@@ -1,0 +1,38 @@
+# Maintainer: AndyRTR <andyrtr@archlinux.org>
+# Conributor: Mélanie Chauvel (ariasuni) <perso at hack-libre dot org>
+
+pkgname=nuspell
+pkgver=3.1.2
+pkgrel=1
+pkgdesc='Fast and safe spellchecking C++ library'
+arch=('loongarch64' 'x86_64')
+url='https://nuspell.github.io/'
+license=('LGPL3')
+depends=('boost-libs' 'icu')
+makedepends=('cmake' 'boost' 'catch2' 'ruby-ronn')
+source=("https://github.com/nuspell/nuspell/archive/v${pkgver}.tar.gz")
+sha512sums=('ed5206cb9ffa7e4ec6843988a75627d4ae7d5170444b6e7bd3496c1bf61c25412c4e68864800f2ad238d014b4e50d25282f367de2900f8a230f3ecc9ae5772be')
+
+prepare() {
+  mkdir build
+}
+
+build() {
+  cd build
+  cmake ../${pkgbase}-${pkgver} \
+    -DCMAKE_BUILD_TYPE=Release \
+    -DCMAKE_INSTALL_PREFIX=/usr \
+    -DCMAKE_INSTALL_LIBDIR=/usr/lib \
+    -DBUILD_SHARED_LIBS=ON
+  make
+}
+
+check() {
+  cd build
+  make test
+}
+
+package() {
+  cd build
+  make DESTDIR="$pkgdir" install
+}

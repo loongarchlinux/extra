@@ -1,0 +1,47 @@
+# Maintainer: Evangelos Foutras <evangelos@foutrelis.com>
+# Contributor: tobias <tobias funnychar archlinux.org>
+# Contributor: Aurelien Foret <orelien@chez.com>
+
+pkgname=xfce4-terminal
+pkgver=0.8.9.2
+pkgrel=2
+pkgdesc="A modern terminal emulator primarily for the Xfce desktop environment"
+arch=('loongarch64' 'x86_64')
+url="https://www.xfce.org/"
+license=('GPL2')
+groups=('xfce4')
+depends=('libxfce4ui' 'vte3' 'hicolor-icon-theme')
+makedepends=('intltool')
+conflicts=('terminal')
+replaces=('terminal')
+source=(https://archive.xfce.org/src/apps/$pkgname/0.8/$pkgname-$pkgver.tar.bz2
+        $pkgname-vte-0.62.patch::https://gitlab.xfce.org/foutrelis/xfce4-terminal/-/commit/ccb4e3ce97.patch)
+sha256sums=('9ba23bf86d350ef8a95d2dfb50bbd1bbb2144d82985a779ec28caf47faaeeeeb'
+            '38c047cb733b96174bbd71627e6900e705a387c44512d7417b236452538c404e')
+
+prepare() {
+  cd "$srcdir/$pkgname-$pkgver"
+
+  # https://gitlab.xfce.org/apps/xfce4-terminal/-/issues/86
+  patch -Np1 -i ../$pkgname-vte-0.62.patch
+}
+
+build() {
+  cd "$srcdir/$pkgname-$pkgver"
+
+  ./configure \
+    --prefix=/usr \
+    --sysconfdir=/etc \
+    --libexecdir=/usr/lib/xfce4 \
+    --localstatedir=/var \
+    --disable-static \
+    --disable-debug
+  make
+}
+
+package() {
+  cd "$srcdir/$pkgname-$pkgver"
+  make DESTDIR="$pkgdir" install
+}
+
+# vim:set ts=2 sw=2 et:

@@ -1,0 +1,42 @@
+# Maintainer: Laurent Carlier <lordheavym@gmail.com>
+
+pkgbase=vulkan-docs
+pkgname=(vulkan-html-docs)
+pkgver=1.2.157
+pkgrel=1
+epoch=1
+_pkgname=Vulkan-Docs
+arch=(any)
+url="https://www.khronos.org/vulkan/"
+license=('custom')
+makedepends=(asciidoctor python3 dblatex source-highlight cmake ghostscript nodejs npm git)
+groups=(vulkan-devel)
+source=("https://github.com/KhronosGroup/${_pkgname}/archive/v${pkgver}.tar.gz")
+sha256sums=('f1bfa0b8969bf76c1e9ffcde9e229f1e73461a191f2b626029dd93c5e50691b9')
+
+prepare() {
+  npm install escape-string-regexp
+  npm install he
+}
+
+build() {
+  cd "${srcdir}/${_pkgname}-${pkgver}"
+
+  ./makeAllExts html manhtmlpages styleguide registry
+}
+
+package_vulkan-html-docs() {
+  pkgdesc="Vulkan html documentation"
+  cd "${_pkgname}-${pkgver}"
+
+  install -dm755 "${pkgdir}/usr/share/doc/vulkan"
+  install -dm755 "${pkgdir}/usr/share/licenses/${pkgname}"
+
+  mv -v gen/out/man "${pkgdir}/usr/share/doc/vulkan/"
+  mv -v gen/out/html/* "${pkgdir}/usr/share/doc/vulkan/"
+  mv -v gen/out/registry.html "${pkgdir}/usr/share/doc/vulkan/"
+  mv -v gen/out/styleguide.html "${pkgdir}/usr/share/doc/vulkan/"
+
+  install -m644 config/copyright-ccby.txt ${pkgdir}/usr/share/licenses/${pkgname}/copyright-ccby.txt
+  install -m644 copyright-spec.txt ${pkgdir}/usr/share/licenses/${pkgname}/copyright-spec.txt
+}

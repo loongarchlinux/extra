@@ -1,0 +1,32 @@
+# Maintainer: Antonio Rojas <arojas@archlinux.org>
+
+pkgname=kdiagram
+pkgver=2.7.0
+pkgrel=1
+pkgdesc="Powerful libraries for creating business diagrams"
+arch=(loongarch64 x86_64)
+url="https://www.kde.org/"
+license=(GPL2)
+depends=(qt5-svg)
+makedepends=(extra-cmake-modules qt5-tools qt5-doc doxygen)
+source=("https://download.kde.org/stable/$pkgname/$pkgver/$pkgname-$pkgver.tar.xz"{,.sig})
+sha256sums=('63a2eabfa1554ceb1d686d5f17ed6308139b6d9155aaf224e0309585b070fbdd'
+            'SKIP')
+validpgpkeys=(42A60D06F449E895F40F09C01638B8A616108B8A) # Dag Andersen <danders@get2net.dk>
+
+prepare() {
+  mkdir -p build
+}
+
+build() {
+  cd build
+  cmake ../$pkgname-$pkgver \
+    -DBUILD_TESTING=OFF \
+    -DBUILD_QCH=ON
+  make
+}
+
+package() {
+  cd build
+  make DESTDIR="$pkgdir" install
+}

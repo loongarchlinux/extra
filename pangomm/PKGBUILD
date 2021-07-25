@@ -1,0 +1,49 @@
+# Maintainer: Jan de Groot <jgc@archlinux.org>
+
+pkgbase=pangomm
+pkgname=(pangomm pangomm-docs)
+pkgver=2.42.1
+pkgrel=2
+pkgdesc="C++ bindings for Pango"
+url="https://www.gtkmm.org/"
+arch=(loongarch64 x86_64)
+license=(LGPL)
+depends=(pango glibmm cairomm)
+makedepends=(git mm-common glibmm-docs cairomm-docs meson)
+options=(!emptydirs)
+_commit=7dfc6c3372faaa4a7c492d08f09881b02095145b  # tags/2.42.1^0
+source=("git+https://gitlab.gnome.org/GNOME/pangomm.git#commit=$_commit")
+sha256sums=('SKIP')
+
+pkgver() {
+  cd $pkgbase
+  git describe --tags | sed 's/-/+/g'
+}
+
+prepare() {
+  cd $pkgbase
+}
+
+build() {
+  arch-meson $pkgbase build -D maintainer-mode=true
+  ninja -C build
+}
+
+check() {
+  meson test -C build --print-errorlogs
+}
+
+package_pangomm() {
+  DESTDIR="$pkgdir" meson install -C build
+
+  mkdir -p docs/usr/share
+  mv "$pkgdir"/usr/share/{devhelp,doc} docs/usr/share
+}
+
+package_pangomm-docs() {
+  pkgdesc+=" (documentation)"
+  depends=()
+  options=(!strip)
+
+  mv docs/* "$pkgdir"
+}

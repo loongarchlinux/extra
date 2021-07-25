@@ -1,0 +1,41 @@
+# Maintainer: Jan Alexander Steffens (heftig) <heftig@archlinux.org>
+
+pkgname=cbindgen
+pkgver=0.15.0
+pkgrel=1
+pkgdesc="A tool for generating C bindings to Rust code"
+url="https://github.com/eqrion/cbindgen"
+arch=(loongarch64 x86_64)
+license=(MPL2)
+depends=(gcc-libs)
+makedepends=(cargo git)
+_commit=83b3be9f884697a51f8717af8b5498866a81e62e  # tags/v0.15.0^0
+source=("git+https://github.com/eqrion/cbindgen#commit=$_commit")
+sha512sums=('SKIP')
+
+pkgver() {
+  cd $pkgname
+  git describe --tags | sed 's/^v//;s/-/+/g'
+}
+
+prepare() {
+  cd $pkgname
+  cargo fetch --locked --target x86_64-unknown-linux-gnu
+}
+
+build() {
+  cd $pkgname
+  cargo build --release --frozen --all-targets
+}
+
+check() {
+  cd $pkgname
+  # test_expand* fails; needs nightly rust
+  cargo test --release --frozen || :
+}
+
+package() {
+  cd $pkgname
+  install -Dt "$pkgdir/usr/bin" target/release/cbindgen
+  install -Dt "$pkgdir/usr/share/doc/$pkgname" -m644 README.md
+}

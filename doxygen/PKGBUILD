@@ -1,0 +1,66 @@
+# Maintainer: Levente Polyak <anthraxx[at]archlinux[dot]org>
+# Maintainer: Dan McGee <dan@archlinux.org>
+
+pkgbase=doxygen
+pkgname=('doxygen' 'doxygen-docs')
+pkgver=1.8.20
+pkgrel=1
+pkgdesc='Documentation system for C++, C, Java, IDL and PHP'
+url='http://www.doxygen.nl'
+arch=('loongarch64' 'x86_64')
+license=('GPL')
+makedepends=('cmake' 'gcc-libs' 'flex' 'qt5-base' 'texlive-core' 'ghostscript'
+             'texlive-latexextra' 'graphviz' 'python' 'git')
+source=(${pkgbase}-${pkgver}.tar.gz::https://github.com/doxygen/doxygen/archive/Release_${pkgver//./_}.tar.gz)
+sha256sums=('3dbdf8814d6e68233d5149239cb1f0b40b4e7b32eef2fd53de8828fedd7aca15')
+sha512sums=('25509cec8904b10431cf3d29f6e6bbdad49fbf3a763606b30c92c111f294ac0311aa13d53007d71ff1f55fcae6903e2ce8f80d1a6b4832fa43f6a9166184e005')
+b2sums=('d318d6c1543cbd17062231eb5a29ed129f4b743f64e4533fac355f50f944b2efa53901298730805bbecb411edbadc3f4afed76e84093257108bf8edf69d1ea00')
+
+prepare() {
+  cd ${pkgbase}-Release_${pkgver//./_}
+  # Install the man pages in the right place
+  sed -i 's:DESTINATION man/man1:DESTINATION "${CMAKE_INSTALL_PREFIX}/share/man/man1":g' \
+    doc/CMakeLists.txt
+}
+
+build() {
+  cd ${pkgbase}-Release_${pkgver//./_}
+
+  cmake -B build \
+    -DCMAKE_INSTALL_PREFIX:PATH=/usr \
+    -DDOC_INSTALL_DIR:PATH=share/doc/doxygen \
+    -DPYTHON_EXECUTABLE:FILE=/usr/bin/python \
+    -Dbuild_doc:BOOL=ON \
+    -Dbuild_wizard:BOOL=ON
+  make -C build
+  make -C build docs
+}
+
+check() {
+  cd ${pkgbase}-Release_${pkgver//./_}
+  make -C build tests
+}
+
+package_doxygen() {
+  pkgdesc='Documentation system for C++, C, Java, IDL and PHP'
+  depends=('gcc-libs')
+  optdepends=('graphviz: for caller/callee graph generation'
+              'qt5-base: for doxywizard')
+
+  cd ${pkgbase}-Release_${pkgver//./_}
+  make -C build DESTDIR="${pkgdir}" install
+
+  rm -rf "${pkgdir}/usr/share/doc"
+}
+
+package_doxygen-docs() {
+  pkgdesc='Developer documentation for doxygen'
+
+  cd ${pkgbase}-Release_${pkgver//./_}
+  make -C build DESTDIR="${pkgdir}" install
+
+  rm -rf "${pkgdir}/usr/bin"
+  rm -rf "${pkgdir}/usr/share/man"
+}
+
+# vim: ts=2 sw=2 et:
