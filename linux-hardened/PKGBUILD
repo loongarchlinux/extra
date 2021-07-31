@@ -4,36 +4,34 @@
 # Contributor: Thomas Baechler <thomas@archlinux.org>
 
 pkgbase=linux-hardened
-pkgver=5.8.15.a
+pkgver=5.12.13.hardened1
 pkgrel=1
 pkgdesc='Security-Hardened Linux'
 url='https://github.com/anthraxx/linux-hardened'
 arch=(loongarch64 x86_64)
 license=(GPL2)
 makedepends=(
-  bc kmod libelf
+  bc kmod libelf pahole cpio perl tar xz
   xmlto python-sphinx python-sphinx_rtd_theme graphviz imagemagick
 )
 options=('!strip')
 _srcname=linux-${pkgver%.*}
+_srctag=${pkgver%.*}-${pkgver##*.}
 source=(
   https://www.kernel.org/pub/linux/kernel/v${pkgver%%.*}.x/${_srcname}.tar.{xz,sign}
-  https://github.com/anthraxx/${pkgbase}/releases/download/${pkgver}/${pkgbase}-${pkgver}.patch{,.sig}
+  https://github.com/anthraxx/${pkgbase}/releases/download/${_srctag}/${pkgbase}-${_srctag}.patch{,.sig}
   config         # the main kernel config file
-  sphinx-workaround.patch
 )
 validpgpkeys=(
   'ABAF11C65A2970B130ABE3C479BE3E4300411886'  # Linus Torvalds
   '647F28654894E3BD457199BE38DBBDC86092693E'  # Greg Kroah-Hartman
-  '65EEFE022108E2B708CBFCF7F9E712E59AF5F22A'  # Daniel Micay
   'E240B57E2C4630BA768E2F26FC1B547C8D8172C8'  # Levente Polyak
 )
-sha256sums=('72811c4e131b3b6cfb38b74684d22b6403d57bd334b42e35d2fc0a902cc1d641'
+sha256sums=('af485fcde5635981e6713b547cc8904a7f6e74e5ffb784cc08781fa5999dd255'
             'SKIP'
-            'c1dafe8d5c23867b94e88d4da55331a6b195fcfcf8abebdd4d55896fe777eb2c'
+            'e0fc0e22756f0f17e59aee6031c239015450ff79834869254504bf61e4054fba'
             'SKIP'
-            '111e1d394b180f507147f9f0831690aef16447592572ce5fc0e8593c031cee07'
-            '8cb21e0b3411327b627a9dd15b8eb773295a0d2782b1a41b2a8839d1b2f5778c')
+            'cdeab0ac3ce540c7d9d249883ed9d35bbfcb7a207230b969a7b18410dfa95b19')
 
 export KBUILD_BUILD_HOST=archlinux
 export KBUILD_BUILD_USER=$pkgbase
@@ -43,7 +41,6 @@ prepare() {
   cd $_srcname
 
   echo "Setting version..."
-  sed -e "/^EXTRAVERSION =/s/=.*/= .${pkgver##*.}/" -i Makefile
   scripts/setlocalversion --save-scmversion
   echo "-$pkgrel" > localversion.10-pkgrel
   echo "${pkgbase#linux}" > localversion.20-pkgname

@@ -4,16 +4,16 @@
 
 pkgbase=gnome-software
 pkgname=(gnome-software gnome-software-packagekit-plugin)
-pkgver=3.38.0
-pkgrel=2
+pkgver=40.2
+pkgrel=1
 pkgdesc="GNOME Software Tools"
 url="https://wiki.gnome.org/Apps/Software/"
 arch=(loongarch64 x86_64)
 license=(GPL2)
-makedepends=(appstream-glib gnome-desktop libpackagekit-glib flatpak fwupd ostree
-             docbook-xsl git gobject-introspection gspell gtk-doc meson valgrind
-             gnome-online-accounts libxmlb malcontent sysprof)
-_commit=de586130932f5a33a20f57ffe836ebd36443f9d3  # tags/3.38.0^0
+makedepends=(appstream gsettings-desktop-schemas libpackagekit-glib flatpak
+             fwupd docbook-xsl git gobject-introspection gspell gtk-doc meson
+             valgrind gnome-online-accounts libxmlb malcontent libhandy)
+_commit=11b5e9663a7ee9fe0e5c9f97c864b804cf5271d5  # tags/40.2^0
 source=("git+https://gitlab.gnome.org/GNOME/gnome-software.git#commit=$_commit")
 sha256sums=('SKIP')
 
@@ -30,7 +30,7 @@ build() {
   # Ensure static library is non-LTO compatible
   CFLAGS+=" -ffat-lto-objects"
 
-  arch-meson $pkgbase build
+  arch-meson $pkgbase build -D sysprof=disabled
   meson compile -C build
 }
 
@@ -50,18 +50,19 @@ _pick() {
 }
 
 package_gnome-software() {
-  groups=('gnome')
-  depends=(libxmlb gnome-desktop gsettings-desktop-schemas gspell libpackagekit-glib
-           gnome-online-accounts appstream-glib malcontent)
+  groups=(gnome)
+  depends=(libxmlb gsettings-desktop-schemas gspell libpackagekit-glib
+           gnome-online-accounts appstream libhandy)
   optdepends=('flatpak: Flatpak support plugin'
               'fwupd: fwupd support plugin'
-              'ostree: OSTree support plugin')
+              'malcontent: Parental control plugin')
 
-  DESTDIR="$pkgdir" meson install -C build
+  meson install -C build --destdir="$pkgdir"
 
 ### Split gnome-software-packagekit-plugin
-  _pick packagekit-plugin "$pkgdir"/usr/lib/gs-plugins-*/libgs_plugin_packagekit*.so
-  _pick packagekit-plugin "$pkgdir"/usr/lib/gs-plugins-*/libgs_plugin_systemd-updates.so
+  local pkglibdir="$pkgdir/usr/lib/gnome-software"
+  _pick packagekit-plugin "$pkglibdir"/plugins-*/libgs_plugin_packagekit*.so
+  _pick packagekit-plugin "$pkglibdir"/plugins-*/libgs_plugin_systemd-updates.so
 }
 
 package_gnome-software-packagekit-plugin() {

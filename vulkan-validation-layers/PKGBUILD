@@ -1,18 +1,20 @@
 # Maintainer: Laurent Carlier <lordheavym@gmail.com>
 
 pkgname=vulkan-validation-layers
-pkgver=1.2.153
+pkgver=1.2.182
 pkgrel=1
 pkgdesc="Vulkan Validation Layers"
 arch=(loongarch64 x86_64)
 url="https://www.khronos.org/vulkan/"
 license=('custom')
-depends=(gcc-libs vulkan-icd-loader vulkan-headers libx11)
-makedepends=(cmake python-lxml libx11 libxrandr wayland git)
+groups=('vulkan-devel')
+depends=('gcc-libs' 'vulkan-icd-loader' 'vulkan-headers' 'libx11')
+makedepends=('cmake' 'python-lxml' 'libxrandr' 'wayland' 'git')
+provides=('libVkLayer_khronos_validation.so')
 options=(!strip)
-source=(https://github.com/KhronosGroup/Vulkan-ValidationLayers/archive/v${pkgver}.tar.gz)
+source=("https://github.com/KhronosGroup/Vulkan-ValidationLayers/archive/v${pkgver}.tar.gz")
 #source=("git+https://github.com/KhronosGroup/Vulkan-ValidationLayers.git#commit=35d091dad71304dab79758fdae4bda12f692d735")
-sha256sums=('8f4db853eac41a852720a3347322b65240c3a698635d5675dc56f7a1a8b4f6cb')
+sha256sums=('5a1f7027c06a8e5ae777d9053b5ce46f10ca623806a43332eb2da06fe46476d4')
 
 #pkgver() {
 #  cd "${srcdir}/Vulkan-ValidationLayers"
@@ -20,17 +22,22 @@ sha256sums=('8f4db853eac41a852720a3347322b65240c3a698635d5675dc56f7a1a8b4f6cb')
 #  echo 1.1.97.0+$(git rev-list --count HEAD)+$(git rev-parse --short HEAD)
 #}
 
-build() {
+prepare() {
   cd "${srcdir}"/Vulkan-ValidationLayers*
 
-  rm -rf build ; mkdir build ; cd build
+  rm -rf build && mkdir build
+}
+
+build() {
+  cd "${srcdir}"/Vulkan-ValidationLayers*/build
+
   ../scripts/update_deps.py
   cmake -C helper.cmake \
     -DCMAKE_INSTALL_PREFIX=/usr \
     -DCMAKE_INSTALL_LIBDIR=lib \
     -DCMAKE_INSTALL_SYSCONFDIR=/etc \
     -DCMAKE_INSTALL_DATADIR=/share \
-    -DCMAKE_INSTALL_INCLUDEDIR="/usr/include/vulkan/" \
+    -DCMAKE_INSTALL_INCLUDEDIR="/usr/include/" \
     -DBUILD_LAYER_SUPPORT_FILES=ON \
     -DCMAKE_SKIP_RPATH=True \
     -DBUILD_TESTS=Off \
@@ -43,7 +50,6 @@ build() {
 }
 
 package() {
-  groups=('vulkan-devel')
   cd "${srcdir}"/Vulkan-ValidationLayers*/build
   
   make DESTDIR="${pkgdir}" install

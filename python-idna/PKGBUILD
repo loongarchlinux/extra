@@ -1,50 +1,33 @@
 # Maintainer: Felix Yan <felixonmars@archlinux.org>
 
-pkgbase=python-idna
-pkgname=('python-idna' 'python2-idna')
-pkgver=2.10
+pkgname=python-idna
+pkgver=3.2
 pkgrel=1
 pkgdesc="Internationalized Domain Names in Applications (IDNA)"
 arch=('any')
 license=('BSD')
 url="https://github.com/kjd/idna"
-makedepends=('python-setuptools' 'python2-setuptools')
+depends=('python')
+makedepends=('python-setuptools')
 source=("https://pypi.io/packages/source/i/idna/idna-$pkgver.tar.gz")
-sha512sums=('83b412de2f79a4bc86fb4bdac7252521b9d84f0be54f4fb1bde1ee13a210bbfa4b1a98247affbc7921046fb117a591316c12694c1be72865767646554c5207ac')
+sha512sums=('2bc8e37abdc0570e5e13c9064f51630605806c3246a8d292511dad6f971610288212a2d881f9356ecb383f871e1477ccd60c4a5d6d7fd05254ff740d36543f35')
 
 prepare() {
    rm -r idna-$pkgver/*.egg-info
-   cp -a idna-$pkgver{,-py2}
 }
 
 build() {
-   cd "$srcdir"/idna-$pkgver
+   cd idna-$pkgver
    python setup.py build
- 
-   cd "$srcdir"/idna-$pkgver-py2
-   python2 setup.py build
 }
 
 check() {
-   cd "$srcdir"/idna-$pkgver
+   cd idna-$pkgver
    python setup.py test
-
-   cd "$srcdir"/idna-$pkgver-py2
-   python2 setup.py test
 }
  
-package_python-idna() {
-   depends=('python')
- 
+package() {
    cd idna-$pkgver
    python setup.py install --root="$pkgdir" --optimize=1 --skip-build
-   install -Dm644 LICENSE.rst "$pkgdir"/usr/share/licenses/$pkgname/LICENSE.rst
-}
- 
-package_python2-idna() {
-   depends=('python2')
- 
-   cd idna-$pkgver-py2
-   python2 setup.py install --root="$pkgdir" --optimize=1 --skip-build
-   install -Dm644 LICENSE.rst "$pkgdir"/usr/share/licenses/$pkgname/LICENSE.rst
+   #install -Dm644 LICENSE.md -t "$pkgdir"/usr/share/licenses/$pkgname/
 }

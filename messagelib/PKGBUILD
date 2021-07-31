@@ -1,19 +1,26 @@
 # Maintainer: Antonio Rojas <arojas@archlinux.org>
 
 pkgname=messagelib
-pkgver=20.08.2
+pkgver=21.04.2
 pkgrel=1
-pkgdesc="KDE PIM messaging library"
+pkgdesc='KDE PIM messaging library'
 arch=(loongarch64 x86_64)
-url="https://kontact.kde.org"
+url='https://kontact.kde.org'
 license=(LGPL)
-depends=(kdepim-apps-libs kmailtransport libgravatar kidentitymanagement kmbox qca)
+depends=(kmailtransport libgravatar kidentitymanagement kmbox qca-qt5)
 makedepends=(extra-cmake-modules boost)
-source=("https://download.kde.org/stable/release-service/$pkgver/src/$pkgname-$pkgver.tar.xz"{,.sig})
-sha256sums=('5cf3a3f2b6473e60a7c2af10aa4eb1cfba25a4786132ee87b657b0dafb9f5028'
-            'SKIP')
+source=(https://download.kde.org/stable/release-service/$pkgver/src/$pkgname-$pkgver.tar.xz{,.sig}
+        kdebug-282792.patch::https://invent.kde.org/pim/messagelib/commit/53daeb84.patch)
+sha256sums=('1e9c9bb9f0384676e8cbbd2e0e212cffb4dba0b63309b52ad30ebb6e0d430fc3'
+            'SKIP'
+            'd4739f277fde5ec33625e47087d3cea6294331ae342b078368f2d7eac9861acc')
 validpgpkeys=(CA262C6C83DE4D2FB28A332A3A6A4DB839EAA6D7  # Albert Astals Cid <aacid@kde.org>
-              F23275E4BF10AFC1DF6914A6DBD2CE893E2D1C87) # Christoph Feck <cfeck@kde.org>
+              F23275E4BF10AFC1DF6914A6DBD2CE893E2D1C87  # Christoph Feck <cfeck@kde.org>
+              D81C0CB38EB725EF6691C385BB463350D6EF31EF) # Heiko Becker <heiko.becker@kde.org>
+
+prepare() {
+  patch -d $pkgname-$pkgver -p1 < kdebug-282792.patch # Fix deletion of multiple attachments
+}
 
 build() {
   cmake -B build -S $pkgname-$pkgver \

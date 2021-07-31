@@ -1,26 +1,32 @@
-# Maintainer: Tom Gundersen <teg@jklm.no>
+# Maintainer: Andreas Radke <andyrtr@archlinux.org>
+# Contributor: Tom Gundersen <teg@jklm.no>
 # Contributor: Andrea Scarpino <andrea@archlinux.org>
 # Contributor: Geoffroy Carrier <geoffroy@archlinux.org>
 
 pkgbase=bluez
 pkgname=('bluez' 'bluez-utils' 'bluez-libs' 'bluez-cups' 'bluez-hid2hci' 'bluez-plugins')
-pkgver=5.55
-pkgrel=1
+pkgver=5.59
+pkgrel=2
 url="http://www.bluez.org/"
 arch=('loongarch64' 'x86_64')
 license=('GPL2')
-makedepends=('dbus' 'libical' 'systemd' 'alsa-lib' 'json-c' 'ell')
+makedepends=('dbus' 'libical' 'systemd' 'alsa-lib' 'json-c' 'ell' 'python-docutils')
 source=(https://www.kernel.org/pub/linux/bluetooth/${pkgname}-${pkgver}.tar.{xz,sign}
-        bluetooth.modprobe)
+        bluetooth.modprobe
+        0001-rfkill-Fix-reading-from-rfkill-socket.patch
+)
 # see https://www.kernel.org/pub/linux/bluetooth/sha256sums.asc
-sha256sums=('8863717113c4897e2ad3271fc808ea245319e6fd95eed2e934fae8e0894e9b88'
+sha256sums=('046b95b386d0bfb2a16311fe799d517ee7735045512d89902c4ed701db477316'
             'SKIP'
-            '46c021be659c9a1c4e55afd04df0c059af1f3d98a96338236412e449bf7477b4')
+            '46c021be659c9a1c4e55afd04df0c059af1f3d98a96338236412e449bf7477b4'
+            'befc9c56fa15fe276916d299e70901d09aedc25d5a29ee444e78fa76f297e72f')
 validpgpkeys=('E932D120BC2AEC444E558F0106CA9F5D1DCF2659') # Marcel Holtmann <marcel@holtmann.org>
 
-#prepare() {
-#  cd "${pkgname}"-${pkgver}
-#}
+prepare() {
+  cd "${pkgname}"-${pkgver}
+  # https://bugs.archlinux.org/task/71243
+  patch -Np1 -i ../0001-rfkill-Fix-reading-from-rfkill-socket.patch
+}
 
 build() {
   cd "${pkgname}"-${pkgver}
@@ -115,6 +121,7 @@ package_bluez-utils() {
 package_bluez-libs() {
   pkgdesc="Deprecated libraries for the bluetooth protocol stack"
   depends=('glibc')
+  provides=('libbluetooth.so')
   license=('LGPL2.1')
 
   cd "${pkgbase}"-${pkgver}

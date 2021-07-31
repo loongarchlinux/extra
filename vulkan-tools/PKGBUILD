@@ -1,21 +1,27 @@
 # Maintainer: Laurent Carlier <lordheavym@gmail.com>
 
 pkgname=vulkan-tools
-pkgver=1.2.153
+pkgver=1.2.182
 pkgrel=1
 arch=(loongarch64 x86_64)
 url="https://www.khronos.org/vulkan/"
 pkgdesc="Vulkan Utilities and Tools"
 license=('custom')
-depends=(gcc-libs libxcb vulkan-icd-loader)
-makedepends=(git cmake python vulkan-headers libx11 wayland glslang spirv-tools)
-source=("https://github.com/KhronosGroup/Vulkan-Tools/archive/v${pkgver}.tar.gz")
-sha256sums=('34bb95309d9c7d70f14e8144cb921cbbf138b47060770fcc3fdda25a3e45441f')
+depends=('libx11' 'wayland' 'libvulkan.so')
+makedepends=('git' 'cmake' 'python' 'vulkan-headers' 'vulkan-icd-loader' 'glslang' 'spirv-tools')
+groups=('vulkan-devel')
+source=("${pkgname}-${pkgver}.tar.gz::https://github.com/KhronosGroup/Vulkan-Tools/archive/v${pkgver}.tar.gz")
+sha256sums=('50c959851230d1daba20235167faced7b7686ebe5d9e626dfb1fe5c92fa30b9e')
 
-build() {
+prepare() {
   cd "${srcdir}"/Vulkan-Tools*
 
-  rm -rf build ; mkdir build ; cd build
+  rm -rf build && mkdir build
+}
+
+build() {
+  cd "${srcdir}"/Vulkan-Tools*/build
+
   cmake \
     -DCMAKE_INSTALL_PREFIX=/usr \
     -DCMAKE_INSTALL_SYSCONFDIR=/etc \
@@ -34,12 +40,10 @@ build() {
 }
 
 package() {
-  groups=('vulkan-devel')
-  
   cd "${srcdir}"/Vulkan-Tools*/build
   
   make DESTDIR="${pkgdir}" install
 
-  install -dm755 ${pkgdir}/usr/share/licenses/${pkgname}
+  install -dm755 "${pkgdir}"/usr/share/licenses/${pkgname}
   install -m644 ../LICENSE.txt "${pkgdir}"/usr/share/licenses/${pkgname}/
 }

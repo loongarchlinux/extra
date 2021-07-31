@@ -1,34 +1,35 @@
-# Maintainer: Jan de Groot <jgc@archlinux.org>
+# Maintainer: Jan Alexander Steffens (heftig) <heftig@archlinux.org>
+# Contributor: Jan de Groot <jgc@archlinux.org>
 # Contributor: Tom Newsom <Jeepster@gmx.co.uk>
 
 pkgbase=glibmm
 pkgname=(glibmm glibmm-docs)
-pkgver=2.64.2
-pkgrel=1
+pkgver=2.66.1
+pkgrel=2
 pkgdesc="C++ bindings for GLib"
 url="https://www.gtkmm.org/"
 arch=(loongarch64 x86_64)
 license=(LGPL)
 depends=(glib2 libsigc++)
-makedepends=(git mm-common perl-xml-parser clang meson)
+makedepends=(git meson mm-common perl-xml-parser clang)
 checkdepends=(glib-networking)
 options=(!emptydirs)
-_commit=e775940669cb6d93f37ddc2b4cd7da446dfa482c  # tags/2.64.2^0
+_commit=6900bf628d07f66e32e2321a46922ebdea15bc21  # tags/2.66.1^0
 source=("git+https://gitlab.gnome.org/GNOME/glibmm.git#commit=$_commit")
 sha256sums=('SKIP')
 
 pkgver() {
-  cd $pkgbase
+  cd glibmm
   git describe --tags | sed 's/-/+/g'
 }
 
 prepare() {
-  cd $pkgbase
+  cd glibmm
 }
 
 build() {
-  arch-meson $pkgbase build -D maintainer-mode=true
-  ninja -C build
+  arch-meson glibmm build -D maintainer-mode=true
+  meson compile -C build
 }
 
 check() {
@@ -36,10 +37,14 @@ check() {
 }
 
 package_glibmm() {
-  DESTDIR="$pkgdir" meson install -C build
+  depends+=(libsigc-2.0.so)
+  provides=(libglibmm-2.4.so)
 
+  meson install -C build --destdir "$pkgdir"
+
+  # Split -docs
   mkdir -p docs/usr/share
-  mv "$pkgdir"/usr/share/{devhelp,doc} docs/usr/share
+  mv -t docs/usr/share "$pkgdir"/usr/share/{devhelp,doc}
 }
 
 package_glibmm-docs() {
@@ -47,5 +52,5 @@ package_glibmm-docs() {
   depends=()
   options=(!strip)
 
-  mv docs/* "$pkgdir"
+  mv -t "$pkgdir" docs/*
 }

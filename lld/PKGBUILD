@@ -2,8 +2,8 @@
 # Contributor: Jan "heftig" Steffens <jan.steffens@gmail.com>
 
 pkgname=lld
-pkgver=10.0.1
-pkgrel=2
+pkgver=12.0.0
+pkgrel=1
 pkgdesc="Linker from the LLVM project"
 arch=('loongarch64' 'x86_64')
 url="https://lld.llvm.org/"
@@ -13,26 +13,27 @@ makedepends=('llvm' 'cmake' 'ninja' 'python-sphinx')
 _source_base=https://github.com/llvm/llvm-project/releases/download/llvmorg-$pkgver
 source=($_source_base/$pkgname-$pkgver.src.tar.xz{,.sig}
         $_source_base/llvm-$pkgver.src.tar.xz{,.sig}
-        respect-versioned-undefined-symbols.patch
-        sphinx2.patch)
-sha256sums=('591449e0aa623a6318d5ce2371860401653c48bb540982ccdd933992cb88df7a'
+        $_source_base/libunwind-$pkgver.src.tar.xz{,.sig}
+        dont-set-versionId-on-undefined-weak-lazy-symbols.patch)
+sha256sums=('2cb7d497f3ce33ce8a2c50ad26ec93a8c45f57268d4d96953cd0f25566f753fd'
             'SKIP'
-            'c5d8e30b57cbded7128d78e5e8dad811bff97a8d471896812f57fa99ee82cdf3'
+            '49dc47c8697a1a0abd4ee51629a696d7bfe803662f2a7252a3b16fc75f3a8b50'
             'SKIP'
-            'd5e6f2e60a35d9cc4a791b0ae35ac9634217bbe7f1bea316062c2af226ba786b'
-            '7f7cca66a16c5a4aca132bfa1d86a7a2ff33612ec47d3422dc91ad4cc1810646')
+            '9ed2a5b28853f7f58be9d04836ff43d6e4132df5a2c058b690dc3e9d75bd1cf5'
+            'SKIP'
+            '0a2e30617a5c2a3bead0638d7f77f5915d800b7d11e5962b8ca0e525ca744843')
 validpgpkeys+=('B6C8F98282B944E3B0D5C2530FC3042E345AD05D') # Hans Wennborg <hans@chromium.org>
 validpgpkeys+=('474E22316ABF4785A88C6E8EA2C794A986419D8A') # Tom Stellard <tstellar@redhat.com>
 
 prepare() {
+  # https://bugs.llvm.org/show_bug.cgi?id=49228
+  mv libunwind{-$pkgver.src,}
+
   cd "$srcdir/$pkgname-$pkgver.src"
   mkdir build
 
-  # https://bugs.llvm.org/show_bug.cgi?id=44842
-  patch -Np2 -i ../respect-versioned-undefined-symbols.patch
-
-  # https://bugs.llvm.org/show_bug.cgi?id=41789
-  patch -Np1 -i ../sphinx2.patch
+  # https://bugs.llvm.org/show_bug.cgi?id=49915
+  patch -Np2 -i ../dont-set-versionId-on-undefined-weak-lazy-symbols.patch
 }
 
 build() {
@@ -41,12 +42,12 @@ build() {
   cmake .. -G Ninja \
     -DCMAKE_BUILD_TYPE=Release \
     -DCMAKE_INSTALL_PREFIX=/usr \
-    -DPYTHON_EXECUTABLE=/usr/bin/python \
     -DLLVM_LINK_LLVM_DYLIB=ON \
     -DLLVM_INCLUDE_TESTS=ON \
     -DLLVM_BUILD_TESTS=ON \
     -DLLVM_BUILD_DOCS=ON \
     -DLLVM_ENABLE_SPHINX=ON \
+    -DSPHINX_WARNINGS_AS_ERRORS=OFF \
     -DLLVM_EXTERNAL_LIT=/usr/bin/lit \
     -DLLVM_MAIN_SRC_DIR="$srcdir/llvm-$pkgver.src"
   ninja

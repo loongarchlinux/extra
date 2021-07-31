@@ -3,22 +3,23 @@
 # Contributor: Eli Schwartz <eschwartz@archlinux.org>
 
 pkgname=python-setuptools
-pkgver=50.3.1
-pkgrel=1
+pkgver=57.0.0
+pkgrel=2
 epoch=1
 pkgdesc="Easily download, build, install, upgrade, and uninstall Python packages"
 arch=('any')
 license=('PSF')
 url="https://pypi.org/project/setuptools/"
-depends=('python-appdirs' 'python-packaging' 'python-ordered-set')
+depends=('python-appdirs' 'python-more-itertools' 'python-ordered-set' 'python-packaging'
+         'python-pyparsing')
 makedepends=('git')
-checkdepends=('python-jaraco.envs' 'python-mock' 'python-pip' 'python-pytest-fixture-config'
-              'python-pytest-flake8' 'python-pytest-virtualenv' 'python-wheel' 'python-paver'
-              'python-pytest-cov')
+checkdepends=('python-jaraco.envs' 'python-jaraco.path' 'python-mock' 'python-pip'
+              'python-pytest-fixture-config' 'python-pytest-flake8' 'python-pytest-virtualenv'
+              'python-wheel' 'python-paver' 'python-pytest-cov' 'python-sphinx')
 provides=('python-distribute')
 replaces=('python-distribute')
-source=("$pkgname-$pkgver.tar.gz::https://github.com/pypa/setuptools/archive/v$pkgver.tar.gz")
-sha512sums=('fd81ea610c75e123765a5f31ee878fb7f126985a8875e1a007ffc52ee415fa7c076a44caecc7980af38c0668a7ab982554181b804ee458ddbc7cad1f7ec2811b')
+source=("https://github.com/pypa/setuptools/archive/v$pkgver/$pkgname-$pkgver.tar.gz")
+sha512sums=('66b2da5998e101820eb63c4a3b8825188cb56c36b35628bc5985c831637677634327abf130040c059c2a2959d31881bae3f3abcafa12a43b1a1b80051d6c9c49')
 
 export SETUPTOOLS_INSTALL_WINDOWS_SPECIFIC_FILES=0
 
@@ -38,10 +39,11 @@ prepare() {
           -e 's/import '$_module.extern'./import /' \
           -e "s/__import__('$_module.extern./__import__('/" \
           {} +
-    done
+  done
 
-  # Fix for flake8
-  sed -i 's/import six, ordered_set/import six\nimport ordered_set/' setuptools-$pkgver/setuptools/command/sdist.py
+  # https://github.com/pypa/setuptools/issues/2466
+  sed -i '/ignore:lib2to3 package is deprecated:DeprecationWarning/a \    ignore:Creating a LegacyVersion has been deprecated and will be removed in the next major release:DeprecationWarning' \
+      setuptools-$pkgver/pytest.ini
 
   # Remove post-release tag since we are using stable tags
   sed -e '/tag_build = .post/d' \
@@ -65,7 +67,6 @@ prepare() {
 
 build() {
   cd setuptools-$pkgver
-  python bootstrap.py
   python setup.py build
 }
 

@@ -3,22 +3,22 @@
 # Contributor: Link Dupont <link@subpop.net>
 
 pkgname=devhelp
-pkgver=3.38.0
+pkgver=40.0
 pkgrel=1
 pkgdesc="API documentation browser for GNOME"
+url="https://wiki.gnome.org/Apps/Devhelp"
 arch=(loongarch64 x86_64)
 license=(GPL)
-url="https://wiki.gnome.org/Apps/Devhelp"
 depends=(webkit2gtk amtk)
 makedepends=(gtk-doc git appstream-glib gobject-introspection meson yelp-tools)
 groups=(gnome-extra)
-_commit=7307a810be192300d50c9f1510b53fbb96c9ee8e  # tags/3.38.0^0
+_commit=0db498d2b95c6efb739b9372fd3f5803d3851e9e  # tags/40.0^0
 source=("git+https://gitlab.gnome.org/GNOME/devhelp.git#commit=$_commit")
 sha256sums=('SKIP')
 
 pkgver() {
   cd $pkgname
-  git describe --tags | sed 's/-/+/g'
+  git describe --tags | sed 's/\.alpha/alpha/;s/-/+/g'
 }
 
 prepare() {
@@ -26,7 +26,11 @@ prepare() {
 }
 
 build() {
-  arch-meson $pkgname build -D gtk_doc=true
+  arch-meson $pkgname build \
+    -D gtk_doc=true \
+    -D plugin_emacs=true \
+    -D plugin_gedit=true \
+    -D plugin_vim=true
   meson compile -C build
 }
 

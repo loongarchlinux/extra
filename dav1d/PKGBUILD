@@ -1,26 +1,33 @@
 # Maintainer: Levente Polyak <anthraxx[at]archlinux[dot]org>
 
-pkgname=dav1d
-pkgver=0.7.1
+pkgbase=dav1d
+pkgname=(dav1d dav1d-doc)
+pkgver=0.9.0
 pkgrel=1
 pkgdesc='AV1 cross-platform decoder focused on speed and correctness'
 url='https://code.videolan.org/videolan/dav1d/'
 arch=('loongarch64' 'x86_64')
 license=('BSD')
-depends=('glibc' 'vulkan-icd-loader')
-makedepends=('meson' 'ninja' 'nasm' 'doxygen' 'vulkan-headers')
-provides=('libdav1d.so')
-source=(https://downloads.videolan.org/pub/videolan/${pkgname}/${pkgver}/${pkgname}-${pkgver}.tar.xz{,.asc})
-sha512sums=('fe7f4a4a547d1239e62025bb40d2f7f97e9fbdfde1d32f9930497801b703a68050ee2fa79793c1cd0c4723678a0736f32431e1b711f63f5de782fe675e5c82de'
-            'SKIP')
-b2sums=('9f69741cf87c7f4f0044890514fdf8261936f6d65653ccbd5669cbbbc1cff3dcee165b96da6dac39000e790d003062368967b1282d5f0955fdaeef5a6e2905ca'
-        'SKIP')
+makedepends=('meson' 'ninja' 'nasm' 'doxygen' 'graphviz' 'xxhash')
+source=(https://downloads.videolan.org/pub/videolan/${pkgname}/${pkgver}/${pkgname}-${pkgver}.tar.xz{,.asc}
+        https://code.videolan.org/videolan/dav1d-test-data/-/archive/${pkgver}/dav1d-test-data-${pkgver}.tar.gz)
+sha512sums=('46ead83042ab951eb4c79c458e060875174739a8a0efd8d34fdcb6ad3c094093f629d16f467c1dbd37a125bba31d0a7b051933540e38c675eade25fefc80ed75'
+            'SKIP'
+            '38a7542c2cf742b5aa97b6c785f3376c8b78b00659ab87ba5a030d4d659bd66dd39813f23a0606fc1a736b8878b60ca85daa804d254f1bd73018fb7afa57873d')
+b2sums=('261331fb339c4f5e1f854310dd5ee5f0d9d7730385c5eaa5c097a26daa2d92b4283ade127dffbec776da2737f1269797cfdda516d3531e8ac1c0947c431e6e68'
+        'SKIP'
+        'ef029fa912e6cee0a3931b0ff4427c860b09be4683fc8a098a2dcf0dd09db7b3e8c822e19b02b66e20fb4c8494b3650019b44276eb1aadc8134da26b910dc570')
 validpgpkeys=('65F7C6B4206BD057A7EB73787180713BE58D1ADC') # VideoLAN Release Signing Key
+
+prepare() {
+  cd ${pkgbase}-${pkgver}
+  ln -s "${srcdir}/dav1d-test-data-${pkgver}" tests/dav1d-test-data
+}
 
 build() {
   cd ${pkgbase}-${pkgver}
-  arch-meson build
-  ninja -C build
+  arch-meson -Dtestdata_tests=true build
+  ninja -C build all doc/html
 }
 
 check() {
@@ -28,10 +35,23 @@ check() {
   meson test
 }
 
-package() {
+package_dav1d() {
+  depends=('glibc')
+  provides=('libdav1d.so')
+  optdepends=('dav1d-doc: HTML documentation')
+
   cd ${pkgbase}-${pkgver}
   DESTDIR="${pkgdir}" ninja -C build install
-  install -Dm 644 README.md -t "${pkgdir}/usr/share/doc/${pkgname}"
+  install -Dm 644 README.md CONTRIBUTING.md NEWS -t "${pkgdir}/usr/share/doc/${pkgname}"
+  install -Dm 644 COPYING -t "${pkgdir}/usr/share/licenses/${pkgname}"
+}
+
+package_dav1d-doc() {
+  pkgdesc+=" (documentation)"
+
+  cd ${pkgbase}-${pkgver}
+  install -d "${pkgdir}/usr/share/doc/${pkgbase}"
+  cp -r build/doc/html -t "${pkgdir}/usr/share/doc/${pkgbase}"
   install -Dm 644 COPYING -t "${pkgdir}/usr/share/licenses/${pkgname}"
 }
 

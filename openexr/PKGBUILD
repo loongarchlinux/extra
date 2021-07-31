@@ -1,31 +1,25 @@
 # Maintainer: Tobias Powalowski <tpowa@archlinux.org>
 
 pkgname=openexr
-pkgver=2.5.3
+pkgver=3.0.4
 pkgrel=1
-pkgdesc="An high dynamic-range image file format library"
-url="https://www.openexr.com/"
-arch=('loongarch64' 'x86_64')
-license=('BSD')
-depends=('zlib')
-makedepends=('cmake' 'fltk' 'python' 'boost' 'freeglut' 'python-numpy' 'chrpath')
-optdepends=('fltk: for exrdisplay' 'boost-libs: python support' 'python: python support') 
-conflicts=('ilmbase')
-replaces=('ilmbase')
-source=($pkgname-$pkgver.tar.gz::"https://github.com/openexr/openexr/archive/v$pkgver.tar.gz")
-sha256sums=('6a6525e6e3907715c6a55887716d7e42d09b54d2457323fcee35a0376960bebf')
+pkgdesc='A high dynamic-range image file format library'
+url='https://www.openexr.com/'
+arch=(loongarch64 x86_64)
+license=(BSD)
+depends=(zlib imath)
+makedepends=(cmake)
+source=(https://github.com/openexr/openexr/archive/v$pkgver/$pkgname-$pkgver.tar.gz)
+sha256sums=('64daae95d406fe3f59ee11ad8586d03fe7df2552b9630eac1a4f9152b8015fb9')
 
 build() {
   cmake -B build -S $pkgname-$pkgver \
-    -DCMAKE_INSTALL_PREFIX=/usr
+    -DCMAKE_INSTALL_PREFIX=/usr \
+    -DCMAKE_BUILD_TYPE=None
   cmake --build build
 }
 
 package() {
-  DESTDIR="${pkgdir}" cmake --install build
-  install -D -m644 $pkgname-$pkgver/LICENSE.md -t "${pkgdir}/usr/share/licenses/${pkgname}"
-
-# Install missing python module
-  _pythonpath=`python -c "from sysconfig import get_path; print(get_path('platlib'))"`
-  install -Dm755 build/python3*/imathnumpy.so -t "$pkgdir"/$_pythonpath 
+  DESTDIR="$pkgdir" cmake --install build
+  install -Dm644 $pkgname-$pkgver/LICENSE.md -t "$pkgdir"/usr/share/licenses/$pkgname
 }

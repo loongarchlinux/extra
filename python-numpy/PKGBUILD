@@ -4,7 +4,7 @@
 # Contributor: Angel 'angvp' Velasquez <angvp[at]archlinux.com.ve> 
 
 pkgname=python-numpy
-pkgver=1.19.2
+pkgver=1.20.3
 pkgrel=1
 pkgdesc="Scientific tools for Python"
 arch=('loongarch64' 'x86_64')
@@ -17,7 +17,12 @@ makedepends=('python-setuptools' 'gcc-fortran' 'python-nose' 'cython')
 checkdepends=('python-pytest' 'python-hypothesis')
 options=('staticlibs')
 source=("$pkgname-$pkgver.tar.gz::https://github.com/numpy/numpy/archive/v$pkgver.tar.gz")
-sha512sums=('df6ba4e0b6fc4101cddf5f86ef28eba0bd03f173539dffddbd6c1cd9c77f6caf4a6301bc08869e46b8d4a69e1cb1462101d1b3aca1ad48c00da80d5c7e403c91')
+sha512sums=('f9d1692ec6e47ac43a8402a850f8f8bc1fcd69ec83f11ecba2133f182dcc19d47e7bcf42f779a30abd84805188e0673fdb232d9d5d51b81ef42110207296b0b2')
+
+prepare() {
+  # https://github.com/numpy/numpy/issues/17390
+  sed -i '/error/a \    ignore:Module already imported so cannot be rewritten' numpy-$pkgver/pytest.ini
+}
 
 build() {
   cd numpy-$pkgver
@@ -25,12 +30,10 @@ build() {
 }
 
 check() {
-  # TODO: Fix fortran tests here (it works fine after installation)
-
   cd numpy-$pkgver
   python setup.py install --root="$PWD/tmp_install" --optimize=1
   cd "$PWD/tmp_install"
-  PATH="$PWD/usr/bin:$PATH" PYTHONPATH="$PWD/usr/lib/python3.8/site-packages:$PYTHONPATH" python -c 'import numpy; numpy.test()'
+  PATH="$PWD/usr/bin:$PATH" PYTHONPATH="$PWD/usr/lib/python3.9/site-packages:$PYTHONPATH" python -c 'import numpy; numpy.test()'
 }
 
 package() {

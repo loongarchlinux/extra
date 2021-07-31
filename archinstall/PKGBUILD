@@ -1,0 +1,37 @@
+# Maintainer: Giancarlo Razzolini <grazzolini@archlinux.org>
+# Contributor: Anton Hvornum <anton@hvornum.se>
+# Contributor: demostanis worlds <demostanis@protonmail.com>
+
+pkgname=archinstall
+pkgver=2.2.0
+pkgrel=1
+pkgdesc="Just another guided/automated Arch Linux installer with a twist"
+arch=('any')
+url="https://github.com/archlinux/archinstall"
+license=('GPL3')
+depends=('python')
+makedepends=('python-setuptools' 'python-sphinx')
+provides=('python-archinstall')
+conflicts=('python-archinstall')
+replaces=('python-archinstall')
+source=("$pkgname-$pkgver.tar.gz::$url/archive/v$pkgver.tar.gz"
+        "$url/releases/download/v$pkgver/$pkgname-$pkgver.tar.gz.asc")
+sha512sums=('1231ae9c15350f9923328051f6d6c9c4496a950a7f82ecbacfd610d3363f7720cdd53d7c2c2e3616b737621439a4c9557a4f0c03f57d47ee5ca20d1082a613f4'
+            'SKIP')
+b2sums=('a0be1649195f0532052bfab47934abd45cafc9eff6e703ce4f2b62f8312910dbfbb5cc1e2fb345dbf6eee792293f57c7f18aa41c66bc9ae7fdfeb95a7f45ea50'
+        'SKIP')
+validpgpkeys=('256F73CEEFC6705C6BBAB20E5FBBB32941E3740A') # Anton Hvornum (Torxed) <anton@hvornum.se>
+
+
+build() {
+  cd "$pkgname-$pkgver"
+  python setup.py build
+  make man -C docs
+}
+
+package() {
+  cd "$pkgname-$pkgver"
+
+  python setup.py install --prefix=/usr --root="${pkgdir}" --optimize=1 --skip-build
+  install -vDm 644 docs/_build/man/archinstall.1 -t "${pkgdir}/usr/share/man/man1/"
+}

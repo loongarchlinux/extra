@@ -1,19 +1,19 @@
-# Maintainer: Jan Alexander Steffens (heftig) <jan.steffens@gmail.com>
+# Maintainer: Jan Alexander Steffens (heftig) <heftig@archlinux.org>
 # Contributor: Ionut Biru <ibiru@archlinux.org>
 
 pkgbase=colord
-pkgname=(colord colord-sane)
-pkgver=1.4.4+9+g1ce26da
-pkgrel=2
+pkgname=(colord colord-sane libcolord)
+pkgver=1.4.5
+pkgrel=4
 pkgdesc="System daemon for managing color devices"
 url="https://www.freedesktop.org/software/colord"
 arch=(loongarch64 x86_64)
 license=(GPL2)
-depends=(lcms2 libgusb polkit sqlite dconf dbus libgudev shared-mime-info systemd-libs udev)
-makedepends=(gobject-introspection vala sane bash-completion argyllcms git meson gtk-doc systemd
+depends=(lcms2 libgusb polkit sqlite dconf dbus libgudev shared-mime-info systemd)
+makedepends=(gobject-introspection vala sane bash-completion argyllcms git meson gtk-doc
              docbook-xsl)
 options=(!emptydirs)
-_commit=1ce26daa5bc786869dac6ba309b698480ef31bac  # master
+_commit=0563117371f82420616e5e40b6a75a0b34c697c7  # tags/1.4.5^0
 source=("git+https://github.com/hughsie/colord#commit=$_commit")
 sha256sums=('SKIP')
 validpgpkeys=('163EB50119225DB3DF8F49EA17ACBA8DFA970E17')  # Richard Hughes
@@ -34,33 +34,58 @@ build() {
     -D vapi=true \
     -D print_profiles=true \
     -D daemon_user=colord
-  ninja -C build
+  meson compile -C build
 }
 
 check() {
   meson test -C build --print-errorlogs
 }
 
+_pick() {
+  local p="$1" f d; shift
+  for f; do
+    d="$srcdir/$p/${f#$pkgdir/}"
+    mkdir -p "$(dirname "$d")"
+    mv "$f" "$d"
+    rmdir -p --ignore-fail-on-non-empty "$(dirname "$f")"
+  done
+}
+
 package_colord() {
+  depends+=("libcolord=$pkgver-$pkgrel")
   optdepends=('argyllcms: color profiling'
               'colord-sane: SANE support')
+  provides=(libcolorhug.so)
   replaces=(shared-color-profiles)
 
-  DESTDIR="$pkgdir" meson install -C build
+  meson install -C build --destdir "$pkgdir"
 
   echo 'u colord - "Color management daemon" /var/lib/colord' |
     install -Dm644 /dev/stdin "$pkgdir/usr/lib/sysusers.d/colord.conf"
 
-### Split colord-sane
-  mkdir -p colord-sane/usr/lib/colord-plugins
-  mv {"$pkgdir",colord-sane}/usr/lib/colord-sane
-  mv {"$pkgdir",colord-sane}/usr/lib/colord-plugins/libcolord_sensor_sane.so
+  cd "$pkgdir"
+
+  _pick sane usr/lib/colord-sane
+  _pick sane usr/lib/colord-plugins/libcolord_sensor_sane.so
+
+  _pick lib usr/include/colord-1/colord{,.h}
+  _pick lib usr/lib/libcolord{,compat}.so*
+  _pick lib usr/lib/girepository-1.0/Colord-1.0.typelib
+  _pick lib usr/lib/pkgconfig/colord.pc
+  _pick lib usr/share/gir-1.0/Colord-1.0.gir
 }
 
 package_colord-sane() {
   pkgdesc+=" (SANE support)"
   depends=("colord=$pkgver-$pkgrel" sane)
-  mv colord-sane/* "$pkgdir"
+  mv sane/* "$pkgdir"
+}
+
+package_libcolord() {
+  pkgdesc+=" (client library)"
+  depends=(glib2 lcms2 systemd)
+  provides=(libcolord.so)
+  mv lib/* "$pkgdir"
 }
 
 # vim:set sw=2 et:

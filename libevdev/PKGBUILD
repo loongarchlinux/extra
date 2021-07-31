@@ -1,17 +1,17 @@
 # Maintainer: Andreas Radke <andyrtr@archlinux.org>
 
 pkgname=libevdev
-pkgver=1.9.1
+pkgver=1.11.0
 pkgrel=1
 pkgdesc="Wrapper library for evdev devices"
 arch=(loongarch64 x86_64)
 url="https://www.freedesktop.org/wiki/Software/libevdev/"
-license=(custom:X11)
+license=(custom:MIT)
 depends=('glibc')
 makedepends=('python' 'check' 'valgrind' 'doxygen')
-#checkdepends=('kmod')
+provides=('libevdev.so')
 source=(https://freedesktop.org/software/$pkgname/$pkgname-$pkgver.tar.xz{,.sig})
-sha512sums=('7d845ce2279d2e2ef12437f6218550265ea0c85e5b6c0d116aff09787b73626b338fe3084baff060085d393688b5ae3d33772689e0581684eff257af01c4c645'
+sha512sums=('b3c6b4a1532c5142f3684b920dcdd497a5368aec516e8c389e2c8f9d1eaba16c907b2a7f2c82a3c3ff89bb4d0ae5503c736098c095f9f1bc98f0668e99bf639d'
             'SKIP')
 validpgpkeys=('3C2C43D9447D5938EF4551EBE23B7E70B467F0BF') # Peter Hutterer (Who-T) <office@who-t.net>
 
@@ -19,14 +19,12 @@ build() {
   cd $pkgname-$pkgver
   ./configure --prefix=/usr \
     --disable-static
+  sed -i -e 's/ -shared / -Wl,-O1,--as-needed\0/g' libtool
   make
 }
 check() {
   cd $pkgname-$pkgver
-  # test suite requires root access and needs to load uinput module
-  # that's not possible in our chroot
-  #modprobe uinput
-  make check || /bin/true
+  make check
 }
 
 package() {

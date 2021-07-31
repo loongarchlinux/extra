@@ -1,7 +1,7 @@
 # Maintainer: Jan Alexander Steffens (heftig) <heftig@archlinux.org>
 
 pkgname=js78
-pkgver=78.3.1
+pkgver=78.11.0
 pkgrel=1
 pkgdesc="JavaScript interpreter and libraries - Version 78"
 arch=(loongarch64 x86_64)
@@ -11,9 +11,13 @@ depends=(gcc-libs readline zlib sh)
 makedepends=(zip autoconf2.13 python-setuptools python-psutil rust llvm clang lld)
 checkdepends=(mercurial git)
 _relver=${pkgver}esr
-source=(https://archive.mozilla.org/pub/firefox/releases/$_relver/source/firefox-$_relver.source.tar.xz{,.asc})
-sha256sums=('5fd27d67689fe60803022035e556146d2dbce5e53d21c14d026fc31dd2e45be9'
-            'SKIP')
+source=(https://archive.mozilla.org/pub/firefox/releases/$_relver/source/firefox-$_relver.source.tar.xz{,.asc}
+        0001-Fixes-for-LTO-PGO-support.patch
+        0002-Bug-1667736-Update-packed_simd-to-compile-on-Rust-1..patch)
+sha256sums=('38394b5937be3839104b3a097d71987c06392d4d8be0d3004182f1d1fbfc577e'
+            'SKIP'
+            '926a573eabe3b6177363b795ed5e5641b4a4ebc6d7cfa093f11e1779ac0f897c'
+            '5f7c132fe7dab5e412cfd24c0c542531d4bfbcf030c736d46993845ba262cf9c')
 validpgpkeys=('14F26682D0916CDD81E37B6D61B7B526D98F0353') # Mozilla Software Releases <release@mozilla.com>
 
 # Make sure the duplication between bin and lib is found
@@ -22,6 +26,12 @@ COMPRESSZST+=(--long)
 prepare() {
   cd firefox-$pkgver
   mkdir obj
+
+  # Post-78 fixes to fix LTO with LLVM 11
+  patch -Np1 -i ../0001-Fixes-for-LTO-PGO-support.patch
+
+  # Fix build with Rust 1.48
+  patch -Np1 -i ../0002-Bug-1667736-Update-packed_simd-to-compile-on-Rust-1..patch
 }
 
 build() {
@@ -44,8 +54,8 @@ build() {
     --without-system-icu
   )
 
-  export CC='clang --target=x86_64-unknown-linux-gnu'
-  export CXX='clang++ --target=x86_64-unknown-linux-gnu'
+  export CC=clang
+  export CXX=clang++
   export AR=llvm-ar
   export NM=llvm-nm
   export RANLIB=llvm-ranlib

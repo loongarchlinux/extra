@@ -1,8 +1,9 @@
-# Maintainer: Jan Alexander Steffens (heftig) <jan.steffens@gmail.com>
+# Maintainer: Jan Alexander Steffens (heftig) <heftig@archlinux.org>
 # Contributor: Chocobo1 <chocobo1 AT archlinux DOT net>
 
-pkgname=aom
-pkgver=2.0.0
+pkgbase=aom
+pkgname=(aom aom-docs)
+pkgver=3.1.1
 pkgrel=1
 pkgdesc="Alliance for Open Media video codec"
 url="https://aomedia.org/"
@@ -10,35 +11,43 @@ arch=(loongarch64 x86_64)
 license=(BSD custom:PATENTS)
 depends=(gcc-libs)
 makedepends=(git cmake ninja doxygen yasm)
-provides=(libaom.so)
-_commit=bb35ba9148543f22ba7d8642e4fbd29ae301f5dc  # tags/v2.0.0^0
+_commit=7fadc0e77130efb05f52979b0deaba9b6a1bba6d  # tags/v3.1.1^0
 source=("git+https://aomedia.googlesource.com/aom#commit=$_commit")
-sha256sums=('SKIP')
+b2sums=('SKIP')
 
 pkgver() {
-  cd $pkgname
+  cd $pkgbase
   git describe --tags | sed 's/^v//;s/-errata/.errata/;s/-/+/g'
 }
 
 prepare() {
-  cd $pkgname
+  cd $pkgbase
 }
 
 build() {
-  cmake -H$pkgname -Bbuild -G Ninja \
+  cmake -S $pkgbase -B build -G Ninja \
     -DCMAKE_INSTALL_PREFIX=/usr \
     -DBUILD_SHARED_LIBS=1 \
     -DENABLE_TESTS=0
   cmake --build build
 }
 
-package() {
-  DESTDIR="$pkgdir" cmake --build build --target install
+package_aom() {
+  provides=(libaom.so)
+
+  DESTDIR="$pkgdir" cmake --install build
+
+  install -Dt "$pkgdir/usr/share/licenses/$pkgname" -m644 $pkgbase/{LICENSE,PATENTS}
+}
+
+package_aom-docs() {
+  pkgdesc+=" (documentation)"
+  depends=()
 
   mkdir -p "$pkgdir/usr/share/doc"
-  cp -r build/docs/html "$pkgdir/usr/share/doc/$pkgname"
+  cp -r build/docs/html "$pkgdir/usr/share/doc/$pkgbase"
 
-  install -Dt "$pkgdir/usr/share/licenses/$pkgname" -m644 $pkgname/{LICENSE,PATENTS}
+  install -Dt "$pkgdir/usr/share/licenses/$pkgname" -m644 $pkgbase/{LICENSE,PATENTS}
 }
 
 # vim:set et sw=2:

@@ -2,19 +2,19 @@
 # Contributor: Jan de Groot <jan@archlinux.org>
 
 pkgname=gnome-desktop
-pkgver=3.38.1
+pkgver=40.2
 pkgrel=1
 epoch=1
 pkgdesc="Library with common API for various GNOME modules"
 url="https://gitlab.gnome.org/GNOME/gnome-desktop"
 arch=(loongarch64 x86_64)
 license=(GPL LGPL)
-depends=(gsettings-desktop-schemas gtk3 libxkbfile xkeyboard-config iso-codes
-         libseccomp bubblewrap systemd-libs)
+depends=(gsettings-desktop-schemas gtk3 xkeyboard-config iso-codes libseccomp
+         bubblewrap systemd libxkbcommon)
 makedepends=(gobject-introspection git meson gtk-doc yelp-tools)
 checkdepends=(xorg-server-xvfb)
 provides=(libgnome-desktop-3.so)
-_commit=6c974e9be1d4b5bd7c898f249a4fc40022a9edc9  # tags/3.38.1^0
+_commit=e708fc1a15dd96e362988b494acbc8e24fdf2ddd  # tags/40.2^0
 source=("git+https://gitlab.gnome.org/GNOME/gnome-desktop.git#commit=$_commit")
 sha256sums=('SKIP')
 
@@ -31,6 +31,7 @@ build() {
   arch-meson $pkgname build \
     -D gnome_distributor="Arch Linux" \
     -D gtk_doc=true \
+    -D debug_tools=false \
     -D date_in_gnome_version=false
   meson compile -C build
 }
@@ -42,5 +43,5 @@ check() {
 }
 
 package() {
-  DESTDIR="$pkgdir" meson install -C build
+  meson install -C build --destdir "$pkgdir"
 }

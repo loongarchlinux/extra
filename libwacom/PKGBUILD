@@ -1,35 +1,31 @@
 # Maintainer: Jan Alexander Steffens (heftig) <jan.steffens@gmail.com>
 
 pkgname=libwacom
-pkgver=1.5
+pkgver=1.10
 pkgrel=1
 pkgdesc="Library to identify Wacom tablets and their features"
 arch=('loongarch64' 'x86_64')
 url="https://github.com/linuxwacom/libwacom/wiki"
 license=('MIT')
 depends=('glib2' 'systemd' 'libgudev')
-makedepends=('libxml2')
+makedepends=('libxml2' 'meson')
+checkdepends=('python-pytest' 'python-libevdev' 'python-pyudev')
 validpgpkeys=('3C2C43D9447D5938EF4551EBE23B7E70B467F0BF')
 source=(https://github.com/linuxwacom/libwacom/releases/download/${pkgname}-${pkgver}/${pkgname}-${pkgver}.tar.bz2{,.sig})
-sha512sums=('d3aa6ea1d574f753490818092b3128171f11a4af4716681d156b831cae5c70e96281033a523eb7d2e263acbd95ea9407948d1583191bdb121aff2886571c1cd0'
+sha512sums=('8c3e795a180503fb6ad3d5f514f24aa3ba202f63a89fd637ed4e50d494a29d86ad62f529180d0c384d387af7456c77904dfcd361a70807feeaf0e7a88dac2bfe'
             'SKIP')
 
 build() {
-  cd $pkgname-$pkgver
-  ./configure --prefix=/usr
-  make
+  meson build $pkgname-$pkgver \
+    --prefix=/usr
+  ninja -C build
 }
 
 check() {
-  cd $pkgname-$pkgver
-  make check
+  ninja test -C build
 }
 
 package() {
-  cd $pkgname-$pkgver
-  make DESTDIR="$pkgdir" install
-  install -D -m644 COPYING "${pkgdir}/usr/share/licenses/${pkgname}/LICENSE"
-  install -m755 -d "${pkgdir}"/usr/lib/udev/rules.d
-  cd tools
-  ./generate-hwdb > "${pkgdir}"/usr/lib/udev/hwdb.d/65-libwacom.hwdb
+  DESTDIR="$pkgdir" ninja install -C build
+  install -D -m644 $pkgname-$pkgver/COPYING "${pkgdir}/usr/share/licenses/${pkgname}/LICENSE"
 }

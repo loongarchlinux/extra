@@ -1,17 +1,17 @@
 # Maintainer: Jan Alexander Steffens (heftig) <heftig@archlinux.org>
 # Contributor: Ionut Biru <ibiru@archlinux.org>
 
-pkgname=gdk-pixbuf2
-pkgver=2.40.0+6+g5432316df
+pkgbase=gdk-pixbuf2
+pkgname=(gdk-pixbuf2 gdk-pixbuf2-docs)
+pkgver=2.42.6
 pkgrel=1
 pkgdesc="An image loading library"
-arch=(loongarch64 x86_64)
 url="https://wiki.gnome.org/Projects/GdkPixbuf"
-license=(LGPL2.1)
-depends=(glib2 libpng libtiff libjpeg libx11 shared-mime-info)
-makedepends=(gtk-doc gobject-introspection git meson)
-install=gdk-pixbuf2.install
-_commit=5432316df6b8106d279c4972ebade240edd66d13  # gdk-pixbuf-2-40
+arch=(loongarch64 x86_64)
+license=(LGPL)
+depends=(glib2 libpng libtiff libjpeg shared-mime-info)
+makedepends=(gobject-introspection git meson gi-docgen docbook-xsl)
+_commit=3afa395cd47fdde70216a8a8e4d71ac753e26ade  # tags/2.42.6^0
 source=("git+https://gitlab.gnome.org/GNOME/gdk-pixbuf.git#commit=$_commit"
         gdk-pixbuf-query-loaders.hook)
 sha256sums=('SKIP'
@@ -28,7 +28,8 @@ prepare() {
 
 build() {
   arch-meson gdk-pixbuf build \
-    -D docs=true \
+    -D builtin_loaders=all \
+    -D gtk_doc=true \
     -D installed_tests=false
   meson compile -C build
 }
@@ -37,9 +38,23 @@ check() {
   meson test -C build --print-errorlogs
 }
 
-package() {
+package_gdk-pixbuf2() {
+  provides=(libgdk_pixbuf-2.0.so)
+  install=gdk-pixbuf2.install
+
   DESTDIR="$pkgdir" meson install -C build
+
+  mkdir -p doc/usr/share
+  mv {"$pkgdir",doc}/usr/share/doc
+
   install -Dt "$pkgdir/usr/share/libalpm/hooks" -m644 *.hook
 }
 
-# vim:set ts=2 sw=2 et:
+package_gdk-pixbuf2-docs() {
+  pkgdesc+=" (documentation)"
+  depends=()
+
+  mv doc/* "$pkgdir"
+}
+
+# vim:set sw=2 et:

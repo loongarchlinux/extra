@@ -1,0 +1,39 @@
+# Maintainer: Antonio Rojas <arojas@archlinux.org>
+
+pkgbase=pyqt6
+pkgname=python-pyqt6
+pkgdesc='A set of Python bindings for the Qt6 toolkit'
+pkgver=6.1.1
+pkgrel=1
+arch=(loongarch64 x86_64)
+url='https://riverbankcomputing.com/software/pyqt/intro'
+license=(GPL)
+groups=(pyqt6)
+depends=(qt6-base python-pyqt6-sip)
+optdepends=('qt6-tools: QtHelp, QtDesigner'
+            'qt6-svg: QtSvg'
+            'qt6-declarative: QtQml, qmlplugin'
+            'qt6-quick3d: QtQuick3D'
+            'dbus-python: for python-dbus mainloop support')
+makedepends=(sip pyqt-builder qt6-tools qt6-svg qt6-declarative qt6-quick3d qt6-shadertools python-opengl dbus-python)
+source=(https://pypi.python.org/packages/source/P/PyQt6/PyQt6-$pkgver.tar.gz)
+sha256sums=('8775244fa73f94bfe8ae7672b624e2a903a22bc35d7ea42dd830949e2f9e43c7')
+
+build() {
+  cd PyQt6-$pkgver
+  sip-build \
+    --confirm-license \
+    --no-make \
+    --qmake=/usr/bin/qmake6
+  cd build
+  make
+}
+
+package_python-pyqt6(){
+  cd PyQt6-$pkgver/build
+  make INSTALL_ROOT="$pkgdir" install
+
+  # compile Python bytecode
+  python -m compileall -d / "$pkgdir"/usr/lib
+  python -O -m compileall -d / "$pkgdir"/usr/lib
+}

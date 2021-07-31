@@ -2,9 +2,9 @@
 # Contributor: Jan de Groot <jgc@archlinux.org>
 
 pkgbase=gst-plugins-bad
-pkgname=(gst-plugins-bad-libs gst-plugins-bad gst-plugin-opencv)
-pkgver=1.18.0
-pkgrel=2
+pkgname=(gst-plugins-bad-libs gst-plugins-bad gst-plugin-opencv gst-plugin-wpe)
+pkgver=1.18.4
+pkgrel=7
 pkgdesc="Multimedia graph framework - bad plugins"
 url="https://gstreamer.freedesktop.org/"
 arch=(loongarch64 x86_64)
@@ -20,14 +20,12 @@ makedepends=(mjpegtools curl chromaprint libmms faad2 libdca libdvdnav
              librsvg fluidsynth lilv lv2 gst-plugins-good python git
              gobject-introspection vulkan-headers vulkan-validation-layers
              wayland-protocols gtk3 meson shaderc libavtp svt-hevc libmicrodns
-             zxing-cpp opencv libva)
+             zxing-cpp opencv libva wpewebkit)
 checkdepends=(xorg-server-xvfb)
 options=(!emptydirs)
-_commit=7cb583bb0427819a6b59b783e7df67961df2155f  # tags/1.18.0^0
-source=("git+https://gitlab.freedesktop.org/gstreamer/gst-plugins-bad.git#commit=$_commit"
-        0001-tests-svthevcenc-Fix-test_encode_simple.patch)
-sha256sums=('SKIP'
-            '04b276b7dc5ae63d2a5bfcef446597114e9d28c743e325c60038f8fc5375f445')
+_commit=8cb03bdf01ca6ad8c87f951bcd7962c3ca9f6860  # tags/1.18.4^0
+source=("git+https://gitlab.freedesktop.org/gstreamer/gst-plugins-bad.git#commit=$_commit")
+sha256sums=('SKIP')
 
 pkgver() {
   cd $pkgbase
@@ -36,7 +34,8 @@ pkgver() {
 
 prepare() {
   cd $pkgbase
-  git apply -3 ../0001-tests-svthevcenc-Fix-test_encode_simple.patch
+  git cherry-pick -n 68858358544dd3b7e20663f731db22fd74a78a45 # fix build with GCC 11
+  git cherry-pick -n a9fafd98b74fd184b178604095d35ac6105119b8 # fix build with OpenEXR 3
 }
 
 build() {
@@ -48,8 +47,6 @@ build() {
     -D iqa=disabled \
     -D magicleap=disabled \
     -D msdk=disabled \
-    -D nvdec=disabled \
-    -D nvenc=disabled \
     -D openh264=disabled \
     -D openmpt=disabled \
     -D openni2=disabled \
@@ -59,7 +56,6 @@ build() {
     -D voamrwbenc=disabled \
     -D wasapi2=disabled \
     -D wasapi=disabled \
-    -D wpe=disabled \
     -D gobject-cast-checks=disabled \
     -D package-name="GStreamer Bad Plugins (Arch Linux)" \
     -D package-origin="https://www.archlinux.org/"
@@ -100,7 +96,7 @@ package_gst-plugins-bad-libs() {
   mv -t opencv/include/gstreamer-1.0/gst \
     "$pkgdir"/usr/include/gstreamer-1.0/gst/opencv
 
-  for _x in opencv; do
+  for _x in opencv wpe; do
     mkdir -p "$_x/lib/gstreamer-1.0"
     _f="lib/gstreamer-1.0/libgst${_x}.so"
     mv "$pkgdir/usr/$_f" "$_x/$_f"
@@ -117,6 +113,7 @@ package_gst-plugins-bad() {
            libsrtp zvbi vulkan-icd-loader libxcb wayland libwebp libnice
            webrtc-audio-processing wildmidi x265 zbar libavtp svt-hevc
            libmicrodns zxing-cpp libva)
+  optdepends=('nvidia-utils: nvcodec plugin')
 
   mv ext "$pkgdir/usr"
 }
@@ -126,4 +123,11 @@ package_gst-plugin-opencv() {
   depends=(gst-plugins-base-libs opencv)
 
   mv opencv "$pkgdir/usr"
+}
+
+package_gst-plugin-wpe() {
+  pkgdesc="${pkgdesc%-*}- wpe plugin"
+  depends=(gst-plugins-base-libs wpewebkit)
+
+  mv wpe "$pkgdir/usr"
 }

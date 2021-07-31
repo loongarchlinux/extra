@@ -1,38 +1,42 @@
-# Maintainer: Gaetan Bisson <bisson@archlinux.org>
+# Maintainer: David Runge <dvzrv@archlinux.org>
+# Contributor: Gaetan Bisson <bisson@archlinux.org>
 # Contributor: Giovanni Scafora <giovanni@archlinux.org>
 # Contributor: dorphell <dorphell@archlinux.org>
 
 pkgname=tcpdump
-pkgver=4.9.3
-pkgrel=2
+pkgver=4.99.1
+pkgrel=1
 pkgdesc='Powerful command-line packet analyzer'
-url='https://www.tcpdump.org/'
+url="https://www.tcpdump.org/"
 arch=('loongarch64' 'x86_64')
 license=('BSD')
-depends=('libpcap' 'libcap-ng' 'openssl')
+depends=('glibc' 'openssl')
+makedepends=('cmake' 'libpcap' 'libcap-ng')
 source=("https://www.tcpdump.org/release/${pkgname}-${pkgver}.tar.gz"{,.sig})
-#source=("https://sources.archlinux.org/other/packages/tcpdump/${pkgname}-${pkgver}.tar.gz"{,.sig})
-validpgpkeys=('1F166A5742ABB9E0249A8D30E089DEF1D9C15D0D')
-sha256sums=('2cd47cb3d460b6ff75f4a9940f594317ad456cfbf2bd2c8e5151e16559db6410'
+sha512sums=('53d31355e1a6ef5a65bb3bf72454169fc80adf973a327a5768840e6ccf0550fbeb3c8a41f959635076d871df0619680321910a3a97879607f481cdaa8b7ceda7'
             'SKIP')
+b2sums=('0a10fe68afdfe80d3e7e661352fcaf1c47702df27fbed959f52fb0ec81543a1d4ce6b0de16a8b081de48dd43e09a13f5e1f0fb11d7590f92cbff29dc511bea12'
+        'SKIP')
+validpgpkeys=('1F166A5742ABB9E0249A8D30E089DEF1D9C15D0D') # The Tcpdump Group (Package signing key) <release@tcpdump.org>
 
 build() {
-	cd "${srcdir}/${pkgname}-${pkgver}"
-	./configure \
-		--prefix=/usr \
-		--sbindir=/usr/bin \
-
-	make
+  cd "${pkgname}-${pkgver}"
+  cmake -DCMAKE_INSTALL_PREFIX=/usr \
+        -DCMAKE_BUILD_TYPE='None' \
+        -Wno-dev \
+        -B build \
+        -S .
+  make VERBOSE=1 -C build
 }
 
 check() {
-	cd "${srcdir}/${pkgname}-${pkgver}"
-	make check
+  cd "${pkgname}-${pkgver}"
+  make VERBOSE=1 check -C build
 }
 
 package() {
-	cd "${srcdir}/${pkgname}-${pkgver}"
-	make DESTDIR="${pkgdir}" install
-	install -D -m644 LICENSE "${pkgdir}/usr/share/licenses/${pkgname}/LICENSE"
-	rm -f "${pkgdir}"/usr/bin/tcpdump.${pkgver}
+  depends+=('libpcap.so' 'libcap-ng.so')
+  cd "${pkgname}-${pkgver}"
+  make DESTDIR="${pkgdir}" install -C build
+  install -vDm 644 LICENSE -t "${pkgdir}/usr/share/licenses/${pkgname}/"
 }

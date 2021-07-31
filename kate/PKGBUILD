@@ -4,16 +4,17 @@
 
 pkgbase=kate
 pkgname=(kwrite kate)
-pkgver=20.08.2
+pkgver=21.04.2
 pkgrel=1
 arch=(loongarch64 x86_64)
 license=(GPL LGPL FDL)
-makedepends=(extra-cmake-modules kdoctools plasma-framework knewstuff kitemmodels ktexteditor threadweaver kactivities kuserfeedback)
-source=("https://download.kde.org/stable/release-service/$pkgver/src/$pkgbase-$pkgver.tar.xz"{,.sig})
-sha256sums=('718e8230edfa16f93f54380c4e214a0f25f8a398fe74ad23f12b7dcffae419d0'
+makedepends=(extra-cmake-modules kdoctools plasma-framework knewstuff kitemmodels ktexteditor kactivities kuserfeedback)
+source=(https://download.kde.org/stable/release-service/$pkgver/src/$pkgbase-$pkgver.tar.xz{,.sig})
+sha256sums=('370d75eecbba6740f80e9aff807d3117ff27a4332865acf5351e9e063e0b6d60'
             'SKIP')
 validpgpkeys=(CA262C6C83DE4D2FB28A332A3A6A4DB839EAA6D7  # Albert Astals Cid <aacid@kde.org>
-              F23275E4BF10AFC1DF6914A6DBD2CE893E2D1C87) # Christoph Feck <cfeck@kde.org>
+              F23275E4BF10AFC1DF6914A6DBD2CE893E2D1C87  # Christoph Feck <cfeck@kde.org>
+              D81C0CB38EB725EF6691C385BB463350D6EF31EF) # Heiko Becker <heiko.becker@kde.org>
 
 build() {
   cmake -B build -S $pkgbase-$pkgver \
@@ -22,9 +23,9 @@ build() {
 }
 
 package_kwrite() {
-  pkgdesc="Text Editor"
+  pkgdesc='Text Editor'
   groups=(kde-applications kde-utilities)
-  url="https://www.kde.org/applications/utilities/kwrite/"
+  url='https://apps.kde.org/kwrite/'
   depends=(ktexteditor hicolor-icon-theme)
 
   DESTDIR="$pkgdir" cmake --install build
@@ -38,15 +39,16 @@ package_kwrite() {
 }
 
 package_kate() {
-  pkgdesc="Advanced Text Editor"
+  pkgdesc='Advanced Text Editor'
   groups=(kde-applications kde-utilities)
-  url="https://www.kde.org/applications/utilities/kate/"
-  depends=(knewstuff ktexteditor threadweaver kactivities kuserfeedback hicolor-icon-theme)
+  url='https://apps.kde.org/kate/'
+  depends=(knewstuff ktexteditor kactivities kuserfeedback hicolor-icon-theme)
   optdepends=('konsole: open a terminal in Kate'
               'clang: C and C++ LSP support'
               'python-language-server: Python LSP support'
               'texlab: LaTeX LSP support'
-              'rust: Rust LSP support')
+              'rust: Rust LSP support'
+              'git: git-blame plugin')
   DESTDIR="$pkgdir" cmake --install build
 
   find "$pkgdir" -type f -name '*kwrite*' -exec rm {} \;
