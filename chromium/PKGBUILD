@@ -4,10 +4,10 @@
 # Contributor: Daniel J Griffiths <ghost1227@archlinux.us>
 
 pkgname=chromium
-pkgver=91.0.4472.114
+pkgver=96.0.4664.110
 pkgrel=1
-_launcher_ver=7
-_gcc_patchset=5
+_launcher_ver=8
+_gcc_patchset=4
 pkgdesc="A web browser built for speed, simplicity, and security"
 arch=('loongarch64' 'x86_64')
 url="https://www.chromium.org/Home"
@@ -16,7 +16,7 @@ depends=('gtk3' 'nss' 'alsa-lib' 'xdg-utils' 'libxss' 'libcups' 'libgcrypt'
          'ttf-liberation' 'systemd' 'dbus' 'libpulse' 'pciutils' 'libva'
          'desktop-file-utils' 'hicolor-icon-theme')
 makedepends=('python' 'gn' 'ninja' 'clang' 'lld' 'gperf' 'nodejs' 'pipewire'
-             'java-runtime-headless' 'python2')
+             'java-runtime-headless')
 optdepends=('pipewire: WebRTC desktop sharing under Wayland'
             'kdialog: support for native dialogs in Plasma'
             'org.freedesktop.secrets: password storage backend on GNOME / Xfce'
@@ -24,22 +24,20 @@ optdepends=('pipewire: WebRTC desktop sharing under Wayland'
 source=(https://commondatastorage.googleapis.com/chromium-browser-official/$pkgname-$pkgver.tar.xz
         https://github.com/foutrelis/chromium-launcher/archive/v$_launcher_ver/chromium-launcher-$_launcher_ver.tar.gz
         https://github.com/stha09/chromium-patches/releases/download/chromium-${pkgver%%.*}-patchset-$_gcc_patchset/chromium-${pkgver%%.*}-patchset-$_gcc_patchset.tar.xz
-        fix-crash-in-ThemeService.patch
-        unbundle-use-char16_t-as-UCHAR_TYPE.patch
-        make-dom-distiller-protoc-plugin-call-py2.7.patch
-        extend-enable-accelerated-video-decode-flag.patch
+        unbundle-fix-visibility-of-build-config-freetype.patch
         sql-make-VirtualCursor-standard-layout-type.patch
-        chromium-glibc-2.33.patch
+        chromium-93-ffmpeg-4.4.patch
+        chromium-94-ffmpeg-roll.patch
+        unexpire-accelerated-video-decode-flag.patch
         use-oauth2-client-switches-as-default.patch)
-sha256sums=('c1c7fe783f3250978503d4bd53144039bd818de8a6e89de493f27dd5168f7e71'
-            '86859c11cfc8ba106a3826479c0bc759324a62150b271dd35d1a0f96e890f52f'
-            '171525009003a9ed1182cfcb6f407d7169d9a731a474304e263029376719f55a'
-            '3cfe46e181cb9d337c454b5b5adbf5297052f29cd617cdee4380eeb1943825d8'
-            '59a59a60a08b335fe8647fdf0f9d2288d236ebf2cc9626396d0c4d032fd2b25d'
-            '76ceebd14c9a6f1ea6a05b1613e64d1e2aca595e0f0b3e9497e3eeee33ed756c'
-            '66db9132d6f5e06aa26e5de0924f814224a76a9bdf4b61afce161fb1d7643b22'
+sha256sums=('36a99d29c2e93a9975be53648f2cd3ffa4ee43730f217a2e7ed88c1901a671e8'
+            '213e50f48b67feb4441078d50b0fd431df34323be15be97c55302d3fdac4483a'
+            '090af7eab39aade15a1786273f2497d6b4abfaef24279fbf97ce0dd1c38c69aa'
+            'd0b17162211dd49e3a58c16d1697e7d8c322dcfd3b7890f0c2f920b711f52293'
             'dd317f85e5abfdcfc89c6f23f4c8edbcdebdd5e083dcec770e5da49ee647d150'
-            '2fccecdcd4509d4c36af873988ca9dbcba7fdb95122894a9fdf502c33a1d7a4b'
+            '1a9e074f417f8ffd78bcd6874d8e2e74a239905bf662f76a7755fa40dc476b57'
+            '56acb6e743d2ab1ed9f3eb01700ade02521769978d03ac43226dec94659b3ace'
+            '2a97b26c3d6821b15ef4ef1369905c6fa3e9c8da4877eb9af4361452a425290b'
             'e393174d7695d0bafed69e868c5fbfecf07aa6969f3b64596d0bae8b067e1711')
 
 # Possible replacements are listed in build/linux/unbundle/replace_gn_files.py
@@ -94,20 +92,30 @@ prepare() {
   # runtime -- this allows signing into Chromium without baked-in values
   patch -Np1 -i ../use-oauth2-client-switches-as-default.patch
 
-  # https://crbug.com/1164975
-  patch -Np1 -i ../chromium-glibc-2.33.patch
+  # Fix build with older ffmpeg
+  patch -Np1 -i ../chromium-93-ffmpeg-4.4.patch
+
+  # Revert change to custom function av_stream_get_first_dts; will need to
+  # switch to bundled ffmpeg when we're no longer using ffmpeg 4.4 in Arch
+  # Upstream commit that made first_dts internal causing Chromium to add a
+  # custom function: https://github.com/FFmpeg/FFmpeg/commit/591b88e6787c4
+  # https://crbug.com/1251779
+  patch -Rp1 -i ../chromium-94-ffmpeg-roll.patch
+
+  # https://crbug.com/1207478
+  patch -Np0 -i ../unexpire-accelerated-video-decode-flag.patch
 
   # Upstream fixes
-  patch -Np1 -i ../fix-crash-in-ThemeService.patch
-  patch -Np1 -i ../unbundle-use-char16_t-as-UCHAR_TYPE.patch
-  patch -Np1 -i ../make-dom-distiller-protoc-plugin-call-py2.7.patch
-  patch -Np1 -i ../extend-enable-accelerated-video-decode-flag.patch
+  patch -Np1 -i ../unbundle-fix-visibility-of-build-config-freetype.patch
 
   # https://chromium-review.googlesource.com/c/chromium/src/+/2862724
   patch -Np1 -i ../sql-make-VirtualCursor-standard-layout-type.patch
 
   # Fixes for building with libstdc++ instead of libc++
-  patch -Np1 -i ../patches/chromium-90-ruy-include.patch
+  patch -Np1 -i ../patches/chromium-96-CommandLine-include.patch
+  patch -Np1 -i ../patches/chromium-96-RestrictedCookieManager-tuple.patch
+  patch -Np1 -i ../patches/chromium-96-DrmRenderNodePathFinder-include.patch
+  patch -Np1 -i ../patches/chromium-96-CouponDB-include.patch
 
   # Link to system tools required by the build
   mkdir -p third_party/node/linux/node-linux-x64/bin
@@ -147,7 +155,8 @@ build() {
     'clang_use_chrome_plugins=false'
     'is_official_build=true' # implies is_cfi=true on x86_64
     'treat_warnings_as_errors=false'
-    'fieldtrial_testing_like_official_build=true'
+    'disable_fieldtrial_testing_config=true'
+    'blink_enable_generated_code_formatting=false'
     'ffmpeg_branding="Chrome"'
     'proprietary_codecs=true'
     'rtc_use_pipewire=true'
@@ -217,6 +226,8 @@ package() {
   local toplevel_files=(
     chrome_100_percent.pak
     chrome_200_percent.pak
+    chrome_crashpad_handler
+    chromedriver
     resources.pak
     v8_context_snapshot.bin
 
@@ -224,7 +235,9 @@ package() {
     libEGL.so
     libGLESv2.so
 
-    chromedriver
+    # SwiftShader ICD
+    libvk_swiftshader.so
+    vk_swiftshader_icd.json
   )
 
   if [[ -z ${_system_libs[icu]+set} ]]; then

@@ -2,24 +2,24 @@
 # Contributor: Jan de Groot <jgc@archlinux.org>
 
 pkgname=epiphany
-pkgver=40.2
+pkgver=41.3
 pkgrel=2
 pkgdesc="A GNOME web browser based on the WebKit rendering engine"
 url="https://wiki.gnome.org/Apps/Web"
 arch=(loongarch64 x86_64)
 license=(GPL)
-depends=(webkit2gtk gcr icu libdazzle libhandy libportal libarchive)
+depends=(webkit2gtk-4.1 gcr icu libdazzle libhandy libarchive)
 makedepends=(docbook-xml startup-notification lsb-release gobject-introspection
              yelp-tools git meson)
 checkdepends=(xorg-server-xvfb aspell hspell hunspell nuspell libvoikko)
 groups=(gnome)
-_commit=95552d19b3fc8c7e1c014db301390a0a517dc3e6  # tags/40.2^0
+_commit=ce3713dfd4f69275c2c46a6687c24deb8b8aa367  # tags/41.3^0
 source=("git+https://gitlab.gnome.org/GNOME/epiphany.git#commit=$_commit")
 sha256sums=('SKIP')
 
 pkgver() {
   cd $pkgname
-  git describe --tags | sed 's/-/+/g'
+  git describe --tags | sed 's/[^-]*-g/r&/;s/-/+/g'
 }
 
 prepare() {
@@ -27,13 +27,12 @@ prepare() {
 }
 
 build() {
-  arch-meson $pkgname build
+  arch-meson $pkgname build -D soup2=disabled -D libportal=disabled
   meson compile -C build
 }
 
 check() {
-  dbus-run-session xvfb-run \
-    -s '-screen 0 1920x1080x24 -nolisten local' \
+  dbus-run-session xvfb-run -s '-nolisten local' \
     meson test -C build --print-errorlogs
 }
 

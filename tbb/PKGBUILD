@@ -5,32 +5,32 @@
 # Contributor: Bogdan Burlacu <bogdan.burlacu AT pm.me>
 
 pkgname=tbb
-pkgver=2020.3
+pkgver=2021.5.0
 pkgrel=1
 pkgdesc='High level abstract threading library'
 arch=('loongarch64' 'x86_64')
 url='https://www.threadingbuildingblocks.org/'
 license=('Apache')
-depends=('gcc-libs')
-makedepends=('cmake' 'inetutils')
+depends=('gcc-libs' 'hwloc')
+makedepends=('cmake' 'inetutils' 'ninja' 'python' 'swig')
 conflicts=('intel-tbb')
 provides=("intel-tbb=$pkgver")
 replaces=('intel-tbb')
 source=(https://github.com/oneapi-src/oneTBB/archive/v$pkgver/$pkgname-$pkgver.tar.gz)
-sha512sums=('ea1ffd22c7234d715b8c46a4e51b40719c7a9b8837ab3166f1da5a2c6061167c2be2126b1d74fd361eec6975b8fce0df26829ca2e7af8029edbb52e40f23d630')
+sha512sums=('0e7b71022e397a6d7abb0cea106847935ae79a1e12a6976f8d038668c6eca8775ed971202c5bd518f7e517092b67af805cc5feb04b5c3a40e9fbf972cc703a46')
 
 build() {
   cd oneTBB-$pkgver
-  make
+  cmake -GNinja -DCMAKE_INSTALL_PREFIX=/usr -DTBB4PY_BUILD=ON .
+  ninja all python_build
+}
+
+check() {
+  cd oneTBB-$pkgver
+  ninja test
 }
 
 package() {
   cd oneTBB-$pkgver
-  install -Dm755 build/linux_*/*.so* -t "$pkgdir"/usr/lib
-  install -d "$pkgdir"/usr/include
-  cp -a include/tbb "$pkgdir"/usr/include
-  cmake \
-    -DINSTALL_DIR="$pkgdir"/usr/lib/cmake/TBB \
-    -DSYSTEM_NAME=Linux -DTBB_VERSION_FILE="$pkgdir"/usr/include/tbb/tbb_stddef.h \
-    -P cmake/tbb_config_installer.cmake
+  DESTDIR="$pkgdir" ninja install
 }

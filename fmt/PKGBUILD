@@ -2,8 +2,8 @@
 # Contributor: Mihai Bişog <mihai.bisog@gmail.com>
 
 pkgname=fmt
-pkgver=7.1.3
-pkgrel=1
+pkgver=8.0.1
+pkgrel=2
 pkgdesc='Open-source formatting library for C++'
 arch=(loongarch64 x86_64)
 url=https://fmt.dev
@@ -19,19 +19,27 @@ makedepends=(
   python-virtualenv
 )
 provides=(libfmt.so)
-_tag=7bdf0628b1276379886c7f6dda2cef2b3b374f0b
+_tag=d141cdbeb0fb422a3fb7173b285fd38e0d1772dc
 source=(git+https://github.com/fmtlib/fmt.git#tag=${_tag})
 b2sums=(SKIP)
 
-pkgver() {
-  cd fmt
-
-  git describe --tags
-}
-
 prepare() {
+  pushd fmt
+  # https://github.com/fmtlib/fmt/pull/2376
+  git cherry-pick -n c9a10631cb3a656b0a0a3ba3cf0ef7ea541df30f
+  # https://github.com/fmtlib/fmt/pull/2432
+  git cherry-pick -n 55d3c4831d67141265c9462360d20787413e692e
+  # https://github.com/fmtlib/fmt/pull/2575
+  git cherry-pick -n 6eaceb5f73f12943376c833a8433b38ff7faed10
+  popd
+
   npm install less less-plugin-clean-css
   sed "s/'lessc',/'npx', 'lessc',/" -i fmt/doc/build.py
+}
+
+pkgver() {
+  cd fmt
+  git describe --tags
 }
 
 build() {
@@ -39,7 +47,7 @@ build() {
     -DCMAKE_BUILD_TYPE=None \
     -DCMAKE_INSTALL_PREFIX=/usr \
     -DCMAKE_INSTALL_LIBDIR=/usr/lib \
-    -DBUILD_SHARED_LIBS=1
+    -DBUILD_SHARED_LIBS=ON
   cmake --build build
   cmake --build build --target doc
 }
@@ -50,7 +58,7 @@ check() {
 
 package() {
   DESTDIR="${pkgdir}" cmake --build build --target install
-  install -Dm 644 fmt/LICENSE.rst -t "${pkgdir}"/usr/share/licenses/fmt
+  install -Dm 644 fmt/LICENSE.rst -t "${pkgdir}"/usr/share/licenses/fmt/
 }
 
 # vim: ts=2 sw=2 et:

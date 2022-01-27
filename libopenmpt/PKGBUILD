@@ -1,0 +1,54 @@
+# Maintainer: David Runge <dvzrv@archlinux.org>
+
+pkgname=libopenmpt
+pkgver=0.6.0
+pkgrel=1
+pkgdesc="A library to render tracker music to a PCM audio stream"
+arch=(loongarch64 x86_64)
+url="https://lib.openmpt.org/libopenmpt/"
+license=(BSD)
+depends=(
+  flac libFLAC.so
+  gcc-libs
+  glibc
+  libogg libogg.so
+  libpulse libpulse.so libpulse-simple.so
+  libsndfile libsndfile.so
+  libvorbis libvorbis.so libvorbisfile.so
+  mpg123 libmpg123.so
+  portaudio libportaudio.so
+)
+makedepends=(autoconf-archive doxygen help2man)
+# TODO: remove provides/replaces on openmpt123 after 2022-05-01
+provides=(libopenmpt.so openmpt123)
+replaces=(openmpt123)
+source=(
+  "$pkgname-$pkgver.tar.gz::https://lib.openmpt.org/files/libopenmpt/src/${pkgname}-${pkgver}+release.autotools.tar.gz"
+)
+sha512sums=('8da6cf1f2dbf683c32f45cbf884784360cced5e21f9862c96a1a679bd90b36be9a7cc59accbf82271a804722986cb81e75915f6564aeaaa248ed3e967dfdfb1a')
+b2sums=('44cf8c5f725d2b11409d23e293dca0c151cad17c029da7f70a22366e75baa1b49b763f67d617d84a142efd3933b90344ccca5d881e5c724e2cfe0210170593dc')
+
+prepare() {
+  mv -v "$pkgname-$pkgver+release.autotools" "$pkgname-$pkgver"
+  cd "$pkgname-$pkgver"
+  autoreconf -fiv
+}
+
+build() {
+  cd "$pkgname-$pkgver"
+  ./configure --prefix=/usr
+  # prevent excessive overlinking due to libtool
+  sed -i -e 's/ -shared / -Wl,-O1,--as-needed\0/g' libtool
+  make
+}
+
+check() {
+  cd "$pkgname-$pkgver"
+  make -k check
+}
+
+package() {
+  cd "$pkgname-$pkgver"
+  make DESTDIR="$pkgdir/" install
+  install -vDm 644 LICENSE -t "${pkgdir}/usr/share/licenses/${pkgname}/"
+}

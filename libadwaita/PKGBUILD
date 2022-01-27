@@ -1,22 +1,24 @@
 # Maintainer: Jan Alexander Steffens (heftig) <heftig@archlinux.org>
 
 pkgbase=libadwaita
-pkgname=(libadwaita libadwaita-docs)
-pkgver=1.0.0alpha.1
+pkgname=(libadwaita libadwaita-docs libadwaita-demos)
+pkgver=1.0.0
 pkgrel=1
-pkgdesc="Building blocks for modern GNOME applications"
-url="https://gitlab.gnome.org/GNOME/libadwaita"
+epoch=1
+pkgdesc="Building blocks for modern adaptive GNOME applications"
+url="https://gnome.pages.gitlab.gnome.org/libadwaita/"
 arch=(loongarch64 x86_64)
 license=(LGPL)
 depends=(gtk4)
 makedepends=(git meson gi-docgen sassc gobject-introspection vala)
-_commit=faa9f26a2b8a89923c0b83d42e84078f672c19ec  # tags/1.0.0-alpha.1^0
+checkdepends=(weston)
+_commit=8896cb224e7bd737b7f99bba5a10b56e89f034c4  # tags/1.0.0^0
 source=("git+https://gitlab.gnome.org/GNOME/libadwaita.git#commit=$_commit")
 sha256sums=('SKIP')
 
 pkgver() {
   cd $pkgname
-  git describe --tags | sed -r 's/-([a-z])/\1/;s/-/+/g'
+  git describe --tags | sed -r 's/\.([a-z])/\1/;s/[^-]*-g/r&/;s/-/+/g'
 }
 
 prepare() {
@@ -27,6 +29,18 @@ build() {
   arch-meson $pkgname build -D gtk_doc=true
   meson compile -C build
 }
+
+check() (
+  export XDG_RUNTIME_DIR="$PWD/runtime-dir" WAYLAND_DISPLAY=wayland-5
+
+  mkdir -p -m 700 "$XDG_RUNTIME_DIR"
+  weston --backend=headless-backend.so --socket=$WAYLAND_DISPLAY --idle-time=0 &
+  _w=$!
+
+  trap "kill $_w; wait" EXIT
+
+  meson test -C build --print-errorlogs
+)
 
 _pick() {
   local p="$1" f d; shift
@@ -47,12 +61,23 @@ package_libadwaita() {
   cd "$pkgdir"
 
   _pick docs usr/share/doc
+
+  _pick demo usr/bin/adwaita-1-demo
+  _pick demo usr/share/applications/org.gnome.Adwaita1.Demo.desktop
+  _pick demo usr/share/icons/hicolor/*/apps/org.gnome.Adwaita1.Demo[-.]*
+  _pick demo usr/share/metainfo/org.gnome.Adwaita1.Demo.metainfo.xml
 }
 
 package_libadwaita-docs() {
   pkgdesc+=" (documentation)"
   depends=()
   mv docs/* "$pkgdir"
+}
+
+package_libadwaita-demos() {
+  pkgdesc+=" (demo applications)"
+  depends=(libadwaita)
+  mv demo/* "$pkgdir"
 }
 
 # vim:set sw=2 et:

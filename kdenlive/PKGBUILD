@@ -5,45 +5,32 @@
 # Contributor: Gustavo Alvarez <sl1pkn07@gmail.com>
 
 pkgname=kdenlive
-pkgver=21.04.2
-pkgrel=2
+pkgver=21.12.0
+pkgrel=1
 pkgdesc='A non-linear video editor for Linux using the MLT video framework'
 arch=(loongarch64 x86_64)
 url='https://apps.kde.org/kdenlive/'
 license=(GPL)
 groups=(kde-applications kde-multimedia)
-depends=(qt5-networkauth knewstuff knotifyconfig kfilemetadata purpose mlt6 rttr breeze-icons frei0r-plugins)
-makedepends=(extra-cmake-modules kdoctools v4l-utils)
+depends=(qt5-networkauth knewstuff knotifyconfig kfilemetadata purpose mlt breeze-icons frei0r-plugins)
+makedepends=(extra-cmake-modules kdoctools v4l-utils doxygen qt5-tools)
 optdepends=('ffmpeg: for FFmpeg plugin'
-            'cdrtools: for creation of DVD ISO images'
-            'dvdauthor: for creation of DVD'
             'dvgrab: for firewire capture'
             'recordmydesktop: for screen capture'
-            'xine-ui: for DVD preview'
-            'vlc: for DVD preview'
             'opencv: for motion tracking'
             'plasma-desktop: theme configuration'
             'opentimelineio: timeline export/import')
-source=(https://download.kde.org/stable/release-service/$pkgver/src/$pkgname-$pkgver.tar.xz{,.sig}
-        kdenlive-mlt6.patch
-        https://invent.kde.org/multimedia/kdenlive/commit/185b3036.patch)
-sha256sums=('5510106b6bdda3f2048702b23d90f7438d4ec4d2ddb932e53df716e6d4afdd4f'
-            'SKIP'
-            'db0819cea73fc7c2926c39a3de66fba86e94a6ca2e1f97e7bad1166ac6aec5bb'
-            '2b82e00650db2e63c6717a00550158bd748a2c0556e4620344e18b4a52ae20a0')
+source=(https://download.kde.org/stable/release-service/$pkgver/src/$pkgname-$pkgver.tar.xz{,.sig})
+sha256sums=('e11d2ee058d89ad1c7b8bb230bf3e26e9c4b8fdf7fb98fc790de7e4a1bd77420'
+            'SKIP')
 validpgpkeys=(CA262C6C83DE4D2FB28A332A3A6A4DB839EAA6D7  # Albert Astals Cid <aacid@kde.org>
               F23275E4BF10AFC1DF6914A6DBD2CE893E2D1C87  # Christoph Feck <cfeck@kde.org>
               D81C0CB38EB725EF6691C385BB463350D6EF31EF) # Heiko Becker <heiko.becker@kde.org>
 
-prepare() {
-  patch -d $pkgname-$pkgver -p1 < kdenlive-mlt6.patch # Use melt6 executable name
-  patch -d $pkgname-$pkgver -p1 < 185b3036.patch # Fix startup crash on Wayland
-}
-
 build() {
   cmake -B build -S $pkgname-$pkgver \
     -DBUILD_TESTING=OFF \
-    -DCRASH_AUTO_TEST=ON
+    -DBUILD_QCH=ON
   cmake --build build
 }
 

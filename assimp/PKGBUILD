@@ -1,9 +1,9 @@
-# Maintainer: Sven-Hendrik Haase <svenstaro@gmail.com>
+# Maintainer: Sven-Hendrik Haase <svenstaro@archlinux.org>
 # Contributor: jepaan <jepaan at hotmail dot com>
 
 pkgname=assimp
-pkgver=5.0.1
-pkgrel=3
+pkgver=5.1.4
+pkgrel=1
 pkgdesc="Library to import various well-known 3D model formats in an uniform manner"
 arch=('loongarch64' 'x86_64')
 license=('BSD')
@@ -11,12 +11,12 @@ depends=('zlib' 'gcc-libs')
 makedepends=('cmake' 'ninja')
 url='https://assimp.org/'
 source=("$pkgname-$pkgver.tar.gz::https://github.com/assimp/assimp/archive/v${pkgver}.tar.gz")
-sha512sums=('51b704ffea778638b9e228578650f62691c56ee1a90337f8bbbee37e807455466d818234be24852334e5806260e5690932c9bd8e00f055c5c26782e0636538f0')
+sha512sums=('c209847424d08e063e9e7cff189ffac2bed1ccb13ba5f1542dfe750ae8041420163881d7a4add8d27e53336674e77451695f5bc1ba974bd7c7e8738d50f0e5a7')
 
 build() {
     cd ${pkgname}-${pkgver}
 
-    cmake . \
+    cmake \
         -Bbuild \
         -GNinja \
         -DCMAKE_INSTALL_PREFIX=/usr \
@@ -30,8 +30,4 @@ package()  {
 
     DESTDIR="$pkgdir" ninja -C build install
     install -Dm644 LICENSE "${pkgdir}"/usr/share/licenses/${pkgname}/LICENSE
-
-    # Remove this in release > 5.0.1
-    # https://bugs.archlinux.org/task/67735
-    sed -i "s|includedir=.*|includedir=/usr/include/assimp|" "${pkgdir}"/usr/lib/pkgconfig/assimp.pc
 }

@@ -2,7 +2,7 @@
 # Contributor: Jan de Groot <jan@archlinux.org>
 
 pkgname=gnome-desktop
-pkgver=40.2
+pkgver=41.2
 pkgrel=1
 epoch=1
 pkgdesc="Library with common API for various GNOME modules"
@@ -14,13 +14,13 @@ depends=(gsettings-desktop-schemas gtk3 xkeyboard-config iso-codes libseccomp
 makedepends=(gobject-introspection git meson gtk-doc yelp-tools)
 checkdepends=(xorg-server-xvfb)
 provides=(libgnome-desktop-3.so)
-_commit=e708fc1a15dd96e362988b494acbc8e24fdf2ddd  # tags/40.2^0
+_commit=67ec3af26d30d3ef8ed57fc1e8cc6524e0ed60dc  # tags/41.2^0
 source=("git+https://gitlab.gnome.org/GNOME/gnome-desktop.git#commit=$_commit")
 sha256sums=('SKIP')
 
 pkgver() {
   cd $pkgname
-  git describe --tags | sed 's/-/+/g'
+  git describe --tags | sed 's/[^-]*-g/r&/;s/-/+/g'
 }
 
 prepare() {
@@ -37,8 +37,7 @@ build() {
 }
 
 check() {
-  dbus-run-session xvfb-run \
-    -s '-screen 0 1920x1080x24 -nolisten local' \
+  dbus-run-session xvfb-run -s '-nolisten local' \
     meson test -C build --print-errorlogs
 }
 

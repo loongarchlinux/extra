@@ -2,33 +2,26 @@
 # Contributor: Daniel Bermond < yahoo-com: danielbermond >
 
 pkgname=libraqm
-pkgver=0.7.1
+pkgver=0.8.0
 pkgrel=1
 pkgdesc='A library that encapsulates the logic for complex text layout'
 arch=(loongarch64 x86_64)
 url='https://github.com/HOST-Oman/libraqm/'
 license=(MIT)
 depends=(freetype2 fribidi)
-makedepends=(gtk-doc)
-source=(https://github.com/HOST-Oman/libraqm/releases/download/v$pkgver/raqm-$pkgver.tar.gz)
-sha256sums=('86488cf0b8ac736943fa748bd812000db63cc5ab6ad69c942e68e5187f4b9828')
+makedepends=(meson gtk-doc)
+source=(https://github.com/HOST-Oman/libraqm/releases/download/v$pkgver/raqm-$pkgver.tar.xz)
+sha256sums=('e9b5ed5e6c1ed1341307d3fba5e325cd65af60f89616597c4a191b1aa6e95d1e')
 
 build() {
-  cd raqm-$pkgver
-  ./configure \
+  meson build raqm-$pkgver \
     --prefix=/usr \
-    --enable-static=no \
-    --enable-shared=yes \
-    --enable-fast-install=yes \
-    --enable-gtk-doc=yes \
-    --enable-gtk-doc-html=yes \
-    --enable-gtk-doc-pdf=no
-  make
+    -D docs=true
+  meson compile -C build
 }
 
 package() {
-  cd raqm-$pkgver
+  meson install -C build --destdir "$pkgdir"
 
-  make DESTDIR="$pkgdir" install
-  install -D -m644 COPYING "$pkgdir"/usr/share/licenses/$pkgname/LICENSE
+  install -D -m644 raqm-$pkgver/COPYING "$pkgdir"/usr/share/licenses/$pkgname/LICENSE
 }

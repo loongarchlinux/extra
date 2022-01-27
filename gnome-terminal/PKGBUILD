@@ -2,16 +2,16 @@
 # Contributor: Jan de Groot <jgc@archlinux.org>
 
 pkgname=gnome-terminal
-pkgver=3.40.2
+pkgver=3.42.2
 pkgrel=1
 pkgdesc="The GNOME Terminal Emulator"
 url="https://wiki.gnome.org/Apps/Terminal"
 arch=(loongarch64 x86_64)
 license=(GPL)
-depends=('vte3>=0.64.0' gsettings-desktop-schemas)
-makedepends=(docbook-xsl libnautilus-extension gnome-shell yelp-tools git)
+depends=('vte3>=0.66.0' gsettings-desktop-schemas)
+makedepends=(docbook-xsl libnautilus-extension gnome-shell yelp-tools git meson)
 groups=(gnome)
-_commit=417a3ada79e042a119a4c9c99adc866de127bfd5  # tags/3.40.2^0
+_commit=f300eed28e6755458ebaaecd9a8fe5f6b4ca29cd  # tags/3.42.2^0
 source=("git+https://gitlab.gnome.org/GNOME/gnome-terminal.git#commit=$_commit")
 sha256sums=('SKIP')
 
@@ -22,23 +22,17 @@ pkgver() {
 
 prepare() {
   cd $pkgname
-  NOCONFIGURE=1 ./autogen.sh
 }
 
 build() {
-  cd $pkgname
-  ./configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var \
-    --libexecdir=/usr/lib --disable-static --with-nautilus-extension
-  sed -i -e 's/ -shared / -Wl,-O1,--as-needed\0/g' libtool
-  make
+  arch-meson $pkgname build
+  meson compile -C build
 }
 
 check() {
-  cd $pkgname
-  make check
+  meson test -C build --print-errorlogs
 }
 
 package() {
-  cd $pkgname
-  make DESTDIR="$pkgdir" install
+  meson install -C build --destdir "$pkgdir"
 }

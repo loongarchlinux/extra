@@ -3,7 +3,7 @@
 # Contributor: Jakub Schmidtke <sjakub@gmail.com>
 
 pkgname=firefox
-pkgver=89.0.2
+pkgver=95.0.2
 pkgrel=1
 pkgdesc="Standalone web browser from mozilla.org"
 arch=(loongarch64 x86_64)
@@ -11,8 +11,9 @@ license=(MPL GPL LGPL)
 url="https://www.mozilla.org/firefox/"
 depends=(gtk3 libxt mime-types dbus-glib ffmpeg nss ttf-font libpulse)
 makedepends=(unzip zip diffutils yasm mesa imake inetutils xorg-server-xvfb
-             autoconf2.13 rust clang llvm jack gtk2 nodejs cbindgen nasm
-             python-setuptools python-psutil python-zstandard lld dump_syms)
+             autoconf2.13 rust clang llvm jack nodejs cbindgen nasm
+             python-setuptools python-psutil python-zstandard lld dump_syms
+             wasi-compiler-rt wasi-libc wasi-libc++ wasi-libc++abi)
 optdepends=('networkmanager: Location detection via available WiFi networks'
             'libnotify: Notification integration'
             'pulseaudio: Audio support'
@@ -22,11 +23,14 @@ optdepends=('networkmanager: Location detection via available WiFi networks'
 options=(!emptydirs !makeflags !strip)
 source=(https://archive.mozilla.org/pub/firefox/releases/$pkgver/source/firefox-$pkgver.source.tar.xz{,.asc}
         0001-Use-remoting-name-for-GDK-application-names.patch
-        $pkgname.desktop)
-sha256sums=('3225f583c5e36bdf52ad16f71a2c359deb0c765c38205acdeb6b7b6520ac5494'
+        0002-Bug-1745560-Add-missing-stub-for-wl_proxy_marshal_fl.patch
+        $pkgname.desktop identity-icons-brand.svg)
+sha256sums=('c178cbf61979bd39a8daa9a09c6e03089da37baded692ad1f745ecfcaae74d64'
             'SKIP'
-            '98b6b30973bb1e12e17e8a78baf7d1db0d5085f35252f4611870bb23e8faeff1'
-            '298eae9de76ec53182f38d5c549d0379569916eebf62149f9d7f4a7edef36abf')
+            'a7a5ea4680c0a4c6eb5a5f99970008f5ad3e2f29f0d6d050aa651bce8c713718'
+            '8a893ae44955c90a0fb4a504134773293054ab57a41ba7931df98c8cf5449549'
+            '298eae9de76ec53182f38d5c549d0379569916eebf62149f9d7f4a7edef36abf'
+            'a9b8b4a0a1f4a7b4af77d5fc70c2686d624038909263c795ecc81e0aec7711e9')
 validpgpkeys=('14F26682D0916CDD81E37B6D61B7B526D98F0353') # Mozilla Software Releases <release@mozilla.com>
 
 # Google API keys (see http://www.chromium.org/developers/how-tos/api-keys)
@@ -48,6 +52,9 @@ prepare() {
   # https://bugzilla.mozilla.org/show_bug.cgi?id=1530052
   patch -Np1 -i ../0001-Use-remoting-name-for-GDK-application-names.patch
 
+  # Fix build with wayland 1.20
+  patch -Np1 -i ../0002-Bug-1745560-Add-missing-stub-for-wl_proxy_marshal_fl.patch
+
   echo -n "$_google_api_key" >google-api-key
   echo -n "$_mozilla_api_key" >mozilla-api-key
 
@@ -62,6 +69,8 @@ ac_add_options --enable-optimize
 ac_add_options --enable-rust-simd
 ac_add_options --enable-linker=lld
 ac_add_options --disable-elf-hack
+ac_add_options --disable-bootstrap
+ac_add_options --with-wasi-sysroot=/usr/share/wasi-sysroot
 
 # Branding
 ac_add_options --enable-official-branding
@@ -71,7 +80,6 @@ ac_add_options --with-unsigned-addon-scopes=app,system
 ac_add_options --allow-addon-sideload
 export MOZILLA_OFFICIAL=1
 export MOZ_APP_REMOTINGNAME=${pkgname//-/}
-export MOZ_REQUIRE_SIGNING=1
 
 # Keys
 ac_add_options --with-google-location-service-api-keyfile=${PWD@Q}/google-api-key
@@ -179,7 +187,9 @@ END
     "$pkgdir/usr/share/icons/hicolor/192x192/apps/$pkgname.png"
   install -Dvm644 browser/branding/$theme/content/about-logo@2x.png \
     "$pkgdir/usr/share/icons/hicolor/384x384/apps/$pkgname.png"
-  install -Dvm644 browser/branding/$theme/content/identity-icons-brand.svg \
+  install -Dvm644 browser/branding/$theme/content/about-logo.svg \
+    "$pkgdir/usr/share/icons/hicolor/scalable/apps/$pkgname.svg"
+  install -Dvm644 ../identity-icons-brand.svg \
     "$pkgdir/usr/share/icons/hicolor/symbolic/apps/$pkgname-symbolic.svg"
 
   install -Dvm644 ../$pkgname.desktop \

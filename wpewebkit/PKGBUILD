@@ -1,14 +1,14 @@
 # Maintainer: Jan Alexander Steffens (heftig) <heftig@archlinux.org>
 
 pkgname=wpewebkit
-pkgver=2.32.1
+pkgver=2.34.3
 pkgrel=1
 pkgdesc="Web content engine for embedded devices"
 url="https://wpewebkit.org"
 arch=(loongarch64 x86_64)
 license=(custom)
 depends=(cairo fontconfig freetype2 glib2 harfbuzz harfbuzz-icu icu libjpeg
-         libepoxy libgcrypt libsoup libxml2 zlib libpng sqlite libwebp libwpe
+         libepoxy libgcrypt libsoup3 libxml2 zlib libpng sqlite libwebp libwpe
          atk at-spi2-atk openjpeg2 woff2 libtasn1 libxslt libsystemd bubblewrap
          libseccomp xdg-dbus-proxy gstreamer gst-plugins-base-libs libxkbcommon
          wayland wpebackend-fdo)
@@ -18,14 +18,16 @@ optdepends=('geoclue: Geolocation support'
             'gst-plugins-good: media decoding'
             'gst-plugins-bad: media decoding'
             'gst-libav: nonfree media decoding')
-source=($url/releases/$pkgname-$pkgver.tar.xz{,.asc})
-sha256sums=('7b6b39a12ccf3f84da4cc6ac59e02fbe328f7476eaeb9c23de9b9288c2c2f39c'
-            'SKIP')
+source=($url/releases/$pkgname-$pkgver.tar.xz{,.asc} fix-doc.diff)
+sha256sums=('c35de4bfce35c81cbd6c1da27879b4ea33e20bd51d750ce296a4d100d45f40fc'
+            'SKIP'
+            'd8406f972334b22c7bcad4b105f4fe3e1c9f3dda5b396dbf912afa01fc121d8f')
 validpgpkeys=('D7FCF61CF9A2DEAB31D81BD3F3D322D0EC4582C3'  # Carlos Garcia Campos <cgarcia@igalia.com>
               '5AA3BC334FD7E3369E7C77B291C559DBE4C9123B') # Adrián Pérez de Castro <aperez@igalia.com>
 
 prepare() {
   cd $pkgname-$pkgver
+  patch -Np1 -i ../fix-doc.diff
 }
 
 build() {
@@ -43,7 +45,7 @@ build() {
 
 package() {
   depends+=(libwpe-1.0.so libWPEBackend-fdo-1.0.so)
-  provides+=(libWPEWebKit-1.0.so)
+  provides+=(libWPEWebKit-1.1.so)
 
   DESTDIR="$pkgdir" cmake --install build
 

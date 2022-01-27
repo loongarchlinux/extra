@@ -3,7 +3,7 @@
 
 pkgbase=harfbuzz
 pkgname=(harfbuzz harfbuzz-icu)
-pkgver=2.8.1
+pkgver=3.2.0
 pkgrel=1
 pkgdesc="OpenType text shaping engine"
 url="https://www.freedesktop.org/wiki/Software/HarfBuzz"
@@ -12,13 +12,13 @@ license=(MIT)
 makedepends=(glib2 freetype2 graphite cairo icu gobject-introspection gtk-doc
              ragel git python meson chafa)
 checkdepends=(python-fonttools python-setuptools)
-_commit=b37f03f16b39d397a626f097858e9ae550234ca0  # tags/2.8.1^0
+_commit=be91d2917d9860326cb5fd1d03ffe1042a72f6d3  # tags/3.2.0^0
 source=("git+https://github.com/harfbuzz/harfbuzz#commit=$_commit")
 sha256sums=('SKIP')
 
 pkgver() {
   cd harfbuzz
-  git describe --tags | sed 's/-/+/g'
+  git describe --tags | sed 's/[^-]*-g/r&/;s/-/+/g'
 }
 
 prepare() {
@@ -27,7 +27,7 @@ prepare() {
 
 build() {
   arch-meson harfbuzz build \
-    -D graphite=enabled
+    -D graphite2=enabled
   meson compile -C build
 }
 
@@ -37,6 +37,16 @@ check() {
   rm -r tmp
 }
 
+_pick() {
+  local p="$1" f d; shift
+  for f; do
+    d="$srcdir/$p/${f#$pkgdir/}"
+    mkdir -p "$(dirname "$d")"
+    mv "$f" "$d"
+    rmdir -p --ignore-fail-on-non-empty "$(dirname "$f")"
+  done
+}
+
 package_harfbuzz() {
   depends=(glib2 freetype2 graphite libglib-2.0.so libfreetype.so
            libgobject-2.0.so)
@@ -44,20 +54,21 @@ package_harfbuzz() {
   optdepends=('cairo: hb-view program'
               'chafa: hb-view program')
 
-  DESTDIR="$pkgdir" meson install -C build
+  meson install -C build --destdir "$pkgdir"
 
-  # Split harfbuzz-icu
-  mkdir -p hb-icu/usr/{include/harfbuzz,lib/pkgconfig}
-  mv -t hb-icu/usr/lib "$pkgdir"/usr/lib/libharfbuzz-icu*
-  mv -t hb-icu/usr/lib/pkgconfig "$pkgdir"/usr/lib/pkgconfig/harfbuzz-icu.pc
-  mv -t hb-icu/usr/include/harfbuzz "$pkgdir"/usr/include/harfbuzz/hb-icu.h
+  ( cd "$pkgdir"
+
+    _pick hb-icu usr/lib/libharfbuzz-icu*
+    _pick hb-icu usr/lib/pkgconfig/harfbuzz-icu.pc
+    _pick hb-icu usr/include/harfbuzz/hb-icu.h
+  )
 
   install -Dt "$pkgdir/usr/share/licenses/$pkgname" -m644 harfbuzz/COPYING
 }
 
 package_harfbuzz-icu() {
-  pkgdesc="$pkgdesc (ICU integration)"
-  depends=("harfbuzz=$pkgver-$pkgrel" icu libharfbuzz.so)
+  pkgdesc+=" - ICU integration"
+  depends=("harfbuzz=$pkgver-$pkgrel" libicuuc.so libharfbuzz.so)
   provides=(libharfbuzz-icu.so)
 
   mv hb-icu/* "$pkgdir"

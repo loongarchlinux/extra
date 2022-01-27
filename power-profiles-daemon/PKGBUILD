@@ -1,0 +1,31 @@
+# Maintainer: Antonio Rojas <arojas@archlinux.org>
+# Contributor: tinywrkb <tinywrkb@gmail.com>
+
+pkgname=power-profiles-daemon
+pkgver=0.10.1
+pkgrel=1
+pkgdesc='Makes power profiles handling available over D-Bus'
+url='https://gitlab.freedesktop.org/hadess/power-profiles-daemon'
+license=(GPL3)
+arch=(loongarch64 x86_64)
+depends=(upower polkit)
+optdepends=('python-gobject: for powerprofilesctl')
+makedepends=(meson)
+checkdepends=(python-dbusmock python-isort python-mccabe umockdev)
+source=(https://gitlab.freedesktop.org/hadess/power-profiles-daemon/-/archive/$pkgver/$pkgname-$pkgver.tar.gz)
+b2sums=('a6db0c55e9109fe0ff83564c186e09c57c46999d2c44cae385772094a2c6d7f7129b3ded62ea1e921756a507fffba6d44809d6b01a05beacdfc2a5cd41934162')
+
+build() {
+  meson $pkgname-$pkgver build \
+    --prefix /usr \
+    --libexec lib
+  meson compile -C build
+}
+
+check() {
+  meson test -C build
+}
+
+package() {
+  meson install -C build --destdir "$pkgdir"
+}

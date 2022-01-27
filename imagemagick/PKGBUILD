@@ -3,20 +3,20 @@
 
 pkgbase=imagemagick
 pkgname=(imagemagick imagemagick-doc)
-pkgver=7.1.0.2
+pkgver=7.1.0.19
 pkgrel=1
 pkgdesc='An image viewing/manipulation program'
 url='https://www.imagemagick.org/'
 arch=(loongarch64 x86_64)
 license=(custom)
-makedepends=(ghostscript openexr libwmf librsvg libxml2 openjpeg2 libraw opencl-headers libwebp libzip
+makedepends=(ghostscript openexr libwmf librsvg libxml2 openjpeg2 libraw opencl-headers libwebp libzip libjxl highway
              chrpath ocl-icd glu ghostpcl ghostxps libheif jbigkit lcms2 libxext liblqr libraqm libpng djvulibre)
 checkdepends=(gsfonts ttf-dejavu)
 _relname=ImageMagick-${pkgver%%.*}
 _tarname=ImageMagick-${pkgver%.*}-${pkgver##*.}
-source=(https://imagemagick.org/download/$_tarname.tar.xz{,.asc}
+source=(https://download.imagemagick.org/ImageMagick/download/releases/$_tarname.tar.xz{,.asc}
         arch-fonts.diff)
-sha256sums=('039006f616bb326598e7b910932694e2a3ca925586560e1b8d153a7048f52980'
+sha256sums=('3fd79174ab0f30bc1643af3e654f1d2ffcc3a9554263981155688b4f49f7fd77'
             'SKIP'
             'a85b744c61b1b563743ecb7c7adad999d7ed9a8af816650e3ab9321b2b102e73')
 validpgpkeys=(D8272EF51DA223E4D05B466989AB63D48277377A)  # Lexie Parsimoniae
@@ -38,6 +38,7 @@ build() {
     --prefix=/usr \
     --sysconfdir=/etc \
     --enable-shared \
+    --disable-static \
     --with-dejavu-font-dir=/usr/share/fonts/TTF \
     --with-gs-font-dir=/usr/share/fonts/gsfonts \
     PSDelegate=/usr/bin/gs \
@@ -47,6 +48,7 @@ build() {
     --enable-opencl \
     --without-gslib \
     --with-djvu \
+    --with-jxl \
     --with-lqr \
     --with-modules \
     --with-openexr \
@@ -77,6 +79,7 @@ package_imagemagick() {
   depends=(libltdl lcms2 fontconfig libxext liblqr libraqm libpng libxml2)
   optdepends=('ghostscript: PS/PDF support'
               'libheif: HEIF support'
+              'libjxl: JPEG XL support'
               'libraw: DNG support'
               'librsvg: SVG support'
               'libwebp: WEBP support'

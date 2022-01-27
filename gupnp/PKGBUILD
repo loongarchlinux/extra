@@ -2,8 +2,9 @@
 # Contributor: György Balló <ballogy@freestart.hu>
 
 pkgname=gupnp
-pkgver=1.2.7
+pkgver=1.4.1
 pkgrel=1
+epoch=1
 pkgdesc="An object-oriented UPNP framework"
 url="https://wiki.gnome.org/Projects/GUPnP"
 arch=(loongarch64 x86_64)
@@ -11,21 +12,21 @@ license=(LGPL)
 depends=(glib2 gssdp util-linux libxml2)
 makedepends=(gobject-introspection gtk-doc vala meson git)
 optdepends=('python: gupnp-binding-tool')
-_commit=91f5c741ac9ff026df16111833719ce2e07ef11a  # tags/gupnp-1.2.7^0
+_commit=21cf45befcdfbda8882ff4805f9e791270e28274  # tags/gupnp-1.4.1^0
 source=("git+https://gitlab.gnome.org/GNOME/gupnp.git#commit=$_commit")
 sha256sums=('SKIP')
 
 pkgver() {
-  cd $pkgname
+  cd gupnp
   git describe --tags | sed 's/^gupnp-//;s/-/+/g'
 }
 
 prepare() {
-  cd $pkgname
+  cd gupnp
 }
 
 build() {
-  arch-meson $pkgname build -D gtk_doc=true
+  arch-meson gupnp build -D gtk_doc=true
   meson compile -C build
 }
 
@@ -35,7 +36,7 @@ check() {
 
 package() {
   depends+=(libg{lib,object,io,module}-2.0.so libgssdp-1.2.so libsoup-2.4.so
-           libuuid.so)
+            libuuid.so)
   provides+=(libgupnp-1.2.so)
 
   meson install -C build --destdir "$pkgdir"

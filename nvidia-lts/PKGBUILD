@@ -1,9 +1,9 @@
-# Maintainer: Sven-Hendrik Haase <svenstaro@gmail.com>
+# Maintainer: Sven-Hendrik Haase <svenstaro@archlinux.org>
 # Maintainer: Eric Bélanger <eric@archlinux.org>
 
 pkgname=nvidia-lts
-pkgver=465.31
-pkgrel=11
+pkgver=495.46
+pkgrel=6
 epoch=1
 pkgdesc="NVIDIA drivers for linux-lts"
 arch=('loongarch64' 'x86_64')
@@ -24,16 +24,10 @@ package() {
 
     _kernver="$(</usr/src/linux-lts/version)"
 
-    install -Dt "${pkgdir}/usr/lib/modules/${_kernver}/extramodules" -m644 \
-        nvidia/${pkgver}/${_kernver}/${CARCH}/module/*
+    install -Dt "${pkgdir}/usr/lib/modules/${_kernver}/extramodules" -m644 nvidia/${pkgver}/${_kernver}/${CARCH}/module/*
 
     # compress each module individually
     find "$pkgdir" -name '*.ko' -exec xz -T1 {} +
 
-    echo "blacklist nouveau" |
-        install -Dm644 /dev/stdin "${pkgdir}/usr/lib/modprobe.d/${pkgname}.conf"
-
-    install -Dt "${pkgdir}/usr/share/licenses/${pkgname}" -m644 \
-        /usr/share/licenses/nvidia-dkms/LICENSE
+    install -Dm644 /usr/share/licenses/nvidia-dkms/LICENSE "${pkgdir}/usr/share/licenses/${pkgname}/LICENSE"
 }
-

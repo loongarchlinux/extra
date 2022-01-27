@@ -1,52 +1,78 @@
 # Maintainer: Jan Alexander Steffens (heftig) <heftig@archlinux.org>
 
-pkgname=gnome-builder
-pkgver=3.40.2
+pkgbase=gnome-builder
+pkgname=(gnome-builder gnome-builder-libide-docs)
+pkgver=41.3
 pkgrel=2
 pkgdesc="An IDE for writing GNOME-based software"
 url="https://wiki.gnome.org/Apps/Builder"
 arch=(loongarch64 x86_64)
 license=(GPL3)
-depends=(gtksourceview4 devhelp libgit2-glib gjs python-gobject clang sysprof
-         desktop-file-utils ctags libpeas vte3 vala python-jedi autoconf-archive
-         flatpak-builder gspell libdazzle template-glib jsonrpc-glib
-         python-sphinx webkit2gtk glade python-lxml meson libportal)
-makedepends=(llvm gobject-introspection gtk-doc yelp-tools appstream-glib git mm-common
-             python-sphinx_rtd_theme)
+depends=(gtksourceview4 devhelp libgit2-glib gjs python-gobject sysprof
+         desktop-file-utils ctags libpeas vte3 vala autoconf-archive
+         gspell libdazzle template-glib jsonrpc-glib python-sphinx webkit2gtk
+         glade python-lxml meson libportal-gtk3 cmark)
+makedepends=(llvm gobject-introspection gi-docgen yelp-tools appstream-glib git
+             mm-common python-sphinx_rtd_theme clang jedi-language-server
+             flatpak-builder)
 checkdepends=(xorg-server-xvfb)
-optdepends=('gnome-code-assistance: Legacy assistance services')
-groups=(gnome-extra)
-_commit=9bd87348c1a33d43a78d3c823300bec5656762d5  # tags/3.40.2^0
-source=("git+https://gitlab.gnome.org/GNOME/gnome-builder.git#commit=$_commit")
-sha256sums=('SKIP')
+_commit=21c097851240dc1242e9fbd819e7d9acf6e6af9c  # tags/41.3^0
+source=("git+https://gitlab.gnome.org/GNOME/gnome-builder.git#commit=$_commit"
+        libportal-0.5.diff)
+sha256sums=('SKIP'
+            '350dd0e5b8dc4d7ecdf3284e91983fe8d890ab453df6c5b218af8a6b6e7e7280')
 
 pkgver() {
-  cd $pkgname
-  git describe --tags | sed 's/^GNOME_BUILDER_//;s/_/./g;s/-/+/g'
+  cd $pkgbase
+  git describe --tags | sed 's/^GNOME_BUILDER_//;s/[^-]*-g/r&/;s/_/./g;s/-/+/g'
 }
 
 prepare() {
-  cd $pkgname
-  sed -i "s/'sysprof-4'/'nosysprof'/" meson.build  # Hack sysprof-capture away
+  cd $pkgbase
+
+  # libportal 0.5
+  git apply -3 ../libportal-0.5.diff
 }
 
 build() {
-  arch-meson $pkgname build \
+  arch-meson $pkgbase build \
     -D docs=true \
     -D help=true
   meson compile -C build
 }
 
 check() {
-  dbus-run-session xvfb-run \
-    -s '-screen 0 1920x1080x24 -nolisten local' \
+  dbus-run-session xvfb-run -s '-nolisten local' \
     meson test -C build --print-errorlogs
 }
 
-package() {
-  depends+=(libgladeui-2.so)
+_pick() {
+  local p="$1" f d; shift
+  for f; do
+    d="$srcdir/$p/${f#$pkgdir/}"
+    mkdir -p "$(dirname "$d")"
+    mv "$f" "$d"
+    rmdir -p --ignore-fail-on-non-empty "$(dirname "$f")"
+  done
+}
 
-  DESTDIR="$pkgdir" meson install -C build
+package_gnome-builder() {
+  depends+=(libgladeui-2.so)
+  optdepends=('gnome-code-assistance: Legacy assistance services'
+              'clang: C/C++ code assistance'
+              'jedi-language-server: Python code assistance'
+              'flatpak-builder: Build Flatpaks')
+  groups=(gnome-extra)
+
+  meson install -C build --destdir "$pkgdir"
+
+  _pick libide-docs "$pkgdir"/usr/share/doc/libide
+}
+
+package_gnome-builder-libide-docs() {
+  pkgdesc+=" (libide API documentation)"
+  depends=()
+  mv libide-docs/* "$pkgdir"
 }
 
 # vim:set sw=2 et:

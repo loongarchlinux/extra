@@ -1,27 +1,29 @@
-# Maintainer: Jan de Groot <jgc@archlinux.org>
+# Maintainer: Jan Alexander Steffens (heftig) <heftig@archlinux.org>
+# Contributor: Jan de Groot <jgc@archlinux.org>
 # Contributor: pressh <pressh@gmail.com>
 
 pkgname=alacarte
-pkgver=3.36.0+2+gae6b92d
+pkgver=3.42.0
 pkgrel=2
+epoch=1
 pkgdesc="Menu editor for gnome"
 url="https://gitlab.gnome.org/GNOME/alacarte"
 arch=(any)
 license=(LGPL)
 depends=(gnome-menus python-gobject python-cairo gtk3)
-makedepends=(intltool libxslt docbook-xsl git gnome-common)
-_commit=ae6b92daad3f53c025f59cfbb674ba3de7dcb8a4  # master
+makedepends=(intltool libxslt docbook-xsl git)
+_commit=0225d87182a2c208e1d7d802c174899bd34fa8ed  # tags/3.42.0^0
 source=("git+https://gitlab.gnome.org/GNOME/alacarte.git#commit=$_commit")
 sha256sums=('SKIP')
 
 pkgver() {
   cd $pkgname
-  git describe --long | sed 's/-/+/g'
+  git describe --tags | sed 's/[^-]*-g/r&/;s/-/+/g'
 }
 
 prepare() {
   cd $pkgname
-  NOCONFIGURE=1 ./autogen.sh
+  autoreconf -fvi
 }
 
 build() {

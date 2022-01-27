@@ -5,92 +5,41 @@
 # Contributor: Brice Carpentier <brice@dlfp.org>
 
 pkgname=scons
-pkgver=3.1.2
-pkgrel=4
+pkgver=4.3.0
+pkgrel=3
 pkgdesc="Extensible Python-based build utility"
-arch=('any')
+arch=(any)
 url="https://scons.org"
-license=('MIT')
-depends=('python')
-makedepends=('docbook2x' 'epydoc' 'fop' 'texlive-bin' 'graphviz' 'ghostscript'
-'lynx' 'python-lxml' 'python-setuptools' 'texlive-latexextra')
-# potential additions include ipkg, rpm
-checkdepends=('clang' 'gdc' 'dmd' 'ldc' 'lib32-glibc' 'nasm' 'python-pytest'
-'python-virtualenv' 'rpm-tools' 'swig' 'zip')
+license=(MIT)
+depends=(python)
+makedepends=(python-setuptools python-sphinx python-sphinx_rtd_theme
+rst2pdf)
+checkdepends=(python-pytest)
 source=("$pkgname-$pkgver.tar.gz::https://github.com/${pkgname}/${pkgname}/archive/${pkgver}.tar.gz")
-sha512sums=('b096501ea37e62f596f16b46b4022ad7979f359b10849d4c5fa17731a6c3ec34e0890374de175a8aa7539ae677777142ccf5dfae39a74696efcdbcc00e89bccf')
+sha512sums=('2d91cf3045797c888d24db38d5b44576e56b271a2c4e9d28d7e16026451865f713990ff9e57fa3e0a1c19603c2d6adbbd1ba36d297c9dcce4db4139fcc51cd62')
+b2sums=('a43b509b358d47ee73f7eb714d1239b4fdc33f38483c1a3e72c3a8082242d7bb1a4925958a2648782aa28f4c22a6e018aea8fec1139cf44c59e859f6f902d1d3')
 
 prepare() {
   cd "${pkgname}-${pkgver}"
-  # emulate a release
-  local _copyright='Copyright (c) 2001 - 2019 The SCons Foundation'
-  local _date_of_release="$(grep "RELEASE ${pkgver}" src/CHANGES.txt | cut -d ',' -f2)"
-  local _date="$(date -d "${_date_of_release}" +'%Y-%m-%d %H:%M:%S')"
-  # change globals in all scripts
-  for _script in $(find src/ -type f -iname "*.py"); do
-    sed -e "s|__COPYRIGHT__|${_copyright}|g" \
-        -e "s|__FILE__|/src/script/${_script}|g" \
-        -e 's/__REVISION__/none/g' \
-        -e "s|__DATE__|${_date}|g" \
-        -e 's/__BUILDSYS__/none/g' \
-        -e 's/__DEVELOPER__/none/g' \
-        -e "s/__VERSION__/${pkgver}/g" \
-        -i "${_script}"
-  done
-  # copy scripts to correct locations
-  for _script in scons{,ign,-time,-configure-cache}; do
-    cp -v "src/script/${_script}.py" "src/script/${_script}"
-  done
-  # disabling postscript creation, because it's broken
-  sed -e '614,619d' \
-      -e '/api_ps =/d' \
-      -e 's/api_ps,//' \
-      -i doc/SConscript
-  # fixing refentrytitle, so man pages are rendered with correct file names
-  sed -e 's/refentrytitle>SCONS-TIME/refentrytitle>scons-time/' \
-      -e 's/refentrytitle>SCONSIGN/refentrytitle>sconsign/' \
-      -e 's/refentrytitle>SCONS/refentrytitle>scons/' \
-      -i doc/man/*.xml
+  # fix wrong build target
+  sed -e 's/bdist_wheel/bdist/g' -i SConstruct
 }
 
 build() {
   cd "${pkgname}-${pkgver}"
-  # build documentation
-  (
-    python bootstrap.py SConstruct doc
-    cd src
-    for _xml in {scons,sconsign,scons-time}; do
-      docbook2man "../build/doc/man/${_xml}_db.xml"
-    done
-  )
-  (
-    cd src
-    python setup.py build
-  )
+  python scripts/scons.py --include-dir= -j1
+  # copy man pages into place, so that install-data may pick them up
+  cp -av build/doc/man/* .
 }
 
 check() {
   cd "${pkgname}-${pkgver}"
-  python runtest.py -a -t || echo "Tests passing with 'NO RESULT' count as failed."
+  python runtest.py --all --unit-only
 }
 
 package() {
-  local py_ver=$(python -c 'import sys; print(".".join(map(str, sys.version_info[:2])))')
-  cd "${pkgname}-${pkgver}/src"
-  python setup.py install --prefix=/usr \
-                          --skip-build \
-                          --optimize=1 \
-                          --standard-lib \
-                          --install-data=/usr/share \
-                          --root="$pkgdir"
-  # strip $pkgdir from embedded paths:
-  python -m compileall -d "/usr/lib/python${py_ver}" \
-    "${pkgdir}/usr/lib/python${py_ver}"
-  python -O -m compileall -d "/usr/lib/python${py_ver}" \
-    "${pkgdir}/usr/lib/python${py_ver}"
-  install -vDm 644 LICENSE.txt -t "${pkgdir}/usr/share/licenses/${pkgname}/"
-  install -vDm 644 {CHANGES,README,RELEASE}.txt \
-    -t "${pkgdir}/usr/share/doc/${pkgname}/"
-  # removing Windows only script
-  rm -vf "${pkgdir}/usr/bin/scons"*.bat
+  cd "${pkgname}-${pkgver}"
+  python setup.py install --optimize=1 --install-data=/usr/share/man/man1/ --root="$pkgdir"
+  install -vDm 644 LICENSE -t "${pkgdir}/usr/share/licenses/${pkgname}/"
+  install -vDm 644 {{CHANGES,RELEASE}.txt,README.rst} -t "${pkgdir}/usr/share/doc/${pkgname}/"
 }
