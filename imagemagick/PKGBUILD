@@ -3,7 +3,7 @@
 
 pkgbase=imagemagick
 pkgname=(imagemagick imagemagick-doc)
-pkgver=7.1.0.19
+pkgver=7.1.0.26
 pkgrel=1
 pkgdesc='An image viewing/manipulation program'
 url='https://www.imagemagick.org/'
@@ -16,10 +16,11 @@ _relname=ImageMagick-${pkgver%%.*}
 _tarname=ImageMagick-${pkgver%.*}-${pkgver##*.}
 source=(https://download.imagemagick.org/ImageMagick/download/releases/$_tarname.tar.xz{,.asc}
         arch-fonts.diff)
-sha256sums=('3fd79174ab0f30bc1643af3e654f1d2ffcc3a9554263981155688b4f49f7fd77'
+sha256sums=('5eb5e48b5785f2e8042563019694f70f09c33e81672a0570375ca0d56e07e752'
             'SKIP'
             'a85b744c61b1b563743ecb7c7adad999d7ed9a8af816650e3ab9321b2b102e73')
 validpgpkeys=(D8272EF51DA223E4D05B466989AB63D48277377A)  # Lexie Parsimoniae
+options=(debug)
 
 shopt -s extglob
 
@@ -85,13 +86,14 @@ package_imagemagick() {
               'libwebp: WEBP support'
               'libwmf: WMF support'
               'libxml2: Magick Scripting Language'
+              'libzip: OpenRaster support'
               'ocl-icd: OpenCL support'
               'openexr: OpenEXR support'
               'openjpeg2: JPEG2000 support'
               'djvulibre: DJVU support'
               'pango: Text rendering'
               'imagemagick-doc: manual and API docs')
-  options=(!emptydirs libtool)
+  options+=(!emptydirs libtool)
   backup=(etc/$_relname/{colors,delegates,log,mime,policy,quantization-table,thresholds,type,type-{dejavu,ghostscript}}.xml)
   conflicts=(imagemagick6)
   provides=(libmagick)
@@ -108,9 +110,6 @@ package_imagemagick() {
 
 # Split docs
   mv "$pkgdir/usr/share/doc" "$srcdir/docpkg/usr/share/"
-
-# Harden security policy https://bugs.archlinux.org/task/62785
-  sed -e '/<\/policymap>/i \ \ <policy domain="delegate" rights="none" pattern="gs" \/>' -i "$pkgdir"/etc/ImageMagick-7/policy.xml
 }
 
 package_imagemagick-doc() {

@@ -6,7 +6,7 @@
 
 pkgname=brltty
 pkgver=6.4
-pkgrel=7
+pkgrel=9
 pkgdesc="Braille display driver for Linux/Unix"
 arch=(loongarch64 x86_64)
 url="https://brltty.app"
@@ -14,7 +14,7 @@ license=(LGPL2.1)
 depends=(bluez-libs gcc-libs glibc liblouis libspeechd pcre2 polkit)
 makedepends=(alsa-lib at-spi2-atk at-spi2-core atk cython dbus dracut espeak-ng
 expat festival glib2 gpm icu java-environment libxaw ncurses ocaml-ctypes
-ocaml-findlib speech-dispatcher systemd-libs tcl)
+ocaml-findlib speech-dispatcher strip-nondeterminism systemd-libs tcl)
 optdepends=(
   'at-spi2-core: X11/GNOME Apps accessibility'
   'atk: ATK bridge for X11/GNOME accessibility'
@@ -35,7 +35,7 @@ backup=(
   etc/brltty.conf
   etc/X11/xinit/xinitrc.d/90xbrlapi
 )
-options=(!emptydirs)
+options=(debug !emptydirs)
 install=brltty.install
 source=("https://brltty.app/archive/${pkgname}-${pkgver}.tar.bz2"
         "${pkgname}-6.2-systemd_sysusers_groups.patch"
@@ -69,6 +69,8 @@ build() {
               --enable-gpm \
               --disable-stripping
   make
+  # make brlapi.jar deterministic
+  find . -type f -iname "*.jar" -exec strip-nondeterminism {} \;
 }
 
 package() {
