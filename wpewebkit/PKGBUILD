@@ -67,6 +67,7 @@ makedepends=(
 )
 source=(
   $url/releases/wpewebkit-$pkgver.tar.xz{,.asc}
+  webkit2gtk-fix-cmake-build.patch
 )
 sha256sums=('2c9fbf4fcf8884d34102283e2b008ce0b0bc2cf07de78f564a8b34347e7bc19b'
             'SKIP')
@@ -79,6 +80,7 @@ validpgpkeys=(
 
 prepare() {
   cd wpewebkit-$pkgver
+  patch -p1 -i $srcdir/webkit2gtk-fix-cmake-build.patch
 }
 
 build() {
@@ -101,7 +103,13 @@ build() {
   #     <artificial>:(.text+0x4a019): undefined reference to `ipint_extern_table_fill'
   #     collect2: error: ld returned 1 exit status
   export CC=clang CXX=clang++
-  LDFLAGS+=" -fuse-ld=lld"
+#  LDFLAGS+=" -fuse-ld=lld"
+# clang didn't support -mlsx
+  CFLAGS=${CFLAGS/-mlsx /}
+  CXXFLAGS=${CXXFLAGS/-mlsx /}
+  CFLAGS=${CFLAGS/-fstack-clash-protection/}
+  CXXFLAGS=${CXXFLAGS/-fstack-clash-protection/}
+
 
   # JITted code crashes when CET is used
   CFLAGS+=' -fcf-protection=none'

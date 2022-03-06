@@ -14,7 +14,9 @@ options=('staticlibs' '!lto') # tools/llvm-shlib/typeids.test fails with LTO
 _source_base=https://github.com/llvm/llvm-project/releases/download/llvmorg-$pkgver
 source=($_source_base/llvm-$pkgver.src.tar.xz{,.sig}
         $_source_base/cmake-$pkgver.src.tar.xz{,.sig}
-        $_source_base/third-party-$pkgver.src.tar.xz{,.sig})
+        $_source_base/third-party-$pkgver.src.tar.xz{,.sig}
+        llvm-newreloc-la64.patch
+        RuntimeDyld-MCJIT-Add-LoongArch-support.patch)
 sha256sums=('b638167da139126ca11917b6880207cc6e8f9d1cbb1a48d87d017f697ef78188'
             'SKIP'
             '807f069c54dc20cb47b21c1f6acafdd9c649f3ae015609040d6182cab01140f4'
@@ -58,6 +60,8 @@ _get_distribution_components() {
 prepare() {
   rename -v -- "-$pkgver.src" '' {cmake,third-party}-$pkgver.src
   cd llvm-$pkgver.src
+  patch -Np1 -i ../RuntimeDyld-MCJIT-Add-LoongArch-support.patch
+  patch -Np2 -i ../llvm-newreloc-la64.patch
   mkdir build
 }
 

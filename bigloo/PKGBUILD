@@ -14,13 +14,16 @@ depends=('gmp' 'openssl' 'libunistring' 'libnsl' 'gc' 'libuv')
 makedepends=('emacs' 'zip' 'sqlite' 'alsa-lib' 'flac' 'avahi' 'libpulse')
 optdepends=('emacs' 'zip' 'sqlite' 'alsa-lib' 'flac' 'avahi')
 options=('!makeflags' '!lto')
-source=("ftp://ftp-sop.inria.fr/indes/fp/Bigloo/${pkgname}-${_src_ver}.tar.gz")
+source=("ftp://ftp-sop.inria.fr/indes/fp/Bigloo/${pkgname}-${_src_ver}.tar.gz"
+bigloo-la64.patch)
 sha256sums=('864d525ee6a7ff339fd9a8c973cc46bf9a623a3827d84bfb6e04a29223707da5')
 
 elisp_dir=/usr/share/emacs/site-lisp/bigloo
 
 prepare() {
   sed -i 's/$(GCLIB)/c/' "${srcdir}/${pkgname}-${_src_ver}/configure"
+  cd "${srcdir}/${pkgname}-${_src_ver}"
+  patch -p1 -i $srcdir/bigloo-la64.patch
 }
 
 build() {

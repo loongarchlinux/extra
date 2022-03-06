@@ -10,16 +10,28 @@ url="https://gn.googlesource.com/gn/"
 license=('BSD')
 depends=('gcc-libs')
 makedepends=('clang' 'ninja' 'python' 'git')
-source=(git+https://gn.googlesource.com/gn#commit=$_commit)
-sha256sums=('SKIP')
+source=(git+https://gn.googlesource.com/gn#commit=$_commit
+gn-fix-build.patch)
+sha256sums=('SKIP'
+            '072db93d2c4a1486a5a70aa7a17e562e3478bbff5c2d5b219729ddda630bb31e')
 
 pkgver() {
   cd $pkgname
   echo 0.$(git rev-list --count initial-commit..).$(git rev-parse --short=8 HEAD)
 }
 
+prepare() {
+  cd $pkgname
+  patch -p1 -i $srcdir/gn-fix-build.patch
+}
+
 build() {
   cd $pkgname
+# clang didn't support -mlsx
+  CFLAGS=${CFLAGS/-mlsx /}
+  CXXFLAGS=${CXXFLAGS/-mlsx /}
+  CFLAGS=${CFLAGS/-fstack-clash-protection/}
+  CXXFLAGS=${CXXFLAGS/-fstack-clash-protection/}
   ./build/gen.py
   ninja -C out
 }

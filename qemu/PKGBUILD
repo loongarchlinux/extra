@@ -129,6 +129,10 @@ source=(
   65-kvm.rules
   99-qemu-guest-agent.rules
   $pkgbase-8.1.1-static_regression.patch
+  $pkgbase-8.2.0-virtio-gpu_redrawing.patch::https://gitlab.com/qemu-project/qemu/-/commit/9d5b42beb6978dc6219d5dc029c9d453c6b8d503.patch
+  $pkgbase-8.2.0-fix_tcg.patch
+  qemu-kvm-la64.patch
+  qemu-4k-pagesize.patch
 )
 sha512sums=('1603517cd4c93632ba60ad7261eb67374f12a744bf58f10b0e8686e46d3a02d8b6bf58a0c617f23a1868084aaba6386c24341894f75539e0b816091718721427'
             'SKIP'
@@ -276,6 +280,8 @@ _install_licenses() {
 prepare() {
   # fix crash with static binaries: https://gitlab.com/qemu-project/qemu/-/issues/1913
   patch -Np1 -d $pkgbase-$pkgver -i ../$pkgbase-8.1.1-static_regression.patch
+  patch -p1 -d $pkgbase-$pkgver -i ../qemu-kvm-la64.patch
+  patch -p1 -d $pkgbase-$pkgver -i ../qemu-4k-pagesize.patch
 
   # extract licenses for TCG
   sed -n '1,23p' $pkgbase-$pkgver/tcg/tcg-internal.h > tcg.LICENSE.MIT.txt
@@ -310,6 +316,7 @@ build() {
     --enable-sdl
     --enable-slirp
     --enable-tpm
+    --enable-kvm
     --smbd=/usr/bin/smbd
     --with-coroutine=ucontext
   )
@@ -863,7 +870,7 @@ package_qemu-system-hppa-firmware() {
 
 package_qemu-system-loongarch64() {
   pkgdesc="QEMU system emulator for LoongArch64"
-  depends=("${_qemu_system_deps[@]}" systemd-libs)
+  depends=("${_qemu_system_deps[@]}" edk2-loongarch64 systemd-libs)
   mv -v $pkgname/* "$pkgdir"
   _install_licenses
 }

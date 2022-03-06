@@ -15,6 +15,7 @@ source=($_source_base/lld-$pkgver.src.tar.xz{,.sig}
         $_source_base/llvm-$pkgver.src.tar.xz{,.sig}
         $_source_base/libunwind-$pkgver.src.tar.xz{,.sig}
         $_source_base/cmake-$pkgver.src.tar.xz{,.sig}
+        lld-la64.patch
         $pkgname-internalize-enum.patch::https://github.com/llvmbot/llvm-project/commit/939ee549a2c4.patch)
 sha256sums=('4ac13125616dc44905b85820aa403d27ec1226329b7f674daeb5f5584c6f0b22'
             'SKIP'
@@ -31,9 +32,10 @@ validpgpkeys=('474E22316ABF4785A88C6E8EA2C794A986419D8A'  # Tom Stellard <tstell
 prepare() {
   # https://bugs.llvm.org/show_bug.cgi?id=49228
   mv libunwind{-$pkgver.src,}
-
   mv cmake{-$pkgver.src,}
+
   cd lld-$pkgver.src
+  patch -p2 -i $srcdir/lld-la64.patch
   mkdir build
 
   # https://github.com/llvm/llvm-project/issues/83529

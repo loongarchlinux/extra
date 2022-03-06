@@ -1,0 +1,729 @@
+From 726f40b468f8cb3136d100d94620eb78f0bb27d9 Mon Sep 17 00:00:00 2001
+From: Xiaotian Wu <wuxiaotian@loongson.cn>
+Date: Sat, 17 Apr 2021 22:09:40 +0800
+Subject: [PATCH] add loongarch64 support
+
+---
+ Make.common                  | 21 +++++++++++++++++++++
+ Makefile                     |  3 +++
+ RefindPkg.dsc                |  5 ++++-
+ filesystems/Make.gnuefi      |  5 +++++
+ filesystems/btrfs.inf        |  9 +++++++++
+ filesystems/ext2.inf         |  9 +++++++++
+ filesystems/ext4.inf         |  9 +++++++++
+ filesystems/hfs.inf          |  9 +++++++++
+ filesystems/iso9660.inf      |  9 +++++++++
+ filesystems/ntfs.inf         |  9 +++++++++
+ filesystems/reiserfs.inf     |  9 +++++++++
+ gptsync.inf                  |  9 +++++++++
+ gptsync/Make.gnuefi          |  4 ++++
+ gptsync/Make.tiano           |  4 ++++
+ gptsync/gptsync.h            |  2 +-
+ include/refit_call_wrapper.h |  2 +-
+ libeg/image.c                |  2 +-
+ mvrefind                     |  3 +++
+ refind-install               | 36 +++++++++++++++++++++++++++++-------
+ refind.inf                   | 11 ++++++++++-
+ refind/Make.tiano            |  4 ++++
+ refind/Makefile              |  5 +++++
+ refind/config.h              |  2 ++
+ refind/driver_support.c      |  2 ++
+ refind/global.h              |  4 ++++
+ refind/install.h             |  5 +++++
+ refind/launch_efi.c          |  4 +++-
+ refind/lib.c                 |  2 ++
+ refind/main.c                |  5 +++++
+ refind/scan.c                |  8 ++++++++
+ 31 files changed, 211 insertions(+), 13 deletions(-)
+
+diff --git a/Make.common b/Make.common
+index 10cde40..9c5fb11 100644
+--- a/Make.common
++++ b/Make.common
+@@ -166,6 +166,27 @@ ifeq ($(ARCH), aarch64)
+   LD_CODE = aarch64elf
+ endif
+ 
++ifeq ($(ARCH), loongarch64)
++  GNUEFI_CFLAGS += -DEFILOONGARCH64
++  FORMAT          = -O binary
++  FORMAT_DRIVER   = -O binary
++  SUBSYSTEM_LDFLAG = -defsym=EFI_SUBSYSTEM=0xa
++  LDFLAGS         += --warn-common --no-undefined --fatal-warnings
++
++  ARCH_CFLAGS = -fno-merge-constants -ffreestanding -DEFILOONGARCH64
++  ifeq ($(MAKEWITH),TIANO)
++    ARCH_CFLAGS += -mcmodel=large -Wno-address -Wno-missing-braces -Wno-array-bounds -ffunction-sections -fdata-sections
++  endif
++  ifeq ($(MAKEWITH),GNUEFI)
++    ARCH_CFLAGS += -fno-stack-check
++  endif
++  ARCHDIR = LoongArch64
++  UC_ARCH = LOONGARCH64
++  FILENAME_CODE = loongarch64
++  LD_CODE = loongarch64elf
++endif
++
++
+ # GNU-EFI compilation path uses .o files for compiled object code
+ %.o: %.c
+ 	$(CC) $(CFLAGS) $(ARCH_CFLAGS) $(GNUEFI_CFLAGS) $(LOCAL_GNUEFI_CFLAGS) \
+diff --git a/Makefile b/Makefile
+index 4d07160..8ebc622 100644
+--- a/Makefile
++++ b/Makefile
+@@ -117,6 +117,9 @@ tiano:
+ ifneq ($(ARCH),aarch64)
+ 	+make MAKEWITH=TIANO -C $(GPTSYNC_DIR) -f Make.tiano
+ endif
++ifneq ($(ARCH),loongarch64)
++	+make MAKEWITH=TIANO -C $(GPTSYNC_DIR) -f Make.tiano
++endif
+ #	+make MAKEWITH=TIANO -C $(FS_DIR)
+ 
+ all_tiano: tiano fs_tiano
+diff --git a/RefindPkg.dsc b/RefindPkg.dsc
+index c267f7a..5a7f857 100644
+--- a/RefindPkg.dsc
++++ b/RefindPkg.dsc
+@@ -3,7 +3,7 @@
+   PLATFORM_GUID                  = d6365e1c-b895-426d-a012-46769b2d02a3
+   PLATFORM_VERSION               = 4.5.0
+   DSC_SPECIFICATION              = 0x00010006
+-  SUPPORTED_ARCHITECTURES        = IA32|IPF|X64|EBC|ARM|AARCH64
++  SUPPORTED_ARCHITECTURES        = IA32|IPF|X64|EBC|ARM|AARCH64|LOONGARCH64
+   BUILD_TARGETS                  = DEBUG|RELEASE
+   SKUID_IDENTIFIER               = DEFAULT
+ 
+@@ -75,6 +75,9 @@
+ [LibraryClasses.AARCH64]
+   CompilerIntrinsicsLib|ArmPkg/Library/CompilerIntrinsicsLib/CompilerIntrinsicsLib.inf
+ 
++[LibraryClasses.LOONGARCH64]
++  CompilerIntrinsicsLib|LoongArchPkg/Library/CompilerIntrinsicsLib/CompilerIntrinsicsLib.inf
++
+ [Components]
+   RefindPkg/refind.inf
+   RefindPkg/gptsync.inf
+diff --git a/filesystems/Make.gnuefi b/filesystems/Make.gnuefi
+index be5b183..6638f9d 100644
+--- a/filesystems/Make.gnuefi
++++ b/filesystems/Make.gnuefi
+@@ -30,6 +30,11 @@ ifeq ($(HOSTARCH),aarch64)
+   SUBSYSTEM_LDFLAG = -defsym=EFI_SUBSYSTEM=0xb
+ endif
+ 
++ifeq ($(HOSTARCH),loongarch64)
++  # Set symbol for driver
++  SUBSYSTEM_LDFLAG = -defsym=EFI_SUBSYSTEM=0xb
++endif
++
+ $(SHLIB_TARGET): $(OBJS)
+ 	$(LD) $(GNUEFI_LDFLAGS) $(SUBSYSTEM_LDFLAG) $(OBJS) -o $@ $(LOCAL_LIBS) $(GNUEFI_LIBS)
+ 
+diff --git a/filesystems/btrfs.inf b/filesystems/btrfs.inf
+index 10f284a..00a2c54 100644
+--- a/filesystems/btrfs.inf
++++ b/filesystems/btrfs.inf
+@@ -51,6 +51,11 @@
+ # Comment out CompilerIntrinsicsLib when compiling for AARCH64 using UDK2014
+   CompilerIntrinsicsLib
+ 
++[LibraryClasses.LOONGARCH64]
++  BaseStackCheckLib
++# Comment out CompilerIntrinsicsLib when compiling for LOONGARCH64 using UDK2014
++  CompilerIntrinsicsLib
++
+ [Guids]
+ 
+ [Ppis]
+@@ -74,3 +79,7 @@
+ [BuildOptions.AARCH64]
+   XCODE:*_*_*_CC_FLAGS = -Os  -DEFIAARCH64 -D__MAKEWITH_TIANO -DFSTYPE=btrfs
+   GCC:*_*_*_CC_FLAGS = -Os -DEFIAARCH64 -D__MAKEWITH_TIANO -DFSTYPE=btrfs
++
++[BuildOptions.LOONGARCH64]
++  XCODE:*_*_*_CC_FLAGS = -Os  -DEFILOONGARCH64 -D__MAKEWITH_TIANO -DFSTYPE=btrfs
++  GCC:*_*_*_CC_FLAGS = -Os -DEFILOONGARCH64 -D__MAKEWITH_TIANO -DFSTYPE=btrfs
+diff --git a/filesystems/ext2.inf b/filesystems/ext2.inf
+index ee8eea0..2df2dbd 100644
+--- a/filesystems/ext2.inf
++++ b/filesystems/ext2.inf
+@@ -50,6 +50,11 @@
+ # Comment out CompilerIntrinsicsLib when compiling for AARCH64 using UDK2014
+   CompilerIntrinsicsLib
+ 
++[LibraryClasses.LOONGARCH64]
++  BaseStackCheckLib
++# Comment out CompilerIntrinsicsLib when compiling for LOONGARCH64 using UDK2014
++  CompilerIntrinsicsLib
++
+ [Guids]
+ 
+ [Ppis]
+@@ -71,3 +76,7 @@
+ [BuildOptions.AARCH64]
+   XCODE:*_*_*_CC_FLAGS = -Os  -DEFIAARCH64 -D__MAKEWITH_TIANO -DFSTYPE=ext2
+   GCC:*_*_*_CC_FLAGS = -Os -DEFIAARCH64 -D__MAKEWITH_TIANO -DFSTYPE=ext2
++
++[BuildOptions.LOONGARCH64]
++  XCODE:*_*_*_CC_FLAGS = -Os  -DEFILOONGARCH64 -D__MAKEWITH_TIANO -DFSTYPE=ext2
++  GCC:*_*_*_CC_FLAGS = -Os -DEFILOONGARCH64 -D__MAKEWITH_TIANO -DFSTYPE=ext2
+diff --git a/filesystems/ext4.inf b/filesystems/ext4.inf
+index 3586ee5..6e445dd 100644
+--- a/filesystems/ext4.inf
++++ b/filesystems/ext4.inf
+@@ -51,6 +51,11 @@
+ # Comment out CompilerIntrinsicsLib when compiling for AARCH64 using UDK2014
+   CompilerIntrinsicsLib
+ 
++[LibraryClasses.LOONGARCH64]
++  BaseStackCheckLib
++# Comment out CompilerIntrinsicsLib when compiling for LOONGARCH64 using UDK2014
++  CompilerIntrinsicsLib
++
+ [Guids]
+ 
+ [Ppis]
+@@ -72,3 +77,7 @@
+ [BuildOptions.AARCH64]
+   XCODE:*_*_*_CC_FLAGS = -Os  -DEFIAARCH64 -D__MAKEWITH_TIANO -DFSTYPE=ext4
+   GCC:*_*_*_CC_FLAGS = -Os -DEFIAARCH64 -D__MAKEWITH_TIANO -DFSTYPE=ext4
++
++[BuildOptions.LOONGARCH64]
++  XCODE:*_*_*_CC_FLAGS = -Os  -DEFILOONGARCH64 -D__MAKEWITH_TIANO -DFSTYPE=ext4
++  GCC:*_*_*_CC_FLAGS = -Os -DEFILOONGARCH64 -D__MAKEWITH_TIANO -DFSTYPE=ext4
+diff --git a/filesystems/hfs.inf b/filesystems/hfs.inf
+index 14a859c..31bc526 100644
+--- a/filesystems/hfs.inf
++++ b/filesystems/hfs.inf
+@@ -51,6 +51,11 @@
+ # Comment out CompilerIntrinsicsLib when compiling for AARCH64 using UDK2014
+   CompilerIntrinsicsLib
+ 
++[LibraryClasses.LOONGARCH64]
++  BaseStackCheckLib
++# Comment out CompilerIntrinsicsLib when compiling for LOONGARCH64 using UDK2014
++  CompilerIntrinsicsLib
++
+ [Guids]
+ 
+ [Ppis]
+@@ -72,3 +77,7 @@
+ [BuildOptions.AARCH64]
+   XCODE:*_*_*_CC_FLAGS = -Os  -DEFIAARCH64 -D__MAKEWITH_TIANO -DFSTYPE=hfs
+   GCC:*_*_*_CC_FLAGS = -Os -DEFIAARCH64 -D__MAKEWITH_TIANO -DFSTYPE=hfs
++
++[BuildOptions.LOONGARCH64]
++  XCODE:*_*_*_CC_FLAGS = -Os  -DEFILOONGARCH64 -D__MAKEWITH_TIANO -DFSTYPE=hfs
++  GCC:*_*_*_CC_FLAGS = -Os -DEFILOONGARCH64 -D__MAKEWITH_TIANO -DFSTYPE=hfs
+diff --git a/filesystems/iso9660.inf b/filesystems/iso9660.inf
+index 0e03032..9bcf98b 100644
+--- a/filesystems/iso9660.inf
++++ b/filesystems/iso9660.inf
+@@ -51,6 +51,11 @@
+ # Comment out CompilerIntrinsicsLib when compiling for AARCH64 using UDK2014
+   CompilerIntrinsicsLib
+ 
++[LibraryClasses.LOONGARCH64]
++  BaseStackCheckLib
++# Comment out CompilerIntrinsicsLib when compiling for LOONGARCH64 using UDK2014
++  CompilerIntrinsicsLib
++
+ [Guids]
+ 
+ [Ppis]
+@@ -72,3 +77,7 @@
+ [BuildOptions.AARCH64]
+   XCODE:*_*_*_CC_FLAGS = -Os  -DEFIAARCH64 -D__MAKEWITH_TIANO -DFSTYPE=iso9660
+   GCC:*_*_*_CC_FLAGS = -Os -DEFIAARCH64 -D__MAKEWITH_TIANO -DFSTYPE=iso9660
++
++[BuildOptions.LOONGARCH64]
++  XCODE:*_*_*_CC_FLAGS = -Os  -DEFILOONGARCH64 -D__MAKEWITH_TIANO -DFSTYPE=iso9660
++  GCC:*_*_*_CC_FLAGS = -Os -DEFILOONGARCH64 -D__MAKEWITH_TIANO -DFSTYPE=iso9660
+diff --git a/filesystems/ntfs.inf b/filesystems/ntfs.inf
+index 73262e1..b008e10 100644
+--- a/filesystems/ntfs.inf
++++ b/filesystems/ntfs.inf
+@@ -51,6 +51,11 @@
+ # Comment out CompilerIntrinsicsLib when compiling for AARCH64 using UDK2014
+   CompilerIntrinsicsLib
+ 
++[LibraryClasses.LOONGARCH64]
++  BaseStackCheckLib
++# Comment out CompilerIntrinsicsLib when compiling for LOONGARCH64 using UDK2014
++  CompilerIntrinsicsLib
++
+ [Guids]
+ 
+ [Ppis]
+@@ -72,3 +77,7 @@
+ [BuildOptions.AARCH64]
+   XCODE:*_*_*_CC_FLAGS = -Os  -DEFIAARCH64 -D__MAKEWITH_TIANO -DFSTYPE=ntfs
+   GCC:*_*_*_CC_FLAGS = -Os -DEFIAARCH64 -D__MAKEWITH_TIANO -DFSTYPE=ntfs
++
++[BuildOptions.LOONGARCH64]
++  XCODE:*_*_*_CC_FLAGS = -Os  -DEFILOONGARCH64 -D__MAKEWITH_TIANO -DFSTYPE=ntfs
++  GCC:*_*_*_CC_FLAGS = -Os -DEFILOONGARCH64 -D__MAKEWITH_TIANO -DFSTYPE=ntfs
+diff --git a/filesystems/reiserfs.inf b/filesystems/reiserfs.inf
+index 474d97c..b2c6dfa 100644
+--- a/filesystems/reiserfs.inf
++++ b/filesystems/reiserfs.inf
+@@ -51,6 +51,11 @@
+ # Comment out CompilerIntrinsicsLib when compiling for AARCH64 using UDK2014
+   CompilerIntrinsicsLib
+ 
++[LibraryClasses.LOONGARCH64]
++  BaseStackCheckLib
++# Comment out CompilerIntrinsicsLib when compiling for LOONGARCH64 using UDK2014
++  CompilerIntrinsicsLib
++
+ [Guids]
+ 
+ [Ppis]
+@@ -72,3 +77,7 @@
+ [BuildOptions.AARCH64]
+   XCODE:*_*_*_CC_FLAGS = -Os  -DEFIAARCH64 -D__MAKEWITH_TIANO -DFSTYPE=reiserfs
+   GCC:*_*_*_CC_FLAGS = -Os -DEFIAARCH64 -D__MAKEWITH_TIANO -DFSTYPE=reiserfs
++
++[BuildOptions.LOONGARCH64]
++  XCODE:*_*_*_CC_FLAGS = -Os  -DEFILOONGARCH64 -D__MAKEWITH_TIANO -DFSTYPE=reiserfs
++  GCC:*_*_*_CC_FLAGS = -Os -DEFILOONGARCH64 -D__MAKEWITH_TIANO -DFSTYPE=reiserfs
+diff --git a/gptsync.inf b/gptsync.inf
+index af3769c..382ac97 100644
+--- a/gptsync.inf
++++ b/gptsync.inf
+@@ -50,6 +50,11 @@
+ # Comment out CompilerIntrinsicsLib when compiling for AARCH64 using UDK2014
+   CompilerIntrinsicsLib
+ 
++[LibraryClasses.LOONGARCH64]
++  BaseStackCheckLib
++# Comment out CompilerIntrinsicsLib when compiling for LOONGARCH64 using UDK2014
++  CompilerIntrinsicsLib
++
+ [Guids]
+   gEfiAcpiTableGuid
+   gEfiAcpi10TableGuid
+@@ -135,3 +140,7 @@
+ [BuildOptions.AARCH64]
+   XCODE:*_*_*_CC_FLAGS = -Os  -DEFIAARCH64 -D__MAKEWITH_TIANO
+   GCC:*_*_*_CC_FLAGS = -Os -DEFIAARCH64 -D__MAKEWITH_TIANO
++
++[BuildOptions.LOONGARCH64]
++  XCODE:*_*_*_CC_FLAGS = -Os  -DEFILOONGARCH64 -D__MAKEWITH_TIANO
++  GCC:*_*_*_CC_FLAGS = -Os -DEFILOONGARCH64 -D__MAKEWITH_TIANO
+diff --git a/gptsync/Make.gnuefi b/gptsync/Make.gnuefi
+index b74d0f3..8c6f530 100644
+--- a/gptsync/Make.gnuefi
++++ b/gptsync/Make.gnuefi
+@@ -23,6 +23,10 @@ ifeq ($(ARCH),aarch64)
+   TARGET = gptsync_aa64.efi
+ endif
+ 
++ifeq ($(ARCH),loongarch64)
++  TARGET = gptsync_loongarch64.efi
++endif
++
+ all: $(TARGET)
+ 
+ SHLIB_TARGET = $(subst .efi,.so,$(TARGET))
+diff --git a/gptsync/Make.tiano b/gptsync/Make.tiano
+index a0656cd..70a7db3 100644
+--- a/gptsync/Make.tiano
++++ b/gptsync/Make.tiano
+@@ -26,6 +26,10 @@ ifeq ($(ARCH),aarch64)
+   ALL_EFILIBS +=  $(EFILIB)/BaseStackCheckLib/BaseStackCheckLib/OUTPUT/BaseStackCheckLib.lib
+ endif
+ 
++ifeq ($(ARCH),loongarch64)
++  ALL_EFILIBS +=  $(EFILIB)/BaseStackCheckLib/BaseStackCheckLib/OUTPUT/BaseStackCheckLib.lib
++endif
++
+ TIANO_INCLUDE_DIRS = -I $(TIANOBASE)/MdePkg \
+                      -I $(TIANOBASE)/MdePkg/Include \
+                      -I $(TIANOBASE)/MdePkg/Include/$(ARCHDIR) \
+diff --git a/gptsync/gptsync.h b/gptsync/gptsync.h
+index f6cf2a5..584d1fb 100644
+--- a/gptsync/gptsync.h
++++ b/gptsync/gptsync.h
+@@ -45,7 +45,7 @@
+ //
+ 
+ 
+-#if defined(EFI32) || defined(EFIX64) || defined(EFIAARCH64)
++#if defined(EFI32) || defined(EFIX64) || defined(EFIAARCH64) || defined(EFILOONGARCH64)
+ #define CONFIG_EFI
+ #endif
+ 
+diff --git a/include/refit_call_wrapper.h b/include/refit_call_wrapper.h
+index 1bd4042..1fa386f 100644
+--- a/include/refit_call_wrapper.h
++++ b/include/refit_call_wrapper.h
+@@ -3,7 +3,7 @@
+ 
+ #ifdef __MAKEWITH_GNUEFI
+ 
+-#if defined (EFIX64) | defined (AARCH64)
++#if defined (EFIX64) | defined (AARCH64) | defined (LOONGARCH64)
+ # define refit_call1_wrapper(f, a1) \
+   uefi_call_wrapper(f, 1, (UINT64)(a1))
+ # define refit_call2_wrapper(f, a1, a2) \
+diff --git a/libeg/image.c b/libeg/image.c
+index c8ae198..47ddede 100644
+--- a/libeg/image.c
++++ b/libeg/image.c
+@@ -71,7 +71,7 @@
+ // A value of 4096 should keep us within limits on 32-bit systems, but I've
+ // seen some minor artifacts at this level, so give it a bit more precision
+ // on 64-bit systems....
+-#if defined(EFIX64) | defined(EFIAARCH64)
++#if defined(EFIX64) | defined(EFIAARCH64) | defined(EFILOONGARCH64)
+ #define FP_MULTIPLIER (UINTN) 65536
+ #else
+ #define FP_MULTIPLIER (UINTN) 4096
+diff --git a/mvrefind b/mvrefind
+index 6b840c2..154729e 100755
+--- a/mvrefind
++++ b/mvrefind
+@@ -95,6 +95,9 @@ DeterminePlatform() {
+     i?86)
+         Platform="ia32"
+         ;;
++    loongarch64)
++        Platform="loongarch64"
++        ;;
+     *)
+         echo "Unsupported CPU type; aborting!"
+         exit 1
+diff --git a/refind-install b/refind-install
+index 22dd8e6..3fc7cab 100755
+--- a/refind-install
++++ b/refind-install
+@@ -266,7 +266,7 @@ ReadKeyPassphrase() {
+ 
+ # Determine what CPU type and EFI bit depth we're using.
+ # Sets Platform global variable to lowercase EFI platform code (currently
+-# "x64", "ia32", or "aa64") -- the same code used in filenames.
++# "x64", "ia32", "aa64" or "loongarch64") -- the same code used in filenames.
+ DeterminePlatform() {
+    local CpuType
+    case "$OSTYPE" in
+@@ -291,6 +291,9 @@ DeterminePlatform() {
+       aarch64)
+          Platform="aa64"
+          ;;
++      loongarch64)
++         Platform="loongarch64"
++         ;;
+       x86_64)
+          Platform="x64"
+          ;;
+@@ -386,6 +389,7 @@ CheckForFiles() {
+          if [[ $ShimType == "shimx64.efi" || $ShimType == "shim.efi" || $ShimType == "shimx64.efi.signed" ]] ; then
+             TargetX64="grubx64.efi"
+             TargetAARCH64="grubaa64.efi"
++            TargetLOONGARCH64="grubloongarch64.efi"
+             MokManagerSource=$(dirname "$ShimSource")/mm$Platform.efi.signed
+             if [[ ! -f "$MokManagerSource" ]] ; then
+                 MokManagerSource=$(dirname "$ShimSource")/mm$Platform.efi
+@@ -455,10 +459,12 @@ SetVarsForBoot() {
+       TargetX64="bootx64.efi"
+       TargetIA32="bootia32.efi"
+       TargetAARCH64="bootaa64.efi"
++      TargetLOONGARCH64="bootloongarch64.efi"
+    else
+-      if [[ $ShimType == "shim.efi" || $ShimType == "shimx64.efi" || $ShimType == "shimx64.efi.signed" || $ShimType = "shimaa64.efi" ]] ; then
++      if [[ $ShimType == "shim.efi" || $ShimType == "shimx64.efi" || $ShimType == "shimx64.efi.signed" || $ShimType = "shimaa64.efi"  || $ShimType = "shimloongarch64.efi" ]] ; then
+          TargetX64="grubx64.efi"
+          TargetAARCH64="grubaa64.efi"
++         TargetLOONGARCH64="grubloongarch64.efi"
+       elif [[ $ShimType == "preloader.efi" || $ShimType == "PreLoader.efi" ]] ; then
+          TargetX64="loader.efi"
+       else
+@@ -482,10 +488,12 @@ SetVarsForMsBoot() {
+       TargetX64="bootmgfw.efi"
+       TargetIA32="bootmgfw.efi"
+       TargetAARCH64="bootmgfw.efi"
++      TargetLOONGARCH64="bootmgfw.efi"
+    else
+-      if [[ $ShimType == "shim.efi" || $ShimType == "shimx64.efi" || $ShimType == "shimaa64.efi" ]] ; then
++      if [[ $ShimType == "shim.efi" || $ShimType == "shimx64.efi" || $ShimType == "shimaa64.efi"  || $ShimType == "shimloongarch64.efi" ]] ; then
+          TargetX64="grubx64.efi"
+          TargetAARCH64="grubaa64.efi"
++         TargetLOONGARCH64="grubloongarch64.efi"
+       elif [[ $ShimType == "preloader.efi" || $ShimType == "PreLoader.efi" ]] ; then
+          TargetX64="loader.efi"
+       else
+@@ -528,6 +536,7 @@ DetermineTargetDir() {
+          TargetX64="refind_x64.efi"
+          TargetIA32="refind_ia32.efi"
+          TargetAARCH64="refind_aa64.efi"
++         TargetLOONGARCH64="refind_loongarch64.efi"
+       fi
+       Upgrade=1
+    fi
+@@ -672,6 +681,10 @@ CopyRefindFiles() {
+       if [[ $? != 0 && $Platform == "aa64" ]] ; then
+          Problems=1
+       fi
++      cp "$RefindDir/refind_loongarch64.efi" "$InstallDir/$TargetDir/$TargetLOONGARCH64" 2> /dev/null
++      if [[ $? != 0 && $Platform == "loongarch64" ]] ; then
++         Problems=1
++      fi
+       if [[ "$ShimSource" != "none" ]] ; then
+          TargetShim="bootx64.efi"
+          CopyShimFiles
+@@ -709,15 +722,19 @@ CopyRefindFiles() {
+       if [[ "$TargetDir" == '/System/Library/CoreServices' ]] ; then
+          SetupMacHfs $TargetX64
+       fi
+-   elif [[ $Platform == 'ia32' || $Platform == 'aa64' ]] ; then
++   elif [[ $Platform == 'ia32' || $Platform == 'aa64' || $Platform == 'loongarch64' ]] ; then
+       if [[ $Platform == 'ia32' ]] ; then
+          if ! cp "$RefindDir/refind_ia32.efi" "$InstallDir/$TargetDir/$TargetIA32" ; then
+             Problems=1
+          fi
+-      else
++      elif [[ $Platform == 'aa64' ]] ; then
+          if ! cp "$RefindDir/refind_aa64.efi" "$InstallDir/$TargetDir/$TargetAARCH64" ; then
+             Problems=1
+          fi
++      else
++         if ! cp "$RefindDir/refind_loongarch64.efi" "$InstallDir/$TargetDir/$TargetLOONGARCH64" ; then
++            Problems=1
++         fi
+       fi
+       CopyDrivers $Platform
+       CopyTools $Platform
+@@ -816,6 +833,10 @@ CreateBootCsvFile() {
+          echo "$TargetAARCH64,rEFInd Boot Manager,,This is the boot entry for rEFInd" | \
+               $IConv -t UCS-2 > "$InstallDir/$TargetDir/BOOT.CSV"
+       fi
++      if [[ "$Platform" == "loongarch64" && -d "$InstallDir/$TargetDir" ]] ; then
++         echo "$TargetLOONGARCH64,rEFInd Boot Manager,,This is the boot entry for rEFInd" | \
++              $IConv -t UCS-2 > "$InstallDir/$TargetDir/BOOT.CSV"
++      fi
+    fi
+ } # CreateBootCsvFile()
+ 
+@@ -1362,8 +1383,9 @@ AddBootEntry() {
+       echo
+       echo "ALERT: There were problems running the efibootmgr program! You may need to"
+       echo "rename the $Refind binary to the default name (EFI/BOOT/bootx64.efi"
+-      echo "on x86-64 systems, EFI/BOOT/bootia32.efi on x86 systems, or"
+-      echo "EFI/BOOT/bootaa64.efi on ARM64 systems) to have it run!"
++      echo "on x86-64 systems, EFI/BOOT/bootia32.efi on x86 systems, "
++      echo "EFI/BOOT/bootaa64.efi on ARM64 systems or "
++      echo "EFI/BOOT/bootloongarch64.efi on LoongArch systems.) to have it run!"
+       echo
+    else
+       echo "rEFInd is set as the default boot manager."
+diff --git a/refind.inf b/refind.inf
+index 9340b1e..7bb6a36 100644
+--- a/refind.inf
++++ b/refind.inf
+@@ -22,7 +22,7 @@
+ #
+ # The following information is for reference only and not required by the build tools.
+ #
+-#  VALID_ARCHITECTURES           = IA32 X64 IPF EBC AARCH64
++#  VALID_ARCHITECTURES           = IA32 X64 IPF EBC AARCH64 LOONGARCH64
+ #
+ 
+ [Sources]
+@@ -99,6 +99,11 @@
+ # Comment out CompilerIntrinsicsLib when compiling for AARCH64 using UDK2014
+   CompilerIntrinsicsLib
+ 
++[LibraryClasses.LOONGARCH64]
++  BaseStackCheckLib
++# Comment out CompilerIntrinsicsLib when compiling for LOONGARCH64 using UDK2014
++  CompilerIntrinsicsLib
++
+ [Guids]
+   gEfiAcpiTableGuid
+   gEfiAcpi10TableGuid
+@@ -184,3 +189,7 @@
+ [BuildOptions.AARCH64]
+   XCODE:*_*_*_CC_FLAGS = -Os  -DEFIAARCH64 -D__MAKEWITH_TIANO
+   GCC:*_*_*_CC_FLAGS = -Os -DEFIAARCH64 -D__MAKEWITH_TIANO
++
++[BuildOptions.LOONGARCH64]
++  XCODE:*_*_*_CC_FLAGS = -Os  -DEFILOONGARCH64 -D__MAKEWITH_TIANO
++  GCC:*_*_*_CC_FLAGS = -Os -DEFILOONGARCH64 -D__MAKEWITH_TIANO
+diff --git a/refind/Make.tiano b/refind/Make.tiano
+index 3e9036c..4aff620 100644
+--- a/refind/Make.tiano
++++ b/refind/Make.tiano
+@@ -35,6 +35,10 @@ ifeq ($(ARCH),aarch64)
+   ALL_EFILIBS +=    $(EFILIB)/BaseStackCheckLib/BaseStackCheckLib/OUTPUT/BaseStackCheckLib.lib
+ endif
+ 
++ifeq ($(ARCH),loongarch64)
++  ALL_EFILIBS +=    $(EFILIB)/BaseStackCheckLib/BaseStackCheckLib/OUTPUT/BaseStackCheckLib.lib
++endif
++
+ SOURCE_NAMES     = apple AutoGen config crc32 driver_support gpt icns \
+                    install  launch_efi launch_legacy lib line_edit linux \
+                    log main menu mystrings pointer scan screen
+diff --git a/refind/Makefile b/refind/Makefile
+index 8e7048c..99ba59b 100644
+--- a/refind/Makefile
++++ b/refind/Makefile
+@@ -30,6 +30,11 @@ ifeq ($(ARCH),aarch64)
+   TARGET = refind_aa64.efi
+ endif
+ 
++ifeq ($(ARCH),loongarch64)
++  LIBEG = build
++  TARGET = refind_loongarch64.efi
++endif
++
+ LOCAL_GNUEFI_CFLAGS  = -I$(SRCDIR) -I$(SRCDIR)/../include \
+                        -I$(SRCDIR)/../libeg -I$(SRCDIR)/../mok
+ LOCAL_LDFLAGS   = -L$(SRCDIR)/../libeg/ -L$(SRCDIR)/../mok/ \
+diff --git a/refind/config.h b/refind/config.h
+index 223af72..1e1bb9b 100644
+--- a/refind/config.h
++++ b/refind/config.h
+@@ -76,6 +76,8 @@ typedef struct {
+ #define DONT_SCAN_FILES L"shim.efi,shim-fedora.efi,shim-centos.efi,shimx64.efi,PreLoader.efi,TextMode.efi,ebounce.efi,GraphicsConsole.efi,bootmgr.efi,fbia32.efi"
+ #elif defined(EFIAARCH64)
+ #define DONT_SCAN_FILES L"shim.efi,shim-fedora.efi,shim-centos.efi,shimx64.efi,PreLoader.efi,TextMode.efi,ebounce.efi,GraphicsConsole.efi,bootmgr.efi,fbaa64.efi"
++#elif defined(EFILOONGARCH64)
++#define DONT_SCAN_FILES L"shim.efi,shim-fedora.efi,shim-centos.efi,shimx64.efi,PreLoader.efi,TextMode.efi,ebounce.efi,GraphicsConsole.efi,bootmgr.efi,fbloongarch64.efi"
+ #else
+ #define DONT_SCAN_FILES L"shim.efi,shim-fedora.efi,shim-centos.efi,shimx64.efi,PreLoader.efi,TextMode.efi,ebounce.efi,GraphicsConsole.efi,bootmgr.efi"
+ #endif
+diff --git a/refind/driver_support.c b/refind/driver_support.c
+index 563b5ad..a527b13 100644
+--- a/refind/driver_support.c
++++ b/refind/driver_support.c
+@@ -83,6 +83,8 @@
+ #define DRIVER_DIRS             L"drivers,drivers_ia32"
+ #elif defined (EFIAARCH64)
+ #define DRIVER_DIRS             L"drivers,drivers_aa64"
++#elif defined (EFILOONGARCH64)
++#define DRIVER_DIRS             L"drivers,drivers_loongarch64"
+ #else
+ #define DRIVER_DIRS             L"drivers"
+ #endif
+diff --git a/refind/global.h b/refind/global.h
+index ae958ed..7bbbedb 100644
+--- a/refind/global.h
++++ b/refind/global.h
+@@ -172,6 +172,8 @@
+ #define MOK_NAMES               L"MokManager.efi,HashTool.efi,HashTool-signed.efi,KeyTool.efi,KeyTool-signed.efi,mmia32.efi"
+ #elif defined(EFIAARCH64)
+ #define MOK_NAMES               L"MokManager.efi,HashTool.efi,HashTool-signed.efi,KeyTool.efi,KeyTool-signed.efi,mmaa64.efi"
++#elif defined(EFILOONGARCH64)
++#define MOK_NAMES               L"MokManager.efi,HashTool.efi,HashTool-signed.efi,KeyTool.efi,KeyTool-signed.efi,mmloongarch64.efi"
+ #else
+ #define MOK_NAMES               L"MokManager.efi,HashTool.efi,HashTool-signed.efi,KeyTool.efi,KeyTool-signed.efi"
+ #endif
+@@ -182,6 +184,8 @@
+ #define FWUPDATE_NAMES          L"fwupia32.efi"
+ #elif defined(EFIAARCH64)
+ #define FWUPDATE_NAMES          L"fwupaa64.efi"
++#elif defined(EFILOONGARCH64)
++#define FWUPDATE_NAMES          L"fwuploongarch64.efi"
+ #else
+ #define FWUPDATE_NAMES          L"fwup.efi"
+ #endif
+diff --git a/refind/install.h b/refind/install.h
+index 1976884..3ecf96d 100644
+--- a/refind/install.h
++++ b/refind/install.h
+@@ -28,6 +28,11 @@
+ #define INST_DRIVERS_SUBDIR L"drivers_aa64"
+ #define INST_REFIND_NAME L"refind_aa64.efi"
+ #define INST_PLATFORM_EXTENSION L"_aa64.efi"
++#elif defined(EFILOONGARCH64)
++#define INST_DIRECTORIES L"\\EFI,\\EFI\\refind,\\EFI\\refind\\icons,\\EFI\\refind\\drivers_loongarch64"
++#define INST_DRIVERS_SUBDIR L"drivers_loongarch64"
++#define INST_REFIND_NAME L"refind_loongarch64.efi"
++#define INST_PLATFORM_EXTENSION L"_loongarch64.efi"
+ #else
+ #define INST_DIRECTORIES L"\\EFI,\\EFI\\refind,\\EFI\\refind\\icons,\\EFI\\refind\\drivers"
+ #define INST_DRIVERS_SUBDIR L"drivers"
+diff --git a/refind/launch_efi.c b/refind/launch_efi.c
+index 320a207..03da111 100644
+--- a/refind/launch_efi.c
++++ b/refind/launch_efi.c
+@@ -81,6 +81,8 @@
+ #define EFI_STUB_ARCH           0x014c
+ #elif defined (EFIAARCH64)
+ #define EFI_STUB_ARCH           0xaa64
++#elif defined (EFILOONGARCH64)
++#define EFI_STUB_ARCH           0x6264
+ #else
+ #endif
+ 
+@@ -116,7 +118,7 @@ static VOID WarnSecureBootError(CHAR16 *Name, BOOLEAN Verbose) {
+ // gzip loaders.
+ UINTN IsValidLoader(EFI_FILE_PROTOCOL *RootDir, CHAR16 *FileName) {
+     UINTN           LoaderType = LOADER_TYPE_EFI;
+-#if defined (EFIX64) | defined (EFI32) | defined (EFIAARCH64)
++#if defined (EFIX64) | defined (EFI32) | defined (EFIAARCH64) | defined (EFILOONGARCH64)
+     BOOLEAN         IsValid = TRUE;
+     EFI_STATUS      Status;
+     EFI_FILE_HANDLE FileHandle;
+diff --git a/refind/lib.c b/refind/lib.c
+index 0da1fa4..c27ae73 100644
+--- a/refind/lib.c
++++ b/refind/lib.c
+@@ -103,6 +103,8 @@ EFI_GUID gFreedesktopRootGuid = { 0x4f68bce3, 0xe8cd, 0x4db1, { 0x96, 0xe7, 0xfb
+ EFI_GUID gFreedesktopRootGuid = { 0x44479540, 0xf297, 0x41b2, { 0x9a, 0xf7, 0xd1, 0x31, 0xd5, 0xf0, 0x45, 0x8a }};
+ #elif defined (EFIAARCH64)
+ EFI_GUID gFreedesktopRootGuid = { 0xb921b045, 0x1df0, 0x41c3, { 0xaf, 0x44, 0x4c, 0x6f, 0x28, 0x0d, 0x3f, 0xae }};
++#elif defined (EFILOONGARCH64)
++EFI_GUID gFreedesktopRootGuid = { 0x77055800, 0x792c, 0x4f94, { 0xb3, 0x9a, 0x98, 0xc9, 0x1b, 0x76, 0x2b, 0xb6 }};
+ #else
+ // Below is GUID for ARM32
+ EFI_GUID gFreedesktopRootGuid = { 0x69dad710, 0x2ce4, 0x4e3c, { 0xb1, 0x6c, 0x21, 0xa1, 0xd4, 0x9a, 0xbe, 0xd3 }};
+diff --git a/refind/main.c b/refind/main.c
+index a6d0dc7..55f5b2f 100644
+--- a/refind/main.c
++++ b/refind/main.c
+@@ -192,6 +192,9 @@ VOID AboutrEFInd(VOID)
+ #elif defined(EFIAARCH64)
+         AddMenuInfoLine(&AboutMenu, PoolPrint(L" Platform: ARM (64 bit); Secure Boot %s",
+                                               secure_mode() ? L"active" : L"inactive"));
++#elif defined(EFILOONGARCH64)
++        AddMenuInfoLine(&AboutMenu, PoolPrint(L" Platform: LoongArch (64 bit); Secure Boot %s",
++                                              secure_mode() ? L"active" : L"inactive"));
+ #else
+         AddMenuInfoLine(&AboutMenu, L" Platform: unknown");
+ #endif
+@@ -384,6 +387,8 @@ VOID LogBasicInfo(VOID) {
+     LOG(1, LOG_LINE_NORMAL, L"Platform: x86-64/X64/AMD64 (64-bit)");
+ #elif defined(EFIAARCH64)
+     LOG(1, LOG_LINE_NORMAL, L"Platform: ARM64/AARCH64 (64-bit)");
++#elif defined(EFILOONGARCH64)
++    LOG(1, LOG_LINE_NORMAL, L"Platform: LoongArch (64-bit)");
+ #else
+     LOG(1, LOG_LINE_NORMAL, L"Platform: unknown");
+ #endif
+diff --git a/refind/scan.c b/refind/scan.c
+index e270e83..535ef42 100644
+--- a/refind/scan.c
++++ b/refind/scan.c
+@@ -104,6 +104,14 @@
+ #define MEMTEST_NAMES           L"memtest86.efi,memtest86_aa64.efi,memtest86aa64.efi,bootaa64.efi"
+ #define FALLBACK_FULLNAME       L"EFI\\BOOT\\bootaa64.efi"
+ #define FALLBACK_BASENAME       L"bootaa64.efi"
++#elif defined (EFILOONGARCH64)
++#define SHELL_NAMES             L"\\EFI\\tools\\shell.efi,\\EFI\\tools\\shellloongarch64.efi,\\shell.efi,\\shellloongarch64.efi"
++#define GPTSYNC_NAMES           L"\\EFI\\tools\\gptsync.efi,\\EFI\\tools\\gptsync_loongarch64.efi"
++#define GDISK_NAMES             L"\\EFI\\tools\\gdisk.efi,\\EFI\\tools\\gdisk_loongarch64.efi"
++#define NETBOOT_NAMES           L"\\EFI\\tools\\ipxe.efi"
++#define MEMTEST_NAMES           L"memtest86.efi,memtest86_loongarch64.efi,memtest86loongarch64.efi,bootloongarch64.efi"
++#define FALLBACK_FULLNAME       L"EFI\\BOOT\\bootloongarch64.efi"
++#define FALLBACK_BASENAME       L"bootloongarch64.efi"
+ #else
+ #define SHELL_NAMES             L"\\EFI\\tools\\shell.efi,\\shell.efi"
+ #define GPTSYNC_NAMES           L"\\EFI\\tools\\gptsync.efi"
+-- 
+2.39.2
+

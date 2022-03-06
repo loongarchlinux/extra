@@ -27,7 +27,6 @@ makedepends=(
   imake
   inetutils
   jack
-  lld
   llvm
   mesa
   nasm
@@ -61,6 +60,10 @@ source=(
   $pkgname.desktop
   identity-icons-brand.svg
   0001-Bug-1882209-Update-encoding_rs-to-0.8.34-to-deal-wit.patch
+  0001-Add-support-for-LoongArch64.patch
+  0002-Enable-VA-API-support-for-AMD-GPUs.patch
+  0003-Enable-WebRTC-for-LoongArch.patch
+  0004-Fix-libyuv-build-with-LSX-LASX.patch
 )
 validpgpkeys=(
   # Mozilla Software Releases <release@mozilla.com>
@@ -96,6 +99,10 @@ prepare() {
 
   # Fix build with Rust 1.78.0
   patch -Np1 -i ../0001-Bug-1882209-Update-encoding_rs-to-0.8.34-to-deal-wit.patch
+  patch -Np1 -i ../0001-Add-support-for-LoongArch64.patch
+  patch -Np1 -i ../0002-Enable-VA-API-support-for-AMD-GPUs.patch
+  patch -Np1 -i ../0003-Enable-WebRTC-for-LoongArch.patch
+  patch -Np1 -i ../0004-Fix-libyuv-build-with-LSX-LASX.patch
 
   echo -n "$_google_api_key" >google-api-key
   echo -n "$_mozilla_api_key" >mozilla-api-key
@@ -109,11 +116,11 @@ ac_add_options --enable-release
 ac_add_options --enable-hardening
 ac_add_options --enable-optimize
 ac_add_options --enable-rust-simd
-ac_add_options --enable-linker=lld
+#ac_add_options --enable-linker=lld
 ac_add_options --disable-install-strip
-ac_add_options --disable-elf-hack
+#ac_add_options --disable-elf-hack
 ac_add_options --disable-bootstrap
-ac_add_options --with-wasi-sysroot=/usr/share/wasi-sysroot
+ac_add_options --without-wasm-sandboxed-libraries
 
 # Branding
 ac_add_options --enable-official-branding
@@ -136,7 +143,7 @@ ac_add_options --with-system-nss
 # Features
 ac_add_options --enable-alsa
 ac_add_options --enable-jack
-ac_add_options --enable-crashreporter
+ac_add_options --disable-crashreporter
 ac_add_options --disable-updater
 ac_add_options --disable-tests
 END
@@ -149,6 +156,11 @@ build() {
   export MOZBUILD_STATE_PATH="$srcdir/mozbuild"
   export MOZ_BUILD_DATE="$(date -u${SOURCE_DATE_EPOCH:+d @$SOURCE_DATE_EPOCH} +%Y%m%d%H%M%S)"
   export MOZ_NOSPAM=1
+# clang didn't support -mlsx
+  CFLAGS=${CFLAGS/-mlsx /}
+  CXXFLAGS=${CXXFLAGS/-mlsx /}
+  CFLAGS=${CFLAGS/-fstack-clash-protection/}
+  CXXFLAGS=${CXXFLAGS/-fstack-clash-protection/}
 
   # malloc_usable_size is used in various parts of the codebase
   CFLAGS="${CFLAGS/_FORTIFY_SOURCE=3/_FORTIFY_SOURCE=2}"
@@ -159,34 +171,7 @@ build() {
 
   # Do 3-tier PGO
   echo "Building instrumented browser..."
-  cat >.mozconfig ../mozconfig - <<END
-ac_add_options --enable-profile-generate=cross
-END
-  ./mach build
-
-  echo "Profiling instrumented browser..."
-  ./mach package
-  LLVM_PROFDATA=llvm-profdata \
-    JARLOG_FILE="$PWD/jarlog" \
-    xvfb-run -s "-screen 0 1920x1080x24 -nolisten local" \
-    ./mach python build/pgo/profileserver.py
-
-  stat -c "Profile data found (%s bytes)" merged.profdata
-  test -s merged.profdata
-
-  stat -c "Jar log found (%s bytes)" jarlog
-  test -s jarlog
-
-  echo "Removing instrumented browser..."
-  ./mach clobber
-
-  echo "Building optimized browser..."
-  cat >.mozconfig ../mozconfig - <<END
-ac_add_options --enable-lto=cross,full
-ac_add_options --enable-profile-use=cross
-ac_add_options --with-pgo-profile-path=${PWD@Q}/merged.profdata
-ac_add_options --with-pgo-jarlog=${PWD@Q}/jarlog
-END
+  cp ../mozconfig .mozconfig
   ./mach build
 }
 

@@ -22,11 +22,17 @@ sha256sums=('529b067f5d80981f45ddf6766627b8fc5af619822f068f342aab776e683df4f3')
 
 build() {
   cd SuiteSparse-$pkgver
+  CXXFLAGS=${CXXFLAGS/-mlsx /}
+  CXXFLAGS=${CXXFLAGS/-fstack-clash-protection/}
+
+  CFLAGS+=" -ffat-lto-objects -mcmodel=extreme" \
+  CXXFLAGS+=" -ffat-lto-objects -mcmodel=extreme" \
   CMAKE_OPTIONS="-DBLA_VENDOR=Generic \
                  -DCMAKE_INSTALL_PREFIX=/usr \
                  -DCMAKE_BUILD_TYPE=None \
                  -DNSTATIC=ON" \
   make
+#  -DALLOW_64BIT_BLAS=ON \
 }
 
 package() {

@@ -1,0 +1,2237 @@
+From 50bae581a3e5e996bc36e656631a29be9f12ad9a Mon Sep 17 00:00:00 2001
+From: znley <shanjiantao@loongson.cn>
+Date: Mon, 12 Jun 2023 11:23:38 +0800
+Subject: [PATCH 1/6] include: add common header files for loongarch64
+
+Signed-off-by: znley <shanjiantao@loongson.cn>
+---
+ include/common/arch/loongarch64/asm/atomic.h  | 62 +++++++++++++++++++
+ include/common/arch/loongarch64/asm/bitops.h  | 24 +++++++
+ .../common/arch/loongarch64/asm/bitsperlong.h |  6 ++
+ include/common/arch/loongarch64/asm/linkage.h | 19 ++++++
+ include/common/arch/loongarch64/asm/page.h    | 39 ++++++++++++
+ 5 files changed, 150 insertions(+)
+ create mode 100644 include/common/arch/loongarch64/asm/atomic.h
+ create mode 100644 include/common/arch/loongarch64/asm/bitops.h
+ create mode 100644 include/common/arch/loongarch64/asm/bitsperlong.h
+ create mode 100644 include/common/arch/loongarch64/asm/linkage.h
+ create mode 100644 include/common/arch/loongarch64/asm/page.h
+
+diff --git a/include/common/arch/loongarch64/asm/atomic.h b/include/common/arch/loongarch64/asm/atomic.h
+new file mode 100644
+index 0000000000..9017254397
+--- /dev/null
++++ b/include/common/arch/loongarch64/asm/atomic.h
+@@ -0,0 +1,62 @@
++#ifndef __CR_ATOMIC_H__
++#define __CR_ATOMIC_H__
++
++#include <linux/types.h>
++#include "common/compiler.h"
++
++typedef struct {
++	int counter;
++} atomic_t;
++
++static inline int atomic_read(const atomic_t *v)
++{
++	return (*(volatile int *)&(v)->counter);
++}
++
++static inline void atomic_set(atomic_t *v, int i)
++{
++	v->counter = i;
++}
++
++static inline int __atomic_add(int i, atomic_t *v)
++{
++	int result;
++	asm volatile("amadd_db.w %1, %2, %0" : "+ZB"(v->counter), "=&r"(result) : "r"(i) : "memory");
++	return result + i;
++}
++
++static inline void atomic_add(int i, atomic_t *v)
++{
++	__atomic_add(i, v);
++}
++
++static inline int atomic_add_return(int i, atomic_t *v)
++{
++	return __atomic_add(i, v);
++}
++
++#define atomic_sub(i, v)	atomic_add(-(int)i, v)
++#define atomic_sub_return(i, v) atomic_add_return(-(int)i, v)
++#define atomic_inc(v)		atomic_add(1, v)
++#define atomic_inc_return(v)	atomic_add_return(1, v)
++#define atomic_dec(v)		atomic_sub(1, v)
++#define atomic_dec_return(v)	atomic_sub_return(1, v)
++
++static inline int atomic_cmpxchg(atomic_t *ptr, int old, int new)
++{
++	int ret;
++	asm volatile("1:                     \n"
++		     " ll.w  %0, %1          \n"
++		     " bne   %0, %2, 2f      \n"
++		     " or    $t0, %3, $zero  \n"
++		     " sc.w  $t0, %1         \n"
++		     " beqz  $t0, 1b         \n"
++		     "2:                     \n"
++		     " dbar  0               \n"
++		     : "=&r"(ret), "+ZB"(ptr->counter)
++		     : "r"(old), "r"(new)
++		     : "t0", "memory");
++	return ret;
++}
++
++#endif /* __CR_ATOMIC_H__ */
+diff --git a/include/common/arch/loongarch64/asm/bitops.h b/include/common/arch/loongarch64/asm/bitops.h
+new file mode 100644
+index 0000000000..170e4f7369
+--- /dev/null
++++ b/include/common/arch/loongarch64/asm/bitops.h
+@@ -0,0 +1,24 @@
++#ifndef _LINUX_BITOPS_H
++#define _LINUX_BITOPS_H
++#include "common/asm-generic/bitops.h"
++
++/**
++ * test_and_set_bit - Set a bit and return its old value
++ * @nr: Bit to set
++ * @addr: Address to count from
++ *
++ * This operation is atomic and cannot be reordered.
++ * It also implies a memory barrier.
++ */
++
++#define BIT_MASK(nr) (1UL << ((nr) % BITS_PER_LONG))
++#define BIT_WORD(nr) ((1UL << ((nr) / BITS_PER_LONG)) - 1)
++static inline int test_and_set_bit(unsigned long nr, volatile unsigned long *addr)
++{
++	unsigned long res, mask;
++	mask = BIT_MASK(nr);
++	asm volatile("amor_db.d  %0, %2, %1" : "=&r"(res), "+ZB"(addr[BIT_WORD(nr)]) : "r"(mask) : "memory");
++	return (res & mask) != 0;
++}
++
++#endif
+diff --git a/include/common/arch/loongarch64/asm/bitsperlong.h b/include/common/arch/loongarch64/asm/bitsperlong.h
+new file mode 100644
+index 0000000000..13d06a384e
+--- /dev/null
++++ b/include/common/arch/loongarch64/asm/bitsperlong.h
+@@ -0,0 +1,6 @@
++#ifndef __CR_BITSPERLONG_H__
++#define __CR_BITSPERLONG_H__
++
++#define BITS_PER_LONG _LOONGARCH_SZLONG
++
++#endif /* __CR_BITSPERLONG_H__ */
+diff --git a/include/common/arch/loongarch64/asm/linkage.h b/include/common/arch/loongarch64/asm/linkage.h
+new file mode 100644
+index 0000000000..448acc29fc
+--- /dev/null
++++ b/include/common/arch/loongarch64/asm/linkage.h
+@@ -0,0 +1,19 @@
++#ifndef __CR_LINKAGE_H__
++#define __CR_LINKAGE_H__
++
++#define __ALIGN	    .align 2
++#define __ALIGN_STR ".align 2"
++
++#define GLOBAL(name) \
++	.globl name; \
++name:
++
++#define ENTRY(name)            \
++	.globl name;           \
++	__ALIGN;               \
++	.type name, @function; \
++name:
++
++#define END(sym) .size sym, .- sym
++
++#endif /* __CR_LINKAGE_H__ */
+diff --git a/include/common/arch/loongarch64/asm/page.h b/include/common/arch/loongarch64/asm/page.h
+new file mode 100644
+index 0000000000..25bdbc1412
+--- /dev/null
++++ b/include/common/arch/loongarch64/asm/page.h
+@@ -0,0 +1,39 @@
++#ifndef __CR_ASM_PAGE_H__
++#define __CR_ASM_PAGE_H__
++
++#define ARCH_HAS_LONG_PAGES
++
++#ifndef CR_NOGLIBC
++#include <string.h> /* ffsl() */
++#include <unistd.h> /* _SC_PAGESIZE */
++
++static unsigned __page_size;
++static unsigned __page_shift;
++
++static inline unsigned page_size(void)
++{
++	if (!__page_size)
++		__page_size = sysconf(_SC_PAGESIZE);
++	return __page_size;
++}
++
++static inline unsigned page_shift(void)
++{
++	if (!__page_shift)
++		__page_shift = (ffsl(page_size()) - 1);
++	return __page_shift;
++}
++
++#define PAGE_SIZE  page_size()
++#define PAGE_SHIFT page_shift()
++#define PAGE_MASK  (~(PAGE_SIZE - 1))
++
++#define PAGE_PFN(addr) ((addr) / PAGE_SIZE)
++#else /* CR_NOGLIBC */
++
++extern unsigned page_size(void);
++#define PAGE_SIZE page_size()
++
++#endif /* CR_NOGLIBC */
++
++#endif /* __CR_ASM_PAGE_H__ */
+
+From 0d63f58663fa22eb9fecd1cc778a49c49ddccfc9 Mon Sep 17 00:00:00 2001
+From: znley <shanjiantao@loongson.cn>
+Date: Mon, 12 Jun 2023 09:35:40 +0000
+Subject: [PATCH 2/6] compel: add loongarch64 support
+
+Signed-off-by: znley <shanjiantao@loongson.cn>
+---
+ Makefile                                      |  10 +-
+ compel/Makefile                               |   2 +-
+ .../plugins/include/asm/prologue.h            |  35 +++
+ .../plugins/include/asm/syscall-types.h       |  30 +++
+ .../loongarch64/plugins/include/features.h    |   4 +
+ .../loongarch64/plugins/std/parasite-head.S   |   9 +
+ .../plugins/std/syscalls/Makefile.syscalls    | 117 ++++++++++
+ .../syscalls/syscall-common-loongarch-64.S    |  44 ++++
+ .../plugins/std/syscalls/syscall_64.tbl       | 121 +++++++++++
+ .../loongarch64/scripts/compel-pack.lds.S     |  32 +++
+ compel/arch/loongarch64/src/lib/cpu.c         |  41 ++++
+ .../loongarch64/src/lib/handle-elf-host.c     |  22 ++
+ compel/arch/loongarch64/src/lib/handle-elf.c  |  22 ++
+ .../loongarch64/src/lib/include/handle-elf.h  |   8 +
+ .../loongarch64/src/lib/include/syscall.h     |   8 +
+ .../src/lib/include/uapi/asm/breakpoints.h    |   6 +
+ .../src/lib/include/uapi/asm/cpu.h            |   6 +
+ .../src/lib/include/uapi/asm/fpu.h            |   4 +
+ .../src/lib/include/uapi/asm/infect-types.h   |  67 ++++++
+ .../src/lib/include/uapi/asm/sigframe.h       |  86 ++++++++
+ compel/arch/loongarch64/src/lib/infect.c      | 204 ++++++++++++++++++
+ compel/src/main.c                             |   3 +
+ scripts/nmk/scripts/include.mk                |   3 +-
+ 23 files changed, 881 insertions(+), 3 deletions(-)
+ create mode 100644 compel/arch/loongarch64/plugins/include/asm/prologue.h
+ create mode 100644 compel/arch/loongarch64/plugins/include/asm/syscall-types.h
+ create mode 100644 compel/arch/loongarch64/plugins/include/features.h
+ create mode 100644 compel/arch/loongarch64/plugins/std/parasite-head.S
+ create mode 100644 compel/arch/loongarch64/plugins/std/syscalls/Makefile.syscalls
+ create mode 100644 compel/arch/loongarch64/plugins/std/syscalls/syscall-common-loongarch-64.S
+ create mode 100644 compel/arch/loongarch64/plugins/std/syscalls/syscall_64.tbl
+ create mode 100644 compel/arch/loongarch64/scripts/compel-pack.lds.S
+ create mode 100644 compel/arch/loongarch64/src/lib/cpu.c
+ create mode 100644 compel/arch/loongarch64/src/lib/handle-elf-host.c
+ create mode 100644 compel/arch/loongarch64/src/lib/handle-elf.c
+ create mode 100644 compel/arch/loongarch64/src/lib/include/handle-elf.h
+ create mode 100644 compel/arch/loongarch64/src/lib/include/syscall.h
+ create mode 100644 compel/arch/loongarch64/src/lib/include/uapi/asm/breakpoints.h
+ create mode 100644 compel/arch/loongarch64/src/lib/include/uapi/asm/cpu.h
+ create mode 100644 compel/arch/loongarch64/src/lib/include/uapi/asm/fpu.h
+ create mode 100644 compel/arch/loongarch64/src/lib/include/uapi/asm/infect-types.h
+ create mode 100644 compel/arch/loongarch64/src/lib/include/uapi/asm/sigframe.h
+ create mode 100644 compel/arch/loongarch64/src/lib/infect.c
+
+diff --git a/Makefile b/Makefile
+index a5c6c5bccf..9a297d2d83 100644
+--- a/Makefile
++++ b/Makefile
+@@ -19,7 +19,7 @@ endif
+ 
+ #
+ # Supported Architectures
+-ifneq ($(filter-out x86 arm aarch64 ppc64 s390 mips,$(ARCH)),)
++ifneq ($(filter-out x86 arm aarch64 ppc64 s390 mips loongarch64,$(ARCH)),)
+         $(error "The architecture $(ARCH) isn't supported")
+ endif
+ 
+@@ -80,6 +80,10 @@ ifeq ($(ARCH),mips)
+         DEFINES		:= -DCONFIG_MIPS
+ endif
+ 
++ifeq ($(ARCH),loongarch64)
++        DEFINES		:= -DCONFIG_LOONGARCH64
++endif
++
+ #
+ # CFLAGS_PIE:
+ #
+@@ -122,6 +126,10 @@ ifeq ($(ARCH),mips)
+ WARNINGS		:= -rdynamic
+ endif
+ 
++ifeq ($(ARCH),loongarch64)
++WARNINGS		:= -Wno-implicit-function-declaration
++endif
++
+ ifneq ($(GCOV),)
+         LDFLAGS         += -lgcov
+         CFLAGS          += $(CFLAGS-GCOV)
+diff --git a/compel/Makefile b/compel/Makefile
+index b79aee6871..78ec4826af 100644
+--- a/compel/Makefile
++++ b/compel/Makefile
+@@ -33,7 +33,7 @@ lib-y			+= arch/$(ARCH)/src/lib/thread_area.o
+ endif
+ 
+ # handle_elf() has no support of ELF relocations on ARM (yet?)
+-ifneq ($(filter arm aarch64,$(ARCH)),)
++ifneq ($(filter arm aarch64 loongarch64,$(ARCH)),)
+ CFLAGS			+= -DNO_RELOCS
+ HOSTCFLAGS		+= -DNO_RELOCS
+ endif
+diff --git a/compel/arch/loongarch64/plugins/include/asm/prologue.h b/compel/arch/loongarch64/plugins/include/asm/prologue.h
+new file mode 100644
+index 0000000000..c19ce54d7a
+--- /dev/null
++++ b/compel/arch/loongarch64/plugins/include/asm/prologue.h
+@@ -0,0 +1,35 @@
++#ifndef __ASM_PROLOGUE_H__
++#define __ASM_PROLOGUE_H__
++
++#ifndef __ASSEMBLY__
++
++#include <sys/types.h>
++#include <sys/socket.h>
++#include <sys/un.h>
++
++#include <errno.h>
++
++#define sys_recv(sockfd, ubuf, size, flags) sys_recvfrom(sockfd, ubuf, size, flags, NULL, NULL)
++
++typedef struct prologue_init_args {
++	struct sockaddr_un ctl_sock_addr;
++	unsigned int ctl_sock_addr_len;
++
++	unsigned int arg_s;
++	void *arg_p;
++
++	void *sigframe;
++} prologue_init_args_t;
++
++#endif /* __ASSEMBLY__ */
++
++/*
++ * Reserve enough space for sigframe.
++ *
++ * FIXME It is rather should be taken from sigframe header.
++ */
++#define PROLOGUE_SGFRAME_SIZE 4096
++
++#define PROLOGUE_INIT_ARGS_SIZE 1024
++
++#endif /* __ASM_PROLOGUE_H__ */
+diff --git a/compel/arch/loongarch64/plugins/include/asm/syscall-types.h b/compel/arch/loongarch64/plugins/include/asm/syscall-types.h
+new file mode 100644
+index 0000000000..b883bd8bed
+--- /dev/null
++++ b/compel/arch/loongarch64/plugins/include/asm/syscall-types.h
+@@ -0,0 +1,30 @@
++#ifndef COMPEL_ARCH_SYSCALL_TYPES_H__
++#define COMPEL_ARCH_SYSCALL_TYPES_H__
++
++#include <common/asm/bitsperlong.h>
++/* Types for sigaction, sigprocmask syscalls */
++typedef void rt_signalfn_t(int, siginfo_t *, void *);
++typedef rt_signalfn_t *rt_sighandler_t;
++
++typedef void rt_restorefn_t(void);
++typedef rt_restorefn_t *rt_sigrestore_t;
++
++/* refer to arch/loongarch/include/uapi/asm/signal.h */
++#define _KNSIG	     64
++#define _NSIG_BPW    BITS_PER_LONG
++#define _KNSIG_WORDS (_KNSIG / _NSIG_BPW)
++
++typedef struct {
++	uint64_t sig[_KNSIG_WORDS];
++} k_rtsigset_t;
++
++typedef struct {
++	rt_sighandler_t rt_sa_handler;
++	unsigned long rt_sa_flags;
++	rt_sigrestore_t rt_sa_restorer;
++	k_rtsigset_t rt_sa_mask;
++} rt_sigaction_t;
++
++#define SA_RESTORER 0x04000000
++
++#endif /* COMPEL_ARCH_SYSCALL_TYPES_H__ */
+diff --git a/compel/arch/loongarch64/plugins/include/features.h b/compel/arch/loongarch64/plugins/include/features.h
+new file mode 100644
+index 0000000000..b4a3cded2b
+--- /dev/null
++++ b/compel/arch/loongarch64/plugins/include/features.h
+@@ -0,0 +1,4 @@
++#ifndef __COMPEL_ARCH_FEATURES_H
++#define __COMPEL_ARCH_FEATURES_H
++
++#endif /* __COMPEL_ARCH_FEATURES_H */
+diff --git a/compel/arch/loongarch64/plugins/std/parasite-head.S b/compel/arch/loongarch64/plugins/std/parasite-head.S
+new file mode 100644
+index 0000000000..3a960490eb
+--- /dev/null
++++ b/compel/arch/loongarch64/plugins/std/parasite-head.S
+@@ -0,0 +1,9 @@
++
++#include "common/asm/linkage.h"
++
++	.section .head.text, "ax"
++ENTRY(__export_parasite_head_start)
++	bl	parasite_service;
++	break 0;
++END(__export_parasite_head_start)
++
+diff --git a/compel/arch/loongarch64/plugins/std/syscalls/Makefile.syscalls b/compel/arch/loongarch64/plugins/std/syscalls/Makefile.syscalls
+new file mode 100644
+index 0000000000..0d08f34e1d
+--- /dev/null
++++ b/compel/arch/loongarch64/plugins/std/syscalls/Makefile.syscalls
+@@ -0,0 +1,117 @@
++std-lib-y		+= ./$(PLUGIN_ARCH_DIR)/std/syscalls-64.o
++sys-proto-types		:= $(obj)/include/uapi/std/syscall-types.h
++sys-proto-generic	:= $(obj)/include/uapi/std/syscall.h
++sys-codes-generic	:= $(obj)/include/uapi/std/syscall-codes.h
++sys-codes		 = $(obj)/include/uapi/std/syscall-codes-$(1).h
++sys-proto		 = $(obj)/include/uapi/std/syscall-$(1).h
++sys-def			 = $(PLUGIN_ARCH_DIR)/std/syscalls/syscall_$(1).tbl
++sys-asm			 = $(PLUGIN_ARCH_DIR)/std/syscalls-$(1).S
++sys-asm-common-name	 = std/syscalls/syscall-common-loongarch-$(1).S
++sys-asm-common		 = $(PLUGIN_ARCH_DIR)/$(sys-asm-common-name)
++sys-asm-types		:= $(obj)/include/uapi/std/asm/syscall-types.h
++sys-exec-tbl		 = $(PLUGIN_ARCH_DIR)/std/sys-exec-tbl-$(1).c
++
++sys-bits		:= 64
++
++AV			:= $$$$
++
++define gen-rule-sys-codes
++$(sys-codes): $(sys-def) $(sys-proto-types)
++	$(call msg-gen, $$@)
++	$(Q) echo "/* Autogenerated, don't edit */"					>  $$@
++	$(Q) echo "#ifndef ASM_SYSCALL_CODES_H_$(1)__"					>> $$@
++	$(Q) echo "#define ASM_SYSCALL_CODES_H_$(1)__"					>> $$@
++	$(Q) cat $$< | awk '/^__NR/{SYSN=$(AV)1;					\
++		sub("^__NR", "SYS", SYSN);						\
++		print "\n#ifndef ", $(AV)1;						\
++		print "#define", $(AV)1, $(AV)2;					\
++		print "#endif";								\
++		print "\n#ifndef ", SYSN;						\
++		print "#define ", SYSN, $(AV)1;						\
++		print "#endif";}'							>> $$@
++	$(Q) echo "#endif /* ASM_SYSCALL_CODES_H_$(1)__ */"				>> $$@
++endef
++
++define gen-rule-sys-proto
++$(sys-proto): $(sys-def) $(sys-proto-types)
++	$(call msg-gen, $$@)
++	$(Q) echo "/* Autogenerated, don't edit */"					>  $$@
++	$(Q) echo "#ifndef ASM_SYSCALL_PROTO_H_$(1)__"					>> $$@
++	$(Q) echo "#define ASM_SYSCALL_PROTO_H_$(1)__"					>> $$@
++	$(Q) echo '#include <compel/plugins/std/syscall-codes-$(1).h>'			>> $$@
++	$(Q) echo '#include <compel/plugins/std/syscall-types.h>'			>> $$@
++ifeq ($(1),32)
++	$(Q) echo '#include "asm/syscall32.h"'						>> $$@
++endif
++	$(Q) cat $$< | awk '/^__NR/{print "extern long", $(AV)3,			\
++			substr($(AV)0, index($(AV)0,$(AV)4)), ";"}'			>> $$@
++	$(Q) echo "#endif /* ASM_SYSCALL_PROTO_H_$(1)__ */"				>> $$@
++endef
++
++define gen-rule-sys-asm
++$(sys-asm): $(sys-def) $(sys-asm-common) $(sys-codes) $(sys-proto) $(sys-proto-types)
++	$(call msg-gen, $$@)
++	$(Q) echo "/* Autogenerated, don't edit */"					>  $$@
++	$(Q) echo '#include <compel/plugins/std/syscall-codes-$(1).h>'			>> $$@
++	$(Q) echo '#include "$(sys-asm-common-name)"'					>> $$@
++	$(Q) cat $$< | awk '/^__NR/{print "SYSCALL(", $(AV)3, ",", $(AV)2, ")"}'	>> $$@
++endef
++
++define gen-rule-sys-exec-tbl
++$(sys-exec-tbl): $(sys-def) $(sys-codes) $(sys-proto) $(sys-proto-generic) $(sys-proto-types)
++	$(call msg-gen, $$@)
++	$(Q) echo "/* Autogenerated, don't edit */"					>  $$@
++	$(Q) cat $$< | awk '/^__NR/{print						\
++		"SYSCALL(", substr($(AV)3, 5), ",", $(AV)2, ")"}'			>> $$@
++endef
++
++$(sys-codes-generic): $(sys-proto-types)
++	$(call msg-gen, $@)
++	$(Q) echo "/* Autogenerated, don't edit */"			>  $@
++	$(Q) echo "#ifndef __ASM_CR_SYSCALL_CODES_H__"			>> $@
++	$(Q) echo "#define __ASM_CR_SYSCALL_CODES_H__"			>> $@
++	$(Q) echo '#include <compel/plugins/std/syscall-codes-64.h>'	>> $@
++	$(Q) cat $< | awk '/^__NR/{NR32=$$1;				\
++		sub("^__NR", "__NR32", NR32);				\
++		print "\n#ifndef ", NR32;				\
++		print "#define ", NR32, $$2;				\
++		print "#endif";}'					>> $@
++	$(Q) echo "#endif /* __ASM_CR_SYSCALL_CODES_H__ */"		>> $@
++mrproper-y += $(sys-codes-generic)
++
++$(sys-proto-generic): $(strip $(call map,sys-proto,$(sys-bits))) $(sys-proto-types)
++	$(call msg-gen, $@)
++	$(Q) echo "/* Autogenerated, don't edit */"			>  $@
++	$(Q) echo "#ifndef __ASM_CR_SYSCALL_PROTO_H__"			>> $@
++	$(Q) echo "#define __ASM_CR_SYSCALL_PROTO_H__"			>> $@
++	$(Q) echo ""							>> $@
++	$(Q) echo '#include <compel/plugins/std/syscall-64.h>'		>> $@
++	$(Q) echo ""							>> $@
++	$(Q) echo "#endif /* __ASM_CR_SYSCALL_PROTO_H__ */"		>> $@
++mrproper-y += $(sys-proto-generic)
++
++define gen-rule-sys-exec-tbl
++$(sys-exec-tbl): $(sys-def) $(sys-codes) $(sys-proto) $(sys-proto-generic)
++	$(call msg-gen, $$@)
++	$(Q) echo "/* Autogenerated, don't edit */"			>  $$@
++	$(Q) cat $$< | awk '/^__NR/{print				\
++		"SYSCALL(", substr($(AV)3, 5), ",", $(AV)2, ")"}'	>> $$@
++endef
++
++$(eval $(call map,gen-rule-sys-codes,$(sys-bits)))
++$(eval $(call map,gen-rule-sys-proto,$(sys-bits)))
++$(eval $(call map,gen-rule-sys-asm,$(sys-bits)))
++$(eval $(call map,gen-rule-sys-exec-tbl,$(sys-bits)))
++
++$(sys-asm-types): $(PLUGIN_ARCH_DIR)/include/asm/syscall-types.h
++	$(call msg-gen, $@)
++	$(Q) ln -s ../../../../../../$(PLUGIN_ARCH_DIR)/include/asm/syscall-types.h $(sys-asm-types)
++
++std-headers-deps	+= $(call sys-codes,$(sys-bits))
++std-headers-deps	+= $(call sys-proto,$(sys-bits))
++std-headers-deps	+= $(call sys-asm,$(sys-bits))
++std-headers-deps	+= $(call sys-exec-tbl,$(sys-bits))
++std-headers-deps	+= $(sys-codes-generic)
++std-headers-deps	+= $(sys-proto-generic)
++std-headers-deps	+= $(sys-asm-types)
++mrproper-y		+= $(std-headers-deps)
+diff --git a/compel/arch/loongarch64/plugins/std/syscalls/syscall-common-loongarch-64.S b/compel/arch/loongarch64/plugins/std/syscalls/syscall-common-loongarch-64.S
+new file mode 100644
+index 0000000000..fff8944669
+--- /dev/null
++++ b/compel/arch/loongarch64/plugins/std/syscalls/syscall-common-loongarch-64.S
+@@ -0,0 +1,44 @@
++#include "common/asm/linkage.h"
++
++#define SYSCALL(name, opcode)		\
++ENTRY(name);					\
++	addi.d	$a7, $zero, opcode;	\
++	syscall 0;					\
++	jirl	$r0, $r1, 0;		\
++END(name)
++
++#ifndef AT_FDCWD
++#define AT_FDCWD	-100
++#endif
++
++#ifndef AT_REMOVEDIR
++#define AT_REMOVEDIR	0x200
++#endif
++
++ENTRY(sys_open)
++	or		$a3, $zero, $a2
++	or		$a2, $zero, $a1
++	or		$a1, $zero, $a0
++	addi.d	$a0, $zero, AT_FDCWD
++	b		sys_openat
++END(sys_open)
++
++ENTRY(sys_mkdir)
++	or		$a3, $zero, $a2
++	or		$a2, $zero, $a1
++	or		$a1, $zero, $a0
++	addi.d	$a0, $zero, AT_FDCWD
++	b		sys_mkdirat
++END(sys_mkdir)
++
++ENTRY(sys_rmdir)
++	addi.d	$a2, $zero, AT_REMOVEDIR
++	or		$a1, $zero, $a0
++	addi.d	$a0, $zero, AT_FDCWD
++	b		sys_unlinkat
++END(sys_rmdir)
++
++ENTRY(__cr_restore_rt)
++	addi.d	$a7, $zero, __NR_rt_sigreturn
++	syscall	0
++END(__cr_restore_rt)
+diff --git a/compel/arch/loongarch64/plugins/std/syscalls/syscall_64.tbl b/compel/arch/loongarch64/plugins/std/syscalls/syscall_64.tbl
+new file mode 100644
+index 0000000000..b37a22674e
+--- /dev/null
++++ b/compel/arch/loongarch64/plugins/std/syscalls/syscall_64.tbl
+@@ -0,0 +1,121 @@
++#
++# System calls table, please make sure the table consist only the syscalls
++# really used somewhere in project.
++# from kernel/linux-3.10.84/arch/mips/include/uapi/asm/unistd.h Linux 64-bit syscalls are in the range from 5000 to 5999.
++#
++# __NR_name			code		name			arguments
++# -------------------------------------------------------------------------------------------------------------------------------------------------------------
++__NR_io_setup				0		sys_io_setup			(unsigned nr_events, aio_context_t *ctx)
++__NR_io_submit				2		sys_io_submit			(aio_context_t ctx, long nr, struct iocb **iocbpp)
++__NR_io_getevents			4		sys_io_getevents		(aio_context_t ctx, long min_nr, long nr, struct io_event *evs, struct timespec *tmo)
++__NR_fcntl					25		sys_fcntl				(int fd, int type, long arg)
++__NR_ioctl					29		sys_ioctl				(unsigned int fd, unsigned int cmd, unsigned long arg)
++__NR_flock					32		sys_flock				(int fd, unsigned long cmd)
++__NR_mkdirat				34		sys_mkdirat             (int dfd, const char *pathname, int flag)
++__NR_unlinkat				35		sys_unlinkat            (int dfd, const char *pathname, int flag)
++__NR_umount2				39		sys_umount2				(char *name, int flags)
++__NR_mount					40		sys_mount				(char *dev_nmae, char *dir_name, char *type, unsigned long flags, void *data)
++__NR_fallocate				47		sys_fallocate			(int fd, int mode, loff_t offset, loff_t len)
++__NR_close					57		sys_close				(int fd)
++__NR_openat					56		sys_openat				(int dfd, const char *filename, int flags, int mode)
++__NR_lseek					62		sys_lseek				(int fd, unsigned long offset, unsigned long origin)
++__NR_read					63		sys_read				(int fd, void *buf, unsigned long count)
++__NR_write					64		sys_write				(int fd, const void *buf, unsigned long count)
++__NR_pread64				67		sys_pread				(unsigned int fd, char *buf, size_t count, loff_t pos)
++__NR_preadv					69		sys_preadv_raw			(int fd, struct iovec *iov, unsigned long nr, unsigned long pos_l, unsigned long pos_h)
++__NR_ppoll					73		sys_ppoll				(struct pollfd *fds, unsigned int nfds, const struct timespec *tmo, const sigset_t *sigmask, size_t sigsetsize)
++__NR_signalfd4				74		sys_signalfd			(int fd, k_rtsigset_t *mask, size_t sizemask, int flags)
++__NR_vmsplice				75		sys_vmsplice			(int fd, const struct iovec *iov, unsigned long nr_segs, unsigned int flags)
++__NR_readlinkat				78		sys_readlinkat			(int fd, const char *path, char *buf, int bufsize)
++__NR_timerfd_settime		86		sys_timerfd_settime		(int ufd, int flags, const struct itimerspec *utmr, struct itimerspec *otmr)
++__NR_capget					90		sys_capget				(struct cap_header *h, struct cap_data *d)
++__NR_capset					91		sys_capset				(struct cap_header *h, struct cap_data *d)
++__NR_personality			92		sys_personality			(unsigned int personality)
++__NR_exit					93		sys_exit				(unsigned long error_code)
++__NR_exit_group				94		sys_exit_group			(int error_code)
++__NR_waitid					95		sys_waitid				(int which, pid_t pid, struct siginfo *infop, int options, struct rusage *ru)
++__NR_set_tid_address		96		sys_set_tid_address		(int *tid_addr)
++__NR_futex					98		sys_futex				(uint32_t *uaddr, int op, uint32_t val, struct timespec *utime, uint32_t *uaddr2, uint32_t val3)
++__NR_set_robust_list		99		sys_set_robust_list		(struct robust_list_head *head, size_t len)
++__NR_get_robust_list		100		sys_get_robust_list		(int pid, struct robust_list_head **head_ptr, size_t *len_ptr)
++__NR_nanosleep				101		sys_nanosleep			(struct timespec *req, struct timespec *rem)
++__NR_getitimer				102		sys_getitimer			(int which, const struct itimerval *val)
++__NR_setitimer				103		sys_setitimer			(int which, const struct itimerval *val, struct itimerval *old)
++__NR_sys_timer_create		107		sys_timer_create		(clockid_t which_clock, struct sigevent *timer_event_spec, kernel_timer_t *created_timer_id)
++__NR_sys_timer_gettime		108		sys_timer_gettime		(int timer_id, const struct itimerspec *setting)
++__NR_sys_timer_getoverrun	109		sys_timer_getoverrun	(int timer_id)
++__NR_sys_timer_settime		110		sys_timer_settime		(kernel_timer_t timer_id, int flags, const struct itimerspec *new_setting, struct itimerspec *old_setting)
++__NR_sys_timer_delete		111		sys_timer_delete		(kernel_timer_t timer_id)
++__NR_clock_gettime			113		sys_clock_gettime		(const clockid_t which_clock, const struct timespec *tp)
++__NR_sched_setscheduler		119		sys_sched_setscheduler	(int pid, int policy, struct sched_param *p)
++__NR_restart_syscall		128		sys_restart_syscall		(void)
++__NR_kill					129		sys_kill				(long pid, int sig)
++__NR_sigaltstack			132		sys_sigaltstack			(const void *uss, void *uoss)
++__NR_rt_sigaction			134		sys_sigaction			(int signum, const rt_sigaction_t *act, rt_sigaction_t *oldact, size_t sigsetsize)
++__NR_rt_sigprocmask			135		sys_sigprocmask			(int how, k_rtsigset_t *set, k_rtsigset_t *old, size_t sigsetsize)
++__NR_rt_sigqueueinfo		138		sys_rt_sigqueueinfo		(pid_t pid, int sig, siginfo_t *info)
++__NR_rt_sigreturn			139		sys_rt_sigreturn		(void)
++__NR_setpriority			140		sys_setpriority			(int which, int who, int nice)
++__NR_setresuid				147		sys_setresuid			(int uid, int euid, int suid)
++__NR_getresuid				148		sys_getresuid			(int *uid, int *euid, int *suid)
++__NR_setresgid				149		sys_setresgid			(int gid, int egid, int sgid)
++__NR_getresgid				150		sys_getresgid			(int *gid, int *egid, int *sgid)
++__NR_getpgid				155		sys_getpgid				(pid_t pid)
++__NR_setfsuid				151		sys_setfsuid			(int fsuid)
++__NR_setfsgid				152		sys_setfsgid			(int fsgid)
++__NR_getsid					156		sys_getsid				(void)
++__NR_getgroups				158		sys_getgroups			(int gsize, unsigned int *groups)
++__NR_setgroups				159		sys_setgroups			(int gsize, unsigned int *groups)
++__NR_setrlimit				164		sys_setrlimit			(int resource, struct krlimit *rlim)
++__NR_umask					166		sys_umask				(int mask)
++__NR_prctl					167		sys_prctl				(int option, unsigned long arg2, unsigned long arg3, unsigned long arg4, unsigned long arg5)
++__NR_gettimeofday			169		sys_gettimeofday		(struct timeval *tv, struct timezone *tz)
++__NR_getpid					172		sys_getpid				(void)
++__NR_ptrace					177		sys_ptrace				(long request, pid_t pid, void *addr, void *data)
++__NR_gettid					178		sys_gettid				(void)
++__NR_shmat					196		sys_shmat				(int shmid, void *shmaddr, int shmflag)
++__NR_socket					198		sys_socket				(int domain, int type, int protocol)
++__NR_bind					200		sys_bind				(int sockfd, const struct sockaddr *addr, int addrlen)
++__NR_connect				203		sys_connect				(int sockfd, struct sockaddr *addr, int addrlen)
++__NR_sendto					206		sys_sendto				(int sockfd, void *buff, size_t len, unsigned int flags, struct sockaddr *addr, int addr_len)
++__NR_recvfrom				207		sys_recvfrom			(int sockfd, void *ubuf, size_t size, unsigned int flags, struct sockaddr *addr, int *addr_len)
++__NR_setsockopt				208		sys_setsockopt			(int sockfd, int level, int optname, const void *optval, socklen_t optlen)
++__NR_getsockopt				209		sys_getsockopt			(int sockfd, int level, int optname, const void *optval, socklen_t *optlen)
++__NR_shutdown				210		sys_shutdown			(int sockfd, int how)
++__NR_sendmsg				211		sys_sendmsg				(int sockfd, const struct msghdr *msg, int flags)
++__NR_recvmsg				212		sys_recvmsg				(int sockfd, struct msghdr *msg, int flags)
++__NR_brk					214		sys_brk					(void *addr)
++__NR_munmap					215		sys_munmap				(void *addr, unsigned long len)
++__NR_mremap					216		sys_mremap				(unsigned long addr, unsigned long old_len, unsigned long new_len, unsigned long flags, unsigned long new_addr)
++__NR_clone					220		sys_clone				(unsigned long flags, void *child_stack, void *parent_tid, unsigned long newtls, void *child_tid)
++__NR_mmap					222		sys_mmap				(void *addr, unsigned long len, unsigned long prot, unsigned long flags, unsigned long fd, unsigned long offset)
++__NR_mprotect				226		sys_mprotect			(const void *addr, unsigned long len, unsigned long prot)
++__NR_mincore				232		sys_mincore				(void *addr, unsigned long size, unsigned char *vec)
++__NR_madvise				233		sys_madvise				(unsigned long start, size_t len, int behavior)
++__NR_rt_tgsigqueueinfo		240		sys_rt_tgsigqueueinfo	(pid_t tgid, pid_t pid, int sig, siginfo_t *info)
++__NR_wait4					260		sys_wait4				(int pid, int *status, int options, struct rusage *ru)
++__NR_fanotify_init			262		sys_fanotify_init		(unsigned int flags, unsigned int event_f_flags)
++__NR_fanotify_mark			263		sys_fanotify_mark		(int fanotify_fd, unsigned int flags, uint64_t mask, int dfd, const char *pathname)
++__NR_open_by_handle_at		265		sys_open_by_handle_at	(int mountdirfd, struct file_handle *handle, int flags)
++__NR_setns					268		sys_setns				(int fd, int nstype)
++__NR_kcmp					272		sys_kcmp				(pid_t pid1, pid_t pid2, int type, unsigned long idx1, unsigned long idx2)
++__NR_seccomp				277		sys_seccomp				(unsigned int op, unsigned int flags, const char *uargs)
++__NR_memfd_create			279		sys_memfd_create		(const char *name, unsigned int flags)
++__NR_userfaultfd			282		sys_userfaultfd			(int flags)
++__NR_rseq					293		sys_rseq				(void *rseq, uint32_t rseq_len, int flags, uint32_t sig)
++__NR_open_tree				428		sys_open_tree			(int dirfd, const char *pathname, unsigned int flags)
++__NR_move_mount				429		sys_move_mount			(int from_dfd, const char *from_pathname, int to_dfd, const char *to_pathname, int flags)
++__NR_fsopen					430		sys_fsopen				(char *fsname, unsigned int flags)
++__NR_fsconfig				431		sys_fsconfig			(int fd, unsigned int cmd, const char *key, const char *value, int aux)
++__NR_fsmount				432		sys_fsmount				(int fd, unsigned int flags, unsigned int attr_flags)
++__NR_pidfd_open				434		sys_pidfd_open			(pid_t pid, unsigned int flags)
++__NR_clone3					435		sys_clone3				(struct clone_args *uargs, size_t size)
++__NR_openat2				437		sys_openat2				(int dirfd, char *pathname, struct open_how *how, size_t size)
++__NR_pidfd_getfd			438		sys_pidfd_getfd			(int pidfd, int targetfd, unsigned int flags)
++#__NR_dup2					!		sys_dup2				(int oldfd, int newfd)
++#__NR_rmdir					!		sys_rmdir				(const char *name)
++#__NR_unlink				!		sys_unlink				(char *pathname)
++#__NR_cacheflush			!		sys_cacheflush			(char *addr, int nbytes, int cache)
++#__NR_set_thread_area		!		sys_set_thread_area		(unsigned long *addr)
++#__NR_mkdir					!		sys_mkdir				(const char *name, int mode)
++#__NR_open					!		sys_open				(const char *filename, unsigned long flags, unsigned long mode)
+diff --git a/compel/arch/loongarch64/scripts/compel-pack.lds.S b/compel/arch/loongarch64/scripts/compel-pack.lds.S
+new file mode 100644
+index 0000000000..cfb7a2fb35
+--- /dev/null
++++ b/compel/arch/loongarch64/scripts/compel-pack.lds.S
+@@ -0,0 +1,32 @@
++OUTPUT_ARCH(loongarch)
++EXTERN(__export_parasite_head_start)
++
++SECTIONS
++{
++	.crblob 0x0 : {
++		*(.head.text)
++		ASSERT(DEFINED(__export_parasite_head_start),
++			"Symbol __export_parasite_head_start is missing");
++		*(.text*)
++		. = ALIGN(32);
++		*(.data*)
++		. = ALIGN(32);
++		*(.rodata*)
++		. = ALIGN(32);
++		*(.bss*)
++		. = ALIGN(32);
++		*(.got*)
++		. = ALIGN(32);
++		*(.toc*)
++		. = ALIGN(32);
++	} =0x00000000,
++
++	/DISCARD/ : {
++		*(.debug*)
++		*(.comment*)
++		*(.note*)
++		*(.group*)
++		*(.eh_frame*)
++		*(*)
++	}
++}
+diff --git a/compel/arch/loongarch64/src/lib/cpu.c b/compel/arch/loongarch64/src/lib/cpu.c
+new file mode 100644
+index 0000000000..172b90e275
+--- /dev/null
++++ b/compel/arch/loongarch64/src/lib/cpu.c
+@@ -0,0 +1,41 @@
++#include <string.h>
++#include <stdbool.h>
++
++#include "compel-cpu.h"
++#include "common/bitops.h"
++#include "common/compiler.h"
++#include "log.h"
++
++#undef LOG_PREFIX
++#define LOG_PREFIX "cpu: "
++
++static compel_cpuinfo_t rt_info;
++static bool rt_info_done = false;
++
++void compel_set_cpu_cap(compel_cpuinfo_t *c, unsigned int feature)
++{
++}
++
++void compel_clear_cpu_cap(compel_cpuinfo_t *c, unsigned int feature)
++{
++}
++
++int compel_test_cpu_cap(compel_cpuinfo_t *c, unsigned int feature)
++{
++	return 0;
++}
++
++int compel_cpuid(compel_cpuinfo_t *c)
++{
++	return 0;
++}
++
++bool compel_cpu_has_feature(unsigned int feature)
++{
++	if (!rt_info_done) {
++		compel_cpuid(&rt_info);
++		rt_info_done = true;
++	}
++
++	return compel_test_cpu_cap(&rt_info, feature);
++}
+diff --git a/compel/arch/loongarch64/src/lib/handle-elf-host.c b/compel/arch/loongarch64/src/lib/handle-elf-host.c
+new file mode 100644
+index 0000000000..a605a5a452
+--- /dev/null
++++ b/compel/arch/loongarch64/src/lib/handle-elf-host.c
+@@ -0,0 +1,22 @@
++#include <string.h>
++#include <errno.h>
++
++#include "handle-elf.h"
++#include "piegen.h"
++#include "log.h"
++
++static const unsigned char __maybe_unused elf_ident_64_le[EI_NIDENT] = {
++	0x7f, 0x45, 0x4c, 0x46, 0x02, 0x01, 0x01, 0x00, /* clang-format */
++	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
++};
++
++extern int __handle_elf(void *mem, size_t size);
++
++int handle_binary(void *mem, size_t size)
++{
++	if (memcmp(mem, elf_ident_64_le, sizeof(elf_ident_64_le)) == 0)
++		return __handle_elf(mem, size);
++
++	pr_err("Unsupported Elf format detected\n");
++	return -EINVAL;
++}
+diff --git a/compel/arch/loongarch64/src/lib/handle-elf.c b/compel/arch/loongarch64/src/lib/handle-elf.c
+new file mode 100644
+index 0000000000..a605a5a452
+--- /dev/null
++++ b/compel/arch/loongarch64/src/lib/handle-elf.c
+@@ -0,0 +1,22 @@
++#include <string.h>
++#include <errno.h>
++
++#include "handle-elf.h"
++#include "piegen.h"
++#include "log.h"
++
++static const unsigned char __maybe_unused elf_ident_64_le[EI_NIDENT] = {
++	0x7f, 0x45, 0x4c, 0x46, 0x02, 0x01, 0x01, 0x00, /* clang-format */
++	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
++};
++
++extern int __handle_elf(void *mem, size_t size);
++
++int handle_binary(void *mem, size_t size)
++{
++	if (memcmp(mem, elf_ident_64_le, sizeof(elf_ident_64_le)) == 0)
++		return __handle_elf(mem, size);
++
++	pr_err("Unsupported Elf format detected\n");
++	return -EINVAL;
++}
+diff --git a/compel/arch/loongarch64/src/lib/include/handle-elf.h b/compel/arch/loongarch64/src/lib/include/handle-elf.h
+new file mode 100644
+index 0000000000..b0a66ef879
+--- /dev/null
++++ b/compel/arch/loongarch64/src/lib/include/handle-elf.h
+@@ -0,0 +1,8 @@
++#ifndef COMPEL_HANDLE_ELF_H__
++#define COMPEL_HANDLE_ELF_H__
++
++#include "elf64-types.h"
++
++#define arch_is_machine_supported(e_machine) (e_machine == EM_LOONGARCH)
++
++#endif /* COMPEL_HANDLE_ELF_H__ */
+diff --git a/compel/arch/loongarch64/src/lib/include/syscall.h b/compel/arch/loongarch64/src/lib/include/syscall.h
+new file mode 100644
+index 0000000000..ac3e2799ac
+--- /dev/null
++++ b/compel/arch/loongarch64/src/lib/include/syscall.h
+@@ -0,0 +1,8 @@
++#ifndef __COMPEL_SYSCALL_H__
++#define __COMPEL_SYSCALL_H__
++
++#ifndef SIGSTKFLT
++#define SIGSTKFLT 16
++#endif
++
++#endif
+diff --git a/compel/arch/loongarch64/src/lib/include/uapi/asm/breakpoints.h b/compel/arch/loongarch64/src/lib/include/uapi/asm/breakpoints.h
+new file mode 100644
+index 0000000000..21eb1309f2
+--- /dev/null
++++ b/compel/arch/loongarch64/src/lib/include/uapi/asm/breakpoints.h
+@@ -0,0 +1,6 @@
++#ifndef __COMPEL_BREAKPOINTS_H__
++#define __COMPEL_BREAKPOINTS_H__
++#define ARCH_SI_TRAP TRAP_BRKPT
++extern int ptrace_set_breakpoint(pid_t pid, void *addr);
++extern int ptrace_flush_breakpoints(pid_t pid);
++#endif
+diff --git a/compel/arch/loongarch64/src/lib/include/uapi/asm/cpu.h b/compel/arch/loongarch64/src/lib/include/uapi/asm/cpu.h
+new file mode 100644
+index 0000000000..e568df789c
+--- /dev/null
++++ b/compel/arch/loongarch64/src/lib/include/uapi/asm/cpu.h
+@@ -0,0 +1,6 @@
++#ifndef __CR_ASM_CPU_H__
++#define __CR_ASM_CPU_H__
++
++typedef struct {
++} compel_cpuinfo_t;
++#endif /* __CR_ASM_CPU_H__ */
+diff --git a/compel/arch/loongarch64/src/lib/include/uapi/asm/fpu.h b/compel/arch/loongarch64/src/lib/include/uapi/asm/fpu.h
+new file mode 100644
+index 0000000000..7f476d541a
+--- /dev/null
++++ b/compel/arch/loongarch64/src/lib/include/uapi/asm/fpu.h
+@@ -0,0 +1,4 @@
++#ifndef __CR_ASM_FPU_H__
++#define __CR_ASM_FPU_H__
++
++#endif /* __CR_ASM_FPU_H__ */
+diff --git a/compel/arch/loongarch64/src/lib/include/uapi/asm/infect-types.h b/compel/arch/loongarch64/src/lib/include/uapi/asm/infect-types.h
+new file mode 100644
+index 0000000000..0b047a5b08
+--- /dev/null
++++ b/compel/arch/loongarch64/src/lib/include/uapi/asm/infect-types.h
+@@ -0,0 +1,67 @@
++#ifndef UAPI_COMPEL_ASM_TYPES_H__
++#define UAPI_COMPEL_ASM_TYPES_H__
++
++#include <stdint.h>
++
++#define SIGMAX	   64
++#define SIGMAX_OLD 31
++
++/*
++ * From the Linux kernel header arch/loongarch/include/uapi/asm/ptrace.h
++ *
++ * A thread LoongArch CPU context
++ *
++ * struct user_fp_state {
++ *     uint64_t    fpr[32];
++ *     uint64_t    fcc;
++ *     uint32_t    fcsr;
++ * };
++ *
++ * struct user_pt_regs {
++ *     unsigned long regs[32];
++ *     unsigned long csr_era;
++ *     unsigned long csr_badv;
++ *     unsigned long reserved[11];
++ * };
++ */
++
++struct user_gp_regs {
++	uint64_t regs[32];
++	uint64_t orig_a0;
++	uint64_t pc;
++	uint64_t csr_badv;
++	uint64_t reserved[10];
++} __attribute__((aligned(8)));
++
++struct user_fp_regs {
++	uint64_t regs[32];
++	uint64_t fcc;
++	uint32_t fcsr;
++};
++
++typedef struct user_gp_regs user_regs_struct_t;
++typedef struct user_fp_regs user_fpregs_struct_t;
++
++#define user_regs_native(regs) true
++
++#define __compel_arch_fetch_thread_area(tid, th) 0
++#define compel_arch_fetch_thread_area(tctl)	 0
++#define compel_arch_get_tls_task(ctl, tls)
++#define compel_arch_get_tls_thread(tctl, tls)
++
++#define REG_RES(r)	   ((uint64_t)(r).regs[4])
++#define REG_IP(r)	   ((uint64_t)(r).pc)
++#define REG_SP(r)	   ((uint64_t)(r).regs[3])
++#define REG_SYSCALL_NR(r)  ((uint64_t)(r).regs[11])
++#define SET_REG_IP(r, val) ((r).pc = (val))
++
++#define GPR_NUM 32
++#define FPR_NUM 32
++
++#define __NR(syscall, compat)   \
++	({                      \
++		(void)compat;   \
++		__NR_##syscall; \
++	})
++
++#endif /* UAPI_COMPEL_ASM_TYPES_H__ */
+diff --git a/compel/arch/loongarch64/src/lib/include/uapi/asm/sigframe.h b/compel/arch/loongarch64/src/lib/include/uapi/asm/sigframe.h
+new file mode 100644
+index 0000000000..fcb545a1d2
+--- /dev/null
++++ b/compel/arch/loongarch64/src/lib/include/uapi/asm/sigframe.h
+@@ -0,0 +1,86 @@
++#ifndef UAPI_COMPEL_ASM_SIGFRAME_H__
++#define UAPI_COMPEL_ASM_SIGFRAME_H__
++
++#include <stdint.h>
++#include <stdbool.h>
++#include <stdlib.h>
++
++#include <compel/asm/fpu.h>
++#include <compel/plugins/std/syscall-codes.h>
++
++#include <asm/types.h>
++
++#define rt_sigcontext sigcontext
++/* sigcontext defined in usr/include/uapi/asm/sigcontext.h*/
++#include <compel/sigframe-common.h>
++typedef __u32 u32;
++
++typedef struct sigcontext_t {
++	__u64 pc;
++	__u64 regs[32];
++	__u32 flags;
++	__u64 extcontext[0] __attribute__((__aligned__(16)));
++} sigcontext_t;
++
++typedef struct context_info_t {
++	__u32 magic;
++	__u32 size;
++	__u64 padding;
++} context_info_t;
++
++#define FPU_CTX_MAGIC 0x46505501
++#define FPU_CTX_ALIGN 8
++typedef struct fpu_context_t {
++	__u64 regs[32];
++	__u64 fcc;
++	__u64 fcsr;
++} fpu_context_t;
++
++typedef struct ucontext {
++	unsigned long uc_flags;
++	struct ucontext *uc_link;
++	stack_t uc_stack;
++	sigset_t uc_sigmask;
++	__u8 __unused[1024 / 8 - sizeof(sigset_t)];
++	sigcontext_t uc_mcontext;
++} ucontext;
++
++/* Copy from the kernel source arch/loongarch/kernel/signal.c */
++struct rt_sigframe {
++	rt_siginfo_t rs_info;
++	ucontext rs_uc;
++};
++
++#define RT_SIGFRAME_UC(rt_sigframe)	 (&(rt_sigframe->rs_uc))
++#define RT_SIGFRAME_SIGMASK(rt_sigframe) ((k_rtsigset_t *)&RT_SIGFRAME_UC(rt_sigframe)->uc_sigmask)
++#define RT_SIGFRAME_SIGCTX(rt_sigframe)	 (&(RT_SIGFRAME_UC(rt_sigframe)->uc_mcontext))
++#define RT_SIGFRAME_REGIP(rt_sigframe)	 ((long unsigned int)(RT_SIGFRAME_SIGCTX(rt_sigframe)->pc))
++#define RT_SIGFRAME_HAS_FPU(rt_sigframe) (1)
++
++#define RT_SIGFRAME_FPU(rt_sigframe)                                                                 \
++	({                                                                                           \
++		context_info_t *ctx = (context_info_t *)RT_SIGFRAME_SIGCTX(rt_sigframe)->extcontext; \
++		ctx->magic = FPU_CTX_MAGIC;                                                          \
++		ctx->size = sizeof(context_info_t) + sizeof(fpu_context_t);                          \
++		(fpu_context_t *)((char *)ctx + sizeof(context_info_t));                             \
++	})
++
++#define RT_SIGFRAME_OFFSET(rt_sigframe) 0
++
++/* clang-format off */
++#define ARCH_RT_SIGRETURN(new_sp, rt_sigframe)  \
++    asm volatile(                               \
++            "addi.d $sp, %0, 0 \n"              \
++            "addi.d $a7, $zero, "__stringify(__NR_rt_sigreturn)"    \n" \
++            "syscall   0"                       \
++            :                                   \
++            :"r"(new_sp)                        \
++            : "$a7", "memory")
++/* clang-format on */
++
++int sigreturn_prep_fpu_frame(struct rt_sigframe *sigframe, struct rt_sigframe *rsigframe);
++
++#define rt_sigframe_erase_sigset(sigframe)	memset(RT_SIGFRAME_SIGMASK(sigframe), 0, sizeof(k_rtsigset_t))
++#define rt_sigframe_copy_sigset(sigframe, from) memcpy(RT_SIGFRAME_SIGMASK(sigframe), from, sizeof(k_rtsigset_t))
++
++#endif /* UAPI_COMPEL_ASM_SIGFRAME_H__ */
+diff --git a/compel/arch/loongarch64/src/lib/infect.c b/compel/arch/loongarch64/src/lib/infect.c
+new file mode 100644
+index 0000000000..8e3c19aff2
+--- /dev/null
++++ b/compel/arch/loongarch64/src/lib/infect.c
+@@ -0,0 +1,204 @@
++#include <sys/types.h>
++#include <sys/uio.h>
++#include <sys/auxv.h>
++#include <sys/mman.h>
++#include <errno.h>
++
++#include <compel/asm/fpu.h>
++#include <compel/cpu.h>
++#include "errno.h"
++#include <compel/plugins/std/syscall-codes.h>
++#include <compel/plugins/std/syscall.h>
++#include "common/err.h"
++#include "common/page.h"
++#include "asm/infect-types.h"
++#include "ptrace.h"
++#include "infect.h"
++#include "infect-priv.h"
++#include "log.h"
++#include "common/bug.h"
++
++/*
++ * Injected syscall instruction
++ * loongarch64 is Little Endian
++ */
++const char code_syscall[] = {
++	0x00, 0x00, 0x2b, 0x00, /* syscall    */
++	0x00, 0x00, 0x2a, 0x00	/*  break      */
++};
++
++int sigreturn_prep_regs_plain(struct rt_sigframe *sigframe, user_regs_struct_t *regs, user_fpregs_struct_t *fpregs)
++{
++	sigcontext_t *sc;
++	fpu_context_t *fpu;
++
++	sc = RT_SIGFRAME_SIGCTX(sigframe);
++	memcpy(sc->regs, regs->regs, sizeof(regs->regs));
++	sc->pc = regs->pc;
++
++	fpu = RT_SIGFRAME_FPU(sigframe);
++	memcpy(fpu->regs, fpregs->regs, sizeof(fpregs->regs));
++	fpu->fcc = fpregs->fcc;
++	fpu->fcsr = fpregs->fcsr;
++	return 0;
++}
++
++int sigreturn_prep_fpu_frame_plain(struct rt_sigframe *sigframe, struct rt_sigframe *rsigframe)
++{
++	return 0;
++}
++
++int compel_get_task_regs(pid_t pid, user_regs_struct_t *regs, user_fpregs_struct_t *ext_regs, save_regs_t save,
++			 void *arg, __maybe_unused unsigned long flags)
++{
++	user_fpregs_struct_t tmp, *fpregs = ext_regs ? ext_regs : &tmp;
++	struct iovec iov;
++	int ret;
++
++	pr_info("Dumping GP/FPU registers for %d\n", pid);
++
++	iov.iov_base = regs;
++	iov.iov_len = sizeof(user_regs_struct_t);
++	if ((ret = ptrace(PTRACE_GETREGSET, pid, NT_PRSTATUS, &iov))) {
++		pr_perror("Failed to obtain CPU registers for %d", pid);
++		goto err;
++	}
++
++	/*
++	 * Refer to Linux kernel arch/loongarch/kernel/signal.c
++	 */
++	if (regs->regs[0]) {
++		switch (regs->regs[4]) {
++		case -ERESTARTNOHAND:
++		case -ERESTARTSYS:
++		case -ERESTARTNOINTR:
++			regs->regs[4] = regs->orig_a0;
++			regs->pc -= 4;
++			break;
++		case -ERESTART_RESTARTBLOCK:
++			regs->regs[4] = regs->orig_a0;
++			regs->regs[11] = __NR_restart_syscall;
++			regs->pc -= 4;
++			break;
++		}
++		regs->regs[0] = 0; /* Don't deal with this again.  */
++	}
++
++	iov.iov_base = fpregs;
++	iov.iov_len = sizeof(user_fpregs_struct_t);
++	if ((ret = ptrace(PTRACE_GETREGSET, pid, NT_PRFPREG, &iov))) {
++		pr_perror("Failed to obtain FPU registers for %d", pid);
++		goto err;
++	}
++
++	ret = save(arg, regs, fpregs);
++err:
++	return 0;
++}
++
++int compel_set_task_ext_regs(pid_t pid, user_fpregs_struct_t *ext_regs)
++{
++	struct iovec iov;
++
++	pr_info("Restoring GP/FPU registers for %d\n", pid);
++
++	iov.iov_base = ext_regs;
++	iov.iov_len = sizeof(*ext_regs);
++	if (ptrace(PTRACE_SETREGSET, pid, NT_PRFPREG, &iov)) {
++		pr_perror("Failed to set FPU registers for %d", pid);
++		return -1;
++	}
++	return 0;
++}
++
++/*
++ * Registers $4 ~ $11 represents arguments a0 ~ a7, especially a7 is
++ * used as syscall number.
++ */
++int compel_syscall(struct parasite_ctl *ctl, int nr, long *ret, unsigned long arg1, unsigned long arg2,
++		   unsigned long arg3, unsigned long arg4, unsigned long arg5, unsigned long arg6)
++{
++	int err;
++	user_regs_struct_t regs = ctl->orig.regs;
++
++	regs.regs[11] = (unsigned long)nr;
++	regs.regs[4] = arg1;
++	regs.regs[5] = arg2;
++	regs.regs[6] = arg3;
++	regs.regs[7] = arg4;
++	regs.regs[8] = arg5;
++	regs.regs[9] = arg6;
++	err = compel_execute_syscall(ctl, &regs, code_syscall);
++
++	*ret = regs.regs[4];
++
++	return err;
++}
++
++void *remote_mmap(struct parasite_ctl *ctl, void *addr, size_t length, int prot, int flags, int fd, off_t offset)
++{
++	long map;
++	int err;
++
++	err = compel_syscall(ctl, __NR_mmap, &map, (unsigned long)addr, length, prot, flags, fd, offset >> PAGE_SHIFT);
++
++	if (err < 0 || IS_ERR_VALUE(map)) {
++		pr_err("remote mmap() failed: %s\n", strerror(-map));
++		return NULL;
++	}
++
++	return (void *)map;
++}
++
++/*
++ * regs must be inited when calling this function from original context
++ */
++void parasite_setup_regs(unsigned long new_ip, void *stack, user_regs_struct_t *regs)
++{
++	regs->pc = new_ip;
++	if (stack)
++		regs->regs[4] = (unsigned long)stack;
++}
++
++bool arch_can_dump_task(struct parasite_ctl *ctl)
++{
++	return true;
++}
++
++int arch_fetch_sas(struct parasite_ctl *ctl, struct rt_sigframe *s)
++{
++	long ret;
++	int err;
++
++	err = compel_syscall(ctl, __NR_sigaltstack, &ret, 0, (unsigned long)&s->rs_uc.uc_stack, 0, 0, 0, 0);
++	return err ? err : ret;
++}
++
++/*
++ * TODO: add feature
++ */
++int ptrace_set_breakpoint(pid_t pid, void *addr)
++{
++	return 0;
++}
++
++int ptrace_flush_breakpoints(pid_t pid)
++{
++	return 0;
++}
++
++/*
++ * Refer to Linux kernel arch/loongarch/include/asm/processor.h
++ */
++#define TASK_SIZE32	(1UL) << 31
++#define TASK_SIZE64_MIN (1UL) << 40
++#define TASK_SIZE64_MAX (1UL) << 48
++
++unsigned long compel_task_size(void)
++{
++	unsigned long task_size;
++	for (task_size = TASK_SIZE64_MIN; task_size < TASK_SIZE64_MAX; task_size <<= 1)
++		if (munmap((void *)task_size, page_size()))
++			break;
++	return task_size;
++}
+diff --git a/compel/src/main.c b/compel/src/main.c
+index ef05a46d01..bc16c0ab41 100644
+--- a/compel/src/main.c
++++ b/compel/src/main.c
+@@ -57,6 +57,9 @@ static const flags_t flags = {
+ #elif defined CONFIG_MIPS
+ 	.arch = "mips",
+ 	.cflags = COMPEL_CFLAGS_PIE,
++#elif defined CONFIG_LOONGARCH64
++	.arch = "loongarch64",
++	.cflags = COMPEL_CFLAGS_PIE,
+ #else
+ #error "CONFIG_<ARCH> not defined, or unsupported ARCH"
+ #endif
+diff --git a/scripts/nmk/scripts/include.mk b/scripts/nmk/scripts/include.mk
+index c1c1e94af4..55c5be307f 100644
+--- a/scripts/nmk/scripts/include.mk
++++ b/scripts/nmk/scripts/include.mk
+@@ -20,7 +20,8 @@ ARCH	?= $(shell echo $(SUBARCH) | sed	\
+                 -e s/ppc64.*/ppc64/		\
+                 -e s/mips.*/mips/		\
+                 -e s/sh[234].*/sh/		\
+-                -e s/aarch64.*/aarch64/)
++                -e s/aarch64.*/aarch64/		\
++                -e s/loongarch64.*/loongarch64/)
+ 
+ export SUBARCH ARCH
+ 
+
+From 91c0f7a6d8bef0d8d5836d86430864b2036e140f Mon Sep 17 00:00:00 2001
+From: znley <shanjiantao@loongson.cn>
+Date: Mon, 12 Jun 2023 15:09:22 +0800
+Subject: [PATCH 3/6] images: add loongarch64 core image
+
+Signed-off-by: znley <shanjiantao@loongson.cn>
+---
+ images/Makefile               |  1 +
+ images/core-loongarch64.proto | 23 +++++++++++++++++++++++
+ images/core.proto             |  3 +++
+ 3 files changed, 27 insertions(+)
+ create mode 100755 images/core-loongarch64.proto
+
+diff --git a/images/Makefile b/images/Makefile
+index 004e22ec3f..ca85b1a213 100644
+--- a/images/Makefile
++++ b/images/Makefile
+@@ -2,6 +2,7 @@ proto-obj-y	+= stats.o
+ proto-obj-y	+= core.o
+ proto-obj-y	+= core-x86.o
+ proto-obj-y	+= core-mips.o
++proto-obj-y	+= core-loongarch64.o
+ proto-obj-y	+= core-arm.o
+ proto-obj-y	+= core-aarch64.o
+ proto-obj-y	+= core-ppc64.o
+diff --git a/images/core-loongarch64.proto b/images/core-loongarch64.proto
+new file mode 100755
+index 0000000000..8258f006ea
+--- /dev/null
++++ b/images/core-loongarch64.proto
+@@ -0,0 +1,23 @@
++// SPDX-License-Identifier: MIT
++
++syntax = "proto2";
++
++import "opts.proto";
++
++message user_loongarch64_gpregs_entry {
++	repeated uint64 regs	= 1;
++	required uint64 pc		= 2;
++}
++
++message user_loongarch64_fpregs_entry {
++	repeated uint64 regs    = 1;
++	required uint64 fcc     = 2;
++	required uint32 fcsr    = 3;
++}
++
++message thread_info_loongarch64 {
++	required uint64	clear_tid_addr	= 1[(criu).hex = true];
++	required uint64	tls				= 2;
++	required user_loongarch64_gpregs_entry	gpregs	= 3[(criu).hex = true];
++	required user_loongarch64_fpregs_entry	fpregs	= 4[(criu).hex = true];
++}
+diff --git a/images/core.proto b/images/core.proto
+index eddd1dc555..1882fe8e42 100644
+--- a/images/core.proto
++++ b/images/core.proto
+@@ -8,6 +8,7 @@ import "core-aarch64.proto";
+ import "core-ppc64.proto";
+ import "core-s390.proto";
+ import "core-mips.proto";
++import "core-loongarch64.proto";
+ 
+ import "rlimit.proto";
+ import "timer.proto";
+@@ -122,6 +123,7 @@ message core_entry {
+ 		PPC64		= 4;
+ 		S390		= 5;
+ 		MIPS		= 6;
++		LOONGARCH64		= 7;
+ 	}
+ 
+ 	required march			mtype		= 1;
+@@ -131,6 +133,7 @@ message core_entry {
+ 	optional thread_info_ppc64	ti_ppc64	= 9;
+ 	optional thread_info_s390	ti_s390		= 10;
+ 	optional thread_info_mips	ti_mips		= 11;
++	optional thread_info_loongarch64	ti_loongarch64  = 12;
+ 
+ 	optional task_core_entry	tc		= 3;
+ 	optional task_kobj_ids_entry	ids		= 4;
+
+From c3de76052f24ad5aa88d0093d1c033735f57f163 Mon Sep 17 00:00:00 2001
+From: znley <shanjiantao@loongson.cn>
+Date: Mon, 12 Jun 2023 15:15:30 +0800
+Subject: [PATCH 4/6] criu: add loongarch64 support to parasite and restorer
+
+Signed-off-by: znley <shanjiantao@loongson.cn>
+---
+ criu/arch/loongarch64/Makefile                |  14 +++
+ criu/arch/loongarch64/cpu.c                   |  31 +++++
+ criu/arch/loongarch64/crtools.c               | 115 ++++++++++++++++++
+ criu/arch/loongarch64/include/asm/dump.h      |  15 +++
+ criu/arch/loongarch64/include/asm/int.h       |   6 +
+ criu/arch/loongarch64/include/asm/kerndat.h   |   7 ++
+ .../include/asm/parasite-syscall.h            |   6 +
+ criu/arch/loongarch64/include/asm/parasite.h  |  11 ++
+ criu/arch/loongarch64/include/asm/restore.h   |  33 +++++
+ criu/arch/loongarch64/include/asm/restorer.h  |  97 +++++++++++++++
+ .../loongarch64/include/asm/thread_pointer.h  |  27 ++++
+ criu/arch/loongarch64/include/asm/types.h     |  39 ++++++
+ criu/arch/loongarch64/include/asm/vdso.h      |  27 ++++
+ criu/arch/loongarch64/restorer.c              |  14 +++
+ criu/arch/loongarch64/sigframe.c              |  12 ++
+ criu/arch/loongarch64/vdso-pie.c              |  48 ++++++++
+ 16 files changed, 502 insertions(+)
+ create mode 100644 criu/arch/loongarch64/Makefile
+ create mode 100644 criu/arch/loongarch64/cpu.c
+ create mode 100644 criu/arch/loongarch64/crtools.c
+ create mode 100644 criu/arch/loongarch64/include/asm/dump.h
+ create mode 100644 criu/arch/loongarch64/include/asm/int.h
+ create mode 100644 criu/arch/loongarch64/include/asm/kerndat.h
+ create mode 100644 criu/arch/loongarch64/include/asm/parasite-syscall.h
+ create mode 100644 criu/arch/loongarch64/include/asm/parasite.h
+ create mode 100644 criu/arch/loongarch64/include/asm/restore.h
+ create mode 100644 criu/arch/loongarch64/include/asm/restorer.h
+ create mode 100644 criu/arch/loongarch64/include/asm/thread_pointer.h
+ create mode 100644 criu/arch/loongarch64/include/asm/types.h
+ create mode 100644 criu/arch/loongarch64/include/asm/vdso.h
+ create mode 100644 criu/arch/loongarch64/restorer.c
+ create mode 100644 criu/arch/loongarch64/sigframe.c
+ create mode 100644 criu/arch/loongarch64/vdso-pie.c
+
+diff --git a/criu/arch/loongarch64/Makefile b/criu/arch/loongarch64/Makefile
+new file mode 100644
+index 0000000000..4bd99eb7eb
+--- /dev/null
++++ b/criu/arch/loongarch64/Makefile
+@@ -0,0 +1,14 @@
++builtin-name		:= crtools.built-in.o
++
++ccflags-y		+= -iquote $(obj)/include
++ccflags-y		+= -iquote criu/include -iquote include
++ccflags-y		+= $(COMPEL_UAPI_INCLUDES)
++
++asflags-y		+= -Wstrict-prototypes
++asflags-y		+= -D__ASSEMBLY__ -nostdlib -fomit-frame-pointer
++asflags-y		+= -iquote $(obj)/include
++ldflags-y		+= -r -z noexecstack
++
++obj-y			+= cpu.o
++obj-y			+= crtools.o
++obj-y			+= sigframe.o
+diff --git a/criu/arch/loongarch64/cpu.c b/criu/arch/loongarch64/cpu.c
+new file mode 100644
+index 0000000000..5559c4288f
+--- /dev/null
++++ b/criu/arch/loongarch64/cpu.c
+@@ -0,0 +1,31 @@
++#undef LOG_PREFIX
++#define LOG_PREFIX "cpu: "
++
++int cpu_init(void)
++{
++	return 0;
++}
++
++int cpu_dump_cpuinfo(void)
++{
++	return 0;
++}
++
++int cpu_validate_cpuinfo(void)
++{
++	return 0;
++}
++
++int cpuinfo_dump(void)
++{
++	if (cpu_init())
++		return -1;
++	if (cpu_dump_cpuinfo())
++		return -1;
++	return 0;
++}
++
++int cpuinfo_check(void)
++{
++	return 0;
++}
+diff --git a/criu/arch/loongarch64/crtools.c b/criu/arch/loongarch64/crtools.c
+new file mode 100644
+index 0000000000..eeb0731ca6
+--- /dev/null
++++ b/criu/arch/loongarch64/crtools.c
+@@ -0,0 +1,115 @@
++#include <signal.h>
++#include <stdlib.h>
++#include <string.h>
++#include <unistd.h>
++#include <elf.h>
++#include <sys/mman.h>
++#include <sys/syscall.h>
++#include <sys/auxv.h>
++#include <sys/wait.h>
++
++#include "types.h"
++#include "log.h"
++#include "asm/restorer.h"
++#include "asm/parasite-syscall.h"
++#include <compel/asm/fpu.h>
++#include "asm/dump.h"
++#include "cr_options.h"
++#include "common/compiler.h"
++#include "restorer.h"
++#include "parasite-syscall.h"
++#include "util.h"
++#include "cpu.h"
++#include <compel/plugins/std/syscall-codes.h>
++#include "kerndat.h"
++
++#include "protobuf.h"
++#include "images/core.pb-c.h"
++#include "images/creds.pb-c.h"
++
++#define assign_reg(dst, src, e) (dst)->e = (__typeof__(dst->e))(src)->e
++
++int save_task_regs(void *x, user_regs_struct_t *regs, user_fpregs_struct_t *fpregs)
++{
++	int i;
++	CoreEntry *core = x;
++	UserLoongarch64GpregsEntry *gprs = core->ti_loongarch64->gpregs;
++	UserLoongarch64FpregsEntry *fprs = core->ti_loongarch64->fpregs;
++	for (i = 0; i < GPR_NUM; i++)
++		assign_reg(gprs, regs, regs[i]);
++	assign_reg(gprs, regs, pc);
++
++	for (i = 0; i < FPR_NUM; i++)
++		assign_reg(fpregs, fpregs, regs[i]);
++	assign_reg(fprs, fpregs, fcc);
++	assign_reg(fprs, fpregs, fcsr);
++	return 0;
++}
++
++int arch_alloc_thread_info(CoreEntry *core)
++{
++	ThreadInfoLoongarch64 *ti_loongarch64;
++	UserLoongarch64GpregsEntry *gpregs;
++	UserLoongarch64FpregsEntry *fpregs;
++
++	ti_loongarch64 = xmalloc(sizeof(*ti_loongarch64));
++	thread_info_loongarch64__init(ti_loongarch64);
++	core->ti_loongarch64 = ti_loongarch64;
++
++	gpregs = xmalloc(sizeof(*gpregs));
++	if (!gpregs)
++		goto err;
++	user_loongarch64_gpregs_entry__init(gpregs);
++	gpregs->n_regs = GPR_NUM;
++	gpregs->regs = xmalloc(GPR_NUM * sizeof(uint64_t));
++	if (!gpregs->regs)
++		goto err;
++	ti_loongarch64->gpregs = gpregs;
++
++	fpregs = xmalloc(sizeof(*fpregs));
++	if (!fpregs)
++		goto err;
++	user_loongarch64_fpregs_entry__init(fpregs);
++	fpregs->n_regs = FPR_NUM;
++	fpregs->regs = xmalloc(FPR_NUM * sizeof(uint64_t));
++	if (!fpregs->regs)
++		goto err;
++	ti_loongarch64->fpregs = fpregs;
++
++	return 0;
++err:
++	return -1;
++}
++
++void arch_free_thread_info(CoreEntry *core)
++{
++	if (CORE_THREAD_ARCH_INFO(core)) {
++		if (CORE_THREAD_ARCH_INFO(core)->fpregs) {
++			xfree(CORE_THREAD_ARCH_INFO(core)->fpregs->regs);
++			xfree(CORE_THREAD_ARCH_INFO(core)->fpregs);
++		}
++		xfree(CORE_THREAD_ARCH_INFO(core)->gpregs->regs);
++		xfree(CORE_THREAD_ARCH_INFO(core)->gpregs);
++		xfree(CORE_THREAD_ARCH_INFO(core));
++		CORE_THREAD_ARCH_INFO(core) = NULL;
++	}
++}
++
++int restore_fpu(struct rt_sigframe *sigframe, CoreEntry *core)
++{
++	fpu_context_t *fpu = RT_SIGFRAME_FPU(sigframe);
++	UserLoongarch64FpregsEntry *fpregs = core->ti_loongarch64->fpregs;
++
++	memcpy(fpu->regs, fpregs->regs, sizeof(fpu->regs));
++	fpu->fcc = fpregs->fcc;
++	fpu->fcsr = fpregs->fcsr;
++	return 0;
++}
++
++int restore_gpregs(struct rt_sigframe *sigframe, UserRegsEntry *r)
++{
++	sigcontext_t *sc = RT_SIGFRAME_SIGCTX(sigframe);
++	memcpy(sc->regs, r->regs, sizeof(sc->regs));
++	sc->pc = r->pc;
++	return 0;
++}
+diff --git a/criu/arch/loongarch64/include/asm/dump.h b/criu/arch/loongarch64/include/asm/dump.h
+new file mode 100644
+index 0000000000..04347155c3
+--- /dev/null
++++ b/criu/arch/loongarch64/include/asm/dump.h
+@@ -0,0 +1,15 @@
++#ifndef __CR_ASM_DUMP_H__
++#define __CR_ASM_DUMP_H__
++
++extern int save_task_regs(void *, user_regs_struct_t *, user_fpregs_struct_t *);
++extern int arch_alloc_thread_info(CoreEntry *core);
++extern void arch_free_thread_info(CoreEntry *core);
++
++static inline void core_put_tls(CoreEntry *core, tls_t tls)
++{
++	core->ti_loongarch64->tls = tls;
++}
++
++#define get_task_futex_robust_list_compat(pid, info) -1
++
++#endif
+diff --git a/criu/arch/loongarch64/include/asm/int.h b/criu/arch/loongarch64/include/asm/int.h
+new file mode 100644
+index 0000000000..642804e9b4
+--- /dev/null
++++ b/criu/arch/loongarch64/include/asm/int.h
+@@ -0,0 +1,6 @@
++#ifndef __CR_ASM_INT_H__
++#define __CR_ASM_INT_H__
++
++#include "asm-generic/int.h"
++
++#endif /* __CR_ASM_INT_H__ */
+diff --git a/criu/arch/loongarch64/include/asm/kerndat.h b/criu/arch/loongarch64/include/asm/kerndat.h
+new file mode 100644
+index 0000000000..bb70cf6cf5
+--- /dev/null
++++ b/criu/arch/loongarch64/include/asm/kerndat.h
+@@ -0,0 +1,7 @@
++#ifndef __CR_ASM_KERNDAT_H__
++#define __CR_ASM_KERNDAT_H__
++
++#define kdat_compatible_cr() 0
++#define kdat_can_map_vdso()  0
++
++#endif /* __CR_ASM_KERNDAT_H__ */
+diff --git a/criu/arch/loongarch64/include/asm/parasite-syscall.h b/criu/arch/loongarch64/include/asm/parasite-syscall.h
+new file mode 100644
+index 0000000000..6008c37923
+--- /dev/null
++++ b/criu/arch/loongarch64/include/asm/parasite-syscall.h
+@@ -0,0 +1,6 @@
++#ifndef __CR_ASM_PARASITE_SYSCALL_H__
++#define __CR_ASM_PARASITE_SYSCALL_H__
++
++struct parasite_ctl;
++
++#endif
+diff --git a/criu/arch/loongarch64/include/asm/parasite.h b/criu/arch/loongarch64/include/asm/parasite.h
+new file mode 100644
+index 0000000000..b64cb3185c
+--- /dev/null
++++ b/criu/arch/loongarch64/include/asm/parasite.h
+@@ -0,0 +1,11 @@
++#ifndef __ASM_PARASITE_H__
++#define __ASM_PARASITE_H__
++
++static inline void arch_get_tls(tls_t *ptls)
++{
++	tls_t tls;
++	asm volatile("or %0, $zero, $tp" : "=r"(tls));
++	*ptls = tls;
++}
++
++#endif
+diff --git a/criu/arch/loongarch64/include/asm/restore.h b/criu/arch/loongarch64/include/asm/restore.h
+new file mode 100644
+index 0000000000..d956231c81
+--- /dev/null
++++ b/criu/arch/loongarch64/include/asm/restore.h
+@@ -0,0 +1,33 @@
++#ifndef __CR_ASM_RESTORE_H__
++#define __CR_ASM_RESTORE_H__
++
++#include "asm/restorer.h"
++#include "images/core.pb-c.h"
++
++/* clang-format off */
++#define JUMP_TO_RESTORER_BLOB(new_sp, restore_task_exec_start, task_args)	\
++({										\
++ 	uint64_t save_sp;							\
++	asm volatile("or %0, $zero, $sp" : "=r"(save_sp) : :"memory");		\
++	asm volatile(								\
++	        "or	$a0, $zero, %2	\n"					\
++	        "or	$sp, $zero, %0	\n"					\
++	        "jirl	$ra, %1, 0 	\n"					\
++	        :                               				\
++	        : "r"(new_sp & ~15),						\
++	          "r"(restore_task_exec_start), 				\
++	          "r"(task_args)						\
++	        : "$a0", "memory");						\
++	asm volatile("or $sp, $zero, %0" : : "r"(save_sp) : "memory"); 		\
++})
++
++/* clang-format on */
++
++static inline void core_get_tls(CoreEntry *pcore, tls_t *ptls)
++{
++	*ptls = pcore->ti_loongarch64->tls;
++}
++
++int restore_fpu(struct rt_sigframe *sigframe, CoreEntry *core);
++
++#endif
+diff --git a/criu/arch/loongarch64/include/asm/restorer.h b/criu/arch/loongarch64/include/asm/restorer.h
+new file mode 100644
+index 0000000000..7a0d35c5b5
+--- /dev/null
++++ b/criu/arch/loongarch64/include/asm/restorer.h
+@@ -0,0 +1,97 @@
++#ifndef __CR_ASM_RESTORER_H__
++#define __CR_ASM_RESTORER_H__
++
++#include "asm/types.h"
++#include <compel/asm/fpu.h>
++#include "images/core.pb-c.h"
++#include <compel/plugins/std/syscall-codes.h>
++#include <compel/asm/sigframe.h>
++
++/* clang-format off */
++#define RUN_CLONE_RESTORE_FN(ret, clone_flags, new_sp, parent_tid,	\
++			thread_args, clone_restore_fn)			\
++		asm volatile(								\
++				"clone_emul:					\n"	\
++				"ld.d		$a1, %2				\n"	\
++				"addi.d		$a1, $a1, -16 		\n"	\
++				"st.d		%5, $a1, 0			\n"	\
++				"st.d		%6, $a1, 8			\n"	\
++				"or			$a0, $zero, %1		\n"	\
++				"or			$a2, $zero, %3		\n"	\
++				"or			$a3, $zero, %4		\n"	\
++				"ori 		$a7, $zero, "__stringify(__NR_clone)"	\n"	\
++				"syscall	0					\n"	\
++												   	\
++				"beqz		$a0, thread_run     \n"	\
++												   	\
++				"or			%0, $zero, $a0		\n"	\
++				"b			clone_end			\n"	\
++												   	\
++				"thread_run:					\n"	\
++				"ld.d		$a1, $sp, 0			\n"	\
++				"ld.d		$a0, $sp, 8			\n"	\
++				"jirl		$ra, $a1, 0			\n"	\
++												   	\
++				"clone_end:						\n"	\
++				: "=r"(ret)							\
++				: "r"(clone_flags),					\
++				  "ZB"(new_sp),						\
++				  "r"(&parent_tid),					\
++				  "r"(&thread_args[i].pid),			\
++				  "r"(&clone_restore_fn),			\
++				  "r"(&thread_args[i])				\
++				: "$a0", "$a1", "$a2", "$a3", "$a7", "memory")
++
++#define RUN_CLONE3_RESTORE_FN(ret, clone_args, size, args,	\
++			clone_restore_fn)								\
++		asm volatile(								\
++				"clone3_emul:					\n"	\
++				"or			$a0, $zero, %1		\n"	\
++				"or			$a1, $zero, %2		\n"	\
++				"or			$a2, $zero, %3		\n"	\
++				"or			$a3, $zero, %4		\n"	\
++				"ori		$a7, $zero, "__stringify(__NR_clone3)"	\n"	\
++				"syscall	0					\n"	\
++													\
++				"beqz		$a0, clone3_thread_run	\n"	\
++													\
++				"or			%0, $zero, $a0		\n"	\
++				"b			clone3_end			\n"	\
++													\
++				"clone3_thread_run:				\n"	\
++				"or			$a0, $zero, $a3		\n"	\
++				"jirl		$ra, $a2, 0			\n"	\
++				"clone3_end:					\n"	\
++				: "=r"(ret)							\
++				: "r"(&clone_args),					\
++				  "r"(size),						\
++				  "r"(clone_restore_fn),			\
++				  "r"(args)							\
++				: "$a0", "$a1", "$a2", "$a3", "$a7", "memory")
++/* clang-format on */
++
++static inline void restore_tls(tls_t *ptls)
++{
++	asm volatile("or $tp, $zero, %0" : : "r"(*ptls));
++}
++static inline int arch_compat_rt_sigaction(void *stack, int sig, void *act)
++{
++	return -1;
++}
++static inline int set_compat_robust_list(uint32_t head_ptr, uint32_t len)
++{
++	return -1;
++}
++static inline void *alloc_compat_syscall_stack(void)
++{
++	return NULL;
++}
++static inline void free_compat_syscall_stack(void *stack32)
++{
++}
++int restore_gpregs(struct rt_sigframe *f, UserLoongarch64GpregsEntry *r);
++int restore_nonsigframe_gpregs(UserLoongarch64GpregsEntry *r);
++
++#define arch_map_vdso(map, compat) -1
++
++#endif
+diff --git a/criu/arch/loongarch64/include/asm/thread_pointer.h b/criu/arch/loongarch64/include/asm/thread_pointer.h
+new file mode 100644
+index 0000000000..f7e07066a5
+--- /dev/null
++++ b/criu/arch/loongarch64/include/asm/thread_pointer.h
+@@ -0,0 +1,27 @@
++/* __thread_pointer definition.  Generic version.
++   Copyright (C) 2021 Free Software Foundation, Inc.
++   This file is part of the GNU C Library.
++
++   The GNU C Library is free software; you can redistribute it and/or
++   modify it under the terms of the GNU Lesser General Public
++   License as published by the Free Software Foundation; either
++   version 2.1 of the License, or (at your option) any later version.
++
++   The GNU C Library is distributed in the hope that it will be useful,
++   but WITHOUT ANY WARRANTY; without even the implied warranty of
++   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++   Lesser General Public License for more details.
++
++   You should have received a copy of the GNU Lesser General Public
++   License along with the GNU C Library.  If not, see
++   <https://www.gnu.org/licenses/>.  */
++
++#ifndef _SYS_THREAD_POINTER_H
++#define _SYS_THREAD_POINTER_H
++
++static inline void *__criu_thread_pointer(void)
++{
++	return __builtin_thread_pointer();
++}
++
++#endif /* _SYS_THREAD_POINTER_H */
+diff --git a/criu/arch/loongarch64/include/asm/types.h b/criu/arch/loongarch64/include/asm/types.h
+new file mode 100644
+index 0000000000..72bca2022b
+--- /dev/null
++++ b/criu/arch/loongarch64/include/asm/types.h
+@@ -0,0 +1,39 @@
++#ifndef __CR_ASM_TYPES_H__
++#define __CR_ASM_TYPES_H__
++
++#include <stdbool.h>
++#include <signal.h>
++
++#include "page.h"
++#include "bitops.h"
++#include "asm/int.h"
++#include "images/core.pb-c.h"
++
++#include <compel/plugins/std/asm/syscall-types.h>
++
++#define core_is_compat(core) false
++
++#define CORE_ENTRY__MARCH CORE_ENTRY__MARCH__LOONGARCH64
++
++#define CORE_THREAD_ARCH_INFO(core) core->ti_loongarch64
++
++#define TI_SP(core) ((core)->ti_loongarch64->gpregs->regs[4])
++
++#define TI_IP(core) ((core)->ti_loongarch64->gpregs->pc)
++
++typedef UserLoongarch64GpregsEntry UserRegsEntry;
++
++static inline uint64_t encode_pointer(void *p)
++{
++	return (uint64_t)p;
++}
++static inline void *decode_pointer(uint64_t v)
++{
++	return (void *)v;
++}
++
++#define AT_VECTOR_SIZE 44
++typedef uint64_t auxv_t;
++typedef uint64_t tls_t;
++
++#endif /* __CR_ASM_TYPES_H__ */
+diff --git a/criu/arch/loongarch64/include/asm/vdso.h b/criu/arch/loongarch64/include/asm/vdso.h
+new file mode 100644
+index 0000000000..64631dee09
+--- /dev/null
++++ b/criu/arch/loongarch64/include/asm/vdso.h
+@@ -0,0 +1,27 @@
++#ifndef __CR_ASM_VDSO_H__
++#define __CR_ASM_VDSO_H__
++
++#include "asm/int.h"
++#include "asm-generic/vdso.h"
++
++/* This definition is used in pie/util-vdso.c to initialize the vdso symbol
++ * name string table 'vdso_symbols'
++ */
++
++/*
++ * This is a minimal amount of symbols
++ * we should support at the moment.
++ */
++#define VDSO_SYMBOL_MAX	 5
++#define VDSO_SYMBOL_GTOD 3
++
++#define ARCH_VDSO_SYMBOLS_LIST                                   \
++	const char *aarch_vdso_symbol1 = "__vdso_getcpu";        \
++	const char *aarch_vdso_symbol2 = "__vdso_clock_getres";  \
++	const char *aarch_vdso_symbol3 = "__vdso_clock_gettime"; \
++	const char *aarch_vdso_symbol4 = "__vdso_gettimeofday";  \
++	const char *aarch_vdso_symbol5 = "__vdso_rt_sigreturn";
++
++#define ARCH_VDSO_SYMBOLS \
++	aarch_vdso_symbol1, aarch_vdso_symbol2, aarch_vdso_symbol3, aarch_vdso_symbol4, aarch_vdso_symbol5
++#endif
+diff --git a/criu/arch/loongarch64/restorer.c b/criu/arch/loongarch64/restorer.c
+new file mode 100644
+index 0000000000..730318ac14
+--- /dev/null
++++ b/criu/arch/loongarch64/restorer.c
+@@ -0,0 +1,14 @@
++#include <unistd.h>
++
++#include "restorer.h"
++#include "asm/restorer.h"
++#include <compel/asm/fpu.h>
++
++#include <compel/plugins/std/syscall.h>
++#include "log.h"
++#include "cpu.h"
++
++int restore_nonsigframe_gpregs(UserLoongarch64GpregsEntry *r)
++{
++	return 0;
++}
+diff --git a/criu/arch/loongarch64/sigframe.c b/criu/arch/loongarch64/sigframe.c
+new file mode 100644
+index 0000000000..18983ff138
+--- /dev/null
++++ b/criu/arch/loongarch64/sigframe.c
+@@ -0,0 +1,12 @@
++#include <stdlib.h>
++#include <stdint.h>
++
++#include "asm/sigframe.h"
++#include "asm/types.h"
++
++#include "log.h"
++#include <stdio.h>
++int sigreturn_prep_fpu_frame(struct rt_sigframe *sigframe, struct rt_sigframe *rsigframe)
++{
++	return 0;
++}
+diff --git a/criu/arch/loongarch64/vdso-pie.c b/criu/arch/loongarch64/vdso-pie.c
+new file mode 100644
+index 0000000000..7a75d2741d
+--- /dev/null
++++ b/criu/arch/loongarch64/vdso-pie.c
+@@ -0,0 +1,48 @@
++#include <unistd.h>
++#include "asm/types.h"
++
++#include <compel/plugins/std/string.h>
++#include <compel/plugins/std/syscall.h>
++#include "parasite-vdso.h"
++#include "log.h"
++#include "common/bug.h"
++
++#ifdef LOG_PREFIX
++#undef LOG_PREFIX
++#endif
++#define LOG_PREFIX "vdso: "
++static void insert_trampoline(uintptr_t from, uintptr_t to)
++{
++	struct {
++		uint32_t pcaddi;
++		uint32_t ldptr;
++		uint32_t jirl;
++		uint32_t guards;
++		uint64_t imm64;
++	} __packed jmp = {
++		.pcaddi = 0x18000095, /*  pcaddi  $x, 4        */
++		.ldptr = 0x260002b5,  /*  ldptr.d $x, $x, 0    */
++		.jirl = 0x4c0002a0,   /*  jirl    $zero, $x, 0 */
++		.guards = 0x002a0000, /*  break   0            */
++		.imm64 = to,
++	};
++	memcpy((void *)from, &jmp, sizeof(jmp));
++}
++
++int vdso_redirect_calls(unsigned long base_to, unsigned long base_from, struct vdso_symtable *sto,
++			struct vdso_symtable *sfrom, bool compat_vdso)
++{
++	unsigned int i;
++	unsigned long from, to;
++	for (i = 0; i < ARRAY_SIZE(sto->symbols); i++) {
++		if (vdso_symbol_empty(&sfrom->symbols[i]))
++			continue;
++		pr_debug("br: %lx/%lx -> %lx/%lx (index %d)\n", base_from, sfrom->symbols[i].offset, base_to,
++			 sto->symbols[i].offset, i);
++
++		from = base_from + sfrom->symbols[i].offset;
++		to = base_to + sto->symbols[i].offset;
++		insert_trampoline(from, to);
++	}
++	return 0;
++}
+
+From 7a4a4fbb9a0055112ce7ebc005ef56a317d0b64b Mon Sep 17 00:00:00 2001
+From: znley <shanjiantao@loongson.cn>
+Date: Mon, 12 Jun 2023 15:26:35 +0800
+Subject: [PATCH 5/6] zdtm: add loongarch64 support
+
+Signed-off-by: znley <shanjiantao@loongson.cn>
+---
+ .../lib/arch/loongarch64/include/asm/atomic.h | 49 +++++++++++++++++++
+ test/zdtm/lib/test.c                          |  2 +-
+ 2 files changed, 50 insertions(+), 1 deletion(-)
+ create mode 100644 test/zdtm/lib/arch/loongarch64/include/asm/atomic.h
+
+diff --git a/test/zdtm/lib/arch/loongarch64/include/asm/atomic.h b/test/zdtm/lib/arch/loongarch64/include/asm/atomic.h
+new file mode 100644
+index 0000000000..1803aaeb44
+--- /dev/null
++++ b/test/zdtm/lib/arch/loongarch64/include/asm/atomic.h
+@@ -0,0 +1,49 @@
++#ifndef __CR_ATOMIC_H__
++#define __CR_ATOMIC_H__
++
++typedef uint32_t atomic_t;
++
++#define atomic_get(v)	 (*(volatile int *)v)
++#define atomic_set(v, i) (*(v) = (i))
++
++static inline int __atomic_add(int i, atomic_t *v)
++{
++	int result;
++	asm volatile("amadd_db.w %1, %2, %0" : "+ZB"(*v), "=&r"(result) : "r"(i) : "memory");
++	return result + i;
++}
++
++static inline void atomic_add(int i, atomic_t *v)
++{
++	__atomic_add(i, v);
++}
++
++static inline int atomic_add_return(int i, atomic_t *v)
++{
++	return __atomic_add(i, v);
++}
++
++#define atomic_sub(i, v)	atomic_add(-(int)i, v)
++#define atomic_sub_return(i, v) atomic_add_return(-(int)i, v)
++#define atomic_inc(v)		atomic_add_return(1, v)
++#define atomic_dec(v)		atomic_sub_return(1, v)
++#define atomic_dec_return(v)	atomic_sub_return(1, v)
++
++static inline int atomic_cmpxchg(atomic_t *ptr, int old, int new)
++{
++	int ret;
++	asm volatile("1:                     \n"
++		     " ll.w  %0, %1          \n"
++		     " bne   %0, %2, 2f      \n"
++		     " or    $t0, %3, $zero  \n"
++		     " sc.w  $t0, %1         \n"
++		     " beqz  $t0, 1b         \n"
++		     "2:                     \n"
++		     " dbar  0               \n"
++		     : "=&r"(ret), "+ZB"(*ptr)
++		     : "r"(old), "r"(new)
++		     : "t0", "memory");
++	return ret;
++}
++
++#endif /* __CR_ATOMIC_H__ */
+diff --git a/test/zdtm/lib/test.c b/test/zdtm/lib/test.c
+index 6291ea4a7b..a5ba38b2dd 100644
+--- a/test/zdtm/lib/test.c
++++ b/test/zdtm/lib/test.c
+@@ -406,7 +406,7 @@ pid_t sys_clone_unified(unsigned long flags, void *child_stack, void *parent_tid
+ {
+ #ifdef __x86_64__
+ 	return (pid_t)syscall(__NR_clone, flags, child_stack, parent_tid, child_tid, newtls);
+-#elif (__i386__ || __arm__ || __aarch64__ || __powerpc64__ || __mips__)
++#elif (__i386__ || __arm__ || __aarch64__ || __powerpc64__ || __mips__ || __loongarch64)
+ 	return (pid_t)syscall(__NR_clone, flags, child_stack, parent_tid, newtls, child_tid);
+ #elif __s390x__
+ 	return (pid_t)syscall(__NR_clone, child_stack, flags, parent_tid, child_tid, newtls);
+
+From 53f1b58307ef74c26cfc8cb2d2f69a1ab40cbc3b Mon Sep 17 00:00:00 2001
+From: znley <shanjiantao@loongson.cn>
+Date: Tue, 11 Jul 2023 15:20:00 +0800
+Subject: [PATCH 6/6] ci: add workflow for loongarch64
+
+Signed-off-by: znley <shanjiantao@loongson.cn>
+---
+ .github/workflows/loongarch64-qemu-test.yml | 15 +++++
+ scripts/ci/Makefile                         |  5 ++
+ scripts/ci/loongarch64-qemu-test.sh         | 69 +++++++++++++++++++++
+ 3 files changed, 89 insertions(+)
+ create mode 100644 .github/workflows/loongarch64-qemu-test.yml
+ create mode 100755 scripts/ci/loongarch64-qemu-test.sh
+
+diff --git a/.github/workflows/loongarch64-qemu-test.yml b/.github/workflows/loongarch64-qemu-test.yml
+new file mode 100644
+index 0000000000..ba22fa25ff
+--- /dev/null
++++ b/.github/workflows/loongarch64-qemu-test.yml
+@@ -0,0 +1,15 @@
++name: LoongArch64 Qemu Test
++
++on: [push, pull_request]
++
++# Cancel any preceding run on the pull request.
++concurrency:
++  group: loongarch64-qemu-test-${{ github.event.pull_request.number || github.ref }}
++  cancel-in-progress: ${{ github.ref != 'refs/heads/criu-dev' }}
++
++jobs:
++  build:
++    runs-on: ubuntu-22.04
++    steps:
++      - uses: actions/checkout@v2 
++      - run: sudo make -C scripts/ci loongarch64-qemu-test
+diff --git a/scripts/ci/Makefile b/scripts/ci/Makefile
+index 5c45791034..ce844a17ce 100644
+--- a/scripts/ci/Makefile
++++ b/scripts/ci/Makefile
+@@ -110,5 +110,10 @@ check-commit:
+ 
+ .PHONY: check-commit
+ 
++loongarch64-qemu-test:
++	./loongarch64-qemu-test.sh
++
++.PHONY: loongarch64-qemu-test
++
+ %:
+ 	$(MAKE) -C ../build $@$(target-suffix)
+diff --git a/scripts/ci/loongarch64-qemu-test.sh b/scripts/ci/loongarch64-qemu-test.sh
+new file mode 100755
+index 0000000000..52e587619c
+--- /dev/null
++++ b/scripts/ci/loongarch64-qemu-test.sh
+@@ -0,0 +1,69 @@
++#!/bin/bash
++
++set -o nounset
++set -o errexit
++set -x
++
++./apt-install \
++    apt-transport-https \
++    ca-certificates \
++    curl \
++    software-properties-common \
++    sshpass \
++    openssh-client
++
++curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
++
++add-apt-repository \
++   "deb [arch=amd64] https://download.docker.com/linux/ubuntu \
++   $(lsb_release -cs) \
++   stable test"
++
++./apt-install docker-ce
++
++# shellcheck source=/dev/null
++. /etc/lsb-release
++
++# docker checkpoint and restore is an experimental feature
++echo '{ "experimental": true }' > /etc/docker/daemon.json
++service docker restart
++
++docker info
++
++# run a loongarch64 vm
++
++PORT='2222'
++USER='root'
++PASSWORD='loongarch64'
++NAME='vm'
++
++docker run \
++    -d \
++    --net host \
++    --name $NAME \
++    merore/archlinux-loongarch64
++
++run() {
++    if [ -z "$1" ]; then
++        echo "Command cannot be empty."
++        exit 1
++    fi
++    sshpass -p $PASSWORD ssh -o StrictHostKeyChecking=no -p $PORT $USER@127.0.0.1 "$1"
++}
++
++# wait vm to start
++while (! run "uname -a")
++do
++    echo "Wait vm to start..."
++    sleep 1
++done
++echo "The loongarch64 vm is started!"
++
++# Tar criu and send to vm
++tar -cf criu.tar ../../../criu
++sshpass -p $PASSWORD scp -o StrictHostKeyChecking=no -P $PORT criu.tar $USER@127.0.0.1:/root
++
++# build and test
++run 'cd /root; tar -xf criu.tar'
++run 'cd /root/criu; make -j4'
++run "cd /root/criu; ./test/zdtm.py run -t zdtm/static/maps02 -t zdtm/static/maps05 -t zdtm/static/maps06 -t zdtm/static/maps10 -t zdtm/static/maps_file_prot -t zdtm/static/memfd00 -t zdtm/transition/fork -t zdtm/transition/fork2 -t zdtm/transition/shmem -f h"

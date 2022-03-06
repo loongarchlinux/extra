@@ -21,9 +21,17 @@ options=(!makeflags)
 # https://github.com/acpica/acpica/issues/886
 # https://github.com/acpica/acpica/issues/883
 # https://github.com/acpica/acpica/issues/857
-source=(https://downloadmirror.intel.com/819451/$pkgname-unix-$pkgver.tar.gz)
+source=(https://downloadmirror.intel.com/819451/$pkgname-unix-$pkgver.tar.gz
+        acpica-fix-build.patch
+        acpica-unix-la64.patch)
 sha512sums=('9d21cdbf4351f643b7694be0844d2102c9b1ca2afffd5b4453ef8387cc09812ffe2630f0b4489f679e92eab6e5923f306771b60bb2629fba6a1b2e326d52a11e')
 b2sums=('ee8fea5bd99c6279843a02399760de6e42a7c13a68d4d9fbbf18cee806b2d69aad7b89647cd23db356927b589d2943348f0cf63c0b7d62ccc21c064bd542dd54')
+
+prepare() {
+  cd acpica-unix-${pkgver}
+  patch -p1 -i "$srcdir/acpica-fix-build.patch"
+  patch -p1 -i "$srcdir/$pkgname-unix-la64.patch"
+}
 
 build() {
   NOWERROR=TRUE make -C $pkgname-unix-$pkgver

@@ -12,7 +12,8 @@ license=('Apache')
 depends=('runc' 'containerd')
 makedepends=('git' 'go')
 options=('!lto')
-source=("$pkgname::git+$url.git#tag=v$pkgver")
+source=("$pkgname::git+$url.git#tag=v$pkgver"
+0001-add-loongarch64-support.patch)
 sha256sums=('75ccb5e112e34daa72f4134051f5b4608ce403552e1b5fda4a80d0311ae4fa5f')
 
 prepare() {
@@ -21,6 +22,7 @@ prepare() {
   # fix paths in systemd unit files
   sed -i 's:/usr/local:/usr:' \
     examples/systemd/{system,user}/*.service
+  patch -p1 -i $srcdir/0001-add-loongarch64-support.patch
 
   # create directory for build output
   mkdir build
@@ -38,6 +40,10 @@ build() {
   export CGO_CFLAGS="${CFLAGS}"
   export CGO_CXXFLAGS="${CXXFLAGS}"
   export GOPATH="${srcdir}"
+
+  go mod edit -replace=golang.org/x/sys=github.com/golang/sys@v0.13.0
+  go mod edit -replace=go.etcd.io/bbolt=go.etcd.io/bbolt@v1.3.7-0.20221114114133-eedea6cb26ef
+  go mod tidy
 
   local package='github.com/moby/buildkit'
 

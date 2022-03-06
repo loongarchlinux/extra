@@ -27,15 +27,18 @@ optdepends=(
 source=(https://github.com/openjdk/jdk${_majorver}u/archive/${_git_tag}.tar.gz
         freedesktop-java.desktop
         freedesktop-jconsole.desktop
-        freedesktop-jshell.desktop)
+        freedesktop-jshell.desktop
+        jdk17-17.0.9.8-la64.patch)
 sha256sums=('84e2e143dcab2160dcde3fe6d6b12d7d030533a5bce1aec0ac20d09c023deae0'
             '85c4742764590783160af74587a47269e6797fbdf17ec485c7644bd239adf61d'
             'abac1ab09a33a3654378bc69be5a7cf075263ab3ae9efec1eb25cf388e711bb7'
-            'e7cce0ecf868f656d8dc2eb25ab82ab665526a0a28aba20f02632dd29962dac3')
+            'e7cce0ecf868f656d8dc2eb25ab82ab665526a0a28aba20f02632dd29962dac3'
+            '482e026d19a18e28df2f49bacd3950177be9d2e306d9254a673bc08516c402e3')
 
 case "${CARCH}" in
   x86_64) _JARCH='x86_64';;
   i686)   _JARCH='x86';;
+  loong64) _JARCH='loongarch64';;
 esac
 
 _jvmdir=/usr/lib/jvm/java-${_majorver}-openjdk
@@ -50,6 +53,11 @@ _nonheadless=(lib/libawt_xawt.so
 _commondeps=('java-runtime-common>=3' 'ca-certificates-utils' 'nss' 'libjpeg-turbo' 'libjpeg.so'
            'lcms2' 'liblcms2.so' 'libnet' 'freetype2' 'libfreetype.so' 'harfbuzz' 'libharfbuzz.so'
            'glibc' 'gcc-libs')
+prepare() {
+  cd ${_jdkdir}
+
+  patch -Np1 -i "${srcdir}"/jdk17-17.0.9.8-la64.patch
+}
 
 build() {
   cd ${_jdkdir}
@@ -117,9 +125,8 @@ build() {
     --enable-unlimited-crypto \
     --disable-warnings-as-errors \
     ${NUM_PROC_OPT}
-    #--disable-javac-server
 
-  make images legacy-jre-image docs
+  make images legacy-jre-image #docs
 
   # https://bugs.openjdk.java.net/browse/JDK-8173610
   find "${srcdir}/${_imgdir}" -iname '*.so' -exec chmod +x {} \;
@@ -352,7 +359,7 @@ package_openjdk17-doc() {
   provides=("openjdk${_majorver}-doc=${pkgver}-${pkgrel}")
 
   install -dm 755 "${pkgdir}/usr/share/doc"
-  cp -r ${_imgdir}/docs "${pkgdir}/usr/share/doc/${pkgbase}"
+#cp -r ${_imgdir}/docs "${pkgdir}/usr/share/doc/${pkgbase}"
 
   install -dm 755 "${pkgdir}/usr/share/licenses"
   ln -s ${pkgbase} "${pkgdir}/usr/share/licenses/${pkgname}"

@@ -15,8 +15,14 @@ depends=(gcc-libs bash)
 makedepends=(cmake)
 options=(!emptydirs)
 changelog=$pkgname.changelog
-source=(https://download.osgeo.org/$pkgname/$pkgname-$pkgver.tar.bz2)
-sha256sums=('d6ea7e492224b51193e8244fe3ec17c4d44d0777f3c32ca4fb171140549a0d03')
+source=(https://download.osgeo.org/$pkgname/$pkgname-$pkgver.tar.bz2
+	$pkgname-$pkgver-gcc13.patch)
+sha256sums=('d6ea7e492224b51193e8244fe3ec17c4d44d0777f3c32ca4fb171140549a0d03'
+            '61b348c1177814073e4c2926ee0a0787b7eb3c1acd7b6e77095f8e6868a95b1b')
+
+prepare(){
+  patch -d $pkgname-$pkgver -Np1 -i  $srcdir/$pkgname-$pkgver-gcc13.patch
+}
 
 build() {
   cmake -B build -S $pkgname-$pkgver \

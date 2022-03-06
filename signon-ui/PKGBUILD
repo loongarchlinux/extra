@@ -21,9 +21,11 @@ depends=(gcc-libs
          qt6-webengine
          signond)
 source=(https://gitlab.com/accounts-sso/signon-ui/-/archive/$_commit/$pkgname-$pkgver.tar.gz
-        fake-user-agent.patch)
+        fake-user-agent.patch
+        signon-ui-loong64-bad-fix.patch)
 sha256sums=('0906a1adee88e331e9dcf1f2d5978c24f8564fb734f5c114c88bddb63196d3d4'
-            '5eb7782c6472e51a8107a25324d1d30052bac5d8e9050907cd957c89568fa577')
+            '5eb7782c6472e51a8107a25324d1d30052bac5d8e9050907cd957c89568fa577'
+            'ab79b1e4a67edeb6150e2cb592ec56c71c46a064a048cdb73ddd0533f96f09e0')
 
 prepare() {
   cd $pkgname-$_commit
@@ -32,6 +34,7 @@ prepare() {
   sed -e 's|src \\|src|' -e '/tests/d' -i signon-ui.pro
   # Fake user ID to bypass Google blacklist
   patch -p1 -i ../fake-user-agent.patch
+  patch -p1 -i $srcdir/signon-ui-loong64-bad-fix.patch
 }
 
 build() {

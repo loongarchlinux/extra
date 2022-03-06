@@ -15,13 +15,16 @@ depends=(go-tools qt5-base)
 optdepends=('go: go compiler'
             'gcc-go: go compiler')
 options=(!strip !emptydirs)
-source=("$pkgname-x$pkgver::git+$url#commit=35a0dcd957d8bdcc189089a9c027bc54b8aa8cde") # tag: x38.3
-b2sums=('7fef233153c2195c80079c2dcbff66bceef13c9acf44e6af9d5ae9ebe68ae91b4d00979bf92bac6a6e0b181e74494247d0dcee6bdca69d414ad8ab8eda5306c1')
+source=("$pkgname-x$pkgver::git+$url#commit=35a0dcd957d8bdcc189089a9c027bc54b8aa8cde"
+    liteide-fix-build.patch)
+b2sums=('7fef233153c2195c80079c2dcbff66bceef13c9acf44e6af9d5ae9ebe68ae91b4d00979bf92bac6a6e0b181e74494247d0dcee6bdca69d414ad8ab8eda5306c1'
+        '03d9ff6614a800e9d4fb5a6e05a1b8a92e6e4fb27342b237a6c297dadcd90c39b5299da99bee0ee639630947de67c521fe72c10419cc06c3f94eda0a546f84a7')
 
 prepare() {
   cd $pkgname-x$pkgver
 
   chmod +x build/*_*.sh
+  patch -p1 -i $srcdir/liteide-fix-build.patch
 
   # Fix for FS#4662
   sed -i 's|^GOROOT|#GOROOT|g' liteidex/os_deploy/linux/liteenv/linux{32,64}.env

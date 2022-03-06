@@ -20,7 +20,7 @@ arch=('loong64' 'x86_64')
 license=('GPL-2.0-or-later')
 url='https://valgrind.org/'
 depends=('glibc' 'perl' 'debuginfod')
-makedepends=('gdb' 'lib32-glibc' 'lib32-gcc-libs' 'docbook-xml'
+makedepends=('gdb' 'docbook-xml'
              'docbook-xsl' 'docbook-sgml')
 checkdepends=('procps-ng')
 optdepends=(
@@ -31,7 +31,9 @@ provides=('valgrind-multilib')
 replaces=('valgrind-multilib')
 options=('!emptydirs' '!strip')
 source=(https://sourceware.org/pub/valgrind/valgrind-${pkgver}.tar.bz2{,.asc}
-        valgrind-3.7.0-respect-flags.patch)
+        valgrind-3.7.0-respect-flags.patch
+        fix-perl-errors.patch
+        valgrind-3.21-la64.patch)
 validpgpkeys=(
   0E9FFD0C16A1856CF9C7C690BA0166E698FA6035 # Julian Seward <jseward@acm.org>
   EC3CFE88F6CA0788774F5C1D1AA44BE649DE760A # Mark Wielaard <mjw@gnu.org>
@@ -41,12 +43,15 @@ sha512sums=('27d038faaaf6154cace2df18c3573291393548ba0738dbb6aba58eab6324c5beaa9
             'e0cec39381cefeca09ae4794cca309dfac7c8693e6315e137e64f5c33684598726d41cfbb4edf764fe985503b13ff596184ca5fc32b159d500ec092e4cf8838c')
 b2sums=('9312761b0531006725f13270984b26c48f71ebe66e355b04410d7c01773c9b78ec21db3259cab398e58b3b68f93f5f074db06efe1f359bd7cf423515576191a4'
         'SKIP'
-        'af556fdf3c02e37892bfe9afebc954cf2f1b2fa9b75c1caacfa9f3b456ebc02bf078475f9ee30079b3af5d150d41415a947c3d04235c1ea8412cf92b959c484a')
+        'af556fdf3c02e37892bfe9afebc954cf2f1b2fa9b75c1caacfa9f3b456ebc02bf078475f9ee30079b3af5d150d41415a947c3d04235c1ea8412cf92b959c484a'
+        '78e5ebeda69302ad380923fe0e76ef8fc3443ffa29cc3104fe629335c8ceda1b4198cb5c72bdefb0e47c77ea02d2ca7bfb478cbf8731f8ded0e0c7c5d83981ee'
+        'd9bea235f6b8d07cff5db4851b7085cde9d90e85929167206c74c641fe2db50dde2ffc6cf4524109275321e4c1be8e5a4bcca8a0dda1570877d2cfbfd847b994')
 options=(!lto) # https://bugs.kde.org/show_bug.cgi?id=338252
 
 prepare() {
   cd valgrind-${pkgver}
   patch -Np1 < ../valgrind-3.7.0-respect-flags.patch
+  patch -p1 -i "${srcdir}"/valgrind-3.21-la64.patch
   sed -i 's|sgml/docbook/xsl-stylesheets|xml/docbook/xsl-stylesheets-1.79.2-nons|' docs/Makefile.am
 
   autoreconf -ifv

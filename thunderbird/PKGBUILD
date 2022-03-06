@@ -55,13 +55,14 @@ depends=(
 )
 makedepends=(
   unzip zip diffutils python nasm mesa libpulse libice libsm
-  rust clang llvm cbindgen nodejs lld
+  rust clang llvm cbindgen nodejs #lld
   gawk perl findutils libotr wasi-compiler-rt wasi-libc wasi-libc++ wasi-libc++abi
 )
 options=(!emptydirs !makeflags !lto)
 source=(https://archive.mozilla.org/pub/thunderbird/releases/$pkgver/source/thunderbird-$pkgver.source.tar.xz{,.asc}
         vendor-prefs.js
         distribution.ini
+        firefox-115-loong.patch
         mozconfig.cfg
         metainfo.patch
         org.mozilla.Thunderbird.desktop
@@ -119,6 +120,10 @@ build() {
   # malloc_usable_size is used in various parts of the codebase
   CFLAGS="${CFLAGS/_FORTIFY_SOURCE=3/_FORTIFY_SOURCE=2}"
   CXXFLAGS="${CXXFLAGS/_FORTIFY_SOURCE=3/_FORTIFY_SOURCE=2}"
+  CFLAGS=${CFLAGS/-mlsx /}
+  CXXFLAGS=${CXXFLAGS/-mlsx /}
+  CFLAGS=${CFLAGS/-fstack-clash-protection/}
+  CXXFLAGS=${CXXFLAGS/-fstack-clash-protection/}
 
   ./mach configure
   ./mach build
@@ -261,7 +266,8 @@ sha512sums=('e893cba882fe3fba516758b8822fa16a6c5b1f633cd2877a91357255f956be32b55
             'SKIP'
             '6918c0de63deeddc6f53b9ba331390556c12e0d649cf54587dfaabb98b32d6a597b63cf02809c7c58b15501720455a724d527375a8fb9d757ccca57460320734'
             '5cd3ac4c94ef6dcce72fba02bc18b771a2f67906ff795e0e3d71ce7db6d8a41165bd5443908470915bdbdb98dddd9cf3f837c4ba3a36413f55ec570e6efdbb9f'
-            'a34dd97954f415a5ffe956ca1f10718bd164950566ceba328805c2ccbb54ed9081df07f2e063479bf932c4a443bb5b7443cca2f82eea3914465ed6e4863e0c0e'
+            '0c1c085147db0569ec0365b9250e6b8181fe3ffbe6c22e1b5d752370eaa8d18425dfab612a906d10d5211394d232d9ee1a563b9d8d89d8f2105a4303f953eb94'
+            '702f1e889ec75e454245a46e485a554c51af1be94bdc0eeb42c466c5baee48106f41d5769f1f09888ad5bbe2db113bfbefbbea34111d6e2566126bfdb34d50b0'
             '7e43b1f25827ddae615ad43fc1e11c6ba439d6c2049477dfe60e00188a70c0a76160c59a97cc01d1fd99c476f261c7cecb57628b5be48874be7cf991c22db290'
             'fffeb73e2055408c5598439b0214b3cb3bb4e53dac3090b880a55f64afcbc56ba5d32d1187829a08ef06d592513d158ced1fde2f20e2f01e967b5fbd3b2fafd4'
             '9897cb0ababc8e1a0001c4e1f70e0b39f5cdb9c08c69e3afd42088dfd001aa1fc6996cd83df0db1fb57ee0a80686c35c8df783108408dbe9191602cddd1e3c65'

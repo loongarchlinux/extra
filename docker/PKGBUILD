@@ -21,7 +21,8 @@ _TINI_COMMIT=de40ad007797e0dcd8b7126f27bb87401d224240
 source=("git+https://github.com/docker/cli.git#tag=v$pkgver"
         "git+https://github.com/moby/moby.git#tag=v$pkgver"
         "git+https://github.com/krallin/tini.git#commit=$_TINI_COMMIT"
-        "$pkgname.sysusers")
+        "$pkgname.sysusers"
+        "moby-la64.patch")
 sha256sums=('cf71e83614261fe8063630920d62090a8f04cea14d9a1b5a96cbc99aedfd7330'
             '75b2102f0cda60a2ecf24eac17126aaf59426a1bd286c16fe966aef22f188e8b'
             '28a6641d508f60d47315efb3c85d97360188750a45bd6d3c8737d3f1a2b44121'
@@ -39,6 +40,11 @@ _fake_gopath_pushd() {
 
 _fake_gopath_popd() {
   popd >/dev/null
+}
+
+prepare() {
+  cd moby
+  patch -p1 -i $srcdir/moby-la64.patch
 }
 
 build() {
