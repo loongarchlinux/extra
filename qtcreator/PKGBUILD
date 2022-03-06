@@ -29,9 +29,16 @@ optdepends=('qt6-doc: integrated Qt documentation'
             'valgrind: analyze support'
             'perf: performer analyzer'
             'mlocate: locator filter')
-source=(https://download.qt.io/official_releases/qtcreator/${pkgver%.*}/$pkgver/qt-creator-opensource-src-$pkgver.tar.xz)
-sha256sums=('5cb4798cd81b086e7f17f5a8d42ea024f64da7efd38ccb5c62f9c1457c23551a')
+source=(https://download.qt.io/official_releases/qtcreator/${pkgver%.*}/$pkgver/qt-creator-opensource-src-$pkgver.tar.xz
+        qtcreator-la64.patch)
+sha256sums=('5cb4798cd81b086e7f17f5a8d42ea024f64da7efd38ccb5c62f9c1457c23551a'
+            '3f4125ab535ab96096d0317ecd9889f58d7cfb7fc8a95cafd8b9df33a6facfb1')
 options=(docs debug)
+
+prepare() {
+  cd qt-creator-opensource-src-$pkgver
+  patch -p1 -i ../qtcreator-la64.patch
+}
 
 build() {
   cmake -B build -S qt-creator-opensource-src-$pkgver \

@@ -10,16 +10,24 @@ pkgdesc='C library providing BLAKE2b, BLAKE2s, BLAKE2bp, BLAKE2sp hash functions
 url='https://blake2.net/'
 license=(custom:CC0)
 depends=(gcc-libs)
-source=("https://github.com/BLAKE2/libb2/releases/download/v$pkgver/$pkgname-$pkgver.tar.gz")
-sha256sums=('53626fddce753c454a3fea581cbbc7fe9bbcf0bc70416d48fdbbf5d87ef6c72e')
+source=("https://github.com/BLAKE2/libb2/releases/download/v$pkgver/$pkgname-$pkgver.tar.gz"
+        libb2-fix-build.patch)
+sha256sums=('53626fddce753c454a3fea581cbbc7fe9bbcf0bc70416d48fdbbf5d87ef6c72e'
+            '40f3468e1015e60ff454ea46215cde1324b5c94fae437663090d0e41a505923e')
 
 # libb2's build system discards the $CFLAGS variable.
 # We can get around this by putting those flags in $CC.
 export CC="${CC-cc} $CFLAGS"
 
+prepare() {
+  cd "$pkgname-$pkgver"
+  patch -p1 -i $srcdir/libb2-fix-build.patch
+  autoreconf -vfi
+}
+
 build() {
   cd "$pkgname-$pkgver"
-  ./configure --prefix=/usr --disable-static --enable-shared --disable-native --enable-fat
+  ./configure --prefix=/usr --disable-static --enable-shared --disable-native
   make
 }
 

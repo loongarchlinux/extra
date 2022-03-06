@@ -38,6 +38,7 @@ prepare() {
 
 build() {
   cd "${srcdir}/${pkgbase}-${_realver}"
+  autoreconf
 
   ./configure \
       --prefix=/usr \
@@ -51,6 +52,15 @@ build() {
       --with-srv6-lease-file=/var/lib/dhcp/dhcpd6.leases \
       --with-cli-lease-file=/var/lib/dhclient/dhclient.leases \
       --with-cli6-lease-file=/var/lib/dhclient/dhclient6.leases
+
+  (
+   cd bind
+   tar xf bind.tar.gz
+   cp -f /usr/share/automake-1.16/config.sub bind-9.11.36/config.sub
+   cp -f /usr/share/automake-1.16/config.guess bind-9.11.36/config.guess
+   tar zcf bind.tar.gz bind-9.11.36
+   rm -rf bind-9.11.36
+  )
 
   make -j1
 }
