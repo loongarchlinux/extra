@@ -1,0 +1,328 @@
+From cb5f5e13300712b5dde6cfcafab9f7f465096c18 Mon Sep 17 00:00:00 2001
+From: wanglei <wanglei@loongson.cn>
+Date: Tue, 30 May 2023 19:16:18 +0800
+Subject: [PATCH] [RuntimeDyld][MCJIT] Add LoongArch support
+
+---
+ lib/ExecutionEngine/Orc/LLJIT.cpp             |   3 +-
+ .../RuntimeDyld/RuntimeDyld.cpp               |  12 ++
+ .../RuntimeDyld/RuntimeDyldELF.cpp            | 198 ++++++++++++++++++
+ .../RuntimeDyld/RuntimeDyldELF.h              |  14 ++
+ 4 files changed, 226 insertions(+), 1 deletion(-)
+
+diff --git a/lib/ExecutionEngine/Orc/LLJIT.cpp b/lib/ExecutionEngine/Orc/LLJIT.cpp
+index bc84988e..e06dea9d 100644
+--- a/lib/ExecutionEngine/Orc/LLJIT.cpp
++++ b/lib/ExecutionEngine/Orc/LLJIT.cpp
+@@ -802,7 +802,8 @@ LLJIT::createObjectLinkingLayer(LLJITBuilderState &S, ExecutionSession &ES) {
+ 
+   if (S.JTMB->getTargetTriple().isOSBinFormatELF() &&
+       (S.JTMB->getTargetTriple().getArch() == Triple::ArchType::ppc64 ||
+-       S.JTMB->getTargetTriple().getArch() == Triple::ArchType::ppc64le))
++       S.JTMB->getTargetTriple().getArch() == Triple::ArchType::ppc64le ||
++       S.JTMB->getTargetTriple().getArch() == Triple::ArchType::loongarch64))
+     Layer->setAutoClaimResponsibilityForObjectSymbols(true);
+ 
+   // FIXME: Explicit conversion to std::unique_ptr<ObjectLayer> added to silence
+diff --git a/lib/ExecutionEngine/RuntimeDyld/RuntimeDyld.cpp b/lib/ExecutionEngine/RuntimeDyld/RuntimeDyld.cpp
+index a9aaff42..b154ea28 100644
+--- a/lib/ExecutionEngine/RuntimeDyld/RuntimeDyld.cpp
++++ b/lib/ExecutionEngine/RuntimeDyld/RuntimeDyld.cpp
+@@ -987,6 +987,18 @@ uint8_t *RuntimeDyldImpl::createStubFunction(uint8_t *Addr,
+     // and stubs for branches Thumb - ARM and ARM - Thumb.
+     writeBytesUnaligned(0xe51ff004, Addr, 4); // ldr pc, [pc, #-4]
+     return Addr + 4;
++  } else if (Arch == Triple::loongarch64) {
++    // lu12i.w  $t0, %abs_hi20(addr)
++    // ori      $t0, $t0, %abs_lo12(addr)
++    // lu32i.d  $t0, %abs64_lo20(addr)
++    // lu52i.d  $t0, $t0, %abs64_lo12(addr)
++    // jr       $t0
++    writeBytesUnaligned(0x1400000c, Addr, 4);
++    writeBytesUnaligned(0x0380018c, Addr + 4, 4);
++    writeBytesUnaligned(0x1600000c, Addr + 8, 4);
++    writeBytesUnaligned(0x0300018c, Addr + 12, 4);
++    writeBytesUnaligned(0x4c000180, Addr + 16, 4);
++    return Addr;
+   } else if (IsMipsO32ABI || IsMipsN32ABI) {
+     // 0:   3c190000        lui     t9,%hi(addr).
+     // 4:   27390000        addiu   t9,t9,%lo(addr).
+diff --git a/lib/ExecutionEngine/RuntimeDyld/RuntimeDyldELF.cpp b/lib/ExecutionEngine/RuntimeDyld/RuntimeDyldELF.cpp
+index 2fe49fef..f85452be 100644
+--- a/lib/ExecutionEngine/RuntimeDyld/RuntimeDyldELF.cpp
++++ b/lib/ExecutionEngine/RuntimeDyld/RuntimeDyldELF.cpp
+@@ -641,6 +641,102 @@ void RuntimeDyldELF::resolveARMRelocation(const SectionEntry &Section,
+   }
+ }
+ 
++// Returns extract bits Val[Hi:Lo].
++static inline uint32_t extractBits(uint32_t Val, unsigned Hi, unsigned Lo) {
++  return (Val & (((1UL << (Hi + 1)) - 1))) >> Lo;
++}
++
++void RuntimeDyldELF::resolveLoongArch64Relocation(const SectionEntry &Section,
++                                                  uint64_t Offset,
++                                                  uint64_t Value, uint32_t Type,
++                                                  int64_t Addend) {
++  uint32_t *TargetPtr =
++      reinterpret_cast<uint32_t *>(Section.getAddressWithOffset(Offset));
++  uint64_t FinalAddress = Section.getLoadAddressWithOffset(Offset);
++
++  LLVM_DEBUG(dbgs() << "resolveLoongArch64Relocation, LocalAddress: 0x"
++                    << format("%llx", Section.getAddressWithOffset(Offset))
++                    << " FinalAddress: 0x" << format("%llx", FinalAddress)
++                    << " Value: 0x" << format("%llx", Value) << " Type: 0x"
++                    << format("%x", Type) << " Addend: 0x"
++                    << format("%llx", Addend) << "\n");
++
++  switch (Type) {
++  default:
++    report_fatal_error("Relocation type not implemented yet!");
++    break;
++  case ELF::R_LARCH_32:
++    *(support::little32_t *)TargetPtr = static_cast<uint32_t>(Value + Addend);
++    break;
++  case ELF::R_LARCH_64:
++    *(support::little64_t *)TargetPtr = Value + Addend;
++    break;
++  case ELF::R_LARCH_32_PCREL:
++    *(support::little32_t *)TargetPtr =
++        static_cast<uint32_t>(Value - FinalAddress + Addend);
++    break;
++  case ELF::R_LARCH_B26: {
++    uint64_t BranchImm = Value - FinalAddress + Addend;
++    assert(isInt<28>(BranchImm));
++    uint32_t RawInstr = *(support::little32_t *)TargetPtr;
++    uint32_t Imm = static_cast<uint32_t>(BranchImm >> 2);
++    uint32_t Imm15_0 = extractBits(Imm, /*Hi=*/15, /*Lo=*/0) << 10;
++    uint32_t Imm25_16 = extractBits(Imm, /*Hi=*/25, /*Lo=*/16);
++    *(support::little32_t *)TargetPtr = RawInstr | Imm15_0 | Imm25_16;
++    break;
++  }
++  case ELF::R_LARCH_GOT_PC_HI20:
++  case ELF::R_LARCH_PCALA_HI20: {
++    uint64_t Target = Value + Addend;
++    uint64_t TargetPage =
++        (Target + (Target & 0x800)) & ~static_cast<uint64_t>(0xfff);
++    uint64_t PCPage = FinalAddress & ~static_cast<uint64_t>(0xfff);
++    int64_t PageDelta = TargetPage - PCPage;
++    uint32_t RawInstr = *(support::little32_t *)TargetPtr;
++    uint32_t Imm31_12 = extractBits(PageDelta, /*Hi=*/31, /*Lo=*/12) << 5;
++    *(support::little32_t *)TargetPtr = RawInstr | Imm31_12;
++    break;
++  }
++  case ELF::R_LARCH_GOT_PC_LO12:
++  case ELF::R_LARCH_PCALA_LO12: {
++    // TODO: code-model=medium
++    uint64_t TargetOffset = (Value + Addend) & 0xfff;
++    uint32_t RawInstr = *(support::little32_t *)TargetPtr;
++    uint32_t Imm11_0 = TargetOffset << 10;
++    *(support::little32_t *)TargetPtr = RawInstr | Imm11_0;
++    break;
++  }
++  case ELF::R_LARCH_ABS_HI20: {
++    uint64_t Target = Value + Addend;
++    uint32_t RawInstr = *(support::little32_t *)TargetPtr;
++    uint32_t Imm31_12 = extractBits(Target, /*Hi=*/31, /*Lo=*/12) << 5;
++    *(support::little32_t *)TargetPtr = RawInstr | Imm31_12;
++    break;
++  }
++  case ELF::R_LARCH_ABS_LO12: {
++    uint64_t Target = Value + Addend;
++    uint32_t RawInstr = *(support::little32_t *)TargetPtr;
++    uint32_t Imm11_0 = extractBits(Target, /*Hi=*/11, /*Lo=*/0) << 10;
++    *(support::little32_t *)TargetPtr = RawInstr | Imm11_0;
++    break;
++  }
++  case ELF::R_LARCH_ABS64_LO20: {
++    uint64_t Target = Value + Addend;
++    uint32_t RawInstr = *(support::little32_t *)TargetPtr;
++    uint32_t Imm51_32 = extractBits(Target >> 32, /*Hi=*/19, /*Lo=*/0) << 5;
++    *(support::little32_t *)TargetPtr = RawInstr | Imm51_32;
++    break;
++  }
++  case ELF::R_LARCH_ABS64_HI12: {
++    uint64_t Target = Value + Addend;
++    uint32_t RawInstr = *(support::little32_t *)TargetPtr;
++    uint32_t Imm63_52 = extractBits(Target >> 32, /*Hi=*/31, /*Lo=*/20) << 5;
++    *(support::little32_t *)TargetPtr = RawInstr | Imm63_52;
++    break;
++  }
++  }
++}
++
+ void RuntimeDyldELF::setMipsABI(const ObjectFile &Obj) {
+   if (Arch == Triple::UnknownArch ||
+       !StringRef(Triple::getArchTypePrefix(Arch)).equals("mips")) {
+@@ -1057,6 +1153,9 @@ void RuntimeDyldELF::resolveRelocation(const SectionEntry &Section,
+     resolveARMRelocation(Section, Offset, (uint32_t)(Value & 0xffffffffL), Type,
+                          (uint32_t)(Addend & 0xffffffffL));
+     break;
++  case Triple::loongarch64:
++    resolveLoongArch64Relocation(Section, Offset, Value, Type, Addend);
++    break;
+   case Triple::ppc: // Fall through.
+   case Triple::ppcle:
+     resolvePPC32Relocation(Section, Offset, Value, Type, Addend);
+@@ -1209,6 +1308,81 @@ void RuntimeDyldELF::resolveAArch64Branch(unsigned SectionID,
+   }
+ }
+ 
++bool RuntimeDyldELF::resolveLoongArch64ShortBranch(
++    unsigned SectionID, relocation_iterator RelI,
++    const RelocationValueRef &Value) {
++  uint64_t Address;
++  if (Value.SymbolName) {
++    auto Loc = GlobalSymbolTable.find(Value.SymbolName);
++    // Don't create direct branch for external symbols.
++    if (Loc == GlobalSymbolTable.end())
++      return false;
++    const auto &SymInfo = Loc->second;
++    Address =
++        uint64_t(Sections[SymInfo.getSectionID()].getLoadAddressWithOffset(
++            SymInfo.getOffset()));
++  } else {
++    Address = uint64_t(Sections[Value.SectionID].getLoadAddress());
++  }
++  uint64_t Offset = RelI->getOffset();
++  uint64_t SourceAddress = Sections[SectionID].getLoadAddressWithOffset(Offset);
++  if (!isInt<28>(Address + Value.Addend - SourceAddress))
++    return false;
++  resolveRelocation(Sections[SectionID], Offset, Address, RelI->getType(),
++                    Value.Addend);
++  return true;
++}
++
++void RuntimeDyldELF::resolveLoongArch64Branch(unsigned SectionID,
++                                              const RelocationValueRef &Value,
++                                              relocation_iterator RelI,
++                                              StubMap &Stubs) {
++  LLVM_DEBUG(dbgs() << "\t\tThis is an LoongArch64 branch relocation.\n");
++  SectionEntry &Section = Sections[SectionID];
++  uint64_t Offset = RelI->getOffset();
++  unsigned RelType = RelI->getType();
++  // Look for an existing stub.
++  StubMap::const_iterator i = Stubs.find(Value);
++  if (i != Stubs.end()) {
++    resolveRelocation(Section, Offset,
++                      (uint64_t)Section.getAddressWithOffset(i->second),
++                      RelType, 0);
++    LLVM_DEBUG(dbgs() << " Stub function found\n");
++  } else if (!resolveLoongArch64ShortBranch(SectionID, RelI, Value)) {
++    // Create a new stub function.
++    LLVM_DEBUG(dbgs() << " Create a new stub function\n");
++    Stubs[Value] = Section.getStubOffset();
++    uint8_t *StubTargetAddr = createStubFunction(
++        Section.getAddressWithOffset(Section.getStubOffset()));
++    RelocationEntry LU12I_W(SectionID, StubTargetAddr - Section.getAddress(),
++                            ELF::R_LARCH_ABS_HI20, Value.Addend);
++    RelocationEntry ORI(SectionID, StubTargetAddr - Section.getAddress() + 4,
++                        ELF::R_LARCH_ABS_LO12, Value.Addend);
++    RelocationEntry LU32I_D(SectionID,
++                            StubTargetAddr - Section.getAddress() + 8,
++                            ELF::R_LARCH_ABS64_LO20, Value.Addend);
++    RelocationEntry LU52I_D(SectionID,
++                            StubTargetAddr - Section.getAddress() + 12,
++                            ELF::R_LARCH_ABS64_HI12, Value.Addend);
++    if (Value.SymbolName) {
++      addRelocationForSymbol(LU12I_W, Value.SymbolName);
++      addRelocationForSymbol(ORI, Value.SymbolName);
++      addRelocationForSymbol(LU32I_D, Value.SymbolName);
++      addRelocationForSymbol(LU52I_D, Value.SymbolName);
++    } else {
++      addRelocationForSection(LU12I_W, Value.SectionID);
++      addRelocationForSection(ORI, Value.SectionID);
++      addRelocationForSection(LU32I_D, Value.SectionID);
++      addRelocationForSection(LU52I_D, Value.SectionID);
++    }
++    resolveRelocation(Section, Offset,
++                      reinterpret_cast<uint64_t>(Section.getAddressWithOffset(
++                          Section.getStubOffset())),
++                      RelType, 0);
++    Section.advanceStubOffset(getMaxStubSize());
++  }
++}
++
+ Expected<relocation_iterator>
+ RuntimeDyldELF::processRelocationRef(
+     unsigned SectionID, relocation_iterator RelI, const ObjectFile &O,
+@@ -1369,6 +1543,25 @@ RuntimeDyldELF::processRelocationRef(
+       }
+       processSimpleRelocation(SectionID, Offset, RelType, Value);
+     }
++  } else if (Arch == Triple::loongarch64) {
++    if (RelType == ELF::R_LARCH_B26 && MemMgr.allowStubAllocation()) {
++      resolveLoongArch64Branch(SectionID, Value, RelI, Stubs);
++    } else if (RelType == ELF::R_LARCH_GOT_PC_HI20 ||
++               RelType == ELF::R_LARCH_GOT_PC_LO12) {
++      // FIXME: This will create redundant got entry.
++      uint64_t GOTOffset = allocateGOTEntries(1);
++      // Create relocation for newly created GOT entry.
++      RelocationEntry RE =
++          computeGOTOffsetRE(GOTOffset, Value.Offset, ELF::R_LARCH_64);
++      if (Value.SymbolName)
++        addRelocationForSymbol(RE, Value.SymbolName);
++      else
++        addRelocationForSection(RE, Value.SectionID);
++      resolveGOTOffsetRelocation(SectionID, Offset, GOTOffset + Addend,
++                                 RelType);
++    } else {
++      processSimpleRelocation(SectionID, Offset, RelType, Value);
++    }
+   } else if (IsMipsO32ABI) {
+     uint8_t *Placeholder = reinterpret_cast<uint8_t *>(
+         computePlaceholderAddress(SectionID, Offset));
+@@ -2214,6 +2407,7 @@ size_t RuntimeDyldELF::getGOTEntrySize() {
+   case Triple::x86_64:
+   case Triple::aarch64:
+   case Triple::aarch64_be:
++  case Triple::loongarch64:
+   case Triple::ppc64:
+   case Triple::ppc64le:
+   case Triple::systemz:
+@@ -2525,6 +2719,10 @@ bool RuntimeDyldELF::relocationNeedsGot(const RelocationRef &R) const {
+     return RelTy == ELF::R_AARCH64_ADR_GOT_PAGE ||
+            RelTy == ELF::R_AARCH64_LD64_GOT_LO12_NC;
+ 
++  if (Arch == Triple::loongarch64)
++    return RelTy == ELF::R_LARCH_GOT_PC_HI20 ||
++           RelTy == ELF::R_LARCH_GOT_PC_LO12;
++
+   if (Arch == Triple::x86_64)
+     return RelTy == ELF::R_X86_64_GOTPCREL ||
+            RelTy == ELF::R_X86_64_GOTPCRELX ||
+diff --git a/lib/ExecutionEngine/RuntimeDyld/RuntimeDyldELF.h b/lib/ExecutionEngine/RuntimeDyld/RuntimeDyldELF.h
+index dfdd98cb..2c930219 100644
+--- a/lib/ExecutionEngine/RuntimeDyld/RuntimeDyldELF.h
++++ b/lib/ExecutionEngine/RuntimeDyld/RuntimeDyldELF.h
+@@ -48,6 +48,18 @@ class RuntimeDyldELF : public RuntimeDyldImpl {
+   void resolveARMRelocation(const SectionEntry &Section, uint64_t Offset,
+                             uint32_t Value, uint32_t Type, int32_t Addend);
+ 
++  void resolveLoongArch64Relocation(const SectionEntry &Section,
++                                    uint64_t Offset, uint64_t Value,
++                                    uint32_t Type, int64_t Addend);
++
++  bool resolveLoongArch64ShortBranch(unsigned SectionID,
++                                     relocation_iterator RelI,
++                                     const RelocationValueRef &Value);
++
++  void resolveLoongArch64Branch(unsigned SectionID,
++                                const RelocationValueRef &Value,
++                                relocation_iterator RelI, StubMap &Stubs);
++
+   void resolvePPC32Relocation(const SectionEntry &Section, uint64_t Offset,
+                               uint64_t Value, uint32_t Type, int64_t Addend);
+ 
+@@ -69,6 +81,8 @@ class RuntimeDyldELF : public RuntimeDyldImpl {
+       return 16;
+     else if (IsMipsN64ABI)
+       return 32;
++    if (Arch == Triple::loongarch64)
++      return 20; // lu12i.w; ori; lu32i.d; lu52i.d; jr
+     else if (Arch == Triple::ppc64 || Arch == Triple::ppc64le)
+       return 44;
+     else if (Arch == Triple::x86_64)
+-- 
+2.40.0
+

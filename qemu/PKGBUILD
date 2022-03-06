@@ -130,6 +130,7 @@ source=(
   65-kvm.rules
   99-qemu-guest-agent.rules
   $pkgbase-8.1.1-static_regression.patch
+  $pkgbase-8.2.0-virtio-gpu_redrawing.patch::https://gitlab.com/qemu-project/qemu/-/commit/9d5b42beb6978dc6219d5dc029c9d453c6b8d503.patch
 )
 sha512sums=('58ed84f6fe6263d279356bc9193f96edf62cf3663fb151daa3f047d52329fe49cb91c2d45e09697e0469f4f5409be96403aec9572d4871ffa40848a786c21599'
             'SKIP'
@@ -146,7 +147,8 @@ b2sums=('6b5301f985919ae53e056410be7486b8150a65016127568bd4d58f596e94960d08eb3fc
         '69177b962d2fda20cafdbc6226fd017b5ca5a0f69f866d055dc1c744b7b2955059f47c693cfb5b4c863ec159569fdabd4327ab4b8a95566a68cd8ce38e339c7a'
         '3559fe9c4f744194939770047a0a02d07ff791c845a80726d0bc7b8c4801ed5f11150e7d5adab813844b3dab1cf38c3a5a87fb6efbb8fc9dccdda9fa56409ed8'
         'a9a2bdfeeb44eb86cbe88ac7c65f72800bdb2fd5cecb02f3a258cf9470b52832180aab43c89d481f7fd4d067342a9a27dd6c8a94d625b95d6e2b912e47d274e7'
-        '209ec05e161d157aaa08a9fcbea45cf87aa22fe9360f9b3c477a78a274e4ecee989c16121f9e6b7765bb479c9db718c98db047c27fd426c127c4c95e28877a16')
+        '209ec05e161d157aaa08a9fcbea45cf87aa22fe9360f9b3c477a78a274e4ecee989c16121f9e6b7765bb479c9db718c98db047c27fd426c127c4c95e28877a16'
+        'ea23f8db20cbd8b0e925b9fdda84fb64914beb764d5d25cff9578fc59ba2e28a52c725f9dfa2ab0e752b80560594f66974ef17d74c4f04d48afd5bf7bd05bd26')
 validpgpkeys=('CEACC9E15534EBABB82D3FA03353C9CEF108B584') # Michael Roth <flukshun@gmail.com>
 
 _qemu_system_deps=(
@@ -311,6 +313,7 @@ build() {
     --enable-sdl
     --enable-slirp
     --enable-tpm
+    --enable-kvm
     --smbd=/usr/bin/smbd
     --with-coroutine=ucontext
   )
@@ -864,7 +867,7 @@ package_qemu-system-hppa-firmware() {
 
 package_qemu-system-loongarch64() {
   pkgdesc="QEMU system emulator for LoongArch64"
-  depends=("${_qemu_system_deps[@]}" systemd-libs)
+  depends=("${_qemu_system_deps[@]}" edk2-loongarch64 systemd-libs)
   mv -v $pkgname/* "$pkgdir"
   _install_licenses
 }

@@ -15,7 +15,8 @@ _source_base=https://github.com/llvm/llvm-project/releases/download/llvmorg-$pkg
 source=($_source_base/llvm-$pkgver.src.tar.xz{,.sig}
         $_source_base/cmake-$pkgver.src.tar.xz{,.sig}
         $_source_base/third-party-$pkgver.src.tar.xz{,.sig}
-        $pkgname-SelectionDAG.patch::https://github.com/llvm/llvm-project/commit/46505b3cbfc5.patch)
+        $pkgname-SelectionDAG.patch::https://github.com/llvm/llvm-project/commit/46505b3cbfc5.patch
+        RuntimeDyld-MCJIT-Add-LoongArch-support.patch)
 sha256sums=('f68cf90f369bc7d0158ba70d860b0cb34dbc163d6ff0ebc6cfa5e515b9b2e28d'
             'SKIP'
             '59badef592dd34893cd319d42b323aaa990b452d05c7180ff20f23ab1b41e837'
@@ -62,6 +63,7 @@ _get_distribution_components() {
 prepare() {
   rename -v -- "-$pkgver.src" '' {cmake,third-party}-$pkgver.src
   cd llvm-$pkgver.src
+  patch -Np1 -i ../RuntimeDyld-MCJIT-Add-LoongArch-support.patch
   mkdir build
 
   # https://github.com/llvm/llvm-project/issues/82431

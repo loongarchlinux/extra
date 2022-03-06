@@ -13,13 +13,15 @@ makedepends=(
   efibootmgr
   gnu-efi
 )
-source=(https://sourceforge.net/projects/refind/files/$pkgver/$pkgname-src-$pkgver.tar.gz)
+source=(https://sourceforge.net/projects/refind/files/$pkgver/$pkgname-src-$pkgver.tar.gz
+        refind-la64-0.14.0.patch)
 sha512sums=('76a52ed422ab3d431e6530fae4d13a51e8ed100568d4290207aaee87a84700b077bb79c4f4917027f5286de422954e1872fca288252ec756072d6c075b102e1e')
 b2sums=('987acb29d4d81c01db245cd8e1c9761072e34cf3dfaa3e4fa77e549ee2c1dc4c3f8cbd9218f42e4eb77478df3453095dba8b36324c289c6a10b81f1ecb202743')
 _arch='x64'
 
 prepare() {
   cd $pkgbase-$pkgver
+  patch -p1 -i $srcdir/refind-la64-0.14.0.patch
   # remove the path prefix from the css reference, so that the css can live
   # in the same directory
   sed -e 's|../Styles/||g' -i docs/$pkgbase/*.html
@@ -63,11 +65,17 @@ package_refind() {
   )
 
   cd $pkgbase-$pkgver
+  if [ "$CARCH" == "loong64" ]; then
+    _arch='loongarch64'
+  else
+    _arch='x64'
+  fi
   # NOTE: the install target calls refind-install, therefore we install things
   # manually
   # efi binaries
   install -vDm 644 refind/*.efi -t "$pkgdir/usr/share/$pkgname/"
   install -vDm 644 drivers_*/*.efi -t "$pkgdir/usr/share/refind/drivers_$_arch/"
+  rm -f "$pkgdir/usr/share/refind/drivers_loongarch64/ext4_loongarch64.efi"
   install -vDm 644 gptsync/*.efi -t "$pkgdir/usr/share/$pkgname/tools_$_arch/"
   # sample config
   install -vDm 644 $pkgname.conf-sample -t "$pkgdir/usr/share/$pkgname/"

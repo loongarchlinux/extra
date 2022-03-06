@@ -21,8 +21,8 @@ url='https://gcc.gnu.org'
 makedepends=(
   binutils
   doxygen
-  gcc-ada
-  gcc-d
+#  gcc-ada
+#  gcc-d
   git
   libisl
   libmpc
@@ -37,10 +37,12 @@ checkdepends=(
   tcl
 )
 options=(!emptydirs !lto)
-_libdir=usr/lib/gcc/$CHOST/${pkgver%%+*}
+_libdir=usr/lib/gcc/`uname -m`-unknown-linux-gnu/${pkgver%%+*}
 source=(git+https://sourceware.org/git/gcc.git#commit=${_commit}
         c89 c99
         fix-asan-allocator-aslr.patch
+        gcc-lib64-lib.patch
+        gcc-loong64.patch # backport from master to add lsx/lasx support
 )
 validpgpkeys=(F3691687D867B81B51CE07D9BBE43771487328A9  # bpiotrowski@archlinux.org
               86CFFCA918CF3AF47147588051E8B148A9999C34  # evangelos@foutrelis.com
@@ -49,7 +51,9 @@ validpgpkeys=(F3691687D867B81B51CE07D9BBE43771487328A9  # bpiotrowski@archlinux.
 sha256sums=('9ee55a2c27bf0110ffe06fe0356027480626169dbbb8ea94b7baed3ec24c8447'
             'de48736f6e4153f03d0a5d38ceb6c6fdb7f054e8f47ddd6af0a3dbf14f27b931'
             '2513c6d9984dd0a2058557bf00f06d8d5181734e41dcfe07be7ed86f2959622a'
-            '5ede1f5fec5b664428412a0849b28895be1c8d8982d3c0d246a4e95fd4730d65')
+            '5ede1f5fec5b664428412a0849b28895be1c8d8982d3c0d246a4e95fd4730d65'
+            'a5904483163c3086f24088a2b422988bb3bc55f493d946e6a54f95ac48d83fb9'
+            '49fc1bd364c19fcd9e43c9b7d88a5b1f5da6eebe0f440124e5ec7843e5575d14')
 
 prepare() {
   [[ ! -d gcc ]] && ln -s gcc-${pkgver/+/-} gcc
@@ -64,6 +68,8 @@ prepare() {
   #ASan: move allocator base to avoid conflict with high-entropy ASLR for x86-64 Linux'
   patch -Np3 < "$srcdir/fix-asan-allocator-aslr.patch" -d libsanitizer/
 
+  patch -p1 -i $srcdir/gcc-lib64-lib.patch
+  patch -p1 -i $srcdir/gcc-loong64.patch
   mkdir -p "$srcdir/gcc-build"
 }
 
@@ -108,6 +114,8 @@ build() {
   # TODO: properly deal with the build issues resulting from this
   CFLAGS=${CFLAGS/-Werror=format-security/}
   CXXFLAGS=${CXXFLAGS/-Werror=format-security/}
+  CFLAGS=${CFLAGS/-mlsx /}
+  CXXFLAGS=${CXXFLAGS/-mlsx /}
 
   "$srcdir/gcc/configure" \
     --enable-languages=c,c++,fortran \
@@ -140,15 +148,14 @@ package_gcc13-libs() {
 
   cd gcc-build
   make -C $CHOST/libgcc DESTDIR="$pkgdir" install-shared
-  mv "${pkgdir}/${_libdir}"/../lib/* "${pkgdir}/${_libdir}"
-  rmdir "${pkgdir}/${_libdir}"/../lib
+#  mv "${pkgdir}/${_libdir}"/../lib/* "${pkgdir}/${_libdir}"
+#  rmdir "${pkgdir}/${_libdir}"/../lib
   rm -f "$pkgdir/$_libdir/libgcc_eh.a"
 
   for lib in libasan.so \
              libatomic.so \
              libgfortran.so \
              libgomp.so \
-             libitm.so \
              liblsan.so \
              libquadmath.so \
              libstdc++.so \
@@ -184,6 +191,7 @@ package_gcc13() {
 
   make -C $CHOST/libgcc DESTDIR="$pkgdir" install
   rm -f "$pkgdir"/usr/lib/libgcc_s.so*
+  rm -f "$pkgdir"/usr/lib/gcc/loongarch64-unknown-linux-gnu/${pkgver/+/-}/libgcc_s.so*
 
   make -C $CHOST/libstdc++-v3/src DESTDIR="$pkgdir" install
   make -C $CHOST/libstdc++-v3/include DESTDIR="$pkgdir" install
@@ -204,7 +212,7 @@ package_gcc13() {
   make -C $CHOST/libquadmath DESTDIR="$pkgdir" install-nodist_libsubincludeHEADERS
   make -C $CHOST/libsanitizer DESTDIR="$pkgdir" install-nodist_{saninclude,toolexeclib}HEADERS
   make -C $CHOST/libsanitizer/asan DESTDIR="$pkgdir" install-nodist_toolexeclibHEADERS
-  make -C $CHOST/libsanitizer/tsan DESTDIR="$pkgdir" install-nodist_toolexeclibHEADERS
+#  make -C $CHOST/libsanitizer/tsan DESTDIR="$pkgdir" install-nodist_toolexeclibHEADERS
   make -C $CHOST/libsanitizer/lsan DESTDIR="$pkgdir" install-nodist_toolexeclibHEADERS
 
   make -C libcpp DESTDIR="$pkgdir" install
@@ -216,7 +224,7 @@ package_gcc13() {
   # create cc-rs compatible symlinks
   # https://github.com/rust-lang/cc-rs/blob/1.0.73/src/lib.rs#L2578-L2581
   for binary in {c++,g++,gcc,gcc-ar,gcc-nm,gcc-ranlib}; do
-    ln -s /usr/bin/${binary} "${pkgdir}"/usr/bin/x86_64-linux-gnu-${binary}-13
+    ln -s /usr/bin/${binary} "${pkgdir}"/usr/bin/`uname -m`-linux-gnu-${binary}-13
   done
 
   # POSIX conformance launcher scripts for c89 and c99

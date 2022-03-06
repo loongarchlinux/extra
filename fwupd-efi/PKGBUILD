@@ -14,9 +14,15 @@ makedepends=(
   'meson'
   'python-pefile'
 )
-source=(git+${url}.git#tag=${pkgver}?signed)
+source=(git+${url}.git#tag=${pkgver}?signed
+        0001-add-support-for-loongarch64.patch)
 sha256sums=('00a08795795c8f05c685649ac41ff3e4c73203b5314f6fcf8651d6206219dd96')
 validpgpkeys=('163EB50119225DB3DF8F49EA17ACBA8DFA970E17') # Richard Hughes <richard@hughsie.com>
+
+prepare() {
+	cd "$pkgname-$pkgver"
+	patch -p1 -i "$srcdir/0001-add-support-for-loongarch64.patch"
+}
 
 build() {
   arch-meson ${pkgname} build  \
@@ -24,7 +30,7 @@ build() {
     -D efi_sbat_distro_summary='Arch Linux' \
     -D efi_sbat_distro_pkgname=${pkgname} \
     -D efi_sbat_distro_version=${pkgver} \
-    -D efi_sbat_distro_url="https://archlinux.org/packages/community/x86_64/${pkgname}/"
+    -D efi_sbat_distro_url="https://archlinux.org/packages/community/loongarch64/${pkgname}/"
   ninja -C build
 }
 

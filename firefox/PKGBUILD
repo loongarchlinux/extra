@@ -47,7 +47,6 @@ makedepends=(
   imake
   inetutils
   jack
-  lld
   llvm
   mesa
   nasm
@@ -84,6 +83,10 @@ source=(
   0002-Bug-1898476-Wayland-Provide-surface-lock-by-GtkCompo.patch
   0003-Bug-1898476-Wayland-Lock-Wayland-surface-before-Swap.patch
   0004-Bug-1912663-Fix-some-build-issues-with-cbindgen-0.27.patch
+  0001-Add-support-for-LoongArch64.patch
+  0002-Enable-VA-API-support-for-AMD-GPUs.patch
+  0003-Enable-WebRTC-for-LoongArch.patch
+  0004-Fix-libyuv-build-with-LSX-LASX.patch
 )
 validpgpkeys=(
   # Mozilla Software Releases <release@mozilla.com>
@@ -129,6 +132,11 @@ prepare() {
   # Fix build with cinbdgen 0.27.0
   # https://bugzilla.mozilla.org/show_bug.cgi?id=1912663
   patch -Np1 -i ../0004-Bug-1912663-Fix-some-build-issues-with-cbindgen-0.27.patch
+  # Fix build with Rust 1.78.0
+  patch -Np1 -i ../0001-Add-support-for-LoongArch64.patch
+  patch -Np1 -i ../0002-Enable-VA-API-support-for-AMD-GPUs.patch
+  patch -Np1 -i ../0003-Enable-WebRTC-for-LoongArch.patch
+  patch -Np1 -i ../0004-Fix-libyuv-build-with-LSX-LASX.patch
 
   echo -n "$_google_api_key" >google-api-key
 
@@ -141,11 +149,11 @@ ac_add_options --enable-release
 ac_add_options --enable-hardening
 ac_add_options --enable-optimize
 ac_add_options --enable-rust-simd
-ac_add_options --enable-linker=lld
+#ac_add_options --enable-linker=lld
 ac_add_options --disable-install-strip
-ac_add_options --disable-elf-hack
+#ac_add_options --disable-elf-hack
 ac_add_options --disable-bootstrap
-ac_add_options --with-wasi-sysroot=/usr/share/wasi-sysroot
+ac_add_options --without-wasm-sandboxed-libraries
 
 # Branding
 ac_add_options --enable-official-branding
@@ -167,7 +175,7 @@ ac_add_options --with-system-nss
 # Features
 ac_add_options --enable-alsa
 ac_add_options --enable-jack
-ac_add_options --enable-crashreporter
+ac_add_options --disable-crashreporter
 ac_add_options --disable-updater
 ac_add_options --disable-tests
 END
@@ -180,6 +188,11 @@ build() {
   export MOZBUILD_STATE_PATH="$srcdir/mozbuild"
   export MOZ_BUILD_DATE="$(date -u${SOURCE_DATE_EPOCH:+d @$SOURCE_DATE_EPOCH} +%Y%m%d%H%M%S)"
   export MOZ_NOSPAM=1
+# clang didn't support -mlsx
+  CFLAGS=${CFLAGS/-mlsx /}
+  CXXFLAGS=${CXXFLAGS/-mlsx /}
+  CFLAGS=${CFLAGS/-fstack-clash-protection/}
+  CXXFLAGS=${CXXFLAGS/-fstack-clash-protection/}
 
   # malloc_usable_size is used in various parts of the codebase
   CFLAGS="${CFLAGS/_FORTIFY_SOURCE=3/_FORTIFY_SOURCE=2}"

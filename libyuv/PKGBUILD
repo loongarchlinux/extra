@@ -11,8 +11,10 @@ depends=(gcc-libs libjpeg)
 makedepends=(cmake git)
 # Version required by libavif
 _commit=464c51a0353c71f08fe45f683d6a97a638d47833
-source=(git+${url}#commit=${_commit})
-sha512sums=(SKIP)
+source=(git+${url}#commit=${_commit}
+    0001-fix-build-error.patch)
+sha512sums=('SKIP'
+            '74e4503371ea7fbb054b18990dccc708d97612c03821d6ca3f19bf26ca8bbabfb7978f61b6a738b17c820bb5fd278a746dba5f0e9ae8e0d2a8833f6d5b7feaea')
 
 pkgver() {
   cd ${pkgname}
@@ -21,6 +23,7 @@ pkgver() {
 
 prepare() {
   sed -i 's|yuvconvert ${JPEG_LIBRARY}|${ly_lib_shared} ${JPEG_LIBRARY}|' ${pkgname}/CMakeLists.txt
+  patch -d ${pkgname} -p1 -i $srcdir/0001-fix-build-error.patch
 }
 
 build() {

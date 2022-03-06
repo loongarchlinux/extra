@@ -59,7 +59,7 @@ _nextcloud_app_package() {
 prepare() {
 	cd "$_archive"
 	cargo fetch --locked --target "$(rustc -vV | sed -n 's/host: //p')"
-	sed -i -e "s/@ARCH@/$CARCH/" "../$pkgname.service"
+	sed -i -e "s/@ARCH@/`uname -m`/" "../$pkgname.service"
 }
 
 build() {
@@ -89,6 +89,6 @@ package() {
 		--include=webpack.prod.js \
 		--exclude='*' \
 		./ $_appdir/
-	install -Dm0755 -t "$_appdir/bin/$CARCH/" "target/release/${pkgname##*-}"
+	install -Dm0755 -t "$_appdir/bin/`uname -m`/" "target/release/${pkgname##*-}"
 	install -Dm0644 -t "$pkgdir/usr/lib/systemd/system/" "$srcdir/$pkgname.service"
 }

@@ -19,6 +19,7 @@ depends=(
 makedepends=(
   clang
   git
+  gettext
 )
 _commit=5567ea92c6a1b76d72fedaee679a997056038001
 source=(libretro-genesis-plus-gx::git+https://github.com/libretro/Genesis-Plus-GX.git#commit=${_commit})
@@ -31,6 +32,10 @@ pkgver() {
 
 build() {
   export CC=clang # FS#71188 - [libretro-genesis-plus-gx] segfaults when compiled with -O2
+  CFLAGS=${CFLAGS/-mlsx /}
+  CXXFLAGS=${CXXFLAGS/-mlsx /}
+  CFLAGS=${CFLAGS/-fstack-clash-protection/}
+  CXXFLAGS=${CXXFLAGS/-fstack-clash-protection/}
   make \
     SHARED_LIBVORBIS=1 \
     SYSTEM_ZLIB=1 \

@@ -1,0 +1,152 @@
+From bb10f5774025e90234c2d2ad95351d3b307fce2b Mon Sep 17 00:00:00 2001
+From: Xiaotian Wu <wuxiaotian@loongson.cn>
+Date: Mon, 19 Feb 2024 15:52:44 +0800
+Subject: [PATCH 3/4] Enable WebRTC for LoongArch
+
+---
+ .../common_audio/common_audio_c_gn/moz.build  |  8 ++++++
+ .../spl_sqrt_floor_gn/moz.build               |  6 ++++
+ .../aecm/aecm_core_gn/moz.build               |  6 ++++
+ .../desktop_capture_gn/moz.build              | 28 +++++++++++++++++++
+ .../desktop_capture/primitives_gn/moz.build   |  4 +++
+ third_party/libwebrtc/moz.build               |  7 +++++
+ toolkit/moz.configure                         |  1 +
+ 7 files changed, 60 insertions(+)
+
+diff --git a/third_party/libwebrtc/common_audio/common_audio_c_gn/moz.build b/third_party/libwebrtc/common_audio/common_audio_c_gn/moz.build
+index 2a9bfac..24f2199 100644
+--- a/third_party/libwebrtc/common_audio/common_audio_c_gn/moz.build
++++ b/third_party/libwebrtc/common_audio/common_audio_c_gn/moz.build
+@@ -258,6 +258,14 @@ if CONFIG["TARGET_CPU"] == "riscv64":
+         "/third_party/libwebrtc/common_audio/signal_processing/filter_ar_fast_q12.c"
+     ]
+ 
++if CONFIG["TARGET_CPU"] == "loongarch64":
++
++    UNIFIED_SOURCES += [
++        "/third_party/libwebrtc/common_audio/signal_processing/complex_bit_reverse.c",
++        "/third_party/libwebrtc/common_audio/signal_processing/complex_fft.c",
++        "/third_party/libwebrtc/common_audio/signal_processing/filter_ar_fast_q12.c"
++    ]
++
+ if CONFIG["TARGET_CPU"] == "x86":
+ 
+     DEFINES["WEBRTC_ENABLE_AVX2"] = True
+diff --git a/third_party/libwebrtc/common_audio/third_party/spl_sqrt_floor/spl_sqrt_floor_gn/moz.build b/third_party/libwebrtc/common_audio/third_party/spl_sqrt_floor/spl_sqrt_floor_gn/moz.build
+index 316c199..08f2b64 100644
+--- a/third_party/libwebrtc/common_audio/third_party/spl_sqrt_floor/spl_sqrt_floor_gn/moz.build
++++ b/third_party/libwebrtc/common_audio/third_party/spl_sqrt_floor/spl_sqrt_floor_gn/moz.build
+@@ -177,6 +177,12 @@ if CONFIG["TARGET_CPU"] == "riscv64":
+         "/third_party/libwebrtc/common_audio/third_party/spl_sqrt_floor/spl_sqrt_floor.c"
+     ]
+ 
++if CONFIG["TARGET_CPU"] == "loongarch64":
++
++    UNIFIED_SOURCES += [
++        "/third_party/libwebrtc/common_audio/third_party/spl_sqrt_floor/spl_sqrt_floor.c"
++    ]
++
+ if CONFIG["TARGET_CPU"] == "x86":
+ 
+     DEFINES["WEBRTC_ENABLE_AVX2"] = True
+diff --git a/third_party/libwebrtc/modules/audio_processing/aecm/aecm_core_gn/moz.build b/third_party/libwebrtc/modules/audio_processing/aecm/aecm_core_gn/moz.build
+index a645dce..57ea718 100644
+--- a/third_party/libwebrtc/modules/audio_processing/aecm/aecm_core_gn/moz.build
++++ b/third_party/libwebrtc/modules/audio_processing/aecm/aecm_core_gn/moz.build
+@@ -209,6 +209,12 @@ if CONFIG["TARGET_CPU"] == "riscv64":
+         "/third_party/libwebrtc/modules/audio_processing/aecm/aecm_core_c.cc"
+     ]
+ 
++if CONFIG["TARGET_CPU"] == "loongarch64":
++
++    SOURCES += [
++        "/third_party/libwebrtc/modules/audio_processing/aecm/aecm_core_c.cc"
++    ]
++
+ if CONFIG["TARGET_CPU"] == "x86":
+ 
+     DEFINES["WEBRTC_ENABLE_AVX2"] = True
+diff --git a/third_party/libwebrtc/modules/desktop_capture/desktop_capture_gn/moz.build b/third_party/libwebrtc/modules/desktop_capture/desktop_capture_gn/moz.build
+index 22a76e9..7489dda 100644
+--- a/third_party/libwebrtc/modules/desktop_capture/desktop_capture_gn/moz.build
++++ b/third_party/libwebrtc/modules/desktop_capture/desktop_capture_gn/moz.build
+@@ -393,6 +393,34 @@ if CONFIG["TARGET_CPU"] == "riscv64":
+         "/third_party/libwebrtc/modules/desktop_capture/linux/x11/x_window_property.cc"
+     ]
+ 
++if CONFIG["TARGET_CPU"] == "loongarch64":
++
++    DEFINES["USE_X11"] = "1"
++    DEFINES["WEBRTC_USE_X11"] = True
++
++    OS_LIBS += [
++        "X11",
++        "Xcomposite",
++        "Xdamage",
++        "Xext",
++        "Xfixes",
++        "Xrandr",
++        "Xrender"
++    ]
++
++    UNIFIED_SOURCES += [
++        "/third_party/libwebrtc/modules/desktop_capture/linux/x11/mouse_cursor_monitor_x11.cc",
++        "/third_party/libwebrtc/modules/desktop_capture/linux/x11/screen_capturer_x11.cc",
++        "/third_party/libwebrtc/modules/desktop_capture/linux/x11/shared_x_display.cc",
++        "/third_party/libwebrtc/modules/desktop_capture/linux/x11/window_capturer_x11.cc",
++        "/third_party/libwebrtc/modules/desktop_capture/linux/x11/window_finder_x11.cc",
++        "/third_party/libwebrtc/modules/desktop_capture/linux/x11/window_list_utils.cc",
++        "/third_party/libwebrtc/modules/desktop_capture/linux/x11/x_atom_cache.cc",
++        "/third_party/libwebrtc/modules/desktop_capture/linux/x11/x_error_trap.cc",
++        "/third_party/libwebrtc/modules/desktop_capture/linux/x11/x_server_pixel_buffer.cc",
++        "/third_party/libwebrtc/modules/desktop_capture/linux/x11/x_window_property.cc"
++    ]
++
+ if CONFIG["TARGET_CPU"] == "x86":
+ 
+     DEFINES["WEBRTC_ENABLE_AVX2"] = True
+diff --git a/third_party/libwebrtc/modules/desktop_capture/primitives_gn/moz.build b/third_party/libwebrtc/modules/desktop_capture/primitives_gn/moz.build
+index de23257..be48aa6 100644
+--- a/third_party/libwebrtc/modules/desktop_capture/primitives_gn/moz.build
++++ b/third_party/libwebrtc/modules/desktop_capture/primitives_gn/moz.build
+@@ -150,6 +150,10 @@ if CONFIG["TARGET_CPU"] == "riscv64":
+ 
+     DEFINES["USE_X11"] = "1"
+ 
++if CONFIG["TARGET_CPU"] == "loongarch64":
++
++    DEFINES["USE_X11"] = "1"
++
+ if CONFIG["TARGET_CPU"] == "x86":
+ 
+     DEFINES["WEBRTC_ENABLE_AVX2"] = True
+diff --git a/third_party/libwebrtc/moz.build b/third_party/libwebrtc/moz.build
+index 7baea55..73cda0d 100644
+--- a/third_party/libwebrtc/moz.build
++++ b/third_party/libwebrtc/moz.build
+@@ -694,3 +694,10 @@ if CONFIG["MOZ_X11"] == "1" and CONFIG["OS_TARGET"] == "Linux" and CONFIG["TARGE
+         "/third_party/libwebrtc/modules/desktop_capture/desktop_capture_gn",
+         "/third_party/libwebrtc/modules/desktop_capture/primitives_gn"
+     ]
++
++if CONFIG["MOZ_X11"] == "1" and CONFIG["OS_TARGET"] == "Linux" and CONFIG["TARGET_CPU"] == "loongarch64":
++
++    DIRS += [
++        "/third_party/libwebrtc/modules/desktop_capture/desktop_capture_gn",
++        "/third_party/libwebrtc/modules/desktop_capture/primitives_gn"
++    ]
+diff --git a/toolkit/moz.configure b/toolkit/moz.configure
+index a8920f8..0ff8c6f 100644
+--- a/toolkit/moz.configure
++++ b/toolkit/moz.configure
+@@ -1322,6 +1322,7 @@ def webrtc_default(target):
+         "aarch64",
+         "x86",
+         "ia64",
++        "loongarch64",
+         "mips32",
+         "mips64",
+         "ppc",
+-- 
+2.43.0
+

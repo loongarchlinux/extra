@@ -55,13 +55,12 @@ makedepends=(
   mariadb-libs
   netcdf
   opencascade
-  openimagedenoise
+#  openimagedenoise
   openmp
   openmpi
   openvdb
   openvr
   openxr
-  ospray
   pdal
   postgresql-libs
   proj
@@ -103,12 +102,12 @@ optdepends=(
   mariadb-libs
   netcdf
   opencascade
-  openimagedenoise
+#  openimagedenoise
   'openmpi: OpenMPI support'
   openvdb
   openvr
   openxr
-  ospray
+#  ospray
   pdal
   postgresql-libs
   proj
@@ -124,10 +123,12 @@ optdepends=(
 options=(staticlibs)
 source=(${url}/files/release/${pkgver%.*}/VTK-${pkgver}.tar.gz
         vtk-occt.patch
-        ospray-3.patch)
+        ospray-3.patch
+	vtk-loong64.patch)
 sha256sums=('8354ec084ea0d2dc3d23dbe4243823c4bfc270382d0ce8d658939fd50061cab8'
             'df958eabc7dc4f5b33383ce0fb0f90a3ba202c1c2a24d3b5b9e7cfb1fb38b011'
-            'faf3fd2eea2f73a07f5dcbd67920161a07ae554e008ad1e4099153fec2882278')
+            'faf3fd2eea2f73a07f5dcbd67920161a07ae554e008ad1e4099153fec2882278'
+            '9d0d77a25473c7c8832a333bf2436610c1b8714220296908b1b07891b21d90c5')
 
 prepare() {
   cd ${pkgname^^}-${pkgver}
@@ -136,6 +137,7 @@ prepare() {
 
   patch -Np1 -i "$srcdir"/vtk-occt.patch
   patch -Np1 -i ../ospray-3.patch # Fix build with ospray 3.0
+  patch -p1 -i ../vtk-loong64.patch
 }
 
 build() {
@@ -156,6 +158,7 @@ build() {
     -DVTK_INSTALL_TCL_DIR=/usr/lib/tcl${_tkver}/vtk/ \
     -DVTK_LEGACY_REMOVE=ON \
     -DVTK_SMP_ENABLE_OPENMP=ON \
+    -DVTK_ENABLE_OSPRAY=OFF \
     -DVTK_SMP_IMPLEMENTATION_TYPE=TBB \
     -DVTK_PYTHON_VERSION=3 \
     -DVTK_QT_VERSION=5 \
@@ -164,7 +167,7 @@ build() {
     -DVTK_VERSIONED_INSTALL=OFF \
     -DVTK_WRAP_JAVA=ON \
     -DVTK_WRAP_PYTHON=ON \
-    -DVTKOSPRAY_ENABLE_DENOISER=ON \
+    -DVTKOSPRAY_ENABLE_DENOISER=OFF \
     -DVTKm_ENABLE_HDF5_IO=ON \
     -DVTKm_ENABLE_MPI=ON \
     -DVTKm_ENABLE_OPENMP=ON \
@@ -189,8 +192,8 @@ package() {
   install -dv "${pkgdir}"/usr/share/java/vtk
   mv -v "${pkgdir}"/usr/lib/java/vtk.jar "${pkgdir}"/usr/share/java/vtk
   # …and the libs to the proper place
-  mv "${pkgdir}"/usr/lib/java/vtk-Linux-${CARCH}/*.so "${pkgdir}"/usr/lib/
-  rmdir "${pkgdir}"/usr/lib/java/{vtk-Linux-${CARCH}/,}
+  mv "${pkgdir}"/usr/lib/java/vtk-Linux-`uname -m`/*.so "${pkgdir}"/usr/lib/
+  rmdir "${pkgdir}"/usr/lib/java/{vtk-Linux-`uname -m`/,}
 
   # byte-compile python modules since the CMake build does not do it
   local site_packages=$(python -c "import site; print(site.getsitepackages()[0])")

@@ -33,6 +33,7 @@ options=(
 _relver=${pkgver}esr
 source=(
   https://archive.mozilla.org/pub/firefox/releases/$_relver/source/firefox-$_relver.source.tar.xz{,.asc}
+  js102-loong64-jit.patch
 )
 validpgpkeys=(
   # Mozilla Software Releases <release@mozilla.com>
@@ -50,6 +51,7 @@ COMPRESSZST+=(--long)
 prepare() {
   mkdir mozbuild
   cd firefox-$pkgver
+  patch -p1 -i $srcdir/js102-loong64-jit.patch
 
   cat >../mozconfig <<END
 ac_add_options --enable-application=js
@@ -58,9 +60,9 @@ mk_add_options MOZ_OBJDIR=${PWD@Q}/obj
 ac_add_options --prefix=/usr
 ac_add_options --enable-release
 ac_add_options --enable-hardening
-ac_add_options --enable-optimize
-ac_add_options --enable-rust-simd
-ac_add_options --enable-linker=lld
+#ac_add_options --enable-optimize
+#ac_add_options --enable-rust-simd
+#ac_add_options --enable-linker=lld
 ac_add_options --disable-bootstrap
 ac_add_options --disable-debug
 ac_add_options --disable-jemalloc
@@ -93,6 +95,9 @@ build() {
   # Breaks compilation since https://bugzilla.mozilla.org/show_bug.cgi?id=1896066
   CFLAGS="${CFLAGS/-fexceptions/}"
   CXXFLAGS="${CXXFLAGS/-fexceptions/}"
+# clang didn't support -mlsx
+  CFLAGS=${CFLAGS/-mlsx /}
+  CXXFLAGS=${CFLAGS/-mlsx /}
 
   # Do 3-tier PGO
   echo "Building instrumented JS..."
@@ -101,35 +106,35 @@ ac_add_options --enable-profile-generate
 END
   ./mach build --priority normal
 
-  echo "Profiling instrumented JS..."
-  (
-    local js="$PWD/obj/dist/bin/js"
-    export LLVM_PROFILE_FILE="$PWD/js-%p-%m.profraw"
-
-    cd js/src/octane
-    "$js" run.js
-
-    cd ../../../third_party/webkit/PerformanceTests/ARES-6
-    "$js" cli.js
-
-    cd ../SunSpider/sunspider-0.9.1
-    "$js" sunspider-standalone-driver.js
-  )
-
-  llvm-profdata merge -o merged.profdata *.profraw
-
-  stat -c "Profile data found (%s bytes)" merged.profdata
-  test -s merged.profdata
-
-  echo "Removing instrumented JS..."
-  ./mach clobber objdir
-
-  echo "Building optimized JS..."
-  cat >.mozconfig ../mozconfig - <<END
-ac_add_options --enable-lto=full
-ac_add_options --enable-profile-use
-ac_add_options --with-pgo-profile-path=${PWD@Q}/merged.profdata
-END
+#  echo "Profiling instrumented JS..."
+#  (
+#    local js="$PWD/obj/dist/bin/js"
+#    export LLVM_PROFILE_FILE="$PWD/js-%p-%m.profraw"
+#
+#    cd js/src/octane
+#    "$js" run.js
+#
+#    cd ../../../third_party/webkit/PerformanceTests/ARES-6
+#    "$js" cli.js
+#
+#    cd ../SunSpider/sunspider-0.9.1
+#    "$js" sunspider-standalone-driver.js
+#  )
+#
+#  llvm-profdata merge -o merged.profdata *.profraw
+#
+#  stat -c "Profile data found (%s bytes)" merged.profdata
+#  test -s merged.profdata
+#
+#  echo "Removing instrumented JS..."
+#  ./mach clobber objdir
+#
+#  echo "Building optimized JS..."
+#  cat >.mozconfig ../mozconfig - <<END
+#ac_add_options --enable-lto=full
+#ac_add_options --enable-profile-use
+#ac_add_options --with-pgo-profile-path=${PWD@Q}/merged.profdata
+#END
   ./mach build --priority normal
 }
 

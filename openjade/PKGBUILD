@@ -24,10 +24,13 @@ prepare() {
   patch -Np1 -i $srcdir/openjade-nola.patch
   # https://bugs.archlinux.org/task/55331 / https://gcc.gnu.org/bugzilla/show_bug.cgi?id=69534#c9
   export CXXFLAGS+=' -fno-lifetime-dse'
+  cp /usr/share/automake-1.16/config.* config/.
 }
 
 build() {
   cd ${pkgname}-$pkgver
+  CFLAGS=${CFLAGS/-Werror=format-security/}
+  CXXFLAGS=${CXXFLAGS/-Werror=format-security/}
   ./configure --prefix=/usr \
     --mandir=/usr/share/man \
     --enable-default-catalog=/etc/sgml/catalog \

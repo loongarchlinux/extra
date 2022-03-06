@@ -25,6 +25,9 @@ b2sums=('b0ff7bcebca7f4b515acf412b756da8512dad7c89f1976cc749c68d70303ff7172b6817
 prepare() {
     cd "${pkgname}-${pkgver}"
     patch -Np1 < "$srcdir/fix-tests.patch"
+    cd $srcdir
+    [ -d sys ] || git clone https://github.com/golang/sys.git
+    [ -d net ] || git clone https://github.com/golang/net.git
 }
 
 build() {
@@ -34,7 +37,12 @@ build() {
   export CGO_CFLAGS="${CFLAGS}"
   export CGO_CXXFLAGS="${CXXFLAGS}"
   export CGO_LDFLAGS="${LDFLAGS}"
-  export GOFLAGS="-buildmode=pie -trimpath -mod=readonly -modcacherw"
+  export GOFLAGS="-trimpath -mod=readonly -modcacherw"
+
+  rm -rf vendor/golang.org/x/sys/
+  rm -rf vendor/golang.org/x/net/
+  cp -r $srcdir/sys vendor/golang.org/x/sys/
+  cp -r $srcdir/net vendor/golang.org/x/net/
 
   make
   make man-pages

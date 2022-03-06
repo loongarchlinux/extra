@@ -10,18 +10,31 @@ license=('MIT')
 depends=('glibc' 'gcc-libs')
 makedepends=('cargo' 'scdoc')
 source=(${url}/archive/${pkgver}/${pkgname}-${pkgver}.tar.gz
-        ${url}/releases/download/${pkgver}/${pkgname}-${pkgver}.tar.gz.sig)
+        ${url}/releases/download/${pkgver}/${pkgname}-${pkgver}.tar.gz.sig
+        dfrs-la64.patch)
 options=('!makeflags')
 sha512sums=('8b8f67ff919e4f1012fe415b564574fe9b11caf01da90a025ca8b8c7707e3f90e865e30cfbeb24db7b80829d082ba7accce44e1897a67e39d129d94c171f21fe'
-            'SKIP')
+            'SKIP'
+            '6464137f5f049a9d5b5c196bd459932726f572dffd4115a1b855753f739e87c5c994c24637920c5f173dd63af250827e0be99cdd6916608555f377cf0dac7500')
 b2sums=('c051c1d712811d2b9c5273ec4b89bc54f8bc10a07a18a99c9908f7c58025b99e74c0d06ce9d5ec6029eda4250befbd52d3e269ec2c6fb1a160b06b4f3b019c8d'
-        'SKIP')
+        'SKIP'
+        '373b428a11de3ed16a5d6992e48ebf4b92a370e669a3e17457e8ff33dd0215a8ba1efcb3e99975f7f24ac7030e9780ab5a3495ddcdf95c6a4a12c5fb0a6ba220')
 validpgpkeys=(
   'E240B57E2C4630BA768E2F26FC1B547C8D8172C8'  # Levente Polyak
 )
 
+prepare() {
+	cd "$pkgname-$pkgver"
+	patch -p1 -i "$srcdir/dfrs-la64.patch"
+}
 build() {
   cd ${pkgname}-${pkgver}
+  find -name Cargo.lock -exec rm -f {} \;
+  mkdir -p .cargo
+  cat > .cargo/config.toml <<EOF
+[source.crates-io]
+registry = "https://gitee.com/yetist/crates.io-index"
+EOF
   make
 }
 

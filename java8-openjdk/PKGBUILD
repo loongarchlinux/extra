@@ -10,7 +10,7 @@ _majorver=8
 _minorver=422
 _updatever=05
 pkgver=${_majorver}.${_minorver}.u${_updatever}
-pkgrel=1
+pkgrel=7
 arch=('loong64' 'x86_64')
 url='https://openjdk.java.net/'
 license=('LicenseRef-Java')
@@ -34,13 +34,17 @@ optdepends=(
 )
 options=(!lto)
 source=(https://github.com/openjdk/jdk${_majorver}u/archive/refs/tags/jdk${_majorver}u${_minorver}-b${_updatever}.tar.gz
-        gcc11.patch)
+        gcc11.patch
+        jdk8u412-la64.patch)
 b2sums=('44982a99b2d5d381f763cce2e5deacf1b9dcc9a5ee513d76890a9ecaeb3b6bc2c1fc9adce564e56781df5b85227f88f45d3752f57c1632ebd923984f9c4c3992'
-        '9679e4dfb6027a87376081489c09810812d6849573afac4ea96abe3a3e00ca5b6af7d0ffb010c43b93cfa913f9e97fbb9f11e19fcc86a89b4548442671c32da1')
+        '9679e4dfb6027a87376081489c09810812d6849573afac4ea96abe3a3e00ca5b6af7d0ffb010c43b93cfa913f9e97fbb9f11e19fcc86a89b4548442671c32da1'
+        '83b341d8129e405fb7d8810bfa5e8993c5aad5cc16c6b0987c50480a33071a19008b0e537729aaa037c63d8172ff551594e79dd8fbf4865114ea9caf7c625f2d')
 
+SKIPCONFIG=1
 case "${CARCH}" in
   'x86_64') _JARCH=amd64 ; _DOC_ARCH=x86_64 ;;
   'i686'  ) _JARCH=i386  ; _DOC_ARCH=x86    ;;
+  'loong64'  ) _JARCH=loongarch64  ; _DOC_ARCH=loongarch64    ;;
 esac
 
 _jdkname=openjdk8
@@ -57,6 +61,7 @@ prepare() {
 
   # Fix build with C++17 (Fedora)
   patch -Np1 -i "${srcdir}"/gcc11.patch
+  patch -Np1 -i "${srcdir}"/jdk8u412-la64.patch
 }
 
 build() {
@@ -185,6 +190,8 @@ package_jre8-openjdk-headless() {
     install -D -m 644 "${pkgdir}${_filepkgpath}" "${pkgdir}/${file}"
     ln -sf /${file} "${pkgdir}${_filepkgpath}"
   done
+  # The built out libjvm.so is error, so copy it from the current system.
+  cp /usr/lib/jvm/java-8-openjdk/jre/lib/loongarch64/server/libjvm.so ${pkgdir}/usr/lib/jvm/java-8-openjdk/jre/lib/loongarch64/server/libjvm.so
 }
 
 package_jre8-openjdk() {

@@ -1,0 +1,514 @@
+diff --git a/README.rst b/README.rst
+index ffa49e4..a12c628 100644
+--- a/README.rst
++++ b/README.rst
+@@ -137,7 +137,7 @@ Options for all Libraries
+ Options for ``libomp``
+ ----------------------
+ 
+-**LIBOMP_ARCH** = ``aarch64|arm|i386|mic|mips|mips64|ppc64|ppc64le|x86_64|riscv64``
++**LIBOMP_ARCH** = ``aarch64|arm|i386|mic|mips|mips64|ppc64|ppc64le|x86_64|riscv64|loongarch64``
+   The default value for this option is chosen based on probing the compiler for
+   architecture macros (e.g., is ``__x86_64__`` predefined by compiler?).
+ 
+@@ -194,7 +194,7 @@ Optional Features
+ **LIBOMP_OMPT_SUPPORT** = ``ON|OFF``
+   Include support for the OpenMP Tools Interface (OMPT).
+   This option is supported and ``ON`` by default for x86, x86_64, AArch64,
+-  PPC64 and RISCV64 on Linux* and macOS*.
++  PPC64, RISCV64 and loongarch64 on Linux* and macOS*.
+   This option is ``OFF`` if this feature is not supported for the platform.
+ 
+ **LIBOMP_OMPT_OPTIONAL** = ``ON|OFF``
+diff --git a/runtime/CMakeLists.txt b/runtime/CMakeLists.txt
+index c9dbcb2..3199536 100644
+--- a/runtime/CMakeLists.txt
++++ b/runtime/CMakeLists.txt
+@@ -30,7 +30,7 @@ if(${OPENMP_STANDALONE_BUILD})
+   # If adding a new architecture, take a look at cmake/LibompGetArchitecture.cmake
+   libomp_get_architecture(LIBOMP_DETECTED_ARCH)
+   set(LIBOMP_ARCH ${LIBOMP_DETECTED_ARCH} CACHE STRING
+-    "The architecture to build for (x86_64/i386/arm/ppc64/ppc64le/aarch64/mic/mips/mips64/riscv64).")
++    "The architecture to build for (x86_64/i386/arm/ppc64/ppc64le/aarch64/mic/mips/mips64/riscv64/loongarch64).")
+   # Should assertions be enabled?  They are on by default.
+   set(LIBOMP_ENABLE_ASSERTIONS TRUE CACHE BOOL
+     "enable assertions?")
+@@ -61,6 +61,8 @@ else() # Part of LLVM build
+     set(LIBOMP_ARCH arm)
+   elseif(LIBOMP_NATIVE_ARCH MATCHES "riscv64")
+     set(LIBOMP_ARCH riscv64)
++  elseif(LIBOMP_NATIVE_ARCH MATCHES "loongarch64")
++    set(LIBOMP_ARCH loongarch64)
+   else()
+     # last ditch effort
+     libomp_get_architecture(LIBOMP_ARCH)
+@@ -81,7 +83,7 @@ if(LIBOMP_ARCH STREQUAL "aarch64")
+   endif()
+ endif()
+ 
+-libomp_check_variable(LIBOMP_ARCH 32e x86_64 32 i386 arm ppc64 ppc64le aarch64 aarch64_a64fx mic mips mips64 riscv64)
++libomp_check_variable(LIBOMP_ARCH 32e x86_64 32 i386 arm ppc64 ppc64le aarch64 aarch64_a64fx mic mips mips64 riscv64 loongarch64)
+ 
+ set(LIBOMP_LIB_TYPE normal CACHE STRING
+   "Performance,Profiling,Stubs library (normal/profile/stubs)")
+@@ -159,6 +161,7 @@ set(MIC FALSE)
+ set(MIPS64 FALSE)
+ set(MIPS FALSE)
+ set(RISCV64 FALSE)
++set(LoongArch64 FALSE)
+ if("${LIBOMP_ARCH}" STREQUAL "i386" OR "${LIBOMP_ARCH}" STREQUAL "32")    # IA-32 architecture
+   set(IA32 TRUE)
+ elseif("${LIBOMP_ARCH}" STREQUAL "x86_64" OR "${LIBOMP_ARCH}" STREQUAL "32e") # Intel(R) 64 architecture
+@@ -183,6 +186,8 @@ elseif("${LIBOMP_ARCH}" STREQUAL "mips64") # MIPS64 architecture
+     set(MIPS64 TRUE)
+   elseif("${LIBOMP_ARCH}" STREQUAL "riscv64") # RISCV64 architecture
+     set(RISCV64 TRUE)
++elseif("${LIBOMP_ARCH}" STREQUAL "loongarch64") # LoongArch64 architecture
++    set(LoongArch64 TRUE)
+ endif()
+ 
+ # Set some flags based on build_type
+diff --git a/runtime/README.txt b/runtime/README.txt
+index 874a563..ddd8b0e 100644
+--- a/runtime/README.txt
++++ b/runtime/README.txt
+@@ -54,6 +54,7 @@ Architectures Supported
+ * IBM(R) Power architecture (little endian)
+ * MIPS and MIPS64 architecture
+ * RISCV64 architecture
++* LoongArch64 architecture
+ 
+ Supported RTL Build Configurations
+ ==================================
+diff --git a/runtime/cmake/LibompGetArchitecture.cmake b/runtime/cmake/LibompGetArchitecture.cmake
+index dd60a2d..72cbf64 100644
+--- a/runtime/cmake/LibompGetArchitecture.cmake
++++ b/runtime/cmake/LibompGetArchitecture.cmake
+@@ -47,6 +47,8 @@ function(libomp_get_architecture return_arch)
+       #error ARCHITECTURE=mips
+     #elif defined(__riscv) && __riscv_xlen == 64
+       #error ARCHITECTURE=riscv64
++    #elif defined(__loongarch__) && defined(__loongarch64)
++      #error ARCHITECTURE=loongarch64
+     #else
+       #error ARCHITECTURE=UnknownArchitecture
+     #endif
+diff --git a/runtime/cmake/LibompMicroTests.cmake b/runtime/cmake/LibompMicroTests.cmake
+index 1ca3412..d344056 100644
+--- a/runtime/cmake/LibompMicroTests.cmake
++++ b/runtime/cmake/LibompMicroTests.cmake
+@@ -214,6 +214,9 @@ else()
+     elseif(${RISCV64})
+       libomp_append(libomp_expected_library_deps libc.so.6)
+       libomp_append(libomp_expected_library_deps ld.so.1)
++    elseif(${LoongArch64})
++      libomp_append(libomp_expected_library_deps libc.so.6)
++      libomp_append(libomp_expected_library_deps ld.so.1)
+     endif()
+     libomp_append(libomp_expected_library_deps libpthread.so.0 IF_FALSE STUBS_LIBRARY)
+     libomp_append(libomp_expected_library_deps libhwloc.so.5 LIBOMP_USE_HWLOC)
+diff --git a/runtime/cmake/LibompUtils.cmake b/runtime/cmake/LibompUtils.cmake
+index b1de242..8d6b6ef 100644
+--- a/runtime/cmake/LibompUtils.cmake
++++ b/runtime/cmake/LibompUtils.cmake
+@@ -109,6 +109,8 @@ function(libomp_get_legal_arch return_arch_string)
+     set(${return_arch_string} "MIPS64" PARENT_SCOPE)
+   elseif(${RISCV64})
+     set(${return_arch_string} "RISCV64" PARENT_SCOPE)
++  elseif(${LoongArch64})
++    set(${return_arch_string} "LoongArch64" PARENT_SCOPE)
+   else()
+     set(${return_arch_string} "${LIBOMP_ARCH}" PARENT_SCOPE)
+     libomp_warning_say("libomp_get_legal_arch(): Warning: Unknown architecture: Using ${LIBOMP_ARCH}")
+diff --git a/runtime/src/kmp_affinity.h b/runtime/src/kmp_affinity.h
+index ce00362..06fd323 100644
+--- a/runtime/src/kmp_affinity.h
++++ b/runtime/src/kmp_affinity.h
+@@ -254,6 +254,18 @@ public:
+ #elif __NR_sched_getaffinity != 5196
+ #error Wrong code for getaffinity system call.
+ #endif /* __NR_sched_getaffinity */
++#elif KMP_ARCH_LOONGARCH64
++#ifndef __NR_sched_setaffinity
++#define __NR_sched_setaffinity 122
++#elif __NR_sched_setaffinity != 122
++#error Wrong code for setaffinity system call.
++#endif /* __NR_sched_setaffinity */
++#ifndef __NR_sched_getaffinity
++#define __NR_sched_getaffinity 123
++#elif __NR_sched_getaffinity != 123
++#error Wrong code for getaffinity system call.
++#endif /* __NR_sched_getaffinity */
++#else
+ #error Unknown or unsupported architecture
+ #endif /* KMP_ARCH_* */
+ #elif KMP_OS_FREEBSD
+diff --git a/runtime/src/kmp_csupport.cpp b/runtime/src/kmp_csupport.cpp
+index e263558..ca42148 100644
+--- a/runtime/src/kmp_csupport.cpp
++++ b/runtime/src/kmp_csupport.cpp
+@@ -695,7 +695,7 @@ void __kmpc_flush(ident_t *loc) {
+   }
+ #endif // KMP_MIC
+ #elif (KMP_ARCH_ARM || KMP_ARCH_AARCH64 || KMP_ARCH_MIPS || KMP_ARCH_MIPS64 || \
+-       KMP_ARCH_RISCV64)
++       KMP_ARCH_RISCV64 || KMP_ARCH_LOONGARCH64)
+ // Nothing to see here move along
+ #elif KMP_ARCH_PPC64
+ // Nothing needed here (we have a real MB above).
+diff --git a/runtime/src/kmp_os.h b/runtime/src/kmp_os.h
+index d71e9ae..33eb269 100644
+--- a/runtime/src/kmp_os.h
++++ b/runtime/src/kmp_os.h
+@@ -167,7 +167,7 @@ typedef unsigned long long kmp_uint64;
+ #if KMP_ARCH_X86 || KMP_ARCH_ARM || KMP_ARCH_MIPS
+ #define KMP_SIZE_T_SPEC KMP_UINT32_SPEC
+ #elif KMP_ARCH_X86_64 || KMP_ARCH_PPC64 || KMP_ARCH_AARCH64 ||                 \
+-    KMP_ARCH_MIPS64 || KMP_ARCH_RISCV64
++    KMP_ARCH_MIPS64 || KMP_ARCH_RISCV64 || KMP_ARCH_LOONGARCH64
+ #define KMP_SIZE_T_SPEC KMP_UINT64_SPEC
+ #else
+ #error "Can't determine size_t printf format specifier."
+@@ -1012,7 +1012,7 @@ extern kmp_real64 __kmp_xchg_real64(volatile kmp_real64 *p, kmp_real64 v);
+ #endif /* KMP_OS_WINDOWS */
+ 
+ #if KMP_ARCH_PPC64 || KMP_ARCH_ARM || KMP_ARCH_AARCH64 || KMP_ARCH_MIPS ||     \
+-    KMP_ARCH_MIPS64 || KMP_ARCH_RISCV64
++    KMP_ARCH_MIPS64 || KMP_ARCH_RISCV64 || KMP_ARCH_LOONGARCH64
+ #if KMP_OS_WINDOWS
+ #undef KMP_MB
+ #define KMP_MB() std::atomic_thread_fence(std::memory_order_seq_cst)
+diff --git a/runtime/src/kmp_platform.h b/runtime/src/kmp_platform.h
+index bbbd72d..6392d17 100644
+--- a/runtime/src/kmp_platform.h
++++ b/runtime/src/kmp_platform.h
+@@ -92,6 +92,7 @@
+ #define KMP_ARCH_MIPS 0
+ #define KMP_ARCH_MIPS64 0
+ #define KMP_ARCH_RISCV64 0
++#define KMP_ARCH_LOONGARCH64 0
+ 
+ #if KMP_OS_WINDOWS
+ #if defined(_M_AMD64) || defined(__x86_64)
+@@ -135,6 +136,9 @@
+ #elif defined __riscv && __riscv_xlen == 64
+ #undef KMP_ARCH_RISCV64
+ #define KMP_ARCH_RISCV64 1
++#elif defined __loongarch__ && defined __loongarch64
++#undef KMP_ARCH_LOONGARCH64
++#define KMP_ARCH_LOONGARCH64 1
+ #endif
+ #endif
+ 
+@@ -199,7 +203,7 @@
+ // TODO: Fixme - This is clever, but really fugly
+ #if (1 != KMP_ARCH_X86 + KMP_ARCH_X86_64 + KMP_ARCH_ARM + KMP_ARCH_PPC64 +     \
+               KMP_ARCH_AARCH64 + KMP_ARCH_MIPS + KMP_ARCH_MIPS64 +             \
+-              KMP_ARCH_RISCV64)
++              KMP_ARCH_RISCV64 + KMP_ARCH_LOONGARCH64)
+ #error Unknown or unsupported architecture
+ #endif
+ 
+diff --git a/runtime/src/kmp_runtime.cpp b/runtime/src/kmp_runtime.cpp
+index e1af2f4..9dbc196 100644
+--- a/runtime/src/kmp_runtime.cpp
++++ b/runtime/src/kmp_runtime.cpp
+@@ -8723,7 +8723,7 @@ __kmp_determine_reduction_method(
+     int atomic_available = FAST_REDUCTION_ATOMIC_METHOD_GENERATED;
+ 
+ #if KMP_ARCH_X86_64 || KMP_ARCH_PPC64 || KMP_ARCH_AARCH64 ||                   \
+-    KMP_ARCH_MIPS64 || KMP_ARCH_RISCV64
++    KMP_ARCH_MIPS64 || KMP_ARCH_RISCV64 || KMP_ARCH_LOONGARCH64
+ 
+ #if KMP_OS_LINUX || KMP_OS_DRAGONFLY || KMP_OS_FREEBSD || KMP_OS_NETBSD ||     \
+     KMP_OS_OPENBSD || KMP_OS_WINDOWS || KMP_OS_DARWIN || KMP_OS_HURD
+diff --git a/runtime/src/thirdparty/ittnotify/ittnotify_config.h b/runtime/src/thirdparty/ittnotify/ittnotify_config.h
+index a452b76..d6d2cb0 100644
+--- a/runtime/src/thirdparty/ittnotify/ittnotify_config.h
++++ b/runtime/src/thirdparty/ittnotify/ittnotify_config.h
+@@ -162,6 +162,10 @@
+ #define ITT_ARCH_ARM64 6
+ #endif /* ITT_ARCH_ARM64 */
+ 
++#ifndef ITT_ARCH_LOONGARCH64
++#define ITT_ARCH_LOONGARCH64 7
++#endif /* ITT_ARCH_LOONGARCH64 */
++
+ #ifndef ITT_ARCH
+ #if defined _M_IX86 || defined __i386__
+ #define ITT_ARCH ITT_ARCH_IA32
+@@ -175,6 +179,8 @@
+ #define ITT_ARCH ITT_ARCH_ARM64
+ #elif defined __powerpc64__
+ #define ITT_ARCH ITT_ARCH_PPC64
++#elif defined __loongarch__ && defined __loongarch64
++#define ITT_ARCH ITT_ARCH_LOONGARCH64
+ #endif
+ #endif
+ 
+diff --git a/runtime/src/z_Linux_asm.S b/runtime/src/z_Linux_asm.S
+index b4a45c1..4f80a81 100644
+--- a/runtime/src/z_Linux_asm.S
++++ b/runtime/src/z_Linux_asm.S
+@@ -1725,6 +1725,157 @@ __kmp_invoke_microtask:
+ 
+ #endif /* KMP_ARCH_RISCV64 */
+ 
++#if KMP_ARCH_LOONGARCH64
++
++//------------------------------------------------------------------------
++//
++// typedef void        (*microtask_t)( int *gtid, int *tid, ... );
++//
++// int __kmp_invoke_microtask(microtask_t pkfn, int gtid, int tid, int argc,
++//                            void *p_argv[]
++// #if OMPT_SUPPORT
++//                            ,
++//                            void **exit_frame_ptr
++// #endif
++//                            ) {
++// #if OMPT_SUPPORT
++//   *exit_frame_ptr = OMPT_GET_FRAME_ADDRESS(0);
++// #endif
++//    (*pkfn)( & gtid, & tid, argv[0], ... );
++//
++//    return 1;
++// }
++//
++// parameters:
++//     a0:     pkfn
++//     a1:     gtid
++//     a2:     tid
++//     a3:     argc
++//     a4:     p_argv
++//     a5:     exit_frame_ptr
++//
++// Temp. registers:
++//
++//  t0: used to calculate the dynamic stack size / used to hold pkfn address
++//  t1: used as temporary for stack placement calculation
++//  t2: used as temporary for stack arguments
++//  t3: used as temporary for number of remaining pkfn parms
++//  t4: used to traverse p_argv array
++//
++// return:     a0      (always 1/TRUE)
++//
++
++// -- Begin __kmp_invoke_microtask
++// mark_begin;
++       .text
++       .globl  __kmp_invoke_microtask
++       .p2align        3
++       .type   __kmp_invoke_microtask,@function
++__kmp_invoke_microtask:
++
++       // First, save ra and fp
++       addi.d  $sp, $sp, -16
++       st.d    $ra, $sp, 8
++       st.d    $fp, $sp, 0
++       addi.d  $fp, $sp, 16
++
++       // Compute the dynamic stack size:
++       //
++       // - We need 8 bytes for storing 'gtid' and 'tid', so we can pass them by
++       //   reference
++       // - We need 8 bytes for each argument that cannot be passed to the 'pkfn'
++       //   function by register. Given that we have 8 of such registers (a[0-7])
++       //   and two + 'argc' arguments (consider &gtid and &tid), we need to
++       //   reserve max(0, argc - 6)*8 ext$ra bytes
++       //
++       // The total number of bytes is then max(0, argc - 6)*8 + 8
++
++       // Compute max(0, argc - 6) using the following bithack:
++       // max(0, x) = x - (x & (x >> 31?63)), where x := argc - 6
++       // Source: http://g$raphics.stanford.edu/~seander/bithacks.html#IntegerMinOrMax
++       addi.d  $t0, $a3, -6
++       srai.d  $t1, $t0, 63
++       and             $t1, $t0, $t1
++       sub.d   $t0, $t0, $t1
++
++       addi.d  $t0, $t0, 1
++
++       slli.d  $t0, $t0, 3             // t0: total number of bytes for stack storing arguments.
++       sub.d   $sp, $sp, $t0
++
++       move    $t0, $a0
++       move    $t3, $a3
++       move    $t4, $a4
++
++#if OMPT_SUPPORT
++       // Save frame pointer into exit_frame
++       st.d    $fp, $a5, 0
++#endif
++
++       // Prepare arguments for the pkfn function (first 8 using $a0-$a7 registers)
++
++       st.w    $a1, $fp, -20   // gtid
++       st.w    $a2, $fp, -24   // tid
++
++       addi.d  $a0, $fp, -20   // &gtid
++       addi.d  $a1, $fp, -24   // &tid
++
++       beqz    $t3, .L_kmp_3
++       ld.d    $a2, $t4, 0             // argv[0]
++
++       addi.d  $t3, $t3, -1
++       beqz    $t3, .L_kmp_3
++       ld.d    $a3, $t4, 8             // argv[1]
++
++       addi.d  $t3, $t3, -1
++       beqz    $t3, .L_kmp_3
++       ld.d    $a4, $t4, 16    // argv[2]
++
++       addi.d  $t3, $t3, -1
++       beqz    $t3, .L_kmp_3
++       ld.d    $a5, $t4, 24    // argv[3]
++
++       addi.d  $t3, $t3, -1
++       beqz    $t3, .L_kmp_3
++       ld.d    $a6, $t4, 32    // argv[4]
++
++       addi.d  $t3, $t3, -1
++       beqz    $t3, .L_kmp_3
++       ld.d    $a7, $t4, 40    // argv[5]
++
++       // Prepare any additional argument passed through the stack
++       addi.d  $t4, $t4, 48
++       move    $t1, $sp
++       b .L_kmp_2
++.L_kmp_1:
++       ld.d    $t2, $t4, 0
++       st.d    $t2, $t1, 0
++       addi.d  $t4, $t4, 8
++       addi.d  $t1, $t1, 8
++.L_kmp_2:
++       addi.d  $t3, $t3, -1
++       bnez    $t3, .L_kmp_1
++
++.L_kmp_3:
++       // Call pkfn function
++       jirl    $ra, $t0, 0
++
++       // Restore stack and return
++
++       addi.d  $a0, $zero, 1
++
++       addi.d  $sp, $fp, -16
++       ld.d    $fp, $sp, 0
++       ld.d    $ra, $sp, 8
++       addi.d  $sp, $sp, 16
++       jr              $ra
++.Lfunc_end0:
++       .size   __kmp_invoke_microtask, .Lfunc_end0-__kmp_invoke_microtask
++
++// -- End  __kmp_invoke_microtask
++
++#endif /* KMP_ARCH_LOONGARCH64 */
++
+ #if KMP_ARCH_ARM || KMP_ARCH_MIPS
+     .data
+     .comm .gomp_critical_user_,32,8
+@@ -1736,7 +1887,8 @@ __kmp_unnamed_critical_addr:
+     .size __kmp_unnamed_critical_addr,4
+ #endif /* KMP_ARCH_ARM */
+ 
+-#if KMP_ARCH_PPC64 || KMP_ARCH_AARCH64 || KMP_ARCH_MIPS64 || KMP_ARCH_RISCV64
++#if KMP_ARCH_PPC64 || KMP_ARCH_AARCH64 || KMP_ARCH_MIPS64 ||                   \
++    KMP_ARCH_RISCV64 || KMP_ARCH_LOONGARCH64
+ #ifndef KMP_PREFIX_UNDERSCORE
+ # define KMP_PREFIX_UNDERSCORE(x) x
+ #endif
+@@ -1751,7 +1903,7 @@ KMP_PREFIX_UNDERSCORE(__kmp_unnamed_critical_addr):
+     .size KMP_PREFIX_UNDERSCORE(__kmp_unnamed_critical_addr),8
+ #endif
+ #endif /* KMP_ARCH_PPC64 || KMP_ARCH_AARCH64 || KMP_ARCH_MIPS64 ||
+-          KMP_ARCH_RISCV64 */
++          KMP_ARCH_RISCV64 || KMP_ARCH_LOONGARCH64 */
+ 
+ #if KMP_OS_LINUX
+ # if KMP_ARCH_ARM
+diff --git a/runtime/src/z_Linux_util.cpp b/runtime/src/z_Linux_util.cpp
+index 5cd6ad6..bdadbd6 100644
+--- a/runtime/src/z_Linux_util.cpp
++++ b/runtime/src/z_Linux_util.cpp
+@@ -2441,7 +2441,7 @@ finish: // Clean up and exit.
+ 
+ #if !(KMP_ARCH_X86 || KMP_ARCH_X86_64 || KMP_MIC ||                            \
+       ((KMP_OS_LINUX || KMP_OS_DARWIN) && KMP_ARCH_AARCH64) ||                 \
+-      KMP_ARCH_PPC64 || KMP_ARCH_RISCV64)
++      KMP_ARCH_PPC64 || KMP_ARCH_RISCV64 || KMP_ARCH_LOONGARCH64)
+ 
+ // we really only need the case with 1 argument, because CLANG always build
+ // a struct of pointers to shared variables referenced in the outlined function
+diff --git a/runtime/test/atomic/kmp_atomic_float10_max_min.c b/runtime/test/atomic/kmp_atomic_float10_max_min.c
+index 4a833e7..cc54e1a 100644
+--- a/runtime/test/atomic/kmp_atomic_float10_max_min.c
++++ b/runtime/test/atomic/kmp_atomic_float10_max_min.c
+@@ -1,6 +1,6 @@
+ // RUN: %libomp-compile -mlong-double-80 && %libomp-run
+ // UNSUPPORTED: gcc
+-// UNSUPPORTED: powerpc
++// REQUIRES: x86-registered-target
+ 
+ #include <stdio.h>
+ #include <omp.h>
+diff --git a/runtime/tools/lib/Platform.pm b/runtime/tools/lib/Platform.pm
+index 38593a1..2d262ae 100644
+--- a/runtime/tools/lib/Platform.pm
++++ b/runtime/tools/lib/Platform.pm
+@@ -63,6 +63,8 @@ sub canon_arch($) {
+             $arch = "mips";
+         } elsif ( $arch =~ m{\Ariscv64} ) {
+             $arch = "riscv64";
++        } elsif ( $arch =~ m{\Aloongarch64} ) {
++            $arch = "loongarch64";
+         } else {
+             $arch = undef;
+         }; # if
+@@ -97,6 +99,7 @@ sub canon_mic_arch($) {
+         "mips" => "MIPS",
+         "mips64" => "MIPS64",
+         "riscv64" => "RISC-V (64-bit)",
++        "loongarch64" => "LoongArch64",
+     );
+ 
+     sub legal_arch($) {
+@@ -119,6 +122,7 @@ sub canon_mic_arch($) {
+         "mic" => "intel64",
+         "mips" => "mips",
+         "mips64" => "MIPS64",
++        "loongarch64" => "loongarch64",
+     );
+ 
+     sub arch_opt($) {
+@@ -225,6 +229,8 @@ sub target_options() {
+         $_host_arch = "mips";
+     } elsif ( $hardware_platform eq "riscv64" ) {
+         $_host_arch = "riscv64";
++    } elsif ( $hardware_platform eq "loongarch64" ) {
++        $_host_arch = "loongarch64";
+     } else {
+         die "Unsupported host hardware platform: \"$hardware_platform\"; stopped";
+     }; # if
+@@ -414,7 +420,7 @@ the script assumes host architecture is target one.
+ 
+ Input string is an architecture name to canonize. The function recognizes many variants, for example:
+ C<32e>, C<Intel64>, C<Intel(R) 64>, etc. Returned string is a canonized architecture name,
+-one of: C<32>, C<32e>, C<64>, C<arm>, C<ppc64le>, C<ppc64>, C<mic>, C<mips>, C<mips64>, C<riscv64> or C<undef> is input string is not recognized.
++one of: C<32>, C<32e>, C<64>, C<arm>, C<ppc64le>, C<ppc64>, C<mic>, C<mips>, C<mips64>, C<riscv64>,  C<loongarch64> or C<undef> is input string is not recognized.
+ 
+ =item B<legal_arch( $arch )>
+ 
+diff --git a/runtime/tools/lib/Uname.pm b/runtime/tools/lib/Uname.pm
+index 99fe1cd..8a976ad 100644
+--- a/runtime/tools/lib/Uname.pm
++++ b/runtime/tools/lib/Uname.pm
+@@ -158,6 +158,8 @@ if ( 0 ) {
+         $values{ hardware_platform } = "mips";
+     } elsif ( $values{ machine } =~ m{\Ariscv64\z} ) {
+         $values{ hardware_platform } = "riscv64";
++    } elsif ( $values{ machine } =~ m{\Aloongarch64\z} ) {
++        $values{ hardware_platform } = "loongarch64";
+     } else {
+         die "Unsupported machine (\"$values{ machine }\") returned by POSIX::uname(); stopped";
+     }; # if

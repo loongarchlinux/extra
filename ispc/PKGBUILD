@@ -10,7 +10,7 @@ arch=(loong64 x86_64)
 url="https://ispc.github.io/"
 license=(BSD-3-Clause)
 depends=(clang gcc-libs glibc llvm-libs spirv-llvm-translator onetbb)
-makedepends=(cmake git level-zero-headers level-zero-loader lib32-glibc llvm openmp python vc-intrinsics)
+makedepends=(cmake git level-zero-headers level-zero-loader llvm openmp python vc-intrinsics)
 checkdepends=(intel-compute-runtime)
 optdepends=(
     'intel-compute-runtime: GPU support'
@@ -49,6 +49,11 @@ build() {
     -S $pkgname
     -W no-dev
   )
+# clang didn't support -mlsx
+  CFLAGS=${CFLAGS/-mlsx /}
+  CXXFLAGS=${CXXFLAGS/-mlsx /}
+  CFLAGS=${CFLAGS/-fstack-clash-protection/}
+  CXXFLAGS=${CXXFLAGS/-fstack-clash-protection/}
 
   cmake "${cmake_options[@]}"
   cmake --build build --verbose

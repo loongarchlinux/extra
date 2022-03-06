@@ -5,8 +5,8 @@
 pkgbase=opencv
 pkgname=(opencv
          opencv-samples
-         python-opencv
-         opencv-cuda)
+         python-opencv)
+#         opencv-cuda)
 pkgver=4.10.0
 pkgrel=4
 pkgdesc='Open Source Computer Vision Library'
@@ -106,8 +106,7 @@ build() {
          -DINSTALL_C_EXAMPLES=ON \
          -DINSTALL_PYTHON_EXAMPLES=ON \
          -DCMAKE_INSTALL_PREFIX=/usr \
-         -DCPU_BASELINE_DISABLE=SSE3 \
-         -DCPU_BASELINE_REQUIRE=SSE2 \
+         -DCPU_BASELINE_DISABLE=LASX,SSE2,SSE3 \
          -DOPENCV_EXTRA_MODULES_PATH=$srcdir/opencv_contrib/modules \
          -DOPENCV_SKIP_PYTHON_LOADER=ON \
          -DLAPACK_LIBRARIES=/usr/lib/liblapack.so;/usr/lib/libblas.so;/usr/lib/libcblas.so \
@@ -120,35 +119,35 @@ build() {
          -DEIGEN_INCLUDE_PATH=/usr/include/eigen3 \
          -DCMAKE_FIND_PACKAGE_PREFER_CONFIG=ON \
          -Dprotobuf_MODULE_COMPATIBLE=ON"
- 
+
   cmake -B build -S $pkgname $_opts \
     -DBUILD_WITH_DEBUG_INFO=ON
   cmake --build build
 
-  CFLAGS="${CFLAGS} -fno-lto" CXXFLAGS="${CXXFLAGS} -fno-lto" LDFLAGS="${LDFLAGS} -fno-lto" \
-  cmake -B build-cuda -S $pkgname $_opts \
-    -DBUILD_WITH_DEBUG_INFO=OFF \
-    -DWITH_CUDA=ON \
-    -DWITH_CUDNN=ON \
-    -DCMAKE_C_COMPILER=gcc-13 \
-    -DCMAKE_CXX_COMPILER=g++-13 \
-    -DCUDA_ARCH_BIN='52-real;53-real;60-real;61-real;62-real;70-real;72-real;75-real;80-real;86-real;87-real;89-real;90-real;90-virtual' \
-    -DCUDA_ARCH_PTX='90-virtual'
-  cmake --build build-cuda
+#  CFLAGS="${CFLAGS} -fno-lto" CXXFLAGS="${CXXFLAGS} -fno-lto" LDFLAGS="${LDFLAGS} -fno-lto" \
+#  cmake -B build-cuda -S $pkgname $_opts \
+#    -DBUILD_WITH_DEBUG_INFO=OFF \
+#    -DWITH_CUDA=ON \
+#    -DWITH_CUDNN=ON \
+#    -DCMAKE_C_COMPILER=gcc-13 \
+#    -DCMAKE_CXX_COMPILER=g++-13 \
+#    -DCUDA_ARCH_BIN='52-real;53-real;60-real;61-real;62-real;70-real;72-real;75-real;80-real;86-real;87-real;89-real;90-real;90-virtual' \
+#    -DCUDA_ARCH_PTX='90-virtual'
+#  cmake --build build-cuda
 }
 
 package_opencv() {
   DESTDIR="$pkgdir" cmake --install build
 
   # separate samples package
-  mv "$pkgdir"/usr/share/opencv4/samples "$srcdir"
+  #mv "$pkgdir"/usr/share/opencv4/samples "$srcdir"
 
   # Add java symlinks expected by some binary blobs
   ln -sr "$pkgdir"/usr/share/java/{opencv4/opencv-${pkgver//./},opencv}.jar
   ln -sr "$pkgdir"/usr/lib/{libopencv_java${pkgver//./},libopencv_java}.so
 
   # Split Python bindings
-  rm -r "$pkgdir"/usr/lib/python3*
+  #rm -r "$pkgdir"/usr/lib/python3*
 }
 
 package_opencv-samples() {

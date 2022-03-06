@@ -23,8 +23,20 @@ makedepends=(
   python-sphinx
 )
 optdepends=('dmidecode: for SMBIOS/DMI table decoder support')
-source=(git+https://github.com/flashrom/flashrom.git#tag=v${pkgver})
+source=(git+https://github.com/flashrom/flashrom.git#tag=v${pkgver}
+    0001-Loongson-3-SPI-tmp.patch
+    0002-Speed-up.patch
+    0003-Add-support-for-loongarch64.patch
+)
 sha256sums=('a9e6d4cc525c7cb5591f940d7472c639ecbe8fab845409ed873997292f634a9e')
+
+
+prepare() {
+    cd ${pkgname}-v${pkgver}
+    patch -p1 -i "$srcdir/0001-Loongson-3-SPI-tmp.patch"
+    patch -p1 -i "$srcdir/0002-Speed-up.patch"
+    patch -p1 -i "$srcdir/0003-Add-support-for-loongarch64.patch"
+}
 
 build() {
   arch-meson ${pkgname} build
