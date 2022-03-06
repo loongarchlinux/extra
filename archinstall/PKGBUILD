@@ -5,7 +5,7 @@
 
 pkgname=archinstall
 pkgver=2.5.2
-pkgrel=1
+pkgrel=2
 pkgdesc="Just another guided/automated Arch Linux installer with a twist"
 arch=(any)
 url="https://github.com/archlinux/archinstall"
@@ -18,19 +18,24 @@ replaces=(python-archinstall)
 source=(
   $pkgname-$pkgver.tar.gz::$url/archive/refs/tags/v$pkgver.tar.gz
   $pkgname-$pkgver.tar.gz.sig::$url/releases/download/v$pkgver/$pkgname-$pkgver.tar.gz.sig
+  archinstall-la64.patch
 )
 sha512sums=('005e9ca97f39a5ab94cb2ae0c7d6cf254cff11933bf8bf1d658a3d6d04db75c6cfa3930225285f47034e30654ff9b0978b9dc1eaed3edae9391b939cebc042e5'
-            'SKIP')
+            'SKIP'
+            'cdb305783e3cfe37ae234a144b2cd9a3ec7ebd583d629debd677bacf849aa0773214d1ea87e63128329a2b4623fa5785330a649e7fb47f07a2935050f4863d47')
 b2sums=('ee6537c589f7a5c24d5639d724b09f079b10b2267ffa9561d457335d49334aeaa3302dbe91e2ad4ccbd6555c9739d870e960e62b20f2f5b4c125970c823bec19'
-        'SKIP')
+        'SKIP'
+        '981530b424dfdaeec799eb3041f698728f4e8cc5638fe5b8d6b017edb5c7913f2aee70b955cce4d4835e3c31041ffdc2294912f482f2ce52ce31f3ce8aa6f028')
 validpgpkeys=('256F73CEEFC6705C6BBAB20E5FBBB32941E3740A') # Anton Hvornum (Torxed) <anton@hvornum.se>
 
 prepare() {
   cd $pkgname-$pkgver
+  patch -p1 -i $srcdir/archinstall-la64.patch
   # use real directories for examples and profiles, as symlinks do not work
   # with flit or setuptools PEP517 backends
   rm -fv $pkgname/{examples,profiles}
   mv -v examples profiles $pkgname/
+  (cd archinstall/locales; bash ./locales_generator.sh)
 }
 
 build() {

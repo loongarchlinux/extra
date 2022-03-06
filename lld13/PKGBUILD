@@ -3,6 +3,8 @@
 
 pkgname=lld13
 pkgver=13.0.1
+_rdate=20220505
+_rdate1=20220517
 pkgrel=1
 pkgdesc="Linker from the LLVM project"
 arch=('loong64' 'x86_64')
@@ -13,15 +15,12 @@ makedepends=('llvm13' 'cmake' 'ninja' 'python')
 checkdepends=('llvm')
 options=('!lto') # LTO causes a couple of test failures
 _source_base=https://github.com/llvm/llvm-project/releases/download/llvmorg-$pkgver
-source=($_source_base/lld-$pkgver.src.tar.xz{,.sig}
-        $_source_base/llvm-$pkgver.src.tar.xz{,.sig}
-        $_source_base/libunwind-$pkgver.src.tar.xz{,.sig})
-sha256sums=('666af745e8bf7b680533b4d18b7a31dc7cab575b1e6e4d261922bbafd9644cfb'
-            'SKIP'
-            'ec6b80d82c384acad2dc192903a6cf2cdbaffb889b84bfb98da9d71e630fc834'
-            'SKIP'
-            'e206dbf1bbe058a113bffe189386ded99a160b2443ee1e2cd41ff810f78551ba'
-            'SKIP')
+source=($_source_base/lld-$pkgver-$_rdate1.tar.xz
+        $_source_base/llvm-$pkgver-$_rdate.tar.xz
+        $_source_base/libunwind-$pkgver-$_rdate.tar.xz)
+sha256sums=('d28e1caf1d54bb6c83a483fff1f137f7d83078adba34653ee5089fa643410f38'
+            '5af8782456df8199da714978a9a0759e395d6f4756d48c20bf7e42ec5e5881b5'
+            'a019117e6feea8411cc0dcbe081caddf20d2ab09523dfa4fd17d224610c3f27d')
 validpgpkeys+=('B6C8F98282B944E3B0D5C2530FC3042E345AD05D') # Hans Wennborg <hans@chromium.org>
 validpgpkeys+=('474E22316ABF4785A88C6E8EA2C794A986419D8A') # Tom Stellard <tstellar@redhat.com>
 
@@ -46,6 +45,7 @@ build() {
     -DLLVM_INCLUDE_TESTS=ON
     -DLLVM_LINK_LLVM_DYLIB=ON
     -DLLVM_MAIN_SRC_DIR="$srcdir/llvm-$pkgver.src"
+    -DSPHINX_WARNINGS_AS_ERRORS=OFF
   )
   cmake .. "${cmake_args[@]}"
   ninja

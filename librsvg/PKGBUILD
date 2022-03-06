@@ -15,7 +15,8 @@ makedepends=(gobject-introspection vala git rust gi-docgen python-docutils)
 checkdepends=(ttf-dejavu)
 options=(debug)
 _commit=b556c32bd6e57b3310ed0cea1ab77f48014a291b  # tags/2.55.1^0
-source=("git+https://gitlab.gnome.org/GNOME/librsvg.git#commit=$_commit")
+source=("git+https://gitlab.gnome.org/GNOME/librsvg.git#commit=$_commit"
+  librsvg-la64-build.patch)
 sha256sums=('SKIP')
 
 pkgver() {
@@ -25,6 +26,7 @@ pkgver() {
 
 prepare() {
   cd librsvg
+  patch -p1 -i $srcdir/librsvg-la64-build.patch
   NOCONFIGURE=1 ./autogen.sh
 }
 
@@ -36,6 +38,12 @@ export CARGO_PROFILE_RELEASE_DEBUG=2
 
 build() {
   cd librsvg
+  find -name Cargo.lock -exec rm -f {} \;
+  mkdir .cargo
+  cat > .cargo/config.toml <<EOF
+[source.crates-io]
+registry = "https://gitee.com/yetist/crates.io-index"
+EOF
   ./configure --prefix=/usr --disable-static --enable-vala --enable-gtk-doc
   sed -i -e 's/ -shared / -Wl,-O1,--as-needed\0 /g' libtool
   make
@@ -64,3 +72,5 @@ package_librsvg-docs() {
 }
 
 # vim:set sw=2 sts=-1 et:
+sha256sums=('SKIP'
+            '5ea1c5f71769e2275e8e8e64b5dc015160b609e73b11632a23dfa0237d454da7')
