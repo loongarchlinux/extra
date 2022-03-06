@@ -80,15 +80,21 @@ source=(
   $url/releases/webkitgtk-$pkgver.tar.xz{,.asc}
   GTK-MiniBrowser-should-hide-the-toolbar-when-using-full-screen.patch
   GTK-Disable-DMABuf-renderer-for-NVIDIA-proprietary-drivers.patch
+  webkit2-gtk-fix-build.patch
+  webkit2gtk-fix-cmake-build.patch
 )
 sha256sums=('52288b30bda22373442cecb86f9c9a569ad8d4769a1f97b352290ed92a67ed86'
             'SKIP'
             'a921d6be1303e9f23474971f381886fd291ec5bb1a7ff1e85acede8cfb88bef2'
-            '655f3b2c96355ac83c4fa1fc6048e3256bbfdbfb9727e1e18c5af12613536206')
+            '655f3b2c96355ac83c4fa1fc6048e3256bbfdbfb9727e1e18c5af12613536206'
+            '08917be7a1af4bb371c9919117912f1acffc9bc8fe9434693e3b0184ac352bc0'
+            '2ce442337d9f9871170f7face452a965d724a418ecb752be4222cc867b9c0e5e')
 b2sums=('3a8cd0818e0d989ab778cda63dd873d7e185ec20fbfe609b9da70041fe38ac30351046516600cb8eb86089e43136487d81c922690468daa70ed2a436561c2401'
         'SKIP'
         'd440d82c769f1b35caf5464dc850cdf1c896224205c90c17d8b0a44aee62e4b1383e11306936aaca067fde8836770d346d5122d7b05c91a5c7c1741c89c65e2f'
-        'daa782d4d40cc12a05c02b2494e879333f66f32820f1a1b89b7ab68f62fd53043b116ecb5ef476004095a7c7b924b12695b7e87e21dd547f66e72fa02a972f0d')
+        'daa782d4d40cc12a05c02b2494e879333f66f32820f1a1b89b7ab68f62fd53043b116ecb5ef476004095a7c7b924b12695b7e87e21dd547f66e72fa02a972f0d'
+        '22602b8f9836d666ca8db8200e4c965c0560263786d713f041db9814f5c93233da76c5f29e8540079e6bf97097ab063aa88938de39a32f547d954de5b8669acf'
+        '6fa62e8d83678ea8938b1aef0425422354ce5597bad455adca89e7509677edcc7c1a263b0c38057e20ae404a7a2cc3dffe9f411ff9fc29baa5a59ea585d998b6')
 validpgpkeys=(
   'D7FCF61CF9A2DEAB31D81BD3F3D322D0EC4582C3'  # Carlos Garcia Campos <cgarcia@igalia.com>
   '5AA3BC334FD7E3369E7C77B291C559DBE4C9123B'  # Adrián Pérez de Castro <aperez@igalia.com>
@@ -104,6 +110,8 @@ prepare() {
   # https://bugs.archlinux.org/task/79783
   # https://github.com/WebKit/WebKit/pull/18614
   patch -Np1 -i ../GTK-Disable-DMABuf-renderer-for-NVIDIA-proprietary-drivers.patch
+  patch -p1 -i $srcdir/webkit2-gtk-fix-build.patch
+  patch -p1 -i $srcdir/webkit2gtk-fix-cmake-build.patch
 }
 
 build() {
@@ -127,7 +135,12 @@ build() {
   #     <artificial>:(.text+0x4a019): undefined reference to `ipint_extern_table_fill'
   #     collect2: error: ld returned 1 exit status
   export CC=clang CXX=clang++
-  LDFLAGS+=" -fuse-ld=lld"
+#  LDFLAGS+=" -fuse-ld=lld"
+# clang didn't support -mlsx
+  CFLAGS=${CFLAGS/-mlsx /}
+  CXXFLAGS=${CXXFLAGS/-mlsx /}
+  CFLAGS=${CFLAGS/-fstack-clash-protection/}
+  CXXFLAGS=${CXXFLAGS/-fstack-clash-protection/}
 
   # Produce minimal debug info: 4.3 GB of debug data makes the
   # build too slow and is too much to package for debuginfod

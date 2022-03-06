@@ -20,6 +20,8 @@ makedepends=('xorgproto' 'pixman' 'libx11' 'mesa' 'mesa-libgl' 'xtrans'
 source=(https://xorg.freedesktop.org/releases/individual/xserver/${pkgbase}-${pkgver}.tar.xz{,.sig}
         xvfb-run # with updates from FC master
         xvfb-run.1
+        10-modeset.conf
+        0001-modesetting-match-against-Multimedia-Video-Controlle.patch
 )
 validpgpkeys=('3C2C43D9447D5938EF4551EBE23B7E70B467F0BF'  # Peter Hutterer (Who-T) <office@who-t.net>
               '67DC86F2623FC5FD4BB5225D14706DBE1E4B4540'  # Olivier Fourdan <fourdan@xfce.org>
@@ -31,6 +33,11 @@ sha512sums=('ad5edacbe8c7e2ebe6b4a690af94c7ea5ebc781d00b0e58ae2d273c78ceee2fa00b
 
 prepare() {
   cd ${pkgbase}-$pkgver
+
+  # FS#73274
+  patch -Np1 -i ../xephyr_Dont_check_for_SeatId_anymore.patch
+  # fix modesetting driver for loongson and gsgpu
+  patch -Np1 -i ../0001-modesetting-match-against-Multimedia-Video-Controlle.patch
 }
 
 build() {
@@ -50,6 +57,7 @@ build() {
     -D xephyr=true \
     -D glamor=true \
     -D udev=true \
+    -D udev_kms=true \
     -D dtrace=false \
     -D systemd_logind=true \
     -D suid_wrapper=true \
@@ -111,6 +119,7 @@ package_xorg-server() {
 
   # distro specific files must be installed in /usr/share/X11/xorg.conf.d
   install -m755 -d "${pkgdir}/etc/X11/xorg.conf.d"
+  install -m644 -Dt "${pkgdir}/usr/share/X11/xorg.conf.d" 10-modeset.conf
 
   # license
   install -m644 -Dt "${pkgdir}/usr/share/licenses/${pkgname}" "${pkgbase}-${pkgver}"/COPYING

@@ -1,7 +1,7 @@
 # Contributor: tobias <tobias@archlinux.org>
 # Contributor: Tobias Kieslich <tobias@justdreams.de>
 
-pkgname=(libgda libgda-{firebird,jdbc,mysql,postgres})
+pkgname=(libgda libgda-{firebird,mysql,postgres})
 pkgver=5.2.10
 pkgrel=5
 pkgdesc="Database access library"
@@ -14,7 +14,9 @@ makedepends=(glade mariadb-libs postgresql-libs libfbclient jdk11-openjdk intlto
 _commit=85a2532df64698306fd3be324bb2052fb1b80fd3  # tags/LIBGDA_5_2_10^0
 source=("git+https://gitlab.gnome.org/GNOME/libgda.git#commit=$_commit"
         0001-Use-single-header-with-GtkSource.patch
-        0002-Use-goocanvas-3.0.patch)
+        0002-Use-goocanvas-3.0.patch
+        libgda-la64.patch)
+
 sha256sums=('SKIP'
             '104594a6034b041d87c1129b0b5544c8899393d66a6a0fb7a8b55f7fcb77e560'
             '81ab26fd12f7174e880815f6aa624c24821b1f9c7f386ae566293df7f041b25b')
@@ -39,6 +41,8 @@ prepare() {
 
   # Port to goocanvas-3.0
   git apply -3 ../0002-Use-goocanvas-3.0.patch
+  patch -p1 -i $srcdir/libgda-la64.patch
+  rm getsp.class
 
   NOCONFIGURE=1 ./autogen.sh
 }
@@ -56,7 +60,6 @@ build() {
 
 package_libgda() {
   optdepends=('libgda-firebird: provider for Firebird'
-              'libgda-jdbc: provider for JDBC'
               'libgda-mysql: provider for MySQL'
               'libgda-postgres: provider for PostgreSQL')
   options+=(emptydirs)
@@ -66,16 +69,16 @@ package_libgda() {
 
   mkdir -p providers
   local provider
-  for provider in firebird jdbc mysql postgres; do
+  for provider in firebird mysql postgres; do
     mv "$pkgdir"/usr/lib/libgda-$_apiver/providers/libgda-$provider[-.]*so \
        "$pkgdir"/usr/lib/pkgconfig/libgda-$provider-$_apiver.pc \
        "$pkgdir"/usr/share/libgda-$_apiver/${provider}_specs_*.xml \
        "$srcdir/providers"
   done
 
-  mv "$pkgdir"/usr/lib/libgda-$_apiver/providers/gdaprovider-${_apiver}.jar \
-     "$pkgdir"/usr/bin/gda-list-jdbc-providers-${_apiver} \
-     "$srcdir/providers"
+#  mv "$pkgdir"/usr/lib/libgda-$_apiver/providers/gdaprovider-${_apiver}.jar \
+#     "$pkgdir"/usr/bin/gda-list-jdbc-providers-${_apiver} \
+#     "$srcdir/providers"
 }
 
 _packageprovider() {
@@ -112,3 +115,10 @@ package_libgda-postgres() {
   depends=(libgda postgresql-libs)
   _packageprovider postgres
 }
+sha256sums=('SKIP'
+            '104594a6034b041d87c1129b0b5544c8899393d66a6a0fb7a8b55f7fcb77e560'
+            '81ab26fd12f7174e880815f6aa624c24821b1f9c7f386ae566293df7f041b25b')
+sha256sums=('SKIP'
+            '104594a6034b041d87c1129b0b5544c8899393d66a6a0fb7a8b55f7fcb77e560'
+            '81ab26fd12f7174e880815f6aa624c24821b1f9c7f386ae566293df7f041b25b'
+            '8f6f9129df0032d895a8549f3e66e5eef530791326d14097cbb3e5fc8a2b84b1')

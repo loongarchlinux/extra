@@ -44,7 +44,6 @@ makedepends=(
   meson
   noto-fonts
   noto-fonts-cjk
-  pandoc
   python-cairo
   python-gobject
   python-pillow
@@ -55,22 +54,30 @@ checkdepends=(umockdev)
 source=(
   "https://github.com/fwupd/fwupd/releases/download/${pkgver}/${pkgname}-${pkgver}.tar.xz"{,.asc}
   fwupd.sysusers
+  fwupd-1.9.5-loong64.patch
 )
 sha512sums=('d0b2db6fb9dc231022b8109e0c62b682173a89755e759972f6e4b33fa9a8c31426b3bef3fab9b931ef591adcc867962e8251632223e5460122ea499df636b214'
             'SKIP'
             '637203080b55eda74a659f58c853a9a723a2dad5da70915b2b0e036c6145a649468ebec700cc83975d9cb5378b9dced8b3a3b26bdbcc75ddc774837355e75deb')
 b2sums=('f5679c128cd4c4278c47fb098b0d38d7c4d0a8a0f4f0421b72b1cca934622ecb9d1974f7b67f49f9c9c2f805664d3c16ff6861c0572c95a863b4ebd7858e0a78'
         'SKIP'
-        'e65ca7da22a20a40882cfc1fe4479643f9a38c90a4f2c3e71e6e5e3de1d6db212a0f17d600097619fe3cdb0a9b860422f8b0b9a9d45441518e51a7eb12a918bb')
+        'e65ca7da22a20a40882cfc1fe4479643f9a38c90a4f2c3e71e6e5e3de1d6db212a0f17d600097619fe3cdb0a9b860422f8b0b9a9d45441518e51a7eb12a918bb'
+        'c1da6c2cee029024cb94a2a94559499f635a7c36db8b03324c8f506a4390c6171017d8e7c1095ed972d7dd404b53b236f8950cdbf92e308fb9585bd2d48994ac')
 validpgpkeys=(163EB50119225DB3DF8F49EA17ACBA8DFA970E17) # Richard Hughes <richard@hughsie.com>
+
+prepare() {
+    cd ${pkgname}-${pkgver}
+    patch -p1 -i "$srcdir/fwupd-1.9.5-loong64.patch"
+}
 
 build() {
   arch-meson ${pkgname}-${pkgver} build \
     -D b_lto=false \
-    -D docs=enabled \
+    -D docs=disabled \
     -D plugin_amdgpu=disabled \
+    -D plugin_msr=disabled \
     -D launchd=disabled \
-    -D plugin_intel_spi=true \
+    -D plugin_intel_spi=false \
     -D supported_build=enabled \
     -D efi_binary=false \
     -D systemd_unit_user=fwupd
@@ -113,10 +120,10 @@ package_fwupd() {
   mv "${pkgdir}"/usr/bin/{,fwupd-}dbxtool
   mv "${pkgdir}"/usr/share/man/man1/{,fwupd-}dbxtool.1
   # Remove msr module-load config as it is built-in
-  rm "${pkgdir}"/usr/lib/modules-load.d/fwupd-msr.conf
-  rmdir "${pkgdir}"/usr/lib/modules-load.d
+#  rm "${pkgdir}"/usr/lib/modules-load.d/fwupd-msr.conf
+#  rmdir "${pkgdir}"/usr/lib/modules-load.d
 
-  _pick docs "${pkgdir}"/usr/share/doc/{,fwupd/}{libfwupdplugin,libfwupd}
+#  _pick docs "${pkgdir}"/usr/share/doc/{,fwupd/}{libfwupdplugin,libfwupd}
 }
 
 package_fwupd-docs() {

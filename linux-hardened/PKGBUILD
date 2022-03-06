@@ -4,8 +4,10 @@
 # Contributor: Thomas Baechler <thomas@archlinux.org>
 
 pkgbase=linux-hardened
-pkgver=6.7.2.hardened1
-pkgrel=2
+_ver=6.7.0
+_rdate=20231226
+pkgver=${_ver}.hardened1
+pkgrel=1
 pkgdesc='Security-Hardened Linux'
 url='https://github.com/anthraxx/linux-hardened'
 arch=(loong64 x86_64)
@@ -31,9 +33,9 @@ options=('!strip')
 _srcname=linux-${pkgver%.*}
 _srctag=${pkgver%.*}-${pkgver##*.}
 source=(
-  https://cdn.kernel.org/pub/linux/kernel/v${pkgver%%.*}.x/${_srcname}.tar.{xz,sign}
-  ${url}/releases/download/${_srctag}/${pkgbase}-${_srctag}.patch{,.sig}
-  config  # the main kernel config file
+  https://github.com/loongarchlinux/linux/releases/download/v${_rdate}/linux-${_ver}-${_rdate}.tar.xz
+  config         # the main kernel config file
+  config.la64
 )
 validpgpkeys=(
   ABAF11C65A2970B130ABE3C479BE3E4300411886  # Linus Torvalds
@@ -41,16 +43,12 @@ validpgpkeys=(
   E240B57E2C4630BA768E2F26FC1B547C8D8172C8  # Levente Polyak
 )
 # https://www.kernel.org/pub/linux/kernel/v6.x/sha256sums.asc
-sha256sums=('c34de41baa29c475c0834e88a3171e255ff86cd32d83c6bffc2b797e60bfa671'
-            'SKIP'
-            'f1a21eab19a3685f6cabaef93c520fa0061202b978ba64d539af0de690c375d6'
-            'SKIP'
-            '79aa07a1108582118c5e4721b9b5440053791d7a98ceb9538d42a511e39097eb')
-b2sums=('4c1f480de0c1458aa67379cd02d35708f63850adb84a85061088de1f82b5d084bc7cf7da459a3f1e415544351d1f36a9a832277240774ae461cdde11687cbadd'
-        'SKIP'
-        'c97573edb0e765b35c9ebc1a091889aa924be997d57a8acf8a9221edd36ab8b4823c6521dc31838c4c4ec9e23bf39a5c462bc7ab99baf81dddf8c92fd8cfe10f'
-        'SKIP'
-        'ca79cea706454ee6aab3bfbc01d3067cef4fdfd49413c8bca52480596ec394d932a4e252b4bbcc3a605bd3a56b4b73493c47a7cdd3e984a5b42767fce0f1c025')
+sha256sums=('d0e6ce60f0ccd162aabe130c00509590de790e33642a12ed4249aa08ac14f674'
+            '46a1e0e43247d09c5ae29cfa7a79e272767a49b90c5761c2e4a5656a4ced6cf2'
+            'c9b26d463e27257d6ad13e59d489db5bd9b103e506dc80d7917bf48471480c85')
+b2sums=('15b6b33c6fdac5329d56424afc09a722053f045ca1a1553d583d80296a20a3e545d6ac1fd7950e575816df3e2d1c1033aeba779aa374ee25406f05d284d56815'
+        '914edb986d34ddaa20738ec6d4f0d68b2500ee4662be3f58c1f62ecfa87f3ab88205acf91ec7d03d2f925880d538d0b1716183add857d2bff533e5a0d0596ba5'
+        'd285dfd1304c9bc42f9fdaa18f8a393fc599be5d6144abe43959c8f63de7b8973821c50135ce81764428659ddd0eb634d7cce6da697cab9752311ad05dee2df6')
 
 export KBUILD_BUILD_HOST=archlinux
 export KBUILD_BUILD_USER=$pkgbase
@@ -74,9 +72,9 @@ prepare() {
   done
 
   echo "Setting config..."
-  cp ../config .config
+  cp ../config.la64 .config
   make olddefconfig
-  diff -u ../config .config || :
+  diff -u ../config.la64 .config || :
 
   make -s kernelrelease > version
   echo "Prepared $pkgbase version $(<version)"
@@ -102,7 +100,6 @@ _package() {
   optdepends=(
     'wireless-regdb: to set the correct wireless channels of your country'
     'linux-firmware: firmware images needed for some devices'
-    'usbctl: deny_new_usb control'
   )
   provides=(
     KSMBD-MODULE
@@ -142,19 +139,30 @@ _package-headers() {
   install -Dt "$builddir" -m644 .config Makefile Module.symvers System.map \
     localversion.* version vmlinux
   install -Dt "$builddir/kernel" -m644 kernel/Makefile
-  install -Dt "$builddir/arch/x86" -m644 arch/x86/Makefile
+  if [ $CARCH == x86_64 ];then
+    install -Dt "$builddir/arch/x86" -m644 arch/x86/Makefile
+  elif [ $CARCH == loong64 ];then
+    install -Dt "$builddir/arch/loongarch" -m644 arch/loongarch/Makefile
+  fi
+
   cp -t "$builddir" -a scripts
 
   # required when STACK_VALIDATION is enabled
-  install -Dt "$builddir/tools/objtool" tools/objtool/objtool
+#  install -Dt "$builddir/tools/objtool" tools/objtool/objtool
 
   # required when DEBUG_INFO_BTF_MODULES is enabled
   # install -Dt "$builddir/tools/bpf/resolve_btfids" tools/bpf/resolve_btfids/resolve_btfids
 
   echo "Installing headers..."
   cp -t "$builddir" -a include
-  cp -t "$builddir/arch/x86" -a arch/x86/include
-  install -Dt "$builddir/arch/x86/kernel" -m644 arch/x86/kernel/asm-offsets.s
+  if [ $CARCH == x86_64 ];then
+    cp -t "$builddir/arch/x86" -a arch/x86/include
+    install -Dt "$builddir/arch/x86/kernel" -m644 arch/x86/kernel/asm-offsets.s
+  elif [ $CARCH == loong64 ];then
+    cp -t "$builddir/arch/loongarch" -a arch/loongarch/include
+    install -Dt "$builddir/arch/loongarch/kernel" -m644 arch/loongarch/kernel/asm-offsets.s
+  fi
+
 
   install -Dt "$builddir/drivers/md" -m644 drivers/md/*.h
   install -Dt "$builddir/net/mac80211" -m644 net/mac80211/*.h
@@ -176,7 +184,7 @@ _package-headers() {
   echo "Removing unneeded architectures..."
   local arch
   for arch in "$builddir"/arch/*/; do
-    [[ $arch = */x86/ ]] && continue
+    [[ $arch = */loongarch/ ]] && continue
     echo "Removing $(basename "$arch")"
     rm -r "$arch"
   done

@@ -1,0 +1,898 @@
+diff --git a/Makefile b/Makefile
+index bfe80a8..20c3152 100644
+--- a/Makefile
++++ b/Makefile
+@@ -25,28 +25,41 @@ COMMITPKG_LINKS = \
+ 	extrapkg \
+ 	extra-testingpkg \
+ 	extra-stagingpkg \
++	laurpkg \
++	laur-testingpkg \
++	laur-stagingpkg \
+ 	multilibpkg \
+ 	multilib-testingpkg \
+ 	multilib-stagingpkg \
+ 	kde-unstablepkg \
+-	gnome-unstablepkg
++	gnome-unstablepkg \
++	wine-appspkg
+ 
+ ARCHBUILD_LINKS = \
++	core-testing-loong64-build \
+ 	core-testing-x86_64-build \
+ 	core-testing-x86_64_v3-build \
++	core-staging-loong64-build \
+ 	core-staging-x86_64-build \
+ 	core-staging-x86_64_v3-build \
++	extra-loong64-build \
+ 	extra-x86_64-build \
+ 	extra-x86_64_v3-build \
++	extra-testing-loong64-build \
+ 	extra-testing-x86_64-build \
+ 	extra-testing-x86_64_v3-build \
++	extra-staging-loong64-build \
+ 	extra-staging-x86_64-build \
+ 	extra-staging-x86_64_v3-build \
++	laur-loong64-build \
++	laur-testing-loong64-build \
++	laur-staging-loong64-build \
+ 	multilib-build \
+ 	multilib-testing-build \
+ 	multilib-staging-build \
+-	kde-unstable-x86_64-build \
+-	gnome-unstable-x86_64-build
++	kde-unstable-loong64-build kde-unstable-x86_64-build \
++	gnome-unstable-loong64-build gnome-unstable-x86_64-build \
++	wine-apps-loong64-build
+ 
+ COMPLETIONS = $(addprefix $(BUILDDIR)/,$(patsubst %.in,%,$(wildcard contrib/completion/*/*)))
+ 
+@@ -159,7 +172,7 @@ dist:
+ 	git archive --format=tar --prefix=devtools-$(V)/ v$(V) | gzip > devtools-$(V).tar.gz
+ 	gpg --detach-sign --use-agent devtools-$(V).tar.gz
+ 
+-check: $(BINPROGS_SRC) $(LIBRARY_SRC) contrib/completion/bash/devtools.in config/makepkg/x86_64.conf contrib/makepkg/PKGBUILD.proto
++check: $(BINPROGS_SRC) $(LIBRARY_SRC) contrib/completion/bash/devtools.in config/makepkg/loong64.conf config/makepkg/x86_64.conf contrib/makepkg/PKGBUILD.proto
+ 	shellcheck $^
+ 
+ .PHONY: all binprogs library completion conf man clean install uninstall tag dist upload check
+diff --git a/config/makepkg/loong64.conf b/config/makepkg/loong64.conf
+new file mode 100644
+index 0000000..c1b2987
+--- /dev/null
++++ b/config/makepkg/loong64.conf
+@@ -0,0 +1,162 @@
++#!/hint/bash
++# shellcheck disable=2034
++
++#
++# /etc/makepkg.conf
++#
++
++#########################################################################
++# SOURCE ACQUISITION
++#########################################################################
++#
++#-- The download utilities that makepkg should use to acquire sources
++#  Format: 'protocol::agent'
++DLAGENTS=('file::/usr/bin/curl -qgC - -o %o %u'
++          'ftp::/usr/bin/curl -qgfC - --ftp-pasv --retry 3 --retry-delay 3 -o %o %u'
++          'http::/usr/bin/curl -qgb "" -fLC - --retry 3 --retry-delay 3 -o %o %u'
++          'https::/usr/bin/curl -qgb "" -fLC - --retry 3 --retry-delay 3 -o %o %u'
++          'rsync::/usr/bin/rsync --no-motd -z %u %o'
++          'scp::/usr/bin/scp -C %u %o')
++
++# Other common tools:
++# /usr/bin/snarf
++# /usr/bin/lftpget -c
++# /usr/bin/wget
++
++#-- The package required by makepkg to download VCS sources
++#  Format: 'protocol::package'
++VCSCLIENTS=('bzr::bzr'
++            'fossil::fossil'
++            'git::git'
++            'hg::mercurial'
++            'svn::subversion')
++
++#########################################################################
++# ARCHITECTURE, COMPILE FLAGS
++#########################################################################
++#
++CARCH="loong64"
++CHOST="loongarch64-unknown-linux-gnu"
++
++#-- Compiler and Linker Flags
++#CPPFLAGS=""
++CFLAGS="-mabi=lp64d -march=loongarch64 -mlsx -O2 -pipe -fno-plt -fexceptions \
++        -Wp,-D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security \
++        -fstack-clash-protection"
++CXXFLAGS="$CFLAGS -Wp,-D_GLIBCXX_ASSERTIONS"
++LDFLAGS="-Wl,-O1,--sort-common,--as-needed,-z,relro,-z,now"
++LTOFLAGS="-flto=auto"
++RUSTFLAGS=""
++#-- Make Flags: change this for DistCC/SMP systems
++#MAKEFLAGS="-j2"
++#-- Debugging flags
++DEBUG_CFLAGS="-g"
++DEBUG_CXXFLAGS="$DEBUG_CFLAGS"
++DEBUG_RUSTFLAGS="-C debuginfo=2"
++
++#########################################################################
++# BUILD ENVIRONMENT
++#########################################################################
++#
++# Makepkg defaults: BUILDENV=(!distcc !color !ccache check !sign)
++#  A negated environment option will do the opposite of the comments below.
++#
++#-- distcc:   Use the Distributed C/C++/ObjC compiler
++#-- color:    Colorize output messages
++#-- ccache:   Use ccache to cache compilation
++#-- check:    Run the check() function if present in the PKGBUILD
++#-- sign:     Generate PGP signature file
++#
++BUILDENV=(!distcc color !ccache check !sign)
++#
++#-- If using DistCC, your MAKEFLAGS will also need modification. In addition,
++#-- specify a space-delimited list of hosts running in the DistCC cluster.
++#DISTCC_HOSTS=""
++#
++#-- Specify a directory for package building.
++#BUILDDIR=/tmp/makepkg
++
++#########################################################################
++# GLOBAL PACKAGE OPTIONS
++#   These are default values for the options=() settings
++#########################################################################
++#
++# Makepkg defaults: OPTIONS=(!strip docs libtool staticlibs emptydirs !zipman !purge !debug !lto)
++#  A negated option will do the opposite of the comments below.
++#
++#-- strip:      Strip symbols from binaries/libraries
++#-- docs:       Save doc directories specified by DOC_DIRS
++#-- libtool:    Leave libtool (.la) files in packages
++#-- staticlibs: Leave static library (.a) files in packages
++#-- emptydirs:  Leave empty directories in packages
++#-- zipman:     Compress manual (man and info) pages in MAN_DIRS with gzip
++#-- purge:      Remove files specified by PURGE_TARGETS
++#-- debug:      Add debugging flags as specified in DEBUG_* variables
++#-- lto:        Add compile flags for building with link time optimization
++#
++OPTIONS=(strip docs !libtool !staticlibs emptydirs zipman purge debug lto)
++
++#-- File integrity checks to use. Valid: md5, sha1, sha224, sha256, sha384, sha512, b2
++INTEGRITY_CHECK=(sha256)
++#-- Options to be used when stripping binaries. See `man strip' for details.
++STRIP_BINARIES="--strip-all"
++#-- Options to be used when stripping shared libraries. See `man strip' for details.
++STRIP_SHARED="--strip-unneeded"
++#-- Options to be used when stripping static libraries. See `man strip' for details.
++STRIP_STATIC="--strip-debug"
++#-- Manual (man and info) directories to compress (if zipman is specified)
++MAN_DIRS=({usr{,/local}{,/share},opt/*}/{man,info})
++#-- Doc directories to remove (if !docs is specified)
++DOC_DIRS=(usr/{,local/}{,share/}{doc,gtk-doc} opt/*/{doc,gtk-doc})
++#-- Files to be removed from all packages (if purge is specified)
++PURGE_TARGETS=(usr/{,share}/info/dir .packlist *.pod)
++#-- Directory to store source code in for debug packages
++DBGSRCDIR="/usr/src/debug"
++
++#########################################################################
++# PACKAGE OUTPUT
++#########################################################################
++#
++# Default: put built package and cached source in build directory
++#
++#-- Destination: specify a fixed directory where all packages will be placed
++#PKGDEST=/home/packages
++#-- Source cache: specify a fixed directory where source files will be cached
++#SRCDEST=/home/sources
++#-- Source packages: specify a fixed directory where all src packages will be placed
++#SRCPKGDEST=/home/srcpackages
++#-- Log files: specify a fixed directory where all log files will be placed
++#LOGDEST=/home/makepkglogs
++#-- Packager: name/email of the person or organization building packages
++#PACKAGER="John Doe <john@doe.com>"
++#-- Specify a key to use for package signing
++#GPGKEY=""
++
++#########################################################################
++# COMPRESSION DEFAULTS
++#########################################################################
++#
++COMPRESSGZ=(gzip -c -f -n)
++COMPRESSBZ2=(bzip2 -c -f)
++COMPRESSXZ=(xz -c -z -)
++COMPRESSZST=(zstd -c -T0 --ultra -20 -)
++COMPRESSLRZ=(lrzip -q)
++COMPRESSLZO=(lzop -q)
++COMPRESSZ=(compress -c -f)
++COMPRESSLZ4=(lz4 -q)
++COMPRESSLZ=(lzip -c -f)
++
++#########################################################################
++# EXTENSION DEFAULTS
++#########################################################################
++#
++PKGEXT='.pkg.tar.zst'
++SRCEXT='.src.tar.gz'
++
++#########################################################################
++# OTHER
++#########################################################################
++#
++#-- Command used to run pacman as root, instead of trying sudo and su
++#PACMAN_AUTH=()
++# vim: set ft=sh ts=2 sw=2 et:
+diff --git a/config/pacman/laur-staging.conf b/config/pacman/laur-staging.conf
+new file mode 100644
+index 0000000..1726921
+--- /dev/null
++++ b/config/pacman/laur-staging.conf
+@@ -0,0 +1,104 @@
++#
++# /etc/pacman.conf
++#
++# See the pacman.conf(5) manpage for option and repository directives
++
++#
++# GENERAL OPTIONS
++#
++[options]
++# The following paths are commented out with their default values listed.
++# If you wish to use different paths, uncomment and update the paths.
++#RootDir     = /
++#DBPath      = /var/lib/pacman/
++#CacheDir    = /var/cache/pacman/pkg/
++#LogFile     = /var/log/pacman.log
++#GPGDir      = /etc/pacman.d/gnupg/
++#HookDir     = /etc/pacman.d/hooks/
++HoldPkg     = pacman glibc
++#XferCommand = /usr/bin/curl -L -C - -f -o %o %u
++#XferCommand = /usr/bin/wget --passive-ftp -c -O %o %u
++#CleanMethod = KeepInstalled
++Architecture = auto
++
++# Pacman won't upgrade packages listed in IgnorePkg and members of IgnoreGroup
++#IgnorePkg   =
++#IgnoreGroup =
++
++#NoUpgrade   =
++#NoExtract   =
++
++# Misc options
++#UseSyslog
++#Color
++NoProgressBar
++# We cannot check disk space from within a chroot environment
++#CheckSpace
++VerbosePkgLists
++ParallelDownloads = 5
++
++# By default, pacman accepts packages signed by keys that its local keyring
++# trusts (see pacman-key and its man page), as well as unsigned packages.
++SigLevel    = Required DatabaseOptional
++LocalFileSigLevel = Optional
++#RemoteFileSigLevel = Required
++
++# NOTE: You must run `pacman-key --init` before first using pacman; the local
++# keyring can then be populated with the keys of all official Arch Linux
++# packagers with `pacman-key --populate archlinux`.
++
++#
++# REPOSITORIES
++#   - can be defined here or included from another file
++#   - pacman will search repositories in the order defined here
++#   - local/custom mirrors can be added here or in separate files
++#   - repositories listed first will take precedence when packages
++#     have identical names, regardless of version number
++#   - URLs will have $repo replaced by the name of the current repo
++#   - URLs will have $arch replaced by the name of the architecture
++#
++# Repository entries are of the format:
++#       [repo-name]
++#       Server = ServerName
++#       Include = IncludePath
++#
++# The header [repo-name] is crucial - it must be present and
++# uncommented to enable the repo.
++#
++
++# The testing repositories are disabled by default. To enable, uncomment the
++# repo name header and Include lines. You can add preferred servers immediately
++# after the header, and they will be used before the default mirrors.
++
++[core-staging]
++Include = /etc/pacman.d/mirrorlist
++
++[core-testing]
++Include = /etc/pacman.d/mirrorlist
++
++[core]
++Include = /etc/pacman.d/mirrorlist
++
++[extra-staging]
++Include = /etc/pacman.d/mirrorlist
++
++[extra-testing]
++Include = /etc/pacman.d/mirrorlist
++
++[extra]
++Include = /etc/pacman.d/mirrorlist
++
++[laur-staging]
++Include = /etc/pacman.d/mirrorlist
++
++[laur-testing]
++Include = /etc/pacman.d/mirrorlist
++
++[laur]
++Include = /etc/pacman.d/mirrorlist
++
++# An example of a custom package repository.  See the pacman manpage for
++# tips on creating your own repositories.
++#[custom]
++#SigLevel = Optional TrustAll
++#Server = file:///home/custompkgs
+diff --git a/config/pacman/laur-testing.conf b/config/pacman/laur-testing.conf
+new file mode 100644
+index 0000000..bbe7791
+--- /dev/null
++++ b/config/pacman/laur-testing.conf
+@@ -0,0 +1,95 @@
++#
++# /etc/pacman.conf
++#
++# See the pacman.conf(5) manpage for option and repository directives
++
++#
++# GENERAL OPTIONS
++#
++[options]
++# The following paths are commented out with their default values listed.
++# If you wish to use different paths, uncomment and update the paths.
++#RootDir     = /
++#DBPath      = /var/lib/pacman/
++#CacheDir    = /var/cache/pacman/pkg/
++#LogFile     = /var/log/pacman.log
++#GPGDir      = /etc/pacman.d/gnupg/
++#HookDir     = /etc/pacman.d/hooks/
++HoldPkg     = pacman glibc
++#XferCommand = /usr/bin/curl -L -C - -f -o %o %u
++#XferCommand = /usr/bin/wget --passive-ftp -c -O %o %u
++#CleanMethod = KeepInstalled
++Architecture = auto
++
++# Pacman won't upgrade packages listed in IgnorePkg and members of IgnoreGroup
++#IgnorePkg   =
++#IgnoreGroup =
++
++#NoUpgrade   =
++#NoExtract   =
++
++# Misc options
++#UseSyslog
++#Color
++NoProgressBar
++# We cannot check disk space from within a chroot environment
++#CheckSpace
++VerbosePkgLists
++ParallelDownloads = 5
++
++# By default, pacman accepts packages signed by keys that its local keyring
++# trusts (see pacman-key and its man page), as well as unsigned packages.
++SigLevel    = Required DatabaseOptional
++LocalFileSigLevel = Optional
++#RemoteFileSigLevel = Required
++
++# NOTE: You must run `pacman-key --init` before first using pacman; the local
++# keyring can then be populated with the keys of all official Arch Linux
++# packagers with `pacman-key --populate archlinux`.
++
++#
++# REPOSITORIES
++#   - can be defined here or included from another file
++#   - pacman will search repositories in the order defined here
++#   - local/custom mirrors can be added here or in separate files
++#   - repositories listed first will take precedence when packages
++#     have identical names, regardless of version number
++#   - URLs will have $repo replaced by the name of the current repo
++#   - URLs will have $arch replaced by the name of the architecture
++#
++# Repository entries are of the format:
++#       [repo-name]
++#       Server = ServerName
++#       Include = IncludePath
++#
++# The header [repo-name] is crucial - it must be present and
++# uncommented to enable the repo.
++#
++
++# The testing repositories are disabled by default. To enable, uncomment the
++# repo name header and Include lines. You can add preferred servers immediately
++# after the header, and they will be used before the default mirrors.
++
++[core-testing]
++Include = /etc/pacman.d/mirrorlist
++
++[core]
++Include = /etc/pacman.d/mirrorlist
++
++[extra-testing]
++Include = /etc/pacman.d/mirrorlist
++
++[extra]
++Include = /etc/pacman.d/mirrorlist
++
++[laur-testing]
++Include = /etc/pacman.d/mirrorlist
++
++[laur]
++Include = /etc/pacman.d/mirrorlist
++
++# An example of a custom package repository.  See the pacman manpage for
++# tips on creating your own repositories.
++#[custom]
++#SigLevel = Optional TrustAll
++#Server = file:///home/custompkgs
+diff --git a/config/pacman/laur.conf b/config/pacman/laur.conf
+new file mode 100644
+index 0000000..6c50d86
+--- /dev/null
++++ b/config/pacman/laur.conf
+@@ -0,0 +1,92 @@
++#
++# /etc/pacman.conf
++#
++# See the pacman.conf(5) manpage for option and repository directives
++
++#
++# GENERAL OPTIONS
++#
++[options]
++# The following paths are commented out with their default values listed.
++# If you wish to use different paths, uncomment and update the paths.
++#RootDir     = /
++#DBPath      = /var/lib/pacman/
++#CacheDir    = /var/cache/pacman/pkg/
++#LogFile     = /var/log/pacman.log
++#GPGDir      = /etc/pacman.d/gnupg/
++#HookDir     = /etc/pacman.d/hooks/
++HoldPkg     = pacman glibc
++#XferCommand = /usr/bin/curl -L -C - -f -o %o %u
++#XferCommand = /usr/bin/wget --passive-ftp -c -O %o %u
++#CleanMethod = KeepInstalled
++Architecture = auto
++
++# Pacman won't upgrade packages listed in IgnorePkg and members of IgnoreGroup
++#IgnorePkg   =
++#IgnoreGroup =
++
++#NoUpgrade   =
++#NoExtract   =
++
++# Misc options
++#UseSyslog
++#Color
++NoProgressBar
++# We cannot check disk space from within a chroot environment
++#CheckSpace
++VerbosePkgLists
++ParallelDownloads = 5
++
++# By default, pacman accepts packages signed by keys that its local keyring
++# trusts (see pacman-key and its man page), as well as unsigned packages.
++SigLevel    = Required DatabaseOptional
++LocalFileSigLevel = Optional
++#RemoteFileSigLevel = Required
++
++# NOTE: You must run `pacman-key --init` before first using pacman; the local
++# keyring can then be populated with the keys of all official Arch Linux
++# packagers with `pacman-key --populate archlinux`.
++
++#
++# REPOSITORIES
++#   - can be defined here or included from another file
++#   - pacman will search repositories in the order defined here
++#   - local/custom mirrors can be added here or in separate files
++#   - repositories listed first will take precedence when packages
++#     have identical names, regardless of version number
++#   - URLs will have $repo replaced by the name of the current repo
++#   - URLs will have $arch replaced by the name of the architecture
++#
++# Repository entries are of the format:
++#       [repo-name]
++#       Server = ServerName
++#       Include = IncludePath
++#
++# The header [repo-name] is crucial - it must be present and
++# uncommented to enable the repo.
++#
++
++# The testing repositories are disabled by default. To enable, uncomment the
++# repo name header and Include lines. You can add preferred servers immediately
++# after the header, and they will be used before the default mirrors.
++
++#[core-testing]
++#Include = /etc/pacman.d/mirrorlist
++
++[core]
++Include = /etc/pacman.d/mirrorlist
++
++#[extra-testing]
++#Include = /etc/pacman.d/mirrorlist
++
++[extra]
++Include = /etc/pacman.d/mirrorlist
++
++[laur]
++Include = /etc/pacman.d/mirrorlist
++
++# An example of a custom package repository.  See the pacman manpage for
++# tips on creating your own repositories.
++#[custom]
++#SigLevel = Optional TrustAll
++#Server = file:///home/custompkgs
+diff --git a/config/pacman/multilib.conf b/config/pacman/multilib.conf
+index e09a9d5..496d84b 100644
+--- a/config/pacman/multilib.conf
++++ b/config/pacman/multilib.conf
+@@ -88,7 +88,7 @@ Include = /etc/pacman.d/mirrorlist
+ #[multilib-testing]
+ #Include = /etc/pacman.d/mirrorlist
+ 
+-[multilib]
++[laur]
+ Include = /etc/pacman.d/mirrorlist
+ 
+ # An example of a custom package repository.  See the pacman manpage for
+diff --git a/config/setarch-aliases.d/loong64 b/config/setarch-aliases.d/loong64
+new file mode 100644
+index 0000000..a4d6d47
+--- /dev/null
++++ b/config/setarch-aliases.d/loong64
+@@ -0,0 +1 @@
++loongarch64
+diff --git a/src/archbuild.in b/src/archbuild.in
+index 2f3faf9..c977a24 100644
+--- a/src/archbuild.in
++++ b/src/archbuild.in
+@@ -15,7 +15,7 @@ makechrootpkg_args=(-c -n -C)
+ cmd="${0##*/}"
+ if [[ "${cmd%%-*}" == 'multilib' ]]; then
+ 	repo="${cmd%-build}"
+-	arch='x86_64'
++	arch='loong64'
+ 	base_packages+=(multilib-devel)
+ else
+ 	tag="${cmd%-build}"
+diff --git a/src/archrelease.in b/src/archrelease.in
+index 818b0ca..d1e277b 100644
+--- a/src/archrelease.in
++++ b/src/archrelease.in
+@@ -45,50 +45,50 @@ if [[ ! -f PKGBUILD ]]; then
+ 	die 'archrelease: PKGBUILD not found'
+ fi
+ 
+-# shellcheck source=contrib/makepkg/PKGBUILD.proto
+-. ./PKGBUILD
+-pkgbase=${pkgbase:-$pkgname}
+-pkgver=$(get_full_version "$pkgbase")
+-gittag=$(get_tag_from_pkgver "$pkgver")
+-
+-# Check if releasing from a branch
+-if ! branchname=$(git symbolic-ref --short HEAD); then
+-	die 'not on any branch'
+-fi
+-if [[ "${branchname}" != main ]]; then
+-	die 'must be run from the main branch'
+-fi
+-
+-# Check if remote origin is setup properly
+-if ! giturl=$(git remote get-url origin) || [[ ${giturl} != *${GIT_PACKAGING_URL_SSH}* ]]; then
+-	die "remote origin is not configured, run 'pkgctl repo configure'"
+-fi
+-if ! git ls-remote origin >/dev/null; then
+-	die "configured remote origin may not exist, run 'pkgctl repo create ${pkgbase}' to create it"
+-fi
+-
+-msg 'Fetching remote changes'
+-git fetch --prune --prune-tags origin || die 'failed to fetch remote changes'
+-
+-# Check if local branch is up to date and contains the latest origin commit
+-if remoteref=$(git rev-parse "origin/${branchname}" 2>/dev/null); then
+-	if [[ $(git branch "${branchname}" --contains "${remoteref}" --format '%(refname:short)') != "${branchname}" ]]; then
+-		die "local branch is out of date, run 'git pull --rebase'"
+-	fi
+-fi
+-
+-# If the tag exists we check if it's properly signed and that it
+-# matches the working directory PKGBUILD.
+-if git tag --verify "$gittag" &> /dev/null; then
+-	cwd_checksum=$(sha256sum PKGBUILD|cut -d' ' -f1)
+-	tag_checksum=$(git show "${gittag}:PKGBUILD" | sha256sum |cut -d' ' -f1)
+-	if [[ "$cwd_checksum" != "$tag_checksum" ]]; then
+-		die "tagged PKGBUILD is not the same as the working dir PKGBUILD"
+-	fi
+-	git push --tags --set-upstream origin main || abort
+-	exit 0
+-fi
+-
+-msg "Releasing package"
+-git tag --sign --message="Package release ${pkgver}" "$gittag" || abort
+-git push --tags --set-upstream origin main || abort
++## shellcheck source=contrib/makepkg/PKGBUILD.proto
++#. ./PKGBUILD
++#pkgbase=${pkgbase:-$pkgname}
++#pkgver=$(get_full_version "$pkgbase")
++#gittag=$(get_tag_from_pkgver "$pkgver")
++#
++## Check if releasing from a branch
++#if ! branchname=$(git symbolic-ref --short HEAD); then
++#	die 'not on any branch'
++#fi
++#if [[ "${branchname}" != main ]]; then
++#	die 'must be run from the main branch'
++#fi
++#
++## Check if remote origin is setup properly
++#if ! giturl=$(git remote get-url origin) || [[ ${giturl} != *${GIT_PACKAGING_URL_SSH}* ]]; then
++#	die "remote origin is not configured, run 'pkgctl repo configure'"
++#fi
++#if ! git ls-remote origin >/dev/null; then
++#	die "configured remote origin may not exist, run 'pkgctl repo create ${pkgbase}' to create it"
++#fi
++#
++#msg 'Fetching remote changes'
++#git fetch --prune --prune-tags origin || die 'failed to fetch remote changes'
++#
++## Check if local branch is up to date and contains the latest origin commit
++#if remoteref=$(git rev-parse "origin/${branchname}" 2>/dev/null); then
++#	if [[ $(git branch "${branchname}" --contains "${remoteref}" --format '%(refname:short)') != "${branchname}" ]]; then
++#		die "local branch is out of date, run 'git pull --rebase'"
++#	fi
++#fi
++#
++## If the tag exists we check if it's properly signed and that it
++## matches the working directory PKGBUILD.
++#if git tag --verify "$gittag" &> /dev/null; then
++#	cwd_checksum=$(sha256sum PKGBUILD|cut -d' ' -f1)
++#	tag_checksum=$(git show "${gittag}:PKGBUILD" | sha256sum |cut -d' ' -f1)
++#	if [[ "$cwd_checksum" != "$tag_checksum" ]]; then
++#		die "tagged PKGBUILD is not the same as the working dir PKGBUILD"
++#	fi
++#	git push --tags --set-upstream origin main || abort
++#	exit 0
++#fi
++#
++#msg "Releasing package"
++#git tag --sign --message="Package release ${pkgver}" "$gittag" || abort
++#git push --tags --set-upstream origin main || abort
+diff --git a/src/commitpkg.in b/src/commitpkg.in
+index f979d61..0b1226f 100644
+--- a/src/commitpkg.in
++++ b/src/commitpkg.in
+@@ -128,17 +128,17 @@ for key in "${validpgpkeys[@]}"; do
+ done
+ 
+ # assert that they really are controlled by git
+-if (( ${#needsversioning[*]} )); then
+-	for file in "${needsversioning[@]}"; do
+-		# skip none existing files
+-		if [[ ! -f "${file}" ]]; then
+-			continue
+-		fi
+-		if ! git ls-files --error-unmatch "$file"; then
+-			die "%s is not under version control" "$file"
+-		fi
+-	done
+-fi
++#if (( ${#needsversioning[*]} )); then
++#	for file in "${needsversioning[@]}"; do
++#		# skip none existing files
++#		if [[ ! -f "${file}" ]]; then
++#			continue
++#		fi
++#		if ! git ls-files --error-unmatch "$file"; then
++#			die "%s is not under version control" "$file"
++#		fi
++#	done
++#fi
+ 
+ 
+ server=${PACKAGING_REPO_RELEASE_HOST}
+@@ -176,51 +176,51 @@ for _arch in "${arch[@]}"; do
+ done
+ 
+ # check for PKGBUILD standards
+-check_pkgbuild_validity
++#check_pkgbuild_validity
+ 
+ # auto generate .SRCINFO
+-stat_busy 'Generating .SRCINFO'
+-write_srcinfo_content > .SRCINFO
+-git add --force .SRCINFO
+-stat_done
+-
+-if [[ -n $(git status --porcelain --untracked-files=no) ]]; then
+-	stat_busy 'Staging files'
+-	for f in $(git ls-files --modified); do
+-		git add "$f"
+-	done
+-	for f in $(git ls-files --deleted); do
+-		git rm "$f"
+-	done
+-	stat_done
+-
+-	msgtemplate="upgpkg: $(get_full_version)"
+-	if [[ -n $1 ]]; then
+-		stat_busy 'Committing changes'
+-		git commit -q -m "${msgtemplate}: ${1}" || die
+-		stat_done
+-	else
+-		[[ -z ${WORKDIR:-} ]] && setup_workdir
+-		msgfile=$(mktemp --tmpdir="${WORKDIR}" commitpkg.XXXXXXXXXX)
+-		echo "$msgtemplate" > "$msgfile"
+-		if [[ -n $GIT_EDITOR ]]; then
+-			$GIT_EDITOR "$msgfile" || die
+-		elif [[ -n $VISUAL ]]; then
+-			$VISUAL "$msgfile" || die
+-		elif [[ -n $EDITOR ]]; then
+-			$EDITOR "$msgfile" || die
+-		elif giteditor=$(git config --get core.editor); then
+-			$giteditor "$msgfile" || die
+-		else
+-			die "No usable editor found (tried \$GIT_EDITOR, \$VISUAL, \$EDITOR, git config [core.editor])."
+-		fi
+-		[[ -s $msgfile ]] || die
+-		stat_busy 'Committing changes'
+-		git commit -v -q -F "$msgfile" || die
+-		unlink "$msgfile"
+-		stat_done
+-	fi
+-fi
++#stat_busy 'Generating .SRCINFO'
++#write_srcinfo_content > .SRCINFO
++#git add --force .SRCINFO
++#stat_done
++
++#if [[ -n $(git status --porcelain --untracked-files=no) ]]; then
++#	stat_busy 'Staging files'
++#	for f in $(git ls-files --modified); do
++#		git add "$f"
++#	done
++#	for f in $(git ls-files --deleted); do
++#		git rm "$f"
++#	done
++#	stat_done
++#
++#	msgtemplate="upgpkg: $(get_full_version)"
++#	if [[ -n $1 ]]; then
++#		stat_busy 'Committing changes'
++#		git commit -q -m "${msgtemplate}: ${1}" || die
++#		stat_done
++#	else
++#		[[ -z ${WORKDIR:-} ]] && setup_workdir
++#		msgfile=$(mktemp --tmpdir="${WORKDIR}" commitpkg.XXXXXXXXXX)
++#		echo "$msgtemplate" > "$msgfile"
++#		if [[ -n $GIT_EDITOR ]]; then
++#			$GIT_EDITOR "$msgfile" || die
++#		elif [[ -n $VISUAL ]]; then
++#			$VISUAL "$msgfile" || die
++#		elif [[ -n $EDITOR ]]; then
++#			$EDITOR "$msgfile" || die
++#		elif giteditor=$(git config --get core.editor); then
++#			$giteditor "$msgfile" || die
++#		else
++#			die "No usable editor found (tried \$GIT_EDITOR, \$VISUAL, \$EDITOR, git config [core.editor])."
++#		fi
++#		[[ -s $msgfile ]] || die
++#		stat_busy 'Committing changes'
++#		git commit -v -q -F "$msgfile" || die
++#		unlink "$msgfile"
++#		stat_done
++#	fi
++#fi
+ 
+ declare -a uploads
+ declare -a commit_arches
+diff --git a/src/lib/build/build.sh b/src/lib/build/build.sh
+index a5a272d..ec7af1a 100644
+--- a/src/lib/build/build.sh
++++ b/src/lib/build/build.sh
+@@ -319,6 +319,9 @@ pkgctl_build() {
+ 				BUILD_ARCH=("${_arch[0]}")
+ 			else
+ 				for loop_arch in "${arch[@]}"; do 
++					if in_array "${loop_arch}" "x86_64"; then
++						continue
++					fi
+ 					if in_array "${loop_arch}" "${_arch[@]}"; then
+ 						BUILD_ARCH+=("$loop_arch")
+ 					else
+diff --git a/src/lib/valid-repos.sh b/src/lib/valid-repos.sh
+index 14f90ce..21a03ec 100644
+--- a/src/lib/valid-repos.sh
++++ b/src/lib/valid-repos.sh
+@@ -7,16 +7,20 @@
+ _repos=(
+ 	core core-staging core-testing
+ 	extra extra-staging extra-testing
++	laur laur-staging laur-testing
+ 	multilib multilib-staging multilib-testing
+ 	gnome-unstable
+ 	kde-unstable
++	wine-apps
+ )
+ 
+ # shellcheck disable=2034
+ _build_repos=(
+ 	core-staging core-testing
+ 	extra extra-staging extra-testing
++	laur laur-staging laur-testing
+ 	multilib multilib-staging multilib-testing
+ 	gnome-unstable
+ 	kde-unstable
++	wine-apps
+ )
+diff --git a/src/lib/valid-tags.sh b/src/lib/valid-tags.sh
+index ca8d7d7..c2397e2 100644
+--- a/src/lib/valid-tags.sh
++++ b/src/lib/valid-tags.sh
+@@ -5,21 +5,26 @@
+ 
+ # shellcheck disable=2034
+ _arch=(
++	loong64
+ 	x86_64
+ 	any
+ )
+ 
+ # shellcheck disable=2034
+ _tags=(
+-	core-x86_64 core-any
+-	core-staging-x86_64 core-staging-any
+-	core-testing-x86_64 core-testing-any
+-	extra-x86_64 extra-any
+-	extra-staging-x86_64 extra-staging-any
+-	extra-testing-x86_64 extra-testing-any
++	core-loong64 core-x86_64 core-any
++	core-staging-loong64 core-staging-x86_64 core-staging-any
++	core-testing-loong64 core-testing-x86_64 core-testing-any
++	extra-loong64 extra-x86_64 extra-any
++	extra-staging-loong64 extra-staging-x86_64 extra-staging-any
++	extra-testing-loong64 extra-testing-x86_64 extra-testing-any
++	laur-loong64
++	laur-testing-loong64
++	laur-staging-loong64
+ 	multilib-x86_64
+ 	multilib-testing-x86_64
+ 	multilib-staging-x86_64
+-	kde-unstable-x86_64 kde-unstable-any
+-	gnome-unstable-x86_64 gnome-unstable-any
++	kde-unstable-loong64 kde-unstable-x86_64 kde-unstable-any
++	gnome-unstable-loong64 gnome-unstable-x86_64 gnome-unstable-any
++	wine-apps-loong64 wine-apps-any
+ )
+diff --git a/src/makechrootpkg.in b/src/makechrootpkg.in
+index 2cfd849..c1b00af 100644
+--- a/src/makechrootpkg.in
++++ b/src/makechrootpkg.in
+@@ -14,7 +14,7 @@ source /usr/share/makepkg/util/config.sh
+ 
+ shopt -s nullglob
+ 
+-default_makepkg_args=(--syncdeps --noconfirm --log --holdver --skipinteg)
++default_makepkg_args=(--syncdeps --noconfirm --log --holdver --skipinteg --skippgpcheck)
+ makepkg_args=("${default_makepkg_args[@]}")
+ verifysource_args=()
+ chrootdir=
+@@ -241,7 +241,7 @@ download_sources() {
+ 	# Ensure sources are downloaded
+ 	sudo -u "$makepkg_user" --preserve-env=GNUPGHOME,SSH_AUTH_SOCK \
+ 		env SRCDEST="$SRCDEST" BUILDDIR="$WORKDIR" \
+-		makepkg --config="$copydir/etc/makepkg.conf" --verifysource -o "${verifysource_args[@]}" ||
++		makepkg --config="$copydir/etc/makepkg.conf" --skippgpcheck --verifysource -o "${verifysource_args[@]}" ||
+ 		die "Could not download sources."
+ }
+ 

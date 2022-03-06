@@ -13,13 +13,17 @@ makedepends=(
   efibootmgr
   gnu-efi
 )
-source=(https://sourceforge.net/projects/refind/files/$pkgver/$pkgname-src-$pkgver.tar.gz)
-sha512sums=('41c120c1afec37c508aa5c0ec09a6563c3047ef84932308c91701795b950431dfad17d25cf664039b490a302d475add98441b75f90ff71cadce41febedc68a9e')
-b2sums=('02019ddb872ce44d2a2119902edebd633f925d49634e3bcc6bfb2c9dedb8ce213166909395a333d3a37e95c67720e31b1f5fcf25083801c17d645372aa54a06a')
+source=(https://sourceforge.net/projects/refind/files/$pkgver/$pkgname-src-$pkgver.tar.gz
+        refind-la64-0.14.0.patch)
+sha512sums=('41c120c1afec37c508aa5c0ec09a6563c3047ef84932308c91701795b950431dfad17d25cf664039b490a302d475add98441b75f90ff71cadce41febedc68a9e'
+            '413d4db728d0942036a8afbd7e0b68473e6175ab13834f79586a2597043803cb505d70081bfbd00f2f74f96ee54c85baecc2efab8c4a80b999193eaa9cfaffdd')
+b2sums=('02019ddb872ce44d2a2119902edebd633f925d49634e3bcc6bfb2c9dedb8ce213166909395a333d3a37e95c67720e31b1f5fcf25083801c17d645372aa54a06a'
+        'd54284e8da0292bddb79edb230ff36058053b6c5a3452c1b0d4b12a05d535169c83ff1dd9b31569de2d9e97a64eecff9c9f441369bbaccfc219f16aba383679f')
 _arch='x64'
 
 prepare() {
   cd $pkgbase-$pkgver
+  patch -p1 -i $srcdir/refind-la64-0.14.0.patch
   # remove the path prefix from the css reference, so that the css can live
   # in the same directory
   sed -e 's|../Styles/||g' -i docs/$pkgbase/*.html
@@ -63,11 +67,17 @@ package_refind() {
   )
 
   cd $pkgbase-$pkgver
+  if [ "$CARCH" == "loong64" ]; then
+    _arch='loongarch64'
+  else
+    _arch='x64'
+  fi
   # NOTE: the install target calls refind-install, therefore we install things
   # manually
   # efi binaries
   install -vDm 644 refind/*.efi -t "$pkgdir/usr/share/$pkgname/"
   install -vDm 644 drivers_*/*.efi -t "$pkgdir/usr/share/refind/drivers_$_arch/"
+  rm -f "$pkgdir/usr/share/refind/drivers_loongarch64/ext4_loongarch64.efi"
   install -vDm 644 gptsync/*.efi -t "$pkgdir/usr/share/$pkgname/tools_$_arch/"
   # sample config
   install -vDm 644 $pkgname.conf-sample -t "$pkgdir/usr/share/$pkgname/"

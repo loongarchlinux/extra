@@ -18,13 +18,12 @@ url="https://www.blender.org"
 depends=('libpng' 'libtiff' 'openexr' 'python' 'desktop-file-utils' 'python-requests' 'potrace'
          'shared-mime-info' 'hicolor-icon-theme' 'xdg-utils' 'glew' 'openjpeg2' 'python-numpy'
          'freetype2' 'openal' 'ffmpeg' 'fftw' 'boost-libs' 'opencollada' 'alembic' 'openxr'
-         'openimageio' 'libsndfile' 'jack' 'opencolorio' 'openimagedenoise' 'materialx'
-         'jemalloc' 'libspnav' 'ptex' 'opensubdiv' 'openvdb' 'sdl2' 'embree' 'libharu'
-         'draco' 'openpgl' 'level-zero-loader' 'libxkbcommon' 'libepoxy' 'usd' 'openshadinglanguage'
+         'openimageio' 'libsndfile' 'jack' 'opencolorio'
+         'jemalloc' 'libspnav' 'ptex' 'opensubdiv' 'openvdb' 'sdl2' 'libharu'
+         'draco' 'level-zero-loader' 'libxkbcommon' 'libepoxy' 'openshadinglanguage'
          'intel-oneapi-compiler-shared-runtime-libs' 'intel-oneapi-compiler-dpcpp-cpp-runtime-libs')
 makedepends=('cmake' 'boost' 'mesa' 'git' 'subversion' 'llvm' 'cuda' 'ninja' 'wayland-protocols' 'libxkbcommon'
-             'libdecor' 'hip-runtime-amd' 'level-zero-headers' 'intel-oneapi-dpcpp-cpp'
-             'intel-oneapi-compiler-shared-runtime' 'intel-compute-runtime')
+             'libdecor' 'level-zero-headers')
 optdepends=('cuda: Cycles renderer CUDA support'
             'intel-compute-runtime: Cycles renderer Intel OneAPI support'
             'libdecor: wayland support')
@@ -117,6 +116,8 @@ build() {
     -DWITH_PYTHON_INSTALL=OFF \
     -DOCLOC_INSTALL_DIR=/usr \
     -DUSD_ROOT_DIR=/usr \
+    -DWITH_MATERIALX=OFF \
+    -DWITH_CYCLES=OFF \
     -DSYCL_OFFLINE_COMPILER_PARALLEL_JOBS=8
   cmake --build build
     # For debug:
@@ -142,5 +143,5 @@ package() {
   rm -r "${pkgdir}"/usr/share/blender/4*/python
 
   # Move OneAPI AOT lib to proper place
-  mv "${pkgdir}"/usr/share/blender/lib/libcycles_kernel_oneapi_aot.so "${pkgdir}"/usr/lib/
+#  mv "${pkgdir}"/usr/share/blender/lib/libcycles_kernel_oneapi_aot.so "${pkgdir}"/usr/lib/
 }

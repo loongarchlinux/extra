@@ -15,8 +15,15 @@ makedepends=('clang')
 options=('!lto')
 provides=('libjemalloc.so')
 optdepends=('perl: for jeprof')
-source=("https://github.com/jemalloc/jemalloc/releases/download/${pkgver}/${pkgname}-${pkgver}.tar.bz2")
-sha256sums=('2db82d1e7119df3e71b7640219b6dfe84789bc0537983c3b7ac4f7189aecfeaa')
+source=("https://github.com/jemalloc/jemalloc/releases/download/${pkgver}/${pkgname}-${pkgver}.tar.bz2"
+    add-loongarch64.patch)
+sha256sums=('2db82d1e7119df3e71b7640219b6dfe84789bc0537983c3b7ac4f7189aecfeaa'
+            '5e8f375b5d5aec487d65a7681b3574aa0e19927b1d2d9140fc9dba2cf74a961d')
+
+prepare() {
+	cd "$pkgname-$pkgver"
+	patch -p1 -i "$srcdir/add-loongarch64.patch"
+}
 
 build() {
   cd $pkgname-$pkgver
@@ -24,6 +31,10 @@ build() {
   # FS#71745: GCC-built jemalloc causes telegram-desktop to crash a lot. The reason is still not clear.
   export CC=clang
   export CXX=clang++
+  CFLAGS=${CFLAGS/-mlsx /}
+  CXXFLAGS=${CXXFLAGS/-mlsx /}
+  CFLAGS=${CFLAGS/-fstack-clash-protection/}
+  CXXFLAGS=${CXXFLAGS/-fstack-clash-protection/}
 
   ./configure \
     --enable-prof \

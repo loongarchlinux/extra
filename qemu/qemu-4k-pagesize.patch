@@ -1,0 +1,58 @@
+commit 281001f601e289d7c807de73ad0e70761938977b
+Author: Song Gao <gaosong@loongson.cn>
+Date:   Mon Oct 23 10:40:59 2023 +0800
+
+    target/loongarch: Support 4K page size
+    
+    The LoongArch kernel supports 4K page size.
+    Change TARGET_PAGE_BITS to 12.
+    
+    Signed-off-by: Song Gao <gaosong@loongson.cn>
+    Message-Id: <20231023024059.3858349-1-gaosong@loongson.cn>
+
+diff --git a/target/loongarch/cpu-param.h b/target/loongarch/cpu-param.h
+index 1265dc7cb5..cfe195db4e 100644
+--- a/target/loongarch/cpu-param.h
++++ b/target/loongarch/cpu-param.h
+@@ -12,6 +12,6 @@
+ #define TARGET_PHYS_ADDR_SPACE_BITS 48
+ #define TARGET_VIRT_ADDR_SPACE_BITS 48
+ 
+-#define TARGET_PAGE_BITS 14
++#define TARGET_PAGE_BITS 12
+ 
+ #endif
+diff --git a/target/loongarch/tlb_helper.c b/target/loongarch/tlb_helper.c
+index 6e00190547..903bb76bda 100644
+--- a/target/loongarch/tlb_helper.c
++++ b/target/loongarch/tlb_helper.c
+@@ -53,6 +53,9 @@ static int loongarch_map_tlb_entry(CPULoongArchState *env, hwaddr *physical,
+     tlb_nr = FIELD_EX64(tlb_entry, TLBENTRY, NR);
+     tlb_rplv = FIELD_EX64(tlb_entry, TLBENTRY, RPLV);
+ 
++    /* Remove sw bit between bit12 -- bit PS*/
++    tlb_ppn = tlb_ppn & ~(((0x1UL << (tlb_ps - 12)) -1));
++
+     /* Check access rights */
+     if (!tlb_v) {
+         return TLBRET_INVALID;
+@@ -75,10 +78,6 @@ static int loongarch_map_tlb_entry(CPULoongArchState *env, hwaddr *physical,
+         return TLBRET_DIRTY;
+     }
+ 
+-    /*
+-     * tlb_entry contains ppn[47:12] while 16KiB ppn is [47:15]
+-     * need adjust.
+-     */
+     *physical = (tlb_ppn << R_TLBENTRY_PPN_SHIFT) |
+                 (address & MAKE_64BIT_MASK(0, tlb_ps));
+     *prot = PAGE_READ;
+@@ -734,7 +733,7 @@ void helper_ldpte(CPULoongArchState *env, target_ulong base, target_ulong odd,
+         /* Move Global bit */
+         tmp0 = ((tmp0 & (1 << LOONGARCH_HGLOBAL_SHIFT))  >>
+                 LOONGARCH_HGLOBAL_SHIFT) << R_TLBENTRY_G_SHIFT |
+-                (tmp0 & (~(1 << R_TLBENTRY_G_SHIFT)));
++                (tmp0 & (~(1 << LOONGARCH_HGLOBAL_SHIFT)));
+         ps = ptbase + ptwidth - 1;
+         if (odd) {
+             tmp0 += MAKE_64BIT_MASK(ps, 1);

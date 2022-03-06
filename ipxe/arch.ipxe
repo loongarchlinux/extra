@@ -1,4 +1,43 @@
 #!ipxe
-ifconf
-ntp pool.ntp.org
-chain https://ipxe.archlinux.org/releng/netboot/archlinux.ipxe || shell
+#
+
+:netconfig
+dhcp || goto ipxeshell
+
+:prompt
+prompt --key 0x02 --timeout 3000 Press Ctrl-B for the iPXE command line... && goto ipxeshell ||
+
+# We call the default.ipxe script to show and confirm the ipxe client has enough feature.
+set next-server-port 80
+chain http://${next-server}:${next-server-port}/default.ipxe ||
+
+echo
+echo Failed to boot to default menu.
+echo Try to reload iPXE from server.
+echo
+
+:netboot
+chain http://58.49.29.194/loongarch/archlinux/netboot/archlinux.ipxe && set server http://58.49.29.194/loongarch/archlinux/ && goto exit ||
+
+:reload
+chain http://${gateway}/ipxe.efi && set server http://${gateway} && goto netconfig ||
+
+:ipxeshell
+echo
+echo mac...............: ${mac}
+echo ip................: ${ip}
+echo netmask...........: ${netmask}
+echo gateway...........: ${gateway}
+echo dns...............: ${dns}
+echo domain............: ${domain}
+echo dhcp-server.......: ${dhcp-server}
+echo filename..........: ${filename}
+echo next-server.......: ${next-server}
+echo hostname..........: ${hostname}
+echo uuid..............: ${uuid}
+echo serial............: ${serial}
+echo
+shell
+
+:exit
+exit

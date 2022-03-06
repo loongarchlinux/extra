@@ -16,7 +16,7 @@ depends=(
 makedepends=(
   autoconf2.13
   clang
-  lld
+#  lld
   llvm
   python
   rust
@@ -57,11 +57,12 @@ ac_add_options --enable-release
 ac_add_options --enable-hardening
 ac_add_options --enable-optimize
 ac_add_options --enable-rust-simd
-ac_add_options --enable-linker=lld
+ac_add_options --enable-linker=bfd
 ac_add_options --disable-bootstrap
 ac_add_options --disable-debug
 ac_add_options --disable-jemalloc
 ac_add_options --disable-strip
+ac_add_options --disable-unified-build
 
 # System libraries
 ac_add_options --with-system-zlib
@@ -82,11 +83,18 @@ build() {
   export MOZBUILD_STATE_PATH="$srcdir/mozbuild"
   export MOZ_BUILD_DATE="$(date -u${SOURCE_DATE_EPOCH:+d @$SOURCE_DATE_EPOCH} +%Y%m%d%H%M%S)"
   export MOZ_NOSPAM=1
+# clang didn't support -mlsx
+  CFLAGS=${CFLAGS/-mlsx /}
+  CXXFLAGS=${CXXFLAGS/-mlsx /}
+  CFLAGS=${CFLAGS/-fstack-clash-protection/}
+  CXXFLAGS=${CXXFLAGS/-fstack-clash-protection/}
 
   # malloc_usable_size is used in various parts of the codebase
   CFLAGS="${CFLAGS/_FORTIFY_SOURCE=3/_FORTIFY_SOURCE=2}"
   CXXFLAGS="${CXXFLAGS/_FORTIFY_SOURCE=3/_FORTIFY_SOURCE=2}"
 
+  # LTO needs more open files
+  ulimit -n 4096
   # Greatly reduce size of relocation tables
   # https://gitlab.archlinux.org/archlinux/rfcs/-/blob/master/rfcs/0023-pack-relative-relocs.rst
   LDFLAGS+=" -Wl,-z,pack-relative-relocs"
@@ -94,40 +102,40 @@ build() {
   # Do 3-tier PGO
   echo "Building instrumented JS..."
   cat >.mozconfig ../mozconfig - <<END
-ac_add_options --enable-profile-generate=cross
+#ac_add_options --enable-profile-generate=cross
 END
   ./mach build
 
-  echo "Profiling instrumented JS..."
-  (
-    local js="$PWD/obj/dist/bin/js"
-    export LLVM_PROFILE_FILE="$PWD/js-%p-%m.profraw"
-
-    cd js/src/octane
-    "$js" run.js
-
-    cd ../../../third_party/webkit/PerformanceTests/ARES-6
-    "$js" cli.js
-
-    cd ../SunSpider/sunspider-0.9.1
-    "$js" sunspider-standalone-driver.js
-  )
-
-  llvm-profdata merge -o merged.profdata *.profraw
-
-  stat -c "Profile data found (%s bytes)" merged.profdata
-  test -s merged.profdata
-
-  echo "Removing instrumented JS..."
-  ./mach clobber
-
-  echo "Building optimized JS..."
-  cat >.mozconfig ../mozconfig - <<END
-ac_add_options --enable-lto=cross,full
-ac_add_options --enable-profile-use=cross
-ac_add_options --with-pgo-profile-path=${PWD@Q}/merged.profdata
-END
-  ./mach build
+#  echo "Profiling instrumented JS..."
+#  (
+#    local js="$PWD/obj/dist/bin/js"
+#    export LLVM_PROFILE_FILE="$PWD/js-%p-%m.profraw"
+#
+#    cd js/src/octane
+#    "$js" run.js
+#
+#    cd ../../../third_party/webkit/PerformanceTests/ARES-6
+#    "$js" cli.js
+#
+#    cd ../SunSpider/sunspider-0.9.1
+#    "$js" sunspider-standalone-driver.js
+#  )
+#
+#  llvm-profdata merge -o merged.profdata *.profraw
+#
+#  stat -c "Profile data found (%s bytes)" merged.profdata
+#  test -s merged.profdata
+#
+#  echo "Removing instrumented JS..."
+#  ./mach clobber
+#
+#  echo "Building optimized JS..."
+#  cat >.mozconfig ../mozconfig - <<END
+#ac_add_options --enable-lto=cross,full
+#ac_add_options --enable-profile-use=cross
+#ac_add_options --with-pgo-profile-path=${PWD@Q}/merged.profdata
+#END
+#  ./mach build
 }
 
 check() {

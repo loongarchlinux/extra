@@ -11,8 +11,8 @@ shopt -s extglob
 
 pkgbase=ghc
 pkgname=(ghc-libs ghc ghc-static)
-pkgver=9.0.2
-pkgrel=3
+pkgver=9.4.7
+pkgrel=1
 pkgdesc='The Glasgow Haskell Compiler'
 arch=('loong64' 'x86_64')
 url='https://www.haskell.org/ghc/'
@@ -23,7 +23,7 @@ source=("https://downloads.haskell.org/~ghc/$pkgver/$pkgbase-${pkgver}-src.tar.x
         ghc-sphinx-6.patch::https://gitlab.haskell.org/ghc/ghc/-/commit/00dc51060881df81258ba3b3bdf447294618a4de.patch
         ghc-rebuild-doc-index.hook ghc-register.hook ghc-unregister.hook)
 noextract=("$pkgbase-${pkgver}-src.tar.xz")
-sha512sums=('32994c7d2b8f47bae604cd825bfcf9c788d79ce26d1d5f58bd73a7093e11ae6c3c17b31dc0c9e454dbf67ca169b942f92213c388d615768cae86055bf6094dee'
+sha512sums=('0fa2b864e90e6b76fa5a12b7ab417c0b945653707cdbc4942fbba58f93baee43b6160bb23aa0aa1282907022956275fa5469875059a743f181987d1b067f30e2'
             '7a79a5e9591b1ddd78fa349526a85cf9fee64db80639dcf1f3d6edef422fd4454222aedf5581e21489a20d748656265a40e7645004e4d5220280f6214c568e64'
             'd69e5222d1169c4224a2b69a13e57fdd574cb1b5932b15f4bc6c7d269a9658dd87acb1be81f52fbcf3cb64f96978b9943d10cee2c21bff0565aaa93a5d35fcae'
             '5f659651d8e562a4dcaae0f821d272d6e9c648b645b1d6ab1af61e4dd690dc5a4b9c6846753b7f935963f001bb1ae1f40cd77731b71ef5a8dbc079a360aa3f8f'
@@ -36,19 +36,19 @@ prepare() {
   LANG=en_US.UTF-8 bsdtar xf $pkgbase-${pkgver}-src.tar.xz
 
   cd ghc-$pkgver
-  patch -p1 -i ../ghc-sphinx-6.patch
+  #patch -p1 -i ../ghc-sphinx-6.patch
 
   # Suppress warnings for newer LLVM. LlvmMaxVersion is non-inclusive and currently GHC
   # doesn't work with LLVM 15: https://gitlab.haskell.org/ghc/ghc/-/merge_requests/8999
-  sed -i 's/LlvmMaxVersion=13/LlvmMaxVersion=15/' configure.ac
+  #sed -i 's/LlvmMaxVersion=13/LlvmMaxVersion=15/' configure.ac
 
   # Temporary hack to use LLVM 14 for bootstrapping during LLVM 15 rebuild.
-  export PATH="/usr/lib/llvm14/bin/:$PATH"
+  #export PATH="/usr/lib/llvm14/bin/:$PATH"
 
   cp mk/build.mk{.sample,}
   sed -i '1iBuildFlavour = perf-llvm' mk/build.mk
 
-  ./boot
+  ./boot.source
 }
 
 build() {

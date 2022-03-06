@@ -7,9 +7,9 @@
 pkgbase=rust
 pkgname=(
   rust
-  lib32-rust-libs
-  rust-musl
-  rust-wasm
+#  lib32-rust-libs
+#  rust-musl
+#  rust-wasm
   rust-src
 )
 epoch=1
@@ -35,11 +35,11 @@ depends=(
 )
 makedepends=(
   cmake
-  lib32-gcc-libs
+#  lib32-gcc-libs
   libffi
   lld
   llvm
-  musl
+#  musl
   ninja
   perl
   python
@@ -50,6 +50,7 @@ checkdepends=(
   gdb
   procps-ng
 )
+SKIPCONFIG=1
 source=(
   "https://static.rust-lang.org/dist/rustc-$pkgver-src.tar.gz"{,.asc}
   0001-bootstrap-Change-libexec-dir.patch
@@ -91,13 +92,7 @@ change-id = 116881
 link-shared = true
 
 [build]
-target = [
-  "x86_64-unknown-linux-gnu",
-  "i686-unknown-linux-gnu",
-  "x86_64-unknown-linux-musl",
-  "wasm32-unknown-unknown",
-  "wasm32-wasi",
-]
+target = [ "loongarch64-unknown-linux-gnu" ]
 cargo = "/usr/bin/cargo"
 rustc = "/usr/bin/rustc"
 rustfmt = "/usr/bin/rustfmt"
@@ -147,31 +142,31 @@ deny-warnings = false
 [dist]
 compression-formats = ["gz"]
 
-[target.x86_64-unknown-linux-gnu]
+[target.loongarch64-unknown-linux-gnu]
 cc = "/usr/bin/gcc"
 cxx = "/usr/bin/g++"
 ar = "/usr/bin/gcc-ar"
 ranlib = "/usr/bin/gcc-ranlib"
 llvm-config = "/usr/bin/llvm-config"
 
-[target.i686-unknown-linux-gnu]
-cc = "/usr/bin/gcc"
-cxx = "/usr/bin/g++"
-ar = "/usr/bin/gcc-ar"
-ranlib = "/usr/bin/gcc-ranlib"
-
-[target.x86_64-unknown-linux-musl]
-sanitizers = false
-musl-root = "/usr/lib/musl"
-
-[target.wasm32-unknown-unknown]
-sanitizers = false
-profiler = false
-
-[target.wasm32-wasi]
-sanitizers = false
-profiler = false
-wasi-root = "/usr/share/wasi-sysroot"
+#[target.i686-unknown-linux-gnu]
+#cc = "/usr/bin/gcc"
+#cxx = "/usr/bin/g++"
+#ar = "/usr/bin/gcc-ar"
+#ranlib = "/usr/bin/gcc-ranlib"
+#
+#[target.x86_64-unknown-linux-musl]
+#sanitizers = false
+#musl-root = "/usr/lib/musl"
+#
+#[target.wasm32-unknown-unknown]
+#sanitizers = false
+#profiler = false
+#
+#[target.wasm32-wasi]
+#sanitizers = false
+#profiler = false
+#wasi-root = "/usr/share/wasi-sysroot"
 END
 }
 
@@ -201,16 +196,16 @@ build() {
 
   # rustbuild always installs copies of the shared libraries to /usr/lib,
   # overwrite them with symlinks to the per-architecture versions
-  mkdir -p usr/lib32
-  ln -srft usr/lib   usr/lib/rustlib/x86_64-unknown-linux-gnu/lib/*.so
-  ln -srft usr/lib32 usr/lib/rustlib/i686-unknown-linux-gnu/lib/*.so
+#mkdir -p usr/lib32
+  ln -srft usr/lib   usr/lib/rustlib/loongarch64-unknown-linux-gnu/lib/*.so
+#ln -srft usr/lib32 usr/lib/rustlib/i686-unknown-linux-gnu/lib/*.so
 
   mkdir -p usr/share/licenses/rust
   mv -t usr/share/licenses/rust usr/share/doc/rust/{COPYRIGHT,LICENSE*}
 
-  _pick dest-i686 usr/lib/rustlib/i686-unknown-linux-gnu usr/lib32
-  _pick dest-musl usr/lib/rustlib/x86_64-unknown-linux-musl
-  _pick dest-wasm usr/lib/rustlib/wasm32-*
+#_pick dest-i686 usr/lib/rustlib/i686-unknown-linux-gnu usr/lib32
+#_pick dest-musl usr/lib/rustlib/loongarch64-unknown-linux-musl
+#_pick dest-wasm usr/lib/rustlib/wasm32-*
   _pick dest-src  usr/lib/rustlib/src
 }
 

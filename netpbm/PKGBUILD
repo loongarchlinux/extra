@@ -37,6 +37,8 @@ validpgpkeys=('5357F3B111688D88C1D88119FCF2CB179205AC90')
 
 prepare() {
   cd $pkgname-$pkgver
+  CFLAGS=${CFLAGS/-Wformat -Werror=format-security/}
+  CXXFLAGS=${CXXFLAGS/-Wformat -Werror=format-security/}
 
   patch -p1 < ../netpbm-CAN-2005-2471.patch
   patch -p1 < ../netpbm-security-code.patch
@@ -45,6 +47,7 @@ prepare() {
 
   cp config.mk.in  config.mk
   [ "${CARCH}" = 'x86_64' ] && echo 'CFLAGS_SHLIB = -fPIC' >> config.mk
+  [ "${CARCH}" = 'loong64' ] && echo 'CFLAGS_SHLIB = -fPIC' >> config.mk
   echo "NETPBM_DOCURL = file://${srcdir}/doc" >> config.mk
   echo 'TIFFLIB = libtiff.so' >> config.mk
   echo 'JPEGLIB = libjpeg.so' >> config.mk

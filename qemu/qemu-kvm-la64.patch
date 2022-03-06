@@ -1,0 +1,1680 @@
+diff --git a/include/standard-headers/linux/fuse.h b/include/standard-headers/linux/fuse.h
+index 35c131a107..6b9793842c 100644
+--- a/include/standard-headers/linux/fuse.h
++++ b/include/standard-headers/linux/fuse.h
+@@ -206,6 +206,11 @@
+  *  - add extension header
+  *  - add FUSE_EXT_GROUPS
+  *  - add FUSE_CREATE_SUPP_GROUP
++ *  - add FUSE_HAS_EXPIRE_ONLY
++ *
++ *  7.39
++ *  - add FUSE_DIRECT_IO_RELAX
++ *  - add FUSE_STATX and related structures
+  */
+ 
+ #ifndef _LINUX_FUSE_H
+@@ -237,7 +242,7 @@
+ #define FUSE_KERNEL_VERSION 7
+ 
+ /** Minor version number of this interface */
+-#define FUSE_KERNEL_MINOR_VERSION 38
++#define FUSE_KERNEL_MINOR_VERSION 39
+ 
+ /** The node ID of the root inode */
+ #define FUSE_ROOT_ID 1
+@@ -264,6 +269,40 @@ struct fuse_attr {
+ 	uint32_t	flags;
+ };
+ 
++/*
++ * The following structures are bit-for-bit compatible with the statx(2) ABI in
++ * Linux.
++ */
++struct fuse_sx_time {
++	int64_t		tv_sec;
++	uint32_t	tv_nsec;
++	int32_t		__reserved;
++};
++
++struct fuse_statx {
++	uint32_t	mask;
++	uint32_t	blksize;
++	uint64_t	attributes;
++	uint32_t	nlink;
++	uint32_t	uid;
++	uint32_t	gid;
++	uint16_t	mode;
++	uint16_t	__spare0[1];
++	uint64_t	ino;
++	uint64_t	size;
++	uint64_t	blocks;
++	uint64_t	attributes_mask;
++	struct fuse_sx_time	atime;
++	struct fuse_sx_time	btime;
++	struct fuse_sx_time	ctime;
++	struct fuse_sx_time	mtime;
++	uint32_t	rdev_major;
++	uint32_t	rdev_minor;
++	uint32_t	dev_major;
++	uint32_t	dev_minor;
++	uint64_t	__spare2[14];
++};
++
+ struct fuse_kstatfs {
+ 	uint64_t	blocks;
+ 	uint64_t	bfree;
+@@ -365,6 +404,9 @@ struct fuse_file_lock {
+  * FUSE_HAS_INODE_DAX:  use per inode DAX
+  * FUSE_CREATE_SUPP_GROUP: add supplementary group info to create, mkdir,
+  *			symlink and mknod (single group that matches parent)
++ * FUSE_HAS_EXPIRE_ONLY: kernel supports expiry-only entry invalidation
++ * FUSE_DIRECT_IO_RELAX: relax restrictions in FOPEN_DIRECT_IO mode, for now
++ *                       allow shared mmap
+  */
+ #define FUSE_ASYNC_READ		(1 << 0)
+ #define FUSE_POSIX_LOCKS	(1 << 1)
+@@ -402,6 +444,8 @@ struct fuse_file_lock {
+ #define FUSE_SECURITY_CTX	(1ULL << 32)
+ #define FUSE_HAS_INODE_DAX	(1ULL << 33)
+ #define FUSE_CREATE_SUPP_GROUP	(1ULL << 34)
++#define FUSE_HAS_EXPIRE_ONLY	(1ULL << 35)
++#define FUSE_DIRECT_IO_RELAX	(1ULL << 36)
+ 
+ /**
+  * CUSE INIT request/reply flags
+@@ -568,6 +612,7 @@ enum fuse_opcode {
+ 	FUSE_REMOVEMAPPING	= 49,
+ 	FUSE_SYNCFS		= 50,
+ 	FUSE_TMPFILE		= 51,
++	FUSE_STATX		= 52,
+ 
+ 	/* CUSE specific operations */
+ 	CUSE_INIT		= 4096,
+@@ -632,6 +677,22 @@ struct fuse_attr_out {
+ 	struct fuse_attr attr;
+ };
+ 
++struct fuse_statx_in {
++	uint32_t	getattr_flags;
++	uint32_t	reserved;
++	uint64_t	fh;
++	uint32_t	sx_flags;
++	uint32_t	sx_mask;
++};
++
++struct fuse_statx_out {
++	uint64_t	attr_valid;	/* Cache timeout for the attributes */
++	uint32_t	attr_valid_nsec;
++	uint32_t	flags;
++	uint64_t	spare[2];
++	struct fuse_statx stat;
++};
++
+ #define FUSE_COMPAT_MKNOD_IN_SIZE 8
+ 
+ struct fuse_mknod_in {
+diff --git a/include/standard-headers/linux/vhost_types.h b/include/standard-headers/linux/vhost_types.h
+index 6691a3ce24..5ad07e134a 100644
+--- a/include/standard-headers/linux/vhost_types.h
++++ b/include/standard-headers/linux/vhost_types.h
+@@ -181,5 +181,9 @@ struct vhost_vdpa_iova_range {
+ #define VHOST_BACKEND_F_SUSPEND  0x4
+ /* Device can be resumed */
+ #define VHOST_BACKEND_F_RESUME  0x5
++/* Device supports the driver enabling virtqueues both before and after
++ * DRIVER_OK
++ */
++#define VHOST_BACKEND_F_ENABLE_AFTER_DRIVER_OK  0x6
+ 
+ #endif
+diff --git a/include/standard-headers/linux/virtio_net.h b/include/standard-headers/linux/virtio_net.h
+index 2325485f2c..0f88417742 100644
+--- a/include/standard-headers/linux/virtio_net.h
++++ b/include/standard-headers/linux/virtio_net.h
+@@ -56,6 +56,7 @@
+ #define VIRTIO_NET_F_MQ	22	/* Device supports Receive Flow
+ 					 * Steering */
+ #define VIRTIO_NET_F_CTRL_MAC_ADDR 23	/* Set MAC address */
++#define VIRTIO_NET_F_VQ_NOTF_COAL 52	/* Device supports virtqueue notification coalescing */
+ #define VIRTIO_NET_F_NOTF_COAL	53	/* Device supports notifications coalescing */
+ #define VIRTIO_NET_F_GUEST_USO4	54	/* Guest can handle USOv4 in. */
+ #define VIRTIO_NET_F_GUEST_USO6	55	/* Guest can handle USOv6 in. */
+@@ -391,5 +392,18 @@ struct virtio_net_ctrl_coal_rx {
+ };
+ 
+ #define VIRTIO_NET_CTRL_NOTF_COAL_RX_SET		1
++#define VIRTIO_NET_CTRL_NOTF_COAL_VQ_SET		2
++#define VIRTIO_NET_CTRL_NOTF_COAL_VQ_GET		3
++
++struct virtio_net_ctrl_coal {
++	uint32_t max_packets;
++	uint32_t max_usecs;
++};
++
++struct  virtio_net_ctrl_coal_vq {
++	uint16_t vqn;
++	uint16_t reserved;
++	struct virtio_net_ctrl_coal coal;
++};
+ 
+ #endif /* _LINUX_VIRTIO_NET_H */
+diff --git a/linux-headers/asm-arm64/bitsperlong.h b/linux-headers/asm-arm64/bitsperlong.h
+index 6dc0bb0c13..485d60bee2 100644
+--- a/linux-headers/asm-arm64/bitsperlong.h
++++ b/linux-headers/asm-arm64/bitsperlong.h
+@@ -1 +1,24 @@
++/* SPDX-License-Identifier: GPL-2.0 WITH Linux-syscall-note */
++/*
++ * Copyright (C) 2012 ARM Ltd.
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License version 2 as
++ * published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
++ */
++#ifndef __ASM_BITSPERLONG_H
++#define __ASM_BITSPERLONG_H
++
++#define __BITS_PER_LONG 64
++
+ #include <asm-generic/bitsperlong.h>
++
++#endif	/* __ASM_BITSPERLONG_H */
+diff --git a/linux-headers/asm-generic/unistd.h b/linux-headers/asm-generic/unistd.h
+index fd6c1cb585..abe087c53b 100644
+--- a/linux-headers/asm-generic/unistd.h
++++ b/linux-headers/asm-generic/unistd.h
+@@ -820,8 +820,11 @@ __SYSCALL(__NR_set_mempolicy_home_node, sys_set_mempolicy_home_node)
+ #define __NR_cachestat 451
+ __SYSCALL(__NR_cachestat, sys_cachestat)
+ 
++#define __NR_fchmodat2 452
++__SYSCALL(__NR_fchmodat2, sys_fchmodat2)
++
+ #undef __NR_syscalls
+-#define __NR_syscalls 452
++#define __NR_syscalls 453
+ 
+ /*
+  * 32 bit systems traditionally used different
+diff --git a/linux-headers/asm-loongarch/kvm.h b/linux-headers/asm-loongarch/kvm.h
+new file mode 100644
+index 0000000000..5e72b83372
+--- /dev/null
++++ b/linux-headers/asm-loongarch/kvm.h
+@@ -0,0 +1,100 @@
++/* SPDX-License-Identifier: GPL-2.0 WITH Linux-syscall-note */
++/*
++ * Copyright (C) 2023 Loongson Technology Corporation Limited
++ */
++
++#ifndef __UAPI_ASM_LOONGARCH_KVM_H
++#define __UAPI_ASM_LOONGARCH_KVM_H
++
++#include <linux/types.h>
++
++/*
++ * KVM Loongarch specific structures and definitions.
++ */
++
++#define __KVM_HAVE_READONLY_MEM
++
++#define KVM_COALESCED_MMIO_PAGE_OFFSET 1
++
++/*
++ * for KVM_GET_REGS and KVM_SET_REGS
++ */
++struct kvm_regs {
++	/* out (KVM_GET_REGS) / in (KVM_SET_REGS) */
++	__u64 gpr[32];
++	__u64 pc;
++};
++
++/*
++ * for KVM_GET_FPU and KVM_SET_FPU
++ */
++struct kvm_fpu {
++	__u32 fcsr;
++	__u32 none;
++	__u64 fcc;    /* 8x8 */
++	struct kvm_fpureg {
++		__u64 val64[4];
++	} fpr[32];
++};
++
++/*
++ * For LoongArch, we use KVM_SET_ONE_REG and KVM_GET_ONE_REG to access various
++ * registers.  The id field is broken down as follows:
++ *
++ *  bits[63..52] - As per linux/kvm.h
++ *  bits[51..32] - Must be zero.
++ *  bits[31..16] - Register set.
++ *
++ * Register set = 0: GP registers from kvm_regs (see definitions below).
++ *
++ * Register set = 1: CSR registers.
++ *
++ * Register set = 2: KVM specific registers (see definitions below).
++ *
++ * Register set = 3: FPU / SIMD registers (see definitions below).
++ *
++ * Other sets registers may be added in the future.  Each set would
++ * have its own identifier in bits[31..16].
++ */
++
++#define KVM_REG_LOONGARCH_GP		(KVM_REG_LOONGARCH | 0x00000ULL)
++#define KVM_REG_LOONGARCH_CSR		(KVM_REG_LOONGARCH | 0x10000ULL)
++#define KVM_REG_LOONGARCH_KVM		(KVM_REG_LOONGARCH | 0x20000ULL)
++#define KVM_REG_LOONGARCH_FPU		(KVM_REG_LOONGARCH | 0x30000ULL)
++#define KVM_REG_LOONGARCH_CPUCFG	(KVM_REG_LOONGARCH | 0x40000ULL)
++#define KVM_REG_LOONGARCH_MASK		(KVM_REG_LOONGARCH | 0x70000ULL)
++#define KVM_CSR_IDX_MASK		0x7fff
++#define KVM_CPUCFG_IDX_MASK		0x7fff
++
++/*
++ * KVM_REG_LOONGARCH_KVM - KVM specific control registers.
++ */
++
++#define KVM_REG_LOONGARCH_COUNTER	(KVM_REG_LOONGARCH_KVM | KVM_REG_SIZE_U64 | 3)
++#define KVM_REG_LOONGARCH_VCPU_RESET	(KVM_REG_LOONGARCH_KVM | KVM_REG_SIZE_U64 | 4)
++
++#define LOONGARCH_REG_SHIFT		3
++#define LOONGARCH_REG_64(TYPE, REG)	(TYPE | KVM_REG_SIZE_U64 | (REG << LOONGARCH_REG_SHIFT))
++#define KVM_IOC_CSRID(REG)		LOONGARCH_REG_64(KVM_REG_LOONGARCH_CSR, REG)
++#define KVM_IOC_CPUCFG(REG)		LOONGARCH_REG_64(KVM_REG_LOONGARCH_CPUCFG, REG)
++
++struct kvm_debug_exit_arch {
++};
++
++/* for KVM_SET_GUEST_DEBUG */
++struct kvm_guest_debug_arch {
++};
++
++/* definition of registers in kvm_run */
++struct kvm_sync_regs {
++};
++
++/* dummy definition */
++struct kvm_sregs {
++};
++
++#define KVM_NR_IRQCHIPS		1
++#define KVM_IRQCHIP_NUM_PINS	64
++#define KVM_MAX_CORES		256
++
++#endif /* __UAPI_ASM_LOONGARCH_KVM_H */
+diff --git a/linux-headers/asm-mips/unistd_n32.h b/linux-headers/asm-mips/unistd_n32.h
+index 8233f061c4..46d8500654 100644
+--- a/linux-headers/asm-mips/unistd_n32.h
++++ b/linux-headers/asm-mips/unistd_n32.h
+@@ -380,5 +380,6 @@
+ #define __NR_futex_waitv (__NR_Linux + 449)
+ #define __NR_set_mempolicy_home_node (__NR_Linux + 450)
+ #define __NR_cachestat (__NR_Linux + 451)
++#define __NR_fchmodat2 (__NR_Linux + 452)
+ 
+ #endif /* _ASM_UNISTD_N32_H */
+diff --git a/linux-headers/asm-mips/unistd_n64.h b/linux-headers/asm-mips/unistd_n64.h
+index a174edc768..c2f7ac673b 100644
+--- a/linux-headers/asm-mips/unistd_n64.h
++++ b/linux-headers/asm-mips/unistd_n64.h
+@@ -356,5 +356,6 @@
+ #define __NR_futex_waitv (__NR_Linux + 449)
+ #define __NR_set_mempolicy_home_node (__NR_Linux + 450)
+ #define __NR_cachestat (__NR_Linux + 451)
++#define __NR_fchmodat2 (__NR_Linux + 452)
+ 
+ #endif /* _ASM_UNISTD_N64_H */
+diff --git a/linux-headers/asm-mips/unistd_o32.h b/linux-headers/asm-mips/unistd_o32.h
+index c1a5351d9b..757c68f2ad 100644
+--- a/linux-headers/asm-mips/unistd_o32.h
++++ b/linux-headers/asm-mips/unistd_o32.h
+@@ -426,5 +426,6 @@
+ #define __NR_futex_waitv (__NR_Linux + 449)
+ #define __NR_set_mempolicy_home_node (__NR_Linux + 450)
+ #define __NR_cachestat (__NR_Linux + 451)
++#define __NR_fchmodat2 (__NR_Linux + 452)
+ 
+ #endif /* _ASM_UNISTD_O32_H */
+diff --git a/linux-headers/asm-powerpc/unistd_32.h b/linux-headers/asm-powerpc/unistd_32.h
+index 8206758691..8ef94bbac1 100644
+--- a/linux-headers/asm-powerpc/unistd_32.h
++++ b/linux-headers/asm-powerpc/unistd_32.h
+@@ -433,6 +433,7 @@
+ #define __NR_futex_waitv 449
+ #define __NR_set_mempolicy_home_node 450
+ #define __NR_cachestat 451
++#define __NR_fchmodat2 452
+ 
+ 
+ #endif /* _ASM_UNISTD_32_H */
+diff --git a/linux-headers/asm-powerpc/unistd_64.h b/linux-headers/asm-powerpc/unistd_64.h
+index 7be98c15f0..0e7ee43e88 100644
+--- a/linux-headers/asm-powerpc/unistd_64.h
++++ b/linux-headers/asm-powerpc/unistd_64.h
+@@ -405,6 +405,7 @@
+ #define __NR_futex_waitv 449
+ #define __NR_set_mempolicy_home_node 450
+ #define __NR_cachestat 451
++#define __NR_fchmodat2 452
+ 
+ 
+ #endif /* _ASM_UNISTD_64_H */
+diff --git a/linux-headers/asm-riscv/bitsperlong.h b/linux-headers/asm-riscv/bitsperlong.h
+index 6dc0bb0c13..cc5c45a9ce 100644
+--- a/linux-headers/asm-riscv/bitsperlong.h
++++ b/linux-headers/asm-riscv/bitsperlong.h
+@@ -1 +1,14 @@
++/* SPDX-License-Identifier: GPL-2.0-only WITH Linux-syscall-note */
++/*
++ * Copyright (C) 2012 ARM Ltd.
++ * Copyright (C) 2015 Regents of the University of California
++ */
++
++#ifndef _ASM_RISCV_BITSPERLONG_H
++#define _ASM_RISCV_BITSPERLONG_H
++
++#define __BITS_PER_LONG (__SIZEOF_POINTER__ * 8)
++
+ #include <asm-generic/bitsperlong.h>
++
++#endif /* _ASM_RISCV_BITSPERLONG_H */
+diff --git a/linux-headers/asm-riscv/kvm.h b/linux-headers/asm-riscv/kvm.h
+index 930fdc4101..992c5e4071 100644
+--- a/linux-headers/asm-riscv/kvm.h
++++ b/linux-headers/asm-riscv/kvm.h
+@@ -55,6 +55,7 @@ struct kvm_riscv_config {
+ 	unsigned long marchid;
+ 	unsigned long mimpid;
+ 	unsigned long zicboz_block_size;
++	unsigned long satp_mode;
+ };
+ 
+ /* CORE registers for KVM_GET_ONE_REG and KVM_SET_ONE_REG */
+@@ -124,6 +125,12 @@ enum KVM_RISCV_ISA_EXT_ID {
+ 	KVM_RISCV_ISA_EXT_SSAIA,
+ 	KVM_RISCV_ISA_EXT_V,
+ 	KVM_RISCV_ISA_EXT_SVNAPOT,
++	KVM_RISCV_ISA_EXT_ZBA,
++	KVM_RISCV_ISA_EXT_ZBS,
++	KVM_RISCV_ISA_EXT_ZICNTR,
++	KVM_RISCV_ISA_EXT_ZICSR,
++	KVM_RISCV_ISA_EXT_ZIFENCEI,
++	KVM_RISCV_ISA_EXT_ZIHPM,
+ 	KVM_RISCV_ISA_EXT_MAX,
+ };
+ 
+@@ -193,6 +200,15 @@ enum KVM_RISCV_SBI_EXT_ID {
+ 
+ /* ISA Extension registers are mapped as type 7 */
+ #define KVM_REG_RISCV_ISA_EXT		(0x07 << KVM_REG_RISCV_TYPE_SHIFT)
++#define KVM_REG_RISCV_ISA_SINGLE	(0x0 << KVM_REG_RISCV_SUBTYPE_SHIFT)
++#define KVM_REG_RISCV_ISA_MULTI_EN	(0x1 << KVM_REG_RISCV_SUBTYPE_SHIFT)
++#define KVM_REG_RISCV_ISA_MULTI_DIS	(0x2 << KVM_REG_RISCV_SUBTYPE_SHIFT)
++#define KVM_REG_RISCV_ISA_MULTI_REG(__ext_id)	\
++		((__ext_id) / __BITS_PER_LONG)
++#define KVM_REG_RISCV_ISA_MULTI_MASK(__ext_id)	\
++		(1UL << ((__ext_id) % __BITS_PER_LONG))
++#define KVM_REG_RISCV_ISA_MULTI_REG_LAST	\
++		KVM_REG_RISCV_ISA_MULTI_REG(KVM_RISCV_ISA_EXT_MAX - 1)
+ 
+ /* SBI extension registers are mapped as type 8 */
+ #define KVM_REG_RISCV_SBI_EXT		(0x08 << KVM_REG_RISCV_TYPE_SHIFT)
+diff --git a/linux-headers/asm-s390/kvm.h b/linux-headers/asm-s390/kvm.h
+index e2afd95420..023a2763a9 100644
+--- a/linux-headers/asm-s390/kvm.h
++++ b/linux-headers/asm-s390/kvm.h
+@@ -159,6 +159,22 @@ struct kvm_s390_vm_cpu_subfunc {
+ 	__u8 reserved[1728];
+ };
+ 
++#define KVM_S390_VM_CPU_PROCESSOR_UV_FEAT_GUEST	6
++#define KVM_S390_VM_CPU_MACHINE_UV_FEAT_GUEST	7
++
++#define KVM_S390_VM_CPU_UV_FEAT_NR_BITS	64
++struct kvm_s390_vm_cpu_uv_feat {
++	union {
++		struct {
++			__u64 : 4;
++			__u64 ap : 1;		/* bit 4 */
++			__u64 ap_intr : 1;	/* bit 5 */
++			__u64 : 58;
++		};
++		__u64 feat;
++	};
++};
++
+ /* kvm attributes for crypto */
+ #define KVM_S390_VM_CRYPTO_ENABLE_AES_KW	0
+ #define KVM_S390_VM_CRYPTO_ENABLE_DEA_KW	1
+diff --git a/linux-headers/asm-s390/unistd_32.h b/linux-headers/asm-s390/unistd_32.h
+index ef772cc5f8..716fa368ca 100644
+--- a/linux-headers/asm-s390/unistd_32.h
++++ b/linux-headers/asm-s390/unistd_32.h
+@@ -424,5 +424,6 @@
+ #define __NR_futex_waitv 449
+ #define __NR_set_mempolicy_home_node 450
+ #define __NR_cachestat 451
++#define __NR_fchmodat2 452
+ 
+ #endif /* _ASM_S390_UNISTD_32_H */
+diff --git a/linux-headers/asm-s390/unistd_64.h b/linux-headers/asm-s390/unistd_64.h
+index 32354a0459..b2a11b1d13 100644
+--- a/linux-headers/asm-s390/unistd_64.h
++++ b/linux-headers/asm-s390/unistd_64.h
+@@ -372,5 +372,6 @@
+ #define __NR_futex_waitv 449
+ #define __NR_set_mempolicy_home_node 450
+ #define __NR_cachestat 451
++#define __NR_fchmodat2 452
+ 
+ #endif /* _ASM_S390_UNISTD_64_H */
+diff --git a/linux-headers/asm-x86/mman.h b/linux-headers/asm-x86/mman.h
+index 775dbd3aff..46cdc941f9 100644
+--- a/linux-headers/asm-x86/mman.h
++++ b/linux-headers/asm-x86/mman.h
+@@ -3,14 +3,10 @@
+ #define _ASM_X86_MMAN_H
+ 
+ #define MAP_32BIT	0x40		/* only give out 32bit addresses */
++#define MAP_ABOVE4G	0x80		/* only map above 4GB */
+ 
+-#ifdef CONFIG_X86_INTEL_MEMORY_PROTECTION_KEYS
+-#define arch_calc_vm_prot_bits(prot, key) (		\
+-		((key) & 0x1 ? VM_PKEY_BIT0 : 0) |      \
+-		((key) & 0x2 ? VM_PKEY_BIT1 : 0) |      \
+-		((key) & 0x4 ? VM_PKEY_BIT2 : 0) |      \
+-		((key) & 0x8 ? VM_PKEY_BIT3 : 0))
+-#endif
++/* Flags for map_shadow_stack(2) */
++#define SHADOW_STACK_SET_TOKEN	(1ULL << 0)	/* Set up a restore token in the shadow stack */
+ 
+ #include <asm-generic/mman.h>
+ 
+diff --git a/linux-headers/asm-x86/unistd_32.h b/linux-headers/asm-x86/unistd_32.h
+index 37b32d8139..d749ad1c24 100644
+--- a/linux-headers/asm-x86/unistd_32.h
++++ b/linux-headers/asm-x86/unistd_32.h
+@@ -442,6 +442,7 @@
+ #define __NR_futex_waitv 449
+ #define __NR_set_mempolicy_home_node 450
+ #define __NR_cachestat 451
++#define __NR_fchmodat2 452
+ 
+ 
+ #endif /* _ASM_UNISTD_32_H */
+diff --git a/linux-headers/asm-x86/unistd_64.h b/linux-headers/asm-x86/unistd_64.h
+index 5b55d6729a..cea67282eb 100644
+--- a/linux-headers/asm-x86/unistd_64.h
++++ b/linux-headers/asm-x86/unistd_64.h
+@@ -364,6 +364,8 @@
+ #define __NR_futex_waitv 449
+ #define __NR_set_mempolicy_home_node 450
+ #define __NR_cachestat 451
++#define __NR_fchmodat2 452
++#define __NR_map_shadow_stack 453
+ 
+ 
+ #endif /* _ASM_UNISTD_64_H */
+diff --git a/linux-headers/asm-x86/unistd_x32.h b/linux-headers/asm-x86/unistd_x32.h
+index e8a007543d..5b2e79bf4c 100644
+--- a/linux-headers/asm-x86/unistd_x32.h
++++ b/linux-headers/asm-x86/unistd_x32.h
+@@ -317,6 +317,7 @@
+ #define __NR_futex_waitv (__X32_SYSCALL_BIT + 449)
+ #define __NR_set_mempolicy_home_node (__X32_SYSCALL_BIT + 450)
+ #define __NR_cachestat (__X32_SYSCALL_BIT + 451)
++#define __NR_fchmodat2 (__X32_SYSCALL_BIT + 452)
+ #define __NR_rt_sigaction (__X32_SYSCALL_BIT + 512)
+ #define __NR_rt_sigreturn (__X32_SYSCALL_BIT + 513)
+ #define __NR_ioctl (__X32_SYSCALL_BIT + 514)
+diff --git a/linux-headers/linux/kvm.h b/linux-headers/linux/kvm.h
+index 1f3f3333a4..0e378bbcbf 100644
+--- a/linux-headers/linux/kvm.h
++++ b/linux-headers/linux/kvm.h
+@@ -264,6 +264,7 @@ struct kvm_xen_exit {
+ #define KVM_EXIT_RISCV_SBI        35
+ #define KVM_EXIT_RISCV_CSR        36
+ #define KVM_EXIT_NOTIFY           37
++#define KVM_EXIT_LOONGARCH_IOCSR  38
+ 
+ /* For KVM_EXIT_INTERNAL_ERROR */
+ /* Emulate instruction failed. */
+@@ -336,6 +337,13 @@ struct kvm_run {
+ 			__u32 len;
+ 			__u8  is_write;
+ 		} mmio;
++		/* KVM_EXIT_LOONGARCH_IOCSR */
++		struct {
++			__u64 phys_addr;
++			__u8  data[8];
++			__u32 len;
++			__u8  is_write;
++		} iocsr_io;
+ 		/* KVM_EXIT_HYPERCALL */
+ 		struct {
+ 			__u64 nr;
+@@ -1358,6 +1366,7 @@ struct kvm_dirty_tlb {
+ #define KVM_REG_ARM64		0x6000000000000000ULL
+ #define KVM_REG_MIPS		0x7000000000000000ULL
+ #define KVM_REG_RISCV		0x8000000000000000ULL
++#define KVM_REG_LOONGARCH	0x9000000000000000ULL
+ 
+ #define KVM_REG_SIZE_SHIFT	52
+ #define KVM_REG_SIZE_MASK	0x00f0000000000000ULL
+@@ -1414,9 +1423,16 @@ struct kvm_device_attr {
+ 	__u64	addr;		/* userspace address of attr data */
+ };
+ 
+-#define  KVM_DEV_VFIO_GROUP			1
+-#define   KVM_DEV_VFIO_GROUP_ADD			1
+-#define   KVM_DEV_VFIO_GROUP_DEL			2
++#define  KVM_DEV_VFIO_FILE			1
++
++#define   KVM_DEV_VFIO_FILE_ADD			1
++#define   KVM_DEV_VFIO_FILE_DEL			2
++
++/* KVM_DEV_VFIO_GROUP aliases are for compile time uapi compatibility */
++#define  KVM_DEV_VFIO_GROUP	KVM_DEV_VFIO_FILE
++
++#define   KVM_DEV_VFIO_GROUP_ADD	KVM_DEV_VFIO_FILE_ADD
++#define   KVM_DEV_VFIO_GROUP_DEL	KVM_DEV_VFIO_FILE_DEL
+ #define   KVM_DEV_VFIO_GROUP_SET_SPAPR_TCE		3
+ 
+ enum kvm_device_type {
+diff --git a/linux-headers/linux/stddef.h b/linux-headers/linux/stddef.h
+index bb6ea517ef..9bb07083ac 100644
+--- a/linux-headers/linux/stddef.h
++++ b/linux-headers/linux/stddef.h
+@@ -45,3 +45,7 @@
+ 		TYPE NAME[]; \
+ 	}
+ #endif
++
++#ifndef __counted_by
++#define __counted_by(m)
++#endif
+diff --git a/linux-headers/linux/userfaultfd.h b/linux-headers/linux/userfaultfd.h
+index 14e402263a..59978fbaae 100644
+--- a/linux-headers/linux/userfaultfd.h
++++ b/linux-headers/linux/userfaultfd.h
+@@ -39,7 +39,8 @@
+ 			   UFFD_FEATURE_MINOR_SHMEM |		\
+ 			   UFFD_FEATURE_EXACT_ADDRESS |		\
+ 			   UFFD_FEATURE_WP_HUGETLBFS_SHMEM |	\
+-			   UFFD_FEATURE_WP_UNPOPULATED)
++			   UFFD_FEATURE_WP_UNPOPULATED |	\
++			   UFFD_FEATURE_POISON)
+ #define UFFD_API_IOCTLS				\
+ 	((__u64)1 << _UFFDIO_REGISTER |		\
+ 	 (__u64)1 << _UFFDIO_UNREGISTER |	\
+@@ -49,12 +50,14 @@
+ 	 (__u64)1 << _UFFDIO_COPY |		\
+ 	 (__u64)1 << _UFFDIO_ZEROPAGE |		\
+ 	 (__u64)1 << _UFFDIO_WRITEPROTECT |	\
+-	 (__u64)1 << _UFFDIO_CONTINUE)
++	 (__u64)1 << _UFFDIO_CONTINUE |		\
++	 (__u64)1 << _UFFDIO_POISON)
+ #define UFFD_API_RANGE_IOCTLS_BASIC		\
+ 	((__u64)1 << _UFFDIO_WAKE |		\
+ 	 (__u64)1 << _UFFDIO_COPY |		\
++	 (__u64)1 << _UFFDIO_WRITEPROTECT |	\
+ 	 (__u64)1 << _UFFDIO_CONTINUE |		\
+-	 (__u64)1 << _UFFDIO_WRITEPROTECT)
++	 (__u64)1 << _UFFDIO_POISON)
+ 
+ /*
+  * Valid ioctl command number range with this API is from 0x00 to
+@@ -71,6 +74,7 @@
+ #define _UFFDIO_ZEROPAGE		(0x04)
+ #define _UFFDIO_WRITEPROTECT		(0x06)
+ #define _UFFDIO_CONTINUE		(0x07)
++#define _UFFDIO_POISON			(0x08)
+ #define _UFFDIO_API			(0x3F)
+ 
+ /* userfaultfd ioctl ids */
+@@ -91,6 +95,8 @@
+ 				      struct uffdio_writeprotect)
+ #define UFFDIO_CONTINUE		_IOWR(UFFDIO, _UFFDIO_CONTINUE,	\
+ 				      struct uffdio_continue)
++#define UFFDIO_POISON		_IOWR(UFFDIO, _UFFDIO_POISON, \
++				      struct uffdio_poison)
+ 
+ /* read() structure */
+ struct uffd_msg {
+@@ -225,6 +231,7 @@ struct uffdio_api {
+ #define UFFD_FEATURE_EXACT_ADDRESS		(1<<11)
+ #define UFFD_FEATURE_WP_HUGETLBFS_SHMEM		(1<<12)
+ #define UFFD_FEATURE_WP_UNPOPULATED		(1<<13)
++#define UFFD_FEATURE_POISON			(1<<14)
+ 	__u64 features;
+ 
+ 	__u64 ioctls;
+@@ -321,6 +328,18 @@ struct uffdio_continue {
+ 	__s64 mapped;
+ };
+ 
++struct uffdio_poison {
++	struct uffdio_range range;
++#define UFFDIO_POISON_MODE_DONTWAKE		((__u64)1<<0)
++	__u64 mode;
++
++	/*
++	 * Fields below here are written by the ioctl and must be at the end:
++	 * the copy_from_user will not read past here.
++	 */
++	__s64 updated;
++};
++
+ /*
+  * Flags for the userfaultfd(2) system call itself.
+  */
+diff --git a/linux-headers/linux/vfio.h b/linux-headers/linux/vfio.h
+index 16db89071e..acf72b4999 100644
+--- a/linux-headers/linux/vfio.h
++++ b/linux-headers/linux/vfio.h
+@@ -217,6 +217,7 @@ struct vfio_device_info {
+ 	__u32	num_regions;	/* Max region index + 1 */
+ 	__u32	num_irqs;	/* Max IRQ index + 1 */
+ 	__u32   cap_offset;	/* Offset within info struct of first cap */
++	__u32   pad;
+ };
+ #define VFIO_DEVICE_GET_INFO		_IO(VFIO_TYPE, VFIO_BASE + 7)
+ 
+@@ -677,11 +678,60 @@ enum {
+  * VFIO_DEVICE_GET_PCI_HOT_RESET_INFO - _IOWR(VFIO_TYPE, VFIO_BASE + 12,
+  *					      struct vfio_pci_hot_reset_info)
+  *
++ * This command is used to query the affected devices in the hot reset for
++ * a given device.
++ *
++ * This command always reports the segment, bus, and devfn information for
++ * each affected device, and selectively reports the group_id or devid per
++ * the way how the calling device is opened.
++ *
++ *	- If the calling device is opened via the traditional group/container
++ *	  API, group_id is reported.  User should check if it has owned all
++ *	  the affected devices and provides a set of group fds to prove the
++ *	  ownership in VFIO_DEVICE_PCI_HOT_RESET ioctl.
++ *
++ *	- If the calling device is opened as a cdev, devid is reported.
++ *	  Flag VFIO_PCI_HOT_RESET_FLAG_DEV_ID is set to indicate this
++ *	  data type.  All the affected devices should be represented in
++ *	  the dev_set, ex. bound to a vfio driver, and also be owned by
++ *	  this interface which is determined by the following conditions:
++ *	  1) Has a valid devid within the iommufd_ctx of the calling device.
++ *	     Ownership cannot be determined across separate iommufd_ctx and
++ *	     the cdev calling conventions do not support a proof-of-ownership
++ *	     model as provided in the legacy group interface.  In this case
++ *	     valid devid with value greater than zero is provided in the return
++ *	     structure.
++ *	  2) Does not have a valid devid within the iommufd_ctx of the calling
++ *	     device, but belongs to the same IOMMU group as the calling device
++ *	     or another opened device that has a valid devid within the
++ *	     iommufd_ctx of the calling device.  This provides implicit ownership
++ *	     for devices within the same DMA isolation context.  In this case
++ *	     the devid value of VFIO_PCI_DEVID_OWNED is provided in the return
++ *	     structure.
++ *
++ *	  A devid value of VFIO_PCI_DEVID_NOT_OWNED is provided in the return
++ *	  structure for affected devices where device is NOT represented in the
++ *	  dev_set or ownership is not available.  Such devices prevent the use
++ *	  of VFIO_DEVICE_PCI_HOT_RESET ioctl outside of the proof-of-ownership
++ *	  calling conventions (ie. via legacy group accessed devices).  Flag
++ *	  VFIO_PCI_HOT_RESET_FLAG_DEV_ID_OWNED would be set when all the
++ *	  affected devices are represented in the dev_set and also owned by
++ *	  the user.  This flag is available only when
++ *	  flag VFIO_PCI_HOT_RESET_FLAG_DEV_ID is set, otherwise reserved.
++ *	  When set, user could invoke VFIO_DEVICE_PCI_HOT_RESET with a zero
++ *	  length fd array on the calling device as the ownership is validated
++ *	  by iommufd_ctx.
++ *
+  * Return: 0 on success, -errno on failure:
+  *	-enospc = insufficient buffer, -enodev = unsupported for device.
+  */
+ struct vfio_pci_dependent_device {
+-	__u32	group_id;
++	union {
++		__u32   group_id;
++		__u32	devid;
++#define VFIO_PCI_DEVID_OWNED		0
++#define VFIO_PCI_DEVID_NOT_OWNED	-1
++	};
+ 	__u16	segment;
+ 	__u8	bus;
+ 	__u8	devfn; /* Use PCI_SLOT/PCI_FUNC */
+@@ -690,6 +740,8 @@ struct vfio_pci_dependent_device {
+ struct vfio_pci_hot_reset_info {
+ 	__u32	argsz;
+ 	__u32	flags;
++#define VFIO_PCI_HOT_RESET_FLAG_DEV_ID		(1 << 0)
++#define VFIO_PCI_HOT_RESET_FLAG_DEV_ID_OWNED	(1 << 1)
+ 	__u32	count;
+ 	struct vfio_pci_dependent_device	devices[];
+ };
+@@ -700,6 +752,24 @@ struct vfio_pci_hot_reset_info {
+  * VFIO_DEVICE_PCI_HOT_RESET - _IOW(VFIO_TYPE, VFIO_BASE + 13,
+  *				    struct vfio_pci_hot_reset)
+  *
++ * A PCI hot reset results in either a bus or slot reset which may affect
++ * other devices sharing the bus/slot.  The calling user must have
++ * ownership of the full set of affected devices as determined by the
++ * VFIO_DEVICE_GET_PCI_HOT_RESET_INFO ioctl.
++ *
++ * When called on a device file descriptor acquired through the vfio
++ * group interface, the user is required to provide proof of ownership
++ * of those affected devices via the group_fds array in struct
++ * vfio_pci_hot_reset.
++ *
++ * When called on a direct cdev opened vfio device, the flags field of
++ * struct vfio_pci_hot_reset_info reports the ownership status of the
++ * affected devices and this ioctl must be called with an empty group_fds
++ * array.  See above INFO ioctl definition for ownership requirements.
++ *
++ * Mixed usage of legacy groups and cdevs across the set of affected
++ * devices is not supported.
++ *
+  * Return: 0 on success, -errno on failure.
+  */
+ struct vfio_pci_hot_reset {
+@@ -828,6 +898,83 @@ struct vfio_device_feature {
+ 
+ #define VFIO_DEVICE_FEATURE		_IO(VFIO_TYPE, VFIO_BASE + 17)
+ 
++/*
++ * VFIO_DEVICE_BIND_IOMMUFD - _IOR(VFIO_TYPE, VFIO_BASE + 18,
++ *				   struct vfio_device_bind_iommufd)
++ * @argsz:	 User filled size of this data.
++ * @flags:	 Must be 0.
++ * @iommufd:	 iommufd to bind.
++ * @out_devid:	 The device id generated by this bind. devid is a handle for
++ *		 this device/iommufd bond and can be used in IOMMUFD commands.
++ *
++ * Bind a vfio_device to the specified iommufd.
++ *
++ * User is restricted from accessing the device before the binding operation
++ * is completed.  Only allowed on cdev fds.
++ *
++ * Unbind is automatically conducted when device fd is closed.
++ *
++ * Return: 0 on success, -errno on failure.
++ */
++struct vfio_device_bind_iommufd {
++	__u32		argsz;
++	__u32		flags;
++	__s32		iommufd;
++	__u32		out_devid;
++};
++
++#define VFIO_DEVICE_BIND_IOMMUFD	_IO(VFIO_TYPE, VFIO_BASE + 18)
++
++/*
++ * VFIO_DEVICE_ATTACH_IOMMUFD_PT - _IOW(VFIO_TYPE, VFIO_BASE + 19,
++ *					struct vfio_device_attach_iommufd_pt)
++ * @argsz:	User filled size of this data.
++ * @flags:	Must be 0.
++ * @pt_id:	Input the target id which can represent an ioas or a hwpt
++ *		allocated via iommufd subsystem.
++ *		Output the input ioas id or the attached hwpt id which could
++ *		be the specified hwpt itself or a hwpt automatically created
++ *		for the specified ioas by kernel during the attachment.
++ *
++ * Associate the device with an address space within the bound iommufd.
++ * Undo by VFIO_DEVICE_DETACH_IOMMUFD_PT or device fd close.  This is only
++ * allowed on cdev fds.
++ *
++ * If a vfio device is currently attached to a valid hw_pagetable, without doing
++ * a VFIO_DEVICE_DETACH_IOMMUFD_PT, a second VFIO_DEVICE_ATTACH_IOMMUFD_PT ioctl
++ * passing in another hw_pagetable (hwpt) id is allowed. This action, also known
++ * as a hw_pagetable replacement, will replace the device's currently attached
++ * hw_pagetable with a new hw_pagetable corresponding to the given pt_id.
++ *
++ * Return: 0 on success, -errno on failure.
++ */
++struct vfio_device_attach_iommufd_pt {
++	__u32	argsz;
++	__u32	flags;
++	__u32	pt_id;
++};
++
++#define VFIO_DEVICE_ATTACH_IOMMUFD_PT		_IO(VFIO_TYPE, VFIO_BASE + 19)
++
++/*
++ * VFIO_DEVICE_DETACH_IOMMUFD_PT - _IOW(VFIO_TYPE, VFIO_BASE + 20,
++ *					struct vfio_device_detach_iommufd_pt)
++ * @argsz:	User filled size of this data.
++ * @flags:	Must be 0.
++ *
++ * Remove the association of the device and its current associated address
++ * space.  After it, the device should be in a blocking DMA state.  This is only
++ * allowed on cdev fds.
++ *
++ * Return: 0 on success, -errno on failure.
++ */
++struct vfio_device_detach_iommufd_pt {
++	__u32	argsz;
++	__u32	flags;
++};
++
++#define VFIO_DEVICE_DETACH_IOMMUFD_PT		_IO(VFIO_TYPE, VFIO_BASE + 20)
++
+ /*
+  * Provide support for setting a PCI VF Token, which is used as a shared
+  * secret between PF and VF drivers.  This feature may only be set on a
+@@ -1304,6 +1451,7 @@ struct vfio_iommu_type1_info {
+ #define VFIO_IOMMU_INFO_CAPS	(1 << 1)	/* Info supports caps */
+ 	__u64	iova_pgsizes;	/* Bitmap of supported page sizes */
+ 	__u32   cap_offset;	/* Offset within info struct of first cap */
++	__u32   pad;
+ };
+ 
+ /*
+diff --git a/meson.build b/meson.build
+index 98e68ef0b1..1e43c6e887 100644
+--- a/meson.build
++++ b/meson.build
+@@ -114,6 +114,8 @@ elif cpu in ['riscv32']
+   kvm_targets = ['riscv32-softmmu']
+ elif cpu in ['riscv64']
+   kvm_targets = ['riscv64-softmmu']
++elif cpu in ['loongarch64']
++  kvm_targets = ['loongarch64-softmmu']
+ else
+   kvm_targets = []
+ endif
+@@ -3299,6 +3301,7 @@ if have_system or have_user
+     'target/hppa',
+     'target/i386',
+     'target/i386/kvm',
++    'target/loongarch',
+     'target/mips/tcg',
+     'target/nios2',
+     'target/ppc',
+diff --git a/target/loongarch/cpu.c b/target/loongarch/cpu.c
+index ad93ecac92..138acb8100 100644
+--- a/target/loongarch/cpu.c
++++ b/target/loongarch/cpu.c
+@@ -18,6 +18,11 @@
+ #include "cpu-csr.h"
+ #include "sysemu/reset.h"
+ #include "tcg/tcg.h"
++#include "sysemu/kvm.h"
++#include "kvm_loongarch.h"
++#ifdef CONFIG_KVM
++#include <linux/kvm.h>
++#endif
+ 
+ const char * const regnames[32] = {
+     "r0", "r1", "r2", "r3", "r4", "r5", "r6", "r7",
+@@ -105,12 +110,15 @@ void loongarch_cpu_set_irq(void *opaque, int irq, int level)
+         return;
+     }
+ 
+-    env->CSR_ESTAT = deposit64(env->CSR_ESTAT, irq, 1, level != 0);
+-
+-    if (FIELD_EX64(env->CSR_ESTAT, CSR_ESTAT, IS)) {
+-        cpu_interrupt(cs, CPU_INTERRUPT_HARD);
++    if (kvm_enabled()) {
++        kvm_loongarch_set_interrupt(cpu, irq, level);
+     } else {
+-        cpu_reset_interrupt(cs, CPU_INTERRUPT_HARD);
++        env->CSR_ESTAT = deposit64(env->CSR_ESTAT, irq, 1, level != 0);
++        if (FIELD_EX64(env->CSR_ESTAT, CSR_ESTAT, IS)) {
++            cpu_interrupt(cs, CPU_INTERRUPT_HARD);
++        } else {
++            cpu_reset_interrupt(cs, CPU_INTERRUPT_HARD);
++        }
+     }
+ }
+ 
+@@ -489,10 +497,12 @@ static void loongarch_cpu_reset_hold(Object *obj)
+ 
+     env->CSR_ESTAT = env->CSR_ESTAT & (~MAKE_64BIT_MASK(0, 2));
+     env->CSR_RVACFG = FIELD_DP64(env->CSR_RVACFG, CSR_RVACFG, RBITS, 0);
++    env->CSR_CPUID = cs->cpu_index;
+     env->CSR_TCFG = FIELD_DP64(env->CSR_TCFG, CSR_TCFG, EN, 0);
+     env->CSR_LLBCTL = FIELD_DP64(env->CSR_LLBCTL, CSR_LLBCTL, KLO, 0);
+     env->CSR_TLBRERA = FIELD_DP64(env->CSR_TLBRERA, CSR_TLBRERA, ISTLBR, 0);
+     env->CSR_MERRCTL = FIELD_DP64(env->CSR_MERRCTL, CSR_MERRCTL, ISMERR, 0);
++    env->CSR_TID = cs->cpu_index;
+ 
+     env->CSR_PRCFG3 = FIELD_DP64(env->CSR_PRCFG3, CSR_PRCFG3, TLB_TYPE, 2);
+     env->CSR_PRCFG3 = FIELD_DP64(env->CSR_PRCFG3, CSR_PRCFG3, MTLB_ENTRY, 63);
+@@ -509,6 +519,9 @@ static void loongarch_cpu_reset_hold(Object *obj)
+ #ifndef CONFIG_USER_ONLY
+     env->pc = 0x1c000000;
+     memset(env->tlb, 0, sizeof(env->tlb));
++    if (kvm_enabled()) {
++        kvm_arch_reset_vcpu(env);
++    }
+ #endif
+ 
+     restore_fp_status(env);
+diff --git a/target/loongarch/cpu.h b/target/loongarch/cpu.h
+index fa371ca8ba..6ae753def2 100644
+--- a/target/loongarch/cpu.h
++++ b/target/loongarch/cpu.h
+@@ -311,6 +311,7 @@ typedef struct CPUArchState {
+     uint64_t CSR_PWCH;
+     uint64_t CSR_STLBPS;
+     uint64_t CSR_RVACFG;
++    uint64_t CSR_CPUID;
+     uint64_t CSR_PRCFG1;
+     uint64_t CSR_PRCFG2;
+     uint64_t CSR_PRCFG3;
+@@ -342,7 +343,6 @@ typedef struct CPUArchState {
+     uint64_t CSR_DBG;
+     uint64_t CSR_DERA;
+     uint64_t CSR_DSAVE;
+-    uint64_t CSR_CPUID;
+ 
+ #ifndef CONFIG_USER_ONLY
+     LoongArchTLB  tlb[LOONGARCH_TLB_MAX];
+@@ -352,6 +352,7 @@ typedef struct CPUArchState {
+     MemoryRegion iocsr_mem;
+     bool load_elf;
+     uint64_t elf_address;
++    uint32_t mp_state;
+     /* Store ipistate to access from this struct */
+     DeviceState *ipistate;
+ #endif
+@@ -374,6 +375,8 @@ struct ArchCPU {
+ 
+     /* 'compatible' string for this CPU for Linux device trees */
+     const char *dtb_compatible;
++    /* used by KVM_REG_LOONGARCH_COUNTER ioctl to access guest time counters */
++    uint64_t kvm_state_counter;
+ };
+ 
+ #define TYPE_LOONGARCH_CPU "loongarch-cpu"
+@@ -439,6 +442,7 @@ static inline void cpu_get_tb_cpu_state(CPULoongArchState *env, vaddr *pc,
+ }
+ 
+ void loongarch_cpu_list(void);
++void kvm_arch_reset_vcpu(CPULoongArchState *env);
+ 
+ #define cpu_list loongarch_cpu_list
+ 
+diff --git a/target/loongarch/kvm-stub.c b/target/loongarch/kvm-stub.c
+new file mode 100644
+index 0000000000..04534f55b0
+--- /dev/null
++++ b/target/loongarch/kvm-stub.c
+@@ -0,0 +1,14 @@
++/*
++ * QEMU KVM LoongArch specific function stubs
++ *
++ * Copyright (c) 2023 Loongson Technology Corporation Limited
++ */
++#include "qemu/osdep.h"
++#include "cpu.h"
++#include "kvm_loongarch.h"
++
++int kvm_loongarch_set_interrupt(LoongArchCPU *cpu, int irq, int level)
++{
++   g_assert_not_reached();
++   return 0;
++}
+diff --git a/target/loongarch/kvm.c b/target/loongarch/kvm.c
+new file mode 100644
+index 0000000000..4dca207f6d
+--- /dev/null
++++ b/target/loongarch/kvm.c
+@@ -0,0 +1,588 @@
++/* SPDX-License-Identifier: GPL-2.0-or-later */
++/*
++ * QEMU LoongArch KVM
++ *
++ * Copyright (c) 2023 Loongson Technology Corporation Limited
++ */
++
++#include "qemu/osdep.h"
++#include <sys/ioctl.h>
++#include <linux/kvm.h>
++
++#include "qemu/timer.h"
++#include "qemu/error-report.h"
++#include "qemu/main-loop.h"
++#include "sysemu/sysemu.h"
++#include "sysemu/kvm.h"
++#include "sysemu/kvm_int.h"
++#include "hw/pci/pci.h"
++#include "exec/memattrs.h"
++#include "exec/address-spaces.h"
++#include "hw/boards.h"
++#include "hw/irq.h"
++#include "qemu/log.h"
++#include "hw/loader.h"
++#include "migration/migration.h"
++#include "sysemu/runstate.h"
++#include "cpu-csr.h"
++#include "kvm_loongarch.h"
++#include "trace.h"
++
++static bool cap_has_mp_state;
++const KVMCapabilityInfo kvm_arch_required_capabilities[] = {
++    KVM_CAP_LAST_INFO
++};
++
++static int kvm_loongarch_get_regs_core(CPUState *cs)
++{
++    int ret = 0;
++    int i;
++    struct kvm_regs regs;
++    LoongArchCPU *cpu = LOONGARCH_CPU(cs);
++    CPULoongArchState *env = &cpu->env;
++
++    /* Get the current register set as KVM seems it */
++    ret = kvm_vcpu_ioctl(cs, KVM_GET_REGS, &regs);
++    if (ret < 0) {
++        trace_kvm_failed_get_regs_core(strerror(errno));
++        return ret;
++    }
++    /* gpr[0] value is always 0 */
++    env->gpr[0] = 0;
++    for (i = 1; i < 32; i++) {
++        env->gpr[i] = regs.gpr[i];
++    }
++
++    env->pc = regs.pc;
++    return ret;
++}
++
++static int kvm_loongarch_put_regs_core(CPUState *cs)
++{
++    int ret = 0;
++    int i;
++    struct kvm_regs regs;
++    LoongArchCPU *cpu = LOONGARCH_CPU(cs);
++    CPULoongArchState *env = &cpu->env;
++
++    /* Set the registers based on QEMU's view of things */
++    for (i = 0; i < 32; i++) {
++        regs.gpr[i] = env->gpr[i];
++    }
++
++    regs.pc = env->pc;
++    ret = kvm_vcpu_ioctl(cs, KVM_SET_REGS, &regs);
++    if (ret < 0) {
++        trace_kvm_failed_put_regs_core(strerror(errno));
++    }
++
++    return ret;
++}
++
++static int kvm_larch_getq(CPUState *cs, uint64_t reg_id,
++                                 uint64_t *addr)
++{
++    struct kvm_one_reg csrreg = {
++        .id = reg_id,
++        .addr = (uintptr_t)addr
++    };
++
++    return kvm_vcpu_ioctl(cs, KVM_GET_ONE_REG, &csrreg);
++}
++
++static int kvm_larch_putq(CPUState *cs, uint64_t reg_id,
++                                 uint64_t *addr)
++{
++    struct kvm_one_reg csrreg = {
++        .id = reg_id,
++        .addr = (uintptr_t)addr
++    };
++
++    return kvm_vcpu_ioctl(cs, KVM_SET_ONE_REG, &csrreg);
++}
++
++#define KVM_GET_ONE_UREG64(cs, ret, regidx, addr)                 \
++    ({                                                            \
++        err = kvm_larch_getq(cs, KVM_IOC_CSRID(regidx), addr);    \
++        if (err < 0) {                                            \
++            ret = err;                                            \
++            trace_kvm_failed_get_csr(regidx, strerror(errno));    \
++        }                                                         \
++    })
++
++#define KVM_PUT_ONE_UREG64(cs, ret, regidx, addr)                 \
++    ({                                                            \
++        err = kvm_larch_putq(cs, KVM_IOC_CSRID(regidx), addr);    \
++        if (err < 0) {                                            \
++            ret = err;                                            \
++            trace_kvm_failed_put_csr(regidx, strerror(errno));    \
++        }                                                         \
++    })
++
++static int kvm_loongarch_get_csr(CPUState *cs)
++{
++    int err, ret = 0;
++    LoongArchCPU *cpu = LOONGARCH_CPU(cs);
++    CPULoongArchState *env = &cpu->env;
++
++    KVM_GET_ONE_UREG64(cs, ret, LOONGARCH_CSR_CRMD, &env->CSR_CRMD);
++    KVM_GET_ONE_UREG64(cs, ret, LOONGARCH_CSR_PRMD, &env->CSR_PRMD);
++    KVM_GET_ONE_UREG64(cs, ret, LOONGARCH_CSR_EUEN, &env->CSR_EUEN);
++    KVM_GET_ONE_UREG64(cs, ret, LOONGARCH_CSR_MISC, &env->CSR_MISC);
++    KVM_GET_ONE_UREG64(cs, ret, LOONGARCH_CSR_ECFG, &env->CSR_ECFG);
++    KVM_GET_ONE_UREG64(cs, ret, LOONGARCH_CSR_ESTAT, &env->CSR_ESTAT);
++    KVM_GET_ONE_UREG64(cs, ret, LOONGARCH_CSR_ERA, &env->CSR_ERA);
++    KVM_GET_ONE_UREG64(cs, ret, LOONGARCH_CSR_BADV, &env->CSR_BADV);
++    KVM_GET_ONE_UREG64(cs, ret, LOONGARCH_CSR_BADI, &env->CSR_BADI);
++    KVM_GET_ONE_UREG64(cs, ret, LOONGARCH_CSR_EENTRY, &env->CSR_EENTRY);
++    KVM_GET_ONE_UREG64(cs, ret, LOONGARCH_CSR_TLBIDX, &env->CSR_TLBIDX);
++    KVM_GET_ONE_UREG64(cs, ret, LOONGARCH_CSR_TLBEHI, &env->CSR_TLBEHI);
++    KVM_GET_ONE_UREG64(cs, ret, LOONGARCH_CSR_TLBELO0, &env->CSR_TLBELO0);
++    KVM_GET_ONE_UREG64(cs, ret, LOONGARCH_CSR_TLBELO1, &env->CSR_TLBELO1);
++    KVM_GET_ONE_UREG64(cs, ret, LOONGARCH_CSR_ASID, &env->CSR_ASID);
++    KVM_GET_ONE_UREG64(cs, ret, LOONGARCH_CSR_PGDL, &env->CSR_PGDL);
++    KVM_GET_ONE_UREG64(cs, ret, LOONGARCH_CSR_PGDH, &env->CSR_PGDH);
++    KVM_GET_ONE_UREG64(cs, ret, LOONGARCH_CSR_PGD, &env->CSR_PGD);
++    KVM_GET_ONE_UREG64(cs, ret, LOONGARCH_CSR_PWCL, &env->CSR_PWCL);
++    KVM_GET_ONE_UREG64(cs, ret, LOONGARCH_CSR_PWCH, &env->CSR_PWCH);
++    KVM_GET_ONE_UREG64(cs, ret, LOONGARCH_CSR_STLBPS, &env->CSR_STLBPS);
++    KVM_GET_ONE_UREG64(cs, ret, LOONGARCH_CSR_RVACFG, &env->CSR_RVACFG);
++    KVM_GET_ONE_UREG64(cs, ret, LOONGARCH_CSR_CPUID, &env->CSR_CPUID);
++    KVM_GET_ONE_UREG64(cs, ret, LOONGARCH_CSR_PRCFG1, &env->CSR_PRCFG1);
++    KVM_GET_ONE_UREG64(cs, ret, LOONGARCH_CSR_PRCFG2, &env->CSR_PRCFG2);
++    KVM_GET_ONE_UREG64(cs, ret, LOONGARCH_CSR_PRCFG3, &env->CSR_PRCFG3);
++    KVM_GET_ONE_UREG64(cs, ret, LOONGARCH_CSR_SAVE(0), &env->CSR_SAVE[0]);
++    KVM_GET_ONE_UREG64(cs, ret, LOONGARCH_CSR_SAVE(1), &env->CSR_SAVE[1]);
++    KVM_GET_ONE_UREG64(cs, ret, LOONGARCH_CSR_SAVE(2), &env->CSR_SAVE[2]);
++    KVM_GET_ONE_UREG64(cs, ret, LOONGARCH_CSR_SAVE(3), &env->CSR_SAVE[3]);
++    KVM_GET_ONE_UREG64(cs, ret, LOONGARCH_CSR_SAVE(4), &env->CSR_SAVE[4]);
++    KVM_GET_ONE_UREG64(cs, ret, LOONGARCH_CSR_SAVE(5), &env->CSR_SAVE[5]);
++    KVM_GET_ONE_UREG64(cs, ret, LOONGARCH_CSR_SAVE(6), &env->CSR_SAVE[6]);
++    KVM_GET_ONE_UREG64(cs, ret, LOONGARCH_CSR_SAVE(7), &env->CSR_SAVE[7]);
++    KVM_GET_ONE_UREG64(cs, ret, LOONGARCH_CSR_TID, &env->CSR_TID);
++    KVM_GET_ONE_UREG64(cs, ret, LOONGARCH_CSR_CNTC, &env->CSR_CNTC);
++    KVM_GET_ONE_UREG64(cs, ret, LOONGARCH_CSR_TICLR, &env->CSR_TICLR);
++    KVM_GET_ONE_UREG64(cs, ret, LOONGARCH_CSR_LLBCTL, &env->CSR_LLBCTL);
++    KVM_GET_ONE_UREG64(cs, ret, LOONGARCH_CSR_IMPCTL1, &env->CSR_IMPCTL1);
++    KVM_GET_ONE_UREG64(cs, ret, LOONGARCH_CSR_IMPCTL2, &env->CSR_IMPCTL2);
++    KVM_GET_ONE_UREG64(cs, ret, LOONGARCH_CSR_TLBRENTRY, &env->CSR_TLBRENTRY);
++    KVM_GET_ONE_UREG64(cs, ret, LOONGARCH_CSR_TLBRBADV, &env->CSR_TLBRBADV);
++    KVM_GET_ONE_UREG64(cs, ret, LOONGARCH_CSR_TLBRERA, &env->CSR_TLBRERA);
++    KVM_GET_ONE_UREG64(cs, ret, LOONGARCH_CSR_TLBRSAVE, &env->CSR_TLBRSAVE);
++    KVM_GET_ONE_UREG64(cs, ret, LOONGARCH_CSR_TLBRELO0, &env->CSR_TLBRELO0);
++    KVM_GET_ONE_UREG64(cs, ret, LOONGARCH_CSR_TLBRELO1, &env->CSR_TLBRELO1);
++    KVM_GET_ONE_UREG64(cs, ret, LOONGARCH_CSR_TLBREHI, &env->CSR_TLBREHI);
++    KVM_GET_ONE_UREG64(cs, ret, LOONGARCH_CSR_TLBRPRMD, &env->CSR_TLBRPRMD);
++    KVM_GET_ONE_UREG64(cs, ret, LOONGARCH_CSR_DMW(0), &env->CSR_DMW[0]);
++    KVM_GET_ONE_UREG64(cs, ret, LOONGARCH_CSR_DMW(1), &env->CSR_DMW[1]);
++    KVM_GET_ONE_UREG64(cs, ret, LOONGARCH_CSR_DMW(2), &env->CSR_DMW[2]);
++    KVM_GET_ONE_UREG64(cs, ret, LOONGARCH_CSR_DMW(3), &env->CSR_DMW[3]);
++    KVM_GET_ONE_UREG64(cs, ret, LOONGARCH_CSR_TVAL, &env->CSR_TVAL);
++    KVM_GET_ONE_UREG64(cs, ret, LOONGARCH_CSR_TCFG, &env->CSR_TCFG);
++
++    return ret;
++}
++
++static int kvm_loongarch_put_csr(CPUState *cs)
++{
++    int err, ret = 0;
++    LoongArchCPU *cpu = LOONGARCH_CPU(cs);
++    CPULoongArchState *env = &cpu->env;
++
++    KVM_PUT_ONE_UREG64(cs, ret, LOONGARCH_CSR_CRMD, &env->CSR_CRMD);
++    KVM_PUT_ONE_UREG64(cs, ret, LOONGARCH_CSR_PRMD, &env->CSR_PRMD);
++    KVM_PUT_ONE_UREG64(cs, ret, LOONGARCH_CSR_EUEN, &env->CSR_EUEN);
++    KVM_PUT_ONE_UREG64(cs, ret, LOONGARCH_CSR_MISC, &env->CSR_MISC);
++    KVM_PUT_ONE_UREG64(cs, ret, LOONGARCH_CSR_ECFG, &env->CSR_ECFG);
++    KVM_PUT_ONE_UREG64(cs, ret, LOONGARCH_CSR_ESTAT, &env->CSR_ESTAT);
++    KVM_PUT_ONE_UREG64(cs, ret, LOONGARCH_CSR_ERA, &env->CSR_ERA);
++    KVM_PUT_ONE_UREG64(cs, ret, LOONGARCH_CSR_BADV, &env->CSR_BADV);
++    KVM_PUT_ONE_UREG64(cs, ret, LOONGARCH_CSR_BADI, &env->CSR_BADI);
++    KVM_PUT_ONE_UREG64(cs, ret, LOONGARCH_CSR_EENTRY, &env->CSR_EENTRY);
++    KVM_PUT_ONE_UREG64(cs, ret, LOONGARCH_CSR_TLBIDX, &env->CSR_TLBIDX);
++    KVM_PUT_ONE_UREG64(cs, ret, LOONGARCH_CSR_TLBEHI, &env->CSR_TLBEHI);
++    KVM_PUT_ONE_UREG64(cs, ret, LOONGARCH_CSR_TLBELO0, &env->CSR_TLBELO0);
++    KVM_PUT_ONE_UREG64(cs, ret, LOONGARCH_CSR_TLBELO1, &env->CSR_TLBELO1);
++    KVM_PUT_ONE_UREG64(cs, ret, LOONGARCH_CSR_ASID, &env->CSR_ASID);
++    KVM_PUT_ONE_UREG64(cs, ret, LOONGARCH_CSR_PGDL, &env->CSR_PGDL);
++    KVM_PUT_ONE_UREG64(cs, ret, LOONGARCH_CSR_PGDH, &env->CSR_PGDH);
++    KVM_PUT_ONE_UREG64(cs, ret, LOONGARCH_CSR_PGD, &env->CSR_PGD);
++    KVM_PUT_ONE_UREG64(cs, ret, LOONGARCH_CSR_PWCL, &env->CSR_PWCL);
++    KVM_PUT_ONE_UREG64(cs, ret, LOONGARCH_CSR_PWCH, &env->CSR_PWCH);
++    KVM_PUT_ONE_UREG64(cs, ret, LOONGARCH_CSR_STLBPS, &env->CSR_STLBPS);
++    KVM_PUT_ONE_UREG64(cs, ret, LOONGARCH_CSR_RVACFG, &env->CSR_RVACFG);
++    KVM_PUT_ONE_UREG64(cs, ret, LOONGARCH_CSR_CPUID, &env->CSR_CPUID);
++    KVM_PUT_ONE_UREG64(cs, ret, LOONGARCH_CSR_PRCFG1, &env->CSR_PRCFG1);
++    KVM_PUT_ONE_UREG64(cs, ret, LOONGARCH_CSR_PRCFG2, &env->CSR_PRCFG2);
++    KVM_PUT_ONE_UREG64(cs, ret, LOONGARCH_CSR_PRCFG3, &env->CSR_PRCFG3);
++    KVM_PUT_ONE_UREG64(cs, ret, LOONGARCH_CSR_SAVE(0), &env->CSR_SAVE[0]);
++    KVM_PUT_ONE_UREG64(cs, ret, LOONGARCH_CSR_SAVE(1), &env->CSR_SAVE[1]);
++    KVM_PUT_ONE_UREG64(cs, ret, LOONGARCH_CSR_SAVE(2), &env->CSR_SAVE[2]);
++    KVM_PUT_ONE_UREG64(cs, ret, LOONGARCH_CSR_SAVE(3), &env->CSR_SAVE[3]);
++    KVM_PUT_ONE_UREG64(cs, ret, LOONGARCH_CSR_SAVE(4), &env->CSR_SAVE[4]);
++    KVM_PUT_ONE_UREG64(cs, ret, LOONGARCH_CSR_SAVE(5), &env->CSR_SAVE[5]);
++    KVM_PUT_ONE_UREG64(cs, ret, LOONGARCH_CSR_SAVE(6), &env->CSR_SAVE[6]);
++    KVM_PUT_ONE_UREG64(cs, ret, LOONGARCH_CSR_SAVE(7), &env->CSR_SAVE[7]);
++    KVM_PUT_ONE_UREG64(cs, ret, LOONGARCH_CSR_TID, &env->CSR_TID);
++    KVM_PUT_ONE_UREG64(cs, ret, LOONGARCH_CSR_CNTC, &env->CSR_CNTC);
++    KVM_PUT_ONE_UREG64(cs, ret, LOONGARCH_CSR_TICLR, &env->CSR_TICLR);
++    KVM_PUT_ONE_UREG64(cs, ret, LOONGARCH_CSR_LLBCTL, &env->CSR_LLBCTL);
++    KVM_PUT_ONE_UREG64(cs, ret, LOONGARCH_CSR_IMPCTL1, &env->CSR_IMPCTL1);
++    KVM_PUT_ONE_UREG64(cs, ret, LOONGARCH_CSR_IMPCTL2, &env->CSR_IMPCTL2);
++    KVM_PUT_ONE_UREG64(cs, ret, LOONGARCH_CSR_TLBRENTRY, &env->CSR_TLBRENTRY);
++    KVM_PUT_ONE_UREG64(cs, ret, LOONGARCH_CSR_TLBRBADV, &env->CSR_TLBRBADV);
++    KVM_PUT_ONE_UREG64(cs, ret, LOONGARCH_CSR_TLBRERA, &env->CSR_TLBRERA);
++    KVM_PUT_ONE_UREG64(cs, ret, LOONGARCH_CSR_TLBRSAVE, &env->CSR_TLBRSAVE);
++    KVM_PUT_ONE_UREG64(cs, ret, LOONGARCH_CSR_TLBRELO0, &env->CSR_TLBRELO0);
++    KVM_PUT_ONE_UREG64(cs, ret, LOONGARCH_CSR_TLBRELO1, &env->CSR_TLBRELO1);
++    KVM_PUT_ONE_UREG64(cs, ret, LOONGARCH_CSR_TLBREHI, &env->CSR_TLBREHI);
++    KVM_PUT_ONE_UREG64(cs, ret, LOONGARCH_CSR_TLBRPRMD, &env->CSR_TLBRPRMD);
++    KVM_PUT_ONE_UREG64(cs, ret, LOONGARCH_CSR_DMW(0), &env->CSR_DMW[0]);
++    KVM_PUT_ONE_UREG64(cs, ret, LOONGARCH_CSR_DMW(1), &env->CSR_DMW[1]);
++    KVM_PUT_ONE_UREG64(cs, ret, LOONGARCH_CSR_DMW(2), &env->CSR_DMW[2]);
++    KVM_PUT_ONE_UREG64(cs, ret, LOONGARCH_CSR_DMW(3), &env->CSR_DMW[3]);
++    /*
++     * timer cfg must be put at last since it is used to enable
++     * guest timer
++     */
++    KVM_PUT_ONE_UREG64(cs, ret, LOONGARCH_CSR_TVAL, &env->CSR_TVAL);
++    KVM_PUT_ONE_UREG64(cs, ret, LOONGARCH_CSR_TCFG, &env->CSR_TCFG);
++    return ret;
++}
++
++static int kvm_loongarch_get_regs_fp(CPUState *cs)
++{
++    int ret, i;
++    struct kvm_fpu fpu;
++
++    LoongArchCPU *cpu = LOONGARCH_CPU(cs);
++    CPULoongArchState *env = &cpu->env;
++
++    ret = kvm_vcpu_ioctl(cs, KVM_GET_FPU, &fpu);
++    if (ret < 0) {
++        trace_kvm_failed_get_fpu(strerror(errno));
++        return ret;
++    }
++
++    env->fcsr0 = fpu.fcsr;
++    for (i = 0; i < 32; i++) {
++        env->fpr[i].vreg.UD[0] = fpu.fpr[i].val64[0];
++    }
++    for (i = 0; i < 8; i++) {
++        env->cf[i] = fpu.fcc & 0xFF;
++        fpu.fcc = fpu.fcc >> 8;
++    }
++
++    return ret;
++}
++
++static int kvm_loongarch_put_regs_fp(CPUState *cs)
++{
++    int ret, i;
++    struct kvm_fpu fpu;
++
++    LoongArchCPU *cpu = LOONGARCH_CPU(cs);
++    CPULoongArchState *env = &cpu->env;
++
++    fpu.fcsr = env->fcsr0;
++    fpu.fcc = 0;
++    for (i = 0; i < 32; i++) {
++        fpu.fpr[i].val64[0] = env->fpr[i].vreg.UD[0];
++    }
++
++    for (i = 0; i < 8; i++) {
++        fpu.fcc |= env->cf[i] << (8 * i);
++    }
++
++    ret = kvm_vcpu_ioctl(cs, KVM_SET_FPU, &fpu);
++    if (ret < 0) {
++        trace_kvm_failed_put_fpu(strerror(errno));
++    }
++
++    return ret;
++}
++
++void kvm_arch_reset_vcpu(CPULoongArchState *env)
++{
++    env->mp_state = KVM_MP_STATE_RUNNABLE;
++}
++
++static int kvm_loongarch_get_mpstate(CPUState *cs)
++{
++    int ret = 0;
++    struct kvm_mp_state mp_state;
++    LoongArchCPU *cpu = LOONGARCH_CPU(cs);
++    CPULoongArchState *env = &cpu->env;
++
++    if (cap_has_mp_state) {
++        ret = kvm_vcpu_ioctl(cs, KVM_GET_MP_STATE, &mp_state);
++        if (ret) {
++            trace_kvm_failed_get_mpstate(strerror(errno));
++            return ret;
++        }
++        env->mp_state = mp_state.mp_state;
++    }
++
++    return ret;
++}
++
++static int kvm_loongarch_put_mpstate(CPUState *cs)
++{
++    int ret = 0;
++
++    LoongArchCPU *cpu = LOONGARCH_CPU(cs);
++    CPULoongArchState *env = &cpu->env;
++
++    struct kvm_mp_state mp_state = {
++        .mp_state = env->mp_state
++    };
++
++    if (cap_has_mp_state) {
++        ret = kvm_vcpu_ioctl(cs, KVM_SET_MP_STATE, &mp_state);
++        if (ret) {
++            trace_kvm_failed_put_mpstate(strerror(errno));
++        }
++    }
++
++    return ret;
++}
++
++static int kvm_loongarch_get_cpucfg(CPUState *cs)
++{
++    int i, ret = 0;
++    uint64_t val;
++    LoongArchCPU *cpu = LOONGARCH_CPU(cs);
++    CPULoongArchState *env = &cpu->env;
++
++    for (i = 0; i < 21; i++) {
++        ret = kvm_larch_getq(cs, KVM_IOC_CPUCFG(i), &val);
++        if (ret < 0) {
++            trace_kvm_failed_get_cpucfg(strerror(errno));
++        }
++        env->cpucfg[i] = (uint32_t)val;
++    }
++    return ret;
++}
++
++static int kvm_loongarch_put_cpucfg(CPUState *cs)
++{
++    int i, ret = 0;
++    LoongArchCPU *cpu = LOONGARCH_CPU(cs);
++    CPULoongArchState *env = &cpu->env;
++    uint64_t val;
++
++    for (i = 0; i < 21; i++) {
++        val = env->cpucfg[i];
++        ret = kvm_larch_putq(cs, KVM_IOC_CPUCFG(i), &val);
++        if (ret < 0) {
++            trace_kvm_failed_put_cpucfg(strerror(errno));
++        }
++    }
++    return ret;
++}
++
++int kvm_arch_get_registers(CPUState *cs)
++{
++    int ret;
++
++    ret = kvm_loongarch_get_regs_core(cs);
++    if (ret) {
++        return ret;
++    }
++
++    ret = kvm_loongarch_get_csr(cs);
++    if (ret) {
++        return ret;
++    }
++
++    ret = kvm_loongarch_get_regs_fp(cs);
++    if (ret) {
++        return ret;
++    }
++
++    ret = kvm_loongarch_get_mpstate(cs);
++    if (ret) {
++        return ret;
++    }
++
++    ret = kvm_loongarch_get_cpucfg(cs);
++    return ret;
++}
++
++int kvm_arch_put_registers(CPUState *cs, int level)
++{
++    int ret;
++
++    ret = kvm_loongarch_put_regs_core(cs);
++    if (ret) {
++        return ret;
++    }
++
++    ret = kvm_loongarch_put_csr(cs);
++    if (ret) {
++        return ret;
++    }
++
++    ret = kvm_loongarch_put_regs_fp(cs);
++    if (ret) {
++        return ret;
++    }
++
++    ret = kvm_loongarch_put_mpstate(cs);
++    if (ret) {
++        return ret;
++    }
++
++    ret = kvm_loongarch_put_cpucfg(cs);
++    return ret;
++}
++
++static void kvm_loongarch_vm_stage_change(void *opaque, bool running,
++                                          RunState state)
++{
++    int ret;
++    CPUState *cs = opaque;
++    LoongArchCPU *cpu = LOONGARCH_CPU(cs);
++
++    if (running) {
++        ret = kvm_larch_putq(cs, KVM_REG_LOONGARCH_COUNTER,
++                             &cpu->kvm_state_counter);
++        if (ret < 0) {
++            trace_kvm_failed_put_counter(strerror(errno));
++        }
++    } else {
++        ret = kvm_larch_getq(cs, KVM_REG_LOONGARCH_COUNTER,
++                             &cpu->kvm_state_counter);
++        if (ret < 0) {
++            trace_kvm_failed_get_counter(strerror(errno));
++        }
++    }
++}
++
++int kvm_arch_init_vcpu(CPUState *cs)
++{
++    qemu_add_vm_change_state_handler(kvm_loongarch_vm_stage_change, cs);
++    return 0;
++}
++
++int kvm_arch_destroy_vcpu(CPUState *cs)
++{
++    return 0;
++}
++
++unsigned long kvm_arch_vcpu_id(CPUState *cs)
++{
++    return cs->cpu_index;
++}
++
++int kvm_arch_release_virq_post(int virq)
++{
++    return 0;
++}
++
++int kvm_arch_msi_data_to_gsi(uint32_t data)
++{
++    abort();
++}
++
++int kvm_arch_fixup_msi_route(struct kvm_irq_routing_entry *route,
++                             uint64_t address, uint32_t data, PCIDevice *dev)
++{
++    return 0;
++}
++
++int kvm_arch_add_msi_route_post(struct kvm_irq_routing_entry *route,
++                                int vector, PCIDevice *dev)
++{
++    return 0;
++}
++
++void kvm_arch_init_irq_routing(KVMState *s)
++{
++}
++
++int kvm_arch_get_default_type(MachineState *ms)
++{
++    return 0;
++}
++
++int kvm_arch_init(MachineState *ms, KVMState *s)
++{
++    cap_has_mp_state = kvm_check_extension(s, KVM_CAP_MP_STATE);
++    return 0;
++}
++
++int kvm_arch_irqchip_create(KVMState *s)
++{
++    return 0;
++}
++
++void kvm_arch_pre_run(CPUState *cs, struct kvm_run *run)
++{
++}
++
++MemTxAttrs kvm_arch_post_run(CPUState *cs, struct kvm_run *run)
++{
++    return MEMTXATTRS_UNSPECIFIED;
++}
++
++int kvm_arch_process_async_events(CPUState *cs)
++{
++    return cs->halted;
++}
++
++bool kvm_arch_stop_on_emulation_error(CPUState *cs)
++{
++    return true;
++}
++
++bool kvm_arch_cpu_check_are_resettable(void)
++{
++    return true;
++}
++
++int kvm_arch_handle_exit(CPUState *cs, struct kvm_run *run)
++{
++    int ret = 0;
++    LoongArchCPU *cpu = LOONGARCH_CPU(cs);
++    CPULoongArchState *env = &cpu->env;
++    MemTxAttrs attrs = {};
++
++    attrs.requester_id = env_cpu(env)->cpu_index;
++
++    trace_kvm_arch_handle_exit(run->exit_reason);
++    switch (run->exit_reason) {
++    case KVM_EXIT_LOONGARCH_IOCSR:
++        address_space_rw(&env->address_space_iocsr,
++                         run->iocsr_io.phys_addr,
++                         attrs,
++                         run->iocsr_io.data,
++                         run->iocsr_io.len,
++                         run->iocsr_io.is_write);
++        break;
++    default:
++        ret = -1;
++        warn_report("KVM: unknown exit reason %d", run->exit_reason);
++        break;
++    }
++    return ret;
++}
++
++int kvm_loongarch_set_interrupt(LoongArchCPU *cpu, int irq, int level)
++{
++    struct kvm_interrupt intr;
++    CPUState *cs = CPU(cpu);
++
++    if (level) {
++        intr.irq = irq;
++    } else {
++        intr.irq = -irq;
++    }
++
++    trace_kvm_set_intr(irq, level);
++    return kvm_vcpu_ioctl(cs, KVM_INTERRUPT, &intr);
++}
++
++void kvm_arch_accel_class_init(ObjectClass *oc)
++{
++}
+diff --git a/target/loongarch/kvm_loongarch.h b/target/loongarch/kvm_loongarch.h
+new file mode 100644
+index 0000000000..cdef980eec
+--- /dev/null
++++ b/target/loongarch/kvm_loongarch.h
+@@ -0,0 +1,13 @@
++/* SPDX-License-Identifier: GPL-2.0-or-later */
++/*
++ * QEMU LoongArch kvm interface
++ *
++ * Copyright (c) 2023 Loongson Technology Corporation Limited
++ */
++
++#ifndef QEMU_KVM_LOONGARCH_H
++#define QEMU_KVM_LOONGARCH_H
++
++int  kvm_loongarch_set_interrupt(LoongArchCPU *cpu, int irq, int level);
++
++#endif
+diff --git a/target/loongarch/meson.build b/target/loongarch/meson.build
+index b7a27df5a9..b3cceccc95 100644
+--- a/target/loongarch/meson.build
++++ b/target/loongarch/meson.build
+@@ -27,6 +27,7 @@ loongarch_system_ss.add(files(
+ 
+ common_ss.add(when: 'CONFIG_LOONGARCH_DIS', if_true: [files('disas.c'), gen])
+ 
++loongarch_ss.add(when: 'CONFIG_KVM', if_true: files('kvm.c'), if_false: files('kvm-stub.c'))
+ loongarch_ss.add_all(when: 'CONFIG_TCG', if_true: [loongarch_tcg_ss])
+ 
+ target_arch += {'loongarch': loongarch_ss}
+diff --git a/target/loongarch/trace-events b/target/loongarch/trace-events
+new file mode 100644
+index 0000000000..3263406ebe
+--- /dev/null
++++ b/target/loongarch/trace-events
+@@ -0,0 +1,17 @@
++# See docs/devel/tracing.rst for syntax documentation.
++
++#kvm.c
++kvm_failed_get_regs_core(const char *msg) "Failed to get core regs from KVM: %s"
++kvm_failed_put_regs_core(const char *msg) "Failed to put core regs into KVM: %s"
++kvm_failed_get_csr(int csr, const char *msg) "Failed to get csr 0x%x from KVM: %s"
++kvm_failed_put_csr(int csr, const char *msg) "Failed to put csr 0x%x into KVM: %s"
++kvm_failed_get_fpu(const char *msg) "Failed to get fpu from KVM: %s"
++kvm_failed_put_fpu(const char *msg) "Failed to put fpu into KVM: %s"
++kvm_failed_get_mpstate(const char *msg) "Failed to get mp_state from KVM: %s"
++kvm_failed_put_mpstate(const char *msg) "Failed to put mp_state into KVM: %s"
++kvm_failed_get_counter(const char *msg) "Failed to get counter from KVM: %s"
++kvm_failed_put_counter(const char *msg) "Failed to put counter into KVM: %s"
++kvm_failed_get_cpucfg(const char *msg) "Failed to get cpucfg from KVM: %s"
++kvm_failed_put_cpucfg(const char *msg) "Failed to put cpucfg into KVM: %s"
++kvm_arch_handle_exit(int num) "kvm arch handle exit, the reason number: %d"
++kvm_set_intr(int irq, int level) "kvm set interrupt, irq num: %d, level: %d"
+diff --git a/target/loongarch/trace.h b/target/loongarch/trace.h
+new file mode 100644
+index 0000000000..c2ecb78f08
+--- /dev/null
++++ b/target/loongarch/trace.h
+@@ -0,0 +1 @@
++#include "trace/trace-target_loongarch.h"

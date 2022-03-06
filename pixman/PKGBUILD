@@ -12,9 +12,16 @@ license=('MIT')
 depends=('glibc')
 makedepends=('meson' 'libpng')
 provides=('libpixman-1.so')
-source=(https://xorg.freedesktop.org/releases/individual/lib/${pkgname}-${pkgver}.tar.xz)
-sha512sums=('1a1d21b86b3c6784c4c2606b7069723b4dbb747eac9fce95bca86516787840379ffd49abc42d11e7143e85c32c85496f33c2562c7a910ca6f963599affdc3224')
+source=(https://xorg.freedesktop.org/releases/individual/lib/${pkgname}-${pkgver}.tar.xz
+    83.patch)
+sha512sums=('1a1d21b86b3c6784c4c2606b7069723b4dbb747eac9fce95bca86516787840379ffd49abc42d11e7143e85c32c85496f33c2562c7a910ca6f963599affdc3224'
+            '0b7970cd955e31211fa55882974bbb321b0e7421da5c06a2cff196ea3e0efcefce50b4ba5f19a23417aaea2145529c762800dbb5887dfdcfa240efe400d44f7f')
 #validpgpkeys=('') # Maarten Lankhorst <maarten.lankhorst@linux.intel.com>
+
+prepare() {
+  cd "$pkgname-$pkgver"
+  patch -p1 -i "$srcdir/83.patch"
+}
 
 build() {
   arch-meson $pkgname-$pkgver build \
@@ -25,7 +32,12 @@ build() {
     -D a64-neon=disabled \
     -D iwmmxt=disabled \
     -D mips-dspr2=disabled \
-    -D gtk=disabled
+    -D gtk=disabled \
+    -D lsx=enabled \
+    -D b_lto=false \
+    -D mmx=disabled \
+    -D ssse3=disabled \
+    -D sse2=disabled
   ninja -C build
 }
 

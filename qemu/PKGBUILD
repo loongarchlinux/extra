@@ -127,6 +127,8 @@ source=(
   $pkgbase-8.1.1-static_regression.patch
   $pkgbase-8.2.0-virtio-gpu_redrawing.patch::https://gitlab.com/qemu-project/qemu/-/commit/9d5b42beb6978dc6219d5dc029c9d453c6b8d503.patch
   $pkgbase-8.2.0-fix_tcg.patch
+  qemu-kvm-la64.patch
+  qemu-4k-pagesize.patch
 )
 sha512sums=('92ec41196ff145cdbb98948f6b6e43214fa4b4419554a8a1927fb4527080c8212ccb703e184baf8ee0bdfa50ad7a84689e8f5a69eba1bd7bbbdfd69e3b91256c'
             'SKIP'
@@ -137,7 +139,9 @@ sha512sums=('92ec41196ff145cdbb98948f6b6e43214fa4b4419554a8a1927fb4527080c8212cc
             '93b905046fcea8a0a89513b9259c222494ab3b91319dde23baebcb40dc17376a56661b159b99785d6e816831974a0f3cbd7b2f7d89e5fc3c258f88f4492f3839'
             'c7d086a951e9a378434ea95a843a4b01f0eb2ae430135a81365147cf6806a7ba1b49014a3aa66904970853ba84a4a28dbaded7bccb99a0bc3730572c80fb8b12'
             '3f052f87406c47849def7e21900cd9773ed061658e6f568b5918157650e0803c6b9c3bbfec69b577202cc2ce224d1d0339b615e419112f2ac351e44cd9f33539'
-            'eb6a9c9ba7143b1ff937aeff06b07d6b4b718d92e6623743ecf7f1e50f01d259c2d8f7543f526948a14a865d4478b6dd3dfac56e17f5b27d78fda3380767615e')
+            'eb6a9c9ba7143b1ff937aeff06b07d6b4b718d92e6623743ecf7f1e50f01d259c2d8f7543f526948a14a865d4478b6dd3dfac56e17f5b27d78fda3380767615e'
+            '45ec57f314f12ea1dd2e0989ff78b98452446ff040d3806a09df40ab21a4dcc0515a5e28b2294941e802b2bfd57b1c6408db6179a01d1b0331a54b1d7d459872'
+            'e0b1b41c643e437548b2dadcd37697143e1424b0f5912347dd6cb3fbcb11a65c6f69a5206d9df600728ebf9bf3c12ec7aaa4280459a252f4488ada42c49336a7')
 b2sums=('a63667042e1e19c635568072d8dcc117320117e81e374a93cfb79e2363ebf505df3217fb098638e53c899eb6f83435221e8031f2aae003c27ec25af8654683b3'
         'SKIP'
         'b1eca364aa60f130ff5e649f5d004d3fcb75356d3421a4542efdfc410d39b40d9434d15e1dd7bbdbd315cb72b5290d3ea5f77f9c41961a5601cd28ef7bbe72e8'
@@ -147,7 +151,9 @@ b2sums=('a63667042e1e19c635568072d8dcc117320117e81e374a93cfb79e2363ebf505df3217f
         'a9a2bdfeeb44eb86cbe88ac7c65f72800bdb2fd5cecb02f3a258cf9470b52832180aab43c89d481f7fd4d067342a9a27dd6c8a94d625b95d6e2b912e47d274e7'
         '209ec05e161d157aaa08a9fcbea45cf87aa22fe9360f9b3c477a78a274e4ecee989c16121f9e6b7765bb479c9db718c98db047c27fd426c127c4c95e28877a16'
         '0d5ea661bfc2afe0bb68dce7504f872a2d30a2f46e2463bc7bfb4a0d63f01b3090c42780a221cca00a64b0e5c9a6970d8ba444c6d182d6f4867541da9a993512'
-        '5dcd51530db4253a3787d49be34988fbe2d240e50f8771123b853bf3413d26fd3a442580f89c009f15dfc48521279bd2302be1eaa329726330c0cf964e3ea6b2')
+        '5dcd51530db4253a3787d49be34988fbe2d240e50f8771123b853bf3413d26fd3a442580f89c009f15dfc48521279bd2302be1eaa329726330c0cf964e3ea6b2'
+        'b109cfd804e316115c657ef0ca00da5d0e8f957ea0cbebd4c8ba11790bf941319ea0e601b81495ed2ebfd2ae9b5fdbb3b2795ca48db7392c7335c71c4a88f652'
+        'c52f9320dcd59e6f21070a3d13255572ae8bf2e4bc13d989adf8e344413e4bea3d089f5d0306e7fa8050999eb81680638b3d4feef9e7aa29a0132830784e39ef')
 validpgpkeys=('CEACC9E15534EBABB82D3FA03353C9CEF108B584') # Michael Roth <flukshun@gmail.com>
 
 _qemu_system_deps=(
@@ -271,6 +277,8 @@ _pick() {
 prepare() {
   # fix crash with static binaries: https://gitlab.com/qemu-project/qemu/-/issues/1913
   patch -Np1 -d $pkgbase-$pkgver -i ../$pkgbase-8.1.1-static_regression.patch
+  patch -p1 -d $pkgbase-$pkgver -i ../qemu-kvm-la64.patch
+  patch -p1 -d $pkgbase-$pkgver -i ../qemu-4k-pagesize.patch
 
   # fix virtio-gpu redrawingi issues: https://gitlab.com/qemu-project/qemu/-/issues/2051
   patch -Np1 -d $pkgbase-$pkgver -i ../$pkgbase-8.2.0-virtio-gpu_redrawing.patch
@@ -305,6 +313,7 @@ build() {
     --enable-sdl
     --enable-slirp
     --enable-tpm
+    --enable-kvm
     --smbd=/usr/bin/smbd
     --with-coroutine=ucontext
   )
@@ -822,7 +831,7 @@ package_qemu-system-hppa-firmware() {
 
 package_qemu-system-loongarch64() {
   pkgdesc="QEMU system emulator for LoongArch64"
-  depends=("${_qemu_system_deps[@]}" systemd-libs)
+  depends=("${_qemu_system_deps[@]}" edk2-loongarch64 systemd-libs)
   mv -v $pkgname/* "$pkgdir"
 }
 
