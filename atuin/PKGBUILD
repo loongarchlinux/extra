@@ -17,13 +17,20 @@ options=('!lto')
 
 prepare() {
   cd "$pkgname-$pkgver"
-  cargo fetch --locked --target "$CARCH-unknown-linux-gnu"
+#  cargo fetch --locked --target "`uname -m`-unknown-linux-gnu"
   mkdir completions/
 }
 
 build() {
   cd "$pkgname-$pkgver"
-  cargo build --release --frozen --all-features
+  find -name Cargo.lock -exec rm -f {} \;
+  mkdir -p .cargo
+  cat > .cargo/config.toml <<EOF
+[source.crates-io]
+registry = "https://gitee.com/yetist/crates.io-index"
+EOF
+  cargo update
+  cargo build --release --all-features
   for sh in 'bash' 'fish' 'zsh'; do
     "target/release/$pkgname" gen-completions -s "$sh" -o completions/
   done

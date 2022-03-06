@@ -1,0 +1,97 @@
+diff --git a/libraries/source/spidermonkey/mozjs-78.6.0/build/gyp_base.mozbuild b/libraries/source/spidermonkey/mozjs-78.6.0/build/gyp_base.mozbuild
+index 9344cc4e7..6c3f64524 100644
+--- a/libraries/source/spidermonkey/mozjs-78.6.0/build/gyp_base.mozbuild
++++ b/libraries/source/spidermonkey/mozjs-78.6.0/build/gyp_base.mozbuild
+@@ -32,6 +32,7 @@ arches = {
+     'x86_64': 'x64',
+     'x86': 'ia32',
+     'aarch64': 'arm64',
++    'loongarch64': 'loongarch64',
+ }
+ 
+ gyp_vars['host_arch'] = arches.get(CONFIG['HOST_CPU_ARCH'], CONFIG['HOST_CPU_ARCH'])
+diff --git a/libraries/source/spidermonkey/mozjs-78.6.0/build/moz.configure/init.configure b/libraries/source/spidermonkey/mozjs-78.6.0/build/moz.configure/init.configure
+index 2fdeb5497..3a906aef8 100644
+--- a/libraries/source/spidermonkey/mozjs-78.6.0/build/moz.configure/init.configure
++++ b/libraries/source/spidermonkey/mozjs-78.6.0/build/moz.configure/init.configure
+@@ -738,6 +738,9 @@ def split_triplet(triplet, allow_msvc=False):
+     elif cpu.startswith('aarch64'):
+         canonical_cpu = 'aarch64'
+         endianness = 'little'
++    elif cpu.startswith('loongarch64'):
++        canonical_cpu = 'loongarch64'
++        endianness = 'little'
+     elif cpu == 'sh4':
+         canonical_cpu = 'sh4'
+         endianness = 'little'
+diff --git a/libraries/source/spidermonkey/mozjs-78.6.0/intl/icu/source/i18n/double-conversion-utils.h b/libraries/source/spidermonkey/mozjs-78.6.0/intl/icu/source/i18n/double-conversion-utils.h
+index 8c6a0e16e..afb63176d 100644
+--- a/libraries/source/spidermonkey/mozjs-78.6.0/intl/icu/source/i18n/double-conversion-utils.h
++++ b/libraries/source/spidermonkey/mozjs-78.6.0/intl/icu/source/i18n/double-conversion-utils.h
+@@ -123,6 +123,7 @@ int main(int argc, char** argv) {
+     defined(_POWER) || defined(_ARCH_PPC) || defined(_ARCH_PPC64) || \
+     defined(__sparc__) || defined(__sparc) || defined(__s390__) || \
+     defined(__SH4__) || defined(__alpha__) || \
++    defined(__loongarch64) || \
+     defined(_MIPS_ARCH_MIPS32R2) || defined(__ARMEB__) ||\
+     defined(__AARCH64EL__) || defined(__aarch64__) || defined(__AARCH64EB__) || \
+     defined(__riscv) || defined(__e2k__) || \
+diff --git a/libraries/source/spidermonkey/mozjs-78.6.0/js/src/jit/AtomicOperations.h b/libraries/source/spidermonkey/mozjs-78.6.0/js/src/jit/AtomicOperations.h
+index 0486cbad1..0a95e11e7 100644
+--- a/libraries/source/spidermonkey/mozjs-78.6.0/js/src/jit/AtomicOperations.h
++++ b/libraries/source/spidermonkey/mozjs-78.6.0/js/src/jit/AtomicOperations.h
+@@ -391,7 +391,7 @@ inline bool AtomicOperations::isLockfreeJS(int32_t size) {
+ #elif defined(__ppc__) || defined(__PPC__) || defined(__sparc__) ||     \
+     defined(__ppc64__) || defined(__PPC64__) || defined(__ppc64le__) || \
+     defined(__PPC64LE__) || defined(__alpha__) || defined(__hppa__) ||  \
+-    defined(__sh__) || defined(__s390__) || defined(__s390x__)
++    defined(__loongarch64) || defined(__sh__) || defined(__s390__) || defined(__s390x__)
+ #  include "jit/shared/AtomicOperations-feeling-lucky.h"
+ #else
+ #  error "No AtomicOperations support provided for this platform"
+diff --git a/libraries/source/spidermonkey/mozjs-78.6.0/mfbt/double-conversion/double-conversion/utils.h b/libraries/source/spidermonkey/mozjs-78.6.0/mfbt/double-conversion/double-conversion/utils.h
+index f031495b7..55a40ab39 100644
+--- a/libraries/source/spidermonkey/mozjs-78.6.0/mfbt/double-conversion/double-conversion/utils.h
++++ b/libraries/source/spidermonkey/mozjs-78.6.0/mfbt/double-conversion/double-conversion/utils.h
+@@ -93,6 +93,7 @@ int main(int argc, char** argv) {
+ #if defined(_M_X64) || defined(__x86_64__) || \
+     defined(__ARMEL__) || defined(__avr32__) || defined(_M_ARM) || defined(_M_ARM64) || \
+     defined(__hppa__) || defined(__ia64__) || \
++    defined(__loongarch__) || \
+     defined(__mips__) || \
+     defined(__powerpc__) || defined(__ppc__) || defined(__ppc64__) || \
+     defined(_POWER) || defined(_ARCH_PPC) || defined(_ARCH_PPC64) || \
+diff --git a/libraries/source/spidermonkey/mozjs-78.6.0/mfbt/tests/TestPoisonArea.cpp b/libraries/source/spidermonkey/mozjs-78.6.0/mfbt/tests/TestPoisonArea.cpp
+index fbd336471..1de67549e 100644
+--- a/libraries/source/spidermonkey/mozjs-78.6.0/mfbt/tests/TestPoisonArea.cpp
++++ b/libraries/source/spidermonkey/mozjs-78.6.0/mfbt/tests/TestPoisonArea.cpp
+@@ -141,6 +141,9 @@
+ #elif defined __hppa
+ #  define RETURN_INSTR 0xe840c002 /* bv,n r0(rp) */
+ 
++#elif defined __loongarch64
++#  define RETURN_INSTR 0x4c000020 /* jirl */
++
+ #elif defined __mips
+ #  define RETURN_INSTR 0x03e00008 /* jr ra */
+ 
+diff --git a/libraries/source/spidermonkey/mozjs-78.6.0/python/mozbuild/mozbuild/configure/constants.py b/libraries/source/spidermonkey/mozjs-78.6.0/python/mozbuild/mozbuild/configure/constants.py
+index 7542dcdc6..87e1461be 100644
+--- a/libraries/source/spidermonkey/mozjs-78.6.0/python/mozbuild/mozbuild/configure/constants.py
++++ b/libraries/source/spidermonkey/mozjs-78.6.0/python/mozbuild/mozbuild/configure/constants.py
+@@ -45,6 +45,7 @@ CPU_bitness = {
+     'arm': 32,
+     'hppa': 32,
+     'ia64': 64,
++    'loongarch64': 64,
+     'mips32': 32,
+     'mips64': 64,
+     'ppc': 32,
+@@ -83,6 +84,7 @@ CPU_preprocessor_checks = OrderedDict((
+     ('ppc', '__powerpc__'),
+     ('Alpha', '__alpha__'),
+     ('hppa', '__hppa__'),
++    ('loongarch64', '__loongarch64'),
+     ('sparc64', '__sparc__ && __arch64__'),
+     ('sparc', '__sparc__'),
+     ('mips64', '__mips64'),

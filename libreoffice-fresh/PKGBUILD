@@ -61,7 +61,8 @@ source=(${_mirror}/libreoffice{,-help,-translations}-${_LOver}.tar.xz{,.asc}
 	make-pyuno-work-with-system-wide-module-install.diff
         623ea5c.diff
 	soffice-template.desktop.in 
-	libreoffice-fresh.sh libreoffice-fresh.csh)
+	libreoffice-fresh.sh libreoffice-fresh.csh
+	libreoffice-la64-java.patch)
 noextract=(35c94d2df8893241173de1d16b6034c0-swingExSrc.zip
            798b2ffdc8bcfe7bca2cf92b62caf685-rhino1_5R5.zip
            a7983f859eafb2677d7ff386a023bc40-xsltml_2.1.2.zip
@@ -112,7 +113,8 @@ sha256sums=('6628dfd2a21041a7c5bb6d72733e0fd52efa7959c95084fcd4d96cc4a61b0561'
             '440c9af5f3d1213d8ed7177282380f25cbc981cabc8b590dcb777aaae84178e5'
             'd0be8099cbee3c9dfda694a828149b881c345b204ab68826f317580aafb50879'
             'b43ed267643fc5ced803dca010427b12b1f10db485173ccb19efb3395e60c82e'
-            '66f2cb5d2ff9909ee9633aea73d5306fc8c4ff358fa526f45d9994210d3e23ff')
+            '66f2cb5d2ff9909ee9633aea73d5306fc8c4ff358fa526f45d9994210d3e23ff'
+            'e33b1d460257a0dafc22fb0606be26151948bf70857028f29401d05ad5196e4c')
 
 prepare() {
 
@@ -135,6 +137,7 @@ prepare() {
 
         # fix build - https://gerrit.libreoffice.org/c/core/+/145421
         patch -Np1 -i "${srcdir}"/623ea5c.diff
+        patch -Np1 -i "${srcdir}"/libreoffice-la64-java.patch
 
 	#use the CFLAGS but remove the LibO overridden ones
 	for i in $CFLAGS; do
@@ -207,7 +210,7 @@ build() {
 		--with-system-libmwaw \
 		--with-system-libetonyek \
 		--with-system-libfreehand \
-		--without-system-firebird \
+		--disable-firebird-sdbc \
 		--with-system-zxing \
 		--with-system-libtommath \
 		--with-system-libatomic-ops \

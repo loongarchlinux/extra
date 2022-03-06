@@ -9,10 +9,17 @@ arch=('loong64' 'x86_64')
 url='https://github.com/fwupd/fwupd-efi'
 license=('LGPL')
 makedepends=('meson' 'gnu-efi' 'python-pefile')
-source=("https://people.freedesktop.org/~hughsient/releases/${pkgname}-${pkgver}.tar.xz"{,.asc})
+source=("https://people.freedesktop.org/~hughsient/releases/${pkgname}-${pkgver}.tar.xz"{,.asc}
+        0001-add-support-for-loongarch64.patch)
 sha256sums=('27ddbc0a4e3209543eab49e69f1a014eb9ed95f93ff51f966f31082d3b7bffbc'
-            'SKIP')
+            'SKIP'
+            '01819145bad4c0bd945e230ec3d7fe044c1806a80178f7c1f3d0a3bc07f9def5')
 validpgpkeys=('163EB50119225DB3DF8F49EA17ACBA8DFA970E17') # Richard Hughes <richard@hughsie.com>
+
+prepare() {
+	cd "$pkgname-$pkgver"
+	patch -p1 -i "$srcdir/0001-add-support-for-loongarch64.patch"
+}
 
 build() {
   arch-meson ${pkgname}-${pkgver} build  \
@@ -20,7 +27,7 @@ build() {
     -D efi_sbat_distro_summary='Arch Linux' \
     -D efi_sbat_distro_pkgname=${pkgname} \
     -D efi_sbat_distro_version=${pkgver} \
-    -D efi_sbat_distro_url="https://archlinux.org/packages/community/x86_64/${pkgname}/"
+    -D efi_sbat_distro_url="https://archlinux.org/packages/community/loongarch64/${pkgname}/"
   ninja -C build
 }
 

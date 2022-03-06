@@ -33,20 +33,30 @@ backup=('etc/fwupd/fwupd.conf'
         'etc/fwupd/remotes.d/vendor-directory.conf'
         'etc/fwupd/remotes.d/vendor.conf'
 )
-source=("https://github.com/fwupd/fwupd/releases/download/${pkgver}/${pkgname}-${pkgver}.tar.xz"{,.asc})
+source=("https://github.com/fwupd/fwupd/releases/download/${pkgver}/${pkgname}-${pkgver}.tar.xz"{,.asc}
+         fwupd-1.8.10-loong64.patch)
 sha512sums=('53a3c7e0cebbc8726f07590b26a9d0a4443ff9b048304ed1bff403de532d64eec83b19e51907d39449d9afa78c1f78a139808cdc6249b7e76a1e3a179692acb0'
-            'SKIP')
+            'SKIP'
+            'b2a6d66223e79c443562d567cdbff1a16c77ab98367dccd14249787e14176a38cb598777138a48677df65065882900504f41d1bf705cfb35d2ab0b68d96cbb07')
 b2sums=('2652bc0bb56419bf443476081eb4af2900f24dbf489970bed058f91958902c0fdc301ac163ddc106250a85f3de8fc2a4ca9518d5498efb3793ffbc6ba85fc0cb'
-        'SKIP')
+        'SKIP'
+        '7b650b1217401a4a3a864e88910dfac36b320171413f39832cf20f081cdc2fad0cd1e3fe855efaa5f759f7dd63bbe8a808a017cc9631d200c06946cc052293f6')
 validpgpkeys=(163EB50119225DB3DF8F49EA17ACBA8DFA970E17) # Richard Hughes <richard@hughsie.com>
+
+prepare() {
+    cd ${pkgname}-${pkgver}
+    patch -p1 -i "$srcdir/fwupd-1.8.10-loong64.patch"
+}
 
 build() {
     arch-meson ${pkgname}-${pkgver} build \
         -D b_lto=false \
         -D docs=enabled \
-        -D plugin_intel_spi=true \
+        -D plugin_msr=disabled \
+        -D plugin_intel_spi=false \
         -D supported_build=enabled \
         -D efi_binary=false
+
     meson compile -C build
 }
 
@@ -63,6 +73,5 @@ package() {
     mv "${pkgdir}"/usr/bin/{,fwupd-}dbxtool
     mv "${pkgdir}"/usr/share/man/man1/{,fwupd-}dbxtool.1
     # Remove msr module-load config as it is built-in
-    rm "${pkgdir}"/usr/lib/modules-load.d/fwupd-msr.conf
-    rmdir "${pkgdir}"/usr/lib/modules-load.d
+#    rmdir "${pkgdir}"/usr/lib/modules-load.d
 }

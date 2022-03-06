@@ -28,22 +28,15 @@ makedepends=(
   cbindgen
   clang
   diffutils
-  dump_syms
   imake
   inetutils
   jack
-  lld
   llvm
   mesa
   nasm
   nodejs
   python
-  rust
   unzip
-  wasi-compiler-rt
-  wasi-libc
-  wasi-libc++
-  wasi-libc++abi
   xorg-server-xvfb
   yasm
   zip
@@ -67,6 +60,9 @@ source=(
   https://archive.mozilla.org/pub/firefox/releases/$pkgver/source/firefox-$pkgver.source.tar.xz{,.asc}
   $pkgname.desktop
   identity-icons-brand.svg
+  rustup-init::http://public.loongarch.dev/sources/rust/rustup-init/76186f6b42409f14cfbbeeca20bcf928/rustup-init
+  Add-support-for-LoongArch.patch
+  Patch-bindgen-to-work-around-issues-with-some-unsoun.patch
 )
 validpgpkeys=(
   '14F26682D0916CDD81E37B6D61B7B526D98F0353'  # Mozilla Software Releases <release@mozilla.com>
@@ -74,11 +70,17 @@ validpgpkeys=(
 sha256sums=('8a38c923375639b6a382111f5f6f6388f33a3f1dedff23061dd6b10b11994a90'
             'SKIP'
             '1f241fdc619f92a914c75aece7c7c717401d7467c9a306458e106b05f34e5044'
-            'a9b8b4a0a1f4a7b4af77d5fc70c2686d624038909263c795ecc81e0aec7711e9')
+            'a9b8b4a0a1f4a7b4af77d5fc70c2686d624038909263c795ecc81e0aec7711e9'
+            'dd1812464cc932e5d5fe47712924e2735b4082ba2e1026faf02955f4fc70306e'
+            'c610efe044269ab68493df1574bb044bef62e8435025ea6f0c9f7d2d04ac04fb'
+            '91f353257e16d05a7e636123e8278c64bd11b008a75f6aa1f8ce385cd6ec4402')
 b2sums=('a064890e4c900bac96aa7f8a76edcac76567f83dc8f3c2b370db8ae758228ff67aa3cff9171bfc94f930b2f277aacd6a305375ccb9cbebaa97936ceb86f23c2c'
         'SKIP'
         'd07557840097dd48a60c51cc5111950781e1c6ce255557693bd11306c7a9258b2a82548329762148f117b2295145f9e66e0483a18e2fe09c5afcffed2e4b8628'
-        '63a8dd9d8910f9efb353bed452d8b4b2a2da435857ccee083fc0c557f8c4c1339ca593b463db320f70387a1b63f1a79e709e9d12c69520993e26d85a3d742e34')
+        '63a8dd9d8910f9efb353bed452d8b4b2a2da435857ccee083fc0c557f8c4c1339ca593b463db320f70387a1b63f1a79e709e9d12c69520993e26d85a3d742e34'
+        '51f4a6f43b427e50e815b2a39ff54e13b11acff8431d2ae6267a1c41c989048f16b4008573664ca18e0c48c88a0e580e6db55e02cde4ed9ce5016b90f275e6bf'
+        '244bde1a249ef50e8013164a4477812130f0bb3507e93686cb7ebecdec122335d2f377d5e07d37bfbac6608211f6111f0dc5e57efe991937fde8b50f15638bcb'
+        '85293f2d40c56df025ee4312669d6b16123c213e5349aeaeddccd7fe6d34179e8ebb93cd79344fa30166699cba7c75ce4f116b01ff326400f8bad6165021da4b')
 
 # Google API keys (see http://www.chromium.org/developers/how-tos/api-keys)
 # Note: These are for Arch Linux use ONLY. For your own distribution, please
@@ -93,8 +95,16 @@ _google_api_key=AIzaSyDwr302FpOSkGRpLlUpPThNTDPbXcIn_FM
 _mozilla_api_key=e05d56db0a694edc8b5aaebda3f2db6a
 
 prepare() {
+  # Install rust toolchain from upstream
+  ./rustup-init --no-modify-path --default-toolchain=none --profile=minimal -y
+  . $HOME/.cargo/env
+  rustup toolchain install --profile=default nightly
+
   mkdir mozbuild
   cd firefox-$pkgver
+
+  patch -Np1 -i ../Add-support-for-LoongArch.patch
+  patch -Np1 -i ../Patch-bindgen-to-work-around-issues-with-some-unsoun.patch
 
   echo -n "$_google_api_key" >google-api-key
   echo -n "$_mozilla_api_key" >mozilla-api-key
@@ -107,11 +117,8 @@ ac_add_options --prefix=/usr
 ac_add_options --enable-release
 ac_add_options --enable-hardening
 ac_add_options --enable-optimize
-ac_add_options --enable-rust-simd
-ac_add_options --enable-linker=lld
-ac_add_options --disable-elf-hack
 ac_add_options --disable-bootstrap
-ac_add_options --with-wasi-sysroot=/usr/share/wasi-sysroot
+ac_add_options --without-wasm-sandboxed-libraries
 
 # Branding
 ac_add_options --enable-official-branding
@@ -134,7 +141,7 @@ ac_add_options --with-system-nss
 # Features
 ac_add_options --enable-alsa
 ac_add_options --enable-jack
-ac_add_options --enable-crashreporter
+ac_add_options --disable-crashreporter
 ac_add_options --disable-updater
 ac_add_options --disable-tests
 END
@@ -151,36 +158,8 @@ build() {
   # LTO needs more open files
   ulimit -n 4096
 
-  # Do 3-tier PGO
-  echo "Building instrumented browser..."
-  cat >.mozconfig ../mozconfig - <<END
-ac_add_options --enable-profile-generate=cross
-END
-  ./mach build
-
-  echo "Profiling instrumented browser..."
-  ./mach package
-  LLVM_PROFDATA=llvm-profdata \
-    JARLOG_FILE="$PWD/jarlog" \
-    xvfb-run -s "-screen 0 1920x1080x24 -nolisten local" \
-    ./mach python build/pgo/profileserver.py
-
-  stat -c "Profile data found (%s bytes)" merged.profdata
-  test -s merged.profdata
-
-  stat -c "Jar log found (%s bytes)" jarlog
-  test -s jarlog
-
-  echo "Removing instrumented browser..."
-  ./mach clobber
-
-  echo "Building optimized browser..."
-  cat >.mozconfig ../mozconfig - <<END
-ac_add_options --enable-lto=cross,full
-ac_add_options --enable-profile-use=cross
-ac_add_options --with-pgo-profile-path=${PWD@Q}/merged.profdata
-ac_add_options --with-pgo-jarlog=${PWD@Q}/jarlog
-END
+  echo "Building browser..."
+  cp ../mozconfig .mozconfig
   ./mach build
 
   echo "Building symbol archive..."
@@ -253,22 +232,6 @@ END
   local nssckbi="$pkgdir/usr/lib/$pkgname/libnssckbi.so"
   if [[ -e $nssckbi ]]; then
     ln -srfv "$pkgdir/usr/lib/libnssckbi.so" "$nssckbi"
-  fi
-
-  local sprovider="$pkgdir/usr/share/gnome-shell/search-providers/$pkgname.search-provider.ini"
-  install -Dvm644 /dev/stdin "$sprovider" <<END
-[Shell Search Provider]
-DesktopId=$pkgname.desktop
-BusName=org.mozilla.${pkgname//-/}.SearchProvider
-ObjectPath=/org/mozilla/${pkgname//-/}/SearchProvider
-Version=2
-END
-
-  export SOCORRO_SYMBOL_UPLOAD_TOKEN_FILE="$startdir/.crash-stats-api.token"
-  if [[ -f $SOCORRO_SYMBOL_UPLOAD_TOKEN_FILE ]]; then
-    make -C obj uploadsymbols
-  else
-    cp -fvt "$startdir" obj/dist/*crashreporter-symbols-full.tar.zst
   fi
 }
 

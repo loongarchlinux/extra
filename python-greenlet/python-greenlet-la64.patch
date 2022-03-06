@@ -1,0 +1,61 @@
+From c2bd5118ec44752450c63fd8b1a47802f5c0cf0e Mon Sep 17 00:00:00 2001
+From: merore <shanjiantao@loongson.cn>
+Date: Mon, 23 Aug 2021 18:00:20 +0000
+Subject: [PATCH] Port to LoongArch64
+
+---
+ .../platform/switch_loongarch64_linux.h       | 31 +++++++++++++++++++
+ src/greenlet/slp_platformselect.h             |  2 ++
+ 2 files changed, 33 insertions(+)
+ create mode 100644 src/greenlet/platform/switch_loongarch64_linux.h
+
+diff --git a/src/greenlet/platform/switch_loongarch64_linux.h b/src/greenlet/platform/switch_loongarch64_linux.h
+new file mode 100644
+index 00000000..03a5ce9c
+--- /dev/null
++++ b/src/greenlet/platform/switch_loongarch64_linux.h
+@@ -0,0 +1,31 @@
++#define STACK_REFPLUS 1
++
++#ifdef SLP_EVAL
++#define STACK_MAGIC 0
++
++#define REGS_TO_SAVE "s0", "s1", "s2", "s3", "s4", "s5", \
++                    "s6", "s7", "s8", "fp", \
++                    "f24", "f25", "f26", "f27", "f28", "f29", "f30", "f31"
++
++static int
++slp_switch(void)
++{
++  register int ret;
++  register long *stackref, stsizediff;
++  __asm__ volatile ("" : : : REGS_TO_SAVE);
++  __asm__ volatile ("move %0, $sp" : "=r" (stackref) : );
++  {
++      SLP_SAVE_STATE(stackref, stsizediff);
++      __asm__ volatile (
++         "add.d $sp, $sp, %0\n\t"
++         : /* no outputs */
++         : "r" (stsizediff)
++         );
++      SLP_RESTORE_STATE();
++  }
++  __asm__ volatile ("" : : : REGS_TO_SAVE);
++  __asm__ volatile ("move %0, $zero" : "=r" (ret) : );
++  return ret;
++}
++
++#endif
+diff --git a/src/greenlet/slp_platformselect.h b/src/greenlet/slp_platformselect.h
+index b5e8eb6e..f3be7ad9 100644
+--- a/src/greenlet/slp_platformselect.h
++++ b/src/greenlet/slp_platformselect.h
+@@ -34,6 +34,8 @@
+ #include "platform/switch_s390_unix.h"	/* Linux/S390 */
+ #elif defined(__GNUC__) && defined(__s390x__) && defined(__linux__)
+ #include "platform/switch_s390_unix.h"	/* Linux/S390 zSeries (64-bit) */
++#elif defined(__GNUC__) && defined(__loongarch64) && defined(__linux__)
++#include "platform/switch_loongarch64_linux.h"	/* Linux/LoongArch64 */
+ #elif defined(__GNUC__) && defined(__arm__)
+ #ifdef __APPLE__
+ #include <TargetConditionals.h>
