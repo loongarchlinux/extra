@@ -9,7 +9,6 @@ url="https://gcc.gnu.org"
 license=('GPL' 'LGPL' 'FDL' 'custom')
 groups=('mingw-w64-toolchain' 'mingw-w64')
 depends=('zlib' 'libisl' 'libmpc' 'mingw-w64-crt' 'mingw-w64-binutils' 'mingw-w64-winpthreads' 'mingw-w64-headers')
-makedepends=("gcc-ada>=${pkgver:0:2}")
 options=('!strip' 'staticlibs' '!emptydirs' '!buildflags')
 source=(https://ftp.gnu.org/gnu/gcc/gcc-$pkgver/gcc-$pkgver.tar.xz{,.sig}
        https://raw.githubusercontent.com/msys2/MINGW-packages/master/mingw-w64-gcc/0020-libgomp-Don-t-hard-code-MS-printf-attributes.patch)
@@ -17,7 +16,7 @@ validpgpkeys=(D3A93CAD751C2AF4F8C7AD516C35B99309B5FA62  # Jakub Jelinek <jakub@r
               13975A70E63C361C73AE69EF6EEB81F8981C74C7) # richard.guenther@gmail.com
 sha512sums=('e9e857bd81bf7a370307d6848c81b2f5403db8c7b5207f54bce3f3faac3bde63445684092c2bc1a2427cddb6f7746496d9fbbef05fbbd77f2810b2998f1f9173'
             'SKIP'
-            '71f0472b1d199dff7f25333da0b4c766e484b57daa0f75aeb9a0ce2187a3e7f4fc4bd5cfe464c942855eadbcdcc3646a7a3b64144fb3379dcbd6e7fc39a374c4')
+            '51dbad1abc6ceaf9b463a2479994607ce29139f22167203b00108c5a5c5ff27bf4ee281695f0d8b15c19a232bb83838fac2354e936cf06c09e3aaeae3fe9174d')
 
 _architectures="i686-w64-mingw32 x86_64-w64-mingw32"
 
@@ -38,7 +37,7 @@ build() {
     "$srcdir"/gcc/configure --prefix=/usr --libexecdir=/usr/lib \
         --target=${_arch} \
         --with-bugurl=https://bugs.archlinux.org/ \
-        --enable-languages=c,lto,c++,ada,objc,obj-c++,fortran \
+        --enable-languages=c,lto,c++,objc,obj-c++,fortran \
         --enable-shared --enable-static \
         --enable-threads=posix --enable-fully-dynamic-string \
         --enable-libstdcxx-time=yes --enable-libstdcxx-filesystem-ts=yes \
@@ -56,7 +55,7 @@ package() {
     make DESTDIR="$pkgdir" install
     ${_arch}-strip "$pkgdir"/usr/${_arch}/lib/*.dll
     strip "$pkgdir"/usr/bin/${_arch}-*
-    strip "$pkgdir"/usr/lib/gcc/${_arch}/${pkgver}/{cc1*,collect2,gnat1,f951,lto*}
+    strip "$pkgdir"/usr/lib/gcc/${_arch}/${pkgver}/{cc1*,collect2,f951,lto*}
     ln -s ${_arch}-gcc "$pkgdir"/usr/bin/${_arch}-cc
     # mv dlls
     mkdir -p "$pkgdir"/usr/${_arch}/bin/

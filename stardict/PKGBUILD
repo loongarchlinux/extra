@@ -6,20 +6,20 @@
 
 pkgname=stardict
 pkgver=3.0.6.2
-pkgrel=1
+pkgrel=2
 pkgdesc='International dictionary software'
 arch=('loong64' 'x86_64')
 url='http://stardict-4.sourceforge.net/'
 license=('GPL')
 depends=('gtk2' 'libsigc++')
-makedepends=('enchant' 'espeak-ng' 'mariadb-libs' 'gnome-common')
+makedepends=('enchant' 'espeak-ng' 'mariadb-libs' 'gnome-common' 'pcre')
 optdepends=('enchant: spell checker plugin'
             'espeak-ng: text to speech plugin')
 options=('!emptydirs')
 source=("https://downloads.sourceforge.net/project/stardict-4/$pkgver/$pkgname-$pkgver-github-2.tar.xz"
         'glib2.patch'
         'mariadb.patch')
-sha256sums=('05ff1644497e8f9c5f4199d9ae1198fcc571052286b4707c4b61ed9d349cccbc'
+sha256sums=('bb6dc3fe38aa39e0bc22f02acd218884bd37f02e376de5ab6f071a28f1423031'
             '5be4d0468f6089b760924a5d25030110ca62869b4611afb46a411cd4eb59b832'
             'f66b916c358bddf48fcb91a7d0190a7109fe92a1388ec982c47dfa9ac1ee69cf')
 
@@ -42,6 +42,8 @@ prepare() {
 build() {
   cd "${srcdir}/${pkgname}-${pkgver}"
 
+  CFLAGS=${CFLAGS/-Werror=format-security/}
+  CXXFLAGS=${CXXFLAGS/-Werror=format-security/}
   CXXFLAGS+=" -std=gnu++11"
   ./configure \
     --prefix=/usr \

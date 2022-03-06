@@ -9,8 +9,9 @@ arch=('loong64' 'x86_64')
 license=('Apache')
 url="https://pypi.python.org/pypi/cryptography"
 depends=('python-cffi')
+options=(!lto)
 makedepends=('git' 'python-setuptools-rust' 'llvm' 'clang' 'lld')
-checkdepends=('python-pytest' 'python-pytest-subtests' 'python-iso8601' 'python-pretend'
+makedepends+=('python-pytest' 'python-pytest-subtests' 'python-iso8601' 'python-pretend'
               'python-hypothesis' 'python-pytz' 'python-pytest-benchmark')
 source=("git+https://github.com/pyca/cryptography.git#commit=$_commit")
 sha512sums=('SKIP')
@@ -18,8 +19,7 @@ sha512sums=('SKIP')
 build() {
   cd cryptography
   echo $RUSTFLAGS
-  # https://github.com/pyca/cryptography/issues/9023
-  CC=clang RUSTFLAGS+="-Clinker-plugin-lto -Clinker=clang -Clink-arg=-fuse-ld=lld" python setup.py build
+  python setup.py build
 }
 
 check() {

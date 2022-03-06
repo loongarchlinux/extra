@@ -1,0 +1,315 @@
+diff --git a/efi/crt0/crt0-efi-loongarch64.S b/efi/crt0/crt0-efi-loongarch64.S
+new file mode 100644
+index 0000000..416a316
+--- /dev/null
++++ b/efi/crt0/crt0-efi-loongarch64.S
+@@ -0,0 +1,172 @@
++/*
++ * crt0-efi-loongarch64.S - PE/COFF header for LoongArch64 EFI applications
++ *
++ * Copyright (C) 2014 Linaro Ltd. <ard.biesheuvel@linaro.org>
++ *
++ * Redistribution and use in source and binary forms, with or without
++ * modification, are permitted provided that the following conditions
++ * are met:
++ * 1. Redistributions of source code must retain the above copyright
++ *    notice and this list of conditions, without modification.
++ * 2. The name of the author may not be used to endorse or promote products
++ *    derived from this software without specific prior written permission.
++ *
++ * Alternatively, this software may be distributed under the terms of the
++ * GNU General Public License as published by the Free Software Foundation;
++ * either version 2 of the License, or (at your option) any later version.
++ */
++
++	.section	.text.head
++
++	/*
++	 * Magic "MZ" signature for PE/COFF
++	 */
++	.globl	ImageBase
++ImageBase:
++	.ascii	"MZ"
++	.skip	58				// 'MZ' + pad + offset == 64
++	.long	pe_header - ImageBase		// Offset to the PE header.
++pe_header:
++	.ascii	"PE"
++	.short 	0
++coff_header:
++	.short	0x6264			// LoongArch64
++	.short	4				// nr_sections
++	.long	0 				// TimeDateStamp
++	.long	0				// PointerToSymbolTable
++	.long	1				// NumberOfSymbols
++	.short	section_table - optional_header	// SizeOfOptionalHeader
++	.short	0x206				// Characteristics.
++						// IMAGE_FILE_DEBUG_STRIPPED |
++						// IMAGE_FILE_EXECUTABLE_IMAGE |
++						// IMAGE_FILE_LINE_NUMS_STRIPPED
++optional_header:
++	.short	0x20b				// PE32+ format
++	.byte	0x02				// MajorLinkerVersion
++	.byte	0x14				// MinorLinkerVersion
++	.long	_text_size			// SizeOfCode
++	.long	_alldata_size			// SizeOfInitializedData
++	.long	0				// SizeOfUninitializedData
++	.long	_start - ImageBase		// AddressOfEntryPoint
++	.long	_start - ImageBase		// BaseOfCode
++
++extra_header_fields:
++	.quad	0				// ImageBase
++	.long	0x1000				// SectionAlignment
++	.long	0x200				// FileAlignment
++	.short	0				// MajorOperatingSystemVersion
++	.short	0				// MinorOperatingSystemVersion
++	.short	0				// MajorImageVersion
++	.short	0				// MinorImageVersion
++	.short	0				// MajorSubsystemVersion
++	.short	0				// MinorSubsystemVersion
++	.long	0				// Win32VersionValue
++
++	.long	_erodata - ImageBase		// SizeOfImage
++
++	// Everything before the kernel image is considered part of the header
++	.long	_start - ImageBase		// SizeOfHeaders
++	.long	0				// CheckSum
++	.short	EFI_SUBSYSTEM			// Subsystem
++	.short	0				// DllCharacteristics
++	.quad	0				// SizeOfStackReserve
++	.quad	0				// SizeOfStackCommit
++	.quad	0				// SizeOfHeapReserve
++	.quad	0				// SizeOfHeapCommit
++	.long	0				// LoaderFlags
++	.long	0x6				// NumberOfRvaAndSizes
++
++	.quad	0				// ExportTable
++	.quad	0				// ImportTable
++	.quad	0				// ResourceTable
++	.quad	0				// ExceptionTable
++	.quad	0				// CertificationTable
++	.quad	0				// BaseRelocationTable
++
++	// Section table
++section_table:
++	.ascii	".text\0\0\0"
++	.long	_evtext - _start	// VirtualSize
++	.long	_start - ImageBase	// VirtualAddress
++	.long	_etext - _start		// SizeOfRawData
++	.long	_start - ImageBase	// PointerToRawData
++
++	.long	0		// PointerToRelocations (0 for executables)
++	.long	0		// PointerToLineNumbers (0 for executables)
++	.short	0		// NumberOfRelocations  (0 for executables)
++	.short	0		// NumberOfLineNumbers  (0 for executables)
++	/*
++	 * EFI_IMAGE_SCN_MEM_READ | EFI_IMAGE_SCN_MEM_EXECUTE | EFI_IMAGE_SCN_CNT_CODE
++	 */
++	.long	0x60000020	// Characteristics (section flags)
++
++	.ascii	".data\0\0\0"
++	.long	_data_vsize		// VirtualSize
++	.long	_data - ImageBase	// VirtualAddress
++	.long	_data_size		// SizeOfRawData
++	.long	_data - ImageBase	// PointerToRawData
++
++	.long	0		// PointerToRelocations (0 for executables)
++	.long	0		// PointerToLineNumbers (0 for executables)
++	.short	0		// NumberOfRelocations  (0 for executables)
++	.short	0		// NumberOfLineNumbers  (0 for executables)
++	/*
++	 * EFI_IMAGE_SCN_MEM_WRITE | EFI_IMAGE_SCN_MEM_READ | EFI_IMAGE_SCN_CNT_INITIALIZED_DATA
++	 */
++	.long	0xc0000040	// Characteristics (section flags)
++
++	.ascii	".sbat\0\0\0"
++	.long	_sbat_vsize		// VirtualSize
++	.long	_sbat - ImageBase	// VirtualAddress
++	.long	_sbat_size		// SizeOfRawData
++	.long	_sbat - ImageBase	// PointerToRawData
++
++	.long	0		// PointerToRelocations (0 for executables)
++	.long	0		// PointerToLineNumbers (0 for executables)
++	.short	0		// NumberOfRelocations  (0 for executables)
++	.short	0		// NumberOfLineNumbers  (0 for executables)
++	/*
++	 * EFI_IMAGE_SCN_MEM_READ | EFI_IMAGE_SCN_ALIGN_8BYTES | EFI_IMAGE_SCN_CNT_INITIALIZED_DATA
++	 */
++	.long	0x40400040	// Characteristics (section flags)
++
++	.ascii  ".rodata\0"
++	.long	_rodata_vsize		// VirtualSize
++	.long	_rodata - ImageBase	// VirtualAddress
++	.long	_rodata_size		// SizeOfRawData
++	.long	_rodata - ImageBase	// PointerToRawData
++
++	.long	0		// PointerToRelocations (0 for executables)
++	.long	0		// PointerToLineNumbers (0 for executables)
++	.short	0		// NumberOfRelocations  (0 for executables)
++	.short	0		// NumberOfLineNumbers  (0 for executables)
++	/*
++	 * EFI_IMAGE_SCN_MEM_READ | EFI_IMAGE_SCN_ALIGN_8BYTES | EFI_IMAGE_SCN_CNT_INITIALIZED_DATA
++	 */
++	.long	0x40400040	// Characteristics (section flags)
++
++	.align		12
++
++	.globl	_start
++	.type	_start, @function
++_start:
++	addi.d	  $sp, $sp, -24
++	st.d	  $ra, $sp, 0
++	st.d	  $a0, $sp, 8
++	st.d 	  $a1, $sp, 16
++
++	move	  $a2, $a0		// a2: ImageHandle
++	move	  $a3, $a1 		// a3: SystemTable
++	la.local  $a0, ImageBase	// a0: ImageBase
++	la.local  $a1, _DYNAMIC		// a1: DynamicSection
++	bl        _relocate
++	bnez	  $a0, 0f
++
++	ld.d	  $a0, $sp, 8
++	ld.d	  $a1, $sp, 16
++	bl 	  efi_main
++
++0:	ld.d	  $ra, $sp, 0
++	addi.d	  $sp, $sp, 24
++	jr        $ra
++	.end	  _start
+diff --git a/efi/lds/elf_loongarch64_efi.lds b/efi/lds/elf_loongarch64_efi.lds
+new file mode 100644
+index 0000000..899e352
+--- /dev/null
++++ b/efi/lds/elf_loongarch64_efi.lds
+@@ -0,0 +1,103 @@
++OUTPUT_FORMAT("elf64-loongarch", "elf64-loongarch", "elf64-loongarch")
++OUTPUT_ARCH(loongarch)
++ENTRY(_start)
++SECTIONS
++{
++  .text 0x0 : {
++    _text = .;
++    *(.text.head)
++    *(.text)
++    *(.text.*)
++    *(.gnu.linkonce.t.*)
++    _evtext = .;
++    . = ALIGN(4096);
++  }
++  _etext = .;
++  _text_size = . - _text;
++  _text_vsize = _evtext - _text;
++
++  . = ALIGN(4096);
++  .data :
++  {
++   _data = .;
++   *(.sdata)
++   *(.data)
++   *(.data1)
++   *(.data.*)
++   *(.got.plt)
++   *(.got)
++
++   *(.dynamic)
++
++   /* the EFI loader doesn't seem to like a .bss section, so we stick
++      it all into .data: */
++   . = ALIGN(16);
++   _bss = .;
++   *(.sbss)
++   *(.scommon)
++   *(.dynbss)
++   *(.bss)
++   *(COMMON)
++   _evdata = .;
++   . = ALIGN(4096);
++   _bss_end = .;
++  }
++  _edata = .;
++  _data_vsize = _evdata - _data;
++  _data_size = . - _data;
++
++  /*
++   * Note that _sbat must be the beginning of the data, and _esbat must be the
++   * end and must be before any section padding.  The sbat self-check uses
++   * _esbat to find the bounds of the data, and if the padding is included, the
++   * CSV parser (correctly) rejects the data as having NUL values in one of the
++   * required columns.
++   */
++  . = ALIGN(4096);
++  .sbat :
++  {
++    _sbat = .;
++    *(.sbat)
++    *(.sbat.*)
++    _esbat = .;
++    . = ALIGN(4096);
++    _epsbat = .;
++  }
++  _sbat_size = _epsbat - _sbat;
++  _sbat_vsize = _esbat - _sbat;
++
++  . = ALIGN(4096);
++  .rodata :
++  {
++    _rodata = .;
++    *(.rela.dyn)
++    *(.rela.plt)
++    *(.rela.got)
++    *(.rela.data)
++    *(.rela.data*)
++
++    *(.rodata*)
++    *(.srodata)
++    *(.dynsym)
++    *(.dynstr)
++    . = ALIGN(16);
++    *(.note.gnu.build-id)
++    . = ALIGN(4096);
++    *(.vendor_cert)
++    *(.data.ident)
++    _evrodata = .;
++    . = ALIGN(4096);
++  }
++  _erodata = .;
++  _rodata_size = . - _rodata;
++  _rodata_vsize = _evrodata - _rodata;
++  _alldata_size = . - _data;
++
++  /DISCARD/ :
++  {
++    *(.rel.reloc)
++    *(.eh_frame)
++    *(.note.GNU-stack)
++  }
++  .comment 0 : { *(.comment) }
++}
+diff --git a/efi/meson.build b/efi/meson.build
+index 2bba4f5..e65b0b1 100644
+--- a/efi/meson.build
++++ b/efi/meson.build
+@@ -77,6 +77,9 @@ endif
+ if host_cpu == 'arm' or (host_cpu == 'aarch64' and (objcopy_version.version_compare ('< 2.38') or coff_header_in_crt0))
+   objcopy_manualsymbols = true
+   generate_binary_extra = ['--objcopy-manualsymbols']
++elif host_cpu == 'loongarch64' and (objcopy_version.version_compare ('< 2.41') or coff_header_in_crt0)
++  objcopy_manualsymbols = true
++  generate_binary_extra = ['--objcopy-manualsymbols']
+ else
+   objcopy_manualsymbols = false
+   generate_binary_extra = []
+diff --git a/meson.build b/meson.build
+index 1526fd7..9467e23 100644
+--- a/meson.build
++++ b/meson.build
+@@ -33,6 +33,9 @@ elif host_cpu == 'arm'
+ elif host_cpu == 'aarch64'
+         EFI_MACHINE_TYPE_NAME = 'aa64'
+         gnu_efi_arch = 'aarch64'
++elif host_cpu == 'loongarch64'
++        EFI_MACHINE_TYPE_NAME = 'loongarch64'
++        gnu_efi_arch = 'loongarch64'
+ else
+         error('Unknown host_cpu ' + host_cpu)
+ endif

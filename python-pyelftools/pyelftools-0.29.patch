@@ -1,0 +1,452 @@
+diff --git a/elftools/elf/constants.py b/elftools/elf/constants.py
+index fc55aac..567f1e3 100644
+--- a/elftools/elf/constants.py
++++ b/elftools/elf/constants.py
+@@ -51,6 +51,31 @@ class E_FLAGS(object):
+     EF_MIPS_ARCH_32R2=0x70000000
+     EF_MIPS_ARCH_64R2=0x80000000
+ 
++    EF_RISCV_RVC=0x00000001
++    EF_RISCV_FLOAT_ABI=0x00000006
++    EF_RISCV_FLOAT_ABI_SOFT=0x00000000
++    EF_RISCV_FLOAT_ABI_SINGLE=0x00000002
++    EF_RISCV_FLOAT_ABI_DOUBLE=0x00000004
++    EF_RISCV_FLOAT_ABI_QUAD=0x00000006
++    EF_RISCV_RVE=0x00000008
++    EF_RISCV_TSO=0x00000010
++
++    EF_LOONGARCH_OBJABI_MASK=0x000000C0
++    EF_LOONGARCH_OBJABI_V0=0x00000000
++    EF_LOONGARCH_OBJABI_V1=0x00000040
++    EF_LOONGARCH_ABI_MODIFIER_MASK=0x00000007
++    EF_LOONGARCH_ABI_SOFT_FLOAT=0x00000001
++    EF_LOONGARCH_ABI_SINGLE_FLOAT=0x00000002
++    EF_LOONGARCH_ABI_DOUBLE_FLOAT=0x00000003
++    # The names in the glibc elf.h say "LARCH" instead of "LOONGARCH",
++    # provide these names for users' convenience.
++    EF_LARCH_OBJABI_MASK = EF_LOONGARCH_OBJABI_MASK
++    EF_LARCH_OBJABI_V0 = EF_LOONGARCH_OBJABI_V0
++    EF_LARCH_OBJABI_V1 = EF_LOONGARCH_OBJABI_V1
++    EF_LARCH_ABI_MODIFIER_MASK = EF_LOONGARCH_ABI_MODIFIER_MASK
++    EF_LARCH_ABI_SOFT_FLOAT = EF_LOONGARCH_ABI_SOFT_FLOAT
++    EF_LARCH_ABI_SINGLE_FLOAT = EF_LOONGARCH_ABI_SINGLE_FLOAT
++    EF_LARCH_ABI_DOUBLE_FLOAT = EF_LOONGARCH_ABI_DOUBLE_FLOAT
+ 
+ class E_FLAGS_MASKS(object):
+     """Masks to be used for convenience when working with E_FLAGS
+diff --git a/elftools/elf/descriptions.py b/elftools/elf/descriptions.py
+index 38c80b6..b6a615e 100644
+--- a/elftools/elf/descriptions.py
++++ b/elftools/elf/descriptions.py
+@@ -10,7 +10,8 @@ from .enums import (
+     ENUM_D_TAG, ENUM_E_VERSION, ENUM_P_TYPE_BASE, ENUM_SH_TYPE_BASE,
+     ENUM_RELOC_TYPE_i386, ENUM_RELOC_TYPE_x64,
+     ENUM_RELOC_TYPE_ARM, ENUM_RELOC_TYPE_AARCH64, ENUM_RELOC_TYPE_PPC64,
+-    ENUM_RELOC_TYPE_MIPS, ENUM_ATTR_TAG_ARM, ENUM_DT_FLAGS, ENUM_DT_FLAGS_1)
++    ENUM_RELOC_TYPE_MIPS, ENUM_ATTR_TAG_ARM, ENUM_RELOC_TYPE_LOONGARCH,
++    ENUM_DT_FLAGS, ENUM_DT_FLAGS_1)
+ from .constants import (
+     P_FLAGS, RH_FLAGS, SH_FLAGS, SUNW_SYMINFO_FLAGS, VER_FLAGS)
+ from ..common.py3compat import bytes2hex, iteritems
+@@ -151,6 +152,8 @@ def describe_reloc_type(x, elffile):
+         return _DESCR_RELOC_TYPE_PPC64.get(x, _unknown)
+     elif arch == 'MIPS':
+         return _DESCR_RELOC_TYPE_MIPS.get(x, _unknown)
++    elif arch == 'LoongArch':
++        return _DESCR_RELOC_TYPE_LOONGARCH.get(x, _unknown)
+     else:
+         return 'unrecognized: %-7x' % (x & 0xFFFFFFFF)
+ 
+@@ -389,6 +392,7 @@ _DESCR_E_MACHINE = dict(
+     EM_BLACKFIN='Analog Devices Blackfin',
+     EM_PPC='PowerPC',
+     EM_PPC64='PowerPC64',
++    EM_LOONGARCH='LoongArch',
+     RESERVED='RESERVED',
+ )
+ 
+@@ -672,6 +676,7 @@ _DESCR_RELOC_TYPE_ARM = _reverse_dict(ENUM_RELOC_TYPE_ARM)
+ _DESCR_RELOC_TYPE_AARCH64 = _reverse_dict(ENUM_RELOC_TYPE_AARCH64)
+ _DESCR_RELOC_TYPE_PPC64 = _reverse_dict(ENUM_RELOC_TYPE_PPC64)
+ _DESCR_RELOC_TYPE_MIPS = _reverse_dict(ENUM_RELOC_TYPE_MIPS)
++_DESCR_RELOC_TYPE_LOONGARCH = _reverse_dict(ENUM_RELOC_TYPE_LOONGARCH)
+ 
+ _low_priority_D_TAG = (
+     # these are 'meta-tags' marking semantics of numeric ranges of the enum
+diff --git a/elftools/elf/elffile.py b/elftools/elf/elffile.py
+index d228db7..90418a0 100644
+--- a/elftools/elf/elffile.py
++++ b/elftools/elf/elffile.py
+@@ -533,6 +533,7 @@ class ELFFile(object):
+             'EM_RISCV'         : 'RISC-V',
+             'EM_BPF'           : 'Linux BPF - in-kernel virtual machine',
+             'EM_CSKY'          : 'C-SKY',
++            'EM_LOONGARCH'     : 'LoongArch',
+             'EM_FRV'           : 'Fujitsu FR-V'
+         }
+ 
+diff --git a/elftools/elf/enums.py b/elftools/elf/enums.py
+index 745aefc..5116523 100644
+--- a/elftools/elf/enums.py
++++ b/elftools/elf/enums.py
+@@ -257,6 +257,7 @@ ENUM_E_MACHINE = dict(
+     EM_RISCV         = 243, # RISC-V
+     EM_BPF           = 247,	# Linux BPF - in-kernel virtual machine
+     EM_CSKY          = 252,	# C-SKY
++    EM_LOONGARCH     = 258, # LoongArch
+     EM_FRV           = 0x5441, # Fujitsu FR-V
+     # Reservations
+     # reserved  11-14   Reserved for future use
+@@ -812,6 +813,119 @@ ENUM_RELOC_TYPE_x64 = dict(
+     _default_=Pass,
+ )
+ 
++ENUM_RELOC_TYPE_BPF = dict(
++    R_BPF_NONE=0,
++    R_BPF_64_64=1,
++    R_BPF_64_ABS64=2,
++    R_BPF_64_ABS32=3,
++    R_BPF_64_NODYLD32=4,
++    R_BPF_64_32=10,
++    _default_=Pass,
++)
++
++# https://github.com/loongson/la-abi-specs/blob/release/laelf.adoc
++ENUM_RELOC_TYPE_LOONGARCH = dict(
++    R_LARCH_NONE=0,
++    R_LARCH_32=1,
++    R_LARCH_64=2,
++    R_LARCH_RELATIVE=3,
++    R_LARCH_COPY=4,
++    R_LARCH_JUMP_SLOT=5,
++    R_LARCH_TLS_DTPMOD32=6,
++    R_LARCH_TLS_DTPMOD64=7,
++    R_LARCH_TLS_DTPREL32=8,
++    R_LARCH_TLS_DTPREL64=9,
++    R_LARCH_TLS_TPREL32=10,
++    R_LARCH_TLS_TPREL64=11,
++    R_LARCH_IRELATIVE=12,
++    R_LARCH_MARK_LA=20,
++    R_LARCH_MARK_PCREL=21,
++    R_LARCH_SOP_PUSH_PCREL=22,
++    R_LARCH_SOP_PUSH_ABSOLUTE=23,
++    R_LARCH_SOP_PUSH_DUP=24,
++    R_LARCH_SOP_PUSH_GPREL=25,
++    R_LARCH_SOP_PUSH_TLS_TPREL=26,
++    R_LARCH_SOP_PUSH_TLS_GOT=27,
++    R_LARCH_SOP_PUSH_TLS_GD=28,
++    R_LARCH_SOP_PUSH_PLT_PCREL=29,
++    R_LARCH_SOP_ASSERT=30,
++    R_LARCH_SOP_NOT=31,
++    R_LARCH_SOP_SUB=32,
++    R_LARCH_SOP_SL=33,
++    R_LARCH_SOP_SR=34,
++    R_LARCH_SOP_ADD=35,
++    R_LARCH_SOP_AND=36,
++    R_LARCH_SOP_IF_ELSE=37,
++    R_LARCH_SOP_POP_32_S_10_5=38,
++    R_LARCH_SOP_POP_32_U_10_12=39,
++    R_LARCH_SOP_POP_32_S_10_12=40,
++    R_LARCH_SOP_POP_32_S_10_16=41,
++    R_LARCH_SOP_POP_32_S_10_16_S2=42,
++    R_LARCH_SOP_POP_32_S_5_20=43,
++    R_LARCH_SOP_POP_32_S_0_5_10_16_S2=44,
++    R_LARCH_SOP_POP_32_S_0_10_10_16_S2=45,
++    R_LARCH_SOP_POP_32_U=46,
++    R_LARCH_ADD8=47,
++    R_LARCH_ADD16=48,
++    R_LARCH_ADD24=49,
++    R_LARCH_ADD32=50,
++    R_LARCH_ADD64=51,
++    R_LARCH_SUB8=52,
++    R_LARCH_SUB16=53,
++    R_LARCH_SUB24=54,
++    R_LARCH_SUB32=55,
++    R_LARCH_SUB64=56,
++    R_LARCH_GNU_VTINHERIT=57,
++    R_LARCH_GNU_VTENTRY=58,
++    R_LARCH_B16=64,
++    R_LARCH_B21=65,
++    R_LARCH_B26=66,
++    R_LARCH_ABS_HI20=67,
++    R_LARCH_ABS_LO12=68,
++    R_LARCH_ABS64_LO20=69,
++    R_LARCH_ABS64_HI12=70,
++    R_LARCH_PCALA_HI20=71,
++    R_LARCH_PCALA_LO12=72,
++    R_LARCH_PCALA64_LO20=73,
++    R_LARCH_PCALA64_HI12=74,
++    R_LARCH_GOT_PC_HI20=75,
++    R_LARCH_GOT_PC_LO12=76,
++    R_LARCH_GOT64_PC_LO20=77,
++    R_LARCH_GOT64_PC_HI12=78,
++    R_LARCH_GOT_HI20=79,
++    R_LARCH_GOT_LO12=80,
++    R_LARCH_GOT64_LO20=81,
++    R_LARCH_GOT64_HI12=82,
++    R_LARCH_TLS_LE_HI20=83,
++    R_LARCH_TLS_LE_LO12=84,
++    R_LARCH_TLS_LE64_LO20=85,
++    R_LARCH_TLS_LE64_HI12=86,
++    R_LARCH_TLS_IE_PC_HI20=87,
++    R_LARCH_TLS_IE_PC_LO12=88,
++    R_LARCH_TLS_IE64_PC_LO20=89,
++    R_LARCH_TLS_IE64_PC_HI12=90,
++    R_LARCH_TLS_IE_HI20=91,
++    R_LARCH_TLS_IE_LO12=92,
++    R_LARCH_TLS_IE64_LO20=93,
++    R_LARCH_TLS_IE64_HI12=94,
++    R_LARCH_TLS_LD_PC_HI20=95,
++    R_LARCH_TLS_LD_HI20=96,
++    R_LARCH_TLS_GD_PC_HI20=97,
++    R_LARCH_TLS_GD_HI20=98,
++    R_LARCH_32_PCREL=99,
++    R_LARCH_RELAX=100,
++    R_LARCH_DELETE=101,
++    R_LARCH_ALIGN=102,
++    R_LARCH_PCREL20_S2=103,
++    R_LARCH_CFA=104,
++    R_LARCH_ADD6=105,
++    R_LARCH_SUB6=106,
++    R_LARCH_ADD_ULEB128=107,
++    R_LARCH_SUB_ULEB128=108,
++    R_LARCH_64_PCREL=109,
++    _default_=Pass,
++)
++
+ # Sunw Syminfo Bound To special values
+ ENUM_SUNW_SYMINFO_BOUNDTO = dict(
+     SYMINFO_BT_SELF=0xffff,
+diff --git a/elftools/elf/relocation.py b/elftools/elf/relocation.py
+index 4008e28..028858e 100644
+--- a/elftools/elf/relocation.py
++++ b/elftools/elf/relocation.py
+@@ -14,7 +14,7 @@ from .sections import Section
+ from .enums import (
+     ENUM_RELOC_TYPE_i386, ENUM_RELOC_TYPE_x64, ENUM_RELOC_TYPE_MIPS,
+     ENUM_RELOC_TYPE_ARM, ENUM_RELOC_TYPE_AARCH64, ENUM_RELOC_TYPE_PPC64,
+-    ENUM_D_TAG)
++    ENUM_RELOC_TYPE_BPF, ENUM_RELOC_TYPE_LOONGARCH, ENUM_D_TAG)
+ from ..construct import Container
+ 
+ 
+@@ -253,6 +253,13 @@ class RelocationHandler(object):
+             recipe = self._RELOCATION_RECIPES_AARCH64.get(reloc_type, None)
+         elif self.elffile.get_machine_arch() == '64-bit PowerPC':
+             recipe = self._RELOCATION_RECIPES_PPC64.get(reloc_type, None)
++        elif self.elffile.get_machine_arch() == 'Linux BPF - in-kernel virtual machine':
++            recipe = self._RELOCATION_RECIPES_EBPF.get(reloc_type, None)
++        elif self.elffile.get_machine_arch() == 'LoongArch':
++            if not reloc.is_RELA():
++                raise ELFRelocationError(
++                    'Unexpected REL relocation for LoongArch: %s' % reloc)
++            recipe = self._RELOCATION_RECIPES_LOONGARCH.get(reloc_type, None)
+ 
+         if recipe is None:
+             raise ELFRelocationError(
+@@ -267,6 +274,10 @@ class RelocationHandler(object):
+             value_struct = self.elffile.structs.Elf_word('')
+         elif recipe.bytesize == 8:
+             value_struct = self.elffile.structs.Elf_word64('')
++        elif recipe.bytesize == 1:
++            value_struct = self.elffile.structs.Elf_byte('')
++        elif recipe.bytesize == 2:
++            value_struct = self.elffile.structs.Elf_half('')
+         else:
+             raise ELFRelocationError('Invalid bytesize %s for relocation' %
+                     recipe.bytesize)
+@@ -316,6 +327,9 @@ class RelocationHandler(object):
+     def _reloc_calc_sym_plus_addend_pcrel(value, sym_value, offset, addend=0):
+         return sym_value + addend - offset
+ 
++    def _reloc_calc_value_minus_sym_addend(value, sym_value, offset, addend=0):
++        return value - sym_value - addend
++
+     def _arm_reloc_calc_sym_plus_value_pcrel(value, sym_value, offset, addend=0):
+         return sym_value // 4 + value - offset // 4
+ 
+@@ -381,4 +395,46 @@ class RelocationHandler(object):
+             bytesize=4, has_addend=True, calc_func=_reloc_calc_sym_plus_addend),
+     }
+ 
++    # https://github.com/loongson/la-abi-specs/blob/release/laelf.adoc
++    _RELOCATION_RECIPES_LOONGARCH = {
++        ENUM_RELOC_TYPE_LOONGARCH['R_LARCH_NONE']: _RELOCATION_RECIPE_TYPE(
++            bytesize=4, has_addend=False, calc_func=_reloc_calc_identity),
++        ENUM_RELOC_TYPE_LOONGARCH['R_LARCH_32']: _RELOCATION_RECIPE_TYPE(
++            bytesize=4, has_addend=True,
++            calc_func=_reloc_calc_sym_plus_addend),
++        ENUM_RELOC_TYPE_LOONGARCH['R_LARCH_64']: _RELOCATION_RECIPE_TYPE(
++            bytesize=8, has_addend=True,
++            calc_func=_reloc_calc_sym_plus_addend),
++        ENUM_RELOC_TYPE_LOONGARCH['R_LARCH_ADD8']: _RELOCATION_RECIPE_TYPE(
++            bytesize=1, has_addend=True,
++            calc_func=_reloc_calc_sym_plus_value),
++        ENUM_RELOC_TYPE_LOONGARCH['R_LARCH_SUB8']: _RELOCATION_RECIPE_TYPE(
++            bytesize=1, has_addend=True,
++            calc_func=_reloc_calc_value_minus_sym_addend),
++        ENUM_RELOC_TYPE_LOONGARCH['R_LARCH_ADD16']: _RELOCATION_RECIPE_TYPE(
++            bytesize=2, has_addend=True,
++            calc_func=_reloc_calc_sym_plus_value),
++        ENUM_RELOC_TYPE_LOONGARCH['R_LARCH_SUB16']: _RELOCATION_RECIPE_TYPE(
++            bytesize=2, has_addend=True,
++            calc_func=_reloc_calc_value_minus_sym_addend),
++        ENUM_RELOC_TYPE_LOONGARCH['R_LARCH_ADD32']: _RELOCATION_RECIPE_TYPE(
++            bytesize=4, has_addend=True,
++            calc_func=_reloc_calc_sym_plus_value),
++        ENUM_RELOC_TYPE_LOONGARCH['R_LARCH_SUB32']: _RELOCATION_RECIPE_TYPE(
++            bytesize=4, has_addend=True,
++            calc_func=_reloc_calc_value_minus_sym_addend),
++        ENUM_RELOC_TYPE_LOONGARCH['R_LARCH_ADD64']: _RELOCATION_RECIPE_TYPE(
++            bytesize=8, has_addend=True,
++            calc_func=_reloc_calc_sym_plus_value),
++        ENUM_RELOC_TYPE_LOONGARCH['R_LARCH_SUB64']: _RELOCATION_RECIPE_TYPE(
++            bytesize=8, has_addend=True,
++            calc_func=_reloc_calc_value_minus_sym_addend),
++        ENUM_RELOC_TYPE_LOONGARCH['R_LARCH_32_PCREL']: _RELOCATION_RECIPE_TYPE(
++            bytesize=4, has_addend=True,
++            calc_func=_reloc_calc_sym_plus_addend_pcrel),
++        ENUM_RELOC_TYPE_LOONGARCH['R_LARCH_64_PCREL']: _RELOCATION_RECIPE_TYPE(
++            bytesize=8, has_addend=True,
++            calc_func=_reloc_calc_sym_plus_addend_pcrel),
++    }
++
+ 
+diff --git a/scripts/dwarfdump.py b/scripts/dwarfdump.py
+index ca6bac3..552e530 100644
+--- a/scripts/dwarfdump.py
++++ b/scripts/dwarfdump.py
+@@ -342,7 +342,7 @@ class ReadElf(object):
+         self.elffile = ELFFile(file)
+         self.output = output
+         self._dwarfinfo = self.elffile.get_dwarf_info()
+-        arches = {"EM_386": "i386", "EM_X86_64": "x86-64"}
++        arches = {"EM_386": "i386", "EM_X86_64": "x86-64", "EM_ARM": "littlearm", "EM_AARCH64": "littleaarch64", "EM_LOONGARCH": "loongarch", "EM_RISCV": "littleriscv", "EM_MIPS": "mips"}
+         arch = arches[self.elffile['e_machine']]
+         bits = self.elffile.elfclass
+         self._emitline("%s:	file format elf%d-%s" % (filename, bits, arch))
+diff --git a/scripts/readelf.py b/scripts/readelf.py
+index 2095c91..e84d89b 100755
+--- a/scripts/readelf.py
++++ b/scripts/readelf.py
+@@ -9,6 +9,7 @@
+ #-------------------------------------------------------------------------------
+ import argparse
+ import os, sys
++import re
+ import string
+ import traceback
+ import itertools
+@@ -96,6 +97,13 @@ def _get_cu_base(cu):
+     else:
+         raise ValueError("Can't find the base IP (low_pc) for a CU")
+ 
++# Matcher for all control characters, for transforming them into "^X" form when
++# formatting symbol names for display.
++_CONTROL_CHAR_RE = re.compile(r'[\x01-\x1f]')
++
++def _format_symbol_name(s):
++    return _CONTROL_CHAR_RE.sub(lambda match: '^' + chr(0x40 + ord(match[0])), s)
++
+ class ReadElf(object):
+     """ display_* methods are used to emit output into the output stream
+     """
+@@ -244,6 +252,18 @@ class ReadElf(object):
+             if (flags & E_FLAGS.EF_MIPS_ARCH) == E_FLAGS.EF_MIPS_ARCH_64:
+                 description += ", mips64"
+ 
++        elif self.elffile['e_machine'] == "EM_LOONGARCH":
++            if (flags & E_FLAGS.EF_LOONGARCH_ABI_MODIFIER_MASK) == E_FLAGS.EF_LOONGARCH_ABI_SOFT_FLOAT:
++                description += ", SOFT-FLOAT"
++            if (flags & E_FLAGS.EF_LOONGARCH_ABI_MODIFIER_MASK) == E_FLAGS.EF_LOONGARCH_ABI_SINGLE_FLOAT:
++                description += ", SINGLE-FLOAT"
++            if (flags & E_FLAGS.EF_LOONGARCH_ABI_MODIFIER_MASK) == E_FLAGS.EF_LOONGARCH_ABI_DOUBLE_FLOAT:
++                description += ", DOUBLE-FLOAT"
++            if (flags & E_FLAGS.EF_LOONGARCH_OBJABI_MASK) == E_FLAGS.EF_LOONGARCH_OBJABI_V0:
++                description += ", OBJ-v0"
++            if (flags & E_FLAGS.EF_LOONGARCH_OBJABI_MASK) == E_FLAGS.EF_LOONGARCH_OBJABI_V1:
++                description += ", OBJ-v1"
++
+         return description
+ 
+     def display_program_headers(self, show_heading=True):
+@@ -468,7 +488,7 @@ class ReadElf(object):
+                     describe_symbol_shndx(self._get_symbol_shndx(symbol,
+                                                                  nsym,
+                                                                  section_index)),
+-                    symbol_name,
++                    _format_symbol_name(symbol_name),
+                     version_info))
+ 
+     def display_dynamic_tags(self):
+@@ -605,7 +625,7 @@ class ReadElf(object):
+                         self._format_hex(
+                             symbol['st_value'],
+                             fullhex=True, lead0x=False),
+-                        symbol_name))
++                        _format_symbol_name(symbol_name)))
+                     if section.is_RELA():
+                         self._emit(' %s %x' % (
+                             '+' if rel['r_addend'] >= 0 else '-',
+@@ -1403,24 +1423,20 @@ class ReadElf(object):
+ 
+             # Look at the registers the decoded table describes.
+             # We build reg_order here to match readelf's order. In particular,
+-            # registers are sorted by their number, and the register matching
+-            # ra_regnum is always listed last with a special heading.
++            # registers are sorted by their number, so that the register
++            # matching ra_regnum is usually listed last with a special heading.
++            # (LoongArch is a notable exception in that its return register's
++            # DWARF register number is not greater than other GPRs.)
+             decoded_table = entry.get_decoded()
+-            reg_order = sorted(ifilter(
+-                lambda r: r != ra_regnum,
+-                decoded_table.reg_order))
++            reg_order = sorted(decoded_table.reg_order)
+             if len(decoded_table.reg_order):
+-
+                 # Headings for the registers
+                 for regnum in reg_order:
++                    if regnum == ra_regnum:
++                        self._emit('ra      ')
++                        continue
+                     self._emit('%-6s' % describe_reg_name(regnum))
+-                self._emitline('ra      ')
+-
+-                # Now include ra_regnum in reg_order to print its values
+-                # similarly to the other registers.
+-                reg_order.append(ra_regnum)
+-            else:
+-                self._emitline()
++            self._emitline()
+ 
+             for line in decoded_table.table:
+                 self._emit(self._format_hex(
+diff --git a/test/testfiles_for_readelf/loongarch-relocs.c b/test/testfiles_for_readelf/loongarch-relocs.c
+new file mode 100644
+index 0000000..ad347d8
+--- /dev/null
++++ b/test/testfiles_for_readelf/loongarch-relocs.c
+@@ -0,0 +1,18 @@
++/* This source was compiled for LoongArch64.
++   loongarch64-unknown-linux-gnu-gcc -c -o loongarch64-relocs.o.elf loongarch-relocs.c -g
++   Upstream support for LoongArch32 is not yet mature, so it is not covered.
++*/
++
++extern struct {
++  int i, j;
++} data;
++
++extern int bar (void);
++
++int
++foo (int a)
++{
++  data.i += a;
++  data.j -= bar();
++  return 0;
++}
+diff --git a/test/testfiles_for_readelf/loongarch64-relocs.o.elf b/test/testfiles_for_readelf/loongarch64-relocs.o.elf
+new file mode 100644
+index 0000000..12fafa2
+Binary files /dev/null and b/test/testfiles_for_readelf/loongarch64-relocs.o.elf differ

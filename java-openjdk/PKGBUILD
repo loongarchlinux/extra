@@ -19,28 +19,37 @@ _git_tag=jdk-${_majorver}+${_updatever}
 arch=('loong64' 'x86_64')
 url='https://openjdk.java.net/'
 license=('custom')
-makedepends=('java-environment>=17' 'cpio' 'unzip' 'zip' 'libelf' 'libcups' 'libx11'
-             'libxrender' 'libxtst' 'libxt' 'libxext' 'libxrandr' 'alsa-lib' 'pandoc'
+makedepends=('java-environment>=19' 'cpio' 'unzip' 'zip' 'libelf' 'libcups' 'libx11'
+             'libxrender' 'libxtst' 'libxt' 'libxext' 'libxrandr' 'alsa-lib'
              'graphviz' 'freetype2' 'libjpeg-turbo' 'giflib' 'libpng' 'lcms2'
              'libnet' 'bash' 'harfbuzz' 'gcc-libs' 'glibc')
 options=(!lto)
 source=(https://github.com/openjdk/jdk${_majorver}u/archive/${_git_tag}.tar.gz
         freedesktop-java.desktop
         freedesktop-jconsole.desktop
-        freedesktop-jshell.desktop)
+        freedesktop-jshell.desktop
+        jdk20u-la64.patch)
 sha256sums=('b798ebc2e899a98edf2be99e786bb0fbad144e2270925dffe624fbe052f07ade'
             '72111743ab6ab36854b0c85a504172983715d0798fce10bc4e35689b7d15fd93'
             '8ecdf5c1605bafa58b3f7da615e6d8d3d943e3a2d3831930d6efa7815aacce07'
-            '50fc0d677489b73d549df2f08d759d5f057f200adbbab83ea5e87456152ee03e')
+            '50fc0d677489b73d549df2f08d759d5f057f200adbbab83ea5e87456152ee03e'
+            'ad1b7b501ba3ee47b783ac09816d4193eec8319893758f183810ca3249d53ea1')
 
 case "${CARCH}" in
   x86_64) _JARCH='x86_64';;
   i686)   _JARCH='x86';;
+  loong64) _JARCH='loongarch64';;
+  *) _JARCH=${CARCH} ;;
 esac
 
 _jvmdir=/usr/lib/jvm/java-${_majorver}-openjdk
 _jdkdir=jdk${_majorver}u-${_git_tag//+/-}
-_imgdir=${_jdkdir}/build/linux-${_JARCH}-server-release/images
+case "${CARCH}" in
+loong64)
+_imgdir=${_jdkdir}/build/linux-${_JARCH}-server-release/images ;;
+*)
+_imgdir=${_jdkdir}/build/linux-${_JARCH}-server-release/images ;;
+esac
 
 _nonheadless=(lib/libawt_xawt.so
               lib/libjawt.so
@@ -53,6 +62,11 @@ _nonjre=(lib/ct.sym
           lib/lible.so
           lib/src.zip)
 
+prepare() {
+  cd ${_jdkdir}
+
+  patch -Np1 -i "${srcdir}"/jdk20u-la64.patch
+}
 
 build() {
   cd ${_jdkdir}
@@ -108,14 +122,16 @@ build() {
     --with-lcms=system \
     --with-zlib=system \
     --with-harfbuzz=system \
-    --with-jvm-features=zgc,shenandoahgc \
+    --with-jvm-features=zgc \
     --with-native-debug-symbols=internal \
     --enable-unlimited-crypto \
     --disable-warnings-as-errors \
     ${NUM_PROC_OPT}
     #--disable-javac-server
+#--with-jvm-variants=zero \
+#--enable-jvm-feature-zero \
 
-  make images legacy-jre-image docs
+  make images legacy-jre-image #docs
 
   # https://bugs.openjdk.java.net/browse/JDK-8173610
   find "../${_imgdir}" -iname '*.so' -exec chmod +x {} \;
@@ -295,7 +311,7 @@ package_openjdk-doc() {
   provides=("openjdk${_majorver}-doc=${pkgver}-${pkgrel}")
 
   install -dm 755 "${pkgdir}/usr/share/doc"
-  cp -r ${_imgdir}/docs "${pkgdir}/usr/share/doc/${pkgbase}"
+#  cp -r ${_imgdir}/docs "${pkgdir}/usr/share/doc/${pkgbase}"
 
   install -dm 755 "${pkgdir}/usr/share/licenses"
   ln -s ${pkgbase} "${pkgdir}/usr/share/licenses/${pkgname}"

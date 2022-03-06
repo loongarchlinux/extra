@@ -1,0 +1,132 @@
+diff --git a/llvm/include/llvm/BinaryFormat/ELFRelocs/LoongArch.def b/llvm/include/llvm/BinaryFormat/ELFRelocs/LoongArch.def
+index 67dbd020140b..02bce3c71712 100644
+--- a/llvm/include/llvm/BinaryFormat/ELFRelocs/LoongArch.def
++++ b/llvm/include/llvm/BinaryFormat/ELFRelocs/LoongArch.def
+@@ -103,3 +103,18 @@ ELF_RELOC(R_LARCH_TLS_GD_PC_HI20,   97)
+ ELF_RELOC(R_LARCH_TLS_GD_HI20,      98)
+ ELF_RELOC(R_LARCH_32_PCREL,         99)
+ ELF_RELOC(R_LARCH_RELAX,            100)
++
++// Relocs added in ELF for the LoongArch™ Architecture v20230519, part of the
++// v2.10 LoongArch ABI specs.
++//
++// Spec addition: https://github.com/loongson/la-abi-specs/pull/1
++// Binutils commit 57a930e3bfe4b2c7fd6463ed39311e1938513138
++ELF_RELOC(R_LARCH_DELETE,      101)
++ELF_RELOC(R_LARCH_ALIGN,       102)
++ELF_RELOC(R_LARCH_PCREL20_S2,  103)
++ELF_RELOC(R_LARCH_CFA,         104)
++ELF_RELOC(R_LARCH_ADD6,        105)
++ELF_RELOC(R_LARCH_SUB6,        106)
++ELF_RELOC(R_LARCH_ADD_ULEB128, 107)
++ELF_RELOC(R_LARCH_SUB_ULEB128, 108)
++ELF_RELOC(R_LARCH_64_PCREL,    109)
+diff --git a/llvm/lib/Target/LoongArch/MCTargetDesc/LoongArchELFObjectWriter.cpp b/llvm/lib/Target/LoongArch/MCTargetDesc/LoongArchELFObjectWriter.cpp
+index 57330dd31f71..a6b9c0652639 100644
+--- a/llvm/lib/Target/LoongArch/MCTargetDesc/LoongArchELFObjectWriter.cpp
++++ b/llvm/lib/Target/LoongArch/MCTargetDesc/LoongArchELFObjectWriter.cpp
+@@ -59,7 +59,7 @@ unsigned LoongArchELFObjectWriter::getRelocType(MCContext &Ctx,
+   case FK_Data_4:
+     return IsPCRel ? ELF::R_LARCH_32_PCREL : ELF::R_LARCH_32;
+   case FK_Data_8:
+-    return ELF::R_LARCH_64;
++    return IsPCRel ? ELF::R_LARCH_64_PCREL : ELF::R_LARCH_64;
+   case LoongArch::fixup_loongarch_b16:
+     return ELF::R_LARCH_B16;
+   case LoongArch::fixup_loongarch_b21:
+diff --git a/llvm/test/MC/LoongArch/Relocations/sub-expr.s b/llvm/test/MC/LoongArch/Relocations/sub-expr.s
+new file mode 100644
+index 000000000000..0179e1027af8
+--- /dev/null
++++ b/llvm/test/MC/LoongArch/Relocations/sub-expr.s
+@@ -0,0 +1,28 @@
++# RUN: llvm-mc --filetype=obj --triple=loongarch64 %s -o %t
++# RUN: llvm-readobj -r %t | FileCheck %s
++
++## Check that subtraction expressions emit R_LARCH_32_PCREL and R_LARCH_64_PCREL relocations.
++
++## TODO: 1- or 2-byte data relocations are not supported for now.
++
++# CHECK:      Relocations [
++# CHECK-NEXT:   Section ({{.*}}) .rela.data {
++# CHECK-NEXT:     0x0 R_LARCH_64_PCREL sx 0x0
++# CHECK-NEXT:     0x8 R_LARCH_64_PCREL sy 0x0
++# CHECK-NEXT:     0x10 R_LARCH_32_PCREL sx 0x0
++# CHECK-NEXT:     0x14 R_LARCH_32_PCREL sy 0x0
++# CHECK-NEXT:   }
++
++.section sx,"a"
++x:
++nop
++
++.data
++.8byte x-.
++.8byte y-.
++.4byte x-.
++.4byte y-.
++
++.section sy,"a"
++y:
++nop
+diff --git a/llvm/test/tools/llvm-readobj/ELF/reloc-types-loongarch64.test b/llvm/test/tools/llvm-readobj/ELF/reloc-types-loongarch64.test
+index c26fae7e8323..e32dc893fa79 100644
+--- a/llvm/test/tools/llvm-readobj/ELF/reloc-types-loongarch64.test
++++ b/llvm/test/tools/llvm-readobj/ELF/reloc-types-loongarch64.test
+@@ -93,6 +93,15 @@
+ # CHECK: Type: R_LARCH_TLS_GD_HI20 (98)
+ # CHECK: Type: R_LARCH_32_PCREL (99)
+ # CHECK: Type: R_LARCH_RELAX (100)
++# CHECK: Type: R_LARCH_DELETE (101)
++# CHECK: Type: R_LARCH_ALIGN (102)
++# CHECK: Type: R_LARCH_PCREL20_S2 (103)
++# CHECK: Type: R_LARCH_CFA (104)
++# CHECK: Type: R_LARCH_ADD6 (105)
++# CHECK: Type: R_LARCH_SUB6 (106)
++# CHECK: Type: R_LARCH_ADD_ULEB128 (107)
++# CHECK: Type: R_LARCH_SUB_ULEB128 (108)
++# CHECK: Type: R_LARCH_64_PCREL (109)
+ 
+ --- !ELF
+ FileHeader:
+@@ -193,3 +202,12 @@ Sections:
+       - Type: R_LARCH_TLS_GD_HI20
+       - Type: R_LARCH_32_PCREL
+       - Type: R_LARCH_RELAX
++      - Type: R_LARCH_DELETE
++      - Type: R_LARCH_ALIGN
++      - Type: R_LARCH_PCREL20_S2
++      - Type: R_LARCH_CFA
++      - Type: R_LARCH_ADD6
++      - Type: R_LARCH_SUB6
++      - Type: R_LARCH_ADD_ULEB128
++      - Type: R_LARCH_SUB_ULEB128
++      - Type: R_LARCH_64_PCREL
+diff --git a/llvm/unittests/Object/ELFTest.cpp b/llvm/unittests/Object/ELFTest.cpp
+index 9cf8feb0e2c5..35fc2ec698fb 100644
+--- a/llvm/unittests/Object/ELFTest.cpp
++++ b/llvm/unittests/Object/ELFTest.cpp
+@@ -233,6 +233,24 @@ TEST(ELFTest, getELFRelocationTypeNameForLoongArch) {
+             getELFRelocationTypeName(EM_LOONGARCH, R_LARCH_32_PCREL));
+   EXPECT_EQ("R_LARCH_RELAX",
+             getELFRelocationTypeName(EM_LOONGARCH, R_LARCH_RELAX));
++  EXPECT_EQ("R_LARCH_DELETE",
++            getELFRelocationTypeName(EM_LOONGARCH, R_LARCH_DELETE));
++  EXPECT_EQ("R_LARCH_ALIGN",
++            getELFRelocationTypeName(EM_LOONGARCH, R_LARCH_ALIGN));
++  EXPECT_EQ("R_LARCH_PCREL20_S2",
++            getELFRelocationTypeName(EM_LOONGARCH, R_LARCH_PCREL20_S2));
++  EXPECT_EQ("R_LARCH_CFA",
++            getELFRelocationTypeName(EM_LOONGARCH, R_LARCH_CFA));
++  EXPECT_EQ("R_LARCH_ADD6",
++            getELFRelocationTypeName(EM_LOONGARCH, R_LARCH_ADD6));
++  EXPECT_EQ("R_LARCH_SUB6",
++            getELFRelocationTypeName(EM_LOONGARCH, R_LARCH_SUB6));
++  EXPECT_EQ("R_LARCH_ADD_ULEB128",
++            getELFRelocationTypeName(EM_LOONGARCH, R_LARCH_ADD_ULEB128));
++  EXPECT_EQ("R_LARCH_SUB_ULEB128",
++            getELFRelocationTypeName(EM_LOONGARCH, R_LARCH_SUB_ULEB128));
++  EXPECT_EQ("R_LARCH_64_PCREL",
++            getELFRelocationTypeName(EM_LOONGARCH, R_LARCH_64_PCREL));
+ }
+ 
+ TEST(ELFTest, getELFRelativeRelocationType) {

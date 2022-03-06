@@ -24,23 +24,26 @@ _git_tag=jdk-${_majorver}.${_minorver}.${_securityver}+${_updatever}
 arch=('loong64' 'x86_64')
 url='https://openjdk.java.net/'
 license=('custom')
-makedepends=('java-environment>=10' 'java-environment<12' 'cpio' 'unzip' 'zip' 'libelf' 'libcups' 'libx11'
-             'libxrender' 'libxtst' 'libxt' 'libxext' 'libxrandr' 'alsa-lib' 'pandoc'
+makedepends=('jdk11-openjdk' 'cpio' 'unzip' 'zip' 'libelf' 'libcups' 'libx11'
+             'libxrender' 'libxtst' 'libxt' 'libxext' 'libxrandr' 'alsa-lib'
              'graphviz' 'freetype2' 'libjpeg-turbo' 'giflib' 'libpng' 'lcms2'
              'libnet' 'bash' 'harfbuzz' 'glibc' 'gcc-libs')
 options=(!lto)
 source=(https://github.com/openjdk/jdk${_majorver}u/archive/${_git_tag}.tar.gz
         freedesktop-java.desktop
         freedesktop-jconsole.desktop
-        freedesktop-jshell.desktop)
+        freedesktop-jshell.desktop
+        jdk11-11.0.20.1-la64.patch)
 sha256sums=('982322667a9e5cb6a2e063bbab3c0bda43907cf9c6099b80888d41499823f1a3'
             '575587ad58dfa9908f046d307b9afc7b0b2eb20a1eb454f8fdbbd539ea7b3d01'
             '2f57b7c7dd671eabe9fa10c4f1283573e99d7f7c36eccd82c95b705979a2e8cb'
-            'f271618a8c2a892b554caf26857af41efdf0d8bcb95d57ce7ba535d6979e96da')
+            'f271618a8c2a892b554caf26857af41efdf0d8bcb95d57ce7ba535d6979e96da'
+            'c55c5c1a8fbc5721f4c1ebdfba6101c4283b1ce69c8b828d54f49bc5c6e8ccb7')
 
 case "${CARCH}" in
   x86_64) _JARCH='x86_64';;
   i686)   _JARCH='x86';;
+  loong64) _JARCH='loongarch64';;
 esac
 
 _jvmdir=/usr/lib/jvm/java-${_majorver}-openjdk
@@ -51,6 +54,12 @@ _nonheadless=(lib/libawt_xawt.so
               lib/libjawt.so
               lib/libjsound.so
               lib/libsplashscreen.so)
+
+prepare() {
+  cd ${_jdkdir}
+
+  patch -Np1 -i "${srcdir}"/jdk11-11.0.20.1-la64.patch
+}
 
 build() {
   cd ${_jdkdir}
@@ -105,7 +114,7 @@ build() {
     ${NUM_PROC_OPT}
     #--disable-javac-server
 
-  make images legacy-jre-image docs
+  make images legacy-jre-image #docs
 
   # https://bugs.openjdk.java.net/browse/JDK-8173610
   find "../${_imgdir}" -iname '*.so' -exec chmod +x {} \;
@@ -275,7 +284,7 @@ package_openjdk11-doc() {
   provides=("openjdk${_majorver}-doc=${pkgver}-${pkgrel}")
 
   install -dm 755 "${pkgdir}/usr/share/doc"
-  cp -r ${_imgdir}/docs "${pkgdir}/usr/share/doc/${pkgbase}"
+#  cp -r ${_imgdir}/docs "${pkgdir}/usr/share/doc/${pkgbase}"
 
   install -dm 755 "${pkgdir}/usr/share/licenses"
   ln -s ${pkgbase} "${pkgdir}/usr/share/licenses/${pkgname}"

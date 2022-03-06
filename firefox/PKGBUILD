@@ -28,11 +28,9 @@ makedepends=(
   cbindgen
   clang
   diffutils
-  dump_syms
   imake
   inetutils
   jack
-  lld
   llvm
   mesa
   nasm
@@ -67,6 +65,7 @@ source=(
   https://archive.mozilla.org/pub/firefox/releases/$pkgver/source/firefox-$pkgver.source.tar.xz{,.asc}
   $pkgname.desktop
   identity-icons-brand.svg
+  0003-LoongArchLinux-Add-support-for-LoongArch.patch
 )
 validpgpkeys=(
   # Mozilla Software Releases <release@mozilla.com>
@@ -80,7 +79,8 @@ sha256sums=('a3f4da56d13605d615a740c739e3504261649d040bc473ae2ed609336d79fd95'
 b2sums=('eef2b6f4d4f090535a8f74fa5ae3774288aa82142b8bb70c7ca913222a941ac9b7f8d9e6b6739a2ce67dff6f1bec0a9a21d11d015e3437013badf82335206b58'
         'SKIP'
         'd07557840097dd48a60c51cc5111950781e1c6ce255557693bd11306c7a9258b2a82548329762148f117b2295145f9e66e0483a18e2fe09c5afcffed2e4b8628'
-        '63a8dd9d8910f9efb353bed452d8b4b2a2da435857ccee083fc0c557f8c4c1339ca593b463db320f70387a1b63f1a79e709e9d12c69520993e26d85a3d742e34')
+        '63a8dd9d8910f9efb353bed452d8b4b2a2da435857ccee083fc0c557f8c4c1339ca593b463db320f70387a1b63f1a79e709e9d12c69520993e26d85a3d742e34'
+        '3a18fe1225028b6ba687e5507333c028de898c3187344548f36d9ec1bc343d6165135094edc61f0555e04d65b4385158e4cd18b9adf4d5d53ff59db5fedabaf7')
 
 # Google API keys (see http://www.chromium.org/developers/how-tos/api-keys)
 # Note: These are for Arch Linux use ONLY. For your own distribution, please
@@ -98,6 +98,8 @@ prepare() {
   mkdir mozbuild
   cd firefox-$pkgver
 
+  patch -Np1 -i ../0003-LoongArchLinux-Add-support-for-LoongArch.patch
+
   echo -n "$_google_api_key" >google-api-key
   echo -n "$_mozilla_api_key" >mozilla-api-key
 
@@ -110,10 +112,8 @@ ac_add_options --enable-release
 ac_add_options --enable-hardening
 ac_add_options --enable-optimize
 ac_add_options --enable-rust-simd
-ac_add_options --enable-linker=lld
-ac_add_options --disable-elf-hack
 ac_add_options --disable-bootstrap
-ac_add_options --with-wasi-sysroot=/usr/share/wasi-sysroot
+ac_add_options --without-wasm-sandboxed-libraries
 
 # Branding
 ac_add_options --enable-official-branding
@@ -136,19 +136,25 @@ ac_add_options --with-system-nss
 # Features
 ac_add_options --enable-alsa
 ac_add_options --enable-jack
-ac_add_options --enable-crashreporter
+ac_add_options --disable-crashreporter
 ac_add_options --disable-updater
 ac_add_options --disable-tests
 END
 }
 
 build() {
+  set -x
   cd firefox-$pkgver
 
   export MOZ_NOSPAM=1
   export MOZBUILD_STATE_PATH="$srcdir/mozbuild"
   export MOZ_ENABLE_FULL_SYMBOLS=1
   export MACH_BUILD_PYTHON_NATIVE_PACKAGE_SOURCE=pip
+# clang didn't support -mlsx
+  CFLAGS=${CFLAGS/-mlsx /}
+  CXXFLAGS=${CXXFLAGS/-mlsx /}
+  CFLAGS=${CFLAGS/-fstack-clash-protection/}
+  CXXFLAGS=${CXXFLAGS/-fstack-clash-protection/}
 
   # malloc_usable_size is used in various parts of the codebase
   CFLAGS="${CFLAGS/_FORTIFY_SOURCE=3/_FORTIFY_SOURCE=2}"
@@ -159,38 +165,8 @@ build() {
 
   # Do 3-tier PGO
   echo "Building instrumented browser..."
-  cat >.mozconfig ../mozconfig - <<END
-ac_add_options --enable-profile-generate=cross
-END
+  cp ../mozconfig .mozconfig
   ./mach build
-
-  echo "Profiling instrumented browser..."
-  ./mach package
-  LLVM_PROFDATA=llvm-profdata \
-    JARLOG_FILE="$PWD/jarlog" \
-    xvfb-run -s "-screen 0 1920x1080x24 -nolisten local" \
-    ./mach python build/pgo/profileserver.py
-
-  stat -c "Profile data found (%s bytes)" merged.profdata
-  test -s merged.profdata
-
-  stat -c "Jar log found (%s bytes)" jarlog
-  test -s jarlog
-
-  echo "Removing instrumented browser..."
-  ./mach clobber
-
-  echo "Building optimized browser..."
-  cat >.mozconfig ../mozconfig - <<END
-ac_add_options --enable-lto=cross,full
-ac_add_options --enable-profile-use=cross
-ac_add_options --with-pgo-profile-path=${PWD@Q}/merged.profdata
-ac_add_options --with-pgo-jarlog=${PWD@Q}/jarlog
-END
-  ./mach build
-
-  echo "Building symbol archive..."
-  ./mach buildsymbols
 }
 
 package() {
@@ -273,8 +249,8 @@ END
   export SOCORRO_SYMBOL_UPLOAD_TOKEN_FILE="$startdir/.crash-stats-api.token"
   if [[ -f $SOCORRO_SYMBOL_UPLOAD_TOKEN_FILE ]]; then
     make -C obj uploadsymbols
-  else
-    cp -fvt "$startdir" obj/dist/*crashreporter-symbols-full.tar.zst
+#  else
+#    cp -fvt "$startdir" obj/dist/*crashreporter-symbols-full.tar.zst
   fi
 }
 

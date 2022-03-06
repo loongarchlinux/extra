@@ -10,16 +10,21 @@ url='https://github.com/docker/machine'
 license=('Apache')
 depends=('glibc')
 optdepends=('net-tools: for VirtualBox support')
-makedepends=('go')
+makedepends=('go' 'git')
 optdepends=('net-tools: required for VirtualBox driver')
-source=("$pkgname-$pkgver.tar.gz::https://github.com/docker/machine/archive/v$pkgver.tar.gz")
-sha512sums=('92408c18be23cee040e96412dafeff16415834c3141b0a9c1f82cb9d6b1e0700344a158a44ffac24fed2c244d3fa5c531d9f13ffffaa4be1f4fcbd79104f899e')
+source=("$pkgname-$pkgver.tar.gz::https://github.com/docker/machine/archive/v$pkgver.tar.gz"
+        docker-machine-la64.patch)
+sha512sums=('92408c18be23cee040e96412dafeff16415834c3141b0a9c1f82cb9d6b1e0700344a158a44ffac24fed2c244d3fa5c531d9f13ffffaa4be1f4fcbd79104f899e'
+            '6aba97975505e8d439604747e67055d9f45bb75c40dc6a0ae2a90d5ce94be686c16c158c506be1af644ec651a6593b1b45747327e5238643721763d3ccd4907c')
 
 prepare() {
   mkdir -p build/src
   mv machine-$pkgver/vendor/* build/src/
+  rm -rf build/src/golang.org/x/sys
+  git clone https://github.com/golang/sys.git build/src/golang.org/x/sys
   mkdir -p build/src/github.com/docker
   ln -s "$srcdir"/machine-$pkgver build/src/github.com/docker/machine
+  patch -p1 -i $srcdir/docker-machine-la64.patch
 }
 
 build() {

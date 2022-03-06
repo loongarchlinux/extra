@@ -17,8 +17,11 @@ b2sums=('07ba72b713bd240e9035ced7555e02bd544ba402a4cf1e8417804ea3d53d7c43cbd47da
 options=('!lto')
 
 build() {
+  export GOPROXY=https://goproxy.cn
   cd $pkgname-$pkgver
-  go build -v -mod=vendor -trimpath -buildmode=pie -ldflags="-s -w -extldflags $LDFLAGS"
+  go mod edit -replace=golang.org/x/sys=github.com/golang/sys@master
+  go mod tidy
+  go build -v -trimpath -ldflags="-s -w -extldflags $LDFLAGS"
 }
 
 package() {

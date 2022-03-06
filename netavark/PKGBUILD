@@ -35,7 +35,7 @@ pkgver() {
 
 prepare() {
   cd $pkgname
-  cargo fetch --locked --target "$CARCH-unknown-linux-gnu"
+  cargo fetch --target "$CARCH-unknown-linux-gnu"
 }
 
 build() {
@@ -48,6 +48,13 @@ build() {
   # create service file manually as we are not using the Makefile
   sed "s|@@NETAVARK@@|/usr/lib/podman/netavark|" contrib/systemd/system/netavark-dhcp-proxy.service.in > contrib/systemd/system/netavark-dhcp-proxy.service
   cargo build --frozen --release --all-features
+#  find -name Cargo.lock -exec rm -f {} \;
+#  mkdir -p .cargo
+#  cat > .cargo/config.toml <<EOF
+#[source.crates-io]
+#registry = "https://gitee.com/yetist/crates.io-index"
+#EOF
+#  cargo build --release --all-features
 }
 
 check() {
