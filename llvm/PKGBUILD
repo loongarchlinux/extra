@@ -2,7 +2,7 @@
 # Contributor: Jan "heftig" Steffens <jan.steffens@gmail.com>
 
 pkgname=('llvm' 'llvm-libs')
-pkgver=15.0.7
+pkgver=16.0.0rc2
 pkgrel=1
 arch=('loong64' 'x86_64')
 url="https://llvm.org/"
@@ -11,13 +11,16 @@ makedepends=('cmake' 'ninja' 'zlib' 'zstd' 'libffi' 'libedit' 'ncurses'
              'libxml2' 'python-setuptools' 'python-psutil' 'python-sphinx'
              'python-recommonmark')
 options=('staticlibs' 'debug' '!lto') # Getting thousands of test failures with LTO
-_source_base=https://github.com/llvm/llvm-project/releases/download/llvmorg-$pkgver
+_source_base=https://github.com/llvm/llvm-project/releases/download/llvmorg-16.0.0-rc2
 source=($_source_base/llvm-$pkgver.src.tar.xz{,.sig}
         $_source_base/cmake-$pkgver.src.tar.xz{,.sig}
+        $_source_base/third-party-$pkgver.src.tar.xz{,.sig}
         llvm-config.h)
-sha256sums=('4ad8b2cc8003c86d0078d15d987d84e3a739f24aae9033865c027abae93ee7a4'
+sha256sums=('77d8b0186c54269c5e8dcd46840025d1fc7c89d6cbf6d3969edfcf402a3d7412'
             'SKIP'
-            '8986f29b634fdaa9862eedda78513969fe9788301c9f2d938f4c10a3e7a3e7ea'
+            'c95907dd1e10197b851f7e6a6b3dbd831bea96ea25b376d340ad7ad94b3a53a0'
+            'SKIP'
+            '939686f0c8fee1a50ef34c8ec0070af1139e14c69f7a5390dc2e95e8e32c8e34'
             'SKIP'
             '597dc5968c695bbdbb0eac9e8eb5117fcd2773bc91edf5ec103ecffffab8bc48')
 validpgpkeys=('474E22316ABF4785A88C6E8EA2C794A986419D8A'  # Tom Stellard <tstellar@redhat.com>
@@ -25,7 +28,8 @@ validpgpkeys=('474E22316ABF4785A88C6E8EA2C794A986419D8A'  # Tom Stellard <tstell
 
 prepare() {
   mv cmake{-$pkgver.src,}
-  cd llvm-$pkgver.src
+  mv third-party{-${pkgver}.src,}
+  cd llvm-${pkgver}.src
   mkdir build
 }
 

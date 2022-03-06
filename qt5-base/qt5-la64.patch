@@ -1,0 +1,68 @@
+diff --git a/src/3rdparty/double-conversion/include/double-conversion/utils.h b/src/3rdparty/double-conversion/include/double-conversion/utils.h
+index 70e697ca00..fecd82efbf 100644
+--- a/src/3rdparty/double-conversion/include/double-conversion/utils.h
++++ b/src/3rdparty/double-conversion/include/double-conversion/utils.h
+@@ -98,6 +98,7 @@ int main(int argc, char** argv) {
+     defined(_POWER) || defined(_ARCH_PPC) || defined(_ARCH_PPC64) || \
+     defined(__sparc__) || defined(__sparc) || defined(__s390__) || \
+     defined(__SH4__) || defined(__alpha__) || \
++    defined(__loongarch64) || \
+     defined(_MIPS_ARCH_MIPS32R2) || defined(__ARMEB__) ||\
+     defined(__AARCH64EL__) || defined(__aarch64__) || defined(__AARCH64EB__) || \
+     defined(__riscv) || \
+diff --git a/src/3rdparty/forkfd/forkfd_linux.c b/src/3rdparty/forkfd/forkfd_linux.c
+index ffe0e9a5e2..b1f5408d11 100644
+--- a/src/3rdparty/forkfd/forkfd_linux.c
++++ b/src/3rdparty/forkfd/forkfd_linux.c
+@@ -82,7 +82,8 @@ static int sys_clone(unsigned long cloneflags, int *ptid)
+     return syscall(__NR_clone, cloneflags, child_stack, stack_size, ptid, newtls, ctid);
+ #elif defined(__arc__) || defined(__arm__) || defined(__aarch64__) || defined(__mips__) || \
+     defined(__nds32__) || defined(__hppa__) || defined(__powerpc__) || defined(__i386__) || \
+-    defined(__x86_64__) || defined(__xtensa__) || defined(__alpha__) || defined(__riscv)
++    defined(__x86_64__) || defined(__xtensa__) || defined(__alpha__) || defined(__riscv) || \
++    defined(__loongarch__)
+     /* ctid and newtls are inverted on CONFIG_CLONE_BACKWARDS architectures,
+      * but since both values are 0, there's no harm. */
+     return syscall(__NR_clone, cloneflags, child_stack, ptid, ctid, newtls);
+diff --git a/src/corelib/global/archdetect.cpp b/src/corelib/global/archdetect.cpp
+index 1d00b7f5a5..281e84df63 100644
+--- a/src/corelib/global/archdetect.cpp
++++ b/src/corelib/global/archdetect.cpp
+@@ -59,6 +59,10 @@
+ #  define ARCH_PROCESSOR "x86_64"
+ #elif defined(Q_PROCESSOR_IA64)
+ #  define ARCH_PROCESSOR "ia64"
++#elif defined(Q_PROCESSOR_LOONGARCH_32)
++#  define ARCH_PROCESSOR "loongarch32"
++#elif defined(Q_PROCESSOR_LOONGARCH_64)
++#  define ARCH_PROCESSOR "loongarch64"
+ #elif defined(Q_PROCESSOR_MIPS_64)
+ #  define ARCH_PROCESSOR "mips64"
+ #elif defined(Q_PROCESSOR_MIPS)
+diff --git a/src/corelib/global/qprocessordetection.h b/src/corelib/global/qprocessordetection.h
+index 8d65720850..5b65d4e9da 100644
+--- a/src/corelib/global/qprocessordetection.h
++++ b/src/corelib/global/qprocessordetection.h
+@@ -223,6 +223,22 @@
+ #  define Q_PROCESSOR_WORDSIZE   8
+ // Q_BYTE_ORDER not defined, use endianness auto-detection
+ 
++/*
++    LoongArch family, known variants: 32- and 64-bit
++
++    LoongArch is little-endian.
++*/
++#elif defined(__loongarch__)
++#  define Q_PROCESSOR_LOONGARCH
++#  if __loongarch_grlen == 64
++#    define Q_PROCESSOR_LOONGARCH_64
++#    define Q_PROCESSOR_WORDSIZE 8
++#  else
++#    define Q_PROCESSOR_LOONGARCH_32
++#    define Q_PROCESSOR_WORDSIZE 4
++#  endif
++#  define Q_BYTE_ORDER Q_LITTLE_ENDIAN
++
+ /*
+     MIPS family, known revisions: I, II, III, IV, 32, 64
+ 

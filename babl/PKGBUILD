@@ -10,8 +10,10 @@ url='https://gegl.org/babl/'
 license=('LGPL3')
 depends=('glibc' 'lcms2')
 makedepends=('git' 'meson' 'gobject-introspection' 'vala')
-source=("git+https://gitlab.gnome.org/GNOME/babl.git#tag=$_tag")
-sha256sums=('SKIP')
+source=("git+https://gitlab.gnome.org/GNOME/babl.git#tag=$_tag"
+        babl-fix-gir-pkgname.patch)
+sha256sums=('SKIP'
+            'bceba2643d5baef3d5add6f715d8bf982cbaf25701e589d489b1a8d819879e6a')
 
 pkgver() {
   cd "${pkgname}"
@@ -21,6 +23,7 @@ pkgver() {
 prepare() {
   # https://gitlab.gnome.org/GNOME/babl/-/merge_requests/45
   sed -i s/Description/description/ "${pkgname}"/meson.build
+  patch -d babl -p1 -i $srcdir/babl-fix-gir-pkgname.patch
 }
 
 build() {

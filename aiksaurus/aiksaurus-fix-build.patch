@@ -1,0 +1,400 @@
+diff -uNr aiksaurus-1.2.1/base/Aiksaurus.cpp aiksaurus-1.2.1.ok/base/Aiksaurus.cpp
+--- aiksaurus-1.2.1/base/Aiksaurus.cpp	2003-08-09 00:18:43.000000000 +0800
++++ aiksaurus-1.2.1.ok/base/Aiksaurus.cpp	2022-06-23 12:28:39.298196569 +0800
+@@ -98,21 +98,21 @@
+         public:
+ 
+             ThesaurusImpl(const char* mfile, const char* wfile)
+-                throw(AiksaurusException);
++                 noexcept(false);
+             
+             ~ThesaurusImpl() throw();
+ 
+             const char* word() const throw();
+ 
+-            bool find(const char* word) throw(AiksaurusException);
+-            const char* next(int& id) throw(AiksaurusException);
+-            const char* similar() throw(AiksaurusException);
++            bool find(const char* word) noexcept(false);
++            const char* next(int& id) noexcept(false);
++            const char* similar() noexcept(false);
+     };
+ 
+ 
+     
+ ThesaurusImpl::ThesaurusImpl(const char* mfile, const char* wfile)
+-throw(AiksaurusException)
++noexcept(false)
+     : d_meanings(mfile), 
+       d_words(wfile), 
+       d_links(NULL), 
+@@ -152,7 +152,7 @@
+ 
+ 
+ bool 
+-ThesaurusImpl::find(const char* word) throw(AiksaurusException)
++ThesaurusImpl::find(const char* word) noexcept(false)
+ {
+     try
+     {
+@@ -197,7 +197,7 @@
+ 
+ 
+ 
+-const char* ThesaurusImpl::next(int& id) throw(AiksaurusException)
++const char* ThesaurusImpl::next(int& id) noexcept(false)
+ {
+     if (d_currentStream >= d_meaningStreams.size())
+         return "";
+@@ -220,7 +220,7 @@
+ }
+ 
+ 
+-const char* ThesaurusImpl::similar() throw(AiksaurusException)
++const char* ThesaurusImpl::similar() noexcept(false)
+ {
+     if (d_similarID < d_similarStop)
+     {
+diff -uNr aiksaurus-1.2.1/base/MeaningsFile.cpp aiksaurus-1.2.1.ok/base/MeaningsFile.cpp
+--- aiksaurus-1.2.1/base/MeaningsFile.cpp	2003-06-15 18:17:56.000000000 +0800
++++ aiksaurus-1.2.1.ok/base/MeaningsFile.cpp	2022-06-23 12:29:38.830290837 +0800
+@@ -74,7 +74,7 @@
+             // MeaningStream::read
+             //   Put the next integer in the stream into x.
+             //   Return true normally, false if EOF.
+-            bool read(int& x) throw(AiksaurusException);
++            bool read(int& x) noexcept(false);
+     };
+ 
+ 
+@@ -104,7 +104,7 @@
+ //   a link. (EOF or problem reading file).
+ //
+ inline bool 
+-MeaningStream::read(int& x) throw(AiksaurusException)
++MeaningStream::read(int& x) noexcept(false)
+ {
+     bool ret = true;
+     
+@@ -166,7 +166,7 @@
+ //   All we need to do is get a handle to the file. 
+ //   We'll also check to make sure our meanings file opens ok.
+ //
+-MeaningsFile::MeaningsFile(const char* fname) throw(AiksaurusException)
++MeaningsFile::MeaningsFile(const char* fname) noexcept(false)
+ {
+     d_file_ptr = fopen(fname, "rb");
+     if (!d_file_ptr)
+@@ -195,7 +195,7 @@
+ //   line, plus one slot for end-of-links (-1).
+ //
+ int
+-MeaningsFile::_readline(MeaningStream& s, int* buffer) throw(AiksaurusException) 
++MeaningsFile::_readline(MeaningStream& s, int* buffer) noexcept(false)
+ {
+     int i = 0;
+ 
+@@ -225,7 +225,7 @@
+ //   the function is called.
+ //
+ int* 
+-MeaningsFile::getWords(int id) throw(AiksaurusException)
++MeaningsFile::getWords(int id) noexcept(false)
+ {   
+     // First we need to create our buffer to return.
+     // We know that there are at most s_dataMaxLineLength
+diff -uNr aiksaurus-1.2.1/base/MeaningsFile.h aiksaurus-1.2.1.ok/base/MeaningsFile.h
+--- aiksaurus-1.2.1/base/MeaningsFile.h	2003-06-15 18:17:56.000000000 +0800
++++ aiksaurus-1.2.1.ok/base/MeaningsFile.h	2022-06-23 12:22:49.261982237 +0800
+@@ -46,16 +46,16 @@
+ 
+             // Utility function
+             int _readline(MeaningStream& s, int* buffer) 
+-                throw(AiksaurusException);
++                noexcept(false);
+             
+         public:
+ 
+             // Creation and Destruction
+-            MeaningsFile(const char* fname) throw(AiksaurusException);
++            MeaningsFile(const char* fname) noexcept(false);
+             ~MeaningsFile() throw();
+ 
+             // Word Lookup        
+-            int* getWords(int id) throw(AiksaurusException);
++            int* getWords(int id) noexcept(false);
+     };
+ }
+ 
+diff -uNr aiksaurus-1.2.1/base/WordsFile.cpp aiksaurus-1.2.1.ok/base/WordsFile.cpp
+--- aiksaurus-1.2.1/base/WordsFile.cpp	2003-06-15 18:17:58.000000000 +0800
++++ aiksaurus-1.2.1.ok/base/WordsFile.cpp	2022-06-23 12:30:29.725543860 +0800
+@@ -112,7 +112,7 @@
+ //   Attempt to safely initialize the Words file.  Might have problems
+ //   with running out of memory or file not found.
+ //
+-WordsFile::WordsFile(const char* fname) throw(AiksaurusException)
++WordsFile::WordsFile(const char* fname) noexcept(false)
+ {
+     
+     try
+@@ -171,7 +171,7 @@
+ //   Returns the index of the word on success, or -1 on 
+ //   failure.
+ //
+-bool WordsFile::findWord(const char* str, int& index) throw(AiksaurusException)
++bool WordsFile::findWord(const char* str, int& index) noexcept(false)
+ {  
+     // Create copy of str, so that we can turn spaces into colons.
+     // We only need to copy the first s_wordlen + 1 bytes to ensure
+@@ -280,7 +280,7 @@
+ // loadWord()
+ //   Read a particular word from the Words file. 
+ //
+-void WordsFile::loadWord(int id) throw(AiksaurusException)
++void WordsFile::loadWord(int id) noexcept(false)
+ {
+     assert(id >= 0);
+     assert(id < getSize());
+diff -uNr aiksaurus-1.2.1/base/WordsFile.h aiksaurus-1.2.1.ok/base/WordsFile.h
+--- aiksaurus-1.2.1/base/WordsFile.h	2003-06-15 18:17:59.000000000 +0800
++++ aiksaurus-1.2.1.ok/base/WordsFile.h	2022-06-23 12:23:41.711944968 +0800
+@@ -55,12 +55,12 @@
+         public:
+ 
+         // Creation and Destruction
+-            WordsFile(const char* fname) throw(AiksaurusException);
++            WordsFile(const char* fname) noexcept(false);
+             ~WordsFile() throw();
+         
+         // Word Lookup        
+-            void loadWord(int id) throw(AiksaurusException);
+-            bool findWord(const char* str, int& index) throw(AiksaurusException);
++            void loadWord(int id) noexcept(false);
++            bool findWord(const char* str, int& index) noexcept(false);
+ 
+         // Inspection  
+             int getSize() const throw();
+diff -uNr aiksaurus-1.2.1/base/WordStream.h aiksaurus-1.2.1.ok/base/WordStream.h
+--- aiksaurus-1.2.1/base/WordStream.h	2003-06-15 18:17:58.000000000 +0800
++++ aiksaurus-1.2.1.ok/base/WordStream.h	2022-06-23 12:24:57.220828383 +0800
+@@ -38,7 +38,7 @@
+             
+         public:     
+             
+-            WordStream(int* words) throw(std::bad_alloc)
++            WordStream(int* words) noexcept(false)
+             {
+                 for(int i = 0;words[i] != -1;++i)
+                     d_words.push(words[i]);
+diff -uNr aiksaurus-1.2.1/gtk/src/AiksaurusGTK.cpp aiksaurus-1.2.1.ok/gtk/src/AiksaurusGTK.cpp
+--- aiksaurus-1.2.1/gtk/src/AiksaurusGTK.cpp	2003-05-28 07:46:37.000000000 +0800
++++ aiksaurus-1.2.1.ok/gtk/src/AiksaurusGTK.cpp	2022-06-23 12:41:19.848044967 +0800
+@@ -54,7 +54,7 @@
+             const char* runThesaurus(const char* word) throw();
+             void setTitle(const char* title) throw();
+             void setReplacebar(bool replacebar) throw();
+-            void setInitialMessage(const char* message) throw(std::bad_alloc);
++            void setInitialMessage(const char* message) noexcept(false);
+             
+             void eventCancel() throw();
+             void eventReplace(const char* replacement) throw();
+@@ -84,7 +84,7 @@
+     }
+ 
+     
+-    void DialogImpl::setInitialMessage(const char* message) throw(std::bad_alloc)
++    void DialogImpl::setInitialMessage(const char* message) noexcept(false)
+     {
+         d_initialMessage = message;
+     }
+diff -uNr aiksaurus-1.2.1/gtk/src/Display.cpp aiksaurus-1.2.1.ok/gtk/src/Display.cpp
+--- aiksaurus-1.2.1/gtk/src/Display.cpp	2022-06-23 12:46:37.102548374 +0800
++++ aiksaurus-1.2.1.ok/gtk/src/Display.cpp	2022-06-23 12:43:10.935559296 +0800
+@@ -73,7 +73,7 @@
+ 
+     
+     void Display::_createMeaning(const string& title, vector<string>& words)
+-        throw(std::bad_alloc)
++         noexcept(false)
+     {
+         Meaning *mean = new Meaning(title, words, *this);
+         d_meanings.push_back(mean);
+@@ -98,7 +98,7 @@
+         d_meanings.clear();
+     }
+        
+-    void Display::_displayResults(const char* word) throw(Exception, std::bad_alloc)
++    void Display::_displayResults(const char* word) noexcept(false)
+     {
+         _checkThesaurus();
+         
+@@ -137,7 +137,7 @@
+    
+ 
+     
+-    void Display::_checkThesaurus() throw(Exception)
++    void Display::_checkThesaurus() noexcept(false)
+     {
+         if (d_thesaurus.error()[0])
+         {
+@@ -153,7 +153,7 @@
+     }
+     
+     void Display::_displayAlternatives()
+-        throw(Exception, std::bad_alloc)
++         noexcept(false)
+     {
+         _checkThesaurus();
+         vector<string> words;
+@@ -176,7 +176,7 @@
+         gtk_widget_show_all(d_layout);
+     }
+     
+-    void Display::search(const char* word) throw(std::bad_alloc)
++    void Display::search(const char* word) noexcept(false)
+     {
+         try 
+         {
+@@ -197,7 +197,7 @@
+     }
+ 
+ 
+-    void Display::_handleClick(bool isDoubleClick, const char* text) throw(std::bad_alloc)
++    void Display::_handleClick(bool isDoubleClick, const char* text) noexcept(false)
+     {
+         string str(text); // might throw
+ 
+diff -uNr aiksaurus-1.2.1/gtk/src/Display.h aiksaurus-1.2.1.ok/gtk/src/Display.h
+--- aiksaurus-1.2.1/gtk/src/Display.h	2002-07-11 18:09:37.000000000 +0800
++++ aiksaurus-1.2.1.ok/gtk/src/Display.h	2022-06-23 12:40:58.468835523 +0800
+@@ -29,17 +29,17 @@
+             std::vector<Meaning*> d_meanings;
+ 
+             void _handleSelection(GtkWidget* list) throw();
+-            void _handleClick(bool isDoubleClick, const char* text) throw(std::bad_alloc);
++            void _handleClick(bool isDoubleClick, const char* text) noexcept(false);
+         
+             void _resetDisplay() throw();
+             
+             void _createMeaning(const std::string& title, std::vector<std::string>& words) 
+-                throw(std::bad_alloc);
++                 noexcept(false);
+             
+-            void _displayResults(const char* word) throw(Exception, std::bad_alloc);
+-            void _displayAlternatives() throw(Exception, std::bad_alloc);
++            void _displayResults(const char* word) noexcept(false);
++            void _displayAlternatives() noexcept(false);
+             
+-            void _checkThesaurus() throw(Exception);
++            void _checkThesaurus() noexcept(false);
+             
+             static void _initResources() throw();
+ 
+@@ -50,7 +50,7 @@
+             const Aiksaurus& getThesaurus() const throw();
+             GtkWidget* getDisplay() throw();
+ 
+-            void search(const char* word) throw(std::bad_alloc);
++            void search(const char* word) noexcept(false);
+             void showMessage(const char* message) throw();
+     };
+ 
+diff -uNr aiksaurus-1.2.1/gtk/src/Meaning.cpp aiksaurus-1.2.1.ok/gtk/src/Meaning.cpp
+--- aiksaurus-1.2.1/gtk/src/Meaning.cpp	2003-05-28 07:56:55.000000000 +0800
++++ aiksaurus-1.2.1.ok/gtk/src/Meaning.cpp	2022-06-23 12:43:59.713595459 +0800
+@@ -26,7 +26,7 @@
+     }
+ 
+     Meaning::Meaning(const string& title, vector<string>& words, Display& display) 
+-    throw(bad_alloc)
++     noexcept(false)
+         : d_title(title), d_words(words), d_display(display), d_lists(4)
+     {
+         d_masterLayout = gtk_event_box_new();
+@@ -142,7 +142,7 @@
+ 
+     gint Meaning::_wordclick
+     (GtkWidget* list, gint row, gint col, GdkEventButton *e, gpointer data)
+-    throw(std::bad_alloc)
++     noexcept(false)
+     {
+         Meaning *m = static_cast<Meaning*>(data);
+         m->d_display._handleSelection(GTK_WIDGET(list));
+diff -uNr aiksaurus-1.2.1/gtk/src/Meaning.h aiksaurus-1.2.1.ok/gtk/src/Meaning.h
+--- aiksaurus-1.2.1/gtk/src/Meaning.h	2003-05-28 07:56:55.000000000 +0800
++++ aiksaurus-1.2.1.ok/gtk/src/Meaning.h	2022-06-23 12:42:22.403620376 +0800
+@@ -24,12 +24,12 @@
+             GtkWidget* d_label;
+         
+             static gint _wordclick(GtkWidget* l, gint row, gint col, 
+-				   GdkEventButton *e, gpointer data) throw(std::bad_alloc);
++				   GdkEventButton *e, gpointer data) noexcept(false);
+ 
+         public:
+        
+             Meaning(const string& title, vector<string>& words, Display& display)
+-                throw(std::bad_alloc);
++                 noexcept(false);
+        
+             ~Meaning() throw();
+         
+diff -uNr aiksaurus-1.2.1/gtk/src/Toolbar.cpp aiksaurus-1.2.1.ok/gtk/src/Toolbar.cpp
+--- aiksaurus-1.2.1/gtk/src/Toolbar.cpp	2004-06-12 12:12:57.000000000 +0800
++++ aiksaurus-1.2.1.ok/gtk/src/Toolbar.cpp	2022-06-23 12:45:07.159865371 +0800
+@@ -26,7 +26,7 @@
+ namespace AiksaurusGTK_impl 
+ {
+ 
+-    Toolbar::Toolbar(DialogMediator& mediator, GtkWidget* window) throw(std::bad_alloc)
++    Toolbar::Toolbar(DialogMediator& mediator, GtkWidget* window) noexcept(false)
+         : d_mediator(mediator), 
+           d_searchbar_words(12), 
+           d_ishistorymove(false), 
+@@ -96,7 +96,7 @@
+ 
+     }
+     
+-    void Toolbar::_updateNavigation() throw(std::bad_alloc)
++    void Toolbar::_updateNavigation() noexcept(false)
+     {
+         if (d_history.size_back())
+             d_backbutton_ptr->enable();
+@@ -115,7 +115,7 @@
+         d_forwardbutton_ptr->updateMenuOptions();
+     }
+ 
+-    void Toolbar::search(const char* str) throw(std::bad_alloc)
++    void Toolbar::search(const char* str) noexcept(false)
+     {
+         if (!d_ishistorymove)
+             d_history.search(str);
+diff -uNr aiksaurus-1.2.1/gtk/src/Toolbar.h aiksaurus-1.2.1.ok/gtk/src/Toolbar.h
+--- aiksaurus-1.2.1/gtk/src/Toolbar.h	2003-05-28 07:46:42.000000000 +0800
++++ aiksaurus-1.2.1.ok/gtk/src/Toolbar.h	2022-06-23 12:38:42.279404124 +0800
+@@ -56,7 +56,7 @@
+             GtkWidget* d_searchbar_ptr;
+             GtkWidget* d_searchbar_label_ptr;
+ 
+-            void _updateNavigation() throw(std::bad_alloc);
++            void _updateNavigation() noexcept(false);
+ 
+             void _setTooltip(GtkWidget* w, const char* str) throw();
+ 
+@@ -75,14 +75,14 @@
+ 
+         public:
+ 
+-            Toolbar(DialogMediator& mediator, GtkWidget* window) throw(std::bad_alloc);
++            Toolbar(DialogMediator& mediator, GtkWidget* window) noexcept(false);
+             ~Toolbar() throw();
+ 
+             GtkWidget* getToolbar() throw();
+             const char* getText() const throw();
+             void focus() throw();
+ 
+-            void search(const char* str) throw(std::bad_alloc);
++            void search(const char* str) noexcept(false);
+     };
+ 
+ }

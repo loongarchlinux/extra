@@ -2,7 +2,7 @@
 # Contributor: Jan "heftig" Steffens <jan.steffens@gmail.com>
 
 pkgname=clang
-pkgver=15.0.7
+pkgver=16.0.0rc2
 pkgrel=1
 pkgdesc="C language family frontend for LLVM"
 arch=('loong64' 'x86_64')
@@ -17,20 +17,16 @@ provides=("clang-analyzer=$pkgver" "clang-tools-extra=$pkgver")
 conflicts=('clang-analyzer' 'clang-tools-extra')
 replaces=('clang-analyzer' 'clang-tools-extra')
 options=('debug')
-_source_base=https://github.com/llvm/llvm-project/releases/download/llvmorg-$pkgver
+_source_base=https://github.com/llvm/llvm-project/releases/download/llvmorg-16.0.0-rc2
 source=($_source_base/clang-$pkgver.src.tar.xz{,.sig}
         $_source_base/clang-tools-extra-$pkgver.src.tar.xz{,.sig}
         $_source_base/llvm-$pkgver.src.tar.xz{,.sig}
         $_source_base/cmake-$pkgver.src.tar.xz{,.sig}
         enable-fstack-protector-strong-by-default.patch)
-sha256sums=('a6b673ef15377fb46062d164e8ddc4d05c348ff8968f015f7f4af03f51000067'
-            'SKIP'
-            '809a2ef46d46be3b83ca389356404ac041fa6d8f5496cb02ec35d252afb64fd1'
-            'SKIP'
-            '4ad8b2cc8003c86d0078d15d987d84e3a739f24aae9033865c027abae93ee7a4'
-            'SKIP'
-            '8986f29b634fdaa9862eedda78513969fe9788301c9f2d938f4c10a3e7a3e7ea'
-            'SKIP'
+sha256sums=('92b49b26645a3b18c0a8d768dab11e586827066c9d75a28a93e092aeb7741fe6'
+            'c95907dd1e10197b851f7e6a6b3dbd831bea96ea25b376d340ad7ad94b3a53a0'
+            '9b942e6657a0f94252dd3a2ced12e5f05e71c48362a08493b697e7c2498cf8f6'
+            '77d8b0186c54269c5e8dcd46840025d1fc7c89d6cbf6d3969edfcf402a3d7412'
             '7a9ce949579a3b02d4b91b6835c4fb45adc5f743007572fb0e28e6433e48f3a5')
 validpgpkeys=('474E22316ABF4785A88C6E8EA2C794A986419D8A'  # Tom Stellard <tstellar@redhat.com>
               'D574BD5D1D0E98895E3BF90044F2485E45D59042') # Tobias Hieta <tobias@hieta.se>
@@ -62,7 +58,7 @@ prepare() {
   cd clang-$pkgver.src
   mkdir build
   mv "$srcdir/clang-tools-extra-$pkgver.src" tools/extra
-  patch -Np2 -i ../enable-fstack-protector-strong-by-default.patch
+#  patch -Np2 -i ../enable-fstack-protector-strong-by-default.patch
 
   # Attempt to convert script to Python 3
   2to3 -wn --no-diffs \
@@ -86,7 +82,7 @@ build() {
     -DCLANG_LINK_CLANG_DYLIB=ON
     -DENABLE_LINKER_BUILD_ID=ON
     -DLLVM_BUILD_DOCS=ON
-    -DLLVM_BUILD_TESTS=ON
+    -DLLVM_BUILD_TESTS=OFF
     -DLLVM_ENABLE_RTTI=ON
     -DLLVM_ENABLE_SPHINX=ON
     -DLLVM_EXTERNAL_LIT=/usr/bin/lit

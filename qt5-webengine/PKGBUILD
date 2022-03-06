@@ -18,6 +18,7 @@ _pkgfqn=${pkgname/5-/}
 source=(git+https://code.qt.io/qt/qtwebengine.git#tag=v${pkgver}-lts
         git+https://code.qt.io/qt/qtwebengine-chromium.git
         git+https://chromium.googlesource.com/catapult#commit=5eedfe23148a234211ba477f76fc2ea2e8529189
+        http://loongarch.zhcn.cc/list/qtwebengine/qtwebengine-5.15.2-la64.patch/59168fd4d0e9a62535f8118511fb71fa/qtwebengine-5.15.2-la64.patch
         qt5-webengine-python3.patch
         qt5-webengine-chromium-python3.patch
         qt5-webengine-ffmpeg5.patch
@@ -48,6 +49,7 @@ prepare() {
   patch -p1 -d src/3rdparty -i "$srcdir"/qt5-webengine-ffmpeg5.patch # Fix build with ffmpeg 5
   patch -p1 -d src/3rdparty -i "$srcdir"/qt5-webengine-pipewire-0.3.patch # Port to pipewire 0.3
   patch -p1 -d src/3rdparty -i "$srcdir"/qt5-webengine-gcc12.patch # Fix build with GCC 12
+  patch -p1 -i $srcdir/qtwebengine-5.15.2-la64.patch
 
 # Update catapult for python3 compatibility
   rm -r src/3rdparty/chromium/third_party/catapult
@@ -56,7 +58,7 @@ prepare() {
 
 build() {
   cd build
-  qmake ../${_pkgfqn} CONFIG+=force_debug_info -- \
+  qmake ../${_pkgfqn} CONFIG+=force_debug_info QT_ARCH=loongarch64 -- \
     -proprietary-codecs \
     -system-ffmpeg \
     -webp \
@@ -80,3 +82,11 @@ package() {
   # Fix cmake dependency versions
   sed -e "s|$pkgver\ |$_basever |" -i "$pkgdir"/usr/lib/cmake/*/*Config.cmake
 }
+sha256sums=('SKIP'
+            'SKIP'
+            'SKIP'
+            'cace5fc41204e2679d577b6dd1030656826bbf69a6a4db126036fad47c7db2d1'
+            '398c996cb5b606695ac93645143df39e23fa67e768b09e0da6dbd37342a43f32'
+            'fda4ff16790799fb285847918a677f4f3f7c0f513d4751f846ffc5aa5d873932'
+            'c50d3019626183e753c53a997dc8a55938847543aa3178d4c51f377be741c693'
+            '5e3a3c4711d964d5152a04059a2b5c1d14bb13dd29bce370120f60e85b476b6f')
