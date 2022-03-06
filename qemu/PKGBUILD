@@ -102,6 +102,8 @@ source=(
   qemu-sysusers.conf
   65-kvm.rules
   99-qemu-guest-agent.rules
+  qemu-syscall.patch
+  qemu-loong64-pflash.patch
 )
 sha512sums=('1f31d1e653dec2d35f1b7a5468ee3f471553b48eca8c8afafffcf9243c6b2260e78a5b73da3fe567f9b85d4133573eebd397747b3aec501fb24076263eb07b27'
             'SKIP'
@@ -109,14 +111,20 @@ sha512sums=('1f31d1e653dec2d35f1b7a5468ee3f471553b48eca8c8afafffcf9243c6b2260e78
             '6e838773d63ae0ffdffe2b891bf611d8f5f3c67a9bc4cbbedf8363c150c2c9971c8e44d92270bc581af40eb0ece02192760bcdd6aee229fff55635f3a4825afa'
             '985c2c7a6b5217c87a15b45368089ee91b2f9027b070f9eafa448a18b27ae0d9edd964d52e134b9c1f4aeef4d6aae88afd3f454551ca898affef7f9d28b99b8f'
             'bdf05f99407491e27a03aaf845b7cc8acfa2e0e59968236f10ffc905e5e3d5e8569df496fd71c887da2b5b8d1902494520c7da2d3a8258f7fd93a881dd610c99'
-            '93b905046fcea8a0a89513b9259c222494ab3b91319dde23baebcb40dc17376a56661b159b99785d6e816831974a0f3cbd7b2f7d89e5fc3c258f88f4492f3839')
+            '93b905046fcea8a0a89513b9259c222494ab3b91319dde23baebcb40dc17376a56661b159b99785d6e816831974a0f3cbd7b2f7d89e5fc3c258f88f4492f3839'
+            '505ddd4e387a29882a6ae1abac1d972371abac9abe0141358c0ab65bb11c5ac89c6e50d2639e4b8bb5e0ad9c3b805cbe3a01e33baaa44f8005db1f084fb2c4a3'
+            '8a9559a91ece4cfcde6d5f18ae696793f5e4deaccaf14b032909bd882d57ea159997be4c160dd8ef0629040f932851ac342049c2a845a9ad13d87fd1312e496e'
+            'ee1bc13ef7545eda1788cddb82259c3d1f2201d8b77ec66d85d86c738a7549f4f2038f2c433938706fd1ae2ba4f97b7b902ca8fa713ab84d18ae715d1d6c1340')
 b2sums=('9b54aae10fe09691a26e68374723ded5fdda6409673b4de9461a25ee060cfd03968a16ddeadc21d48b9262e53aa6d4e5eb645376969f97c65807fad19607b04f'
         'SKIP'
         'b1eca364aa60f130ff5e649f5d004d3fcb75356d3421a4542efdfc410d39b40d9434d15e1dd7bbdbd315cb72b5290d3ea5f77f9c41961a5601cd28ef7bbe72e8'
         '2102e4a34e11e406e9606c97e026e7b92e887e296a7f77b9cede1b37119d0df33735f3588628167b2b8e32244c196c491bfab623e2caddac9014d445aa2a6d98'
         '69177b962d2fda20cafdbc6226fd017b5ca5a0f69f866d055dc1c744b7b2955059f47c693cfb5b4c863ec159569fdabd4327ab4b8a95566a68cd8ce38e339c7a'
         '3559fe9c4f744194939770047a0a02d07ff791c845a80726d0bc7b8c4801ed5f11150e7d5adab813844b3dab1cf38c3a5a87fb6efbb8fc9dccdda9fa56409ed8'
-        'a9a2bdfeeb44eb86cbe88ac7c65f72800bdb2fd5cecb02f3a258cf9470b52832180aab43c89d481f7fd4d067342a9a27dd6c8a94d625b95d6e2b912e47d274e7')
+        'a9a2bdfeeb44eb86cbe88ac7c65f72800bdb2fd5cecb02f3a258cf9470b52832180aab43c89d481f7fd4d067342a9a27dd6c8a94d625b95d6e2b912e47d274e7'
+        '6f8b1004835d0a9834c5b609f88589bdd243185b989cb1b4ce9c2792bb38f213a65c662d5f230099ee7e823481a28997997dd3082a95de54de26fd7d76b9d273'
+        '9404a2d94526cda17c9dc73ef8dc082a17967a570fb04e741ccc22fd3d4f95c8dc8281ab888ee97f38517362b6c68db3a5fe5d0361507963bce9957f451d325d'
+        '15ea05bfa3b59398a2fa30d18abc08d597cedbccd4009cfaaa1a4f367d87b1941620deb223d5229bc2de6f51a47624a8d33263901e9ef2ca70f44fc0419c5413')
 validpgpkeys=('CEACC9E15534EBABB82D3FA03353C9CEF108B584') # Michael Roth <flukshun@gmail.com>
 
 _qemu_system_deps=(
@@ -221,6 +229,8 @@ prepare() {
 
   # install qemu-pr-helper.socket to sockets.target
   sed -e 's/multi-user.target/sockets.target/g' -i $pkgbase-$pkgver/contrib/systemd/qemu-pr-helper.socket
+  patch -p1 -d $pkgbase-$pkgver -i $srcdir/qemu-syscall.patch
+  patch -p1 -d $pkgbase-$pkgver -i $srcdir/qemu-loong64-pflash.patch
 
   # create build dir
   mkdir -vp build
@@ -752,7 +762,7 @@ package_qemu-system-hppa-firmware() {
 
 package_qemu-system-loongarch64() {
   pkgdesc="QEMU system emulator for LoongArch64"
-  depends=("${_qemu_system_deps[@]}" systemd-libs)
+  depends=("${_qemu_system_deps[@]}" edk2-loongarch64 systemd-libs)
   mv -v $pkgname/* "$pkgdir"
 }
 

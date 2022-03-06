@@ -9,7 +9,7 @@
 pkgbase=qtcreator
 pkgname=(qtcreator qtcreator-devel)
 pkgver=10.0.0
-_clangver=15.0.7
+_clangver=16.0.0
 pkgrel=2
 pkgdesc='Lightweight, cross-platform integrated development environment'
 arch=(loong64 x86_64)
@@ -29,9 +29,16 @@ optdepends=('qt6-doc: integrated Qt documentation'
             'valgrind: analyze support'
             'perf: performer analyzer'
             'mlocate: locator filter')
-source=(https://download.qt.io/official_releases/qtcreator/${pkgver%.*}/$pkgver/qt-creator-opensource-src-$pkgver.tar.xz)
-sha256sums=('9489829de05893a4628b7b6581af096c48afbd31c932cd8a4db30a90c52197bf')
+source=(https://download.qt.io/official_releases/qtcreator/${pkgver%.*}/$pkgver/qt-creator-opensource-src-$pkgver.tar.xz
+        qtcreator-la64.patch)
+sha256sums=('9489829de05893a4628b7b6581af096c48afbd31c932cd8a4db30a90c52197bf'
+            '3f4125ab535ab96096d0317ecd9889f58d7cfb7fc8a95cafd8b9df33a6facfb1')
 options=(docs)
+
+prepare() {
+  cd qt-creator-opensource-src-$pkgver
+  patch -p1 -i ../qtcreator-la64.patch
+}
 
 build() {
   cmake -B build -S qt-creator-opensource-src-$pkgver \

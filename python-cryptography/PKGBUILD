@@ -9,7 +9,7 @@ arch=('loong64' 'x86_64')
 license=('Apache')
 url="https://pypi.python.org/pypi/cryptography"
 depends=('python-cffi')
-makedepends=('git' 'python-setuptools-rust')
+makedepends=('git' 'python-setuptools-rust' llvm14-libs openssl-1.1)
 checkdepends=('python-pytest' 'python-pytest-subtests' 'python-iso8601' 'python-pretend'
               'python-hypothesis' 'python-pytz' 'python-pytest-benchmark')
 source=("git+https://github.com/pyca/cryptography.git#commit=$_commit")
@@ -17,6 +17,12 @@ sha512sums=('SKIP')
 
 build() {
   cd cryptography
+  find -name Cargo.lock -exec rm -f {} \;
+  mkdir -p .cargo
+  cat > .cargo/config.toml <<EOF
+[source.crates-io]
+registry = "https://gitee.com/yetist/crates.io-index"
+EOF
   python setup.py build
 }
 

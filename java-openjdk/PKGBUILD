@@ -19,27 +19,36 @@ arch=('loong64' 'x86_64')
 url='https://openjdk.java.net/'
 license=('custom')
 makedepends=('java-environment>=17' 'cpio' 'unzip' 'zip' 'libelf' 'libcups' 'libx11'
-             'libxrender' 'libxtst' 'libxt' 'libxext' 'libxrandr' 'alsa-lib' 'pandoc'
+             'libxrender' 'libxtst' 'libxt' 'libxext' 'libxrandr' 'alsa-lib'
              'graphviz' 'freetype2' 'libjpeg-turbo' 'giflib' 'libpng' 'lcms2'
              'libnet' 'bash' 'harfbuzz' 'gcc-libs' 'glibc')
 options=(!lto)
 source=(https://github.com/openjdk/jdk${_majorver}u/archive/${_git_tag}.tar.gz
         freedesktop-java.desktop
         freedesktop-jconsole.desktop
-        freedesktop-jshell.desktop)
+        freedesktop-jshell.desktop
+        jdk19-la64.patch)
 sha256sums=('1b7f42ecedf97a837b1f3499d2b6293b26ffed97627b1bd883452c21cf9f798b'
             '761d4f1274c7dfb4ff61f6d6cb01504f2f886240229e371647ce227fcf81278e'
             '2b17178ac414e1d0768c8f482779efa88bfeab17b8b0517df4e66b3c2874131c'
-            '82329d23887df14bce3f8d8f356fe8f4b643831d40ade5fed31a070516f86fd7')
+            '82329d23887df14bce3f8d8f356fe8f4b643831d40ade5fed31a070516f86fd7'
+            '201172e3ddd574218968604250f0edf3c791e72c0cb2a93661ef8a9c577411d8')
 
 case "${CARCH}" in
   x86_64) _JARCH='x86_64';;
   i686)   _JARCH='x86';;
+  loong64) _JARCH='loongarch64';;
+  *) _JARCH=${CARCH} ;;
 esac
 
 _jvmdir=/usr/lib/jvm/java-${_majorver}-openjdk
 _jdkdir=jdk${_majorver}u-${_git_tag//+/-}
-_imgdir=${_jdkdir}/build/linux-${_JARCH}-server-release/images
+case "${CARCH}" in
+loong64)
+_imgdir=${_jdkdir}/build/linux-${_JARCH}-server-release/images ;;
+*)
+_imgdir=${_jdkdir}/build/linux-${_JARCH}-server-release/images ;;
+esac
 
 _nonheadless=(lib/libawt_xawt.so
               lib/libjawt.so
@@ -51,6 +60,11 @@ _nonjre=(lib/ct.sym
           lib/libsaproc.so
           lib/src.zip)
 
+prepare() {
+  cd ${_jdkdir}
+
+  patch -Np1 -i "${srcdir}"/jdk19-la64.patch
+}
 
 build() {
   cd ${_jdkdir}
@@ -106,14 +120,16 @@ build() {
     --with-lcms=system \
     --with-zlib=system \
     --with-harfbuzz=system \
-    --with-jvm-features=zgc,shenandoahgc \
+    --with-jvm-features=zgc \
     --with-native-debug-symbols=internal \
     --enable-unlimited-crypto \
     --disable-warnings-as-errors \
     ${NUM_PROC_OPT}
     #--disable-javac-server
+#--with-jvm-variants=zero \
+#--enable-jvm-feature-zero \
 
-  make images legacy-jre-image docs
+  make images legacy-jre-image #docs
 
   # https://bugs.openjdk.java.net/browse/JDK-8173610
   find "../${_imgdir}" -iname '*.so' -exec chmod +x {} \;
@@ -293,7 +309,7 @@ package_openjdk-doc() {
   provides=("openjdk${_majorver}-doc=${pkgver}-${pkgrel}")
 
   install -dm 755 "${pkgdir}/usr/share/doc"
-  cp -r ${_imgdir}/docs "${pkgdir}/usr/share/doc/${pkgbase}"
+#  cp -r ${_imgdir}/docs "${pkgdir}/usr/share/doc/${pkgbase}"
 
   install -dm 755 "${pkgdir}/usr/share/licenses"
   ln -s ${pkgbase} "${pkgdir}/usr/share/licenses/${pkgname}"

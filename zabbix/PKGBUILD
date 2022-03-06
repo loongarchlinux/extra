@@ -13,7 +13,8 @@ source=("https://cdn.zabbix.com/zabbix/sources/stable/${pkgver%.*}/zabbix-${pkgv
         zabbix-agent.{service,sysusers,tmpfiles}
         zabbix-agent2.service
         zabbix-server{-mysql,-pgsql}.service zabbix-server.{sysusers,tmpfiles}
-        zabbix-proxy{-sqlite,-mysql,-pgsql}.service zabbix-proxy.{sysusers,tmpfiles})
+        zabbix-proxy{-sqlite,-mysql,-pgsql}.service zabbix-proxy.{sysusers,tmpfiles}
+        zabbix-la64.patch)
 
 sha512sums=('4f82cdbf527b34e3689b280e8a0405faa1d9066a6288b273ac50f3b3008c0a6b8fcc325b760de4204dbf52a1301d7e59eadbe74a3f7a5fc3e26d6eb2f7a5c17f'
             '8c1fa2676bc0ef91bc39ec5f97b4d3ba5c365d063420455a3785121a54e120bc5afeacde42a48f4509c115f940dcc3b6c2f43044a7fbfb421182fc93b22a2444'
@@ -28,7 +29,8 @@ sha512sums=('4f82cdbf527b34e3689b280e8a0405faa1d9066a6288b273ac50f3b3008c0a6b8fc
             '94701f34fe5df4859c6a4d0459c16062374e8f89f4f51c414e71c9c2db14f61e087721e68dddb3e8d88bf1c097477c1a21e27ba4705fd07d88c60adb41acc1be'
             'ce026b748df9b7597452a69c6cb04244a95bf99b00ea795d96d7d4ca5a68190af1b2dbf141dfd8e63bb4405131de81d8aa8a831ddde2595f1b859026b9fb0faa'
             '7c1072a8cd5837095f857b50124cb45d1bdbddbce108f6f067a35c3c9ebb1ad0502ef617dfa10f9c843631220177a6286a97b1c2a46539200be72fa83cb23b99'
-            '64042ddf511b56b2a5a311e34643f4e049c09d909ea65b7343a8a9637f33dc59f2b1342201290ca0774cbcbf616096b3696982047fb622b7d51afb5eceb298dd')
+            '64042ddf511b56b2a5a311e34643f4e049c09d909ea65b7343a8a9637f33dc59f2b1342201290ca0774cbcbf616096b3696982047fb622b7d51afb5eceb298dd'
+            '0e1e7ab6e693a43aca5969b0a2627632ca79e67a05ed5a9ceb2adf78a2e9588ffc0d61710f5e597d1ea88d2f1ad81fb99fcbb4151a8a53794052a44b9d11d7e3')
 
 prepare() {
   cd $pkgbase-$pkgver
@@ -36,6 +38,7 @@ prepare() {
     -e '/^LogFile=.*/d' \
     -e 's/# LogType=file/LogType=system/' \
     conf/zabbix_{agentd,proxy,server}.conf
+  patch -p1 -i $srcdir/zabbix-la64.patch
 
   autoreconf -fi
 }

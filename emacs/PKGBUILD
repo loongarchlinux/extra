@@ -4,7 +4,7 @@
 # Contributor: Renchi Raju <renchi@green.tam.uiuc.edu>
 
 pkgbase=emacs
-pkgname=(emacs emacs-nativecomp emacs-nox)
+pkgname=(emacs emacs-nox)
 pkgver=28.2
 pkgrel=2
 arch=('loong64' 'x86_64')
@@ -44,17 +44,20 @@ depends=(
   m17n-lib
   zlib
 )
-makedepends=(libgccjit)
 options=(debug)
-source=(https://ftp.gnu.org/gnu/emacs/${pkgname}-${pkgver}.tar.xz{,.sig})
+source=(https://ftp.gnu.org/gnu/emacs/${pkgname}-${pkgver}.tar.xz{,.sig}
+        emacs-la64.patch)
 b2sums=('a7e4990658b5e7306510f8dded93aaf0b82cdd9306df8b786526d038c3249ef9579287075f2235eb01a71ae1699db555254f137b86ab2d2305b45895053df552'
-        'SKIP')
+        'SKIP'
+        'b0caf8a040398afd4bd922991a499063d75147bd8e1c0d092070cf9bfc114890613c13fccdd181e41952099d2066c7189bff9128a87f33133e95d27c3144647f')
 validpgpkeys=('17E90D521672C04631B1183EE78DAE0F3115E06B'  # Eli Zaretskii <eliz@gnu.org>
               'CEA1DE21AB108493CC9C65742E82323B8F4353EE') # Stefan Kangas <stefankangas@gmail.com>
 
 prepare() {
   cp -ar ${pkgname}-${pkgver} ${pkgbase}-${pkgver}-nativecomp
   cp -ar ${pkgname}-${pkgver} ${pkgbase}-${pkgver}-nox
+  cd "$srcdir"/$pkgname-$pkgver
+#patch -p1 -i "$srcdir/emacs-la64.patch"
 }
 
 build() {
@@ -74,12 +77,12 @@ build() {
     --with-x-toolkit=gtk3
   make
 
-  cd ../${pkgbase}-${pkgver}-nativecomp
-  ./configure \
-    --with-x-toolkit=gtk3 \
-    --with-native-compilation \
-    $_confflags
-  make NATIVE_FULL_AOT=1 bootstrap
+#  cd ../${pkgbase}-${pkgver}-nativecomp
+#  ./configure \
+#    --with-x-toolkit=gtk3 \
+#    --with-native-compilation \
+#    $_confflags
+#  make NATIVE_FULL_AOT=1 bootstrap
 
   cd ../${pkgbase}-${pkgver}-nox
   ./configure \
@@ -105,7 +108,7 @@ package_emacs() {
 
 package_emacs-nativecomp() {
   pkgdesc='The extensible, customizable, self-documenting real-time display editor with native compilation enabled'
-  depends+=(libgccjit)
+#depends+=(libgccjit)
   provides=(emacs)
   conflicts=(emacs)
 
