@@ -15,10 +15,20 @@ conflicts=('fuse')
 depends=('glibc' 'fuse-common')
 makedepends=('pkg-config')
 options=(!emptydirs)
-source=(https://github.com/libfuse/libfuse/releases/download/fuse-$pkgver/fuse-$pkgver.tar.gz{,.asc})
+source=(https://github.com/libfuse/libfuse/releases/download/fuse-$pkgver/fuse-$pkgver.tar.gz{,.asc}
+	fuse-closefrom.patch
+	fuse-loongarch.patch)
 sha1sums=('943ba651b14bc4a3c6fd959ed4b8c04f4a59032d'
-          'SKIP')
+          'SKIP'
+          'aef8e65806d4b73672463378b5cdb694dcd1a051'
+          'b7791ec80f9d8b21f327cd506adb512868174893')
 validpgpkeys=(ED31791B2C5C1613AF388B8AD113FCAC3C4E599F) # Nikolaus Rath <Nikolaus@rath.org>
+
+prepare() {
+  cd fuse-$pkgver
+  patch -p1 -i "$srcdir/fuse-closefrom.patch"
+  patch -p1 -i "$srcdir/fuse-loongarch.patch"
+}
 
 build() {
   cd fuse-$pkgver

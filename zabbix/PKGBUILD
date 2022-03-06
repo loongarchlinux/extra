@@ -13,7 +13,8 @@ source=("https://cdn.zabbix.com/zabbix/sources/stable/${pkgver%.*}/zabbix-${pkgv
         zabbix-agent.{service,sysusers,tmpfiles}
         zabbix-agent2.service
         zabbix-server{-mysql,-pgsql}.service zabbix-server.{sysusers,tmpfiles}
-        zabbix-proxy{-sqlite,-mysql,-pgsql}.service zabbix-proxy.{sysusers,tmpfiles})
+        zabbix-proxy{-sqlite,-mysql,-pgsql}.service zabbix-proxy.{sysusers,tmpfiles}
+        zabbix-la64.patch)
 
 sha512sums=('9a8d3021f0e2929897c2f6d3e05721a9dd55ec5778c39edf7af9fb99590f8eece6bba40cb085426373837409d690646254fd2a3f0b151224532226dc46df14f4'
             '8c1fa2676bc0ef91bc39ec5f97b4d3ba5c365d063420455a3785121a54e120bc5afeacde42a48f4509c115f940dcc3b6c2f43044a7fbfb421182fc93b22a2444'
@@ -28,7 +29,8 @@ sha512sums=('9a8d3021f0e2929897c2f6d3e05721a9dd55ec5778c39edf7af9fb99590f8eece6b
             '94701f34fe5df4859c6a4d0459c16062374e8f89f4f51c414e71c9c2db14f61e087721e68dddb3e8d88bf1c097477c1a21e27ba4705fd07d88c60adb41acc1be'
             'ce026b748df9b7597452a69c6cb04244a95bf99b00ea795d96d7d4ca5a68190af1b2dbf141dfd8e63bb4405131de81d8aa8a831ddde2595f1b859026b9fb0faa'
             '7c1072a8cd5837095f857b50124cb45d1bdbddbce108f6f067a35c3c9ebb1ad0502ef617dfa10f9c843631220177a6286a97b1c2a46539200be72fa83cb23b99'
-            '64042ddf511b56b2a5a311e34643f4e049c09d909ea65b7343a8a9637f33dc59f2b1342201290ca0774cbcbf616096b3696982047fb622b7d51afb5eceb298dd')
+            '64042ddf511b56b2a5a311e34643f4e049c09d909ea65b7343a8a9637f33dc59f2b1342201290ca0774cbcbf616096b3696982047fb622b7d51afb5eceb298dd'
+            '94c401889670b456281d84062ad64cebf2bf564eacd096cf570d74035fb5e80921e7492e0db2e2710a4b34e530e28678efe87966cb1d693db15304928652c9bc')
 
 prepare() {
   cd $pkgbase-$pkgver
@@ -36,6 +38,7 @@ prepare() {
     -e '/^LogFile=.*/d' \
     -e 's/# LogType=file/LogType=system/' \
     conf/zabbix_{agentd,proxy,server}.conf
+  patch -p1 -i $srcdir/zabbix-la64.patch
 
   autoreconf -fi
 }
@@ -63,6 +66,12 @@ build() {
   )
 
   cd $pkgbase-$pkgver
+
+  pushd src/go
+  go mod edit -replace=golang.org/x/sys=github.com/golang/sys@v0.0.0-20220622161953-175b2fd9d664
+  go mod edit -replace=golang.org/x/net=github.com/golang/net@v0.0.0-20220622184535-263ec571b305
+  go mod tidy
+  popd
 
   # Make copies since `make clean` removes the files and they cannot be rebuilt easily
   for db in postgresql mysql sqlite3; do

@@ -19,7 +19,7 @@ backup=(etc/dirsrv/config/certmap.conf
 depends=('cracklib' 'libevent' 'nspr' 'nss' 'net-snmp' 'pam' 'openldap' 'icu'
          'python-argcomplete' 'python-dateutil' 'python-ldap' 'python-packaging' 'lmdb')
 makedepends=('cargo' 'rsync' 'doxygen' 'cmocka' 'python-setuptools' 'python-argparse-manpage'
-             'npm' 'nodejs-lts-fermium' 'systemd')
+             'npm' 'nodejs' 'systemd')
 source=(https://github.com/389ds/389-ds-base/archive/389-ds-base-${pkgver}.tar.gz
         389-ds-base.sysusers
         389-ds-base.tmpfiles)
@@ -39,6 +39,8 @@ prepare() {
 build() {
   cd "${pkgname}-${pkgname}-${pkgver}"
 
+  find -name Cargo.lock -exec rm -f {} \;
+  sed -i 's!registry.*!registry = "https://gitee.com/yetist/crates.io-index"!' .cargo/config.in
   # Build 389-ds-base
   ./configure \
     --prefix=/usr \
@@ -64,6 +66,7 @@ build() {
 
   # Build cockpit plugin
   cd ../cockpit/389-console
+  npm config set registry https://registry.loongnix.cn:5873/
   npm install
   npm run build
   mv dist cockpit_dist

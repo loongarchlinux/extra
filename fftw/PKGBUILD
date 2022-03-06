@@ -12,7 +12,7 @@ url="http://www.fftw.org/"
 license=(GPL2)
 depends=(bash gcc-libs glibc openmpi)
 makedepends=(cmake gcc-fortran)
-provides=(libfftw3q_threads.so libfftw3q_omp.so libfftw3q.so
+provides=(
 libfftw3l_threads.so libfftw3l_omp.so libfftw3l_mpi.so libfftw3l.so
 libfftw3f_threads.so libfftw3f_omp.so libfftw3f_mpi.so libfftw3f.so
 libfftw3_threads.so libfftw3_omp.so libfftw3_mpi.so libfftw3.so)
@@ -45,20 +45,20 @@ build() {
     --enable-openmp
   )
   local _configure_single=(
-    --enable-sse
-    --enable-avx
+    #--enable-sse
+    #--enable-avx
     --enable-single
   )
   local _configure_double=(
-    --enable-sse2
-    --enable-avx
+    #--enable-sse2
+    #--enable-avx
   )
   local _configure_long_double=(
     --enable-long-double
   )
   local _configure_quad=(
     --disable-mpi
-    --enable-quad-precision
+    #--enable-quad-precision
   )
   local _cmake_options=(
     -B build
@@ -70,10 +70,10 @@ build() {
     -D ENABLE_FLOAT=ON
     -D ENABLE_LONG_DOUBLE=ON
     -D ENABLE_QUAD_PRECISION=ON
-    -D ENABLE_SSE=ON
-    -D ENABLE_SSE2=ON
-    -D ENABLE_AVX=ON
-    -D ENABLE_AVX2=ON
+    -D ENABLE_SSE=OFF
+    -D ENABLE_SSE2=OFF
+    -D ENABLE_AVX=OFF
+    -D ENABLE_AVX2=OFF
   )
 
   # create missing FFTW3LibraryDepends.cmake
@@ -84,7 +84,7 @@ build() {
 
   export F77='gfortran'
   # use upstream default CFLAGS while keeping our -march/-mtune
-  CFLAGS+=" -O3 -fomit-frame-pointer -malign-double -fstrict-aliasing -ffast-math"
+  CFLAGS+=" -O3 -fomit-frame-pointer -fstrict-aliasing -ffast-math"
 
   for _name in "${_build_types[@]}"; do
     (

@@ -19,12 +19,19 @@ optdepends=(
   'openssl: for CMS signature verification of rootfs over PXE'
   'pv: for status display during copy to RAM'
 )
-source=(git+https://gitlab.archlinux.org/mkinitcpio/$pkgname.git#tag=$_commit?signed)
-sha256sums=('SKIP')
+source=(git+https://gitlab.archlinux.org/mkinitcpio/$pkgname.git#tag=$_commit?signed
+        mkinitcpio-archiso-loong64.patch)
+sha256sums=('SKIP'
+            '10efee93d9cd8e6769baaf7d6a6bc04e42f693d920977e986c8ab6dab3af1191')
 validpgpkeys=(
   '991F6E3F0765CF6295888586139B09DA5BF0D338'  # David Runge <dvzrv@archlinux.org>
   'BB8E6F1B81CF0BB301D74D1CBF425A01E68B38EF'  # nl6720 <nl6720@archlinux.org>
 )
+
+prepare() {
+  cd $pkgname
+  patch -p1 -i $srcdir/mkinitcpio-archiso-loong64.patch
+}
 
 check() {
   make -k check -C $pkgname

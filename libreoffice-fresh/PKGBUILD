@@ -62,7 +62,9 @@ source=(${_mirror}/libreoffice{,-help,-translations}-${_LOver}.tar.xz{,.asc}
 	${_additional_source_url2}/185d60944ea767075d27247c3162b3bc-unowinreg.dll
 	make-pyuno-work-with-system-wide-module-install.diff
 	soffice-template.desktop.in 
-	libreoffice-fresh.sh libreoffice-fresh.csh)
+	libreoffice-fresh.sh libreoffice-fresh.csh
+    0001-Add-loongarch64-support.patch
+    libreoffice-la64-java.patch)
 noextract=(35c94d2df8893241173de1d16b6034c0-swingExSrc.zip
            798b2ffdc8bcfe7bca2cf92b62caf685-rhino1_5R5.zip
            a7983f859eafb2677d7ff386a023bc40-xsltml_2.1.2.zip
@@ -114,7 +116,9 @@ sha256sums=('82c1ffe02f2ed8ee1451a9f67c35335b27a638db591f9bc539eff86ab14dd95a'
             'c463654a73ecfbc242ff109726fb4faecdbfb3d91affafe919b24bea65afb563'
             'd0be8099cbee3c9dfda694a828149b881c345b204ab68826f317580aafb50879'
             'b20cc7c79e8e5d2c56eb17cf0f1e3bea7a2ceb243308a1bff3af24bf54f7d1f5'
-            'b679a22ecad2892ac9854d80c5c77e404467236bae9fe094637b48ccad37da9d')
+            'b679a22ecad2892ac9854d80c5c77e404467236bae9fe094637b48ccad37da9d'
+            '137e5ec347abca969a7d700365368142fde150b9aee206e66c91dcff8b102c5e'
+            '6c61f059a64eea10d03946bb9274094de4f635185fbe006db42865265950f6a8')
 
 prepare() {
 
@@ -134,6 +138,8 @@ prepare() {
 
 	# fix not upstreamable pyuno paths - FS#54250
 	patch -Np1 -i "${srcdir}"/make-pyuno-work-with-system-wide-module-install.diff
+	patch -Np1 -i "${srcdir}"/0001-Add-loongarch64-support.patch
+	patch -Np1 -i "${srcdir}"/libreoffice-la64-java.patch
 
 	#use the CFLAGS but remove the LibO overridden ones
 	for i in $CFLAGS; do
@@ -198,7 +204,7 @@ build() {
 		--with-system-libmwaw \
 		--with-system-libetonyek \
 		--with-system-libfreehand \
-		--without-system-firebird \
+        --disable-firebird-sdbc \
 		--without-system-zxing \
 		--with-system-libtommath \
 		--with-system-libatomic-ops \

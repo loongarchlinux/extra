@@ -1,0 +1,487 @@
+diff --git a/Makefile b/Makefile
+index c1fa39a..a7f2af4 100644
+--- a/Makefile
++++ b/Makefile
+@@ -26,10 +26,13 @@ COMMITPKG_LINKS = \
+ 	gnome-unstablepkg
+ 
+ ARCHBUILD_LINKS = \
++	extra-loong64-build \
+ 	extra-x86_64-build \
+ 	extra-x86_64_v3-build \
++	testing-loong64-build \
+ 	testing-x86_64-build \
+ 	testing-x86_64_v3-build \
++	staging-loong64-build \
+ 	staging-x86_64-build \
+ 	staging-x86_64_v3-build \
+ 	multilib-build \
+@@ -140,7 +143,7 @@ dist:
+ upload:
+ 	scp devtools-$(V).tar.gz devtools-$(V).tar.gz.sig repos.archlinux.org:/srv/ftp/other/devtools/
+ 
+-check: $(BINPROGS) $(BUILDDIR)/contrib/completion/bash/devtools config/makepkg/x86_64.conf contrib/makepkg/PKGBUILD.proto
++check: $(BINPROGS) $(BUILDDIR)/contrib/completion/bash/devtools config/makepkg/x86_64.conf config/makepkg/loong64.conf contrib/makepkg/PKGBUILD.proto
+ 	shellcheck $^
+ 
+ .PHONY: all completion man clean install uninstall dist upload check tag
+diff --git a/config/makepkg/loong64.conf b/config/makepkg/loong64.conf
+new file mode 100644
+index 0000000..1bf89e3
+--- /dev/null
++++ b/config/makepkg/loong64.conf
+@@ -0,0 +1,162 @@
++#!/hint/bash
++# shellcheck disable=2034
++
++#
++# /etc/makepkg.conf
++#
++
++#########################################################################
++# SOURCE ACQUISITION
++#########################################################################
++#
++#-- The download utilities that makepkg should use to acquire sources
++#  Format: 'protocol::agent'
++DLAGENTS=('file::/usr/bin/curl -qgC - -o %o %u'
++          'ftp::/usr/bin/curl -qgfC - --ftp-pasv --retry 3 --retry-delay 3 -o %o %u'
++          'http::/usr/bin/curl -qgb "" -fLC - --retry 3 --retry-delay 3 -o %o %u'
++          'https::/usr/bin/curl -qgb "" -fLC - --retry 3 --retry-delay 3 -o %o %u'
++          'rsync::/usr/bin/rsync --no-motd -z %u %o'
++          'scp::/usr/bin/scp -C %u %o')
++
++# Other common tools:
++# /usr/bin/snarf
++# /usr/bin/lftpget -c
++# /usr/bin/wget
++
++#-- The package required by makepkg to download VCS sources
++#  Format: 'protocol::package'
++VCSCLIENTS=('bzr::bzr'
++            'fossil::fossil'
++            'git::git'
++            'hg::mercurial'
++            'svn::subversion')
++
++#########################################################################
++# ARCHITECTURE, COMPILE FLAGS
++#########################################################################
++#
++CARCH="loong64"
++CHOST="loongarch64-unknown-linux-gnu"
++
++#-- Compiler and Linker Flags
++#CPPFLAGS=""
++CFLAGS="-mabi=lp64d -march=la464 -O2 -pipe -fno-plt -fexceptions \
++        -Wp,-D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security \
++        -fstack-clash-protection"
++CXXFLAGS="$CFLAGS -Wp,-D_GLIBCXX_ASSERTIONS"
++LDFLAGS="-Wl,-O1,--sort-common,--as-needed,-z,relro,-z,now"
++LTOFLAGS="-flto=auto"
++#RUSTFLAGS="-C opt-level=2"
++#-- Make Flags: change this for DistCC/SMP systems
++#MAKEFLAGS="-j2"
++#-- Debugging flags
++DEBUG_CFLAGS="-g"
++DEBUG_CXXFLAGS="$DEBUG_CFLAGS"
++#DEBUG_RUSTFLAGS="-C debuginfo=2"
++
++#########################################################################
++# BUILD ENVIRONMENT
++#########################################################################
++#
++# Makepkg defaults: BUILDENV=(!distcc !color !ccache check !sign)
++#  A negated environment option will do the opposite of the comments below.
++#
++#-- distcc:   Use the Distributed C/C++/ObjC compiler
++#-- color:    Colorize output messages
++#-- ccache:   Use ccache to cache compilation
++#-- check:    Run the check() function if present in the PKGBUILD
++#-- sign:     Generate PGP signature file
++#
++BUILDENV=(!distcc color !ccache check !sign)
++#
++#-- If using DistCC, your MAKEFLAGS will also need modification. In addition,
++#-- specify a space-delimited list of hosts running in the DistCC cluster.
++#DISTCC_HOSTS=""
++#
++#-- Specify a directory for package building.
++#BUILDDIR=/tmp/makepkg
++
++#########################################################################
++# GLOBAL PACKAGE OPTIONS
++#   These are default values for the options=() settings
++#########################################################################
++#
++# Makepkg defaults: OPTIONS=(!strip docs libtool staticlibs emptydirs !zipman !purge !debug !lto)
++#  A negated option will do the opposite of the comments below.
++#
++#-- strip:      Strip symbols from binaries/libraries
++#-- docs:       Save doc directories specified by DOC_DIRS
++#-- libtool:    Leave libtool (.la) files in packages
++#-- staticlibs: Leave static library (.a) files in packages
++#-- emptydirs:  Leave empty directories in packages
++#-- zipman:     Compress manual (man and info) pages in MAN_DIRS with gzip
++#-- purge:      Remove files specified by PURGE_TARGETS
++#-- debug:      Add debugging flags as specified in DEBUG_* variables
++#-- lto:        Add compile flags for building with link time optimization
++#
++OPTIONS=(strip docs !libtool !staticlibs emptydirs zipman purge !debug lto)
++
++#-- File integrity checks to use. Valid: md5, sha1, sha224, sha256, sha384, sha512, b2
++INTEGRITY_CHECK=(sha256)
++#-- Options to be used when stripping binaries. See `man strip' for details.
++STRIP_BINARIES="--strip-all"
++#-- Options to be used when stripping shared libraries. See `man strip' for details.
++STRIP_SHARED="--strip-unneeded"
++#-- Options to be used when stripping static libraries. See `man strip' for details.
++STRIP_STATIC="--strip-debug"
++#-- Manual (man and info) directories to compress (if zipman is specified)
++MAN_DIRS=({usr{,/local}{,/share},opt/*}/{man,info})
++#-- Doc directories to remove (if !docs is specified)
++DOC_DIRS=(usr/{,local/}{,share/}{doc,gtk-doc} opt/*/{doc,gtk-doc})
++#-- Files to be removed from all packages (if purge is specified)
++PURGE_TARGETS=(usr/{,share}/info/dir .packlist *.pod)
++#-- Directory to store source code in for debug packages
++DBGSRCDIR="/usr/src/debug"
++
++#########################################################################
++# PACKAGE OUTPUT
++#########################################################################
++#
++# Default: put built package and cached source in build directory
++#
++#-- Destination: specify a fixed directory where all packages will be placed
++#PKGDEST=/home/packages
++#-- Source cache: specify a fixed directory where source files will be cached
++#SRCDEST=/home/sources
++#-- Source packages: specify a fixed directory where all src packages will be placed
++#SRCPKGDEST=/home/srcpackages
++#-- Log files: specify a fixed directory where all log files will be placed
++#LOGDEST=/home/makepkglogs
++#-- Packager: name/email of the person or organization building packages
++#PACKAGER="John Doe <john@doe.com>"
++#-- Specify a key to use for package signing
++#GPGKEY=""
++
++#########################################################################
++# COMPRESSION DEFAULTS
++#########################################################################
++#
++COMPRESSGZ=(gzip -c -f -n)
++COMPRESSBZ2=(bzip2 -c -f)
++COMPRESSXZ=(xz -c -z -)
++COMPRESSZST=(zstd -c -T0 --ultra -20 -)
++COMPRESSLRZ=(lrzip -q)
++COMPRESSLZO=(lzop -q)
++COMPRESSZ=(compress -c -f)
++COMPRESSLZ4=(lz4 -q)
++COMPRESSLZ=(lzip -c -f)
++
++#########################################################################
++# EXTENSION DEFAULTS
++#########################################################################
++#
++PKGEXT='.pkg.tar.zst'
++SRCEXT='.src.tar.gz'
++
++#########################################################################
++# OTHER
++#########################################################################
++#
++#-- Command used to run pacman as root, instead of trying sudo and su
++#PACMAN_AUTH=()
++# vim: set ft=sh ts=2 sw=2 et:
+diff --git a/config/setarch-aliases.d/loong64 b/config/setarch-aliases.d/loong64
+new file mode 100644
+index 0000000..a4d6d47
+--- /dev/null
++++ b/config/setarch-aliases.d/loong64
+@@ -0,0 +1 @@
++loongarch64
+diff --git a/lib/valid-tags.sh b/lib/valid-tags.sh
+index d628fd1..bdf4966 100644
+--- a/lib/valid-tags.sh
++++ b/lib/valid-tags.sh
+@@ -5,22 +5,23 @@
+ 
+ # shellcheck disable=2034
+ _arch=(
++	loong64
+ 	x86_64
+ 	any
+ )
+ 
+ # shellcheck disable=2034
+ _tags=(
+-	core-x86_64 core-any
+-	extra-x86_64 extra-any
++	core-loong64 core-x86_64 core-any
++	extra-loong64 extra-x86_64 extra-any
+ 	multilib-x86_64
+-	staging-x86_64 staging-any
+-	testing-x86_64 testing-any
++	staging-loong64 staging-x86_64 staging-any
++	testing-loong64 testing-x86_64 testing-any
+ 	multilib-testing-x86_64
+ 	multilib-staging-x86_64
+-	community-x86_64 community-any
+-	community-staging-x86_64 community-staging-any
+-	community-testing-x86_64 community-testing-any
+-	kde-unstable-x86_64 kde-unstable-any
+-	gnome-unstable-x86_64 gnome-unstable-any
++	community-loong64 community-x86_64 community-any
++	community-staging-loong64 community-staging-x86_64 community-staging-any
++	community-testing-loong64 community-testing-x86_64 community-testing-any
++	kde-unstable-loong64 kde-unstable-x86_64 kde-unstable-any
++	gnome-unstable-loong64 gnome-unstable-x86_64 gnome-unstable-any
+ )
+diff --git a/src/archbuild.in b/src/archbuild.in
+index e6cf19a..e6ef8d1 100644
+--- a/src/archbuild.in
++++ b/src/archbuild.in
+@@ -11,7 +11,7 @@ makechrootpkg_args=(-c -n -C)
+ cmd="${0##*/}"
+ if [[ "${cmd%%-*}" == 'multilib' ]]; then
+ 	repo="${cmd%-build}"
+-	arch='x86_64'
++	arch='loong64'
+ 	base_packages+=(multilib-devel)
+ else
+ 	tag="${cmd%-build}"
+diff --git a/src/archrelease.in b/src/archrelease.in
+index 3490ee2..33214a0 100644
+--- a/src/archrelease.in
++++ b/src/archrelease.in
+@@ -48,40 +48,40 @@ if [[ $(svn status -q) ]]; then
+ 	die 'archrelease: You have not committed your changes yet!'
+ fi
+ 
+-pushd .. >/dev/null
+-mapfile -t known_files < <(svn ls -r HEAD "$trunk")
+-wait $! || die "failed to discover committed files"
+-
+-# gracefully handle files containing an "@" character
+-known_files=("${known_files[@]/%/@}")
+-
+-# update repo directory first to avoid a commit failure
+-svn up repos
+-
+-for tag in "$@"; do
+-	stat_busy "Copying %s to %s" "${trunk}" "${tag}"
+-
+-	if [[ -d repos/$tag ]]; then
+-		mapfile -t trash < <(svn ls --recursive "repos/$tag")
+-		wait $! || die "failed to discover existing files"
+-		if (( ${#trash[@]} )); then
+-			trash=("${trash[@]/#/repos/$tag/}")
+-			svn rm -q "${trash[@]/%/@}"
+-		fi
+-	else
+-		mkdir -p "repos/$tag"
+-		svn add --parents -q "repos/$tag"
+-	fi
+-
+-	# copy all files at once from trunk to the subdirectory in repos/
+-	svn copy -q -r HEAD "${known_files[@]/#/$trunk/}" "repos/$tag/"
+-
+-	stat_done
+-done
+-
+-stat_busy "Releasing package"
+-printf -v tag_list ", %s" "$@"; tag_list="${tag_list#, }"
+-svn commit -q -m "archrelease: copy ${trunk} to $tag_list" || abort
+-stat_done
+-
+-popd >/dev/null
++#pushd .. >/dev/null
++#mapfile -t known_files < <(svn ls -r HEAD "$trunk")
++#wait $! || die "failed to discover committed files"
++#
++## gracefully handle files containing an "@" character
++#known_files=("${known_files[@]/%/@}")
++#
++## update repo directory first to avoid a commit failure
++#svn up repos
++#
++#for tag in "$@"; do
++#	stat_busy "Copying %s to %s" "${trunk}" "${tag}"
++#
++#	if [[ -d repos/$tag ]]; then
++#		mapfile -t trash < <(svn ls --recursive "repos/$tag")
++#		wait $! || die "failed to discover existing files"
++#		if (( ${#trash[@]} )); then
++#			trash=("${trash[@]/#/repos/$tag/}")
++#			svn rm -q "${trash[@]/%/@}"
++#		fi
++#	else
++#		mkdir -p "repos/$tag"
++#		svn add --parents -q "repos/$tag"
++#	fi
++#
++#	# copy all files at once from trunk to the subdirectory in repos/
++#	svn copy -q -r HEAD "${known_files[@]/#/$trunk/}" "repos/$tag/"
++#
++#	stat_done
++#done
++#
++#stat_busy "Releasing package"
++#printf -v tag_list ", %s" "$@"; tag_list="${tag_list#, }"
++#svn commit -q -m "archrelease: copy ${trunk} to $tag_list" || abort
++#stat_done
++#
++#popd >/dev/null
+diff --git a/src/commitpkg.in b/src/commitpkg.in
+index 235d12b..f751278 100644
+--- a/src/commitpkg.in
++++ b/src/commitpkg.in
+@@ -79,14 +79,14 @@ for key in "${validpgpkeys[@]}"; do
+ 	needsversioning+=("keys/pgp/$key.asc")
+ done
+ 
+-# assert that they really are controlled by SVN
+-if (( ${#needsversioning[*]} )); then
+-	# svn status's output is only two columns when the status is unknown
+-	while read -r status filename; do
+-		[[ $status = '?' ]] && unversioned+=("$filename")
+-	done < <(svn status -v "${needsversioning[@]}")
+-	(( ${#unversioned[*]} )) && die "%s is not under version control" "${unversioned[@]}"
+-fi
++## assert that they really are controlled by SVN
++#if (( ${#needsversioning[*]} )); then
++#	# svn status's output is only two columns when the status is unknown
++#	while read -r status filename; do
++#		[[ $status = '?' ]] && unversioned+=("$filename")
++#	done < <(svn status -v "${needsversioning[@]}")
++#	(( ${#unversioned[*]} )) && die "%s is not under version control" "${unversioned[@]}"
++#fi
+ 
+ rsyncopts=(-e ssh -p '--chmod=ug=rw,o=r' -c -h -L --progress --partial -y)
+ archreleaseopts=()
+@@ -122,34 +122,35 @@ for _arch in "${arch[@]}"; do
+ done
+ 
+ if [[ -z $server ]]; then
+-	server='repos.archlinux.org'
++	#server='repos.archlinux.org'
++	server='localhost'
+ fi
+ 
+-if [[ -n $(svn status -q) ]]; then
+-	msgtemplate="upgpkg: $pkgbase $(get_full_version)"
+-	if [[ -n $1 ]]; then
+-		stat_busy 'Committing changes to trunk'
+-		svn commit -q -m "${msgtemplate}: ${1}" || die
+-		stat_done
+-	else
+-		msgfile="$(mktemp)"
+-		echo "$msgtemplate" > "$msgfile"
+-		if [[ -n $SVN_EDITOR ]]; then
+-			$SVN_EDITOR "$msgfile"
+-		elif [[ -n $VISUAL ]]; then
+-			$VISUAL "$msgfile"
+-		elif [[ -n $EDITOR ]]; then
+-			$EDITOR "$msgfile"
+-		else
+-			vi "$msgfile"
+-		fi
+-		[[ -s $msgfile ]] || die
+-		stat_busy 'Committing changes to trunk'
+-		svn commit -q -F "$msgfile" || die
+-		unlink "$msgfile"
+-		stat_done
+-	fi
+-fi
++#if [[ -n $(svn status -q) ]]; then
++#	msgtemplate="upgpkg: $pkgbase $(get_full_version)"
++#	if [[ -n $1 ]]; then
++#		stat_busy 'Committing changes to trunk'
++#		svn commit -q -m "${msgtemplate}: ${1}" || die
++#		stat_done
++#	else
++#		msgfile="$(mktemp)"
++#		echo "$msgtemplate" > "$msgfile"
++#		if [[ -n $SVN_EDITOR ]]; then
++#			$SVN_EDITOR "$msgfile"
++#		elif [[ -n $VISUAL ]]; then
++#			$VISUAL "$msgfile"
++#		elif [[ -n $EDITOR ]]; then
++#			$EDITOR "$msgfile"
++#		else
++#			vi "$msgfile"
++#		fi
++#		[[ -s $msgfile ]] || die
++#		stat_busy 'Committing changes to trunk'
++#		svn commit -q -F "$msgfile" || die
++#		unlink "$msgfile"
++#		stat_done
++#	fi
++#fi
+ 
+ declare -a uploads
+ declare -a commit_arches
+@@ -220,22 +221,22 @@ if [[ ${#uploads[*]} -gt 0 ]]; then
+ 	rsync "${rsyncopts[@]}" "${uploads[@]}" "$server:staging/$repo/" || die
+ fi
+ 
+-if [[ "${arch[*]}" == 'any' ]]; then
+-	if [[ -d ../repos/$repo-x86_64 ]]; then
+-		pushd ../repos/ >/dev/null
+-		stat_busy "Removing %s" "$repo-x86_64"
+-		svn rm -q "$repo-x86_64"
+-		svn commit -q -m "Removed $repo-x86_64 for $pkgname"
+-		stat_done
+-		popd >/dev/null
+-	fi
+-else
+-	if [[ -d ../repos/$repo-any ]]; then
+-		pushd ../repos/ >/dev/null
+-		stat_busy "Removing %s" "$repo-any"
+-		svn rm -q "$repo-any"
+-		svn commit -q -m "Removed $repo-any for $pkgname"
+-		stat_done
+-		popd >/dev/null
+-	fi
+-fi
++#if [[ "${arch[*]}" == 'any' ]]; then
++#	if [[ -d ../repos/$repo-x86_64 ]]; then
++#		pushd ../repos/ >/dev/null
++#		stat_busy "Removing %s" "$repo-x86_64"
++#		svn rm -q "$repo-x86_64"
++#		svn commit -q -m "Removed $repo-x86_64 for $pkgname"
++#		stat_done
++#		popd >/dev/null
++#	fi
++#else
++#	if [[ -d ../repos/$repo-any ]]; then
++#		pushd ../repos/ >/dev/null
++#		stat_busy "Removing %s" "$repo-any"
++#		svn rm -q "$repo-any"
++#		svn commit -q -m "Removed $repo-any for $pkgname"
++#		stat_done
++#		popd >/dev/null
++#	fi
++#fi
+diff --git a/src/makechrootpkg.in b/src/makechrootpkg.in
+index f9a9289..f17add1 100644
+--- a/src/makechrootpkg.in
++++ b/src/makechrootpkg.in
+@@ -9,7 +9,7 @@ source /usr/share/makepkg/util/config.sh
+ 
+ shopt -s nullglob
+ 
+-default_makepkg_args=(--syncdeps --noconfirm --log --holdver --skipinteg)
++default_makepkg_args=(--syncdeps --noconfirm --log --holdver --skipinteg --skippgpcheck --nocheck)
+ makepkg_args=("${default_makepkg_args[@]}")
+ verifysource_args=()
+ chrootdir=
+@@ -235,7 +235,7 @@ download_sources() {
+ 	# Ensure sources are downloaded
+ 	sudo -u "$makepkg_user" --preserve-env=GNUPGHOME,SSH_AUTH_SOCK \
+ 		env SRCDEST="$SRCDEST" BUILDDIR="$WORKDIR" \
+-		makepkg --config="$copydir/etc/makepkg.conf" --verifysource -o "${verifysource_args[@]}" ||
++		makepkg --config="$copydir/etc/makepkg.conf" --skippgpcheck --verifysource -o "${verifysource_args[@]}" ||
+ 		die "Could not download sources."
+ }
+ 
