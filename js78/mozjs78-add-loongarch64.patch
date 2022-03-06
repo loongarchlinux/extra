@@ -1,0 +1,79 @@
+diff -Nurp firefox-78.15.0.orig/build/gyp_base.mozbuild firefox-78.15.0/build/gyp_base.mozbuild
+--- firefox-78.15.0.orig/build/gyp_base.mozbuild	2021-09-28 10:04:51.000000000 +0000
++++ firefox-78.15.0/build/gyp_base.mozbuild	2022-01-19 08:38:53.307784008 +0000
+@@ -32,6 +32,7 @@ arches = {
+     'x86_64': 'x64',
+     'x86': 'ia32',
+     'aarch64': 'arm64',
++    'loongarch64': 'loongarch64',
+ }
+ 
+ gyp_vars['host_arch'] = arches.get(CONFIG['HOST_CPU_ARCH'], CONFIG['HOST_CPU_ARCH'])
+diff -Nurp firefox-78.15.0.orig/build/moz.configure/init.configure firefox-78.15.0/build/moz.configure/init.configure
+--- firefox-78.15.0.orig/build/moz.configure/init.configure	2021-09-28 10:04:51.000000000 +0000
++++ firefox-78.15.0/build/moz.configure/init.configure	2022-01-19 08:35:02.184793719 +0000
+@@ -755,6 +755,9 @@ def split_triplet(triplet, allow_msvc=Fa
+     elif cpu.startswith('aarch64'):
+         canonical_cpu = 'aarch64'
+         endianness = 'little'
++    elif cpu.startswith('loongarch64'):
++        canonical_cpu = 'loongarch64'
++        endianness = 'little'
+     elif cpu == 'sh4':
+         canonical_cpu = 'sh4'
+         endianness = 'little'
+diff -Nurp firefox-78.15.0.orig/js/src/jit/AtomicOperations.h firefox-78.15.0/js/src/jit/AtomicOperations.h
+--- firefox-78.15.0.orig/js/src/jit/AtomicOperations.h	2021-09-28 10:04:54.000000000 +0000
++++ firefox-78.15.0/js/src/jit/AtomicOperations.h	2022-01-19 08:48:41.155759308 +0000
+@@ -391,7 +391,7 @@ inline bool AtomicOperations::isLockfree
+ #elif defined(__ppc__) || defined(__PPC__) || defined(__sparc__) ||     \
+     defined(__ppc64__) || defined(__PPC64__) || defined(__ppc64le__) || \
+     defined(__PPC64LE__) || defined(__alpha__) || defined(__hppa__) ||  \
+-    defined(__sh__) || defined(__s390__) || defined(__s390x__)
++    defined(__loongarch64) || defined(__sh__) || defined(__s390__) || defined(__s390x__)
+ #  include "jit/shared/AtomicOperations-feeling-lucky.h"
+ #else
+ #  error "No AtomicOperations support provided for this platform"
+diff -Nurp firefox-78.15.0.orig/mfbt/double-conversion/double-conversion/utils.h firefox-78.15.0/mfbt/double-conversion/double-conversion/utils.h
+--- firefox-78.15.0.orig/mfbt/double-conversion/double-conversion/utils.h	2021-09-28 10:04:56.000000000 +0000
++++ firefox-78.15.0/mfbt/double-conversion/double-conversion/utils.h	2022-01-19 08:47:09.265763169 +0000
+@@ -93,6 +93,7 @@ int main(int argc, char** argv) {
+ #if defined(_M_X64) || defined(__x86_64__) || \
+     defined(__ARMEL__) || defined(__avr32__) || defined(_M_ARM) || defined(_M_ARM64) || \
+     defined(__hppa__) || defined(__ia64__) || \
++    defined(__loongarch__) || \
+     defined(__mips__) || \
+     defined(__powerpc__) || defined(__ppc__) || defined(__ppc64__) || \
+     defined(_POWER) || defined(_ARCH_PPC) || defined(_ARCH_PPC64) || \
+diff -Nurp firefox-78.15.0.orig/mfbt/tests/TestPoisonArea.cpp firefox-78.15.0/mfbt/tests/TestPoisonArea.cpp
+--- firefox-78.15.0.orig/mfbt/tests/TestPoisonArea.cpp	2021-09-28 10:04:57.000000000 +0000
++++ firefox-78.15.0/mfbt/tests/TestPoisonArea.cpp	2022-01-19 09:02:12.262725228 +0000
+@@ -141,6 +141,9 @@
+ #elif defined __hppa
+ #  define RETURN_INSTR 0xe840c002 /* bv,n r0(rp) */
+ 
++#elif defined __loongarch64
++#  define RETURN_INSTR 0x4c000020 /* jirl */
++
+ #elif defined __mips
+ #  define RETURN_INSTR 0x03e00008 /* jr ra */
+ 
+diff -Nurp firefox-78.15.0.orig/python/mozbuild/mozbuild/configure/constants.py firefox-78.15.0/python/mozbuild/mozbuild/configure/constants.py
+--- firefox-78.15.0.orig/python/mozbuild/mozbuild/configure/constants.py	2021-09-28 10:04:57.000000000 +0000
++++ firefox-78.15.0/python/mozbuild/mozbuild/configure/constants.py	2022-01-19 08:43:13.373773081 +0000
+@@ -45,6 +45,7 @@ CPU_bitness = {
+     'arm': 32,
+     'hppa': 32,
+     'ia64': 64,
++    'loongarch64': 64,
+     'mips32': 32,
+     'mips64': 64,
+     'ppc': 32,
+@@ -83,6 +84,7 @@ CPU_preprocessor_checks = OrderedDict((
+     ('ppc', '__powerpc__'),
+     ('Alpha', '__alpha__'),
+     ('hppa', '__hppa__'),
++    ('loongarch64', '__loongarch64'),
+     ('sparc64', '__sparc__ && __arch64__'),
+     ('sparc', '__sparc__'),
+     ('mips64', '__mips64'),

@@ -1,0 +1,64 @@
+From 26167350f5ff98e128c4b6300bef387e106ce050 Mon Sep 17 00:00:00 2001
+From: Xiaotian Wu <wuxiaotian@loongson.cn>
+Date: Sun, 2 May 2021 12:35:17 +0800
+Subject: [PATCH 2/3] etnaviv: loader: load loongson-drm_dri.so when ls7a1000
+ is in use.
+
+Etnaviv kernel driver on loongson platform has been patched
+to a pci device driver, not a platform one. GC1000 have pci
+id and device id on ls7a1000 bridge chip(0014:7a15).
+
+However, when /dev/dri/card0 is opened, its pci and devcice
+is 0014:7a06, it is display controller not the 3D GPU.
+Mesa-18.3.4 is not supporting kmsro framework yet, in this
+suitation, 0014:7a06 is also provide in ls7a1000_pci_ids.h
+to help mesa find the right gallium driver to use.
+
+we wish etnaviv can also be used on 2k1000, however 2k1000
+is a soc which without pci id, in this case mesa's loader
+will get the driver name from the kernel. so we choose
+loongson-drm_drv.so as gallium driver name.
+
+Signed-off-by: suijingfeng <suijingfeng@loongson.cn>
+---
+ include/pci_ids/ls7a1000_pci_ids.h | 2 ++
+ src/loader/pci_id_driver_map.h     | 7 +++++++
+ 2 files changed, 9 insertions(+)
+ create mode 100644 include/pci_ids/ls7a1000_pci_ids.h
+
+diff --git a/include/pci_ids/ls7a1000_pci_ids.h b/include/pci_ids/ls7a1000_pci_ids.h
+new file mode 100644
+index 00000000000..22a57cffae0
+--- /dev/null
++++ b/include/pci_ids/ls7a1000_pci_ids.h
+@@ -0,0 +1,2 @@
++CHIPSET(0x7A15, GC1000, LOONGSON)
++CHIPSET(0x7A06, DC, LOONGSON)
+diff --git a/src/loader/pci_id_driver_map.h b/src/loader/pci_id_driver_map.h
+index 59dc5b4fbad..683708820f9 100644
+--- a/src/loader/pci_id_driver_map.h
++++ b/src/loader/pci_id_driver_map.h
+@@ -32,6 +32,12 @@ static const int r600_chip_ids[] = {
+ #undef CHIPSET
+ };
+ 
++static const int loongson_chip_ids[] = {
++#define CHIPSET(chip, name, family) chip,
++#include "pci_ids/ls7a1000_pci_ids.h"
++#undef CHIPSET
++};
++
+ static const int virtio_gpu_chip_ids[] = {
+ #define CHIPSET(chip, name, family) chip,
+ #include "pci_ids/virtio_gpu_pci_ids.h"
+@@ -60,6 +66,7 @@ static const struct {
+    { 0x1002, "r600", r600_chip_ids, ARRAY_SIZE(r600_chip_ids) },
+    { 0x1002, "radeonsi", NULL, -1 },
+    { 0x10de, "nouveau", NULL, -1, },
++   { 0x0014, "loongson-drm", loongson_chip_ids, ARRAY_SIZE(loongson_chip_ids) },
+    { 0x1af4, "virtio_gpu", virtio_gpu_chip_ids, ARRAY_SIZE(virtio_gpu_chip_ids) },
+    { 0x15ad, "vmwgfx", vmwgfx_chip_ids, ARRAY_SIZE(vmwgfx_chip_ids) },
+ };
+-- 
+2.35.1
+

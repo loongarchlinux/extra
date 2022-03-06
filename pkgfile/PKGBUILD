@@ -8,11 +8,18 @@ arch=('loong64' 'x86_64')
 url="https://github.com/falconindy/pkgfile"
 license=('MIT')
 depends=('libarchive' 'curl' 'pcre' 'pacman')
-makedepends=('git' 'meson')
-source=("git+https://github.com/falconindy/pkgfile?signed#tag=v$pkgver")
+makedepends=('git' 'meson' 'clang' 'systemd')
+source=("git+https://github.com/falconindy/pkgfile?signed#tag=v$pkgver"
+    pkgfile-use-loong64.patch)
 validpgpkeys=('487EACC08557AD082088DABA1EB2638FF56C0C53')  # Dave Reisner
 install=pkgfile.install
-md5sums=('SKIP')
+md5sums=('SKIP'
+         'b300e43eaa26d4b46ee37ae21a92d262')
+
+prepare() {
+  cd "$pkgname"
+  patch -p1 -i $srcdir/pkgfile-use-loong64.patch
+}
 
 build() {
   cd "$pkgname"

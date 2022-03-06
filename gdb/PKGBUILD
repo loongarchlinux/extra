@@ -2,24 +2,21 @@
 # Maintainer: Anatol Pomozov <anatol.pomozov@gmail.com>
 # Contributor: Allan McRae <allan@archlinux.org>
 # Contributor: Jan de Groot <jgc@archlinux.org>
-
 pkgbase=gdb
 # gdb-common is a package that contains files common for all cross compiled versions
 # of gdb (for arm/avr/...)
 pkgname=(gdb gdb-common)
-pkgver=12.1
-pkgrel=1
+pkgver=13.0.50
+_rdate=20221009
+pkgrel=7
 pkgdesc='The GNU Debugger'
 arch=(loong64 x86_64)
 url='https://www.gnu.org/software/gdb/'
 license=(GPL3)
 makedepends=(glibc gcc-libs texinfo python guile ncurses expat xz mpfr source-highlight
              readline)
-source=(https://ftp.gnu.org/gnu/gdb/${pkgname}-${pkgver}.tar.xz{,.sig})
-sha1sums=('2edabd9f5766b84889b07b366b4438e93e994005'
-          'SKIP')
-b2sums=('7f6f853d1640908cf2c79932cdc1ba02549a07721c005d9c7ce2946a715761719cc164a4e68235a18664ec8a029afe3a2a0cfb57e1635f280076d6bed91317fd'
-        'SKIP')
+source=(https://github.com/yetist/binutils-gdb/releases/download/v${_rdate}/gdb-${pkgver}-${_rdate}.tar.xz)
+sha256sums=('6f42c1e0dfb1495b143b103f29a16da20dd9e25a3847026d73072d81932d4bc1')
 validpgpkeys=('F40ADB902B24264AA42E50BF92EDB04BFF325CF3') # Joel Brobecker
 
 prepare() {
@@ -36,11 +33,12 @@ build() {
   ../configure \
     --prefix=/usr \
     --disable-nls \
-    --enable-source-highlight \
+    --disable-source-highlight \
     --enable-tui \
     --with-system-readline \
     --with-python=/usr/bin/python \
     --with-guile=guile-2.2 \
+    --disable-werror \
     --with-system-gdbinit=/etc/gdb/gdbinit
   make
 }
@@ -59,11 +57,13 @@ package_gdb() {
 
   cd gdb-$pkgver/build
   make -C gdb DESTDIR="$pkgdir" install
-  make -C gdbserver DESTDIR="$pkgdir" install
+  #make -C gdbserver DESTDIR="$pkgdir" install
 
   # install "custom" system gdbinit
   install -dm 755 "$pkgdir/etc/gdb"
   touch "$pkgdir/etc/gdb/gdbinit"
+
+  rm -f "$pkgdir/usr/lib64/libiberty.a"
 
   # comes from gdb-common
   rm -r "$pkgdir/usr/share/gdb/"

@@ -4,7 +4,7 @@
 # Contributor: Andreas Radke <andyrtr@archlinux.org>
 
 pkgbase=mesa
-pkgname=('vulkan-mesa-layers' 'opencl-mesa' 'vulkan-intel' 'vulkan-radeon' 'vulkan-swrast' 'libva-mesa-driver' 'mesa-vdpau' 'mesa')
+pkgname=('vulkan-mesa-layers' 'vulkan-radeon' 'vulkan-swrast' 'libva-mesa-driver' 'mesa-vdpau' 'mesa')
 pkgdesc="An open-source implementation of the OpenGL specification"
 pkgver=22.1.7
 pkgrel=1
@@ -17,10 +17,16 @@ url="https://www.mesa3d.org/"
 license=('custom')
 options=('debug')
 source=(https://mesa.freedesktop.org/archive/mesa-${pkgver}.tar.xz{,.sig}
-        LICENSE)
+        LICENSE
+        0001-etnaviv-Initial-enable-etnaviv-for-vivante-gc1000-fo.patch
+        0002-etnaviv-loader-load-loongson-drm_dri.so-when-ls7a100.patch
+        0003-fix-build-error.patch)
 sha512sums=('447e87359445edce231761d94b316b2aa20e9ab58e4b59d75cbb1696dd0900e7164c32bebc3b75700b4070570b456f7a8cf0914181371754a52427d34e4b9120'
             'SKIP'
-            'f9f0d0ccf166fe6cb684478b6f1e1ab1f2850431c06aa041738563eb1808a004e52cdec823c103c9e180f03ffc083e95974d291353f0220fe52ae6d4897fecc7')
+            'f9f0d0ccf166fe6cb684478b6f1e1ab1f2850431c06aa041738563eb1808a004e52cdec823c103c9e180f03ffc083e95974d291353f0220fe52ae6d4897fecc7'
+            '65e8bb2c9365f581f1a1c233c837c9b71bc7f9871b88eec9aa22f50b344077434aa2544274e6ec535b85019ead0f56f2aa2448021697a70751d1a631dd774097'
+            '4f52ae08c4ce5f080e7fa24f36dca0ad9e0656921725c3f3fb4585164c5866b17de10a8144dfb576cc24b1697539ae497231d827e42af660578c58811344b260'
+            '11f842702325e18ec95eab610ab051e0b6093207548a245689bb533bf6c865d6b6ab025f0c066f7a5ab73ebfd357edf1ee5889814350bd95d10861bce28523b5')
 validpgpkeys=('8703B6700E7EE06D7A39B8D6EDAE37B02CEB490D'  # Emil Velikov <emil.l.velikov@gmail.com>
               '946D09B5E4C9845E63075FF1D961C596A7203456'  # Andres Gomez <tanty@igalia.com>
               'E3E8F480C52ADD73B278EE78E1ECBE07D7D70895'  # Juan Antonio Suárez Romero (Igalia, S.L.) <jasuarez@igalia.com>
@@ -31,6 +37,9 @@ validpgpkeys=('8703B6700E7EE06D7A39B8D6EDAE37B02CEB490D'  # Emil Velikov <emil.l
 prepare() {
   cd mesa-$pkgver
 
+  patch -p1 -i $srcdir/0001-etnaviv-Initial-enable-etnaviv-for-vivante-gc1000-fo.patch
+  patch -p1 -i $srcdir/0002-etnaviv-loader-load-loongson-drm_dri.so-when-ls7a100.patch
+  patch -p1 -i $srcdir/0003-fix-build-error.patch
 }
 
 build() {
@@ -39,21 +48,21 @@ build() {
   CXXFLAGS+=' -g1'
 
   # https://gitlab.freedesktop.org/mesa/mesa/-/issues/6229
-  CFLAGS+=' -mtls-dialect=gnu'
-  CXXFLAGS+=' -mtls-dialect=gnu'
+#  CFLAGS+=' -mtls-dialect=gnu'
+#  CXXFLAGS+=' -mtls-dialect=gnu'
 
   arch-meson mesa-$pkgver build \
     -D b_ndebug=true \
     -D platforms=x11,wayland \
-    -D gallium-drivers=r300,r600,radeonsi,nouveau,virgl,svga,swrast,iris,crocus,zink,d3d12 \
-    -D vulkan-drivers=amd,intel,swrast \
-    -D vulkan-layers=device-select,intel-nullhw,overlay \
+    -D gallium-drivers=r300,r600,radeonsi,nouveau,loongson,etnaviv,virgl,svga,swrast,zink,d3d12 \
+    -D vulkan-drivers=amd,swrast \
+    -D vulkan-layers=device-select,overlay \
     -D dri3=enabled \
     -D egl=enabled \
     -D gallium-extra-hud=true \
     -D gallium-nine=true \
     -D gallium-omx=bellagio \
-    -D gallium-opencl=icd \
+    -D gallium-opencl=disabled \
     -D gallium-va=enabled \
     -D gallium-vdpau=enabled \
     -D gallium-xa=enabled \

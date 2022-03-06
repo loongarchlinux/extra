@@ -19,13 +19,17 @@ makedepends=('java-environment=8' 'ccache' 'cpio' 'unzip' 'zip' 'git' 'bash'
              'libxrender' 'libxtst' 'fontconfig' 'libcups' 'alsa-lib')
 options=(!lto)
 source=(git+https://github.com/openjdk/jdk${_majorver}u.git#tag=${_git_tag}
-        gcc11.patch)
+        gcc11.patch
+        0001-add-support-for-la64.patch)
 sha256sums=('SKIP'
-            'e1e9452b2078c3e9b45aa73491f3f187e7a9abbc40b6a7fc9239d4e5e525569e')
+            'e1e9452b2078c3e9b45aa73491f3f187e7a9abbc40b6a7fc9239d4e5e525569e'
+            '417ad0a7eedf32f6bdc21bfd4d7d6459b7ebfd1d59527b5fd642dccb1c71f8a0')
 
+SKIPCONFIG=1
 case "${CARCH}" in
   'x86_64') _JARCH=amd64 ; _DOC_ARCH=x86_64 ;;
   'i686'  ) _JARCH=i386  ; _DOC_ARCH=x86    ;;
+  'loong64'  ) _JARCH=loongarch64  ; _DOC_ARCH=loongarch64    ;;
 esac
 
 _jdkname=openjdk8
@@ -42,6 +46,7 @@ prepare() {
 
   # Fix build with C++17 (Fedora)
   patch -Np1 -i "${srcdir}"/gcc11.patch
+  patch -Np1 -i "${srcdir}"/0001-add-support-for-la64.patch
 }
 
 build() {
@@ -62,6 +67,7 @@ build() {
     --with-update-version="${_minorver}" \
     --with-build-number="b${_updatever}" \
     --with-milestone="fcs" \
+    --with-jvm-variants=zero \
     --enable-unlimited-crypto \
     --with-zlib=system \
     --with-extra-cflags="${CFLAGS}" \
@@ -260,7 +266,7 @@ package_openjdk8-doc() {
   pkgdesc='OpenJDK Java 8 documentation'
 
   install -d -m 755 "${pkgdir}/usr/share/doc/${pkgbase}/"
-  cp -r "${srcdir}"/jdk8u/build/linux-${_DOC_ARCH}-normal-server-release/docs/* \
+  cp -r "${srcdir}"/jdk8u/build/linux-${_DOC_ARCH}-normal-zero-release/docs/* \
     "${pkgdir}/usr/share/doc/${pkgbase}/"
 }
 

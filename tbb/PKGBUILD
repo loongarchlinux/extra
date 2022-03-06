@@ -17,13 +17,16 @@ conflicts=('intel-tbb')
 provides=("intel-tbb=$pkgver")
 replaces=('intel-tbb')
 source=(https://github.com/oneapi-src/oneTBB/archive/v$pkgver/$pkgname-$pkgver.tar.gz
-        retry-pthread_create.patch::https://github.com/oneapi-src/oneTBB/pull/824.patch)
+        retry-pthread_create.patch::https://github.com/oneapi-src/oneTBB/pull/824.patch
+        tbb-la64.patch)
 sha512sums=('0e7b71022e397a6d7abb0cea106847935ae79a1e12a6976f8d038668c6eca8775ed971202c5bd518f7e517092b67af805cc5feb04b5c3a40e9fbf972cc703a46'
-            '62c1535a3888f27f1af5f472c57b8e22dc6977a0a64edb84d9ea84e4a967169d2c79a2b20654c4aa3da2891fec9538c22c6e5d8a5f296947b8760c6f97e02d98')
+            '62c1535a3888f27f1af5f472c57b8e22dc6977a0a64edb84d9ea84e4a967169d2c79a2b20654c4aa3da2891fec9538c22c6e5d8a5f296947b8760c6f97e02d98'
+            '194321772b9ea0586c40ca70e722cf72e5e7f483ad3f707828744cad34164bc965f838c2e4f6313f8ac7df2fec8ba21babc5c20ccca99ce5450258557023ccbe')
 
 prepare() {
   # Patch for mold:
   patch -d oneTBB-$pkgver -p1 -i ../retry-pthread_create.patch
+  patch -d oneTBB-$pkgver -p1 -i $srcdir/tbb-la64.patch
 }
 
 build() {
@@ -35,6 +38,7 @@ build() {
   # So we turn off the problematic new warnings in GCC 12 manually.
   export CXXFLAGS="$CXXFLAGS -Wno-error=uninitialized -Wno-error=address"
   cmake -GNinja -DCMAKE_INSTALL_PREFIX=/usr -DTBB4PY_BUILD=ON .
+#cmake -GNinja -DCMAKE_INSTALL_PREFIX=/usr -DTBB4PY_BUILD=ON -DTBB_STRICT=OFF .
   ninja all python_build
 }
 

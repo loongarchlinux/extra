@@ -3,7 +3,7 @@
 
 pkgname=libxfce4ui
 pkgver=4.16.1
-pkgrel=1
+pkgrel=2
 pkgdesc="Commonly used Xfce widgets among Xfce applications"
 arch=('loong64' 'x86_64')
 url="https://www.xfce.org/"
@@ -11,8 +11,15 @@ license=('GPL2')
 depends=('libxfce4util' 'gtk3' 'xfconf' 'libsm' 'startup-notification'
          'libgtop' 'libepoxy' 'hicolor-icon-theme')
 makedepends=('intltool' 'gobject-introspection' 'vala')
-source=(https://archive.xfce.org/src/xfce/$pkgname/${pkgver%.*}/$pkgname-$pkgver.tar.bz2)
-sha256sums=('d96946ae5af6bf078dda415419e0021909f763ee0020b42f3e26f603e51585f6')
+source=(https://archive.xfce.org/src/xfce/$pkgname/${pkgver%.*}/$pkgname-$pkgver.tar.bz2
+    libxfce4-ui-la64.patch)
+sha256sums=('d96946ae5af6bf078dda415419e0021909f763ee0020b42f3e26f603e51585f6'
+            'f43f1e042f1a088a3f52353adb887484310b5e9969b2555816b70538b3f5651f')
+
+prepare() {
+	cd "$pkgname-$pkgver"
+	patch -p1 -i "$srcdir/libxfce4-ui-la64.patch"
+}
 
 build() {
   cd "$srcdir/$pkgname-$pkgver"

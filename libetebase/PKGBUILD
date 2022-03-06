@@ -14,12 +14,17 @@ sha256sums=('78c79f72df40ae4ed85beca593d870159f923e8b9e0111c16e34b6142c634995')
 
 prepare() {
   cd $pkgname-$pkgver
-  cargo fetch --locked --target "$CARCH-unknown-linux-gnu"
 }
 
 build() {
   cd $pkgname-$pkgver
-  env CARGO_INCREMENTAL=0 SODIUM_USE_PKG_CONFIG= cargo build --release --locked --offline
+  find -name Cargo.lock -exec rm -f {} \;
+  mkdir -p .cargo
+  cat > .cargo/config.toml <<EOF
+[source.crates-io]
+registry = "https://gitee.com/yetist/crates.io-index"
+EOF
+  env CARGO_INCREMENTAL=0 SODIUM_USE_PKG_CONFIG= cargo build --release
   make pkgconfig
 }
 
