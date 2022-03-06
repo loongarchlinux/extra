@@ -4,7 +4,7 @@
 # Contributor: Andreas Radke <andyrtr@archlinux.org>
 
 pkgbase=mesa
-pkgname=('vulkan-mesa-layers' 'opencl-mesa' 'vulkan-intel' 'vulkan-radeon' 'vulkan-swrast' 'vulkan-virtio' 'libva-mesa-driver' 'mesa-vdpau' 'mesa')
+pkgname=('vulkan-mesa-layers' 'vulkan-radeon' 'vulkan-swrast' 'vulkan-virtio' 'libva-mesa-driver' 'mesa-vdpau' 'mesa')
 pkgdesc="An open-source implementation of the OpenGL specification"
 pkgver=23.0.3
 pkgrel=1
@@ -22,21 +22,30 @@ source=(https://mesa.freedesktop.org/archive/mesa-${pkgver}.tar.xz{,.sig}
         0002-egl-wayland-Fix-destruction-of-event-queue-with-prox.patch
         0003-vulkan-wsi-wayland-Fix-destruction-of-event-queue-wi.patch
         0004-rusticl-Fix-bindgen-invocation.patch
-        LICENSE)
+        LICENSE
+        0001-etnaviv-Initial-enable-etnaviv-for-vivante-gc1000-fo.patch
+        0002-etnaviv-loader-load-loongson-drm_dri.so-when-ls7a100.patch
+        0003-fix-build-error.patch)
 sha256sums=('386362a5d80df3b096636b67f340e1ce67b705b44767d5bdd11d2ed1037192d5'
             'SKIP'
             'dc6790b5be0e80c23e74ae18ca1a2b40f57f4211cc7b645bf22b63af3b790e40'
             'c25493de3e5930702acf833d182aeca0895d6a9d9e830dca15c42d130e25c41c'
             'db2be7ae0540d65e77449eda1af66200e27af382183fdcd0c87f99db3520b80a'
             'b3aaccd6ce5c6d417801baafa056d4dfb2a13bf9b480fb980e9af6d0d071cedb'
-            '7052ba73bb07ea78873a2431ee4e828f4e72bda7d176d07f770fa48373dec537')
+            '7052ba73bb07ea78873a2431ee4e828f4e72bda7d176d07f770fa48373dec537'
+            'a494be095a8a128eddce985ead49be3c90402499c6e5528b955f945e73bf6c21'
+            '3b94a79f209d261c3b27c618ce2968bfdc27c6ab175b9ae92ff0478483ad610a'
+            '226ae39f384f70ca755cf91ee3208686c9eabf039120584d60e201a6c877c798')
 b2sums=('e716d9ddce3da649239c1bc37ec208b9669f316f6b547ca0c69937043f371f0d59ead34fec427297171916045061ddb8783d126f6dec5ece90a0719003fe2c40'
         'SKIP'
         '37d1d070c45c85bce8abe3524a3f8d9ac9ed6326a3eec653cd89fffce3630b08eb9b96b11aeb495488230449c99f9b508f73a15e53265d2b159286b0e2dda7cc'
         'ae891637318fdbb8dd58285098af7bea709fb032969a5671eb225a4a471bf9422fac2a6cb0fd188aad96ea5a03eb043f646f5d371dd655a100046adb1c91bd7d'
         'a7312e0931904e659b3d33fcb37b13bcadab943c6040dd2b58ea191db350b50c1ba588e334b7e59b513bd6155797e29dc1bd1a6a35a278b3824d06534f2c9d17'
         '58c374ae45f84996a7bf248d0f2dd97fb003f30b2ecda5654561679b90c53830efdff10f990295390cdf8d9d676deeb756b3037c070966a6441670bf8dcb2223'
-        '1ecf007b82260710a7bf5048f47dd5d600c168824c02c595af654632326536a6527fbe0738670ee7b921dd85a70425108e0f471ba85a8e1ca47d294ad74b4adb')
+        '1ecf007b82260710a7bf5048f47dd5d600c168824c02c595af654632326536a6527fbe0738670ee7b921dd85a70425108e0f471ba85a8e1ca47d294ad74b4adb'
+        '31022cebcf9b79ade2cbb2c458177a2ef8c175b87048b634b9afbdbd76d88b15143e4b8b8e5b1e6d1c4ae77620743e00393abd224ed52b18511d56f9479f80d4'
+        '4bbcf755337b2d45e7c0bdf33ff5398d97249d83e4327c4b5b205dfec4418220695a021ed588f100c383d7e84178a649bc91ab12d3c9319650c7718d7f8974f9'
+        'e9f218450ad4efa7f72484cd6c7f3df7f9e39ba0a743e46bec3c00ae76bdcdd0ef6a6a61c55004f35429681e57ce417ab418b1a1de13829b1cb3b08a526279f3')
 validpgpkeys=('8703B6700E7EE06D7A39B8D6EDAE37B02CEB490D'  # Emil Velikov <emil.l.velikov@gmail.com>
               '946D09B5E4C9845E63075FF1D961C596A7203456'  # Andres Gomez <tanty@igalia.com>
               'E3E8F480C52ADD73B278EE78E1ECBE07D7D70895'  # Juan Antonio Suárez Romero (Igalia, S.L.) <jasuarez@igalia.com>
@@ -62,6 +71,9 @@ prepare() {
 
   # Fix build failure with rust-bindgen 0.65.1
   patch -Np1 -i ../0004-rusticl-Fix-bindgen-invocation.patch
+  patch -p1 -i $srcdir/0001-etnaviv-Initial-enable-etnaviv-for-vivante-gc1000-fo.patch
+  patch -p1 -i $srcdir/0002-etnaviv-loader-load-loongson-drm_dri.so-when-ls7a100.patch
+  patch -p1 -i $srcdir/0003-fix-build-error.patch
 }
 
 build() {
@@ -72,19 +84,19 @@ build() {
   arch-meson mesa-$pkgver build \
     -D b_ndebug=true \
     -D platforms=x11,wayland \
-    -D gallium-drivers=r300,r600,radeonsi,nouveau,virgl,svga,swrast,i915,iris,crocus,zink,d3d12 \
-    -D vulkan-drivers=amd,intel,intel_hasvk,swrast,virtio-experimental \
-    -D vulkan-layers=device-select,intel-nullhw,overlay \
+    -D gallium-drivers=r300,r600,radeonsi,nouveau,virgl,svga,swrast,zink,d3d12 \
+    -D vulkan-drivers=amd,swrast,virtio-experimental \
+    -D vulkan-layers=device-select,overlay \
     -D dri3=enabled \
     -D egl=enabled \
     -D gallium-extra-hud=true \
     -D gallium-nine=true \
     -D gallium-omx=bellagio \
-    -D gallium-opencl=icd \
+    -D gallium-opencl=disabled \
     -D gallium-va=enabled \
     -D gallium-vdpau=enabled \
     -D gallium-xa=enabled \
-    -D gallium-rusticl=true \
+    -D gallium-rusticl=false \
     -D rust_std=2021 \
     -D gbm=enabled \
     -D gles1=disabled \

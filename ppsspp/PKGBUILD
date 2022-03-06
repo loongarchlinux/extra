@@ -46,6 +46,7 @@ source=(
   git+https://github.com/KhronosGroup/SPIRV-Cross.git
   ppsspp-sdl.desktop
   ppsspp-qt.desktop
+  ppsspp-la64.patch
 )
 b2sums=('SKIP'
         'SKIP'
@@ -77,6 +78,8 @@ prepare() {
     git config submodule.${submodule}.url ../${submodule#*/}
     git -c protocol.file.allow=always submodule update ${submodule}
   done
+  patch -p1 -i $srcdir/ppsspp-la64.patch
+
   cd ext/armips
   for submodule in ext/filesystem; do
     git submodule init ${submodule}
@@ -88,6 +91,8 @@ prepare() {
 build() {
   export CC=clang
   export CXX=clang++
+  CFLAGS=${CFLAGS/-fstack-clash-protection/}
+  CXXFLAGS=${CXXFLAGS/-fstack-clash-protection/}
   cmake -S ppsspp -B build-sdl -G Ninja \
     -DCMAKE_BUILD_TYPE=None \
     -DCMAKE_SKIP_RPATH=ON \
@@ -95,6 +100,7 @@ build() {
     -DOpenGL_GL_PREFERENCE=GLVND \
     -DUSE_SYSTEM_LIBZIP=ON \
     -DUSE_SYSTEM_SNAPPY=ON \
+    -DUSE_SYSTEM_FFMPEG=ON \
     -DUSE_SYSTEM_ZSTD=ON \
     -DUSING_QT_UI=OFF
   cmake --build build-sdl
@@ -106,6 +112,7 @@ build() {
     -DUSE_SYSTEM_LIBZIP=ON \
     -DUSE_SYSTEM_SNAPPY=ON \
     -DUSE_SYSTEM_ZSTD=ON \
+    -DUSE_SYSTEM_FFMPEG=ON \
     -DUSING_QT_UI=ON
   cmake --build build-qt
 }
@@ -141,3 +148,16 @@ package_ppsspp-assets() {
 }
 
 # vim: ts=2 sw=2 et:
+b2sums=('SKIP'
+        'SKIP'
+        'SKIP'
+        'SKIP'
+        'SKIP'
+        'SKIP'
+        'SKIP'
+        'SKIP'
+        'SKIP'
+        'SKIP'
+        'c6bcdfedee866dfdcc82a8c333c31ff73ed0beec65b63acec8bc8186383c0bc9f0912f21bb9715b665e8dc1793b1a85599761f9037856fa54ad8aa3bfdbfd468'
+        '328e2ba47b78d242b0ec6ba6bfa039c77a36d1ef7246e5c2c2432d8e976e9360baf505eb05f48408ede1a30545cbbb7f875bf5ebd0252cef35523d449b8254a0'
+        '7010f5fed4a64ffba2479d2c190b3dcc0b7518343cb01973347ca1c8e577af07fe01a24a5864403d77c632a0e7324c5cc0c5dd244328a3422cdab97eb665ba9d')

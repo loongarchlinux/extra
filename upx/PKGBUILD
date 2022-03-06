@@ -13,13 +13,16 @@ url='https://github.com/upx/upx'
 license=(custom GPL2)
 makedepends=(cmake git perl setconf)
 source=("git+$url#commit=d1b59f65df7b980fd91c6590126c8d3c05a78e25") # tag: v4.0.2
+source+=(0001-just-for-la64-build.patch)
 b2sums=(SKIP)
+b2sums+=('2ec868cded2a8fb3b2b366866ce1d9d765d4afd859f8c226c4b085ca4603e3da')
 
 prepare() {
   cd $pkgname
   git submodule update --init --recursive
   # upx does not believes that this is a release version if the git revision is set
   setconf src/main.cpp 'bool warn' 'false;'
+  patch -p1 -i $srcdir/0001-just-for-la64-build.patch
 }
 
 build() {

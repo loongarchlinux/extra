@@ -11,12 +11,13 @@ pkgname=(
   'perf'
 #  'python-perf'
   'tmon'
-  'turbostat'
+#  'turbostat'
   'usbip'
-  'x86_energy_perf_policy'
+#  'x86_energy_perf_policy'
 )
 pkgver=6.2
 pkgrel=1
+_rdate=20221122
 license=('GPL2')
 arch=('loong64' 'x86_64')
 url='https://www.kernel.org'
@@ -40,8 +41,7 @@ makedepends+=('libcap')
 # bpftool
 makedepends+=('llvm' 'clang')
 groups=("$pkgbase")
-source=("git+https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git#tag=v${pkgver//_/-}?signed"
-#        "https://cdn.kernel.org/pub/linux/kernel/v5.x/patch-$pkgver.1.xz"
+source=("https://github.com/yetist/linux/releases/download/v${_rdate}/linux-${pkgver}-${_rdate}.tar.xz"
         'cpupower.default'
         'cpupower.systemd'
         'cpupower.service'
@@ -63,6 +63,7 @@ sha256sums=('SKIP'
             '2d5e2f8d40b6f19bf2e1dead57ca105d72098fb0b418c09ff2e0cb91089710af')
 
 prepare() {
+  ln -sf linux-$pkgver linux
   cd linux
 
   # apply patch from the source array (should be a pacman feature)
@@ -97,10 +98,10 @@ build() {
   make VERSION=$pkgver-$pkgrel
   popd
 
-  echo ':: x86_energy_perf_policy'
-  pushd linux/tools/power/x86/x86_energy_perf_policy
-  make
-  popd
+#  echo ':: x86_energy_perf_policy'
+#  pushd linux/tools/power/x86/x86_energy_perf_policy
+#  make
+#  popd
 
   echo ':: usbip'
   pushd linux/tools/usb/usbip
@@ -121,10 +122,10 @@ build() {
   make
   popd
 
-  echo ':: turbostat'
-  pushd linux/tools/power/x86/turbostat
-  make
-  popd
+#  echo ':: turbostat'
+#  pushd linux/tools/power/x86/turbostat
+#  make
+#  popd
 
   echo ':: hv'
   pushd linux/tools/hv

@@ -46,6 +46,7 @@ prepare() {
 
   patch -p1 < ../configs.patch
   # At this point config file should not contain any references to '/home/git'
+git clone https://github.com/golang/sys.git
 }
 
 build() {
@@ -55,7 +56,10 @@ build() {
   export CGO_CFLAGS="${CFLAGS}"
   export CGO_CXXFLAGS="${CXXFLAGS}"
   export CGO_LDFLAGS="${LDFLAGS}"
-  export GOFLAGS="-buildmode=pie -trimpath -mod=readonly -modcacherw"
+  export GOFLAGS="-trimpath -mod=readonly -modcacherw"
+export GOPATH="$srcdir/build:/usr/share/gocode"
+go mod tidy
+go mod edit -replace=golang.org/x/sys@v0.0.0-20210412220455-f1c623a9e750=$srcdir/sys
   make build
 }
 

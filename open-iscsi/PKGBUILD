@@ -8,7 +8,7 @@ pkgdesc='iSCSI userland tools'
 arch=('loong64' 'x86_64')
 url='https://www.open-iscsi.com/'
 license=('GPL')
-makedepends=('systemd')
+makedepends=('systemd' 'meson')
 depends=('systemd-libs' 'util-linux-libs' 'kmod' 'openssl' 'open-isns')
 install=$pkgname.install
 backup=('etc/iscsi/iscsid.conf'
@@ -20,23 +20,14 @@ sha256sums=('9565bdf6b68b223e1e0d455d9a04d7536724a3f5b5a254e9398d06b2a0c6b6d2')
 build() {
   cd "$srcdir"/${pkgname}-${pkgver}
 
-  make \
-    LIB_DIR=/usr/lib \
-    RULESDIR=/usr/lib/udev/rules.d \
-    SBINDIR=/usr/bin \
-    user
+  arch-meson -D rulesdir="/usr/lib/udev/rules.d build" -Discsi_sbindir=/usr/bin build
+  meson compile -C build
 }
 
 package() {
   cd "$srcdir"/${pkgname}-${pkgver}
 
-  make -j1 \
-    DESTDIR="$pkgdir" \
-    LIB_DIR=/usr/lib \
-    RULESDIR=/usr/lib/udev/rules.d \
-    SBINDIR=/usr/bin \
-    install \
-    install_systemd
+  meson install -C build --destdir "$pkgdir"
 
   install -D -m0644 "$srcdir"/${pkgname}-${pkgver}/etc/iscsid.conf "$pkgdir"/etc/iscsi
   echo -n > "$pkgdir"/etc/iscsi/initiatorname.iscsi

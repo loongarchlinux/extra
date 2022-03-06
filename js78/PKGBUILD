@@ -10,17 +10,21 @@ license=(MPL)
 depends=(gcc-libs readline zlib sh)
 makedepends=(zip autoconf2.13 python-setuptools python-psutil rust llvm clang lld)
 checkdepends=(mercurial git)
-options=(!lto debug)
+options=(!lto)
 _relver=${pkgver}esr
 source=(https://archive.mozilla.org/pub/firefox/releases/$_relver/source/firefox-$_relver.source.tar.xz{,.asc}
         0001-Fixes-for-LTO-PGO-support.patch
         0002-Fixes-for-Python-3.10.patch
-        0003-Fixes-for-Rust-1.56.patch)
+        0003-Fixes-for-Rust-1.56.patch
+        mozjs78-add-loongarch64.patch
+        moz78-la64.patch)
 sha256sums=('a4438d84d95171a6d4fea9c9f02c2edbf0475a9c614d968ebe2eedc25a672151'
             'SKIP'
             '606ef0a2faeffd52cd3d4564146a95eef2b0e58e610d3af8d203753ed27e5a00'
             'b723277864c8afad1db007963f8e1090b352ced7bb312b2e7e2f11f448e8432d'
-            'cb5f1a0551f55c12562c1f384e9d0a011dd13993039e65aa69b5345a5951af9f')
+            'cb5f1a0551f55c12562c1f384e9d0a011dd13993039e65aa69b5345a5951af9f'
+            'f8baa89d0f7f64fc9ed3fe2ca84dab5b3026dd60e71b15b15892c1dc3c380db3'
+            '038b7a548dcdb6cfd8adf631197c5fbc23e89e9431b18d09c708a829836fab1f')
 validpgpkeys=('14F26682D0916CDD81E37B6D61B7B526D98F0353') # Mozilla Software Releases <release@mozilla.com>
 
 # Make sure the duplication between bin and lib is found
@@ -38,6 +42,8 @@ prepare() {
 
   # Fix build with Rust 1.56
   patch -Np1 -i ../0003-Fixes-for-Rust-1.56.patch
+  patch -Np1 -i ../mozjs78-add-loongarch64.patch
+  patch -Np1 -i ../moz78-la64.patch
 
   cat >../mozconfig <<END
 ac_add_options --enable-application=js
@@ -47,8 +53,8 @@ ac_add_options --prefix=/usr
 ac_add_options --enable-release
 ac_add_options --enable-hardening
 ac_add_options --enable-optimize
-ac_add_options --enable-rust-simd
-ac_add_options --enable-linker=lld
+#ac_add_options --enable-rust-simd
+#ac_add_options --enable-linker=lld
 ac_add_options --disable-debug
 ac_add_options --disable-debug-symbols
 ac_add_options --disable-jemalloc
@@ -71,44 +77,48 @@ build() {
 
   export MOZ_NOSPAM=1
   export MOZBUILD_STATE_PATH="$srcdir/mozbuild"
+  export CC=gcc
+  export CPP=cpp
+  export CXX=g++
+  export AR=ar
 
   # Do 3-tier PGO
   echo "Building instrumented JS..."
   cat >.mozconfig ../mozconfig - <<END
-ac_add_options --enable-profile-generate=cross
+#ac_add_options --enable-profile-generate=cross
 END
   ./mach build
 
-  echo "Profiling instrumented JS..."
-  (
-    local js="$PWD/obj/dist/bin/js"
-    export LLVM_PROFILE_FILE="$PWD/js-%p-%m.profraw"
-
-    cd js/src/octane
-    "$js" run.js
-
-    cd ../../../third_party/webkit/PerformanceTests/ARES-6
-    "$js" cli.js
-
-    cd ../SunSpider/sunspider-0.9.1
-    "$js" sunspider-standalone-driver.js
-  )
-
-  llvm-profdata merge -o merged.profdata *.profraw
-
-  stat -c "Profile data found (%s bytes)" merged.profdata
-  test -s merged.profdata
-
-  echo "Removing instrumented JS..."
-  ./mach clobber
-
-  echo "Building optimized JS..."
-  cat >.mozconfig ../mozconfig - <<END
-ac_add_options --enable-lto=cross
-ac_add_options --enable-profile-use=cross
-ac_add_options --with-pgo-profile-path=${PWD@Q}/merged.profdata
-END
-  ./mach build
+#  echo "Profiling instrumented JS..."
+#  (
+#    local js="$PWD/obj/dist/bin/js"
+#    export LLVM_PROFILE_FILE="$PWD/js-%p-%m.profraw"
+#
+#    cd js/src/octane
+#    "$js" run.js
+#
+#    cd ../../../third_party/webkit/PerformanceTests/ARES-6
+#    "$js" cli.js
+#
+#    cd ../SunSpider/sunspider-0.9.1
+#    "$js" sunspider-standalone-driver.js
+#  )
+#
+#  llvm-profdata merge -o merged.profdata *.profraw
+#
+#  stat -c "Profile data found (%s bytes)" merged.profdata
+#  test -s merged.profdata
+#
+#  echo "Removing instrumented JS..."
+#  ./mach clobber
+#
+#  echo "Building optimized JS..."
+#  cat >.mozconfig ../mozconfig - <<END
+#ac_add_options --enable-lto=cross
+#ac_add_options --enable-profile-use=cross
+#ac_add_options --with-pgo-profile-path=${PWD@Q}/merged.profdata
+#END
+#  ./mach build
 }
 
 check() {

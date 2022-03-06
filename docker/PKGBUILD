@@ -76,10 +76,15 @@ build() {
   export GOFLAGS='-buildmode=pie -trimpath -mod=readonly -modcacherw -ldflags=-linkmode=external'
   export GO111MODULE=off
   export DISABLE_WARN_OUTSIDE_CONTAINER=1
+  git clone https://github.com/golang/sys.git
+  git clone https://github.com/golang/net.git
+  git clone https://github.com/etcd-io/bbolt.git
 
   ### cli
   echo 'Building cli'
   _fake_gopath_pushd cli github.com/docker/cli
+  rm -rf vendor/golang.org/x/{sys,net}
+  cp -r $srcdir/{net,sys} vendor/golang.org/x/
   make VERSION=$pkgver dynbinary
   make manpages
   _fake_gopath_popd
@@ -87,6 +92,10 @@ build() {
   ### daemon
   echo 'Building daemon'
   _fake_gopath_pushd moby github.com/docker/docker
+  rm -rf vendor/golang.org/x/{net,sys} vendor/go.etcd.io/bbolt
+  cp -r $srcdir/{net,sys} vendor/golang.org/x/
+  cp -r $srcdir/bbolt vendor/go.etcd.io/bbolt
+
   DOCKER_GITCOMMIT=$(cd "$srcdir"/moby && git rev-parse --short HEAD) \
     DOCKER_BUILDTAGS='seccomp journald apparmor' \
     VERSION=$pkgver \
