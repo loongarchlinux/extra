@@ -1,0 +1,167 @@
+diff --git a/archinstall/lib/hardware.py b/archinstall/lib/hardware.py
+index 9660ea95..7d60b780 100644
+--- a/archinstall/lib/hardware.py
++++ b/archinstall/lib/hardware.py
+@@ -13,6 +13,7 @@ __packages__ = [
+ 	"mesa",
+ 	"xf86-video-amdgpu",
+ 	"xf86-video-ati",
++	"xf86-video-loongson",
+ 	"xf86-video-nouveau",
+ 	"xf86-video-vmware",
+ 	"libva-mesa-driver",
+@@ -30,6 +31,7 @@ AVAILABLE_GFX_DRIVERS = {
+ 		"mesa",
+ 		"xf86-video-amdgpu",
+ 		"xf86-video-ati",
++		"xf86-video-loongson",
+ 		"xf86-video-nouveau",
+ 		"xf86-video-vmware",
+ 		"libva-mesa-driver",
+@@ -42,6 +44,7 @@ AVAILABLE_GFX_DRIVERS = {
+ 		"mesa",
+ 		"xf86-video-amdgpu",
+ 		"xf86-video-ati",
++		"xf86-video-loongson",
+ 		"libva-mesa-driver",
+ 		"vulkan-radeon",
+ 	],
+diff --git a/archinstall/lib/installer.py b/archinstall/lib/installer.py
+index baf90c9d..6e9250a8 100644
+--- a/archinstall/lib/installer.py
++++ b/archinstall/lib/installer.py
+@@ -947,10 +947,10 @@ class Installer:
+ 		if has_uefi():
+ 			self.pacstrap('efibootmgr') # TODO: Do we need? Yes, but remove from minimal_installation() instead?
+ 			try:
+-				SysCommand(f'/usr/bin/arch-chroot {self.target} grub-install --debug --target=x86_64-efi --efi-directory=/boot --bootloader-id=GRUB --removable', peek_output=True)
++				SysCommand(f'/usr/bin/arch-chroot {self.target} grub-install --debug --target=loongarch64-efi --efi-directory=/boot --bootloader-id=GRUB --removable', peek_output=True)
+ 			except SysCallError:
+ 				try:
+-					SysCommand(f'/usr/bin/arch-chroot {self.target} grub-install --debug --target=x86_64-efi --efi-directory=/boot --bootloader-id=GRUB --removable', peek_output=True)
++					SysCommand(f'/usr/bin/arch-chroot {self.target} grub-install --debug --target=loongarch64-efi --efi-directory=/boot --bootloader-id=GRUB --removable', peek_output=True)
+ 				except SysCallError as error:
+ 					raise DiskError(f"Could not install GRUB to {self.target}/boot: {error}")
+ 		else:
+diff --git a/archinstall/lib/menu/abstract_menu.py b/archinstall/lib/menu/abstract_menu.py
+index d659d709..ec52b4bb 100644
+--- a/archinstall/lib/menu/abstract_menu.py
++++ b/archinstall/lib/menu/abstract_menu.py
+@@ -1,6 +1,9 @@
+ from __future__ import annotations
+ 
+ import logging
++import sys
++import pathlib
++import unicodedata
+ from typing import Callable, Any, List, Iterator, Tuple, Optional, Dict, TYPE_CHECKING
+ 
+ from .menu import Menu, MenuSelectionType
+@@ -12,6 +15,13 @@ from ..user_interaction.general_conf import select_archinstall_language
+ if TYPE_CHECKING:
+ 	_: Any
+ 
++def count_cjk_chars(string):
++	return sum(unicodedata.east_asian_width(c) in 'FW' for c in string)
++
++def cjkljust(string, width, fillbyte=' '):
++	"""  Align left  >>> cjkljust('hello', 10, '*') 'hello*****' >>> cjkljust(' Hello world', 10, '*') ' Hello world*' >>> cjkljust(' Hello world', 1, '*') ' Hello world' """
++	return string.ljust(width - count_cjk_chars(string), fillbyte)
++
+ 
+ class Selector:
+ 	def __init__(
+@@ -126,7 +136,7 @@ class Selector:
+ 
+ 		if current:
+ 			padding += 5
+-			description = str(self._description).ljust(padding, ' ')
++			description = cjkljust(str(self._description), padding, ' ')
+ 			current = str(_('set: {}').format(current))
+ 		else:
+ 			description = self._description
+diff --git a/archinstall/lib/menu/global_menu.py b/archinstall/lib/menu/global_menu.py
+index 7c5b153e..94f4c4d6 100644
+--- a/archinstall/lib/menu/global_menu.py
++++ b/archinstall/lib/menu/global_menu.py
+@@ -51,7 +51,8 @@ class GlobalMenu(AbstractMenu):
+ 				_('Archinstall language'),
+ 				lambda x: self._select_archinstall_language(x),
+ 				display_func=lambda x: x.display_name,
+-				default=self.translation_handler.get_language_by_abbr('en'))
++				default=self.translation_handler.get_language_by_abbr('zh-CN'))
++		self.translation_handler.activate(self.translation_handler.get_language_by_abbr('zh-CN'))
+ 		self._menu_options['keyboard-layout'] = \
+ 			Selector(
+ 				_('Keyboard layout'),
+diff --git a/archinstall/lib/mirrors.py b/archinstall/lib/mirrors.py
+index d76e0473..597d229d 100644
+--- a/archinstall/lib/mirrors.py
++++ b/archinstall/lib/mirrors.py
+@@ -67,7 +67,7 @@ def filter_mirrors_by_region(regions :str,
+ 	:type regions: str
+ 	"""
+ 	region_list = [f'country={region}' for region in regions.split(',')]
+-	response = urllib.request.urlopen(urllib.request.Request(f"https://archlinux.org/mirrorlist/?{'&'.join(region_list)}&protocol=https&protocol=http&ip_version=4&ip_version=6&use_mirror_status=on'", headers={'User-Agent': 'ArchInstall'}))
++	response = urllib.request.urlopen(urllib.request.Request(f"https://archapi.zhcn.cc/api/v1/mirrorlist/?{'&'.join(region_list)}&protocol=https&protocol=http&ip_version=4&ip_version=6&use_mirror_status=on'", headers={'User-Agent': 'ArchInstall'}))
+ 	new_list = response.read().replace(b"#Server", b"Server")
+ 
+ 	if sort_order:
+@@ -152,7 +152,7 @@ def list_mirrors(sort_order :List[str] = ["https", "http"]) -> Dict[str, Any]:
+ 		with pathlib.Path('/etc/pacman.d/mirrorlist').open('rb') as fh:
+ 			mirrorlist = fh.read()
+ 	else:
+-		url = "https://archlinux.org/mirrorlist/?protocol=https&protocol=http&ip_version=4&ip_version=6&use_mirror_status=on"
++		url = "https://archapi.zhcn.cc/api/v1/mirrorlist/?protocol=https&protocol=http&ip_version=4&ip_version=6&use_mirror_status=on"
+ 
+ 		try:
+ 			response = urllib.request.urlopen(url)
+diff --git a/archinstall/lib/translationhandler.py b/archinstall/lib/translationhandler.py
+index 0d74f974..9895ce64 100644
+--- a/archinstall/lib/translationhandler.py
++++ b/archinstall/lib/translationhandler.py
+@@ -168,7 +168,7 @@ class TranslationHandler:
+ 
+ 		translation_files = []
+ 		for filename in filenames:
+-			if len(filename) == 2 or filename == 'pt_BR':
++			if len(filename) == 2 or filename == 'pt_BR' or filename == 'zh-CN':
+ 				translation_files.append(filename)
+ 
+ 		return translation_files
+diff --git a/archinstall/locales/languages.json b/archinstall/locales/languages.json
+index 92efac49..59f4afc0 100644
+--- a/archinstall/locales/languages.json
++++ b/archinstall/locales/languages.json
+@@ -182,5 +182,5 @@
+  {"abbr": "yo", "lang": "Yoruba"},
+  {"abbr": "za", "lang": "Zhuang"},
+  {"abbr": "zh-TW", "lang": "Traditional Chinese"},
+- {"abbr": "zh-CN", "lang": "Simplified Chinese"},
++ {"abbr": "zh-CN", "lang": "Simplified Chinese", "translated_lang":"简体中文"},
+  {"abbr": "zu", "lang": "Zulu"}]
+diff --git a/examples/guided.py b/examples/guided.py
+index e9240c03..3f095bf9 100644
+--- a/examples/guided.py
++++ b/examples/guided.py
+@@ -202,6 +202,20 @@ def perform_installation(mountpoint):
+ 			if archinstall.arguments.get('mirror-region') is not None:
+ 				if archinstall.arguments.get("mirrors", None) is not None:
+ 					installation.set_mirrors(archinstall.arguments['mirror-region'])  # Set the mirrors in the installation medium
++
++			# Add Chinese input method and fonts
++			if archinstall.arguments.get("sys-language").startswith("zh_CN"):
++				archinstall.storage['installation_session'].add_additional_packages(['fcitx5', 'fcitx5-chinese-addons', 'fcitx5-configtool', 'fcitx5-gtk', 'fcitx5-qt'])
++				archinstall.storage['installation_session'].add_additional_packages(['wqy-bitmapfont', 'wqy-microhei', 'wqy-microhei-lite', 'wqy-zenhei'])
++				with open(f"{archinstall.storage['installation_session'].target}/etc/X11/xinit/xinitrc.d/50-input.sh", 'w') as finput:
++					finput.write(f'export XIM=fcitx\n')
++					finput.write(f'export GTK_IM_MODULE=fcitx\n')
++					finput.write(f'export QT_IM_MODULE=fcitx\n')
++					finput.write(f'export XMODIFIERS="@im=fcitx"\n')
++				archinstall.storage['installation_session'].arch_chroot('chmod +x /etc/X11/xinit/xinitrc.d/50-input.sh')
++				archinstall.storage['installation_session'].arch_chroot('sed -i -e \'s/^#zh_CN.UTF-8/zh_CN.UTF-8/\' -e \'s/^#en_US.UTF-8/en_US.UTF-8/\' /etc/locale.gen')
++				archinstall.storage['installation_session'].arch_chroot('locale-gen')
++
+ 			if archinstall.arguments.get('swap'):
+ 				installation.setup_swap('zram')
+ 			if archinstall.arguments.get("bootloader") == "grub-install" and archinstall.has_uefi():

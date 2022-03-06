@@ -19,12 +19,18 @@ b2sums=('0e494d171fc4f1ef972b4e4210b1a9f089976be24487d37c1155725757ca675c005445e
 
 prepare() {
   cd $pkgname-$pkgver
-  cargo fetch --locked --target "$CARCH-unknown-linux-gnu"
+#  cargo fetch --locked --target "$CARCH-unknown-linux-gnu"
 }
 
 build() {
   cd $pkgname-$pkgver
-  cargo build --release --locked --offline --all-features
+  find -name Cargo.lock -exec rm -f {} \;
+  mkdir -p .cargo
+  cat > .cargo/config.toml <<EOF
+[source.crates-io]
+registry = "https://gitee.com/yetist/crates.io-index"
+EOF
+  cargo build --release --offline --all-features
 }
 
 package() {

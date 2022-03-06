@@ -22,11 +22,13 @@ _TINI_COMMIT=de40ad007797e0dcd8b7126f27bb87401d224240
 source=("git+https://github.com/docker/cli.git#tag=v$pkgver"
         "git+https://github.com/moby/moby.git#tag=v$pkgver"
         "git+https://github.com/krallin/tini.git#commit=$_TINI_COMMIT"
-        "$pkgname.sysusers")
+        "$pkgname.sysusers"
+        "moby-la64.patch")
 sha256sums=('SKIP'
             'SKIP'
             'SKIP'
-            '541826011a9836d05a2f42293d5f1beadf2ca8d89fb604487d61a013505678eb')
+            '541826011a9836d05a2f42293d5f1beadf2ca8d89fb604487d61a013505678eb'
+            '0571a94167a0613482b31bfc8d082ac41aecf0fe1667635915b60a3f48764413')
 
 # create a fake go path directory and pushd into it
 # $1 real directory
@@ -40,6 +42,11 @@ _fake_gopath_pushd() {
 
 _fake_gopath_popd() {
   popd >/dev/null
+}
+
+prepare() {
+  cd moby
+  patch -p1 -i $srcdir/moby-la64.patch
 }
 
 build() {
@@ -76,10 +83,15 @@ build() {
   export GOFLAGS='-buildmode=pie -trimpath -mod=readonly -modcacherw -ldflags=-linkmode=external'
   export GO111MODULE=off
   export DISABLE_WARN_OUTSIDE_CONTAINER=1
+  git clone https://github.com/golang/sys.git
+  git clone https://github.com/golang/net.git
+  git clone https://github.com/etcd-io/bbolt.git
 
   ### cli
   echo 'Building cli'
   _fake_gopath_pushd cli github.com/docker/cli
+  rm -rf vendor/golang.org/x/{sys,net}
+  cp -r $srcdir/{net,sys} vendor/golang.org/x/
   make VERSION=$pkgver dynbinary
   make manpages
   _fake_gopath_popd
@@ -87,6 +99,10 @@ build() {
   ### daemon
   echo 'Building daemon'
   _fake_gopath_pushd moby github.com/docker/docker
+  rm -rf vendor/golang.org/x/{net,sys} vendor/go.etcd.io/bbolt
+  cp -r $srcdir/{net,sys} vendor/golang.org/x/
+  cp -r $srcdir/bbolt vendor/go.etcd.io/bbolt
+
   DOCKER_GITCOMMIT=$(cd "$srcdir"/moby && git rev-parse --short HEAD) \
     DOCKER_BUILDTAGS='seccomp journald apparmor' \
     VERSION=$pkgver \

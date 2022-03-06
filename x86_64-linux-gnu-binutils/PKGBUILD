@@ -1,0 +1,65 @@
+# Maintainer: Xiaotian Wu <yetist@gmail.com>
+
+_target=x86_64-linux-gnu
+pkgname=$_target-binutils
+pkgver=2.40
+pkgrel=1
+pkgdesc='A set of programs to assemble and manipulate binary and object files for 32-bit and 64-bit x86'
+arch=(loong64)
+url='https://www.gnu.org/software/binutils/'
+license=(GPL)
+groups=(x86)
+source=(https://ftp.gnu.org/gnu/binutils/binutils-$pkgver.tar.bz2{,.sig})
+sha1sums=('887d24c3799e9fe02646e04e73b5ac2cc3e7188f'
+          'SKIP')
+sha256sums=('f8298eb153a4b37d112e945aa5cb2850040bcf26a3ea65b5a715c83afe05e48a'
+            'SKIP')
+validpgpkeys=('3A24BC1E8FB409FA9F14371813FCEF89DD9E3C4F') # Nick Clifton (Chief Binutils Maintainer) <nickc@redhat.com>
+
+prepare() {
+  cd binutils-$pkgver
+  sed -i "/ac_cpp=/s/\$CPPFLAGS/\$CPPFLAGS -O2/" libiberty/configure
+}
+
+build() {
+  cd binutils-$pkgver
+
+  unset CPPFLAGS
+  ./configure --target=$_target \
+    --with-sysroot=/usr/$_target \
+    --prefix=/usr \
+    --enable-multilib \
+    --with-gnu-as \
+    --with-gnu-ld \
+    --disable-nls \
+    --enable-ld=default \
+    --enable-gold \
+    --enable-plugins \
+    --enable-deterministic-archives \
+    --with-system-zlib
+  make
+}
+
+check() {
+  cd binutils-$pkgver
+
+  # unset LDFLAGS as testsuite makes assumptions about which ones are active
+  # do not abort on errors - manually check log files
+  make -k LDFLAGS="" check || true
+}
+
+package() {
+  cd binutils-$pkgver
+
+  make DESTDIR="$pkgdir" install
+
+  # Remove file conflicting with host binutils and manpages for MS Windows tools
+  rm "$pkgdir"/usr/share/man/man1/$_target-{dlltool,windres,windmc}*
+  rm "$pkgdir"/usr/lib/bfd-plugins/libdep.so
+  rm -f "$pkgdir"/usr/etc/gprofng.rc
+  rm -rf "$pkgdir"/usr/include
+  rm -rf "$pkgdir"/usr/lib/gprofng/
+
+  # Remove info documents that conflict with host version
+  rm -rf "$pkgdir"/usr/share/info
+}

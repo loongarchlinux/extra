@@ -102,6 +102,7 @@ source=(
   qemu-sysusers.conf
   65-kvm.rules
   99-qemu-guest-agent.rules
+  86f04735ac2088d5c069c3d1712212ec7428c562.patch
 )
 sha512sums=('4e915d33a662bf55b09247fb85150be376c92270d3764e3d6470c452cb70cc558f54e84de5610dd60a9eb3ea02d5d4277b1ec75c9804967d278fa8361c7f9b9a'
             'SKIP'
@@ -116,7 +117,8 @@ b2sums=('f2b1a63e10c42aabfe39722c7732d0f04818ad367b769b3deb29c5bf9adcabc3aca1706
         '2102e4a34e11e406e9606c97e026e7b92e887e296a7f77b9cede1b37119d0df33735f3588628167b2b8e32244c196c491bfab623e2caddac9014d445aa2a6d98'
         '69177b962d2fda20cafdbc6226fd017b5ca5a0f69f866d055dc1c744b7b2955059f47c693cfb5b4c863ec159569fdabd4327ab4b8a95566a68cd8ce38e339c7a'
         '3559fe9c4f744194939770047a0a02d07ff791c845a80726d0bc7b8c4801ed5f11150e7d5adab813844b3dab1cf38c3a5a87fb6efbb8fc9dccdda9fa56409ed8'
-        'a9a2bdfeeb44eb86cbe88ac7c65f72800bdb2fd5cecb02f3a258cf9470b52832180aab43c89d481f7fd4d067342a9a27dd6c8a94d625b95d6e2b912e47d274e7')
+        'a9a2bdfeeb44eb86cbe88ac7c65f72800bdb2fd5cecb02f3a258cf9470b52832180aab43c89d481f7fd4d067342a9a27dd6c8a94d625b95d6e2b912e47d274e7'
+        '59b8d0a5137f87ffdf335ba30d13424554d7e18d87e1a1ca0298e0b332df4f92e50c4676cfe2e1f07aba5ee9d3bab07a0a6865006e15e9188682e75bcc98a0c4')
 validpgpkeys=('CEACC9E15534EBABB82D3FA03353C9CEF108B584') # Michael Roth <flukshun@gmail.com>
 
 _qemu_system_deps=(
@@ -221,6 +223,7 @@ prepare() {
 
   # install qemu-pr-helper.socket to sockets.target
   sed -e 's/multi-user.target/sockets.target/g' -i $pkgbase-$pkgver/contrib/systemd/qemu-pr-helper.socket
+  #patch -R -p1 -d $pkgbase-$pkgver -i $srcdir/86f04735ac2088d5c069c3d1712212ec7428c562.patch
 
   # create build dir
   mkdir -vp build
@@ -752,7 +755,7 @@ package_qemu-system-hppa-firmware() {
 
 package_qemu-system-loongarch64() {
   pkgdesc="QEMU system emulator for LoongArch64"
-  depends=("${_qemu_system_deps[@]}" systemd-libs)
+  depends=("${_qemu_system_deps[@]}" edk2-loongarch64 systemd-libs)
   mv -v $pkgname/* "$pkgdir"
 }
 

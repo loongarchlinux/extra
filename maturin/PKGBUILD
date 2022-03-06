@@ -21,7 +21,7 @@ makedepends=(
   python-setuptools
   python-setuptools-rust
   python-wheel
-  rust
+#  rust
 )
 # disable LTO until ring can be built with it: https://github.com/briansmith/ring/issues/1444
 options=(!lto)
@@ -41,7 +41,14 @@ _pick() {
 
 prepare() {
   cd $pkgname-$pkgver
-  cargo fetch --locked --target "$CARCH-unknown-linux-gnu"
+  find -name Cargo.lock -exec rm -f {} \;
+  mkdir -p .cargo
+  cat > .cargo/config.toml <<EOF
+[source.crates-io]
+registry = "https://gitee.com/yetist/crates.io-index"
+EOF
+#  cargo fetch #--target "`uname -m`-unknown-linux-gnu"
+  $srcdir/rustup-init --no-modify-path --default-toolchain=none --profile=minimal -y
 }
 
 build() {

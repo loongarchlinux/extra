@@ -15,8 +15,14 @@ sha512sums=('9321532e4bf633ecd200d98873b6773230d046d7bd075f223f09a68531cef4e4138
 
 build() {
   cd "$pkgname-$pkgver"
+  find -name Cargo.lock -exec rm -f {} \;
+  mkdir -p .cargo
+  cat > .cargo/config.toml <<EOF
+[source.crates-io]
+registry = "https://gitee.com/yetist/crates.io-index"
+EOF
 
-  cargo build --release --locked --features 'pcre2'
+  cargo build --release --features 'pcre2'
   find target -name ripgrep-stamp -print0 | xargs -0 ls -t | head -n1 | xargs dirname > out_dir
 }
 

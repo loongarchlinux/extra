@@ -15,12 +15,15 @@ makedepends=(cmake ninja qt6-declarative clang llvm) # litehtml
 optdepends=('qt6-declarative: for qdoc and lupdate' 'clang: for qdoc and lupdate') # 'litehtml: for assistant'
 groups=(qt6)
 _pkgfn=${pkgname/6-/}-everywhere-src-$_qtver
-source=(https://download.qt.io/official_releases/qt/${pkgver%.*}/$_qtver/submodules/$_pkgfn.tar.xz)
-sha256sums=('5744df9e84b2a86f7f932ffc00341c7d7209e741fd1c0679a32b855fcceb2329')
+source=(https://download.qt.io/official_releases/qt/${pkgver%.*}/$_qtver/submodules/$_pkgfn.tar.xz
+        qt6-tools-fix-build.patch)
+sha256sums=('5744df9e84b2a86f7f932ffc00341c7d7209e741fd1c0679a32b855fcceb2329'
+            '8cced47330d1fed71e10248b4c587c0bac1cf6245b8149d2166d95de55b7cef8')
 
 prepare() {
 # Fix build with system litehtml
   sed -e '/qt_internal_set_exceptions_flags/d' -e '/qt_disable_warnings/d' -i $_pkgfn/src/assistant/CMakeLists.txt
+  patch -d $_pkgfn -p1 -i $srcdir/qt6-tools-fix-build.patch
 }
 
 build() {

@@ -12,8 +12,20 @@ makedepends=('meson' 'rust')
 optdepends=('gst-libav: Extra media codecs'
             'gst-plugins-ugly: Extra media codecs')
 replaces=('glide-player')
-source=("https://github.com/philn/$pkgname/releases/download/$pkgver/$pkgname-$pkgver.tar.xz")
-sha256sums=('9d3824ce12b68504eeddda69a887277db000fc5d188fdf8eb8d2178ef8fc8354')
+source=("https://github.com/philn/$pkgname/releases/download/$pkgver/$pkgname-$pkgver.tar.xz"
+         fix-build.patch)
+sha256sums=('9d3824ce12b68504eeddda69a887277db000fc5d188fdf8eb8d2178ef8fc8354'
+            'd90a7cb94bc7be015167d40c2f8d5e1019ca2c77647bcfcbf2dbaa633eb4983d')
+
+prepare() {
+  patch -d $pkgname-$pkgver -p1 < fix-build.patch
+  find -name Cargo.lock -exec rm -f {} \;
+  mkdir -p .cargo
+  cat > .cargo/config.toml <<EOF
+[source.crates-io]
+registry = "https://gitee.com/yetist/crates.io-index"
+EOF
+}
 
 build() {
   arch-meson $pkgname-$pkgver build
