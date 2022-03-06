@@ -3,14 +3,14 @@
 # Maintainer: Guillaume ALAUX <guillaume@archlinux.org>
 # Contributor: Boyan Ding <stu_dby@126.com>
 
-pkgname=('jre8-openjdk-headless' 'jre8-openjdk' 'jdk8-openjdk' 'openjdk8-src' 'openjdk8-doc')
+pkgname=('jre8-openjdk-headless' 'jre8-openjdk' 'jdk8-openjdk' 'openjdk8-src')
 pkgbase=java8-openjdk
 
 _majorver=8
 _minorver=362
 _updatever=09
 pkgver=${_majorver}.${_minorver}.u${_updatever}
-pkgrel=1
+pkgrel=2
 arch=('loong64' 'x86_64')
 url='https://openjdk.java.net/'
 license=('custom')
@@ -31,13 +31,17 @@ makedepends=(
 )
 options=(!lto)
 source=(https://github.com/openjdk/jdk${_majorver}u/archive/refs/tags/jdk${_majorver}u${_minorver}-b${_updatever}.tar.gz
-        gcc11.patch)
+        gcc11.patch
+        0001-add-support-for-la64.patch)
 b2sums=('f415dad93d2525f0f02450bd86268cd8382376e80188803995df97e5d04ade8f9818d402f1cbb7b961f5ab0947dc8ce33635cdf187ad637c3f7b959487c86b4a'
-        '9679e4dfb6027a87376081489c09810812d6849573afac4ea96abe3a3e00ca5b6af7d0ffb010c43b93cfa913f9e97fbb9f11e19fcc86a89b4548442671c32da1')
+        '9679e4dfb6027a87376081489c09810812d6849573afac4ea96abe3a3e00ca5b6af7d0ffb010c43b93cfa913f9e97fbb9f11e19fcc86a89b4548442671c32da1'
+        '3ba65c27dc81dd2596483817003b40dd18e5360473188611c42d1c46eab2fab9755e671aef3ea4c2f4b89f46cb30002325229592422b70c41b0a528648723bf8')
 
+SKIPCONFIG=1
 case "${CARCH}" in
   'x86_64') _JARCH=amd64 ; _DOC_ARCH=x86_64 ;;
   'i686'  ) _JARCH=i386  ; _DOC_ARCH=x86    ;;
+  'loong64'  ) _JARCH=loongarch64  ; _DOC_ARCH=loongarch64    ;;
 esac
 
 _jdkname=openjdk8
@@ -54,6 +58,7 @@ prepare() {
 
   # Fix build with C++17 (Fedora)
   patch -Np1 -i "${srcdir}"/gcc11.patch
+  patch -Np1 -i "${srcdir}"/0001-add-support-for-la64.patch
 }
 
 build() {
@@ -275,7 +280,7 @@ package_openjdk8-doc() {
   pkgdesc='OpenJDK Java 8 documentation'
 
   install -d -m 755 "${pkgdir}/usr/share/doc/${pkgbase}/"
-  cp -r "${srcdir}"/jdk8u-jdk${_majorver}u${_minorver}-b${_updatever}/build/linux-${_DOC_ARCH}-normal-server-release/docs/* \
+  cp -r "${srcdir}"/jdk8u/build/linux-${_DOC_ARCH}-normal-zero-release/docs/* \
     "${pkgdir}/usr/share/doc/${pkgbase}/"
 }
 

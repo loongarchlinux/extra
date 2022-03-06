@@ -1,0 +1,56 @@
+Index: qt-everywhere-src-5.15.2/qtwebengine/configure.pri
+===================================================================
+--- qt-everywhere-src-5.15.2.orig/qtwebengine/configure.pri
++++ qt-everywhere-src-5.15.2/qtwebengine/configure.pri
+@@ -7,16 +7,7 @@ QTWEBENGINE_SOURCE_TREE = $$PWD
+ equals(QMAKE_HOST.os, Windows): EXE_SUFFIX = .exe
+ 
+ defineTest(isPythonVersionSupported) {
+-    python = $$system_quote($$system_path($$1))
+-    python_version = $$system('$$python -c "import sys; print(sys.version_info[0:3])"')
+-    python_version ~= s/[()]//g
+-    python_version = $$split(python_version, ',')
+-    python_major_version = $$first(python_version)
+-    python_minor_version = $$member(python_version, 1)
+-    python_patch_version = $$member(python_version, 2)
+-    greaterThan(python_major_version, 1): greaterThan(python_minor_version, 6): greaterThan(python_patch_version, 4): return(true)
+-    qtLog("Unsupported python version: $${python_major_version}.$${python_minor_version}.$${python_patch_version}.")
+-    return(false)
++    return(true)
+ }
+ 
+ defineTest(qtConfTest_detectJumboBuild) {
+@@ -49,19 +40,7 @@ defineTest(qtConfReport_jumboBuild) {
+ }
+ 
+ defineTest(qtConfTest_detectPython) {
+-    python = $$qtConfFindInPath("python$$EXE_SUFFIX")
+-    isEmpty(python) {
+-        qtLog("'python$$EXE_SUFFIX' not found in PATH. Checking for 'python$$EXE_SUFFIX'.")
+-        python = $$qtConfFindInPath("python$$EXE_SUFFIX")
+-    }
+-    isEmpty(python) {
+-        qtLog("'python$$EXE_SUFFIX' not found in PATH. Giving up.")
+-        return(false)
+-    }
+-    !isPythonVersionSupported($$python) {
+-        qtLog("A suitable Python executable could not be located.")
+-        return(false)
+-    }
++    python = "/usr/bin/python"
+ 
+     # Make tests.python.location available in configure.json.
+     $${1}.location = $$clean_path($$python)
+Index: qt-everywhere-src-5.15.2/qtdeclarative/src/qml/configure.pri
+===================================================================
+--- qt-everywhere-src-5.15.2.orig/qtdeclarative/src/qml/configure.pri
++++ qt-everywhere-src-5.15.2/qtdeclarative/src/qml/configure.pri
+@@ -2,8 +2,6 @@ equals(QMAKE_HOST.os, Windows): EXE_SUFF
+ 
+ defineTest(qtConfTest_detectPython) {
+     python_path = "/usr/bin/python"
+-    return(true)
+-
+ 
+     # Make tests.python.location available in configure.json.
+     $${1}.location = $$shell_path($$python_path)

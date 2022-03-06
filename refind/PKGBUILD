@@ -8,9 +8,12 @@ pkgdesc="An EFI boot manager"
 arch=(any)
 url="https://www.rodsbooks.com/refind/"
 makedepends=(bash dosfstools efibootmgr gnu-efi)
-source=(https://sourceforge.net/projects/refind/files/$pkgver/$pkgname-src-$pkgver.tar.gz)
-sha512sums=('41c120c1afec37c508aa5c0ec09a6563c3047ef84932308c91701795b950431dfad17d25cf664039b490a302d475add98441b75f90ff71cadce41febedc68a9e')
-b2sums=('02019ddb872ce44d2a2119902edebd633f925d49634e3bcc6bfb2c9dedb8ce213166909395a333d3a37e95c67720e31b1f5fcf25083801c17d645372aa54a06a')
+source=(https://sourceforge.net/projects/refind/files/$pkgver/$pkgname-src-$pkgver.tar.gz
+        refind-la64-0.13.3.patch)
+sha512sums=('41c120c1afec37c508aa5c0ec09a6563c3047ef84932308c91701795b950431dfad17d25cf664039b490a302d475add98441b75f90ff71cadce41febedc68a9e'
+            '0237c5834b37fdd3a62bc68831900db185f49a72b8d4c9d41d3433c98798618c37c18da989ecb226446b36a46ccca7e16ee214d224334538e4a839e1aa28dfbe')
+b2sums=('02019ddb872ce44d2a2119902edebd633f925d49634e3bcc6bfb2c9dedb8ce213166909395a333d3a37e95c67720e31b1f5fcf25083801c17d645372aa54a06a'
+        '81e27d26932955fd32ddcaebb4e442981a00018ab9668421b924f73a7aae5903d0493e78fd34d1319d732b8200293493433e2a555d671b76db7b6909d0c1c7bb')
 _arch='x64'
 
 prepare() {
@@ -22,6 +25,7 @@ prepare() {
   sed -e 's|RefindDir=\"\$ThisDir/refind\"|RefindDir="/usr/share/refind/"|g' -i refind-install
   # add vendor line to the sbat file
   printf 'refind.%s,%s,%s,refind,%s,%s\n' 'arch' '1' 'Arch Linux' "${epoch:+${epoch}:}${pkgver}-${pkgrel}" 'https://archlinux.org/packages/?q=refind' >> refind-sbat.csv
+  patch -p1 -i $srcdir/refind-la64-0.13.3.patch
 }
 
 build() {
@@ -45,11 +49,17 @@ package_refind() {
   )
 
   cd $pkgbase-$pkgver
+  if [ "$CARCH" == "loong64" ]; then
+    _arch='loongarch64'
+  else
+    _arch='x64'
+  fi
   # NOTE: the install target calls refind-install, therefore we install things
   # manually
   # efi binaries
   install -vDm 644 refind/*.efi -t "$pkgdir/usr/share/$pkgname/"
   install -vDm 644 drivers_*/*.efi -t "$pkgdir/usr/share/refind/drivers_$_arch/"
+  rm -f "$pkgdir/usr/share/refind/drivers_loongarch64/ext4_loongarch64.efi"
   install -vDm 644 gptsync/*.efi -t "$pkgdir/usr/share/$pkgname/tools_$_arch/"
   # sample config
   install -vDm 644 $pkgname.conf-sample -t "$pkgdir/usr/share/$pkgname/"

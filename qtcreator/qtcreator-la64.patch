@@ -1,0 +1,179 @@
+Index: qt-creator-opensource-src-6.0.2/src/plugins/projectexplorer/abi.cpp
+===================================================================
+--- qt-creator-opensource-src-6.0.2.orig/src/plugins/projectexplorer/abi.cpp
++++ qt-creator-opensource-src-6.0.2/src/plugins/projectexplorer/abi.cpp
+@@ -152,8 +152,10 @@ static Abi::Architecture architectureFro
+         return Abi::X86Architecture;
+     if (arch == "ia64")
+         return Abi::ItaniumArchitecture;
+     if (arch.startsWith("mips"))
+         return Abi::MipsArchitecture;
++    if (arch.startsWith("loongarch"))
++        return Abi::LoongArchitecture;
+     if (arch.startsWith("power"))
+         return Abi::PowerPCArchitecture;
+     if (arch.startsWith("sh")) // Not in Qt documentation!
+@@ -363,6 +367,9 @@ static Abis abiOf(const QByteArray &data
+         }
+ 
+         switch (machine) {
++        case 2: // EM_LOONGARCH64
++            result.append(Abi(Abi::LoongArchitecture, os, flavor, Abi::ElfFormat, 64));
++            break;
+         case 3: // EM_386
+             result.append(Abi(Abi::X86Architecture, os, flavor, Abi::ElfFormat, 32));
+             break;
+@@ -390,6 +397,8 @@ static Abis abiOf(const QByteArray &data
+         case 50: // EM_IA_64
+             result.append(Abi(Abi::ItaniumArchitecture, os, flavor, Abi::ElfFormat, 64));
+             break;
++        case 258: // EM_AARCH64
++            result.append(Abi(Abi::LoongArchitecture, os, flavor, Abi::ElfFormat, 64));
+         default:
+             ;
+         }
+@@ -575,6 +584,9 @@ Abi Abi::abiFromTargetTriplet(const QStr
+         } else if (p.startsWith("mips")) {
+             arch = MipsArchitecture;
+             width = p.contains("64") ? 64 : 32;
++        } else if (p.startsWith("loongarch")) {
++            arch = LoongArchitecture;
++            width = p.contains("64") ? 64 : 32;
+         } else if (p == "x86_64" || p == "amd64") {
+             arch = X86Architecture;
+             width = 64;
+@@ -772,6 +784,8 @@ QString Abi::toString(const Architecture
+         return QLatin1String("mcs251");
+     case MipsArchitecture:
+         return QLatin1String("mips");
++    case LoongArchitecture:
++        return QLatin1String("loongarch");
+     case PowerPCArchitecture:
+         return QLatin1String("ppc");
+     case ItaniumArchitecture:
+@@ -944,6 +958,8 @@ Abi::Architecture Abi::architectureFromS
+         return Mcs251Architecture;
+     if (a == "mips")
+         return MipsArchitecture;
++    if (a == "loongarch")
++        return LoongArchitecture;
+     if (a == "ppc")
+         return PowerPCArchitecture;
+     if (a == "itanium")
+@@ -1509,6 +1525,14 @@ void ProjectExplorer::ProjectExplorerPlu
+                                     << int(Abi::LinuxOS) << int(Abi::GenericFlavor)
+                                     << int(Abi::ElfFormat) << 64;
+ 
++    QTest::newRow("loongarch-linux-gnu") << int(Abi::LoongArchitecture)
++                                    << int(Abi::LinuxOS) << int(Abi::GenericFlavor)
++                                    << int(Abi::ElfFormat) << 32;
++
++    QTest::newRow("loongarch64-linux-gnu") << int(Abi::LoongArchitecture)
++                                    << int(Abi::LinuxOS) << int(Abi::GenericFlavor)
++                                    << int(Abi::ElfFormat) << 64;
++
+     QTest::newRow("arm-wrs-vxworks") << int(Abi::ArmArchitecture)
+                                      << int(Abi::VxWorks) << int(Abi::VxWorksFlavor)
+                                      << int(Abi::ElfFormat) << 32;
+Index: qt-creator-opensource-src-6.0.2/src/plugins/projectexplorer/abi.h
+===================================================================
+--- qt-creator-opensource-src-6.0.2.orig/src/plugins/projectexplorer/abi.h
++++ qt-creator-opensource-src-6.0.2/src/plugins/projectexplorer/abi.h
+@@ -76,6 +76,7 @@ public:
+         R32CArchitecture,
+         CR16Architecture,
+         RiscVArchitecture,
++        LoongArchitecture,
+         UnknownArchitecture
+     };
+ 
+Index: qt-creator-opensource-src-6.0.2/src/plugins/projectexplorer/gcctoolchain.cpp
+===================================================================
+--- qt-creator-opensource-src-6.0.2.orig/src/plugins/projectexplorer/gcctoolchain.cpp
++++ qt-creator-opensource-src-6.0.2/src/plugins/projectexplorer/gcctoolchain.cpp
+@@ -2042,6 +2042,14 @@ void ProjectExplorerPlugin::testGccAbiGu
+             << QString::fromLatin1("mips64el-linux-uclibc")
+             << QByteArray("#define __SIZEOF_SIZE_T__ 8")
+             << QStringList({"mips-linux-generic-elf-64bit"});
++    QTest::newRow("Linux 12 (loongarch)")
++            << QString::fromLatin1("loongarch32-linux-gnu")
++            << QByteArray("#define __SIZEOF_SIZE_T__ 4")
++            << QStringList({"loongarch-linux-generic-elf-32bit"});
++    QTest::newRow("Linux 13 (64bit loongarch)")
++            << QString::fromLatin1("loongarch64-linux-gnu")
++            << QByteArray("#define __SIZEOF_SIZE_T__ 8")
++            << QStringList({"loongarch64-linux-generic-elf-64bit"});
+ 
+     QTest::newRow("Mingw 1 (32bit)")
+             << QString::fromLatin1("i686-w64-mingw32")
+Index: qt-creator-opensource-src-6.0.2/src/shared/qbs/share/qbs/imports/qbs/ModUtils/utils.js
+===================================================================
+--- qt-creator-opensource-src-6.0.2.orig/src/shared/qbs/share/qbs/imports/qbs/ModUtils/utils.js
++++ qt-creator-opensource-src-6.0.2/src/shared/qbs/share/qbs/imports/qbs/ModUtils/utils.js
+@@ -550,6 +550,10 @@ function guessArchitecture(m) {
+             architecture = "mips";
+             if (hasAnyOf(m, ["_MIPS_ARCH_MIPS64", "__mips64"]))
+                 architecture += "64";
++        } else if (hasAnyOf(m, ["__loongarch", "__loongarch__"])) {
++            architecture = "loongarch";
++            if (hasAnyOf(m, ["__LP64__", "__loongarch64"]))
++                architecture += "64";
+         } else if (hasAnyOf(m, ["__ppc__", "__ppc", "__powerpc__",
+                                 "_ARCH_COM", "_ARCH_PWR", "_ARCH_PPC", "_M_MPPC", "_M_PPC"])) {
+             architecture = "ppc";
+Index: qt-creator-opensource-src-6.0.2/src/shared/qbs/share/qbs/imports/qbs/Probes/LibraryProbe.qbs
+===================================================================
+--- qt-creator-opensource-src-6.0.2.orig/src/shared/qbs/share/qbs/imports/qbs/Probes/LibraryProbe.qbs
++++ qt-creator-opensource-src-6.0.2/src/shared/qbs/share/qbs/imports/qbs/Probes/LibraryProbe.qbs
+@@ -51,6 +51,10 @@ PathProbe {
+                     result = ["/usr/lib/mipsel-linux-gnu"]
+                 else if (qbs.architecture === "mips64")
+                     result = ["/usr/lib/mips64el-linux-gnuabi64"]
++                else if (qbs.architecture === "loongarch")
++                    result = ["/usr/lib/loongarch-linux-gnu"]
++                else if (qbs.architecture === "loongarch64")
++                    result = ["/usr/lib/loongarch64-linux-gnu"]
+                 else if (qbs.architecture === "ppc")
+                     result = ["/usr/lib/powerpc-linux-gnu"]
+                 else if (qbs.architecture === "ppc64")
+Index: qt-creator-opensource-src-6.0.2/src/shared/qbs/src/lib/corelib/tools/architectures.cpp
+===================================================================
+--- qt-creator-opensource-src-6.0.2.orig/src/shared/qbs/src/lib/corelib/tools/architectures.cpp
++++ qt-creator-opensource-src-6.0.2/src/shared/qbs/src/lib/corelib/tools/architectures.cpp
+@@ -82,6 +82,10 @@ QString canonicalTargetArchitecture(cons
+         return StringConstants::i386Arch();
+     }
+ 
++    if (arch == StringConstants::loongArch() || arch == StringConstants::loongArch64()) {
++        return arch;
++    }
++
+     if (arch == StringConstants::mipsArch() || arch == StringConstants::mips64Arch()) {
+         if (endianness == QStringLiteral("big"))
+             return arch + QStringLiteral("eb");
+@@ -145,6 +149,12 @@ QString canonicalArchitecture(const QStr
+         << QStringLiteral("mips64eb")
+         << QStringLiteral("mips64el"));
+ 
++    archMap.insert(StringConstants::loongArch(), QStringList()
++        << QStringLiteral("loongarch"));
++
++    archMap.insert(StringConstants::loongArch64(), QStringList()
++        << QStringLiteral("loongarch64"));
++
+     QMapIterator<QString, QStringList> i(archMap);
+     while (i.hasNext()) {
+         i.next();
+Index: qt-creator-opensource-src-6.0.2/src/shared/qbs/src/lib/corelib/tools/stringconstants.h
+===================================================================
+--- qt-creator-opensource-src-6.0.2.orig/src/shared/qbs/src/lib/corelib/tools/stringconstants.h
++++ qt-creator-opensource-src-6.0.2/src/shared/qbs/src/lib/corelib/tools/stringconstants.h
+@@ -233,6 +233,8 @@ public:
+     QBS_STRING_CONSTANT(i586Arch, "i586")
+     QBS_STRING_CONSTANT(mipsArch, "mips")
+     QBS_STRING_CONSTANT(mips64Arch, "mips64")
++    QBS_STRING_CONSTANT(loongArch, "loongarch")
++    QBS_STRING_CONSTANT(loongArch64, "loongarch64")
+     QBS_STRING_CONSTANT(powerPcArch, "powerpc")
+     QBS_STRING_CONSTANT(ppcArch, "ppc")
+     QBS_STRING_CONSTANT(ppc64Arch, "ppc64")

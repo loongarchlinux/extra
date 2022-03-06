@@ -16,7 +16,7 @@ arch=(loong64 x86_64)
 url='https://www.qt.io'
 license=(GPL3)
 depends=(qt6-tools qt6-svg qt6-quick3d qt6-webengine qt6-serialport qt6-shadertools qt6-5compat
-         clang=$_clangver clazy yaml-cpp litehtml) # syntax-highlighting
+         clang14=$_clangver clazy yaml-cpp litehtml) # syntax-highlighting
 makedepends=(cmake llvm python)
 optdepends=('qt6-doc: integrated Qt documentation'
             'qt6-examples: welcome page examples'
@@ -29,9 +29,19 @@ optdepends=('qt6-doc: integrated Qt documentation'
             'valgrind: analyze support'
             'perf: performer analyzer'
             'mlocate: locator filter')
-source=(https://download.qt.io/official_releases/qtcreator/${pkgver%.*}/$pkgver/qt-creator-opensource-src-$pkgver.tar.xz)
-sha256sums=('9489829de05893a4628b7b6581af096c48afbd31c932cd8a4db30a90c52197bf')
+source=(https://download.qt.io/official_releases/qtcreator/${pkgver%.*}/$pkgver/qt-creator-opensource-src-$pkgver.tar.xz
+        qtcreator-la64.patch
+        fix-clang.patch)
+sha256sums=('9489829de05893a4628b7b6581af096c48afbd31c932cd8a4db30a90c52197bf'
+            '3f4125ab535ab96096d0317ecd9889f58d7cfb7fc8a95cafd8b9df33a6facfb1'
+            'd6b40c1490125fa2d22fac8519c6e6c48631d3526d2367dbe8e0404097a099c2')
 options=(docs)
+
+prepare() {
+  cd qt-creator-opensource-src-$pkgver
+  patch -p1 -i ../qtcreator-la64.patch
+  patch -p1 -i ../fix-clang.patch
+}
 
 build() {
   cmake -B build -S qt-creator-opensource-src-$pkgver \

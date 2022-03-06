@@ -12,9 +12,11 @@ makedepends=(zip autoconf2.13 python-setuptools python-psutil rust llvm clang ll
 checkdepends=(mercurial git)
 options=(!lto)
 _relver=${pkgver}esr
-source=(https://archive.mozilla.org/pub/firefox/releases/$_relver/source/firefox-$_relver.source.tar.xz{,.asc})
+source=(https://archive.mozilla.org/pub/firefox/releases/$_relver/source/firefox-$_relver.source.tar.xz{,.asc}
+  js102-loong64-jit.patch)
 sha256sums=('31b074623f09ca821a8a7dee0b3d2df1a45f1164264d31c26b4969a4d6a21dd1'
-            'SKIP')
+            'SKIP'
+            'b63fda2624024e0783ee719c8b247862bd856284d200619027ece4ba3fde232c')
 validpgpkeys=('14F26682D0916CDD81E37B6D61B7B526D98F0353') # Mozilla Software Releases <release@mozilla.com>
 
 # Make sure the duplication between bin and lib is found
@@ -23,6 +25,7 @@ COMPRESSZST+=(--long)
 prepare() {
   mkdir mozbuild
   cd firefox-$pkgver
+  patch -p1 -i $srcdir/js102-loong64-jit.patch
 
   cat >../mozconfig <<END
 ac_add_options --enable-application=js
@@ -31,9 +34,9 @@ mk_add_options MOZ_OBJDIR=${PWD@Q}/obj
 ac_add_options --prefix=/usr
 ac_add_options --enable-release
 ac_add_options --enable-hardening
-ac_add_options --enable-optimize
-ac_add_options --enable-rust-simd
-ac_add_options --enable-linker=lld
+#ac_add_options --enable-optimize
+#ac_add_options --enable-rust-simd
+#ac_add_options --enable-linker=lld
 ac_add_options --disable-bootstrap
 ac_add_options --disable-debug
 ac_add_options --disable-jemalloc
@@ -62,39 +65,39 @@ build() {
   # Do 3-tier PGO
   echo "Building instrumented JS..."
   cat >.mozconfig ../mozconfig - <<END
-ac_add_options --enable-profile-generate=cross
+#ac_add_options --enable-profile-generate=cross
 END
   ./mach build
 
-  echo "Profiling instrumented JS..."
-  (
-    local js="$PWD/obj/dist/bin/js"
-    export LLVM_PROFILE_FILE="$PWD/js-%p-%m.profraw"
-
-    cd js/src/octane
-    "$js" run.js
-
-    cd ../../../third_party/webkit/PerformanceTests/ARES-6
-    "$js" cli.js
-
-    cd ../SunSpider/sunspider-0.9.1
-    "$js" sunspider-standalone-driver.js
-  )
-
-  llvm-profdata merge -o merged.profdata *.profraw
-
-  stat -c "Profile data found (%s bytes)" merged.profdata
-  test -s merged.profdata
-
-  echo "Removing instrumented JS..."
-  ./mach clobber
-
-  echo "Building optimized JS..."
-  cat >.mozconfig ../mozconfig - <<END
-ac_add_options --enable-lto=cross
-ac_add_options --enable-profile-use=cross
-ac_add_options --with-pgo-profile-path=${PWD@Q}/merged.profdata
-END
+#  echo "Profiling instrumented JS..."
+#  (
+#    local js="$PWD/obj/dist/bin/js"
+#    export LLVM_PROFILE_FILE="$PWD/js-%p-%m.profraw"
+#
+#    cd js/src/octane
+#    "$js" run.js
+#
+#    cd ../../../third_party/webkit/PerformanceTests/ARES-6
+#    "$js" cli.js
+#
+#    cd ../SunSpider/sunspider-0.9.1
+#    "$js" sunspider-standalone-driver.js
+#  )
+#
+#  llvm-profdata merge -o merged.profdata *.profraw
+#
+#  stat -c "Profile data found (%s bytes)" merged.profdata
+#  test -s merged.profdata
+#
+#  echo "Removing instrumented JS..."
+#  ./mach clobber
+#
+#  echo "Building optimized JS..."
+#  cat >.mozconfig ../mozconfig - <<END
+#ac_add_options --enable-lto=cross
+#ac_add_options --enable-profile-use=cross
+#ac_add_options --with-pgo-profile-path=${PWD@Q}/merged.profdata
+#END
   ./mach build
 }
 

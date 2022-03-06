@@ -29,7 +29,8 @@ makedepends=(
 )
 checkdepends=(ttf-dejavu)
 _commit=b831e077174ae608d8cd09e532fc0e7ce1fe5c4f  # tags/2.56.0^0
-source=("git+https://gitlab.gnome.org/GNOME/librsvg.git#commit=$_commit")
+source=("git+https://gitlab.gnome.org/GNOME/librsvg.git#commit=$_commit"
+  librsvg-la64-build.patch)
 sha256sums=('SKIP')
 
 pkgver() {
@@ -39,6 +40,7 @@ pkgver() {
 
 prepare() {
   cd librsvg
+  patch -p1 -i $srcdir/librsvg-la64-build.patch
   NOCONFIGURE=1 ./autogen.sh
 }
 
@@ -50,6 +52,12 @@ export CARGO_PROFILE_RELEASE_DEBUG=2
 
 build() {
   cd librsvg
+  find -name Cargo.lock -exec rm -f {} \;
+  mkdir .cargo
+  cat > .cargo/config.toml <<EOF
+[source.crates-io]
+registry = "https://gitee.com/yetist/crates.io-index"
+EOF
   ./configure --prefix=/usr --disable-static --enable-vala --enable-gtk-doc
   sed -i -e 's/ -shared / -Wl,-O1,--as-needed\0 /g' libtool
   make
@@ -78,3 +86,5 @@ package_librsvg-docs() {
 }
 
 # vim:set sw=2 sts=-1 et:
+sha256sums=('SKIP'
+            '5ea1c5f71769e2275e8e8e64b5dc015160b609e73b11632a23dfa0237d454da7')

@@ -1,0 +1,44 @@
+Index: qtbase/src/3rdparty/double-conversion/double-conversion/utils.h
+===================================================================
+--- qtbase.orig/src/3rdparty/double-conversion/double-conversion/utils.h
++++ qtbase/src/3rdparty/double-conversion/double-conversion/utils.h
+@@ -98,6 +98,7 @@ int main(int argc, char** argv) {
+     defined(_POWER) || defined(_ARCH_PPC) || defined(_ARCH_PPC64) || \
+     defined(__sparc__) || defined(__sparc) || defined(__s390__) || \
+     defined(__SH4__) || defined(__alpha__) || \
++    defined(__loongarch64) || \
+     defined(_MIPS_ARCH_MIPS32R2) || defined(__ARMEB__) ||\
+     defined(__AARCH64EL__) || defined(__aarch64__) || defined(__AARCH64EB__) || \
+     defined(__riscv) || \
+Index: qtbase-everywhere-src-6.3.1/src/corelib/plugin/qelfparser_p.cpp
+===================================================================
+--- qtbase-everywhere-src-6.3.1.orig/src/corelib/plugin/qelfparser_p.cpp
++++ qtbase-everywhere-src-6.3.1/src/corelib/plugin/qelfparser_p.cpp
+@@ -149,6 +149,8 @@ struct ElfMachineCheck
+             EM_BLACKFIN
+ #elif defined(Q_PROCESSOR_IA64)
+             EM_IA_64
++#elif defined(Q_PROCESSOR_LOONGARCH_64)
++            EM_LOONGARCH
+ #elif defined(Q_PROCESSOR_MIPS)
+             EM_MIPS
+ #elif defined(Q_PROCESSOR_POWER_32)
+Index: qtbase-everywhere-src-6.3.1/src/corelib/global/qprocessordetection.h
+===================================================================
+--- qtbase-everywhere-src-6.3.1.orig/src/corelib/global/qprocessordetection.h
++++ qtbase-everywhere-src-6.3.1/src/corelib/global/qprocessordetection.h
+@@ -223,6 +223,14 @@
+ #  define Q_PROCESSOR_WORDSIZE   8
+ // Q_BYTE_ORDER not defined, use endianness auto-detection
+ 
++#elif defined(__loongarch__)
++#  if defined(__loongarch64)
++#    define Q_PROCESSOR_LOONGARCH_64
++#  else
++#    define Q_PROCESSOR_LOONGARCH_32
++#  endif
++#  define Q_BYTE_ORDER Q_LITTLE_ENDIAN
++
+ /*
+     MIPS family, known revisions: I, II, III, IV, 32, 64
+ 

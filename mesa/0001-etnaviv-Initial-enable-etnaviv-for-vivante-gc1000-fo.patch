@@ -1,0 +1,417 @@
+From 9e2eaaff6ae55017ca8607d01c01c28846727eb3 Mon Sep 17 00:00:00 2001
+From: Xiaotian Wu <wuxiaotian@loongson.cn>
+Date: Sun, 2 May 2021 12:34:04 +0800
+Subject: [PATCH 1/3] etnaviv: Initial enable etnaviv for vivante gc1000 found
+ in  loongson7a
+
+ - Add winsys support for loongson
+ - Add loongson entry in drm driver descriptor table
+ - Add loongson create screen related procs to mesa winsys layer
+ - Add pipe_loongson_drm_create_screen function to drm_helper.h
+ - Add autotool and meson build script support for loongson
+
+After apply this patch, you can verify whether loongson-drm_drv.so working correctly
+by running kmscube or glmark2-es2-drm:
+
+ $ MESA_LOADER_DRIVER_OVERRIDE=loongson-drm ./kmscube
+ $ MESA_LOADER_DRIVER_OVERRIDE=loongson-drm glmark2-es2-drm
+
+Signed-off-by: suijingfeng <suijingfeng@loongson.cn>
+---
+ meson.build                                   |  6 ++-
+ meson_options.txt                             |  2 +-
+ .../auxiliary/pipe-loader/pipe_loader_drm.c   |  1 +
+ .../auxiliary/target-helpers/drm_helper.h     | 24 +++++++++
+ .../target-helpers/drm_helper_public.h        |  1 +
+ src/gallium/drivers/loongson/Automake.inc     |  9 ++++
+ src/gallium/drivers/loongson/Makefile.am      |  8 +++
+ src/gallium/meson.build                       |  5 ++
+ src/gallium/targets/dri/meson.build           |  3 +-
+ src/gallium/targets/dri/target.c              |  1 +
+ src/gallium/winsys/loongson/drm/Makefile.am   | 36 +++++++++++++
+ .../winsys/loongson/drm/Makefile.sources      |  3 ++
+ .../winsys/loongson/drm/loongson_drm_public.h | 34 +++++++++++++
+ .../winsys/loongson/drm/loongson_drm_winsys.c | 51 +++++++++++++++++++
+ src/gallium/winsys/loongson/drm/meson.build   | 35 +++++++++++++
+ 15 files changed, 216 insertions(+), 3 deletions(-)
+ create mode 100644 src/gallium/drivers/loongson/Automake.inc
+ create mode 100644 src/gallium/drivers/loongson/Makefile.am
+ create mode 100644 src/gallium/winsys/loongson/drm/Makefile.am
+ create mode 100644 src/gallium/winsys/loongson/drm/Makefile.sources
+ create mode 100644 src/gallium/winsys/loongson/drm/loongson_drm_public.h
+ create mode 100644 src/gallium/winsys/loongson/drm/loongson_drm_winsys.c
+ create mode 100644 src/gallium/winsys/loongson/drm/meson.build
+
+diff --git a/meson.build b/meson.build
+index 70a0d576b9e..311f7414673 100644
+--- a/meson.build
++++ b/meson.build
+@@ -198,7 +198,7 @@ if gallium_drivers.contains('auto')
+       ]
+     elif ['mips', 'mips64', 'riscv32', 'riscv64'].contains(host_machine.cpu_family())
+       gallium_drivers = [
+-        'r300', 'r600', 'radeonsi', 'nouveau', 'virgl', 'swrast'
++        'r300', 'r600', 'radeonsi', 'nouveau', 'virgl', 'etnaviv', 'loongson', 'swrast'
+       ]
+     else
+       error('Unknown architecture @0@. Please pass -Dgallium-drivers to set driver options. Patches gladly accepted to fix this.'.format(
+@@ -221,6 +221,7 @@ with_gallium_vc4 = gallium_drivers.contains('vc4')
+ with_gallium_v3d = gallium_drivers.contains('v3d')
+ with_gallium_panfrost = gallium_drivers.contains('panfrost')
+ with_gallium_etnaviv = gallium_drivers.contains('etnaviv')
++with_gallium_loongson = gallium_drivers.contains('loongson')
+ with_gallium_tegra = gallium_drivers.contains('tegra')
+ with_gallium_crocus = gallium_drivers.contains('crocus')
+ with_gallium_iris = gallium_drivers.contains('iris')
+@@ -288,6 +289,9 @@ with_any_intel = with_intel_vk or with_gallium_iris or with_gallium_crocus or wi
+ if with_swrast_vk and not with_gallium_softpipe
+   error('swrast vulkan requires gallium swrast')
+ endif
++if with_gallium_loongson and not with_gallium_etnaviv
++  error('LOONGSON driver requires etnaviv driver')
++endif
+ if with_gallium_tegra and not with_gallium_nouveau
+   error('tegra driver requires nouveau driver')
+ endif
+diff --git a/meson_options.txt b/meson_options.txt
+index 5baa70d051b..7718d87f052 100644
+--- a/meson_options.txt
++++ b/meson_options.txt
+@@ -75,7 +75,7 @@ option(
+   choices : [
+     'auto', 'kmsro', 'radeonsi', 'r300', 'r600', 'nouveau', 'freedreno',
+     'swrast', 'v3d', 'vc4', 'etnaviv', 'tegra', 'i915', 'svga', 'virgl',
+-    'panfrost', 'iris', 'lima', 'zink', 'd3d12', 'asahi', 'crocus'
++    'panfrost', 'iris', 'lima', 'loongson', 'zink', 'd3d12', 'asahi', 'crocus'
+   ],
+   description : 'List of gallium drivers to build. If this is set to auto all drivers applicable to the target OS/architecture will be built'
+ )
+diff --git a/src/gallium/auxiliary/pipe-loader/pipe_loader_drm.c b/src/gallium/auxiliary/pipe-loader/pipe_loader_drm.c
+index b3bdfc90d97..7bc780c1f35 100644
+--- a/src/gallium/auxiliary/pipe-loader/pipe_loader_drm.c
++++ b/src/gallium/auxiliary/pipe-loader/pipe_loader_drm.c
+@@ -83,6 +83,7 @@ static const struct drm_driver_descriptor *driver_descriptors[] = {
+    &vc4_driver_descriptor,
+    &panfrost_driver_descriptor,
+    &etnaviv_driver_descriptor,
++   &loongson_driver_descriptor,
+    &tegra_driver_descriptor,
+    &lima_driver_descriptor,
+    &zink_driver_descriptor,
+diff --git a/src/gallium/auxiliary/target-helpers/drm_helper.h b/src/gallium/auxiliary/target-helpers/drm_helper.h
+index 601396a5432..8a826d2b014 100644
+--- a/src/gallium/auxiliary/target-helpers/drm_helper.h
++++ b/src/gallium/auxiliary/target-helpers/drm_helper.h
+@@ -374,6 +374,30 @@ DRM_DRIVER_DESCRIPTOR(etnaviv, NULL, 0)
+ DRM_DRIVER_DESCRIPTOR_STUB(etnaviv)
+ #endif
+ 
++#ifdef GALLIUM_LOONGSON
++#include "loongson/drm/loongson_drm_public.h"
++
++struct pipe_screen *
++pipe_loongson_drm_create_screen(int fd, const struct pipe_screen_config *config)
++{
++   struct pipe_screen *screen;
++
++   screen = loongson_drm_screen_create(fd);
++   return screen ? debug_screen_wrap(screen) : NULL;
++}
++
++#else
++
++struct pipe_screen *
++pipe_loongson_drm_create_screen(int fd, const struct pipe_screen_config *config)
++{
++   fprintf(stderr, "loongson-drm: driver missing\n");
++   return NULL;
++}
++
++#endif
++
++
+ #ifdef GALLIUM_TEGRA
+ #include "tegra/drm/tegra_drm_public.h"
+ 
+diff --git a/src/gallium/auxiliary/target-helpers/drm_helper_public.h b/src/gallium/auxiliary/target-helpers/drm_helper_public.h
+index 478e72b8525..b1eb8becbea 100644
+--- a/src/gallium/auxiliary/target-helpers/drm_helper_public.h
++++ b/src/gallium/auxiliary/target-helpers/drm_helper_public.h
+@@ -19,6 +19,7 @@ extern const struct drm_driver_descriptor v3d_driver_descriptor;
+ extern const struct drm_driver_descriptor vc4_driver_descriptor;
+ extern const struct drm_driver_descriptor panfrost_driver_descriptor;
+ extern const struct drm_driver_descriptor etnaviv_driver_descriptor;
++extern const struct drm_driver_descriptor loongson_driver_descriptor;
+ extern const struct drm_driver_descriptor tegra_driver_descriptor;
+ extern const struct drm_driver_descriptor lima_driver_descriptor;
+ extern const struct drm_driver_descriptor zink_driver_descriptor;
+diff --git a/src/gallium/drivers/loongson/Automake.inc b/src/gallium/drivers/loongson/Automake.inc
+new file mode 100644
+index 00000000000..5aea41d1afd
+--- /dev/null
++++ b/src/gallium/drivers/loongson/Automake.inc
+@@ -0,0 +1,9 @@
++if HAVE_GALLIUM_LOONGSON
++
++TARGET_DRIVERS += loongson-drm
++TARGET_CPPFLAGS += -DGALLIUM_LOONGSON
++TARGET_LIB_DEPS += \
++    $(top_builddir)/src/gallium/winsys/loongson/drm/libloongsondrm.la \
++    $(LIBDRM_LIBS)
++
++endif
+diff --git a/src/gallium/drivers/loongson/Makefile.am b/src/gallium/drivers/loongson/Makefile.am
+new file mode 100644
+index 00000000000..95e1f32092e
+--- /dev/null
++++ b/src/gallium/drivers/loongson/Makefile.am
+@@ -0,0 +1,8 @@
++include $(top_srcdir)/src/gallium/Automake.inc
++
++AM_CPPFLAGS = \
++	$(GALLIUM_CFLAGS)
++
++noinst_LTLIBRARIES = libloongson.la
++
++libloongson_la_SOURCES =
+diff --git a/src/gallium/meson.build b/src/gallium/meson.build
+index a678dc02705..5f4a6db8b0c 100644
+--- a/src/gallium/meson.build
++++ b/src/gallium/meson.build
+@@ -112,6 +112,11 @@ if with_gallium_kmsro
+ else
+   driver_kmsro = declare_dependency()
+ endif
++if with_gallium_loongson
++  subdir('winsys/loongson/drm')
++else
++  driver_loongson = declare_dependency()
++endif
+ if with_gallium_v3d
+   subdir('winsys/v3d/drm')
+   subdir('drivers/v3d')
+diff --git a/src/gallium/targets/dri/meson.build b/src/gallium/targets/dri/meson.build
+index 8554b15c63a..eb527857b75 100644
+--- a/src/gallium/targets/dri/meson.build
++++ b/src/gallium/targets/dri/meson.build
+@@ -56,7 +56,7 @@ libgallium_dri = shared_library(
+     dep_selinux, dep_libdrm, dep_llvm, dep_thread, idep_xmlconfig, idep_mesautil,
+     driver_swrast, driver_r300, driver_r600, driver_radeonsi, driver_nouveau,
+     driver_kmsro, driver_v3d, driver_vc4, driver_freedreno, driver_etnaviv,
+-    driver_tegra, driver_i915, driver_svga, driver_virgl,
++    driver_tegra, driver_loongson, driver_i915, driver_svga, driver_virgl,
+     driver_panfrost, driver_iris, driver_lima, driver_zink, driver_d3d12,
+     driver_asahi, driver_crocus
+   ],
+@@ -101,6 +101,7 @@ foreach d : [[with_gallium_kmsro, [
+              [with_gallium_vc4, 'vc4_dri.so'],
+              [with_gallium_panfrost, 'panfrost_dri.so'],
+              [with_gallium_etnaviv, 'etnaviv_dri.so'],
++             [with_gallium_loongson, 'loongson_dri.so'],
+              [with_gallium_tegra, 'tegra_dri.so'],
+              [with_gallium_crocus, 'crocus_dri.so'],
+              [with_gallium_iris, 'iris_dri.so'],
+diff --git a/src/gallium/targets/dri/target.c b/src/gallium/targets/dri/target.c
+index 9b78351fa8f..31a133453c7 100644
+--- a/src/gallium/targets/dri/target.c
++++ b/src/gallium/targets/dri/target.c
+@@ -85,6 +85,7 @@ DEFINE_LOADER_DRM_ENTRYPOINT(panfrost)
+ #endif
+ 
+ #if defined(GALLIUM_ETNAVIV)
++DEFINE_LOADER_DRM_ENTRYPOINT(loongson_drm)
+ DEFINE_LOADER_DRM_ENTRYPOINT(etnaviv)
+ #endif
+ 
+diff --git a/src/gallium/winsys/loongson/drm/Makefile.am b/src/gallium/winsys/loongson/drm/Makefile.am
+new file mode 100644
+index 00000000000..762c19ccb09
+--- /dev/null
++++ b/src/gallium/winsys/loongson/drm/Makefile.am
+@@ -0,0 +1,36 @@
++# Copyright © 2020 Loongson Corporation
++#
++# Permission is hereby granted, free of charge, to any person obtaining a
++# copy of this software and associated documentation files (the "Software"),
++# to deal in the Software without restriction, including without limitation
++# the rights to use, copy, modify, merge, publish, distribute, sublicense,
++# and/or sell copies of the Software, and to permit persons to whom the
++# Software is furnished to do so, subject to the following conditions:
++#
++# The above copyright notice and this permission notice (including the next
++# paragraph) shall be included in all copies or substantial portions of the
++# Software.
++#
++# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
++# EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
++# MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
++# NONINFRINGEMENT.  IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
++# HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
++# WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
++# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
++# DEALINGS IN THE SOFTWARE.
++
++include Makefile.sources
++include $(top_srcdir)/src/gallium/Automake.inc
++
++AM_CFLAGS = \
++	-I$(top_srcdir)/src/gallium/drivers \
++	-I$(top_srcdir)/src/gallium/winsys \
++	$(GALLIUM_WINSYS_CFLAGS) \
++	$(LIBDRM_CFLAGS)
++
++noinst_LTLIBRARIES = libloongsondrm.la
++
++libloongsondrm_la_SOURCES = $(C_SOURCES)
++
++EXTRA_DIST = meson.build
+diff --git a/src/gallium/winsys/loongson/drm/Makefile.sources b/src/gallium/winsys/loongson/drm/Makefile.sources
+new file mode 100644
+index 00000000000..810a5f9f966
+--- /dev/null
++++ b/src/gallium/winsys/loongson/drm/Makefile.sources
+@@ -0,0 +1,3 @@
++C_SOURCES := \
++   loongson_drm_public.h \
++   loongson_drm_winsys.c
+diff --git a/src/gallium/winsys/loongson/drm/loongson_drm_public.h b/src/gallium/winsys/loongson/drm/loongson_drm_public.h
+new file mode 100644
+index 00000000000..077a45a97f4
+--- /dev/null
++++ b/src/gallium/winsys/loongson/drm/loongson_drm_public.h
+@@ -0,0 +1,34 @@
++/*
++ * Copyright (C) 2020 Loongson Corporation
++ *
++ * Permission is hereby granted, free of charge, to any person obtaining a
++ * copy of this software and associated documentation files (the "Software"),
++ * to deal in the Software without restriction, including without limitation
++ * the rights to use, copy, modify, merge, publish, distribute, sublicense,
++ * and/or sell copies of the Software, and to permit persons to whom the
++ * Software is furnished to do so, subject to the following conditions:
++ *
++ * The above copyright notice and this permission notice (including the next
++ * paragraph) shall be included in all copies or substantial portions of the
++ * Software.
++ *
++ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
++ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
++ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
++ * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
++ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
++ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
++ * SOFTWARE.
++ *
++ * Authors:
++ *    Sui Jingfeng <suijingfeng@loongson.cn>
++ */
++
++#ifndef __LOONGSON_DRM_PUBLIC_H__
++#define __LOONGSON_DRM_PUBLIC_H__
++
++struct pipe_screen;
++
++struct pipe_screen *loongson_drm_screen_create(int fd);
++
++#endif /* __LOONGSON_DRM_PUBLIC_H__ */
+diff --git a/src/gallium/winsys/loongson/drm/loongson_drm_winsys.c b/src/gallium/winsys/loongson/drm/loongson_drm_winsys.c
+new file mode 100644
+index 00000000000..8f2481208c6
+--- /dev/null
++++ b/src/gallium/winsys/loongson/drm/loongson_drm_winsys.c
+@@ -0,0 +1,51 @@
++/*
++ * Copyright (C) 2020 Loongson Corporation
++ *
++ * Permission is hereby granted, free of charge, to any person obtaining a
++ * copy of this software and associated documentation files (the "Software"),
++ * to deal in the Software without restriction, including without limitation
++ * the rights to use, copy, modify, merge, publish, distribute, sublicense,
++ * and/or sell copies of the Software, and to permit persons to whom the
++ * Software is furnished to do so, subject to the following conditions:
++ *
++ * The above copyright notice and this permission notice (including the next
++ * paragraph) shall be included in all copies or substantial portions of the
++ * Software.
++ *
++ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
++ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
++ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
++ * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
++ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
++ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
++ * SOFTWARE.
++ *
++ * Authors:
++ *    Sui Jingfeng <suijingfeng@loongson.cn>
++ */
++
++#include "loongson_drm_public.h"
++#include "etnaviv/drm/etnaviv_drm_public.h"
++#include "renderonly/renderonly.h"
++#include "xf86drm.h"
++
++#include <fcntl.h>
++#include <unistd.h>
++
++struct pipe_screen *loongson_drm_screen_create(int fd)
++{
++   struct renderonly ro = {
++      .create_for_resource = renderonly_create_kms_dumb_buffer_for_resource,
++      .kms_fd = fd,
++      .gpu_fd = drmOpenWithType("etnaviv", NULL, DRM_NODE_RENDER),
++   };
++
++   if (ro.gpu_fd < 0)
++      return NULL;
++
++   struct pipe_screen *screen = etna_drm_screen_create_renderonly(&ro);
++   if (!screen)
++      close(ro.gpu_fd);
++
++   return screen;
++}
+diff --git a/src/gallium/winsys/loongson/drm/meson.build b/src/gallium/winsys/loongson/drm/meson.build
+new file mode 100644
+index 00000000000..e4b2a1bafbc
+--- /dev/null
++++ b/src/gallium/winsys/loongson/drm/meson.build
+@@ -0,0 +1,35 @@
++# Copyright © 2020 Loongson Corporation
++
++# Permission is hereby granted, free of charge, to any person obtaining a copy
++# of this software and associated documentation files (the "Software"), to deal
++# in the Software without restriction, including without limitation the rights
++# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
++# copies of the Software, and to permit persons to whom the Software is
++# furnished to do so, subject to the following conditions:
++
++# The above copyright notice and this permission notice shall be included in
++# all copies or substantial portions of the Software.
++
++# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
++# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
++# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
++# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
++# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
++# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
++# SOFTWARE.
++
++libloongsondrm = static_library(
++  'loongsondrm',
++  'loongson_drm_winsys.c',
++  include_directories : [
++    inc_include, inc_src, inc_gallium, inc_gallium_aux,
++    include_directories('../..'),
++  ],
++  dependencies: dep_libdrm,
++)
++
++driver_loongson = declare_dependency(
++  compile_args : '-DGALLIUM_LOONGSON',
++  link_with : libloongsondrm,
++)
++
+-- 
+2.35.1
+
