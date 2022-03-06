@@ -34,12 +34,18 @@ pkgver() {
 
 prepare() {
   cd cbindgen
-  cargo fetch --locked --target x86_64-unknown-linux-gnu
+  find -name Cargo.lock -exec rm -f {} \;
+  mkdir -p .cargo
+  cat > .cargo/config.toml <<EOF
+[source.crates-io]
+registry = "https://gitee.com/yetist/crates.io-index"
+EOF
+  cargo fetch --target `uname -m`-unknown-linux-gnu
 }
 
 build() {
   cd cbindgen
-  cargo build --release --frozen --all-targets
+  cargo build --release --all-targets
 }
 
 check() {

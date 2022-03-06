@@ -1,0 +1,34 @@
+diff --git a/src/seccomp.rs b/src/seccomp.rs
+index 0476e62..5ca20c5 100644
+--- a/src/seccomp.rs
++++ b/src/seccomp.rs
+@@ -104,6 +104,7 @@ pub fn enable_seccomp(action: SeccompAction, allow_remote_logging: bool) -> Resu
+     allow_syscall!(ctx, libc::SYS_flock);
+     allow_syscall!(ctx, libc::SYS_fremovexattr);
+     allow_syscall!(ctx, libc::SYS_fsetxattr);
++    #[cfg(not(target_arch = "loongarch64"))]
+     allow_syscall!(ctx, libc::SYS_fstat);
+     #[cfg(target_arch = "s390x")]
+     allow_syscall!(ctx, libc::SYS_fstatfs64);
+@@ -136,6 +137,7 @@ pub fn enable_seccomp(action: SeccompAction, allow_remote_logging: bool) -> Resu
+     allow_syscall!(ctx, libc::SYS_mremap);
+     allow_syscall!(ctx, libc::SYS_munmap);
+     allow_syscall!(ctx, libc::SYS_name_to_handle_at);
++    #[cfg(not(target_arch = "loongarch64"))]
+     allow_syscall!(ctx, libc::SYS_newfstatat);
+     #[cfg(target_arch = "powerpc64")]
+     allow_syscall!(ctx, libc::SYS__llseek);
+@@ -156,8 +158,12 @@ pub fn enable_seccomp(action: SeccompAction, allow_remote_logging: bool) -> Resu
+     allow_syscall!(ctx, libc::SYS_read);
+     allow_syscall!(ctx, libc::SYS_readlinkat);
+     allow_syscall!(ctx, libc::SYS_recvmsg);
+-    #[cfg(not(target_arch = "riscv64"))]
++    #[cfg(not(any(
++        target_arch = "loongarch64",
++        target_arch = "riscv64"
++    )))]
+     allow_syscall!(ctx, libc::SYS_renameat);
++    #[cfg(not(target_arch = "loongarch64"))]
+     allow_syscall!(ctx, libc::SYS_renameat2);
+     allow_syscall!(ctx, libc::SYS_removexattr);
+     #[cfg(target_env = "gnu")]

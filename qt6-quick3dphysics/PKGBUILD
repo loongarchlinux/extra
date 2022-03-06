@@ -13,8 +13,14 @@ depends=(qt6-quick3d)
 makedepends=(cmake ninja qt6-shadertools)
 groups=(qt6)
 _pkgfn=${pkgname/6-/}-everywhere-src-$_qtver
-source=(https://download.qt.io/official_releases/qt/${pkgver%.*}/$_qtver/submodules/$_pkgfn.tar.xz)
-sha256sums=('7500129836b12448036812cccc0313c695d849db9035d8588081ed7ac1463137')
+source=(https://download.qt.io/official_releases/qt/${pkgver%.*}/$_qtver/submodules/$_pkgfn.tar.xz
+        qt3d-la64.patch)
+sha256sums=('7500129836b12448036812cccc0313c695d849db9035d8588081ed7ac1463137'
+            '3d0f784887aebda0498ad2778ed757069b334db8b8edf1b1e56a82e616972e55')
+
+prepare() {
+  patch -d $_pkgfn -p1 -i "$srcdir/qt3d-la64.patch"
+}
 
 build() {
   cmake -B build -S $_pkgfn -G Ninja \

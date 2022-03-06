@@ -22,13 +22,19 @@ prepare() {
     cd "$srcdir/$pkgname-$pkgver"
     rm -rf lib
     ln -s ../libimagequant-$_libver lib
-    cargo fetch --target "$CARCH-unknown-linux-gnu"
+#    cargo fetch --target "$CARCH-unknown-linux-gnu"
 }
 
 build() {
     cd "$srcdir/$pkgname-$pkgver"
     export RUSTUP_TOOLCHAIN=stable
     export CARGO_TARGET_DIR=target
+    find -name Cargo.lock -exec rm -f {} \;
+    mkdir -p .cargo
+    cat > .cargo/config.toml <<EOF
+[source.crates-io]
+registry = "https://gitee.com/yetist/crates.io-index"
+EOF
     cargo build --release
 }
 

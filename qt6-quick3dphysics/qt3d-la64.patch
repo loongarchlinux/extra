@@ -1,0 +1,31 @@
+Index: qtquick3dphysics-everywhere-src-6.5.1/src/3rdparty/PhysX/pxshared/include/foundation/PxPreprocessor.h
+===================================================================
+--- qtquick3dphysics-everywhere-src-6.5.1.orig/src/3rdparty/PhysX/pxshared/include/foundation/PxPreprocessor.h
++++ qtquick3dphysics-everywhere-src-6.5.1/src/3rdparty/PhysX/pxshared/include/foundation/PxPreprocessor.h
+@@ -127,6 +127,8 @@ Architecture defines, see http://sourcef
+ #define PX_PPC 1
+ #elif defined(__mips__)
+ #define PX_X64 1
++#elif defined(__loongarch_lp64)
++#define PX_LA64 1
+ #else
+ #error "Unknown architecture"
+ #endif
+@@ -147,7 +149,7 @@ SIMD defines
+ #endif
+ 
+ /** Disable SIMD for webassembly, mips and arm64 */
+-#if defined(__EMSCRIPTEN__) || defined(__mips__) || defined(_M_ARM64) || defined(_M_ARM)
++#if defined(__EMSCRIPTEN__) || defined(__mips__) || defined(_M_ARM64) || defined(_M_ARM) || defined(__loongarch__)
+ #define PX_SIMD_DISABLED 1
+ #endif
+ 
+@@ -436,7 +438,7 @@ General defines
+ 
+ // static assert
+ #if(defined(__GNUC__) && (__GNUC__ > 4 || (__GNUC__ == 4 && __GNUC_MINOR__ >= 7))) || (PX_PS4) || (PX_APPLE_FAMILY) || (PX_SWITCH) || (PX_CLANG && PX_ARM)
+-#define PX_COMPILE_TIME_ASSERT(exp) typedef char PX_CONCAT(PxCompileTimeAssert_Dummy, __COUNTER__)[(exp) ? 1 : -1] __attribute__((unused))
++#define PX_COMPILE_TIME_ASSERT(exp) typedef char PX_CONCAT(PxCompileTimeAssert_Dummy, __COUNTER__)[(exp) ? 1 : 0] __attribute__((unused))
+ #else
+ #define PX_COMPILE_TIME_ASSERT(exp) typedef char PxCompileTimeAssert_Dummy[(exp) ? 1 : -1]
+ #endif

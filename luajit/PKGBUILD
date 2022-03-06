@@ -6,25 +6,23 @@
 # Contributor: Anders Bergh <anders1@gmail.com>
 
 pkgname=luajit
-# LuaJIT has a "rolling release" where you should follow git HEAD
-_commit=41fb94defa8f830ce69a8122b03f6ac3216d392a
-# The patch version is the timestamp of the above git commit, obtain via `git show -s --format=%ct`
-_ct=1693350652
-pkgver="2.1.${_ct}"
-pkgrel=1
+# LuaJIT has abandoned versioned releases and now advises using git HEAD
+# https://github.com/LuaJIT/LuaJIT/issues/665#issuecomment-784452583
+_rdate=20220415
+pkgver="2.1"
+pkgrel=8
 pkgdesc='Just-in-time compiler and drop-in replacement for Lua 5.1'
 arch=('loong64' 'x86_64')
 url='https://luajit.org/'
 license=('MIT')
 depends=('gcc-libs')
-source=("LuaJIT-${_commit}.tar.gz::https://repo.or.cz/luajit-2.0.git/snapshot/${_commit}.tar.gz")
-md5sums=('1fe40d7b9449c99e8015793b41f818b0')
-sha256sums=('8036b6a7078385f3db5c6280cdcbfa5790189349b542f26a10d8d5ed87adaa58')
-b2sums=('34948ecd0735a78f4fdfd4dea38c1f1f451c58a90a7794a0e6ee2b11e19ac5fce76fc451d13b08424814713f3a846faf516751a97a6fa585b751f19811f608ee')
+source=("http://public.loongarch.dev/sources/luajit/LuaJIT-${pkgver}-${_rdate}.tar.xz/1bf044ae4e9cd2085ed8fc35c677b3e3/LuaJIT-${pkgver}-${_rdate}.tar.xz")
+md5sums=('1bf044ae4e9cd2085ed8fc35c677b3e3')
+sha256sums=('72ec4625e0dad18f701d3411df9ea1fff09989de412f6b2dd50514b3573112ff')
+b2sums=('2c7d58bbae52375a95e45fa43eb749ef38131da84df8aef3d9dd5fad7e382c063e5e6ecbb79ed8197d54493f3ab36f76f95fd6e9aeea8ba600ef36bd2cca316a')
 
 build() {
-  cd "luajit-2.0-${_commit::7}"
-
+  cd "LuaJIT-2.1"
   # Avoid early stripping
   make amalg PREFIX=/usr BUILDMODE=dynamic TARGET_STRIP=" @:"
 }
@@ -37,7 +35,7 @@ check() {
 }
 
 package() {
-  cd "luajit-2.0-${_commit::7}"
+  cd "LuaJIT-2.1"
 
   make install DESTDIR="$pkgdir" PREFIX=/usr
   install -Dm644 COPYRIGHT "$pkgdir/usr/share/licenses/$pkgname/COPYRIGHT"

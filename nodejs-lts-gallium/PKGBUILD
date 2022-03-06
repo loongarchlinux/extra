@@ -16,11 +16,16 @@ provides=("nodejs=$pkgver")
 conflicts=(nodejs)
 source=(${url}/dist/v${pkgver}/node-v${pkgver}.tar.xz
         fix-test-socket-write-after-fin-error.patch
-        icu72.patch)
+        icu72.patch
+	0001-add-loongarch64-support-v16.17.1.patch
+	0002-disable-pointer-compression.patch)
+
 # https://nodejs.org/download/release/latest-gallium/SHASUMS256.txt.asc
 sha256sums=('576f1a03c455e491a8d132b587eb6b3b84651fc8974bb3638433dd44d22c8f49'
             'bb4df6373e4ab93478089268949934efbdd7bb060f35e8d7262af6b2dda4b948'
-            '886d0edf868c39567124937f93a43fb3e92fa65b5244b8c608d6482ed217fa56')
+            '886d0edf868c39567124937f93a43fb3e92fa65b5244b8c608d6482ed217fa56'
+            '4594358846eb9f021598fb9c63d0bd7fb00b5b99b8c2b958e39a6afa9e8c7d72'
+            '359819ab36ac93ab6fd04ab082e9afbb35624a19481d16937f02edf39d3e7bc3')
 validpgpkeys=(C4F0DFFF4E8C1A8236409D08E73BC641CC11F4C8  # Myles Borins <mylesborins@google.com>
               77984A986EBC2AA786BC0F66B01FBB92821C587A  # Gibson Fahnestock <gibfahn@gmail.com>
               B9AE9905FFD7803F25714661B63B535A4C206CA9  # Evan Lucas <evanlucas@me.com>
@@ -35,6 +40,8 @@ prepare() {
   cd node-v${pkgver}
   patch -Np1 -i ../fix-test-socket-write-after-fin-error.patch
   # patch -Np1 -i ../icu72.patch
+  patch -p1 -i $srcdir/0001-add-loongarch64-support-v16.17.1.patch
+  patch -p1 -i $srcdir/0002-disable-pointer-compression.patch
 }
 
 build() {

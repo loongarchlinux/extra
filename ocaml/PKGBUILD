@@ -8,19 +8,26 @@ pkgdesc="A functional language with OO extensions"
 arch=('loong64' 'x86_64')
 license=('LGPL2.1' 'custom: QPL-1.0')
 url="https://caml.inria.fr/"
-makedepends=('ncurses>=5.6-7')
+makedepends=('ncurses>=5.6-7' autoconf)
 optdepends=('ncurses: advanced ncurses features' 'tk: advanced tk features')
-source=(https://caml.inria.fr/distrib/ocaml-${pkgver%.*}/${pkgname}-${pkgver}.tar.xz)
-sha512sums=('1ddc5ae1cbdccdb44dd1bb9878470bbac3ba225d4339aae35220cac99dda2640c74d48e536111ee47e7fe2a9848db8581966a6f1e182bb102ffade0454dc4ecd')
+source=(https://caml.inria.fr/distrib/ocaml-${pkgver%.*}/${pkgname}-${pkgver}.tar.xz
+ocaml-5.0.0-la64.patch)
+sha512sums=('1ddc5ae1cbdccdb44dd1bb9878470bbac3ba225d4339aae35220cac99dda2640c74d48e536111ee47e7fe2a9848db8581966a6f1e182bb102ffade0454dc4ecd'
+            'a95f2e02b318183d76b858b0a1d66ad5c23977d72f6d964b95a8851edf4170ed3971602e031842ef04615d2f6b36198f62aa4ff7e57c188af052d45f22192f65')
 options=('!makeflags' '!emptydirs' 'staticlibs')
 
 
+prepare() {
+  cd "${srcdir}/${pkgname}-${pkgver}"
+  patch -p1 -i $srcdir/ocaml-5.0.0-la64.patch
+  autoconf
+}
 
 build() {
   cd "${srcdir}/${pkgname}-${pkgver}"
   CFLAGS+=' -ffat-lto-objects'
   CXXFLAGS+=' -ffat-lto-objects'
-  ./configure --prefix /usr --mandir /usr/share/man -enable-frame-pointers
+  ./configure --prefix /usr --mandir /usr/share/man --enable-frame-pointers
   make --debug=v world.opt
 }
 

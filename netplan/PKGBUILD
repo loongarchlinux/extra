@@ -28,12 +28,14 @@ makedepends=(
   'bash-completion'
   'cmocka'
   'meson'
-  'pandoc'
+#'pandoc'
   'python-coverage'
   'python-pycodestyle'
   'python-pyflakes'
   'python-pytest'
   'python-pytest-cov'
+  'python'
+  'pkgconf'
 )
 checkdepends=(
   'openvswitch'
@@ -43,6 +45,7 @@ provides=(libnetplan.so)
 source=(
   "$pkgname-$pkgver.tar.gz::$url/archive/${pkgver}.tar.gz"
   "$pkgname-0.107-disable_tests.patch"
+  netplan-disable-pandoc.patch
 )
 sha512sums=('6f6e3e4f179a2a74b46239cbd86919555a769d001b6fc8ba8daba3894b26415dbb8124f6a594de9afc14dc50d6979e58f195adfba2a53854b882d7cb6621fea7'
             '7f0b512a29c458e7e25f1387ce7f6730df47af48b35a5f2915a9f6a57fddf53a2c1d0690dfd81cd2dbbf40efa16f332bac63180ab3e589dcf5087f13775d040b')
@@ -56,6 +59,7 @@ prepare() {
   # disable linting tests as they are broken and useless to us
   # disable unit-tests as we run them manually to be able to disable things that are broken
   patch -Np1 -d $pkgname-$pkgver -i ../$pkgname-0.107-disable_tests.patch
+  patch -p1 -i $srcdir/netplan-disable-pandoc.patch
 }
 
 build() {
