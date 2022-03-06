@@ -1,0 +1,55 @@
+diff --git a/boostcpp.jam b/boostcpp.jam
+index 082536e2a5..7565dae80d 100644
+--- a/boostcpp.jam
++++ b/boostcpp.jam
+@@ -634,7 +634,7 @@ rule address-model ( )
+     return <conditional>@boostcpp.deduce-address-model ;
+ }
+ 
+-local deducable-architectures = arm mips1 power riscv s390x sparc x86 combined ;
++local deducable-architectures = arm loongarch mips1 power riscv s390x sparc x86 combined ;
+ feature.feature deduced-architecture : $(deducable-architectures) : propagated optional composite hidden ;
+ for a in $(deducable-architectures)
+ {
+@@ -645,9 +645,10 @@ rule deduce-architecture ( properties * )
+ {
+     local result ;
+     local filtered = [ toolset-properties $(properties) ] ;
+-    local names = arm mips1 power riscv s390x sparc x86 combined ;
++    local names = arm loongarch mips1 power riscv s390x sparc x86 combined ;
+     local idx = [ configure.find-builds "default architecture" : $(filtered)
+         : /boost/architecture//arm
++        : /boost/architecture//loongarch
+         : /boost/architecture//mips1
+         : /boost/architecture//power
+         : /boost/architecture//riscv
+Submodule libs/config 08dced51e9..5c177b2269:
+diff --git a/libs/config/checks/architecture/Jamfile.jam b/libs/config/checks/architecture/Jamfile.jam
+index 2ba54f9a..e8838b41 100644
+--- a/libs/config/checks/architecture/Jamfile.jam
++++ b/libs/config/checks/architecture/Jamfile.jam
+@@ -18,6 +18,7 @@ obj 64 : 64.cpp ;
+ 
+ obj arm      : arm.cpp ;
+ obj combined : combined.cpp ;
++obj loongarch : loongarch.cpp ;
+ obj mips     : mips.cpp ;
+ alias mips1  : mips ; # Backwards compatibility
+ obj power    : power.cpp ;
+diff --git a/libs/config/checks/architecture/loongarch.cpp b/libs/config/checks/architecture/loongarch.cpp
+new file mode 100644
+index 00000000..5be8cb09
+--- /dev/null
++++ b/libs/config/checks/architecture/loongarch.cpp
+@@ -0,0 +1,11 @@
++// loongarch.cpp
++//
++// Copyright (c) 2012 Steven Watanabe
++//
++// Distributed under the Boost Software License Version 1.0. (See
++// accompanying file LICENSE_1_0.txt or copy at
++// http://www.boost.org/LICENSE_1_0.txt)
++
++#if !defined(__loongarch__)
++#error "Not LoongArch"
++#endif

@@ -30,7 +30,7 @@ sha256sums=('SKIP')
 
 prepare() {
   cd $pkgname
-  cargo fetch --locked --target "$CARCH-unknown-linux-gnu"
+  cargo fetch --target "$CARCH-unknown-linux-gnu"
 }
 
 build() {
@@ -40,7 +40,14 @@ build() {
   cd $pkgname
   # generate man page directly as docs target is broken: https://github.com/containers/netavark/issues/524
   mandown docs/$pkgname.1.md > $pkgname.1
-  cargo build --frozen --release --all-features
+  find -name Cargo.lock -exec rm -f {} \;
+  mkdir -p .cargo
+  cat > .cargo/config.toml <<EOF
+[source.crates-io]
+registry = "https://gitee.com/yetist/crates.io-index"
+EOF
+  cargo build --release --all-features
+  make -C docs
 }
 
 check() {

@@ -23,10 +23,14 @@ sha512sums=('4e98feda493a0e42c5f22a0471d09370a3751dc59548125a3ac218f14e6fe31f9af
 build() {
   cd booster-$pkgver
 
+  export GOPROXY=https://goproxy.cn
+  go mod edit -replace=golang.org/x/sys=github.com/golang/sys@v0.0.0-20220622161953-175b2fd9d664
+  go mod edit -replace=golang.org/x/net=github.com/golang/net@v0.0.0-20220622184535-263ec571b305
+  go mod edit -replace=github.com/u-root/uio=github.com/loongarch64/uio@dev-main
+  go mod tidy
   cd generator
   CGO_CPPFLAGS="${CPPFLAGS}" CGO_CFLAGS="${CFLAGS}" CGO_CXXFLAGS="${CXXFLAGS}" CGO_LDFLAGS="${LDFLAGS}" \
     go build -trimpath \
-      -buildmode=pie \
       -mod=readonly \
       -modcacherw \
       -ldflags "-linkmode external -extldflags \"${LDFLAGS}\""

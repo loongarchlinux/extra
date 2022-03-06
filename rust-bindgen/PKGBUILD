@@ -15,12 +15,18 @@ sha512sums=('d2633127da4f367590442bc22cce39a3792c049802b4b34d3c6f97ba1f8717008ee
 
 prepare() {
   cd $pkgname-$pkgver
-  cargo fetch --locked --target "$CARCH-unknown-linux-gnu"
+#  cargo fetch --locked --target "$CARCH-unknown-linux-gnu"
 }
 
 build() {
   cd $pkgname-$pkgver
-  cargo build --release --frozen
+  find -name Cargo.lock -exec rm -f {} \;
+  mkdir -p .cargo
+  cat > .cargo/config.toml <<EOF
+[source.crates-io]
+registry = "https://gitee.com/yetist/crates.io-index"
+EOF
+  cargo build --release #--frozen
 }
 
 package() {

@@ -15,23 +15,33 @@ depends=(
 )
 makedepends=(cargo)
 replaces=(qemu-virtiofsd)
-source=($url/-/archive/v$pkgver/$pkgname-v$pkgver.tar.gz)
-sha512sums=('ed398c96f16ef520546052bbebe65ae5b4e6818692d4389aa6ace4eb0a9d3cd4b9f3c6b00790b99c4215ceac9eead36a20ae2e18cc8298defb901d9916c241df')
-b2sums=('e1fad99baef1a6d2a399107422cfbeede365325d1f2e71e3944bc9db41578320a8c0272550597f05741a171ce4a6426338a3255adabcf948735704f3adc1156b')
+source=($url/-/archive/v$pkgver/$pkgname-v$pkgver.tar.gz
+    virtiofsd-la64.patch)
+sha512sums=('ed398c96f16ef520546052bbebe65ae5b4e6818692d4389aa6ace4eb0a9d3cd4b9f3c6b00790b99c4215ceac9eead36a20ae2e18cc8298defb901d9916c241df'
+            '5350adc0fe05c2a2ed97165ec7583ffb070a8f7c1d5459ea32d9421d1100fa02f99d6028da20304b39450d1c2d5de8feeee3993a3d8e82b14b08cc49554c0b35')
+b2sums=('e1fad99baef1a6d2a399107422cfbeede365325d1f2e71e3944bc9db41578320a8c0272550597f05741a171ce4a6426338a3255adabcf948735704f3adc1156b'
+        '7f22c555671ed0e2e996eeb8726e25c8a6f9f275c1b6e5bf4f2068571f6c46529a502f90c60b37e36b42e127b66a18b9640e8c8b9e944a22758ddffe001240f2')
 
 prepare() {
   cd $pkgname-v$pkgver
   # use /usr/lib instead of /usr/libexec: https://gitlab.com/virtio-fs/virtiofsd/-/issues/86
   sed 's/libexec/lib/' -i 50-qemu-$pkgname.json
 
-  cargo fetch --locked --target "$CARCH-unknown-linux-gnu"
+#  cargo fetch  --target "$CARCH-unknown-linux-gnu"
+  patch -p1 -i $srcdir/virtiofsd-la64.patch
 }
 
 build() {
   cd $pkgname-v$pkgver
   export RUSTUP_TOOLCHAIN=stable
   export CARGO_TARGET_DIR=target
-  cargo build --frozen --release --all-features
+  find -name Cargo.lock -exec rm -f {} \;
+  mkdir -p .cargo
+  cat > .cargo/config.toml <<EOF
+[source.crates-io]
+registry = "https://gitee.com/yetist/crates.io-index"
+EOF
+  cargo build --release --all-features
 }
 
 check() {

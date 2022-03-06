@@ -34,9 +34,13 @@ pkgver() {
 }
 
 prepare() {
-  cp -f Cargo-rav1e-${pkgver}.lock rav1e/Cargo.lock
+  find -name Cargo.lock -exec rm -f {} \;
+  mkdir -p .cargo
+  cat > .cargo/config.toml <<EOF
+[source.crates-io]
+registry = "https://gitee.com/yetist/crates.io-index"
+EOF
   cargo fetch \
-    --locked \
     --manifest-path rav1e/Cargo.toml
 }
 
