@@ -10,13 +10,13 @@ pkgname=(
   gst-plugins-good
   gst-plugins-bad
   gst-plugin-gtk
-  gst-plugin-msdk
-  gst-plugin-opencv
+#gst-plugin-msdk
+#gst-plugin-opencv
   gst-plugin-qmlgl
   gst-plugin-va
-  gst-plugin-wpe
+#gst-plugin-wpe
   gst-plugins-ugly
-  gst-libav
+gst-libav
   gst-rtsp-server
   gst-editing-services
   gstreamer-vaapi
@@ -46,12 +46,12 @@ makedepends=(
   libshout taglib twolame libvpx wavpack cairo libsoup3
 
   # gst-plugins-bad
-  opencv vulkan-icd-loader vulkan-headers vulkan-validation-layers shaderc
+  libdc1394 openexr vulkan-icd-loader vulkan-headers shaderc
   libltc bluez-libs libavtp libbs2b bzip2 chromaprint libdca faac faad2
-  libfdk-aac fluidsynth libgme libkate liblrdf ladspa libde265 lilv lv2
-  libmicrodns mjpegtools libmpcdec neon openal libdvdnav rtmpdump sbc soundtouch
-  spandsp libsrtp svt-hevc zvbi libnice webrtc-audio-processing wildmidi
-  zxing-cpp zbar nettle libxml2 gsm libopenmpt wpewebkit libldac libfreeaptx
+  libfdk-aac fluidsynth libkate liblrdf ladspa libde265 lilv lv2
+  libmicrodns mjpegtools libmpcdec neon openal libdvdnav rtmpdump sbc
+  spandsp libsrtp zvbi libnice webrtc-audio-processing wildmidi
+  zxing-cpp zbar nettle libxml2 gsm libopenmpt libldac libfreeaptx
   qrencode json-glib libva libxkbcommon-x11
 
   # gst-plugins-ugly
@@ -75,13 +75,15 @@ source=(
   0001-meson-Allow-building-with-system-orc.patch
   0002-HACK-meson-Disable-broken-tests.patch
   0003-HACK-meson-Work-around-broken-detection-of-underscor.patch
+  gstreamer-la64.patch
 )
 sha256sums=('SKIP'
             '73fc428a40d6a34c2ceb80e3e572b20f19f8ebe216d566f010de11573063f1bf'
             'SKIP'
             '292edebc224557db08404b0d53e2824413f0aad2a99c991de2cb8ccc6e9a7683'
             '11971a978e37fda3822f95fb61b59ba3ded6487066dc59fcbde7b72a3a9cfe70'
-            '79d3038a0ba0c3958ffa8b5aec8431336b372906c07c0c878c3767bec0acb46f')
+            '79d3038a0ba0c3958ffa8b5aec8431336b372906c07c0c878c3767bec0acb46f'
+            'afc10d31d5f460cc7ec956f3493783869acda56d67030c7ad3ee7a029d91a7bb')
 validpgpkeys=(D637032E45B8C6585B9456565D2EEE6F6F349D7C) # Tim Müller <tim@gstreamer-foundation.org>
 
 pkgver() {
@@ -101,6 +103,7 @@ prepare() {
   # Workaround broken detection of underscore prefixes
   # https://github.com/mesonbuild/meson/issues/5482
   git apply -3 ../0003-HACK-meson-Work-around-broken-detection-of-underscor.patch
+  patch -p1 -i $srcdir/gstreamer-la64.patch
 }
 
 build() {
@@ -143,9 +146,20 @@ build() {
     -D gst-plugins-bad:voamrwbenc=disabled
     -D gst-plugins-bad:wasapi2=disabled
     -D gst-plugins-bad:wasapi=disabled
+    -D gst-plugins-bad:opencv=disabled
+    -D gst-plugins-bad:msdk=disabled
+    -D gst-plugins-bad:assrender=disabled
+    -D gst-plugins-bad:gme=disabled
+    -D gst-plugins-bad:modplug=disabled
+    -D gst-plugins-bad:soundtouch=disabled
+    -D gst-plugins-bad:srt=disabled
+    -D gst-plugins-bad:svthevcenc=disabled
+    -D gst-plugins-bad:wpe=disabled
     -D gst-plugins-ugly:gobject-cast-checks=disabled
+#-D gst-plugins-ugly:x264=disabled
     -D gst-plugins-ugly:package-name="Arch Linux gst-plugins-ugly $pkgver-$pkgrel"
     -D gst-plugins-ugly:package-origin="https://www.archlinux.org/"
+#-D libav=disabled
     -D gst-libav:package-name="Arch Linux gst-libav $pkgver-$pkgrel"
     -D gst-libav:package-origin="https://www.archlinux.org/"
     -D gst-rtsp-server:gobject-cast-checks=disabled
@@ -479,19 +493,19 @@ package_gst-plugins-bad() {
   pkgdesc+=" - bad plugins"
   depends=(
     "gst-plugins-bad-libs=$pkgver"
-    aom libass libbs2b bzip2 chromaprint pango lcms2 curl libxml2 libdc1394
-    libde265 openssl libdca faac faad2 libfdk-aac fluidsynth libgme nettle
+    aom libass libbs2b bzip2 chromaprint pango lcms2 curl libxml2 libdc1394 openexr
+    libde265 openssl libdca faac faad2 libfdk-aac fluidsynth nettle
     libkate liblrdf lilv libmodplug mjpegtools libmpcdec neon openal openexr
     openjpeg2 opus libdvdnav libdvdread librsvg rtmpdump sbc libsndfile libltc
-    soundtouch spandsp srt libsrtp zvbi vulkan-icd-loader libxcb wayland libwebp
+    spandsp srt libsrtp zvbi vulkan-icd-loader libxcb wayland libwebp
     libnice webrtc-audio-processing wildmidi x265 zbar gsm libopenmpt libldac
-    libfreeaptx qrencode json-glib libavtp libmicrodns svt-hevc zxing-cpp
+    libfreeaptx qrencode json-glib libavtp libmicrodns zxing-cpp
   )
 
   cd root; local files=(
     usr/lib/gstreamer-1.0/libgstaes.so
     usr/lib/gstreamer-1.0/libgstaom.so
-    usr/lib/gstreamer-1.0/libgstassrender.so
+#usr/lib/gstreamer-1.0/libgstassrender.so
     usr/lib/gstreamer-1.0/libgstavtp.so
     usr/lib/gstreamer-1.0/libgstbs2b.so
     usr/lib/gstreamer-1.0/libgstbz2.so
@@ -508,7 +522,7 @@ package_gst-plugins-bad() {
     usr/lib/gstreamer-1.0/libgstfaad.so
     usr/lib/gstreamer-1.0/libgstfdkaac.so
     usr/lib/gstreamer-1.0/libgstfluidsynthmidi.so
-    usr/lib/gstreamer-1.0/libgstgme.so
+#usr/lib/gstreamer-1.0/libgstgme.so
     usr/lib/gstreamer-1.0/libgstgsm.so
     usr/lib/gstreamer-1.0/libgsthls.so
     usr/lib/gstreamer-1.0/libgstkate.so
@@ -516,7 +530,7 @@ package_gst-plugins-bad() {
     usr/lib/gstreamer-1.0/libgstldac.so
     usr/lib/gstreamer-1.0/libgstlv2.so
     usr/lib/gstreamer-1.0/libgstmicrodns.so
-    usr/lib/gstreamer-1.0/libgstmodplug.so
+#usr/lib/gstreamer-1.0/libgstmodplug.so
     usr/lib/gstreamer-1.0/libgstmpeg2enc.so
     usr/lib/gstreamer-1.0/libgstmplex.so
     usr/lib/gstreamer-1.0/libgstmusepack.so
@@ -535,11 +549,11 @@ package_gst-plugins-bad() {
     usr/lib/gstreamer-1.0/libgstsctp.so
     usr/lib/gstreamer-1.0/libgstsmoothstreaming.so
     usr/lib/gstreamer-1.0/libgstsndfile.so
-    usr/lib/gstreamer-1.0/libgstsoundtouch.so
+#usr/lib/gstreamer-1.0/libgstsoundtouch.so
     usr/lib/gstreamer-1.0/libgstspandsp.so
-    usr/lib/gstreamer-1.0/libgstsrt.so
+#usr/lib/gstreamer-1.0/libgstsrt.so
     usr/lib/gstreamer-1.0/libgstsrtp.so
-    usr/lib/gstreamer-1.0/libgstsvthevcenc.so
+#usr/lib/gstreamer-1.0/libgstsvthevcenc.so
     usr/lib/gstreamer-1.0/libgstteletext.so
     usr/lib/gstreamer-1.0/libgsttimecode.so
     usr/lib/gstreamer-1.0/libgstttmlsubs.so
@@ -610,7 +624,7 @@ package_gst-plugin-va() {
 
 package_gst-plugin-wpe() {
   pkgdesc+=" - wpe plugin"
-  depends=("gst-plugins-base-libs=$pkgver" wpewebkit)
+  depends=("gst-plugins-base-libs=$pkgver" )
 
   cd root; local files=(
     usr/lib/gstreamer-1.0/libgstwpe.so
@@ -723,6 +737,7 @@ package_gstreamer-docs() {
   pkgdesc+=" - documentation"
   license=(GPL3 LGPL custom:BSD custom:CC-BY-SA-4.0 custom:MIT custom:OPL)
 
+#rm -f root/usr/share/gstreamer-1.0/presets/GstAmrnbEnc.prs
   # make sure there are no files left to install
   find root -depth -print0 | xargs -0 rmdir
 

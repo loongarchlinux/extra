@@ -10,14 +10,20 @@ license=(BSD)
 conflicts=(gnu-efi-libs)
 provides=(gnu-efi-libs)
 replaces=(gnu-efi-libs)
-source=(https://download.sourceforge.net/$pkgname/$pkgname-$pkgver.tar.bz2)
+source=(https://download.sourceforge.net/$pkgname/$pkgname-$pkgver.tar.bz2
+        "gnu-efi-3.0.14-la64.patch")
 options=(!strip)
-sha512sums=('64d408b6d115bdc6eebae12fbd6cd907ed5f847f54e506c1e8f8ea5de38a95cf6fac66ab1009bd1d0bd2d54ad45ad598d29bcc303926a5899bf5cc25448cbb2f')
-b2sums=('0df93d8cacfa1e6d4b7731e32287d4386da9375c5e5c5847df8a29c99d70f5c24b14abc5e44ab9d0a39a6ec96682eb2b5e84d81a5a142d44a50a522a4ae0e3c2')
+sha512sums=('64d408b6d115bdc6eebae12fbd6cd907ed5f847f54e506c1e8f8ea5de38a95cf6fac66ab1009bd1d0bd2d54ad45ad598d29bcc303926a5899bf5cc25448cbb2f'
+            '273920ef7013114d4d0ec5a563c4172e0ca97ba9bffbca11a830a39cd1f7e5de10478accb7cf1345a319e83097addee024fcaa41cd4d5d4d53e0a534aa8a1b5b')
+b2sums=('0df93d8cacfa1e6d4b7731e32287d4386da9375c5e5c5847df8a29c99d70f5c24b14abc5e44ab9d0a39a6ec96682eb2b5e84d81a5a142d44a50a522a4ae0e3c2'
+        '3ad6e4c9c708c7bd1f45e3ab8ca4451ea3defc65cab3e80f281907e0d78bc6a95d908a65a8d3bd2f2ecb49d9ce15b44d1b531316e57230d3f880a8a439edfe32')
 
 prepare() {
   # -Werror, not even once
   sed -e 's/-Werror//g' -i $pkgname-$pkgver/Make.defaults
+  cd $pkgname-$pkgver
+  # insert LDFLFAGS into custom linker for apps
+  patch -Np1 -i "../gnu-efi-3.0.14-la64.patch"
 }
 
 build() {

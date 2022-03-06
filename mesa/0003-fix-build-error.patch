@@ -1,0 +1,45 @@
+From 3014b6e8875c599a0b71d536d49ba5b2e39b8d23 Mon Sep 17 00:00:00 2001
+From: Xiaotian Wu <wuxiaotian@loongson.cn>
+Date: Tue, 23 Nov 2021 15:23:20 +0800
+Subject: [PATCH 3/3] fix build error
+
+---
+ src/gallium/auxiliary/target-helpers/drm_helper.h | 14 ++++----------
+ 1 file changed, 4 insertions(+), 10 deletions(-)
+
+diff --git a/src/gallium/auxiliary/target-helpers/drm_helper.h b/src/gallium/auxiliary/target-helpers/drm_helper.h
+index 5f288e9fcc7..2f42ba62336 100644
+--- a/src/gallium/auxiliary/target-helpers/drm_helper.h
++++ b/src/gallium/auxiliary/target-helpers/drm_helper.h
+@@ -367,24 +367,18 @@ DRM_DRIVER_DESCRIPTOR_STUB(etnaviv)
+ #ifdef GALLIUM_LOONGSON
+ #include "loongson/drm/loongson_drm_public.h"
+ 
+-struct pipe_screen *
+-pipe_loongson_drm_create_screen(int fd, const struct pipe_screen_config *config)
++static struct pipe_screen *
++pipe_loongson_create_screen(int fd, const struct pipe_screen_config *config)
+ {
+    struct pipe_screen *screen;
+ 
+    screen = loongson_drm_screen_create(fd);
+    return screen ? debug_screen_wrap(screen) : NULL;
+ }
++DRM_DRIVER_DESCRIPTOR(loongson, NULL, 0)
+ 
+ #else
+-
+-struct pipe_screen *
+-pipe_loongson_drm_create_screen(int fd, const struct pipe_screen_config *config)
+-{
+-   fprintf(stderr, "loongson-drm: driver missing\n");
+-   return NULL;
+-}
+-
++DRM_DRIVER_DESCRIPTOR_STUB(loongson)
+ #endif
+ 
+ 
+-- 
+2.20.1
+

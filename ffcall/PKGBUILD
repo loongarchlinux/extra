@@ -10,12 +10,29 @@ url="https://www.gnu.org/software/libffcall/"
 license=('GPL2')
 depends=('glibc')
 options=('!makeflags' 'staticlibs')
-source=(https://ftp.gnu.org/gnu/libffcall/libffcall-${pkgver}.tar.gz)
-sha256sums=('8ef69921dbdc06bc5bb90513622637a7b83a71f31f5ba377be9d8fd8f57912c2')
+source=(https://ftp.gnu.org/gnu/libffcall/libffcall-${pkgver}.tar.gz
+    libffcall-la64.patch
+    libffcall-la64-2.4.patch
+    0001-loongarch-Add-support-for-loongarch64-ABI.patch
+    0002-loongarch-Allow-for-continuous-integration.patch
+    0003-loongarch-Fix-gcc-installation.patch)
+
+sha256sums=('8ef69921dbdc06bc5bb90513622637a7b83a71f31f5ba377be9d8fd8f57912c2'
+            'b9ab6ebc4110ff7fc95a005d9d82c3093d482faf620f5ef8503fbdfbbd696dec'
+            '4d5f56256d8a026f8e15d9d6b928e910bf9ecdeada3a10ec7b4361f7f9414552'
+            'a3d526369b7b6ed288c7736a1fda7f93df0d26da0149ee0d18a391a3597277eb'
+            'cafa0250c42c3a54f81339364ff9bf27dd692e84fb582b6f66b4ff6351dbf2d3')
+
+prepare() {
+set -x
+    cd "${srcdir}/lib${pkgname}-${pkgver}"
+    patch -p1 -i "$srcdir/libffcall-la64-2.4.patch"
+}
 
 build() {
   cd "${srcdir}/lib${pkgname}-${pkgver}"
   [ "$CARCH" = "x86_64" ] && CONFIGFLAG="--with-pic"
+  [ "$CARCH" = "loong64" ] && CONFIGFLAG="--with-pic"
   CFLAGS+=" -ffat-lto-objects" \
   ./configure --prefix=/usr --mandir=/usr/share/man $CONFIGFLAG
   make

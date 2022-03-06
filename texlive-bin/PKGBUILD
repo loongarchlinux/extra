@@ -12,8 +12,10 @@ makedepends=('git' 'cairo' 'pixman' 'graphite' 't1lib' 'gd'
          'perl' 'clisp' 'ffcall' 'libxcrypt')
 url='https://tug.org/texlive/'
 _commit=f398692b64d6462c35939ec9489694d0828edee5 # svn://tug.org/texlive/tags/texlive-2022.0/Build/source@62885
-source=("git+https://github.com/Tex-Live/texlive-source.git#commit=${_commit}")
-sha256sums=('SKIP')
+source=("git+https://github.com/Tex-Live/texlive-source.git#commit=${_commit}"
+        texlive-bin-la64.patch)
+sha256sums=('SKIP'
+            '940fe5778d40d9f1f968ec3167cba05c659d50ca6fcd735d45c168afa4c270c4')
 
 prepare() {
     cd "$srcdir/texlive-source"
@@ -23,6 +25,7 @@ prepare() {
     (cd texk/bibtex-x && autoreconf)
     # t4ht expects to be un /usr/share/texmf/bin/t4ht (FS#27251)
     sed -i s/SELFAUTOPARENT/TEXMFROOT/ texk/tex4htk/t4ht.c
+    patch -p1 -i $srcdir/texlive-bin-la64.patch
 }
 
 build() {

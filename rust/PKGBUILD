@@ -3,11 +3,12 @@
 # Contributor: Alexander F Rødseth <xyproto@archlinux.org>
 # Contributor: Daniel Micay <danielmicay@gmail.com>
 # Contributor: userwithuid <userwithuid@gmail.com>
+set -x
 
 pkgbase=rust
-pkgname=(rust lib32-rust-libs rust-musl rust-wasm rust-src)
+pkgname=(rust rust-src)
 epoch=1
-pkgver=1.63.0
+pkgver=1.57.0
 pkgrel=1
 pkgdesc="Systems programming language focused on safety, speed and concurrency"
 url=https://www.rust-lang.org/
@@ -15,7 +16,7 @@ arch=(loong64 x86_64)
 license=(MIT Apache)
 options=(!emptydirs !strip !lto)
 depends=(gcc-libs llvm-libs curl libssh2 gcc)
-makedepends=(rust llvm libffi lib32-gcc-libs perl python cmake musl ninja
+makedepends=(rust llvm libffi perl python cmake musl ninja
              wasi-libc lld)
 checkdepends=(procps-ng gdb)
 source=(
@@ -45,10 +46,10 @@ prepare() {
   patch -Np1 -i ../0001-bootstrap-Change-libexec-dir.patch
 
   # Use our *-pc-linux-gnu targets, making LTO with clang simpler
-  patch -Np1 -i ../0002-compiler-Change-LLVM-targets.patch
+#patch -Np1 -i ../0002-compiler-Change-LLVM-targets.patch
 
   # Use our wasm-ld
-  patch -Np1 -i ../0003-compiler-Use-wasm-ld-for-wasm-targets.patch
+#patch -Np1 -i ../0003-compiler-Use-wasm-ld-for-wasm-targets.patch
 
   # https://github.com/llvm/llvm-project/issues/56421
   patch -Np1 -d src/llvm-project < ../remove-include-linux-fs.h.patch
@@ -61,20 +62,14 @@ profile = "user"
 link-shared = true
 
 [build]
-target = [
-  "x86_64-unknown-linux-gnu",
-  "i686-unknown-linux-gnu",
-  "x86_64-unknown-linux-musl",
-  "wasm32-unknown-unknown",
-  "wasm32-wasi",
-]
+target = [ "loongarch64-unknown-linux-gnu" ]
 cargo = "/usr/bin/cargo"
 rustc = "/usr/bin/rustc"
 rustfmt = "/usr/bin/rustfmt"
 locked-deps = true
 vendor = true
 tools = ["cargo", "rls", "clippy", "rustfmt", "analysis", "src", "rust-demangler"]
-sanitizers = true
+sanitizers = false
 profiler = true
 
 # Generating docs fails with the wasm32-* targets
@@ -90,7 +85,7 @@ description = "Arch Linux $pkgbase $epoch:$pkgver-$pkgrel"
 rpath = false
 backtrace-on-ice = true
 remap-debuginfo = true
-jemalloc = true
+jemalloc = false
 
 # LLVM crashes when passing an object through ThinLTO twice.  This is triggered
 # when using rust code in cross-language LTO if libstd was built using ThinLTO.
@@ -104,21 +99,21 @@ deny-warnings = false
 [dist]
 compression-formats = ["gz"]
 
-[target.x86_64-unknown-linux-gnu]
+[target.loongarch64-unknown-linux-gnu]
 llvm-config = "/usr/bin/llvm-config"
 
-[target.x86_64-unknown-linux-musl]
-sanitizers = false
-musl-root = "/usr/lib/musl"
-
-[target.wasm32-unknown-unknown]
-sanitizers = false
-profiler = false
-
-[target.wasm32-wasi]
-sanitizers = false
-profiler = false
-wasi-root = "/usr/share/wasi-sysroot"
+#[target.x86_64-unknown-linux-musl]
+#sanitizers = false
+#musl-root = "/usr/lib/musl"
+#
+#[target.wasm32-unknown-unknown]
+#sanitizers = false
+#profiler = false
+#
+#[target.wasm32-wasi]
+#sanitizers = false
+#profiler = false
+#wasi-root = "/usr/share/wasi-sysroot"
 END
 }
 
@@ -137,6 +132,7 @@ build() {
 
   export RUST_BACKTRACE=1
 
+  #rm -f .cargo/config
   DESTDIR="$srcdir/dest-rust" python ./x.py install -j "$(nproc)"
 
   cd ../dest-rust
@@ -147,9 +143,10 @@ build() {
 
   # rustbuild always installs copies of the shared libraries to /usr/lib,
   # overwrite them with symlinks to the per-architecture versions
-  mkdir -p usr/lib32
-  ln -srft usr/lib   usr/lib/rustlib/x86_64-unknown-linux-gnu/lib/*.so
-  ln -srft usr/lib32 usr/lib/rustlib/i686-unknown-linux-gnu/lib/*.so
+#mkdir -p usr/lib32
+#ln -srft usr/lib   usr/lib/rustlib/x86_64-unknown-linux-gnu/lib/*.so
+  ln -srft usr/lib   usr/lib/rustlib/loongarch64-unknown-linux-gnu/lib/*.so
+#ln -srft usr/lib32 usr/lib/rustlib/i686-unknown-linux-gnu/lib/*.so
 
   mkdir -p usr/share/bash-completion
   mv etc/bash_completion.d usr/share/bash-completion/completions
@@ -157,9 +154,9 @@ build() {
   mkdir -p usr/share/licenses/rust
   mv -t usr/share/licenses/rust usr/share/doc/rust/{COPYRIGHT,LICENSE*}
 
-  _pick dest-i686 usr/lib/rustlib/i686-unknown-linux-gnu usr/lib32
-  _pick dest-musl usr/lib/rustlib/x86_64-unknown-linux-musl
-  _pick dest-wasm usr/lib/rustlib/wasm32-*
+#_pick dest-i686 usr/lib/rustlib/i686-unknown-linux-gnu usr/lib32
+#_pick dest-musl usr/lib/rustlib/x86_64-unknown-linux-musl
+#_pick dest-wasm usr/lib/rustlib/wasm32-*
   _pick dest-src  usr/lib/rustlib/src
 }
 

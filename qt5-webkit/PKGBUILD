@@ -15,7 +15,8 @@ source=("https://github.com/qtwebkit/qtwebkit/releases/download/qtwebkit-$_pkgve
          icu68.patch
          glib-2.68.patch
          qt5-webkit-python-3.9.patch::"https://github.com/qtwebkit/qtwebkit/commit/78360c01.patch"
-         qt5-webkit-bison-3.7.patch::"https://github.com/qtwebkit/qtwebkit/commit/d92b11fe.patch")
+         qt5-webkit-bison-3.7.patch::"https://github.com/qtwebkit/qtwebkit/commit/d92b11fe.patch"
+         qtwebkit-la64.patch)
 depends=(qt5-location qt5-sensors qt5-webchannel libwebp libxslt libxcomposite gst-plugins-base hyphen woff2)
 makedepends=(cmake ruby gperf python qt5-doc qt5-tools)
 optdepends=('gst-plugins-good: Webm codec support')
@@ -32,13 +33,15 @@ prepare() {
   patch -p1 -i ../glib-2.68.patch # https://github.com/qtwebkit/qtwebkit/issues/1057
   patch -p1 -i ../qt5-webkit-python-3.9.patch # Fix build with python 3.9
   patch -p1 -i ../qt5-webkit-bison-3.7.patch # Fix build with bison 3.7
+  patch -p1 -i ../qtwebkit-la64.patch
 }
 
 build() {
   cmake -B build -S qtwebkit-$_pkgver \
     -DCMAKE_INSTALL_PREFIX=/usr \
-    -DCMAKE_CXX_FLAGS="${CXXFLAGS} -DNDEBUG" \
+    -DCMAKE_CXX_FLAGS="${CXXFLAGS}" \
     -DPORT=Qt \
+    -DENABLE_JIT=OFF \
     -DENABLE_TOOLS=OFF
   cmake --build build
 }

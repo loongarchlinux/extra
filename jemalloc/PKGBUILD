@@ -15,8 +15,14 @@ makedepends=('clang')
 options=('!lto')
 provides=('libjemalloc.so')
 optdepends=('perl: for jeprof')
-source=("https://github.com/jemalloc/jemalloc/releases/download/${pkgver}/${pkgname}-${pkgver}.tar.bz2")
+source=("https://github.com/jemalloc/jemalloc/releases/download/${pkgver}/${pkgname}-${pkgver}.tar.bz2"
+    add-loongarch64.patch)
 sha256sums=('2db82d1e7119df3e71b7640219b6dfe84789bc0537983c3b7ac4f7189aecfeaa')
+
+prepare() {
+	cd "$pkgname-$pkgver"
+	patch -p1 -i "$srcdir/add-loongarch64.patch"
+}
 
 build() {
   cd $pkgname-$pkgver
@@ -39,3 +45,5 @@ package() {
   install -Dm644 COPYING "$pkgdir/usr/share/licenses/$pkgname/COPYING"
   chmod 644 "$pkgdir/usr/lib/libjemalloc_pic.a"
 }
+sha256sums=('34330e5ce276099e2e8950d9335db5a875689a4c6a56751ef3b1d8c537f887f6'
+            '5e8f375b5d5aec487d65a7681b3574aa0e19927b1d2d9140fc9dba2cf74a961d')

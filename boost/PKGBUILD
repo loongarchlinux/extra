@@ -20,7 +20,8 @@ license=('custom')
 makedepends=('icu' 'python' 'python-numpy' 'bzip2' 'zlib' 'openmpi' 'zstd')
 source=(https://boostorg.jfrog.io/artifactory/main/release/$pkgver/source/$_srcname.tar.gz
         $pkgname-locale-empty-vector.patch::https://github.com/boostorg/locale/commit/1ff0ead837b3.patch
-        $pkgname-ublas-c++20-iterator.patch::https://github.com/boostorg/ublas/commit/a31e5cffa85f.patch)
+        $pkgname-ublas-c++20-iterator.patch::https://github.com/boostorg/ublas/commit/a31e5cffa85f.patch
+        0001-add-loongarch64-support.patch)
 sha256sums=('273f1be93238a068aba4f9735a4a2b003019af067b9c183ed227780b8f36062c'
             '6c05bd362bc18908a7e23eec3b4a714f82c15c722bda4c340778e2f5b1a9bf25'
             'aa38addb40d5f44b4a8472029b475e7e6aef1c460509eb7d8edf03491dc1b5ee')
@@ -33,6 +34,7 @@ prepare() {
 
   # https://github.com/boostorg/ublas/pull/97
   patch -Np2 -i ../$pkgname-ublas-c++20-iterator.patch
+  patch -Np1 -i $srcdir/0001-add-loongarch64-support.patch
 }
 
 build() {
@@ -113,8 +115,8 @@ package_boost-libs() {
   install -d "$pkgdir"/usr/lib/python3.10/site-packages/boost
   touch "$pkgdir"/usr/lib/python3.10/site-packages/boost/__init__.py
   python -m compileall -o 0 -o 1 -o 2 "$pkgdir"/usr/lib/python3.10/site-packages/boost
-  cp fakeinstall/lib/boost-python3.10/mpi.so \
-    "$pkgdir"/usr/lib/python3.10/site-packages/boost/mpi.so
+  #cp fakeinstall/lib/boost-python3.10/mpi.so \
+  #  "$pkgdir"/usr/lib/python3.10/site-packages/boost/mpi.so
 
   # https://github.com/boostorg/python/issues/203#issuecomment-391477685
   for _lib in python numpy; do

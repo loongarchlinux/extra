@@ -9,13 +9,33 @@ arch=(loong64 x86_64)
 url='https://strace.io/'
 license=(BSD)
 depends=(perl libunwind)
-source=(https://github.com/strace/strace/releases/download/v$pkgver/strace-$pkgver.tar.xz{,.asc})
+source=(https://github.com/strace/strace/releases/download/v$pkgver/strace-$pkgver.tar.xz{,.asc}
+        strace-la64.patch)
 sha1sums=('dc34c0d7c3ab0d0adb227f751c016da2c415eb2e'
-          'SKIP')
+          'SKIP'
+          'e17039c2243a42ff4cd92eaae5bba4a4f5dcf859')
 validpgpkeys=('296D6F29A020808E8717A8842DB5BD89A340AEB7') # Dmitry V. Levin <ldv@altlinux.org>
+
+prepare() {
+  cd $pkgname-$pkgver
+  patch -p1 -i "$srcdir/strace-la64.patch"
+}
 
 build() {
   cd $pkgname-$pkgver
+
+  #bootstrap
+  ###./m4/gen_bpf_attr_m4.sh
+  ##./src/generate_mpers_am.sh
+  ##./src/xlat/gen.sh
+  ##./tests/gen_pure_executables.sh
+  ##./tests/gen_secontext.sh
+  ##./tests/gen_tests.sh
+  ##for f in README INSTALL; do
+  ##    cp "dist/$f" .
+  ##done
+  autoreconf -f -i "$@"
+
   ./configure --prefix=/usr --with-libunwind --enable-mpers=no
   make
 }

@@ -16,6 +16,7 @@ groups=('qt' 'qt5')
 _pkgfqn="qt-everywhere-opensource-src-${pkgver}"
 source=("https://download.qt.io/official_releases/qt/${pkgver%.*}/${pkgver}/single/${_pkgfqn}.tar.xz"
          qt5-webengine-python3.patch
+         qt5-base-la64.patch
          no-qmake.patch)
 sha256sums=('5a97827bdf9fd515f43bc7651defaf64fecb7a55e051c79b8f80510d0e990f06'
             '398c996cb5b606695ac93645143df39e23fa67e768b09e0da6dbd37342a43f32'
@@ -29,6 +30,8 @@ prepare() {
 
   patch -d qtbase -p1 < "$srcdir"/no-qmake.patch # Use system qmake
   patch -d qtwebengine -p1 < "$srcdir"/qt5-webengine-python3.patch # Fix build with Python 3
+  patch -d qtbase -p1 < "$srcdir"/qt5-base-la64.patch
+  patch -p1 -i "$srcdir/qt5-doc-python.patch"
 }
 
 build() {
@@ -80,3 +83,8 @@ package_qt5-examples() {
       cp -rn $_dir/* $_base
   done
 }
+sha256sums=('3a530d1b243b5dec00bc54937455471aaa3e56849d2593edb8ded07228202240'
+            '8ab742b991ed5c43e8da4b1ce1982fd38fe611aaac3d57ee37728b59932b518a'
+            '33304570431c0dd3becc22f3f0911ccfc781a1ce6c7926c3acb08278cd2e60c3'
+            '54de45621463a7c07f87482fbcbb9eacbc60d840bb69b34bc6c776d1df720453'
+            '0ea0ced24a71d6abe7d323c4bfb80c33c77592873b8660fe413cb074978c653a')

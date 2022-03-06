@@ -2,22 +2,28 @@
 # Contributor: Jan "heftig" Steffens <jan.steffens@gmail.com>
 
 pkgname=('llvm' 'llvm-libs')
-pkgver=14.0.6
-pkgrel=3
-arch=('loong64' 'x86_64')
+pkgver=13.0.1
+_rdate=20220505
+pkgrel=1
+_ocaml_ver=4.13.1
+arch=('loongarch64' 'x86_64')
 url="https://llvm.org/"
 license=('custom:Apache 2.0 with LLVM Exception')
 makedepends=('cmake' 'ninja' 'libffi' 'libedit' 'ncurses' 'libxml2'
+#"ocaml>=$_ocaml_ver" 'ocaml-ctypes' 'ocaml-findlib'
              'python-setuptools' 'python-psutil' 'python-sphinx'
              'python-recommonmark')
 options=('staticlibs' '!lto') # Getting thousands of test failures with LTO
 _source_base=https://github.com/llvm/llvm-project/releases/download/llvmorg-$pkgver
-source=($_source_base/llvm-$pkgver.src.tar.xz{,.sig}
-        llvm-coroutines-ubsan.patch
+source=(http://sources.loongarch.org:2020/archlinux/sources/llvm-${pkgver}-${_rdate}.tar.xz
+        don-t-accept-nullptr-as-GEP-element-type.patch
+        no-strict-aliasing-DwarfCompileUnit.patch
+        disable-bswap-for-spir.patch
         llvm-config.h)
-sha256sums=('050922ecaaca5781fdf6631ea92bc715183f202f9d2f15147226f023414f619a'
-            'SKIP'
-            'ee9baf6df05474083857044d92f26f59d3ee709cdf82ba3bdb2792e6645f71d9'
+sha256sums=('5af8782456df8199da714978a9a0759e395d6f4756d48c20bf7e42ec5e5881b5'
+            'a7e902a7612d0fdabe436a917468b043cc296bc89d8954bfc3126f737beb9ac4'
+            'd1eff24508e35aae6c26a943dbaa3ef5acb60a145b008fd1ef9ac6f6c4faa662'
+            'af163392fbc19d65d11ab4b1510a2eae39b417d6228023b3ba5395b138bb41f5'
             '597dc5968c695bbdbb0eac9e8eb5117fcd2773bc91edf5ec103ecffffab8bc48')
 validpgpkeys=('474E22316ABF4785A88C6E8EA2C794A986419D8A') # Tom Stellard <tstellar@redhat.com>
 
@@ -32,29 +38,25 @@ prepare() {
 build() {
   cd llvm-$pkgver.src/build
 
-  local cmake_args=(
-    -G Ninja
-    -DCMAKE_BUILD_TYPE=Release
-    -DCMAKE_INSTALL_DOCDIR=share/doc
-    -DCMAKE_INSTALL_PREFIX=/usr
-    -DCMAKE_SKIP_RPATH=ON
+#-DLLVM_TARGETS_TO_BUILD="AArch64;AMDGPU;ARM;LoongArch;RISCV;Mips;X86;WebAssembly;BPF"
+
+  cmake .. -G Ninja \
+    -DCMAKE_BUILD_TYPE=Release \
+    -DCMAKE_INSTALL_PREFIX=/usr \
+    -DCMAKE_SKIP_RPATH=ON \
+    -DLLVM_HOST_TRIPLE=$CHOST \
+    -DLLVM_BUILD_LLVM_DYLIB=ON \
+    -DLLVM_LINK_LLVM_DYLIB=ON \
+    -DLLVM_INSTALL_UTILS=ON \
+    -DLLVM_ENABLE_RTTI=ON \
+    -DLLVM_ENABLE_FFI=ON \
+    -DLLVM_BUILD_TESTS=ON \
+    -DLLVM_BUILD_DOCS=ON \
+    -DLLVM_ENABLE_SPHINX=ON \
+    -DLLVM_ENABLE_DOXYGEN=OFF \
+    -DSPHINX_WARNINGS_AS_ERRORS=OFF \
     -DLLVM_BINUTILS_INCDIR=/usr/include
-    -DLLVM_BUILD_DOCS=ON
-    -DLLVM_BUILD_LLVM_DYLIB=ON
-    -DLLVM_BUILD_TESTS=ON
-    -DLLVM_ENABLE_BINDINGS=OFF
-    -DLLVM_ENABLE_FFI=ON
-    -DLLVM_ENABLE_RTTI=ON
-    -DLLVM_ENABLE_SPHINX=ON
-    -DLLVM_HOST_TRIPLE=$CHOST
-    -DLLVM_INCLUDE_BENCHMARKS=OFF
-    -DLLVM_INSTALL_UTILS=ON
-    -DLLVM_LINK_LLVM_DYLIB=ON
-    -DLLVM_USE_PERF=ON
-    -DSPHINX_WARNINGS_AS_ERRORS=OFF
-  )
-  cmake .. "${cmake_args[@]}"
-  ninja
+  ninja all #ocaml_doc
 }
 
 check() {
@@ -78,6 +80,11 @@ package_llvm() {
   # The runtime libraries go into llvm-libs
   mv -f "$pkgdir"/usr/lib/lib{LLVM,LTO,Remarks}*.so* "$srcdir"
   mv -f "$pkgdir"/usr/lib/LLVMgold.so "$srcdir"
+
+  # OCaml bindings go to a separate package
+  rm -rf "$srcdir"/ocaml.{lib,doc}
+  #mv "$pkgdir/usr/lib/ocaml" "$srcdir/ocaml.lib"
+  #mv "$pkgdir/usr/share/doc/$pkgname/ocaml-html" "$srcdir/ocaml.doc"
 
   if [[ $CARCH == x86_64 ]]; then
     # Needed for multilib (https://bugs.archlinux.org/task/29951)

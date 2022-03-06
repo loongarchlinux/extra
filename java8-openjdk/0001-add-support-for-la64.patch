@@ -1,0 +1,125 @@
+From d9d61093bb5f9c2d979995ece4d17a61f86140dc Mon Sep 17 00:00:00 2001
+From: Xiaotian Wu <wuxiaotian@loongson.cn>
+Date: Sun, 5 Jun 2022 12:49:56 +0800
+Subject: [PATCH] add support for la64
+
+---
+ common/autoconf/build-aux/config.guess |  9 +++++++++
+ common/autoconf/generated-configure.sh | 12 ++++++++++++
+ common/autoconf/platform.m4            |  7 +++++++
+ hotspot/src/os/linux/vm/os_linux.cpp   |  8 +++++++-
+ 4 files changed, 35 insertions(+), 1 deletion(-)
+
+diff --git a/common/autoconf/build-aux/config.guess b/common/autoconf/build-aux/config.guess
+index 355c91e4eb..32b2630c88 100644
+--- a/common/autoconf/build-aux/config.guess
++++ b/common/autoconf/build-aux/config.guess
+@@ -30,6 +30,15 @@
+ DIR=`dirname $0`
+ OUT=`. $DIR/autoconf-config.guess`
+ 
++# Test and fix LoongArch64.
++if [ "x$OUT" = x ]; then
++  if [ `uname -s` = Linux ]; then
++    if [ `uname -m` = loongarch64 ]; then
++      OUT=loongarch64-unknown-linux-gnu
++    fi
++  fi
++fi
++
+ # Test and fix solaris on x86_64
+ echo $OUT | grep i386-pc-solaris > /dev/null 2> /dev/null
+ if test $? = 0; then
+diff --git a/common/autoconf/generated-configure.sh b/common/autoconf/generated-configure.sh
+index 71fabf4dbb..a172092ee0 100644
+--- a/common/autoconf/generated-configure.sh
++++ b/common/autoconf/generated-configure.sh
+@@ -13679,6 +13679,12 @@ test -n "$target_alias" &&
+       VAR_CPU_BITS=64
+       VAR_CPU_ENDIAN=little
+       ;;
++    loongarch64)
++      VAR_CPU=loongarch64
++      VAR_CPU_ARCH=loongarch
++      VAR_CPU_BITS=64
++      VAR_CPU_ENDIAN=little
++      ;;
+     powerpc)
+       VAR_CPU=ppc
+       VAR_CPU_ARCH=ppc
+@@ -13817,6 +13823,12 @@ $as_echo "$OPENJDK_BUILD_OS-$OPENJDK_BUILD_CPU" >&6; }
+       VAR_CPU_BITS=64
+       VAR_CPU_ENDIAN=little
+       ;;
++    loongarch64)
++      VAR_CPU=loongarch64
++      VAR_CPU_ARCH=loongarch
++      VAR_CPU_BITS=64
++      VAR_CPU_ENDIAN=little
++      ;;
+     powerpc)
+       VAR_CPU=ppc
+       VAR_CPU_ARCH=ppc
+diff --git a/common/autoconf/platform.m4 b/common/autoconf/platform.m4
+index 51df988f61..c303167b69 100644
+--- a/common/autoconf/platform.m4
++++ b/common/autoconf/platform.m4
+@@ -54,6 +54,12 @@ AC_DEFUN([PLATFORM_EXTRACT_VARS_FROM_CPU],
+       VAR_CPU_BITS=64
+       VAR_CPU_ENDIAN=little
+       ;;
++    loongarch64)
++      VAR_CPU=loongarch64
++      VAR_CPU_ARCH=loongarch
++      VAR_CPU_BITS=64
++      VAR_CPU_ENDIAN=little
++      ;;
+     powerpc)
+       VAR_CPU=ppc
+       VAR_CPU_ARCH=ppc
+@@ -377,6 +383,7 @@ AC_DEFUN([PLATFORM_SETUP_LEGACY_VARS],
+   case "${OPENJDK_TARGET_CPU}" in
+     ppc)     ZERO_ARCHDEF=PPC32 ;;
+     ppc64)   ZERO_ARCHDEF=PPC64 ;;
++    loongarch64) ZERO_ARCHDEF=LOONGARCH64;;
+     s390*)   ZERO_ARCHDEF=S390  ;;
+     sparc*)  ZERO_ARCHDEF=SPARC ;;
+     x86_64*) ZERO_ARCHDEF=AMD64 ;;
+diff --git a/hotspot/src/os/linux/vm/os_linux.cpp b/hotspot/src/os/linux/vm/os_linux.cpp
+index 2d3880b363..76650a6579 100644
+--- a/hotspot/src/os/linux/vm/os_linux.cpp
++++ b/hotspot/src/os/linux/vm/os_linux.cpp
+@@ -1953,6 +1953,9 @@ void * os::dll_load(const char *filename, char *ebuf, int ebuflen)
+   #ifndef EM_AARCH64
+   #define EM_AARCH64    183               /* ARM AARCH64 */
+   #endif
++  #ifndef EM_LOONGARCH
++  #define EM_LOONGARCH  258               /* LoongArch */
++  #endif
+ 
+   static const arch_t arch_array[]={
+     {EM_386,         EM_386,     ELFCLASS32, ELFDATA2LSB, (char*)"IA 32"},
+@@ -1976,6 +1979,7 @@ void * os::dll_load(const char *filename, char *ebuf, int ebuflen)
+     {EM_PARISC,      EM_PARISC,  ELFCLASS32, ELFDATA2MSB, (char*)"PARISC"},
+     {EM_68K,         EM_68K,     ELFCLASS32, ELFDATA2MSB, (char*)"M68k"},
+     {EM_AARCH64,     EM_AARCH64, ELFCLASS64, ELFDATA2LSB, (char*)"AARCH64"},
++    {EM_LOONGARCH,   EM_LOONGARCH, ELFCLASS64, ELFDATA2LSB, (char*)"LoongArch"},
+   };
+ 
+   #if  (defined IA32)
+@@ -2008,9 +2012,11 @@ void * os::dll_load(const char *filename, char *ebuf, int ebuflen)
+     static  Elf32_Half running_arch_code=EM_68K;
+   #elif  (defined AARCH64)
+     static  Elf32_Half running_arch_code=EM_AARCH64;
++  #elif  (defined LOONGARCH)
++    static  Elf32_Half running_arch_code=EM_LOONGARCH;
+   #else
+     #error Method os::dll_load requires that one of following is defined:\
+-         IA32, AMD64, IA64, __sparc, __powerpc__, ARM, S390, ALPHA, MIPS, MIPSEL, PARISC, M68K, AARCH64
++         IA32, AMD64, IA64, __sparc, __powerpc__, ARM, S390, ALPHA, LOONGARCH, MIPS, MIPSEL, PARISC, M68K, AARCH64
+   #endif
+ 
+   // Identify compatability class for VM's architecture and library's architecture
+-- 
+2.35.1
+

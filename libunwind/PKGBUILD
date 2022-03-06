@@ -13,15 +13,23 @@ url='https://www.nongnu.org/libunwind/'
 license=('GPL')
 depends=('xz' 'zlib')
 makedepends=('texlive-core')
-source=("https://download.savannah.gnu.org/releases/$pkgname/$pkgname-$pkgver.tar.gz"{,.sig})
+source=("https://download.savannah.gnu.org/releases/$pkgname/$pkgname-$pkgver.tar.gz"{,.sig}
+    libunwind-la64.patch)
 sha512sums=('1d17dfb14f99a894a6cda256caf9ec481c14068aaf8f3a85fa3befa7c7cca7fca0f544a91a3a7c2f2fc55bab19b06a67ca79f55ac9081151d94478c7f611f8f7'
-            'SKIP')
+            'SKIP'
+            '2534da187ca7b4a2706cb79d90e455ccfd252f1a514adeb70f5717b2220339b051af177e1b40ba119b4a1fddc807ca491ca2bea9302528e45c037bab0c1d7f51')
 validpgpkeys=('5C96BDEAF5F47FB02BD4F6B965D98560914F3F48'  # Arun Sharma
               '1675C8DA2EF907FB116EB709EC52B396E6874AF2'  # Dave Watson
               '75D2CFC56CC2E935A4143297015A268A17D55FA4') # Dave Watson
 
+prepare() {
+	cd "$pkgname-$pkgver"
+  patch -p1 -i $srcdir/libunwind-la64.patch
+}
+
 build() {
   cd $pkgname-$pkgver
+  autoreconf -ifv
   ./configure --prefix=/usr
   sed -i -e 's/ -shared / -Wl,-O1,--as-needed\0/g' libtool
   make
