@@ -3,7 +3,7 @@
 # Contributor: damir <damir@archlinux.org>
 
 pkgname=fluidsynth
-pkgver=2.2.5
+pkgver=2.2.7
 pkgrel=1
 pkgdesc="A real-time software synthesizer based on the SoundFont 2 specifications"
 arch=(loongarch64 x86_64)
@@ -14,10 +14,11 @@ depends=(glibc sdl2)
 makedepends=(alsa-lib cmake dbus doxygen glib2 jack ladspa libinstpatch
 libpulse libsndfile portaudio readline systemd-libs)
 provides=(libfluidsynth.so soundfont-synthesizer)
-backup=("etc/conf.d/$pkgname")
-source=("$pkgname-$pkgver.tar.gz::https://github.com/${pkgname}/${pkgname}/archive/v$pkgver.tar.gz")
-sha512sums=('9ba96da560d3e0a3e38febc6f10d2b3d8019b63ffa0a4c6fa9032efd019333df0367bdd3056faba22517f59f4ef27b18d52429606ed2b8306f69778fd755beb2')
-b2sums=('a658e5fb66ebb091560d9e0b8bddd99ec7e7e84c58d9074057fd612a2eb0abf637778ea06c3481dd4d5179a917d47a08f25533d9002c1a915037a83279e2381a')
+backup=(etc/conf.d/$pkgname)
+options=(debug)
+source=($pkgname-$pkgver.tar.gz::https://github.com/$pkgname/$pkgname/archive/v$pkgver.tar.gz)
+sha512sums=('62709f96fa07bbafb9b907438da7376abdf1a4e679cd2b105c5bca257f1ff62c18bd4c646ef2ccba64ca5273604da996fb2caaf61eeee44686bf45fef1ed83a7')
+b2sums=('fd53603947ddf5a76676cfc3d77b1d904146ec7c30ab6e54a2c32cae0e76ec4b66397506072cac277febdd1b799801d5b13c7b37cc0ea4a545fae26077a1d881')
 
 build() {
   cmake -DCMAKE_INSTALL_PREFIX=/usr \
@@ -28,7 +29,7 @@ build() {
         -DLIB_SUFFIX="" \
         -Wno-dev \
         -B build \
-        -S "${pkgname}-${pkgver}"
+        -S $pkgname-$pkgver
   make -C build VERBOSE=1
 }
 
@@ -43,9 +44,9 @@ package() {
 
   make -C build DESTDIR="$pkgdir" install
   # systemd user unit
-  install -vDm 644 "build/${pkgname}.service" -t "$pkgdir/usr/lib/systemd/user/"
+  install -vDm 644 build/$pkgname.service -t "$pkgdir/usr/lib/systemd/user/"
   # system-wide configuration file
-  install -vDm 644 "build/${pkgname}.conf" "${pkgdir}/etc/conf.d/${pkgname}"
+  install -vDm 644 build/$pkgname.conf "$pkgdir/etc/conf.d/$pkgname"
   # docs
-  install -vDm 644 "${pkgname}-${pkgver}/"{AUTHORS,ChangeLog,{CONTRIBUTING,README}.md,THANKS,TODO} -t "${pkgdir}/usr/share/doc/${pkgname}"
+  install -vDm 644 $pkgname-$pkgver/{AUTHORS,ChangeLog,{CONTRIBUTING,README}.md,THANKS,TODO} -t "$pkgdir/usr/share/doc/$pkgname/"
 }

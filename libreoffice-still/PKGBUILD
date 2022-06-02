@@ -10,9 +10,9 @@ _google_default_client_secret=0ZChLK6AxeA3Isu96MkwqDR4
 
 pkgbase=libreoffice-still
 pkgname=('libreoffice-still-sdk' 'libreoffice-still')
-_LOver=7.2.5.2
-pkgver=7.2.5
-pkgrel=4
+_LOver=7.2.7.2
+pkgver=7.2.7
+pkgrel=1
 arch=('loongarch64' 'x86_64')
 license=('LGPL3')
 url="https://www.libreoffice.org/"
@@ -59,10 +59,11 @@ source=(${_mirror}/libreoffice{,-help,-translations}-${_LOver}.tar.xz{,.asc}
 	${_additional_source_url2}/odfvalidator-1.2.0-incubating-SNAPSHOT-jar-with-dependencies-971c54fd38a968f5860014b44301872706f9e540.jar # for test suite
 	${_additional_source_url2}/f543e6e2d7275557a839a164941c0a86e5f2c3f2a0042bfc434c88c6dde9e140-opens___.ttf
 	${_additional_source_url2}/185d60944ea767075d27247c3162b3bc-unowinreg.dll
+	poppler-22.03.0.patch
+	poppler-22.04.0.patch
 	make-pyuno-work-with-system-wide-module-install.diff
 	mdds-2.0-and-orcus-0.17.diff
 	0001_drop_the_SolarMutex_before_QApplication.patch
-	0002_update_kf5_include_lib_check.patch
 	soffice-template.desktop.in
 	libreoffice-still.sh libreoffice-still.csh)
 noextract=(35c94d2df8893241173de1d16b6034c0-swingExSrc.zip
@@ -86,11 +87,11 @@ noextract=(35c94d2df8893241173de1d16b6034c0-swingExSrc.zip
            185d60944ea767075d27247c3162b3bc-unowinreg.dll
 )
 validpgpkeys=('C2839ECAD9408FBE9531C3E9F434A1EFAFEEAEA3') # LibreOffice Build Team (CODE SIGNING KEY) <build@documentfoundation.org>
-sha256sums=('67c1bfb059d433286b0252a915627b33af63bb5f4b6ec9509d13b9dd475512a7'
+sha256sums=('6deaf83a0c2b83c5c8c53c2a9443e2ece51e19469494be2027d4fef3a61bc6a2'
             'SKIP'
-            'eaf1112d68747e441c491902dfb7f0d8706ac55b5bafd90f1213b25978ccadf3'
+            'a4d87b16c05e892b741db9683474692c25907f8df162d5c27ba65bdc8fcb6fe2'
             'SKIP'
-            'f6b9ee4627ec117ed101476c5fa555c3fc504ba759792dd16ca9e80b7f6e31df'
+            '2377014eea11b41e998545aae875ee32df097e869ea329f1be07a44c28595d04'
             'SKIP'
             '64585ac36a81291a58269ec5347e7e3e2e8596dbacb9221015c208191333c6e1'
             '1fb458d6aab06932693cc8a9b6e4e70944ee1ff052fa63606e3131df34e21753'
@@ -111,10 +112,11 @@ sha256sums=('67c1bfb059d433286b0252a915627b33af63bb5f4b6ec9509d13b9dd475512a7'
             '984f2a479df79e27e7b01a5815ac53ae64e07746b882262d8a64566494515504'
             'f543e6e2d7275557a839a164941c0a86e5f2c3f2a0042bfc434c88c6dde9e140'
             'eafde646a7dbe46d20c291685b0beac2382174d78d66ee990e229a1bf6e6cec6'
+            'e61e2a266c7a4374377475254a2f095c1ce2376980b301955a4e5a0d32d3c25b'
+            'caaef7919c6296ab93c7d02607503f91ec965387d038779c0aba9fce78b8e456'
             'c463654a73ecfbc242ff109726fb4faecdbfb3d91affafe919b24bea65afb563'
-            'fd73edaa09a48e2b2c4f4f32af68f1ef01cc181d49a5dfc1f65a5ad4883d7db8'
+            'fd84c4920b25a6ec4f5f08c852ae10a63a3d19c07d83916964f7fa23597d33dd'
             '81a8551aaea0ab1750d36fb8bfbd04340a43eaab349a43c1384d21ef6504ab47'
-            '1cc5aeac9b8e91786701727d97b58039afc3db3dbc7977a3651d3263240798b3'
             'd0be8099cbee3c9dfda694a828149b881c345b204ab68826f317580aafb50879'
             'cd1b25ff390e436c6bffa65c6e12382236e3ccbf8d3aae51b1b59bcaed79fd8a'
             'de20f36d45f0fecc2d94176dd3ec7226ab07fa8ffb9b0bc73c200349a9273de1')
@@ -135,6 +137,9 @@ prepare() {
 	rm "${srcdir}"/ext_sources/185d60944ea767075d27247c3162b3bc-unowinreg.dll
 	cp -f "${srcdir}"/185d60944ea767075d27247c3162b3bc-unowinreg.dll "${srcdir}"/ext_sources
 
+	patch -Np1 -i "${srcdir}"/poppler-22.03.0.patch
+	patch -Np0 -i "${srcdir}"/poppler-22.04.0.patch
+
 	# fix not upstreamable pyuno paths - FS#54250
 	patch -Np1 -i "${srcdir}"/make-pyuno-work-with-system-wide-module-install.diff
 
@@ -143,10 +148,6 @@ prepare() {
 
 	# fix crash on start - FS#73471
 	patch -Np1 -i "${srcdir}"/0001_drop_the_SolarMutex_before_QApplication.patch
-
-	# fix kf5 chances
-	# https://cgit.freedesktop.org/libreoffice/core/commit/?id=5fd5e42bf28a7910321c6b6d76257e7386839fbc
-	patch -Np1 -i "${srcdir}"/0002_update_kf5_include_lib_check.patch
 
 	#use the CFLAGS but remove the LibO overridden ones
 	for i in $CFLAGS; do

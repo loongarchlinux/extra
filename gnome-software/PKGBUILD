@@ -1,26 +1,28 @@
 # Maintainer: Jan Alexander Steffens (heftig) <heftig@archlinux.org>
+# Contributor: Fabian Bornschein <fabiscafe-cat-mailbox-dog-org>
 # Contributor: Jan de Groot <jgc@archlinux.org>
 # Contributor: Yosef Or Boczko <yoseforb@gnome.org>
 
 pkgbase=gnome-software
 pkgname=(gnome-software gnome-software-packagekit-plugin)
-pkgver=41.4
+pkgver=42.2
 pkgrel=1
 pkgdesc="GNOME Software Tools"
 url="https://wiki.gnome.org/Apps/Software/"
 arch=(loongarch64 x86_64)
-license=(GPL2)
+license=(GPL)
 makedepends=(appstream gsettings-desktop-schemas libpackagekit-glib flatpak
-             fwupd docbook-xsl git gobject-introspection gspell gtk-doc meson
-             valgrind gnome-online-accounts libxmlb malcontent libhandy
+             fwupd docbook-xsl git gobject-introspection gtk-doc meson
+             valgrind gnome-online-accounts libxmlb malcontent gtk4 libadwaita
              libsysprof-capture)
-_commit=c6ab7cfd7b022b1dde128b12e873f79dad870033  # tags/41.4^0
+options=(debug)
+_commit=09cafc9ef92587b3d3326d3fa751328c0a28dcf9  # tags/42.2^0
 source=("git+https://gitlab.gnome.org/GNOME/gnome-software.git#commit=$_commit")
 sha256sums=('SKIP')
 
 pkgver() {
   cd $pkgbase
-  git describe --tags | sed 's/^GNOME_SOFTWARE_//;s/_/./g;s/[^-]*-g/r&/;s/-/+/g'
+  git describe --tags | sed 's/[^-]*-g/r&/;s/-/+/g'
 }
 
 prepare() {
@@ -31,13 +33,13 @@ build() {
   # Ensure static library is non-LTO compatible
   CFLAGS+=" -ffat-lto-objects"
 
-  arch-meson $pkgbase build
+  # Building with soup3 requires flatpak to be built with soup3
+  arch-meson $pkgbase build -D soup2=true
   meson compile -C build
 }
 
 check() {
-  # build container troubles
-  meson test -C build --print-errorlogs || :
+  meson test -C build --print-errorlogs
 }
 
 _pick() {
@@ -52,8 +54,8 @@ _pick() {
 
 package_gnome-software() {
   groups=(gnome)
-  depends=(libxmlb gsettings-desktop-schemas gspell libpackagekit-glib
-           gnome-online-accounts appstream libhandy libsysprof-capture)
+  depends=(libxmlb gsettings-desktop-schemas libpackagekit-glib gtk4 libadwaita
+           gnome-online-accounts appstream libsysprof-capture)
   optdepends=('flatpak: Flatpak support plugin'
               'fwupd: fwupd support plugin'
               'malcontent: Parental control plugin')
@@ -62,7 +64,6 @@ package_gnome-software() {
 
   local pkglibdir="$pkgdir/usr/lib/gnome-software"
   _pick packagekit-plugin "$pkglibdir"/plugins-*/libgs_plugin_packagekit*.so
-  _pick packagekit-plugin "$pkglibdir"/plugins-*/libgs_plugin_systemd-updates.so
 }
 
 package_gnome-software-packagekit-plugin() {

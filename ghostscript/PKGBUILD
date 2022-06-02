@@ -2,8 +2,8 @@
 
 pkgbase=ghostscript
 pkgname=(ghostscript ghostxps ghostpcl)
-pkgver=9.55.0
-pkgrel=4
+pkgver=9.56.1
+pkgrel=1
 pkgdesc="An interpreter for the PostScript language"
 url="https://www.ghostscript.com/"
 arch=('loongarch64' 'x86_64')
@@ -15,15 +15,13 @@ options=('debug')
 # https://github.com/ArtifexSoftware/ghostpdl-downloads/releases
 source=(https://github.com/ArtifexSoftware/ghostpdl-downloads/releases/download/gs${pkgver//./}/ghostpdl-${pkgver}.tar.xz
         #https://github.com/ArtifexSoftware/ghostpdl-downloads/releases/download/ghostpdl-${pkgver/.0//}/ghostpdl-${pkgver}.tar.xz
-        2010_add_build_timestamp_setting.patch
-        fix-gx_default_copy_alpha.patch::"https://git.ghostscript.com/?p=ghostpdl.git;a=patch;h=d9d8db23e862707795e76ea8f8cdcf7434b2df65")
-sha512sums=('d23864be1548ce7c7ae61398f52c34c5485dfe74e78bf7ef16c8fa5690e2ea857cc9795409a70feda5ff78c27b3c2bbc0e0710d190763fca77137ee9c56a0fed'
-            'cd7794ee4f28b11177021b950196385200b610127ed6cb94a45e3202b690b721a0dfcc0276ff39448d4dab64c1b31a76e6c323696a8315aad9edc22077f18a3d'
-            '94a63b2d33cf1412bfba75d4cab31c5d6f00846b2e608ad82200ff0d55a11bb80d827c12d4edd1f38cef029cae6cdcd5e39cd98791a17bf356119ba8f74fd0a9')
+        2010_add_build_timestamp_setting.patch)
+sha512sums=('7eb3e6b8de83d0e31cc976151164326cdc110741eb2e9cddb59ab9590e15a6535659e50dea4feb643b9b3b6d90a26d01fe0326a400833e82b22f0091146151cc'
+            'cd7794ee4f28b11177021b950196385200b610127ed6cb94a45e3202b690b721a0dfcc0276ff39448d4dab64c1b31a76e6c323696a8315aad9edc22077f18a3d')
+
 
 ### update jbig2dec first! ###
 
-### make sure to rebuild core/groff on version updates - https://bugs.archlinux.org/task/67751 ###
 
 prepare() {
   cd ghostpdl-${pkgver}
@@ -62,9 +60,6 @@ prepare() {
 
   # Debian: # allow the build timestamp to be externally set
   patch -Np1 -i ../2010_add_build_timestamp_setting.patch
-
-  # Fix build of asymptote
-  patch -Np1 -i ../fix-gx_default_copy_alpha.patch
 }
 
 build() {
@@ -76,6 +71,7 @@ build() {
               --with-x \
               --with-drivers=ALL \
               --with-fontpath=/usr/share/fonts/gsfonts \
+              --without-versioned-path \
               --enable-fontconfig \
               --enable-freetype \
               --enable-openjpeg \
@@ -90,7 +86,8 @@ package_ghostscript() {
               'gtk3:              needed for gsx')
 
   cd ghostpdl-${pkgver}
-  make DESTDIR="${pkgdir}"  install-gs install-so-gs
+  make DESTDIR="${pkgdir}" install-gs install-so-gs
+
   # replace statically linked gs binary with symlink to dynamically linked gsc
   rm -v "${pkgdir}"/usr/bin/gs
   ln -s gsc "${pkgdir}"/usr/bin/gs
@@ -108,11 +105,11 @@ package_ghostxps() {
   cd ghostpdl-${pkgver}
   make DESTDIR="${pkgdir}" install-gxps install-so-gxps
   rm -r "${pkgdir}"/usr/include
-  
-  install -Dt "${pkgdir}"/usr/share/licenses/${pkgname} -m644 LICENSE
 
   # fix file conflict - FS#70238
   rm -r "${pkgdir}"/usr/lib/libgxps.so
+  
+  install -Dt "${pkgdir}"/usr/share/licenses/${pkgname} -m644 LICENSE
 }
 
 package_ghostpcl() {

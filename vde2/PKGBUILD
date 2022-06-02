@@ -1,52 +1,42 @@
+# Maintainer: David Runge <dvzrv@archlinux.org>
+# Contributor: Tobias Powalowski <tpowa@archlinux.org>
 # Contributor: Sergej Pupykin
-# Maintainer: Tobias Powalowski <tpowa@archlinux.org>
+
+_name=vde-2
 pkgname=vde2
-pkgver=2.3.2
-pkgrel=20
+pkgver=2.3.3
+pkgrel=1
 pkgdesc="Virtual Distributed Ethernet for emulators like qemu"
-url="https://sourceforge.net/projects/vde/"
-license=("GPL" "LGPL" "CUSTOM")
-arch=('loongarch64' 'x86_64')
-depends=('bash' 'libpcap' 'openssl')
-makedepends=('python')
-source=(https://downloads.sourceforge.net/vde/$pkgname-$pkgver.tar.bz2
-        vde_cryptcab-compile-against-openssl-1.1.0.patch
-        dhcpd.conf.sample
-        iptables.rules.sample
-        vde-config.sample
-        vde-connection.sample
-        format-security.patch)
-install=vde2.install
-options=(!makeflags)
-sha256sums=('cbea9b7e03097f87a6b5e98b07890d2275848f1fe4b9fcda77b8994148bc9542'
-            '110370a5f48f1e241d43f8bb5e3ea6d2ca7d2c1949e1cf672d03bfc897f2e11f'
-            'da0e2766dc63069da929c28126831ad5fdddcc4a04105a21217d78832c7ca1bc'
-            '99076d7466cd99673dbe91ef83865187e7868177959b38e125df63eea957f83e'
-            '5727c215646333c37b26388146cd3e6b3814b88d60d54051d7da99e00c0aef87'
-            '5139110ed6d5d1174bf12971512dac5196d9d07df46dd393d7b1cd083118fe9b'
-            'a3207c93c4be4848e09a0b8618dcdc4e9d88a99153e95d3fcdd690efa6237a79')
+arch=(loongarch64 x86_64)
+url="https://github.com/virtualsquare/vde-2"
+license=(GPL2 LGPL2.1)
+depends=(bash glibc)
+makedepends=(libpcap wolfssl)
+provides=(libvdehist.so libvdemgmt.so libvdeplug.so libvdesnmp.so)
+source=($pkgname-$pkgver.tar.gz::https://github.com/virtualsquare/$_name/archive/refs/tags/v$pkgver.tar.gz)
+options=(debug)
+sha512sums=('d0495aa700984dcc82f85cf7c8125cc10505a8a077fceec45b7fd2bec9c389966381682842e886469fa49239badd9442403d091c2ae5282685085e8262396387')
+b2sums=('e3ed7423edc03a6af09967484613c0e2a701f74a4323eeab720cabe9a899120023425527054662ee1dbd207327b7e6dd375bceb4999fd708666df13c08acf348')
 
 prepare() {
-  cd $pkgname-$pkgver
-  patch -Np1 -i ../vde_cryptcab-compile-against-openssl-1.1.0.patch
-# Fix format-security build errors
-  patch -p2 -i ../format-security.patch
+  cd $_name-$pkgver
+  autoreconf -fiv
 }
 
 build() {
-  cd $pkgname-$pkgver
-  ./configure --prefix=/usr --sbindir=/usr/bin --sysconfdir=/etc --libexecdir=/usr/lib/vde2 \
-             --enable-experimental
-  make
+  cd $_name-$pkgver
+  ./configure \
+    --prefix=/usr \
+    --sbindir=/usr/bin \
+    --sysconfdir=/etc \
+    --libexecdir=/usr/lib/$pkgname \
+    --enable-experimental
+  make V=1
 }
 
 package() {
-  cd $pkgname-$pkgver 
-  make prefix="$pkgdir/usr" sysconfdir="$pkgdir/etc" sbindir="$pkgdir/usr/bin" libexecdir="$pkgdir/usr/lib/vde2" install
-  install -D -m 644 ../vde-config.sample "$pkgdir"/etc/vde/vde-config.sample
-  install -D -m 644 ../vde-connection.sample "$pkgdir"/etc/vde/vde-connection.sample
-  install -D -m 644 ../dhcpd.conf.sample "$pkgdir"/usr/share/vde2/dhcpd.conf.sample
-  install -D -m 644 ../iptables.rules.sample "$pkgdir"/usr/share/vde2/iptables.rules.sample
-  # install slirp license
-  install -D -m 644 COPYING.slirpvde "$pkgdir"/usr/share/licenses/vde2/COPYING.slirpvde
+  depends+=(libpcap.so libwolfssl.so)
+
+  make DESTDIR="$pkgdir" install -C $_name-$pkgver
+  install -vDm 644 $_name-$pkgver/{README,Changelog,doc/{README.*,*-HOWTO}} -t "$pkgdir/usr/share/doc/$pkgname/"
 }

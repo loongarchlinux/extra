@@ -1,7 +1,7 @@
 # Maintainer: Johannes Löthberg <johannes@kyriasis.com>
 
 pkgname=prometheus
-pkgver=2.33.4
+pkgver=2.36.0
 pkgrel=1
 
 pkgdesc='An open-source systems monitoring and alerting toolkit'
@@ -10,7 +10,7 @@ arch=('loongarch64' 'x86_64')
 license=('Apache')
 
 depends=('glibc')
-makedepends=('go' 'git' 'npm' 'nodejs' 'yamllint')
+makedepends=('go' 'git' 'npm' 'nodejs' 'yamllint' 'typescript' 'yarn')
 
 options=(!lto)
 backup=('etc/prometheus/prometheus.yml' 'etc/conf.d/prometheus')
@@ -20,7 +20,7 @@ source=("prometheus-v$pkgver.tar.gz::https://github.com/prometheus/prometheus/ar
         prometheus.sysusers
         prometheus.conf)
 
-sha256sums=('b6742ef53fc6971d436c3635515d81accb669b9bd8090217cef1ca806db3a478'
+sha256sums=('c7b3b17edc22f93c4573b42c7c892123036b518f6058a0a97637b4190f74bc3f'
             'f358986865bd3d06dc47a265aeb3b5ef64aa644e831f07731c2fc7af64d9e98f'
             '2747fabb4e56b808361eb7dd7acf9729ab8973d1ebe2f857dd56f6c71f71e45f'
             '6d32deb125381cbebac11b6953a7d9a65eb7e50f209dc1e22c63facf678a3070')
@@ -35,19 +35,13 @@ build() {
     -X github.com/prometheus/common/version.BuildUser=someone@builder \
     -X github.com/prometheus/common/version.BuildDate=$(date -u '+%Y%m%d-%H:%M:%S' --date=@${SOURCE_DATE_EPOCH})"
 
-  # The makefile seems to not be able to execute npm properly, so run the make assets target manually
-  cd web/ui/module/codemirror-promql
-  npm install
-  npm run build
-
   cd $srcdir/prometheus-$pkgver/web/ui
   GOOS= GOARCH= go generate -x -v
 
   cd $srcdir/prometheus-$pkgver
-  # Build the react app, normally a part of the assets target
-#make web/ui/static/react
-  make ui-install
-  make ui-build
+  # Build the react app
+  make ui-install # run install first as otherwise the makefile has a race condition......
+  make assets
 
   go build \
     -trimpath \
@@ -68,7 +62,7 @@ build() {
 check() {
   cd prometheus-$pkgver
 
-  go test -short ./...
+  GODEBUG=x509sha1=1 go test -short ./...
 }
 
 package() {
@@ -84,7 +78,7 @@ package() {
 
   # Web
   install -dm755 "$pkgdir"/usr/share/prometheus/web/ui
-  cp -R web/ui/{static,templates} "$pkgdir"/usr/share/prometheus/web/ui/
+  cp -R web/ui/static "$pkgdir"/usr/share/prometheus/web/ui/
 
   # Examples
   install -Dm644 -t "$pkgdir"/usr/share/doc/prometheus/examples documentation/examples/prometheus*.yml

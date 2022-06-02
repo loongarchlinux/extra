@@ -1,28 +1,28 @@
 # Maintainer: Jan Alexander Steffens (heftig) <heftig@archlinux.org>
 # Contributor: Jan de Groot <jgc@archlinux.org>
 
-pkgname=eog
-pkgver=41.1
-pkgrel=2
+pkgbase=eog
+pkgname=(eog eog-docs)
+pkgver=42.2
+pkgrel=1
 pkgdesc="Eye of Gnome: An image viewing and cataloging program"
 url="https://wiki.gnome.org/Apps/EyeOfGnome"
 arch=(loongarch64 x86_64)
 license=(GPL)
-depends=(gnome-desktop libexif lcms2 exempi libpeas librsvg dconf)
-makedepends=(gobject-introspection gtk-doc git meson yelp-tools systemd)
-optdepends=('eog-plugins: Additional features')
-groups=(gnome)
-_commit=54f6541e5dbd30e98756a8062d555ed0a8659b06  # tags/41.1^0
+depends=(gnome-desktop libexif lcms2 exempi libpeas librsvg libhandy)
+makedepends=(gobject-introspection gi-docgen git meson yelp-tools systemd)
+options=(debug)
+_commit=baf28eee80bad44a89d14e4742434a3fa1a96fc5  # tags/42.2^0
 source=("git+https://gitlab.gnome.org/GNOME/eog.git#commit=$_commit")
 sha256sums=('SKIP')
 
 pkgver() {
-  cd $pkgname
+  cd eog
   git describe --tags | sed 's/[^-]*-g/r&/;s/-/+/g'
 }
 
 build() {
-  arch-meson $pkgname build -D gtk_doc=true -D libportal=false
+  arch-meson eog build -D gtk_doc=true -D libportal=false
   meson compile -C build
 }
 
@@ -30,6 +30,19 @@ check() {
   meson test -C build --print-errorlogs
 }
 
-package() {
+package_eog() {
+  optdepends=('eog-plugins: Additional features')
+  groups=(gnome)
+
   meson install -C build --destdir "$pkgdir"
+
+  mkdir -p doc/usr/share
+  mv {"$pkgdir",doc}/usr/share/gtk-doc
+}
+
+package_eog-docs() {
+  pkgdesc+=" (documentation)"
+  depends=()
+
+  mv doc/* "$pkgdir"
 }

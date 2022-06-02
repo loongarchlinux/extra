@@ -2,20 +2,24 @@
 # Contributor: Jan de Groot <jgc@archlinux.org>
 
 pkgname=evolution-data-server
-pkgver=3.42.4
-pkgrel=2
+pkgver=3.44.2
+pkgrel=1
 pkgdesc="Centralized access to appointments and contacts"
 url="https://wiki.gnome.org/Apps/Evolution"
 arch=(loongarch64 x86_64)
-depends=(gnome-online-accounts nss krb5 libgweather libical db libgdata libphonenumber libcanberra)
+depends=(gnome-online-accounts nss krb5 libgweather-4 libical db libgdata libphonenumber
+         libcanberra)
 makedepends=(intltool gperf gobject-introspection vala gtk-doc boost git cmake ninja)
 provides=(libcamel-1.2.so libebackend-1.2.so libebook-1.2.so libebook-contacts-1.2.so
           libecal-2.0.so libedata-book-1.2.so libedata-cal-2.0.so libedataserver-1.2.so
           libedataserverui-1.2.so)
 license=(GPL)
-_commit=b031a4a8ec903ab43d50e92bbf26cff51408bb7a  # tags/3.42.4^0
-source=("git+https://gitlab.gnome.org/GNOME/evolution-data-server.git#commit=$_commit")
-sha256sums=('SKIP')
+options=(debug)
+_commit=e01c792d9a1e0d2a798efdbe108a8057c141e001  # tags/3.44.2^0
+source=("git+https://gitlab.gnome.org/GNOME/evolution-data-server.git#commit=$_commit"
+        fix-tests.diff)
+sha256sums=('SKIP'
+            '435ee829d1f821c5adc3163024057d9fdea6184d35eae87c4bd502b661f10148')
 
 pkgver() {
   cd $pkgname
@@ -24,6 +28,10 @@ pkgver() {
 
 prepare() {
   cd $pkgname
+
+  # Disable tests broken by libphonenumber update. Same reason
+  # as the already-disabled tests in the same files.
+  git apply -3 ../fix-tests.diff
 }
 
 build() {
@@ -34,14 +42,14 @@ build() {
     -DENABLE_INTROSPECTION=ON \
     -DENABLE_VALA_BINDINGS=ON \
     -DENABLE_GTK_DOC=ON \
-    -DWITH_PHONENUMBER=ON
+    -DWITH_PHONENUMBER=ON \
+    -DWITH_GWEATHER4=ON
   cmake --build build
 }
 
 check() {
-  # libedata-book tests fail because they try to
-  # mkdir /usr/lib/evolution-data-server/camel-providers
-  cmake --build build --target test || :
+  cd build
+  ctest --output-on-failure --stop-on-failure
 }
 
 package() {

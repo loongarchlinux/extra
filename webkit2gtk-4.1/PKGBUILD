@@ -2,7 +2,7 @@
 # Contributor: Eric Bélanger <eric@archlinux.org>
 
 pkgname=webkit2gtk-4.1
-pkgver=2.34.6
+pkgver=2.36.3
 pkgrel=1
 pkgdesc="Web content engine for GTK"
 url="https://webkitgtk.org"
@@ -20,9 +20,9 @@ optdepends=('geoclue: Geolocation support'
             'gst-plugins-good: media decoding'
             'gst-plugins-bad: media decoding'
             'gst-libav: nonfree media decoding')
-options=(!lto)
+options=(debug)
 source=($url/releases/webkitgtk-$pkgver.tar.xz{,.asc})
-sha256sums=('6bc8fd034aad0432a2459ce4fc7ee25ad65a4924c618bf8d93b52b0c1a84c1f6'
+sha256sums=('732fcf8c4ec644b8ed28b46ebbd7c1ebab9d9e0afea9bdf5e5d12786afc478d1'
             'SKIP')
 validpgpkeys=('D7FCF61CF9A2DEAB31D81BD3F3D322D0EC4582C3'  # Carlos Garcia Campos <cgarcia@igalia.com>
               '5AA3BC334FD7E3369E7C77B291C559DBE4C9123B') # Adrián Pérez de Castro <aperez@igalia.com>
@@ -32,6 +32,11 @@ prepare() {
 }
 
 build() {
+  # Produce minimal debug info: 4.3 GB of debug data makes the
+  # build too slow and is too much to package for debuginfod
+  CFLAGS+=' -g1'
+  CXXFLAGS+=' -g1'
+
   cmake -S webkitgtk-$pkgver -B build -G Ninja \
     -DPORT=GTK \
     -DCMAKE_BUILD_TYPE=Release \
@@ -39,6 +44,7 @@ build() {
     -DCMAKE_INSTALL_LIBDIR=lib \
     -DCMAKE_INSTALL_LIBEXECDIR=lib \
     -DCMAKE_SKIP_RPATH=ON \
+    -DUSE_SOUP2=OFF \
     -DENABLE_GTKDOC=ON \
     -DENABLE_MINIBROWSER=ON
   cmake --build build
