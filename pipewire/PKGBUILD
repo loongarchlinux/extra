@@ -6,21 +6,21 @@ pkgbase=pipewire
 pkgname=(pipewire alsa-card-profiles pipewire-docs pipewire-alsa pipewire-jack
          pipewire-pulse gst-plugin-pipewire pipewire-zeroconf pipewire-v4l2
          pipewire-x11-bell)
-_commit=ebc775674a0cf254cebd6d4694944006405807e3  # tags/0.3.51
-pkgver=0.3.51
-pkgrel=1
+_commit=3853eba32f1a354b7287f7990ba467679749532a  # tags/0.3.53
+pkgver=0.3.53
+pkgrel=2
 epoch=1
 pkgdesc="Low-latency audio/video router and processor"
 url="https://pipewire.org"
 arch=(loongarch64 x86_64)
 license=(MIT)
-makedepends=(git meson doxygen graphviz python-docutils valgrind libpulse
-             alsa-lib libusb gst-plugins-base rtkit dbus sdl2 ncurses
-             libcanberra libsndfile bluez-libs sbc libldac libfreeaptx
-             libfdk-aac avahi lilv webrtc-audio-processing libx11 libxfixes)
+makedepends=(alsa-lib bluez-libs avahi git dbus doxygen graphviz
+gst-plugins-base libcanberra libfdk-aac libfreeaptx libldac libpulse libsndfile
+libusb libx11 libxfixes lilv meson ncurses python-docutils rtkit sbc sdl2
+valgrind webrtc-audio-processing)
 checkdepends=(desktop-file-utils)
 options=(debug)
-source=("git+https://gitlab.freedesktop.org/pipewire/pipewire.git#commit=$_commit")
+source=(git+https://gitlab.freedesktop.org/pipewire/pipewire.git#commit=$_commit)
 sha256sums=('SKIP')
 
 pkgver() {
@@ -31,12 +31,16 @@ pkgver() {
 prepare() {
   cd pipewire
 
+  # https://gitlab.freedesktop.org/pipewire/pipewire/-/releases/0.3.53#distros
+  git cherry-pick -n 9af94508886b19bb398f4e2a777447ca42907c2f
+
   # remove export of LD_LIBRARY_PATH for pw-jack as it would add /usr/lib
   sed -i '/LD_LIBRARY_PATH/d' pipewire-jack/src/pw-jack.in
 }
 
 build() {
   local meson_options=(
+    -D bluez5-codec-lc3plus=disabled
     -D docs=enabled
     -D jack=disabled
     -D jack-devel=true
@@ -143,7 +147,7 @@ package_pipewire-docs() {
 
 package_pipewire-alsa() {
   pkgdesc+=" - ALSA configuration"
-  depends=(pipewire-session-manager)
+  depends=(wireplumber)
   provides=(pulseaudio-alsa)
 
   mkdir -p "$pkgdir/etc/alsa/conf.d"
@@ -159,7 +163,7 @@ package_pipewire-alsa() {
 package_pipewire-jack() {
   pkgdesc+=" - JACK support"
   license+=(GPL2)  # libjackserver
-  depends=(pipewire-session-manager libpipewire-$_ver.so sh)
+  depends=(wireplumber libpipewire-$_ver.so sh)
   optdepends=('jack-example-tools: for official JACK example-clients and tools')
   conflicts=(jack jack2)
   provides=(jack libjack.so libjackserver.so libjacknet.so)
@@ -177,7 +181,7 @@ package_pipewire-jack() {
 
 package_pipewire-pulse() {
   pkgdesc+=" - PulseAudio replacement"
-  depends=(pipewire-session-manager libpipewire-$_ver.so libpulse.so
+  depends=(wireplumber libpipewire-$_ver.so libpulse.so
            libavahi-{client,common}.so)
   provides=(pulseaudio pulseaudio-bluetooth)
   conflicts=(pulseaudio pulseaudio-bluetooth)
