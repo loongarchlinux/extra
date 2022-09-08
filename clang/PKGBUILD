@@ -2,8 +2,7 @@
 # Contributor: Jan "heftig" Steffens <jan.steffens@gmail.com>
 
 pkgname=clang
-pkgver=13.0.1
-_rdate=20220505
+pkgver=14.0.6
 pkgrel=1
 pkgdesc="C language family frontend for LLVM"
 arch=('loong64' 'x86_64')
@@ -17,19 +16,22 @@ optdepends=('openmp: OpenMP support in clang with -fopenmp'
 provides=("clang-analyzer=$pkgver" "clang-tools-extra=$pkgver")
 conflicts=('clang-analyzer' 'clang-tools-extra')
 replaces=('clang-analyzer' 'clang-tools-extra')
-_source_base=http://sources.loongarch.org:2020/archlinux/sources
-source=($_source_base/$pkgname-$pkgver-${_rdate}.tar.xz
-        $_source_base/clang-tools-extra-$pkgver-${_rdate}.tar.xz
-        $_source_base/llvm-$pkgver-${_rdate}.tar.xz
-        fix-scan-build-py-executable-lookup-path.patch
-        strip-exception-specifications-in-CFI-type-names.patch
-        enable-SSP-and-PIE-by-default.patch)
-sha256sums=('7999b3a6e1e4544fbd80cd7d643e0f16d0e71418b897432d875f3319e3830664'
-            '5166f21eaf5d69b621754ef3996cf15bf61835ff9f9b47f3dee440eb52ac3136'
-            '5af8782456df8199da714978a9a0759e395d6f4756d48c20bf7e42ec5e5881b5'
-            '578b960121c42b8db80566dcb51558409d04455b618cdd608e41b35ded36c13e'
-            '3f4a2784a4c2b2df13e03beb0b66d5805c520f2b9f16ff76e0557daeb284c8fa'
-            '67706047fc93a2e79185d344bdac48219ce042c55ddb9b9397bc98db2153ba58')
+_source_base=https://github.com/llvm/llvm-project/releases/download/llvmorg-$pkgver
+source=($_source_base/clang-$pkgver.src.tar.xz{,.sig}
+        $_source_base/clang-tools-extra-$pkgver.src.tar.xz{,.sig}
+        $_source_base/llvm-$pkgver.src.tar.xz{,.sig}
+        clang-tidy-fix-standalone-build.patch
+        enable-fstack-protector-strong-by-default.patch
+        clang-14.0.6-la64.patch)
+sha256sums=('2b5847b6a63118b9efe5c85548363c81ffe096b66c3b3675e953e26342ae4031'
+            'SKIP'
+            '7cf3b8ff56c65c4d1eae3c56883fc4a6cbc3ff9f3a1530a74d66e45d27271866'
+            'SKIP'
+            '050922ecaaca5781fdf6631ea92bc715183f202f9d2f15147226f023414f619a'
+            'SKIP'
+            '081a7ebc1ae524b13fc6be3dc73feb2c9eb7cf4b99f7f13d9ed37a688311f58a'
+            '7a9ce949579a3b02d4b91b6835c4fb45adc5f743007572fb0e28e6433e48f3a5'
+            '3690bb83ca435a6b54a99de34c583926de59d74485fb18a9abde2e3229d3b158')
 validpgpkeys+=('B6C8F98282B944E3B0D5C2530FC3042E345AD05D') # Hans Wennborg <hans@chromium.org>
 validpgpkeys+=('474E22316ABF4785A88C6E8EA2C794A986419D8A') # Tom Stellard <tstellar@redhat.com>
 
@@ -61,11 +63,9 @@ prepare() {
   mv "$srcdir/clang-tools-extra-$pkgver.src" tools/extra
   patch -Np2 -i ../enable-fstack-protector-strong-by-default.patch
 
-  # https://github.com/llvm/llvm-project/issues/49689
-  patch -Np2 -i ../clang-coroutines-ubsan.patch
-
   # https://github.com/llvm/llvm-project/issues/54116
   patch -Np0 -i ../clang-tidy-fix-standalone-build.patch
+  patch -Np2 -i ../clang-14.0.6-la64.patch
 
   # Attempt to convert script to Python 3
   2to3 -wn --no-diffs \
