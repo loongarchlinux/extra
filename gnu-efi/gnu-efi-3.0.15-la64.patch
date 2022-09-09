@@ -65,10 +65,10 @@ index 05977d2..3153ae1 100644
  		FrameBufferAddr = (UINT32)(UINT64)gop->Mode->FrameBufferBase;
 diff --git a/gnuefi/crt0-efi-loongarch64.S b/gnuefi/crt0-efi-loongarch64.S
 new file mode 100644
-index 0000000..2a2a998
+index 0000000..d819542
 --- /dev/null
 +++ b/gnuefi/crt0-efi-loongarch64.S
-@@ -0,0 +1,151 @@
+@@ -0,0 +1,155 @@
 +/*
 + * crt0-efi-loongarch64.S - PE/COFF header for LoongArch64 EFI applications
 + *
@@ -220,6 +220,10 @@ index 0000000..2a2a998
 +	addi.d	  $sp, $sp, 24
 +	jr        $ra
 +	.end	  _start
++
++#if defined(__ELF__) && defined(__linux__)
++	.section .note.GNU-stack,"",%progbits
++#endif
 diff --git a/gnuefi/elf_loongarch64_efi.lds b/gnuefi/elf_loongarch64_efi.lds
 new file mode 100644
 index 0000000..e7b4d6b
@@ -400,7 +404,7 @@ index 0000000..8ac4ca7
 +	return EFI_SUCCESS;
 +}
 diff --git a/inc/efi.h b/inc/efi.h
-index 43c832e..b8c2f6a 100644
+index b193932..b251a34 100644
 --- a/inc/efi.h
 +++ b/inc/efi.h
 @@ -52,6 +52,8 @@ Revision History
@@ -432,7 +436,7 @@ index 7dbedc4..01a0938 100644
  
  typedef 
 diff --git a/inc/efilib.h b/inc/efilib.h
-index 9f748ad..64f549f 100644
+index a2b39b2..e73177c 100644
 --- a/inc/efilib.h
 +++ b/inc/efilib.h
 @@ -35,6 +35,8 @@ Revision History
@@ -445,7 +449,7 @@ index 9f748ad..64f549f 100644
  #include "efilink.h"
  #include "efirtlib.h"
 diff --git a/inc/efirtlib.h b/inc/efirtlib.h
-index 8643061..6d0e495 100644
+index 518859e..d841a9a 100644
 --- a/inc/efirtlib.h
 +++ b/inc/efirtlib.h
 @@ -30,6 +30,8 @@ Revision History
@@ -454,7 +458,7 @@ index 8643061..6d0e495 100644
  #include "arm/efilibplat.h"
 +#elif defined (__loongarch64)
 +#include "loongarch64/efilibplat.h"
- #elif defined (_M_MIPS64) || defined(__mips64__)
+ #elif defined (_M_MIPS64) || defined(__mips64__) || defined(__mips64)
  #include "mips64el/efilibplat.h"
  #elif defined (__riscv) && __riscv_xlen == 64
 diff --git a/inc/loongarch64/efibind.h b/inc/loongarch64/efibind.h
@@ -679,7 +683,7 @@ index 0000000..18aefaf
 +
 +#endif /* GNU_EFI_LOONGARCH64_SETJMP_H */
 diff --git a/lib/Makefile b/lib/Makefile
-index cf4239d..6fd29ec 100644
+index 1fc6a47..db0ab2e 100644
 --- a/lib/Makefile
 +++ b/lib/Makefile
 @@ -64,7 +64,7 @@ endif
@@ -693,11 +697,15 @@ index cf4239d..6fd29ec 100644
  
 diff --git a/lib/loongarch64/efi_stub.S b/lib/loongarch64/efi_stub.S
 new file mode 100644
-index 0000000..464eae5
+index 0000000..f84aaf2
 --- /dev/null
 +++ b/lib/loongarch64/efi_stub.S
-@@ -0,0 +1 @@
+@@ -0,0 +1,5 @@
 +/* This stub is a stub to make the build happy */
++
++#if defined(__ELF__) && defined(__linux__)
++	.section .note.GNU-stack,"",%progbits
++#endif
 diff --git a/lib/loongarch64/initplat.c b/lib/loongarch64/initplat.c
 new file mode 100644
 index 0000000..6c5e1fa
@@ -801,10 +809,10 @@ index 0000000..8c16444
 +}
 diff --git a/lib/loongarch64/setjmp.S b/lib/loongarch64/setjmp.S
 new file mode 100644
-index 0000000..218ba24
+index 0000000..49761bb
 --- /dev/null
 +++ b/lib/loongarch64/setjmp.S
-@@ -0,0 +1,67 @@
+@@ -0,0 +1,71 @@
 +/*
 + * Copyright (c) 2006 - 2008, Intel Corporation. All rights reserved.
 + * Copright (c) 2021 Loongson Co.
@@ -872,3 +880,7 @@ index 0000000..218ba24
 +	move $a0, $a1		# a0 = a1
 +.L0:
 +	jr $ra
++
++#if defined(__ELF__) && defined(__linux__)
++	.section .note.GNU-stack,"",%progbits
++#endif
