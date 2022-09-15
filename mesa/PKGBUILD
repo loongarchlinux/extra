@@ -4,7 +4,7 @@
 # Contributor: Andreas Radke <andyrtr@archlinux.org>
 
 pkgbase=mesa
-pkgname=('vulkan-mesa-layers' 'vulkan-radeon' 'libva-mesa-driver' 'mesa-vdpau' 'mesa')
+pkgname=('vulkan-mesa-layers' 'vulkan-radeon' 'vulkan-swrast' 'libva-mesa-driver' 'mesa-vdpau' 'mesa')
 pkgdesc="An open-source implementation of the OpenGL specification"
 pkgver=22.1.7
 pkgrel=1
@@ -24,9 +24,9 @@ source=(https://mesa.freedesktop.org/archive/mesa-${pkgver}.tar.xz{,.sig}
 sha512sums=('447e87359445edce231761d94b316b2aa20e9ab58e4b59d75cbb1696dd0900e7164c32bebc3b75700b4070570b456f7a8cf0914181371754a52427d34e4b9120'
             'SKIP'
             'f9f0d0ccf166fe6cb684478b6f1e1ab1f2850431c06aa041738563eb1808a004e52cdec823c103c9e180f03ffc083e95974d291353f0220fe52ae6d4897fecc7'
-            '90ad0a72e23b6afc7fffe1e133a10ccf2c129c61d397bd2baa211d51b9d86ddd679544033d20bcf62b68815aa637972d62b19e7d2a53452ebb6a751e02874ccd'
-            'a796b4a985fc64c2c6227c60b65177b55b2fa21650eea82eccb7cbdbf0310446094dd1d9bfed50a86bad1f02acc7f437c546f18dfbf9151ffae68ca2c3065180'
-            'c62cf418f2ea750d7521d46912d3530e3a9631ba178a4c596377f5d61535ba487456cccc8ad51a5ae93e790a19bcd388e98c1b144960a26ce0cff535b644f3f7')
+            '65e8bb2c9365f581f1a1c233c837c9b71bc7f9871b88eec9aa22f50b344077434aa2544274e6ec535b85019ead0f56f2aa2448021697a70751d1a631dd774097'
+            '4f52ae08c4ce5f080e7fa24f36dca0ad9e0656921725c3f3fb4585164c5866b17de10a8144dfb576cc24b1697539ae497231d827e42af660578c58811344b260'
+            '11f842702325e18ec95eab610ab051e0b6093207548a245689bb533bf6c865d6b6ab025f0c066f7a5ab73ebfd357edf1ee5889814350bd95d10861bce28523b5')
 validpgpkeys=('8703B6700E7EE06D7A39B8D6EDAE37B02CEB490D'  # Emil Velikov <emil.l.velikov@gmail.com>
               '946D09B5E4C9845E63075FF1D961C596A7203456'  # Andres Gomez <tanty@igalia.com>
               'E3E8F480C52ADD73B278EE78E1ECBE07D7D70895'  # Juan Antonio Suárez Romero (Igalia, S.L.) <jasuarez@igalia.com>
@@ -48,16 +48,15 @@ build() {
   CXXFLAGS+=' -g1'
 
   # https://gitlab.freedesktop.org/mesa/mesa/-/issues/6229
-  CFLAGS+=' -mtls-dialect=gnu'
-  CXXFLAGS+=' -mtls-dialect=gnu'
+#  CFLAGS+=' -mtls-dialect=gnu'
+#  CXXFLAGS+=' -mtls-dialect=gnu'
 
   arch-meson mesa-$pkgver build \
     -D b_ndebug=true \
     -D platforms=x11,wayland \
-    -D dri-drivers=r100,r200,nouveau \
-    -D gallium-drivers=r300,r600,radeonsi,nouveau,virgl,swrast,zink,etnaviv,loongson \
-    -D vulkan-drivers=amd \
-    -D vulkan-layers=device-select,intel-nullhw,overlay \
+    -D gallium-drivers=r300,r600,radeonsi,nouveau,loongson,etnaviv,virgl,svga,swrast,zink,d3d12 \
+    -D vulkan-drivers=amd,swrast \
+    -D vulkan-layers=device-select,overlay \
     -D dri3=enabled \
     -D egl=enabled \
     -D gallium-extra-hud=true \
@@ -230,9 +229,3 @@ package_mesa() {
 
   install -m644 -Dt "${pkgdir}/usr/share/licenses/${pkgname}" LICENSE
 }
-sha512sums=('0991543e9435457fa4d077517408b3f197be32ed61a6c7ca34ddb3906eed208791f1a57227f74115f99df18e612efab1d2c6809b7cf426d273633b53d4aefc88'
-            'SKIP'
-            'f9f0d0ccf166fe6cb684478b6f1e1ab1f2850431c06aa041738563eb1808a004e52cdec823c103c9e180f03ffc083e95974d291353f0220fe52ae6d4897fecc7'
-            '9685e6dd3e16357498fb273d3aded6b1033b7fb3ad8595991a926780a0dc35cff130ff693d6a1486d607c2cc55c46756e60402dcb61b6354c1dbc2b0aeb0f220'
-            '7de749a0712ff0f09df6be9a6942bed161c791b6a1f8946aadd2fb71caba759c523852266f779413894e15f8df0acf8891ca1b6c4df488fc18f26d3e8cfa81c7'
-            '5307a2ead4126c2d601568911b7de33b74f1e7c7a0d2d298509c3ff3c90e6941dceab50963c2bbf18e4778317d9e5234ce8b30138b6624f17918939adcb6f0bb')

@@ -1,4 +1,4 @@
-From d7ef099ce0723d1ae30fbc7f0a4224225aa94478 Mon Sep 17 00:00:00 2001
+From 9e2eaaff6ae55017ca8607d01c01c28846727eb3 Mon Sep 17 00:00:00 2001
 From: Xiaotian Wu <wuxiaotian@loongson.cn>
 Date: Sun, 2 May 2021 12:34:04 +0800
 Subject: [PATCH 1/3] etnaviv: Initial enable etnaviv for vivante gc1000 found
@@ -43,10 +43,10 @@ Signed-off-by: suijingfeng <suijingfeng@loongson.cn>
  create mode 100644 src/gallium/winsys/loongson/drm/meson.build
 
 diff --git a/meson.build b/meson.build
-index 0aea31260bb..135fa9ecc43 100644
+index 70a0d576b9e..311f7414673 100644
 --- a/meson.build
 +++ b/meson.build
-@@ -213,7 +213,7 @@ if gallium_drivers.contains('auto')
+@@ -198,7 +198,7 @@ if gallium_drivers.contains('auto')
        ]
      elif ['mips', 'mips64', 'riscv32', 'riscv64'].contains(host_machine.cpu_family())
        gallium_drivers = [
@@ -55,7 +55,7 @@ index 0aea31260bb..135fa9ecc43 100644
        ]
      else
        error('Unknown architecture @0@. Please pass -Dgallium-drivers to set driver options. Patches gladly accepted to fix this.'.format(
-@@ -236,6 +236,7 @@ with_gallium_vc4 = gallium_drivers.contains('vc4')
+@@ -221,6 +221,7 @@ with_gallium_vc4 = gallium_drivers.contains('vc4')
  with_gallium_v3d = gallium_drivers.contains('v3d')
  with_gallium_panfrost = gallium_drivers.contains('panfrost')
  with_gallium_etnaviv = gallium_drivers.contains('etnaviv')
@@ -63,9 +63,9 @@ index 0aea31260bb..135fa9ecc43 100644
  with_gallium_tegra = gallium_drivers.contains('tegra')
  with_gallium_crocus = gallium_drivers.contains('crocus')
  with_gallium_iris = gallium_drivers.contains('iris')
-@@ -300,6 +301,9 @@ endif
- if with_dri_i915 and with_gallium_i915
-   error('Only one i915 provider can be built')
+@@ -288,6 +289,9 @@ with_any_intel = with_intel_vk or with_gallium_iris or with_gallium_crocus or wi
+ if with_swrast_vk and not with_gallium_softpipe
+   error('swrast vulkan requires gallium swrast')
  endif
 +if with_gallium_loongson and not with_gallium_etnaviv
 +  error('LOONGSON driver requires etnaviv driver')
@@ -74,15 +74,15 @@ index 0aea31260bb..135fa9ecc43 100644
    error('tegra driver requires nouveau driver')
  endif
 diff --git a/meson_options.txt b/meson_options.txt
-index 32c7593ee8e..26a29071be8 100644
+index 5baa70d051b..7718d87f052 100644
 --- a/meson_options.txt
 +++ b/meson_options.txt
-@@ -77,7 +77,7 @@ option(
+@@ -75,7 +75,7 @@ option(
    choices : [
      'auto', 'kmsro', 'radeonsi', 'r300', 'r600', 'nouveau', 'freedreno',
      'swrast', 'v3d', 'vc4', 'etnaviv', 'tegra', 'i915', 'svga', 'virgl',
--    'swr', 'panfrost', 'iris', 'lima', 'zink', 'd3d12', 'asahi', 'crocus'
-+    'swr', 'panfrost', 'iris', 'lima', 'zink', 'd3d12', 'loongson', 'asahi', 'crocus'
+-    'panfrost', 'iris', 'lima', 'zink', 'd3d12', 'asahi', 'crocus'
++    'panfrost', 'iris', 'lima', 'loongson', 'zink', 'd3d12', 'asahi', 'crocus'
    ],
    description : 'List of gallium drivers to build. If this is set to auto all drivers applicable to the target OS/architecture will be built'
  )
@@ -99,10 +99,10 @@ index b3bdfc90d97..7bc780c1f35 100644
     &lima_driver_descriptor,
     &zink_driver_descriptor,
 diff --git a/src/gallium/auxiliary/target-helpers/drm_helper.h b/src/gallium/auxiliary/target-helpers/drm_helper.h
-index 6167a94d85f..5f288e9fcc7 100644
+index 601396a5432..8a826d2b014 100644
 --- a/src/gallium/auxiliary/target-helpers/drm_helper.h
 +++ b/src/gallium/auxiliary/target-helpers/drm_helper.h
-@@ -364,6 +364,30 @@ DRM_DRIVER_DESCRIPTOR(etnaviv, NULL, 0)
+@@ -374,6 +374,30 @@ DRM_DRIVER_DESCRIPTOR(etnaviv, NULL, 0)
  DRM_DRIVER_DESCRIPTOR_STUB(etnaviv)
  #endif
  
@@ -175,10 +175,10 @@ index 00000000000..95e1f32092e
 +
 +libloongson_la_SOURCES =
 diff --git a/src/gallium/meson.build b/src/gallium/meson.build
-index 0df0e886ce8..35d4327fd99 100644
+index a678dc02705..5f4a6db8b0c 100644
 --- a/src/gallium/meson.build
 +++ b/src/gallium/meson.build
-@@ -117,6 +117,11 @@ if with_gallium_kmsro
+@@ -112,6 +112,11 @@ if with_gallium_kmsro
  else
    driver_kmsro = declare_dependency()
  endif
@@ -191,7 +191,7 @@ index 0df0e886ce8..35d4327fd99 100644
    subdir('winsys/v3d/drm')
    subdir('drivers/v3d')
 diff --git a/src/gallium/targets/dri/meson.build b/src/gallium/targets/dri/meson.build
-index 86f66a65abe..fd2d745d66f 100644
+index 8554b15c63a..eb527857b75 100644
 --- a/src/gallium/targets/dri/meson.build
 +++ b/src/gallium/targets/dri/meson.build
 @@ -56,7 +56,7 @@ libgallium_dri = shared_library(
@@ -200,10 +200,10 @@ index 86f66a65abe..fd2d745d66f 100644
      driver_kmsro, driver_v3d, driver_vc4, driver_freedreno, driver_etnaviv,
 -    driver_tegra, driver_i915, driver_svga, driver_virgl,
 +    driver_tegra, driver_loongson, driver_i915, driver_svga, driver_virgl,
-     driver_swr, driver_panfrost, driver_iris, driver_lima, driver_zink, driver_d3d12,
+     driver_panfrost, driver_iris, driver_lima, driver_zink, driver_d3d12,
      driver_asahi, driver_crocus
    ],
-@@ -99,6 +99,7 @@ foreach d : [[with_gallium_kmsro, [
+@@ -101,6 +101,7 @@ foreach d : [[with_gallium_kmsro, [
               [with_gallium_vc4, 'vc4_dri.so'],
               [with_gallium_panfrost, 'panfrost_dri.so'],
               [with_gallium_etnaviv, 'etnaviv_dri.so'],
@@ -212,10 +212,10 @@ index 86f66a65abe..fd2d745d66f 100644
               [with_gallium_crocus, 'crocus_dri.so'],
               [with_gallium_iris, 'iris_dri.so'],
 diff --git a/src/gallium/targets/dri/target.c b/src/gallium/targets/dri/target.c
-index 30c9ee9a4da..0772ddb99f4 100644
+index 9b78351fa8f..31a133453c7 100644
 --- a/src/gallium/targets/dri/target.c
 +++ b/src/gallium/targets/dri/target.c
-@@ -88,6 +88,7 @@ DEFINE_LOADER_DRM_ENTRYPOINT(panfrost)
+@@ -85,6 +85,7 @@ DEFINE_LOADER_DRM_ENTRYPOINT(panfrost)
  #endif
  
  #if defined(GALLIUM_ETNAVIV)
@@ -413,5 +413,5 @@ index 00000000000..e4b2a1bafbc
 +)
 +
 -- 
-2.20.1
+2.35.1
 
