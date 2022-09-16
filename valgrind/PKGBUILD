@@ -28,7 +28,7 @@ replaces=('valgrind-multilib')
 options=('!emptydirs' '!strip')
 source=(https://sourceware.org/pub/valgrind/valgrind-${pkgver}.tar.bz2{,.asc}
         valgrind-3.7.0-respect-flags.patch
-        valgrind-3.18-la64-build.patch)
+        valgrind-3.19-la64.patch)
 validpgpkeys=(
   0E9FFD0C16A1856CF9C7C690BA0166E698FA6035 # Julian Seward <jseward@acm.org>
   EC3CFE88F6CA0788774F5C1D1AA44BE649DE760A # Mark Wielaard <mjw@gnu.org>
@@ -36,19 +36,18 @@ validpgpkeys=(
 sha512sums=('f720a89dc4c4989cc5714bff9efe97529f71990bcfad7a92b889ce099c4326d6da07fa4d5fbab2e9125e20f352354f6178471e49e419b613a3c82c2a1c667ab2'
             'SKIP'
             'e0cec39381cefeca09ae4794cca309dfac7c8693e6315e137e64f5c33684598726d41cfbb4edf764fe985503b13ff596184ca5fc32b159d500ec092e4cf8838c'
-            '216d28caacd624e3061269201646917244990be9b394ad661271695a3e83be02b27e475726d9227819c14f9840356f9c72cc61038c1382ae6ed282a7ce4ec474')
+            '0b430ee17c4acdee988d6e78e02a3799d4d61d1ca8ff6e414f9f0ad7e62cfd8a11bc1c9497a5c588431a6368ccb25134a8240fcab1867e1869f0656b7a181ec7')
 b2sums=('d3ccd25789ec4d87a0ddab58d8098246a33a083505b42adaa94ee3af659cbe073e516bc98163ef56233e6cd9de2125839b71ee443fbc0db6557dcb35a6c05280'
         'SKIP'
         'af556fdf3c02e37892bfe9afebc954cf2f1b2fa9b75c1caacfa9f3b456ebc02bf078475f9ee30079b3af5d150d41415a947c3d04235c1ea8412cf92b959c484a'
-        '56477b4a31c26d1a2e5150d1439abbbcc4801e951d4f37f8bdc9f8242c81b7d74d296c14d477822421eb23ddad8e82c54c80f371b790f71314c7b46e09737c7a')
+        '0539733a76cda4a3e9ad23e175a8f0b2957ca2aa3bfb20bae6695350293059832f9b4d5e8c18f08dc87603f7cf6da90592422659e4fb54f72ea8ef74ee70a2f6')
 options=(!lto) # https://bugs.kde.org/show_bug.cgi?id=338252
 
 prepare() {
   cd valgrind-${pkgver}
   patch -Np1 < ../valgrind-3.7.0-respect-flags.patch
+  patch -p1 -i "${srcdir}"/valgrind-3.19-la64.patch
   sed -i 's|sgml/docbook/xsl-stylesheets|xml/docbook/xsl-stylesheets-1.79.2-nons|' docs/Makefile.am
-
-  patch -p1 -i "${srcdir}"/valgrind-3.18-la64-build.patch
 
   autoreconf -ifv
 }
