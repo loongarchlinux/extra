@@ -1,41 +1,110 @@
-From d5664343efc9b20114130019cc8cb98b8b788b42 Mon Sep 17 00:00:00 2001
-From: Xiaotian Wu <wuxiaotian@loongson.cn>
-Date: Sat, 17 Apr 2021 22:09:40 +0800
-Subject: [PATCH] add loongarch64 support
-
----
- Make.common                  | 21 ++++++++++++++++++++
- Makefile                     |  3 +++
- RefindPkg.dsc                |  5 ++++-
- filesystems/Make.gnuefi      |  5 +++++
- filesystems/btrfs.inf        |  9 +++++++++
- filesystems/ext2.inf         |  9 +++++++++
- filesystems/ext4.inf         |  9 +++++++++
- filesystems/hfs.inf          |  9 +++++++++
- filesystems/iso9660.inf      |  9 +++++++++
- filesystems/ntfs.inf         |  9 +++++++++
- filesystems/reiserfs.inf     |  9 +++++++++
- gptsync.inf                  |  9 +++++++++
- gptsync/Make.gnuefi          |  4 ++++
- gptsync/Make.tiano           |  4 ++++
- gptsync/gptsync.h            |  2 +-
- include/refit_call_wrapper.h |  2 +-
- libeg/image.c                |  2 +-
- mvrefind                     |  3 +++
- refind-install               | 37 +++++++++++++++++++++++++++++-------
- refind.inf                   | 11 ++++++++++-
- refind/Make.tiano            |  4 ++++
- refind/Makefile              |  5 +++++
- refind/config.h              |  2 ++
- refind/driver_support.c      |  2 ++
- refind/global.h              |  4 ++++
- refind/install.h             |  5 +++++
- refind/launch_efi.c          |  4 +++-
- refind/lib.c                 |  2 ++
- refind/main.c                |  3 +++
- refind/scan.c                |  8 ++++++++
- 31 files changed, 210 insertions(+), 13 deletions(-)
-
+diff --git a/BUILDING.txt b/BUILDING.txt
+index d57efc4..d4731ed 100644
+--- a/BUILDING.txt
++++ b/BUILDING.txt
+@@ -26,6 +26,21 @@ To compile rEFInd, you'll need the following:
+   using Clang 3.4 under Ubuntu, with partial success. The main rEFInd
+   binary, gptsync, and some drivers compile successfully; but only gptsync
+   runs normally. The drivers I've tried and the main rEFInd binary crash.)
++  Install required packages. Example for Ubuntu:
++  
++sudo apt install build-essential git uuid-dev iasl nasm python2
++for building gdisk.efi you might need Ubuntu 14.4.6 LTS and additionaly:
++sudo apt install build-essential git uuid-dev iasl nasm python libpopt-dev libncursesw5-dev
++or if using Latest Ubuntu use gcc-4.8:
++sudo add-apt-repository "deb http://us.archive.ubuntu.com/ubuntu/ bionic main universe"
++sudo apt install gcc-4.8 g++-4.8
++sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-4.8 50
++sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-4.8 50
++gcc --version
++gcc (Ubuntu 4.8.5-4ubuntu8) 4.8.5
++g++ --version
++g++ (Ubuntu 4.8.5-4ubuntu8) 4.8.5
++sudo apt install git uuid-dev iasl nasm python2 libpopt-dev libncursesw5-dev
+ 
+ * One of the following:
+ 
+@@ -43,7 +58,7 @@ To compile rEFInd, you'll need the following:
+     newer version in February of 2021 (edk2-edk2-stable202011), but it
+     failed to compile because of the removal of in-tree libraries and other
+     problems.
+-
++    
+   * The GNU-EFI package (http://sourceforge.net/projects/gnu-efi/). You can
+     install this from a package called "gnu-efi"; however, rEFInd relies on
+     features that were added sometime between version 3.0s and 3.0u, so I
+@@ -104,7 +119,13 @@ is a bit unclear about others. Here's how to install the toolkit (note that
+ you'll need to be root to do this in the specified location):
+ 
+ 1. Download UDK2018 from
+-   https://github.com/tianocore/tianocore.github.io/wiki/UDK2018. (If you
++   https://github.com/tianocore/tianocore.github.io/wiki/UDK2018:
++   
++cd /usr/local   
++git clone -b UDK2018 "https://github.com/tianocore/edk2" edk2-vUDK2018
++git -C edk2-vUDK2018 submodule update --init
++
++   (If you
+    must use it for some reason, you can download the older
+    UDK2014.SR1.UP1.P1 from
+    https://github.com/tianocore/tianocore.github.io/wiki/UDK2014-Releases
+@@ -124,7 +145,9 @@ you'll need to be root to do this in the specified location):
+ 
+    B. Unzip the downloaded file (edk2-vUDK2018.zip) in the current directory
+       (/usr/local), or use git to pull down the latest source code. This
+-      creates a subdirectory tree called edk2-vUDK2018.
++      creates a subdirectory tree called edk2-vUDK2018. If you already 
++      cloned UDK2018 branch and initialized it as outlined in step 1 of
++      "Preparing Your Development Kit" skip this step.
+ 
+    C. Type "cd edk2-vUDK2018" to change into the extracted directory.
+ 
+@@ -223,6 +246,9 @@ you'll need to be root to do this in the specified location):
+    Python 3 installed, you may need to adjust the default python for this
+    build (for instance, by typing "eselect python set python2.7" in
+    Gentoo).
++   
++10. Type:
++"git clone https://git.code.sf.net/p/refind/code RefindPkg && cd RefindPkg && make edk2" for edk2 builds.
+ 
+ If you installed in a location other than the one I've specified, you must
+ edit the EDK2BASE (for "make edk2" builds) or TIANOBASE (for the deprecated
+@@ -366,6 +392,35 @@ package.
+ If you're using TianoCore's EDK2, as noted earlier, you may need to adjust
+ the TIANOBASE or EDKBASE variable in Makefile.
+ 
++Compiling rEFInd through Docker
++==================================
++cd "`mktemp -d`"
++
++mkdir -m 1777 /tmp/RefindPkg-build
++
++git clone https://git.code.sf.net/p/refind/code RefindPkg
++
++docker pull xaionaro2/edk2-builder:vUDK2018
++
++docker run --rm \
++    -e CFLAGS=-Wno-error \
++    -e TOOLCHAIN=GCC5 \
++    -e BUILD_TARGET=DEBUG \
++    -e DSC_PATH=RefindPkg/RefindPkg.dsc \
++    -v "$PWD/RefindPkg/:/home/edk2/edk2/RefindPkg/" \
++    -v "/tmp/RefindPkg-build:/home/edk2/Build" \
++    xaionaro2/edk2-builder:vUDK2018
++    
++docker run --rm \
++    -e CFLAGS=-Wno-error \
++    -e TOOLCHAIN=GCC5 \
++    -e BUILD_TARGET=RELEASE \
++    -e DSC_PATH=RefindPkg/RefindPkg.dsc \
++    -v "$PWD/RefindPkg/:/home/edk2/edk2/RefindPkg/" \
++    -v "/tmp/RefindPkg-build:/home/edk2/Build" \
++    xaionaro2/edk2-builder:vUDK2018
++    
++The result will be in /tmp/RefindPkg-build
+ 
+ A Note about NTFS
+ =================
 diff --git a/Make.common b/Make.common
 index 95a3a97..4929905 100644
 --- a/Make.common
@@ -397,10 +466,10 @@ index 6b840c2..154729e 100755
          echo "Unsupported CPU type; aborting!"
          exit 1
 diff --git a/refind-install b/refind-install
-index 126bbde..97fdefd 100755
+index b2b6fab..41859e7 100755
 --- a/refind-install
 +++ b/refind-install
-@@ -263,7 +263,7 @@ ReadKeyPassphrase() {
+@@ -264,7 +264,7 @@ ReadKeyPassphrase() {
  
  # Determine what CPU type and EFI bit depth we're using.
  # Sets Platform global variable to lowercase EFI platform code (currently
@@ -409,7 +478,7 @@ index 126bbde..97fdefd 100755
  DeterminePlatform() {
     local CpuType
     case "$OSTYPE" in
-@@ -288,6 +288,9 @@ DeterminePlatform() {
+@@ -289,6 +289,9 @@ DeterminePlatform() {
        aarch64)
           Platform="aa64"
           ;;
@@ -419,15 +488,15 @@ index 126bbde..97fdefd 100755
        x86_64)
           Platform="x64"
           ;;
-@@ -383,6 +386,7 @@ CheckForFiles() {
+@@ -384,6 +387,7 @@ CheckForFiles() {
           if [[ $ShimType == "shimx64.efi" || $ShimType == "shim.efi" || $ShimType == "shimx64.efi.signed" ]] ; then
              TargetX64="grubx64.efi"
              TargetAARCH64="grubaa64.efi"
 +            TargetLOONGARCH64="grubloongarch64.efi"
-             MokManagerSource=`dirname "$ShimSource"`/mm$Platform.efi.signed
+             MokManagerSource=$(dirname "$ShimSource")/mm$Platform.efi.signed
              if [[ ! -f "$MokManagerSource" ]] ; then
-                 MokManagerSource=`dirname "$ShimSource"`/mm$Platform.efi
-@@ -449,10 +453,12 @@ SetVarsForBoot() {
+                 MokManagerSource=$(dirname "$ShimSource")/mm$Platform.efi
+@@ -453,10 +457,12 @@ SetVarsForBoot() {
        TargetX64="bootx64.efi"
        TargetIA32="bootia32.efi"
        TargetAARCH64="bootaa64.efi"
@@ -441,7 +510,7 @@ index 126bbde..97fdefd 100755
        elif [[ $ShimType == "preloader.efi" || $ShimType == "PreLoader.efi" ]] ; then
           TargetX64="loader.efi"
        else
-@@ -476,10 +482,12 @@ SetVarsForMsBoot() {
+@@ -480,10 +486,12 @@ SetVarsForMsBoot() {
        TargetX64="bootmgfw.efi"
        TargetIA32="bootmgfw.efi"
        TargetAARCH64="bootmgfw.efi"
@@ -455,7 +524,7 @@ index 126bbde..97fdefd 100755
        elif [[ $ShimType == "preloader.efi" || $ShimType == "PreLoader.efi" ]] ; then
           TargetX64="loader.efi"
        else
-@@ -522,6 +530,7 @@ DetermineTargetDir() {
+@@ -526,6 +534,7 @@ DetermineTargetDir() {
           TargetX64="refind_x64.efi"
           TargetIA32="refind_ia32.efi"
           TargetAARCH64="refind_aa64.efi"
@@ -463,7 +532,7 @@ index 126bbde..97fdefd 100755
        fi
        Upgrade=1
     fi
-@@ -660,6 +669,10 @@ CopyRefindFiles() {
+@@ -662,6 +671,10 @@ CopyRefindFiles() {
        if [[ $? != 0 && $Platform == "aa64" ]] ; then
           Problems=1
        fi
@@ -474,32 +543,29 @@ index 126bbde..97fdefd 100755
        if [[ "$ShimSource" != "none" ]] ; then
           TargetShim="bootx64.efi"
           CopyShimFiles
-@@ -698,17 +711,22 @@ CopyRefindFiles() {
+@@ -699,15 +712,19 @@ CopyRefindFiles() {
        if [[ "$TargetDir" == '/System/Library/CoreServices' ]] ; then
           SetupMacHfs $TargetX64
        fi
 -   elif [[ $Platform == 'ia32' || $Platform == 'aa64' ]] ; then
 +   elif [[ $Platform == 'ia32' || $Platform == 'aa64' || $Platform == 'loongarch64' ]] ; then
        if [[ $Platform == 'ia32' ]] ; then
-          cp "$RefindDir/refind_ia32.efi" "$InstallDir/$TargetDir/$TargetIA32"
-          if [[ $? != 0 ]] ; then
+          if ! cp "$RefindDir/refind_ia32.efi" "$InstallDir/$TargetDir/$TargetIA32" ; then
              Problems=1
           fi
 -      else
 +      elif [[ $Platform == 'aa64' ]] ; then
-          cp "$RefindDir/refind_aa64.efi" "$InstallDir/$TargetDir/$TargetAARCH64"
-          if [[ $? != 0 ]] ; then
+          if ! cp "$RefindDir/refind_aa64.efi" "$InstallDir/$TargetDir/$TargetAARCH64" ; then
              Problems=1
           fi
 +      else
-+         cp "$RefindDir/refind_loongarch64.efi" "$InstallDir/$TargetDir/$TargetLOONGARCH64"
-+         if [[ $? != 0 ]] ; then
++         if ! cp "$RefindDir/refind_loongarch64.efi" "$InstallDir/$TargetDir/$TargetLOONGARCH64" ; then
 +            Problems=1
 +         fi
        fi
        CopyDrivers $Platform
        CopyTools $Platform
-@@ -810,6 +828,10 @@ CreateBootCsvFile() {
+@@ -806,6 +823,10 @@ CreateBootCsvFile() {
           echo "$TargetAARCH64,rEFInd Boot Manager,,This is the boot entry for rEFInd" | \
                $IConv -t UCS-2 > "$InstallDir/$TargetDir/BOOT.CSV"
        fi
@@ -508,9 +574,9 @@ index 126bbde..97fdefd 100755
 +              $IConv -t UCS-2 > "$InstallDir/$TargetDir/BOOT.CSV"
 +      fi
     fi
-    exit
  } # CreateBootCsvFile()
-@@ -1355,8 +1377,9 @@ AddBootEntry() {
+ 
+@@ -1351,8 +1372,9 @@ AddBootEntry() {
        echo
        echo "ALERT: There were problems running the efibootmgr program! You may need to"
        echo "rename the $Refind binary to the default name (EFI/BOOT/bootx64.efi"
@@ -613,7 +679,7 @@ index 24dbc8d..9108b9d 100644
  #define DRIVER_DIRS             L"drivers"
  #endif
 diff --git a/refind/global.h b/refind/global.h
-index 0e09c22..acf8e17 100644
+index 5a66bfa..8b627d2 100644
 --- a/refind/global.h
 +++ b/refind/global.h
 @@ -172,6 +172,8 @@
@@ -635,7 +701,7 @@ index 0e09c22..acf8e17 100644
  #define FWUPDATE_NAMES          L"fwup.efi"
  #endif
 diff --git a/refind/install.h b/refind/install.h
-index 00c1bb1..560f112 100644
+index c2cd22b..9fe7aff 100644
 --- a/refind/install.h
 +++ b/refind/install.h
 @@ -28,6 +28,11 @@
@@ -651,7 +717,7 @@ index 00c1bb1..560f112 100644
  #define INST_DIRECTORIES L"\\EFI,\\EFI\\refind,\\EFI\\refind\\icons,\\EFI\\refind\\drivers"
  #define INST_DRIVERS_SUBDIR L"drivers"
 diff --git a/refind/launch_efi.c b/refind/launch_efi.c
-index c28d5ee..3d1236f 100644
+index 556216c..a86964c 100644
 --- a/refind/launch_efi.c
 +++ b/refind/launch_efi.c
 @@ -81,6 +81,8 @@
@@ -673,7 +739,7 @@ index c28d5ee..3d1236f 100644
      EFI_FILE_HANDLE FileHandle;
      CHAR8           Header[512];
 diff --git a/refind/lib.c b/refind/lib.c
-index ed29d79..b484668 100644
+index 3a4cccd..f4fc65c 100644
 --- a/refind/lib.c
 +++ b/refind/lib.c
 @@ -102,6 +102,8 @@ EFI_GUID gFreedesktopRootGuid = { 0x4f68bce3, 0xe8cd, 0x4db1, { 0x96, 0xe7, 0xfb
@@ -686,10 +752,10 @@ index ed29d79..b484668 100644
  // Below is GUID for ARM32
  EFI_GUID gFreedesktopRootGuid = { 0x69dad710, 0x2ce4, 0x4e3c, { 0xb1, 0x6c, 0x21, 0xa1, 0xd4, 0x9a, 0xbe, 0xd3 }};
 diff --git a/refind/main.c b/refind/main.c
-index d58f398..5ef2769 100644
+index 3573185..e29e455 100644
 --- a/refind/main.c
 +++ b/refind/main.c
-@@ -184,6 +184,9 @@ VOID AboutrEFInd(VOID)
+@@ -186,6 +186,9 @@ VOID AboutrEFInd(VOID)
  #elif defined(EFIAARCH64)
          AddMenuInfoLine(&AboutMenu, PoolPrint(L" Platform: ARM (64 bit); Secure Boot %s",
                                                secure_mode() ? L"active" : L"inactive"));
@@ -699,8 +765,17 @@ index d58f398..5ef2769 100644
  #else
          AddMenuInfoLine(&AboutMenu, L" Platform: unknown");
  #endif
+@@ -378,6 +381,8 @@ VOID LogBasicInfo(VOID) {
+     LOG(1, LOG_LINE_NORMAL, L"Platform: x86-64/X64/AMD64 (64-bit)");
+ #elif defined(EFIAARCH64)
+     LOG(1, LOG_LINE_NORMAL, L"Platform: ARM64/AARCH64 (64-bit)");
++#elif defined(EFILOONGARCH64)
++    LOG(1, LOG_LINE_NORMAL, L"Platform: LoongArch (64-bit)");
+ #else
+     LOG(1, LOG_LINE_NORMAL, L"Platform: unknown");
+ #endif
 diff --git a/refind/scan.c b/refind/scan.c
-index 10749f6..cc17774 100644
+index 45de6d0..411bbf3 100644
 --- a/refind/scan.c
 +++ b/refind/scan.c
 @@ -104,6 +104,14 @@
@@ -718,6 +793,3 @@ index 10749f6..cc17774 100644
  #else
  #define SHELL_NAMES             L"\\EFI\\tools\\shell.efi,\\shell.efi"
  #define GPTSYNC_NAMES           L"\\EFI\\tools\\gptsync.efi"
--- 
-2.32.0
-
