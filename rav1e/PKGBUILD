@@ -34,21 +34,22 @@ pkgver() {
 }
 
 prepare() {
-  cp -f Cargo.lock rav1e/
+  find -name Cargo.lock -exec rm -f {} \;
+  mkdir -p .cargo
+  cat > .cargo/config.toml <<EOF
+[source.crates-io]
+registry = "https://gitee.com/yetist/crates.io-index"
+EOF
   cargo fetch \
-    --locked \
     --manifest-path rav1e/Cargo.toml
 }
 
 build() {
-  rm -f Cargo.lock
   cargo build \
     --release \
-    --frozen \
     --manifest-path rav1e/Cargo.toml
   cargo cbuild \
     --release \
-    --frozen \
     --prefix=/usr \
     --manifest-path rav1e/Cargo.toml
 }
@@ -64,14 +65,11 @@ package() {
   cd rav1e
 
   cargo install \
-    --frozen \
-    --offline \
     --no-track \
     --path . \
     --root "${pkgdir}"/usr
   cargo cinstall \
     --release \
-    --frozen \
     --prefix /usr \
     --destdir "${pkgdir}"
   install -Dm 644 LICENSE PATENTS -t "${pkgdir}"/usr/share/licenses/rav1e/
