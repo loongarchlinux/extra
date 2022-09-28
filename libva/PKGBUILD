@@ -1,10 +1,10 @@
-# Maintainer: Maxime Gauduin <alucryd@archlonux.org>
+# Maintainer: Maxime Gauduin <alucryd@archlinux.org>
 # Contributor: Bartłomiej Piotrowski <bpiotrowski@archlinux.org>
 # Contributor: Ionut Biru <ibiru@archlinux.org>
 
 pkgname=libva
 pkgver=2.15.0
-pkgrel=2
+pkgrel=7
 pkgdesc='Video Acceleration (VA) API for Linux'
 arch=(loong64 x86_64)
 url=https://01.org/linuxmedia/vaapi
@@ -25,8 +25,8 @@ makedepends=(
 )
 optdepends=(
   'intel-media-driver: backend for Intel GPUs (>= Broadwell)'
-  'libva-vdpau-driver: backend for Nvidia and AMD GPUs'
   'libva-intel-driver: backend for Intel GPUs (<= Haswell)'
+  'libva-mesa-driver: backend for AMD and Nvidia GPUs'
 )
 provides=(
   libva-drm.so
@@ -41,9 +41,13 @@ _tag=b095d10bf355110352e75c22e581018a7ea7de5a
 source=(git+https://github.com/intel/libva.git#tag=${_tag})
 sha256sums=(SKIP)
 
+prepare() {
+  cd libva
+  git cherry-pick -n c04372b332afe5b43bcc8f60f89a0c7033a5711a # https://bugs.archlinux.org/task/75312
+}
+
 pkgver() {
   cd libva
-
   git describe --tags
 }
 
@@ -56,7 +60,6 @@ build() {
 package() {
   meson install -C build --destdir "${pkgdir}"
   install -Dm 644 libva/COPYING -t "${pkgdir}"/usr/share/licenses/${pkgname}
-
   install -Dm 644 /dev/stdin "${pkgdir}"/etc/libva.conf <<END
 LIBVA_MESSAGING_LEVEL=1
 END
