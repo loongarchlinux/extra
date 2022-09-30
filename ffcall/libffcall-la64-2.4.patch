@@ -327,364 +327,710 @@ index c878134..72de32e 100644
  /* Structures <= 16 bytes are passed as embedded copies on the arg stack.
   * Big structures are passed as pointers to caller-made local copies.
   */
-diff --git a/avcall/avcall-loongarch64-macro.S b/avcall/avcall-loongarch64-macro.S
+diff --git a/avcall/avcall-loongarch64-linux.s b/avcall/avcall-loongarch64-linux.s
 new file mode 100644
-index 0000000..def03a9
+index 0000000..2d3a0d2
 --- /dev/null
-+++ b/avcall/avcall-loongarch64-macro.S
-@@ -0,0 +1,349 @@
-+	.file	1 "avcall-loongarch64.c"
++++ b/avcall/avcall-loongarch64-linux.s
+@@ -0,0 +1,344 @@
++	.file	"avcall-loongarch64.c"
 +	.text
 +	.align	2
-+	.align	3
 +	.globl	avcall_call
 +	.type	avcall_call, @function
 +avcall_call:
-+	addi.d	$sp,$sp,-80
-+	st.d	$fp,$sp,64
-+	st.d	$s0,$sp,56
-+	st.d	$s1,$sp,48
-+	st.d	$s2,$sp,40
-+	st.d	$s3,$sp,32
-+	st.d	$s4,$sp,24
-+	addi.d	$fp,$sp,80
-+	st.d	$ra,$sp,72
-+	ld.d	$s2,$a0,48
-+	ld.d	$s0,$a0,40
-+	la.global	$s3,__stack_chk_guard
-+	ldptr.d	$t0,$s3,0
-+	sub.d	$s0,$s0,$s2
-+	srai.d	$s0,$s0,3
-+	st.d	$t0,$fp,-72
-+	slli.w	$s0,$s0,0
-+	addi.w	$t0,$zero,8			# 0x8
-+	ldptr.w	$s4,$a0,64
-+	or	$s1,$a0,$zero
++.LFB0 = .
++	.cfi_startproc
++	addi.d	$sp,$sp,-48
++	.cfi_def_cfa_offset 48
++	st.d	$fp,$sp,32
++	st.d	$s0,$sp,24
++	st.d	$s1,$sp,16
++	st.d	$s2,$sp,8
++	stptr.d	$s3,$sp,0
++	st.d	$ra,$sp,40
++	.cfi_offset 22, -16
++	.cfi_offset 23, -24
++	.cfi_offset 24, -32
++	.cfi_offset 25, -40
++	.cfi_offset 26, -48
++	.cfi_offset 1, -8
++	addi.d	$fp,$sp,48
++	.cfi_def_cfa 22, 0
++	ld.d	$s1,$a0,48
++	ld.d	$t0,$a0,40
++	addi.w	$t1,$r0,8			# 0x8
++	ldptr.w	$s3,$a0,64
++	sub.d	$t0,$t0,$s1
++	srai.d	$t0,$t0,3
++	slli.w	$s2,$t0,0
++	or	$s0,$a0,$r0
 +	addi.d	$sp,$sp,-2048
-+	bge	$t0,$s0,.L2
-+	addi.w	$a2,$s0,-9
-+	or	$t1,$sp,$zero
++	ble	$s2,$t1,.L72
++	addi.w	$a2,$t0,-9
++	or	$t2,$sp,$r0
 +	bstrpick.d	$a2,$a2,31,0
 +	alsl.d	$a2,$a2,$zero,3
 +	addi.d	$a2,$a2,8
-+	addi.d	$a1,$s2,64
-+	or	$a0,$t1,$zero
++	addi.d	$a1,$s1,64
++	or	$a0,$t2,$r0
 +	bl	%plt(memcpy)
-+	ldptr.d	$a0,$s2,0
-+	ld.d	$a1,$s2,8
-+.L3:
-+	addi.w	$t0,$zero,3			# 0x3
-+	ld.d	$a2,$s2,16
-+	beq	$s0,$t0,.L7
-+	addi.w	$t0,$zero,4			# 0x4
-+	ld.d	$a3,$s2,24
-+	beq	$s0,$t0,.L7
-+	addi.w	$t0,$zero,5			# 0x5
-+	ld.d	$a4,$s2,32
-+	beq	$s0,$t0,.L7
-+	addi.w	$t0,$zero,6			# 0x6
-+	ld.d	$a5,$s2,40
-+	beq	$s0,$t0,.L7
-+	addi.w	$t0,$zero,7			# 0x7
-+	ld.d	$a6,$s2,48
-+	beq	$s0,$t0,.L7
-+	ld.d	$a7,$s2,56
-+	.align	3,54525952,4
-+.L7:
-+	beqz	$s4,.L9
-+	ldptr.w	$t0,$s1,72
-+	andi	$t1,$t0,0x1
-+	beqz	$t1,.L10
-+	fld.d	$f0,$s1,112
-+.L11:
-+	addi.w	$t1,$zero,1			# 0x1
-+	beq	$s4,$t1,.L9
-+	andi	$t1,$t0,0x2
-+	bnez	$t1,.L74
-+	ldptr.w	$t1,$s1,68
-+	andi	$t1,$t1,0x2
-+	beqz	$t1,.L14
-+	fld.s	$f1,$s1,80
-+.L14:
-+	addi.w	$t1,$zero,2			# 0x2
-+	beq	$s4,$t1,.L9
-+	andi	$t1,$t0,0x4
-+	beqz	$t1,.L15
-+	fld.d	$f2,$s1,128
-+.L16:
-+	addi.w	$t1,$zero,3			# 0x3
-+	beq	$s4,$t1,.L9
-+	andi	$t1,$t0,0x8
-+	beqz	$t1,.L17
-+	fld.d	$f3,$s1,136
-+.L18:
-+	addi.w	$t1,$zero,4			# 0x4
-+	beq	$s4,$t1,.L9
-+	andi	$t1,$t0,0x10
-+	bnez	$t1,.L75
-+	ldptr.w	$t1,$s1,68
-+	andi	$t1,$t1,0x10
-+	beqz	$t1,.L20
-+	fld.s	$f4,$s1,92
-+.L20:
-+	addi.w	$t1,$zero,5			# 0x5
-+	beq	$s4,$t1,.L9
-+	andi	$t1,$t0,0x20
-+	beqz	$t1,.L21
-+	fld.d	$f5,$s1,152
-+.L22:
-+	addi.w	$t1,$zero,6			# 0x6
-+	beq	$s4,$t1,.L9
-+	andi	$t1,$t0,0x40
-+	beqz	$t1,.L23
-+	fld.d	$f6,$s1,160
-+.L24:
-+	addi.w	$t1,$zero,7			# 0x7
-+	beq	$s4,$t1,.L9
-+	andi	$t0,$t0,0x80
-+	beqz	$t0,.L25
-+	fld.d	$f7,$s1,168
-+	.align	3,54525952,4
-+.L9:
-+	ldptr.w	$t0,$s1,24
-+	addi.w	$t1,$zero,13			# 0xd
-+	ld.d	$t2,$s1,8
-+	beq	$t0,$t1,.L76
-+	addi.w	$t1,$zero,14			# 0xe
-+	beq	$t0,$t1,.L77
-+	jirl	$ra,$t2,0
-+	ldptr.w	$t0,$s1,24
-+	addi.w	$t1,$zero,1			# 0x1
-+	beq	$t0,$t1,.L27
-+	addi.w	$t1,$zero,16			# 0x10
-+	bltu	$t1,$t0,.L27
-+	la.local	$t1,.L30
-+	alsl.d	$t0,$t0,$t1,3
-+	ldptr.d	$t0,$t0,0
-+	add.d	$t1,$t1,$t0
-+	jirl	$zero,$t1,0
-+	.section	.rodata
-+	.align	1
-+	.align	2
-+.L30:
-+	.dword	.L27-.L30
-+	.dword	.L27-.L30
-+	.dword	.L38-.L30
-+	.dword	.L38-.L30
-+	.dword	.L38-.L30
-+	.dword	.L36-.L30
-+	.dword	.L36-.L30
-+	.dword	.L34-.L30
-+	.dword	.L34-.L30
-+	.dword	.L31-.L30
-+	.dword	.L31-.L30
-+	.dword	.L31-.L30
-+	.dword	.L31-.L30
-+	.dword	.L27-.L30
-+	.dword	.L27-.L30
-+	.dword	.L31-.L30
-+	.dword	.L29-.L30
-+	.text
-+	.align	3,54525952,4
++	ldptr.d	$a0,$s1,0
++.L5:
++	addi.w	$t0,$r0,2			# 0x2
++	ld.d	$a1,$s1,8
++	beq	$s2,$t0,.L6
++	addi.w	$t0,$r0,3			# 0x3
++	ld.d	$a2,$s1,16
++	beq	$s2,$t0,.L6
++	addi.w	$t0,$r0,4			# 0x4
++	ld.d	$a3,$s1,24
++	beq	$s2,$t0,.L6
++	addi.w	$t0,$r0,5			# 0x5
++	ld.d	$a4,$s1,32
++	beq	$s2,$t0,.L6
++	addi.w	$t0,$r0,6			# 0x6
++	ld.d	$a5,$s1,40
++	beq	$s2,$t0,.L6
++	addi.w	$t0,$r0,7			# 0x7
++	ld.d	$a6,$s1,48
++	beq	$s2,$t0,.L6
++	ld.d	$a7,$s1,56
++.L6:
++	beqz	$s3,.L8
++	ldptr.w	$t0,$s0,72
++	andi	$t1,$t0,1
++	beqz	$t1,.L9
++	fld.d	$f0,$s0,112
 +.L10:
-+	ldptr.w	$t1,$s1,68
-+	andi	$t1,$t1,0x1
-+	beqz	$t1,.L11
-+	fld.s	$f0,$s1,76
-+	b	.L11
-+	.align	3,54525952,4
-+.L77:
-+	ld.d	$s0,$s1,16
++	addi.w	$t1,$r0,1			# 0x1
++	beq	$s3,$t1,.L8
++	andi	$t1,$t0,2
++	bnez	$t1,.L73
++	ldptr.w	$t1,$s0,68
++	andi	$t1,$t1,2
++	beqz	$t1,.L13
++	fld.s	$f1,$s0,80
++.L13:
++	addi.w	$t1,$r0,2			# 0x2
++	beq	$s3,$t1,.L8
++	andi	$t1,$t0,4
++	beqz	$t1,.L14
++	fld.d	$f2,$s0,128
++.L15:
++	addi.w	$t1,$r0,3			# 0x3
++	beq	$s3,$t1,.L8
++	andi	$t1,$t0,8
++	beqz	$t1,.L16
++	fld.d	$f3,$s0,136
++.L17:
++	addi.w	$t1,$r0,4			# 0x4
++	beq	$s3,$t1,.L8
++	andi	$t1,$t0,16
++	bnez	$t1,.L74
++	ldptr.w	$t1,$s0,68
++	andi	$t1,$t1,16
++	beqz	$t1,.L19
++	fld.s	$f4,$s0,92
++.L19:
++	addi.w	$t1,$r0,5			# 0x5
++	beq	$s3,$t1,.L8
++	andi	$t1,$t0,32
++	beqz	$t1,.L20
++	fld.d	$f5,$s0,152
++.L21:
++	addi.w	$t1,$r0,6			# 0x6
++	beq	$s3,$t1,.L8
++	andi	$t1,$t0,64
++	beqz	$t1,.L22
++	fld.d	$f6,$s0,160
++.L23:
++	addi.w	$t1,$r0,7			# 0x7
++	beq	$s3,$t1,.L8
++	andi	$t0,$t0,128
++	beqz	$t0,.L24
++	fld.d	$f7,$s0,168
++.L8:
++	ldptr.w	$t0,$s0,24
++	addi.w	$t1,$r0,13			# 0xd
++	ld.d	$t2,$s0,8
++	beq	$t0,$t1,.L75
++	addi.w	$t1,$r0,14			# 0xe
++	beq	$t0,$t1,.L76
++	jirl	$ra,$t2,0
++	ldptr.w	$t0,$s0,24
++	addi.w	$t1,$r0,1			# 0x1
++	beq	$t0,$t1,.L26
++	addi.w	$t1,$r0,16			# 0x10
++	bgtu	$t0,$t1,.L26
++	la.local	$t1,.L29
++	slli.d	$t0,$t0,3
++	ldx.d	$t0,$t1,$t0
++	add.d	$t1,$t1,$t0
++	jr	$t1
++	.section	.rodata
++	.align	3
++	.align	2
++.L29:
++	.dword	.L26-.L29
++	.dword	.L26-.L29
++	.dword	.L37-.L29
++	.dword	.L37-.L29
++	.dword	.L37-.L29
++	.dword	.L35-.L29
++	.dword	.L35-.L29
++	.dword	.L33-.L29
++	.dword	.L33-.L29
++	.dword	.L30-.L29
++	.dword	.L30-.L29
++	.dword	.L30-.L29
++	.dword	.L30-.L29
++	.dword	.L26-.L29
++	.dword	.L26-.L29
++	.dword	.L30-.L29
++	.dword	.L28-.L29
++	.text
++.L9:
++	ldptr.w	$t1,$s0,68
++	andi	$t1,$t1,1
++	beqz	$t1,.L10
++	fld.s	$f0,$s0,76
++	b	.L10
++.L76:
++	ld.d	$s0,$s0,16
 +	jirl	$ra,$t2,0
 +	fst.d	$f0,$s0,0
-+.L27:
-+	ld.d	$t1,$fp,-72
-+	ldptr.d	$t0,$s3,0
-+	bne	$t1,$t0,.L78
-+	addi.d	$sp,$fp,-80
-+	ld.d	$ra,$sp,72
-+	ld.d	$fp,$sp,64
-+	ld.d	$s0,$sp,56
-+	ld.d	$s1,$sp,48
-+	ld.d	$s2,$sp,40
-+	ld.d	$s3,$sp,32
-+	ld.d	$s4,$sp,24
-+	or	$a0,$zero,$zero
-+	addi.d	$sp,$sp,80
-+	jirl	$zero,$ra,0
-+	.align	3,54525952,4
-+.L2:
-+	bge	$zero,$s0,.L7
-+	addi.w	$t0,$zero,1			# 0x1
-+	ldptr.d	$a0,$s2,0
-+	beq	$s0,$t0,.L7
-+	addi.w	$t0,$zero,2			# 0x2
-+	ld.d	$a1,$s2,8
-+	beq	$s0,$t0,.L7
-+	b	.L3
-+	.align	3,54525952,4
-+.L76:
-+	ld.d	$s0,$s1,16
++.L26:
++	addi.d	$sp,$fp,-48
++	.cfi_remember_state
++	.cfi_def_cfa 3, 48
++	ld.d	$ra,$sp,40
++	.cfi_restore 1
++	ld.d	$fp,$sp,32
++	.cfi_restore 22
++	ld.d	$s0,$sp,24
++	.cfi_restore 23
++	ld.d	$s1,$sp,16
++	.cfi_restore 24
++	ld.d	$s2,$sp,8
++	.cfi_restore 25
++	ldptr.d	$s3,$sp,0
++	.cfi_restore 26
++	or	$a0,$zero,$r0
++	addi.d	$sp,$sp,48
++	.cfi_def_cfa_offset 0
++	jr	$ra
++.L72:
++	.cfi_restore_state
++	ble	$s2,$r0,.L6
++	addi.w	$t0,$r0,1			# 0x1
++	ldptr.d	$a0,$s1,0
++	bne	$s2,$t0,.L5
++	b	.L6
++.L75:
++	ld.d	$s0,$s0,16
 +	jirl	$ra,$t2,0
 +	fst.s	$f0,$s0,0
-+	b	.L27
-+	.align	3,54525952,4
-+.L74:
-+	fld.d	$f1,$s1,120
-+	b	.L14
-+	.align	3,54525952,4
-+.L31:
-+	ld.d	$t0,$s1,16
++	b	.L26
++.L73:
++	fld.d	$f1,$s0,120
++	b	.L13
++.L30:
++	ld.d	$t0,$s0,16
 +	stptr.d	$a0,$t0,0
-+	b	.L27
-+.L38:
-+	ld.d	$t0,$s1,16
++	b	.L26
++.L37:
++	ld.d	$t0,$s0,16
 +	st.b	$a0,$t0,0
-+	b	.L27
-+	.align	3,54525952,4
-+.L15:
-+	ldptr.w	$t1,$s1,68
-+	andi	$t1,$t1,0x4
-+	beqz	$t1,.L16
-+	fld.s	$f2,$s1,84
-+	b	.L16
-+.L17:
-+	ldptr.w	$t1,$s1,68
-+	andi	$t1,$t1,0x8
-+	beqz	$t1,.L18
-+	fld.s	$f3,$s1,88
-+	b	.L18
-+.L75:
-+	fld.d	$f4,$s1,144
-+	b	.L20
-+.L34:
-+	ld.d	$t0,$s1,16
-+	stptr.w	$a0,$t0,0
-+	b	.L27
-+.L36:
-+	ld.d	$t0,$s1,16
++	b	.L26
++.L14:
++	ldptr.w	$t1,$s0,68
++	andi	$t1,$t1,4
++	beqz	$t1,.L15
++	fld.s	$f2,$s0,84
++	b	.L15
++.L16:
++	ldptr.w	$t1,$s0,68
++	andi	$t1,$t1,8
++	beqz	$t1,.L17
++	fld.s	$f3,$s0,88
++	b	.L17
++.L74:
++	fld.d	$f4,$s0,144
++	b	.L19
++.L35:
++	ld.d	$t0,$s0,16
 +	st.h	$a0,$t0,0
-+	b	.L27
-+.L29:
-+	ldptr.w	$t0,$s1,0
-+	andi	$t0,$t0,0x200
-+	beqz	$t0,.L27
-+	ld.d	$s2,$s1,32
-+	addi.w	$t1,$zero,15			# 0xf
-+	addi.d	$t0,$s2,-1
-+	bltu	$t1,$t0,.L27
-+	ld.d	$t4,$s1,16
-+	addi.w	$t0,$zero,-8			# 0xfffffffffffffff8
-+	addi.w	$t1,$zero,1			# 0x1
-+	andi	$s0,$t4,0x7
-+	and	$t4,$t4,$t0
-+	ldptr.d	$t6,$t4,0
-+	slli.w	$t8,$s0,0
-+	slli.w	$t8,$t8,3
-+	add.d	$s1,$s2,$s0
++	b	.L26
++.L33:
++	ld.d	$t0,$s0,16
++	stptr.w	$a0,$t0,0
++	b	.L26
++.L28:
++	ldptr.w	$t0,$s0,0
++	andi	$t0,$t0,512
++	beqz	$t0,.L26
++	ld.d	$s1,$s0,32
++	addi.w	$t0,$r0,15			# 0xf
++	addi.d	$t1,$s1,-1
++	bgtu	$t1,$t0,.L26
++	ld.d	$t0,$s0,16
++	addi.w	$t4,$r0,-8			# 0xfffffffffffffff8
++	addi.w	$t1,$r0,1			# 0x1
++	and	$t4,$t0,$t4
++	ldptr.d	$t5,$t4,0
++	andi	$t0,$t0,7
++	slli.w	$t8,$t0,3
++	add.d	$s2,$s1,$t0
 +	sll.d	$t7,$a0,$t8
-+	slli.w	$t5,$s1,0
-+	addi.w	$t0,$zero,8			# 0x8
++	addi.w	$s0,$r0,8			# 0x8
 +	sll.d	$t1,$t1,$t8
-+	xor	$t7,$t7,$t6
-+	slli.w	$t5,$t5,3
-+	bltu	$t0,$s2,.L41
-+	bltu	$t0,$s1,.L42
-+	addi.w	$t5,$t5,-1
-+	addi.w	$t0,$zero,2			# 0x2
-+	sll.d	$t0,$t0,$t5
++	xor	$t7,$t7,$t5
++	slli.w	$t6,$s2,3
++	bgtu	$s1,$s0,.L40
++	bgtu	$s2,$s0,.L41
++	addi.w	$t6,$t6,-1
++	addi.w	$t0,$r0,2			# 0x2
++	sll.d	$t0,$t0,$t6
 +	sub.d	$t0,$t0,$t1
 +	and	$t0,$t0,$t7
-+	xor	$t0,$t0,$t6
++	xor	$t0,$t0,$t5
 +	stptr.d	$t0,$t4,0
-+	b	.L27
-+	.align	3,54525952,4
-+.L21:
-+	ldptr.w	$t1,$s1,68
-+	andi	$t1,$t1,0x20
-+	beqz	$t1,.L22
-+	fld.s	$f5,$s1,96
-+	b	.L22
-+.L23:
-+	ldptr.w	$t1,$s1,68
-+	andi	$t1,$t1,0x40
-+	beqz	$t1,.L24
-+	fld.s	$f6,$s1,100
-+	b	.L24
-+.L25:
-+	ldptr.w	$t0,$s1,68
-+	andi	$t0,$t0,0x80
-+	beqz	$t0,.L9
-+	fld.s	$f7,$s1,104
-+	b	.L9
-+.L41:
++	b	.L26
++.L20:
++	ldptr.w	$t1,$s0,68
++	andi	$t1,$t1,32
++	beqz	$t1,.L21
++	fld.s	$f5,$s0,96
++	b	.L21
++.L22:
++	ldptr.w	$t1,$s0,68
++	andi	$t1,$t1,64
++	beqz	$t1,.L23
++	fld.s	$f6,$s0,100
++	b	.L23
++.L24:
++	ldptr.w	$t0,$s0,68
++	andi	$t0,$t0,128
++	beqz	$t0,.L8
++	fld.s	$f7,$s0,104
++	b	.L8
++.L40:
 +	sub.d	$t1,$zero,$t1
 +	and	$t1,$t1,$t7
-+	xor	$t1,$t1,$t6
-+	sub.d	$t0,$t0,$s0
++	xor	$t1,$t1,$t5
 +	stptr.d	$t1,$t4,0
-+	addi.w	$t1,$zero,16			# 0x10
-+	slli.w	$t0,$t0,0
-+	sll.d	$t6,$a1,$t8
-+	bltu	$t1,$s1,.L43
++	addi.w	$t1,$r0,16			# 0x10
++	sub.d	$t0,$s0,$t0
++	sll.d	$t8,$a1,$t8
++	bgtu	$s2,$t1,.L42
 +	slli.w	$t0,$t0,2
 +	ld.d	$t3,$t4,8
 +	sra.d	$t2,$a0,$t0
 +	sra.d	$t0,$t2,$t0
-+	addi.w	$t5,$t5,-65
-+	addi.w	$t1,$zero,2			# 0x2
-+	or	$t0,$t0,$t6
-+	sll.d	$t1,$t1,$t5
++	addi.w	$t6,$t6,-65
++	addi.w	$t1,$r0,2			# 0x2
++	or	$t0,$t0,$t8
++	sll.d	$t1,$t1,$t6
 +	xor	$t0,$t0,$t3
 +	addi.d	$t1,$t1,-1
 +	and	$t0,$t0,$t1
 +	xor	$t0,$t0,$t3
 +	st.d	$t0,$t4,8
-+	b	.L27
-+.L42:
-+	sub.d	$t0,$t0,$s0
++	b	.L26
++.L41:
 +	ld.d	$t3,$t4,8
-+	slli.w	$t0,$t0,0
++	sub.d	$t0,$s0,$t0
 +	slli.w	$t0,$t0,3
-+	addi.w	$t5,$t5,-65
-+	addi.w	$t2,$zero,2			# 0x2
++	addi.w	$t6,$t6,-65
++	addi.w	$t2,$r0,2			# 0x2
 +	sra.d	$t0,$a0,$t0
-+	sll.d	$t2,$t2,$t5
++	sll.d	$t2,$t2,$t6
 +	sub.d	$t1,$zero,$t1
 +	xor	$t0,$t0,$t3
 +	addi.d	$t2,$t2,-1
 +	and	$t1,$t1,$t7
 +	and	$t0,$t0,$t2
-+	xor	$t1,$t1,$t6
++	xor	$t1,$t1,$t5
 +	xor	$t0,$t0,$t3
 +	stptr.d	$t1,$t4,0
 +	st.d	$t0,$t4,8
-+	b	.L27
-+.L43:
++	b	.L26
++.L42:
 +	ld.d	$t7,$t4,16
-+	addi.w	$t1,$t5,-129
 +	slli.w	$t0,$t0,3
-+	addi.w	$t5,$zero,2			# 0x2
++	addi.w	$t1,$t6,-129
++	addi.w	$t5,$r0,2			# 0x2
 +	sll.d	$t5,$t5,$t1
 +	sra.d	$t1,$a1,$t0
 +	addi.d	$t3,$t5,-1
 +	xor	$t1,$t1,$t7
 +	sra.d	$t0,$a0,$t0
 +	and	$t1,$t3,$t1
-+	or	$t0,$t0,$t6
++	or	$t0,$t0,$t8
 +	xor	$t1,$t1,$t7
 +	st.d	$t0,$t4,8
 +	st.d	$t1,$t4,16
-+	b	.L27
-+.L78:
-+	bl	%plt(__stack_chk_fail)
++	b	.L26
++	.cfi_endproc
++.LFE0:
++	.size	avcall_call, .-avcall_call
++	.ident	"GCC: (GNU) 12.0.1 20220317 (experimental)"
++	.section	.note.GNU-stack,"",@progbits
+diff --git a/avcall/avcall-loongarch64-macro.S b/avcall/avcall-loongarch64-macro.S
+new file mode 100644
+index 0000000..ab5dc24
+--- /dev/null
++++ b/avcall/avcall-loongarch64-macro.S
+@@ -0,0 +1,345 @@
++	.file	"avcall-loongarch64.c"
++	.text
++	.align	2
++	.globl	avcall_call
++	.type	avcall_call, @function
++avcall_call:
++.LFB0 = .
++	.cfi_startproc
++	addi.d	$sp,$sp,-48
++	.cfi_def_cfa_offset 48
++	st.d	$fp,$sp,32
++	st.d	$s0,$sp,24
++	st.d	$s1,$sp,16
++	st.d	$s2,$sp,8
++	stptr.d	$s3,$sp,0
++	st.d	$ra,$sp,40
++	.cfi_offset 22, -16
++	.cfi_offset 23, -24
++	.cfi_offset 24, -32
++	.cfi_offset 25, -40
++	.cfi_offset 26, -48
++	.cfi_offset 1, -8
++	addi.d	$fp,$sp,48
++	.cfi_def_cfa 22, 0
++	ld.d	$s1,$a0,48
++	ld.d	$t0,$a0,40
++	addi.w	$t1,$r0,8			# 0x8
++	ldptr.w	$s3,$a0,64
++	sub.d	$t0,$t0,$s1
++	srai.d	$t0,$t0,3
++	slli.w	$s2,$t0,0
++	or	$s0,$a0,$r0
++	addi.d	$sp,$sp,-2048
++	ble	$s2,$t1,.L72
++	addi.w	$a2,$t0,-9
++	or	$t2,$sp,$r0
++	bstrpick.d	$a2,$a2,31,0
++	alsl.d	$a2,$a2,$zero,3
++	addi.d	$a2,$a2,8
++	addi.d	$a1,$s1,64
++	or	$a0,$t2,$r0
++	bl	%plt(memcpy)
++	ldptr.d	$a0,$s1,0
++.L5:
++	addi.w	$t0,$r0,2			# 0x2
++	ld.d	$a1,$s1,8
++	beq	$s2,$t0,.L6
++	addi.w	$t0,$r0,3			# 0x3
++	ld.d	$a2,$s1,16
++	beq	$s2,$t0,.L6
++	addi.w	$t0,$r0,4			# 0x4
++	ld.d	$a3,$s1,24
++	beq	$s2,$t0,.L6
++	addi.w	$t0,$r0,5			# 0x5
++	ld.d	$a4,$s1,32
++	beq	$s2,$t0,.L6
++	addi.w	$t0,$r0,6			# 0x6
++	ld.d	$a5,$s1,40
++	beq	$s2,$t0,.L6
++	addi.w	$t0,$r0,7			# 0x7
++	ld.d	$a6,$s1,48
++	beq	$s2,$t0,.L6
++	ld.d	$a7,$s1,56
++.L6:
++	beqz	$s3,.L8
++	ldptr.w	$t0,$s0,72
++	andi	$t1,$t0,1
++	beqz	$t1,.L9
++	fld.d	$f0,$s0,112
++.L10:
++	addi.w	$t1,$r0,1			# 0x1
++	beq	$s3,$t1,.L8
++	andi	$t1,$t0,2
++	bnez	$t1,.L73
++	ldptr.w	$t1,$s0,68
++	andi	$t1,$t1,2
++	beqz	$t1,.L13
++	fld.s	$f1,$s0,80
++.L13:
++	addi.w	$t1,$r0,2			# 0x2
++	beq	$s3,$t1,.L8
++	andi	$t1,$t0,4
++	beqz	$t1,.L14
++	fld.d	$f2,$s0,128
++.L15:
++	addi.w	$t1,$r0,3			# 0x3
++	beq	$s3,$t1,.L8
++	andi	$t1,$t0,8
++	beqz	$t1,.L16
++	fld.d	$f3,$s0,136
++.L17:
++	addi.w	$t1,$r0,4			# 0x4
++	beq	$s3,$t1,.L8
++	andi	$t1,$t0,16
++	bnez	$t1,.L74
++	ldptr.w	$t1,$s0,68
++	andi	$t1,$t1,16
++	beqz	$t1,.L19
++	fld.s	$f4,$s0,92
++.L19:
++	addi.w	$t1,$r0,5			# 0x5
++	beq	$s3,$t1,.L8
++	andi	$t1,$t0,32
++	beqz	$t1,.L20
++	fld.d	$f5,$s0,152
++.L21:
++	addi.w	$t1,$r0,6			# 0x6
++	beq	$s3,$t1,.L8
++	andi	$t1,$t0,64
++	beqz	$t1,.L22
++	fld.d	$f6,$s0,160
++.L23:
++	addi.w	$t1,$r0,7			# 0x7
++	beq	$s3,$t1,.L8
++	andi	$t0,$t0,128
++	beqz	$t0,.L24
++	fld.d	$f7,$s0,168
++.L8:
++	ldptr.w	$t0,$s0,24
++	addi.w	$t1,$r0,13			# 0xd
++	ld.d	$t2,$s0,8
++	beq	$t0,$t1,.L75
++	addi.w	$t1,$r0,14			# 0xe
++	beq	$t0,$t1,.L76
++	jirl	$ra,$t2,0
++	ldptr.w	$t0,$s0,24
++	addi.w	$t1,$r0,1			# 0x1
++	beq	$t0,$t1,.L26
++	addi.w	$t1,$r0,16			# 0x10
++	bgtu	$t0,$t1,.L26
++	la.local	$t1,.L29
++	slli.d	$t0,$t0,3
++	ldx.d	$t0,$t1,$t0
++	add.d	$t1,$t1,$t0
++	jr	$t1
++	.section	.rodata
++	.align	3
++	.align	2
++.L29:
++	.dword	.L26-.L29
++	.dword	.L26-.L29
++	.dword	.L37-.L29
++	.dword	.L37-.L29
++	.dword	.L37-.L29
++	.dword	.L35-.L29
++	.dword	.L35-.L29
++	.dword	.L33-.L29
++	.dword	.L33-.L29
++	.dword	.L30-.L29
++	.dword	.L30-.L29
++	.dword	.L30-.L29
++	.dword	.L30-.L29
++	.dword	.L26-.L29
++	.dword	.L26-.L29
++	.dword	.L30-.L29
++	.dword	.L28-.L29
++	.text
++.L9:
++	ldptr.w	$t1,$s0,68
++	andi	$t1,$t1,1
++	beqz	$t1,.L10
++	fld.s	$f0,$s0,76
++	b	.L10
++.L76:
++	ld.d	$s0,$s0,16
++	jirl	$ra,$t2,0
++	fst.d	$f0,$s0,0
++.L26:
++	addi.d	$sp,$fp,-48
++	.cfi_remember_state
++	.cfi_def_cfa 3, 48
++	ld.d	$ra,$sp,40
++	.cfi_restore 1
++	ld.d	$fp,$sp,32
++	.cfi_restore 22
++	ld.d	$s0,$sp,24
++	.cfi_restore 23
++	ld.d	$s1,$sp,16
++	.cfi_restore 24
++	ld.d	$s2,$sp,8
++	.cfi_restore 25
++	ldptr.d	$s3,$sp,0
++	.cfi_restore 26
++	or	$a0,$zero,$r0
++	addi.d	$sp,$sp,48
++	.cfi_def_cfa_offset 0
++	jr	$ra
++.L72:
++	.cfi_restore_state
++	ble	$s2,$r0,.L6
++	addi.w	$t0,$r0,1			# 0x1
++	ldptr.d	$a0,$s1,0
++	bne	$s2,$t0,.L5
++	b	.L6
++.L75:
++	ld.d	$s0,$s0,16
++	jirl	$ra,$t2,0
++	fst.s	$f0,$s0,0
++	b	.L26
++.L73:
++	fld.d	$f1,$s0,120
++	b	.L13
++.L30:
++	ld.d	$t0,$s0,16
++	stptr.d	$a0,$t0,0
++	b	.L26
++.L37:
++	ld.d	$t0,$s0,16
++	st.b	$a0,$t0,0
++	b	.L26
++.L14:
++	ldptr.w	$t1,$s0,68
++	andi	$t1,$t1,4
++	beqz	$t1,.L15
++	fld.s	$f2,$s0,84
++	b	.L15
++.L16:
++	ldptr.w	$t1,$s0,68
++	andi	$t1,$t1,8
++	beqz	$t1,.L17
++	fld.s	$f3,$s0,88
++	b	.L17
++.L74:
++	fld.d	$f4,$s0,144
++	b	.L19
++.L35:
++	ld.d	$t0,$s0,16
++	st.h	$a0,$t0,0
++	b	.L26
++.L33:
++	ld.d	$t0,$s0,16
++	stptr.w	$a0,$t0,0
++	b	.L26
++.L28:
++	ldptr.w	$t0,$s0,0
++	andi	$t0,$t0,512
++	beqz	$t0,.L26
++	ld.d	$s1,$s0,32
++	addi.w	$t0,$r0,15			# 0xf
++	addi.d	$t1,$s1,-1
++	bgtu	$t1,$t0,.L26
++	ld.d	$t0,$s0,16
++	addi.w	$t4,$r0,-8			# 0xfffffffffffffff8
++	addi.w	$t1,$r0,1			# 0x1
++	and	$t4,$t0,$t4
++	ldptr.d	$t5,$t4,0
++	andi	$t0,$t0,7
++	slli.w	$t8,$t0,3
++	add.d	$s2,$s1,$t0
++	sll.d	$t7,$a0,$t8
++	addi.w	$s0,$r0,8			# 0x8
++	sll.d	$t1,$t1,$t8
++	xor	$t7,$t7,$t5
++	slli.w	$t6,$s2,3
++	bgtu	$s1,$s0,.L40
++	bgtu	$s2,$s0,.L41
++	addi.w	$t6,$t6,-1
++	addi.w	$t0,$r0,2			# 0x2
++	sll.d	$t0,$t0,$t6
++	sub.d	$t0,$t0,$t1
++	and	$t0,$t0,$t7
++	xor	$t0,$t0,$t5
++	stptr.d	$t0,$t4,0
++	b	.L26
++.L20:
++	ldptr.w	$t1,$s0,68
++	andi	$t1,$t1,32
++	beqz	$t1,.L21
++	fld.s	$f5,$s0,96
++	b	.L21
++.L22:
++	ldptr.w	$t1,$s0,68
++	andi	$t1,$t1,64
++	beqz	$t1,.L23
++	fld.s	$f6,$s0,100
++	b	.L23
++.L24:
++	ldptr.w	$t0,$s0,68
++	andi	$t0,$t0,128
++	beqz	$t0,.L8
++	fld.s	$f7,$s0,104
++	b	.L8
++.L40:
++	sub.d	$t1,$zero,$t1
++	and	$t1,$t1,$t7
++	xor	$t1,$t1,$t5
++	stptr.d	$t1,$t4,0
++	addi.w	$t1,$r0,16			# 0x10
++	sub.d	$t0,$s0,$t0
++	sll.d	$t8,$a1,$t8
++	bgtu	$s2,$t1,.L42
++	slli.w	$t0,$t0,2
++	ld.d	$t3,$t4,8
++	sra.d	$t2,$a0,$t0
++	sra.d	$t0,$t2,$t0
++	addi.w	$t6,$t6,-65
++	addi.w	$t1,$r0,2			# 0x2
++	or	$t0,$t0,$t8
++	sll.d	$t1,$t1,$t6
++	xor	$t0,$t0,$t3
++	addi.d	$t1,$t1,-1
++	and	$t0,$t0,$t1
++	xor	$t0,$t0,$t3
++	st.d	$t0,$t4,8
++	b	.L26
++.L41:
++	ld.d	$t3,$t4,8
++	sub.d	$t0,$s0,$t0
++	slli.w	$t0,$t0,3
++	addi.w	$t6,$t6,-65
++	addi.w	$t2,$r0,2			# 0x2
++	sra.d	$t0,$a0,$t0
++	sll.d	$t2,$t2,$t6
++	sub.d	$t1,$zero,$t1
++	xor	$t0,$t0,$t3
++	addi.d	$t2,$t2,-1
++	and	$t1,$t1,$t7
++	and	$t0,$t0,$t2
++	xor	$t1,$t1,$t5
++	xor	$t0,$t0,$t3
++	stptr.d	$t1,$t4,0
++	st.d	$t0,$t4,8
++	b	.L26
++.L42:
++	ld.d	$t7,$t4,16
++	slli.w	$t0,$t0,3
++	addi.w	$t1,$t6,-129
++	addi.w	$t5,$r0,2			# 0x2
++	sll.d	$t5,$t5,$t1
++	sra.d	$t1,$a1,$t0
++	addi.d	$t3,$t5,-1
++	xor	$t1,$t1,$t7
++	sra.d	$t0,$a0,$t0
++	and	$t1,$t3,$t1
++	or	$t0,$t0,$t8
++	xor	$t1,$t1,$t7
++	st.d	$t0,$t4,8
++	st.d	$t1,$t4,16
++	b	.L26
++	.cfi_endproc
++.LFE0:
 +	.size	avcall_call, .-avcall_call
 +#if defined __linux__ || defined __FreeBSD__ || defined __FreeBSD_kernel__ || defined __DragonFly__
 +	.section .note.GNU-stack,"",@progbits
 +#endif
 diff --git a/avcall/avcall-loongarch64.c b/avcall/avcall-loongarch64.c
 new file mode 100644
-index 0000000..4bb72b6
+index 0000000..0e33033
 --- /dev/null
 +++ b/avcall/avcall-loongarch64.c
 @@ -0,0 +1,358 @@
@@ -737,14 +1083,14 @@ index 0000000..4bb72b6
 +
 +#define RETURN(TYPE,VAL)	(*(TYPE*)l->raddr = (TYPE)(VAL))
 +
-+register __avrword iarg1 __asm__("r4");
-+register __avrword iarg2 __asm__("r5");
-+register __avrword iarg3 __asm__("r6");
-+register __avrword iarg4 __asm__("r7");
-+register __avrword iarg5 __asm__("r8");
-+register __avrword iarg6 __asm__("r9");
-+register __avrword iarg7 __asm__("r10");
-+register __avrword iarg8 __asm__("r11");
++register __avrword iarg1 __asm__("a0");
++register __avrword iarg2 __asm__("a1");
++register __avrword iarg3 __asm__("a2");
++register __avrword iarg4 __asm__("a3");
++register __avrword iarg5 __asm__("a4");
++register __avrword iarg6 __asm__("a5");
++register __avrword iarg7 __asm__("a6");
++register __avrword iarg8 __asm__("a7");
 +
 +register float farg1 __asm__("f0");
 +register float farg2 __asm__("f1");
@@ -767,8 +1113,8 @@ index 0000000..4bb72b6
 +int
 +avcall_call(av_alist* list)
 +{
-+  register __avrword	iretreg	 __asm__("r4");
-+  register __avrword	iret2reg __asm__("r5");
++  register __avrword	iretreg	 __asm__("a0");
++  register __avrword	iret2reg __asm__("a1");
 +  register double	dret	__asm__("f0");
 +
 +  __av_alist* l = &AV_LIST_INNER(list);
@@ -1343,6 +1689,453 @@ index 012f4d9..8cf11b3 100644
    vacall-m68k-linux.s vacall-m68k-sun.s vacall-m68k.mit.S vacall-m68k.motorola.S \
    vacall-mipseb-linux.s vacall-mipsel-linux.s vacall-mipseb-macro.S vacall-mipsel-macro.S \
    vacall-mipsn32eb-linux.s vacall-mipsn32el-linux.s vacall-mipsn32eb-macro.S vacall-mipsn32el-macro.S \
+diff --git a/callback/vacall_r/vacall-loongarch64-linux.s b/callback/vacall_r/vacall-loongarch64-linux.s
+new file mode 100644
+index 0000000..7277364
+--- /dev/null
++++ b/callback/vacall_r/vacall-loongarch64-linux.s
+@@ -0,0 +1,217 @@
++	.file	"vacall-loongarch64.c"
++	.text
++	.align	2
++	.type	callback_receiver, @function
++callback_receiver:
++.LFB0 = .
++	.cfi_startproc
++	addi.d	$sp,$sp,-288
++	.cfi_def_cfa_offset 288
++	st.d	$ra,$sp,264
++	st.d	$fp,$sp,256
++	st.d	$s0,$sp,248
++	.cfi_offset 1, -24
++	.cfi_offset 22, -32
++	.cfi_offset 23, -40
++	addi.d	$fp,$sp,272
++	.cfi_def_cfa 22, 16
++	addi.d	$t1,$fp,16
++	ldptr.d	$t0,$t8,0
++	st.d	$a7,$fp,8
++	st.d	$a1,$fp,-192
++	st.d	$a2,$fp,-184
++	st.d	$a3,$fp,-176
++	st.d	$a4,$fp,-168
++	st.d	$a5,$fp,-160
++	st.d	$a6,$fp,-152
++	st.d	$a7,$fp,-144
++	fst.s	$f0,$fp,-132
++	fst.s	$f1,$fp,-128
++	fst.s	$f2,$fp,-124
++	fst.s	$f3,$fp,-120
++	fst.s	$f4,$fp,-116
++	fst.s	$f5,$fp,-112
++	fst.s	$f6,$fp,-108
++	fst.s	$f7,$fp,-104
++	fst.d	$f0,$fp,-96
++	fst.d	$f1,$fp,-88
++	fst.d	$f2,$fp,-80
++	fst.d	$f3,$fp,-72
++	fst.d	$f4,$fp,-64
++	fst.d	$f5,$fp,-56
++	fst.d	$f6,$fp,-48
++	fst.d	$f7,$fp,-40
++	st.d	$t1,$fp,-240
++	st.d	$a0,$fp,-200
++	st.w	$zero,$fp,-264
++	st.d	$zero,$fp,-232
++	ld.d	$a0,$t8,8
++	st.w	$zero,$fp,-224
++	st.w	$zero,$fp,-208
++	st.w	$zero,$fp,-136
++	addi.d	$a1,$fp,-264
++	jirl	$ra,$t0,0
++	ldptr.w	$t0,$fp,-224
++	beqz	$t0,.L1
++	addi.w	$t1,$r0,15			# 0xf
++	bgtu	$t0,$t1,.L1
++	la.local	$t1,.L4
++	slli.d	$t0,$t0,3
++	ldx.d	$t0,$t1,$t0
++	add.d	$t1,$t1,$t0
++	jr	$t1
++	.section	.rodata
++	.align	3
++	.align	2
++.L4:
++	.dword	.L1-.L4
++	.dword	.L15-.L4
++	.dword	.L15-.L4
++	.dword	.L14-.L4
++	.dword	.L13-.L4
++	.dword	.L12-.L4
++	.dword	.L11-.L4
++	.dword	.L10-.L4
++	.dword	.L5-.L4
++	.dword	.L5-.L4
++	.dword	.L5-.L4
++	.dword	.L5-.L4
++	.dword	.L7-.L4
++	.dword	.L6-.L4
++	.dword	.L5-.L4
++	.dword	.L3-.L4
++	.text
++.L5:
++	ld.d	$a0,$fp,-256
++.L1:
++	ld.d	$ra,$sp,264
++	.cfi_remember_state
++	.cfi_restore 1
++	ld.d	$fp,$sp,256
++	.cfi_restore 22
++	ld.d	$s0,$sp,248
++	.cfi_restore 23
++	addi.d	$sp,$sp,288
++	.cfi_def_cfa 3, 0
++	jr	$ra
++.L15:
++	.cfi_restore_state
++	ld.b	$a0,$fp,-256
++	b	.L1
++.L10:
++	ld.wu	$a0,$fp,-256
++	b	.L1
++.L14:
++	ld.bu	$a0,$fp,-256
++	b	.L1
++.L13:
++	ld.h	$a0,$fp,-256
++	b	.L1
++.L12:
++	ld.hu	$a0,$fp,-256
++	b	.L1
++.L11:
++	ldptr.w	$a0,$fp,-256
++	b	.L1
++.L6:
++	fld.d	$f0,$fp,-256
++	b	.L1
++.L7:
++	fld.s	$f0,$fp,-256
++	b	.L1
++.L3:
++	ldptr.w	$t0,$fp,-264
++	andi	$t0,$t0,1024
++	beqz	$t0,.L1
++	ld.d	$t0,$fp,-216
++	addi.w	$t1,$r0,15			# 0xf
++	addi.d	$t2,$t0,-1
++	bgtu	$t2,$t1,.L1
++	ld.d	$t1,$fp,-232
++	addi.w	$t3,$r0,-8			# 0xfffffffffffffff8
++	addi.w	$s0,$r0,8			# 0x8
++	andi	$t2,$t1,7
++	add.d	$t4,$t0,$t2
++	and	$t1,$t1,$t3
++	ldptr.d	$t5,$t1,0
++	slli.w	$t3,$t4,3
++	slli.w	$t6,$t2,3
++	bgtu	$t0,$s0,.L17
++	bgtu	$t4,$s0,.L18
++	addi.w	$t3,$t3,-1
++	addi.w	$a0,$r0,2			# 0x2
++	sll.d	$a0,$a0,$t3
++	addi.d	$a0,$a0,-1
++	and	$a0,$a0,$t5
++	sra.d	$a0,$a0,$t6
++	b	.L1
++.L17:
++	addi.w	$t0,$r0,16			# 0x10
++	ld.d	$t7,$t1,8
++	sra.d	$t5,$t5,$t6
++	sub.d	$s0,$s0,$t2
++	bgtu	$t4,$t0,.L19
++	addi.w	$t3,$t3,-65
++	addi.w	$a1,$r0,2			# 0x2
++	sll.d	$a1,$a1,$t3
++	addi.d	$a1,$a1,-1
++	and	$a1,$a1,$t7
++	slli.w	$s0,$s0,2
++	sll.d	$a0,$a1,$s0
++	sll.d	$a0,$a0,$s0
++	or	$a0,$a0,$t5
++	sra.d	$a1,$a1,$t6
++	b	.L1
++.L18:
++	ld.d	$t4,$t1,8
++	addi.w	$t3,$t3,-65
++	addi.w	$t0,$r0,2			# 0x2
++	sll.d	$t0,$t0,$t3
++	addi.d	$t0,$t0,-1
++	sub.d	$t1,$s0,$t2
++	and	$t0,$t0,$t4
++	slli.w	$t1,$t1,3
++	sll.d	$t0,$t0,$t1
++	sra.d	$t5,$t5,$t6
++	or	$a0,$t0,$t5
++	b	.L1
++.L19:
++	ld.d	$t2,$t1,16
++	addi.w	$t3,$t3,-129
++	addi.w	$t0,$r0,2			# 0x2
++	sll.d	$t0,$t0,$t3
++	addi.d	$t0,$t0,-1
++	slli.w	$t1,$s0,3
++	and	$t0,$t0,$t2
++	sll.d	$a0,$t7,$t1
++	sll.d	$t0,$t0,$t1
++	sra.d	$t7,$t7,$t6
++	or	$a0,$a0,$t5
++	or	$a1,$t0,$t7
++	b	.L1
++	.cfi_endproc
++.LFE0:
++	.size	callback_receiver, .-callback_receiver
++	.align	2
++	.globl	callback_get_receiver
++	.type	callback_get_receiver, @function
++callback_get_receiver:
++.LFB1 = .
++	.cfi_startproc
++	addi.d	$sp,$sp,-16
++	.cfi_def_cfa_offset 16
++	st.d	$fp,$sp,8
++	.cfi_offset 22, -8
++	addi.d	$fp,$sp,16
++	.cfi_def_cfa 22, 0
++	ld.d	$fp,$sp,8
++	.cfi_restore 22
++	la.local	$a0,callback_receiver
++	addi.d	$sp,$sp,16
++	.cfi_def_cfa_register 3
++	jr	$ra
++	.cfi_endproc
++.LFE1:
++	.size	callback_get_receiver, .-callback_get_receiver
++	.ident	"GCC: (GNU) 12.0.1 20220317 (experimental)"
++	.section	.note.GNU-stack,"",@progbits
+diff --git a/callback/vacall_r/vacall-loongarch64-macro.S b/callback/vacall_r/vacall-loongarch64-macro.S
+new file mode 100644
+index 0000000..3b3b3ad
+--- /dev/null
++++ b/callback/vacall_r/vacall-loongarch64-macro.S
+@@ -0,0 +1,218 @@
++	.file	"vacall-loongarch64.c"
++	.text
++	.align	2
++	.type	callback_receiver, @function
++callback_receiver:
++.LFB0 = .
++	.cfi_startproc
++	addi.d	$sp,$sp,-288
++	.cfi_def_cfa_offset 288
++	st.d	$ra,$sp,264
++	st.d	$fp,$sp,256
++	st.d	$s0,$sp,248
++	.cfi_offset 1, -24
++	.cfi_offset 22, -32
++	.cfi_offset 23, -40
++	addi.d	$fp,$sp,272
++	.cfi_def_cfa 22, 16
++	addi.d	$t1,$fp,16
++	ldptr.d	$t0,$t8,0
++	st.d	$a7,$fp,8
++	st.d	$a1,$fp,-192
++	st.d	$a2,$fp,-184
++	st.d	$a3,$fp,-176
++	st.d	$a4,$fp,-168
++	st.d	$a5,$fp,-160
++	st.d	$a6,$fp,-152
++	st.d	$a7,$fp,-144
++	fst.s	$f0,$fp,-132
++	fst.s	$f1,$fp,-128
++	fst.s	$f2,$fp,-124
++	fst.s	$f3,$fp,-120
++	fst.s	$f4,$fp,-116
++	fst.s	$f5,$fp,-112
++	fst.s	$f6,$fp,-108
++	fst.s	$f7,$fp,-104
++	fst.d	$f0,$fp,-96
++	fst.d	$f1,$fp,-88
++	fst.d	$f2,$fp,-80
++	fst.d	$f3,$fp,-72
++	fst.d	$f4,$fp,-64
++	fst.d	$f5,$fp,-56
++	fst.d	$f6,$fp,-48
++	fst.d	$f7,$fp,-40
++	st.d	$t1,$fp,-240
++	st.d	$a0,$fp,-200
++	st.w	$zero,$fp,-264
++	st.d	$zero,$fp,-232
++	ld.d	$a0,$t8,8
++	st.w	$zero,$fp,-224
++	st.w	$zero,$fp,-208
++	st.w	$zero,$fp,-136
++	addi.d	$a1,$fp,-264
++	jirl	$ra,$t0,0
++	ldptr.w	$t0,$fp,-224
++	beqz	$t0,.L1
++	addi.w	$t1,$r0,15			# 0xf
++	bgtu	$t0,$t1,.L1
++	la.local	$t1,.L4
++	slli.d	$t0,$t0,3
++	ldx.d	$t0,$t1,$t0
++	add.d	$t1,$t1,$t0
++	jr	$t1
++	.section	.rodata
++	.align	3
++	.align	2
++.L4:
++	.dword	.L1-.L4
++	.dword	.L15-.L4
++	.dword	.L15-.L4
++	.dword	.L14-.L4
++	.dword	.L13-.L4
++	.dword	.L12-.L4
++	.dword	.L11-.L4
++	.dword	.L10-.L4
++	.dword	.L5-.L4
++	.dword	.L5-.L4
++	.dword	.L5-.L4
++	.dword	.L5-.L4
++	.dword	.L7-.L4
++	.dword	.L6-.L4
++	.dword	.L5-.L4
++	.dword	.L3-.L4
++	.text
++.L5:
++	ld.d	$a0,$fp,-256
++.L1:
++	ld.d	$ra,$sp,264
++	.cfi_remember_state
++	.cfi_restore 1
++	ld.d	$fp,$sp,256
++	.cfi_restore 22
++	ld.d	$s0,$sp,248
++	.cfi_restore 23
++	addi.d	$sp,$sp,288
++	.cfi_def_cfa 3, 0
++	jr	$ra
++.L15:
++	.cfi_restore_state
++	ld.b	$a0,$fp,-256
++	b	.L1
++.L10:
++	ld.wu	$a0,$fp,-256
++	b	.L1
++.L14:
++	ld.bu	$a0,$fp,-256
++	b	.L1
++.L13:
++	ld.h	$a0,$fp,-256
++	b	.L1
++.L12:
++	ld.hu	$a0,$fp,-256
++	b	.L1
++.L11:
++	ldptr.w	$a0,$fp,-256
++	b	.L1
++.L6:
++	fld.d	$f0,$fp,-256
++	b	.L1
++.L7:
++	fld.s	$f0,$fp,-256
++	b	.L1
++.L3:
++	ldptr.w	$t0,$fp,-264
++	andi	$t0,$t0,1024
++	beqz	$t0,.L1
++	ld.d	$t0,$fp,-216
++	addi.w	$t1,$r0,15			# 0xf
++	addi.d	$t2,$t0,-1
++	bgtu	$t2,$t1,.L1
++	ld.d	$t1,$fp,-232
++	addi.w	$t3,$r0,-8			# 0xfffffffffffffff8
++	addi.w	$s0,$r0,8			# 0x8
++	andi	$t2,$t1,7
++	add.d	$t4,$t0,$t2
++	and	$t1,$t1,$t3
++	ldptr.d	$t5,$t1,0
++	slli.w	$t3,$t4,3
++	slli.w	$t6,$t2,3
++	bgtu	$t0,$s0,.L17
++	bgtu	$t4,$s0,.L18
++	addi.w	$t3,$t3,-1
++	addi.w	$a0,$r0,2			# 0x2
++	sll.d	$a0,$a0,$t3
++	addi.d	$a0,$a0,-1
++	and	$a0,$a0,$t5
++	sra.d	$a0,$a0,$t6
++	b	.L1
++.L17:
++	addi.w	$t0,$r0,16			# 0x10
++	ld.d	$t7,$t1,8
++	sra.d	$t5,$t5,$t6
++	sub.d	$s0,$s0,$t2
++	bgtu	$t4,$t0,.L19
++	addi.w	$t3,$t3,-65
++	addi.w	$a1,$r0,2			# 0x2
++	sll.d	$a1,$a1,$t3
++	addi.d	$a1,$a1,-1
++	and	$a1,$a1,$t7
++	slli.w	$s0,$s0,2
++	sll.d	$a0,$a1,$s0
++	sll.d	$a0,$a0,$s0
++	or	$a0,$a0,$t5
++	sra.d	$a1,$a1,$t6
++	b	.L1
++.L18:
++	ld.d	$t4,$t1,8
++	addi.w	$t3,$t3,-65
++	addi.w	$t0,$r0,2			# 0x2
++	sll.d	$t0,$t0,$t3
++	addi.d	$t0,$t0,-1
++	sub.d	$t1,$s0,$t2
++	and	$t0,$t0,$t4
++	slli.w	$t1,$t1,3
++	sll.d	$t0,$t0,$t1
++	sra.d	$t5,$t5,$t6
++	or	$a0,$t0,$t5
++	b	.L1
++.L19:
++	ld.d	$t2,$t1,16
++	addi.w	$t3,$t3,-129
++	addi.w	$t0,$r0,2			# 0x2
++	sll.d	$t0,$t0,$t3
++	addi.d	$t0,$t0,-1
++	slli.w	$t1,$s0,3
++	and	$t0,$t0,$t2
++	sll.d	$a0,$t7,$t1
++	sll.d	$t0,$t0,$t1
++	sra.d	$t7,$t7,$t6
++	or	$a0,$a0,$t5
++	or	$a1,$t0,$t7
++	b	.L1
++	.cfi_endproc
++.LFE0:
++	.size	callback_receiver, .-callback_receiver
++	.align	2
++	.globl	callback_get_receiver
++	.type	callback_get_receiver, @function
++callback_get_receiver:
++.LFB1 = .
++	.cfi_startproc
++	addi.d	$sp,$sp,-16
++	.cfi_def_cfa_offset 16
++	st.d	$fp,$sp,8
++	.cfi_offset 22, -8
++	addi.d	$fp,$sp,16
++	.cfi_def_cfa 22, 0
++	ld.d	$fp,$sp,8
++	.cfi_restore 22
++	la.local	$a0,callback_receiver
++	addi.d	$sp,$sp,16
++	.cfi_def_cfa_register 3
++	jr	$ra
++	.cfi_endproc
++.LFE1:
++	.size	callback_get_receiver, .-callback_get_receiver
++#if defined __linux__ || defined __FreeBSD__ || defined __FreeBSD_kernel__ || defined __DragonFly__
++	.section .note.GNU-stack,"",@progbits
++#endif
 diff --git a/callback/vacall_r/vacall_r.h b/callback/vacall_r/vacall_r.h
 index 08b0f09..1bd3638 100644
 --- a/callback/vacall_r/vacall_r.h
@@ -1839,9 +2632,406 @@ index c196348..f56b238 100644
  #define _va_return_longlong(LIST,VAL)  \
    (__va_return(LIST,__VAlonglong), (LIST)->tmp._long = (VAL))
  #define _va_return_ulonglong(LIST,VAL)  \
+diff --git a/vacall/vacall-loongarch64-linux.s b/vacall/vacall-loongarch64-linux.s
+new file mode 100644
+index 0000000..f430424
+--- /dev/null
++++ b/vacall/vacall-loongarch64-linux.s
+@@ -0,0 +1,192 @@
++	.file	"vacall-loongarch64.c"
++	.text
++	.align	2
++	.globl	vacall_receiver
++	.type	vacall_receiver, @function
++vacall_receiver:
++.LFB0 = .
++	.cfi_startproc
++	addi.d	$sp,$sp,-272
++	.cfi_def_cfa_offset 272
++	st.d	$ra,$sp,248
++	st.d	$fp,$sp,240
++	la.global	$t0,vacall_function
++	.cfi_offset 1, -24
++	.cfi_offset 22, -32
++	addi.d	$fp,$sp,256
++	.cfi_def_cfa 22, 16
++	addi.d	$t1,$fp,16
++	ldptr.d	$t0,$t0,0
++	st.d	$a0,$fp,-184
++	st.d	$a7,$fp,8
++	st.d	$a1,$fp,-176
++	st.d	$a2,$fp,-168
++	st.d	$a3,$fp,-160
++	st.d	$a4,$fp,-152
++	st.d	$a5,$fp,-144
++	st.d	$a6,$fp,-136
++	st.d	$a7,$fp,-128
++	fst.s	$f0,$fp,-116
++	fst.s	$f1,$fp,-112
++	fst.s	$f2,$fp,-108
++	fst.s	$f3,$fp,-104
++	fst.s	$f4,$fp,-100
++	fst.s	$f5,$fp,-96
++	fst.s	$f6,$fp,-92
++	fst.s	$f7,$fp,-88
++	fst.d	$f0,$fp,-80
++	fst.d	$f1,$fp,-72
++	fst.d	$f2,$fp,-64
++	fst.d	$f3,$fp,-56
++	fst.d	$f4,$fp,-48
++	fst.d	$f5,$fp,-40
++	fst.d	$f6,$fp,-32
++	fst.d	$f7,$fp,-24
++	st.d	$t1,$fp,-224
++	st.w	$zero,$fp,-248
++	st.d	$zero,$fp,-216
++	st.w	$zero,$fp,-208
++	addi.d	$a0,$fp,-248
++	st.w	$zero,$fp,-192
++	st.w	$zero,$fp,-120
++	jirl	$ra,$t0,0
++	ldptr.w	$t0,$fp,-208
++	beqz	$t0,.L1
++	addi.w	$t1,$r0,15			# 0xf
++	bgtu	$t0,$t1,.L1
++	slli.d	$t0,$t0,3
++	la.local	$t1,.L4
++	ldx.d	$t0,$t1,$t0
++	jr	$t0
++	.section	.rodata
++	.align	3
++	.align	2
++.L4:
++	.dword	.L1
++	.dword	.L15
++	.dword	.L15
++	.dword	.L14
++	.dword	.L13
++	.dword	.L12
++	.dword	.L11
++	.dword	.L10
++	.dword	.L5
++	.dword	.L5
++	.dword	.L5
++	.dword	.L5
++	.dword	.L7
++	.dword	.L6
++	.dword	.L5
++	.dword	.L3
++	.text
++.L5:
++	ld.d	$a0,$fp,-240
++.L1:
++	ld.d	$ra,$sp,248
++	.cfi_remember_state
++	.cfi_restore 1
++	ld.d	$fp,$sp,240
++	.cfi_restore 22
++	addi.d	$sp,$sp,272
++	.cfi_def_cfa 3, 0
++	jr	$ra
++.L15:
++	.cfi_restore_state
++	ld.b	$a0,$fp,-240
++	b	.L1
++.L10:
++	ld.wu	$a0,$fp,-240
++	b	.L1
++.L14:
++	ld.bu	$a0,$fp,-240
++	b	.L1
++.L13:
++	ld.h	$a0,$fp,-240
++	b	.L1
++.L12:
++	ld.hu	$a0,$fp,-240
++	b	.L1
++.L11:
++	ldptr.w	$a0,$fp,-240
++	b	.L1
++.L6:
++	fld.d	$f0,$fp,-240
++	b	.L1
++.L7:
++	fld.s	$f0,$fp,-240
++	b	.L1
++.L3:
++	ldptr.w	$t0,$fp,-248
++	andi	$t0,$t0,1024
++	beqz	$t0,.L1
++	ld.d	$t1,$fp,-200
++	addi.w	$t0,$r0,15			# 0xf
++	addi.d	$t2,$t1,-1
++	bgtu	$t2,$t0,.L1
++	ld.d	$t2,$fp,-216
++	addi.w	$t3,$r0,-8			# 0xfffffffffffffff8
++	addi.w	$t0,$r0,8			# 0x8
++	andi	$t4,$t2,7
++	add.d	$t5,$t1,$t4
++	and	$t2,$t2,$t3
++	ldptr.d	$t7,$t2,0
++	slli.w	$t3,$t5,3
++	slli.w	$t6,$t4,3
++	bgtu	$t1,$t0,.L17
++	bgtu	$t5,$t0,.L18
++	addi.w	$t3,$t3,-1
++	addi.w	$a0,$r0,2			# 0x2
++	sll.d	$a0,$a0,$t3
++	addi.d	$a0,$a0,-1
++	and	$a0,$a0,$t7
++	sra.d	$a0,$a0,$t6
++	b	.L1
++.L17:
++	addi.w	$t1,$r0,16			# 0x10
++	ld.d	$t8,$t2,8
++	sra.d	$t7,$t7,$t6
++	sub.d	$t0,$t0,$t4
++	bgtu	$t5,$t1,.L19
++	addi.w	$t3,$t3,-65
++	addi.w	$a1,$r0,2			# 0x2
++	sll.d	$a1,$a1,$t3
++	addi.d	$a1,$a1,-1
++	and	$a1,$a1,$t8
++	slli.w	$t0,$t0,2
++	sll.d	$a0,$a1,$t0
++	sll.d	$a0,$a0,$t0
++	or	$a0,$a0,$t7
++	sra.d	$a1,$a1,$t6
++	b	.L1
++.L18:
++	ld.d	$t2,$t2,8
++	addi.w	$t3,$t3,-65
++	addi.w	$t1,$r0,2			# 0x2
++	sll.d	$t1,$t1,$t3
++	addi.d	$t1,$t1,-1
++	sub.d	$t0,$t0,$t4
++	and	$t1,$t1,$t2
++	slli.w	$t0,$t0,3
++	sll.d	$t0,$t1,$t0
++	sra.d	$t7,$t7,$t6
++	or	$a0,$t0,$t7
++	b	.L1
++.L19:
++	ld.d	$t2,$t2,16
++	addi.w	$t3,$t3,-129
++	addi.w	$t1,$r0,2			# 0x2
++	sll.d	$t1,$t1,$t3
++	addi.d	$t1,$t1,-1
++	slli.w	$t0,$t0,3
++	and	$t1,$t1,$t2
++	sll.d	$a0,$t8,$t0
++	sll.d	$t0,$t1,$t0
++	sra.d	$t8,$t8,$t6
++	or	$a0,$a0,$t7
++	or	$a1,$t0,$t8
++	b	.L1
++	.cfi_endproc
++.LFE0:
++	.size	vacall_receiver, .-vacall_receiver
++	.ident	"GCC: (GNU) 12.0.1 20220317 (experimental)"
++	.section	.note.GNU-stack,"",@progbits
+diff --git a/vacall/vacall-loongarch64-macro.S b/vacall/vacall-loongarch64-macro.S
+new file mode 100644
+index 0000000..0699ab6
+--- /dev/null
++++ b/vacall/vacall-loongarch64-macro.S
+@@ -0,0 +1,193 @@
++	.file	"vacall-loongarch64.c"
++	.text
++	.align	2
++	.globl	vacall_receiver
++	.type	vacall_receiver, @function
++vacall_receiver:
++.LFB0 = .
++	.cfi_startproc
++	addi.d	$sp,$sp,-272
++	.cfi_def_cfa_offset 272
++	st.d	$ra,$sp,248
++	st.d	$fp,$sp,240
++	la.global	$t0,vacall_function
++	.cfi_offset 1, -24
++	.cfi_offset 22, -32
++	addi.d	$fp,$sp,256
++	.cfi_def_cfa 22, 16
++	addi.d	$t1,$fp,16
++	ldptr.d	$t0,$t0,0
++	st.d	$a0,$fp,-184
++	st.d	$a7,$fp,8
++	st.d	$a1,$fp,-176
++	st.d	$a2,$fp,-168
++	st.d	$a3,$fp,-160
++	st.d	$a4,$fp,-152
++	st.d	$a5,$fp,-144
++	st.d	$a6,$fp,-136
++	st.d	$a7,$fp,-128
++	fst.s	$f0,$fp,-116
++	fst.s	$f1,$fp,-112
++	fst.s	$f2,$fp,-108
++	fst.s	$f3,$fp,-104
++	fst.s	$f4,$fp,-100
++	fst.s	$f5,$fp,-96
++	fst.s	$f6,$fp,-92
++	fst.s	$f7,$fp,-88
++	fst.d	$f0,$fp,-80
++	fst.d	$f1,$fp,-72
++	fst.d	$f2,$fp,-64
++	fst.d	$f3,$fp,-56
++	fst.d	$f4,$fp,-48
++	fst.d	$f5,$fp,-40
++	fst.d	$f6,$fp,-32
++	fst.d	$f7,$fp,-24
++	st.d	$t1,$fp,-224
++	st.w	$zero,$fp,-248
++	st.d	$zero,$fp,-216
++	st.w	$zero,$fp,-208
++	addi.d	$a0,$fp,-248
++	st.w	$zero,$fp,-192
++	st.w	$zero,$fp,-120
++	jirl	$ra,$t0,0
++	ldptr.w	$t0,$fp,-208
++	beqz	$t0,.L1
++	addi.w	$t1,$r0,15			# 0xf
++	bgtu	$t0,$t1,.L1
++	slli.d	$t0,$t0,3
++	la.local	$t1,.L4
++	ldx.d	$t0,$t1,$t0
++	jr	$t0
++	.section	.rodata
++	.align	3
++	.align	2
++.L4:
++	.dword	.L1
++	.dword	.L15
++	.dword	.L15
++	.dword	.L14
++	.dword	.L13
++	.dword	.L12
++	.dword	.L11
++	.dword	.L10
++	.dword	.L5
++	.dword	.L5
++	.dword	.L5
++	.dword	.L5
++	.dword	.L7
++	.dword	.L6
++	.dword	.L5
++	.dword	.L3
++	.text
++.L5:
++	ld.d	$a0,$fp,-240
++.L1:
++	ld.d	$ra,$sp,248
++	.cfi_remember_state
++	.cfi_restore 1
++	ld.d	$fp,$sp,240
++	.cfi_restore 22
++	addi.d	$sp,$sp,272
++	.cfi_def_cfa 3, 0
++	jr	$ra
++.L15:
++	.cfi_restore_state
++	ld.b	$a0,$fp,-240
++	b	.L1
++.L10:
++	ld.wu	$a0,$fp,-240
++	b	.L1
++.L14:
++	ld.bu	$a0,$fp,-240
++	b	.L1
++.L13:
++	ld.h	$a0,$fp,-240
++	b	.L1
++.L12:
++	ld.hu	$a0,$fp,-240
++	b	.L1
++.L11:
++	ldptr.w	$a0,$fp,-240
++	b	.L1
++.L6:
++	fld.d	$f0,$fp,-240
++	b	.L1
++.L7:
++	fld.s	$f0,$fp,-240
++	b	.L1
++.L3:
++	ldptr.w	$t0,$fp,-248
++	andi	$t0,$t0,1024
++	beqz	$t0,.L1
++	ld.d	$t1,$fp,-200
++	addi.w	$t0,$r0,15			# 0xf
++	addi.d	$t2,$t1,-1
++	bgtu	$t2,$t0,.L1
++	ld.d	$t2,$fp,-216
++	addi.w	$t3,$r0,-8			# 0xfffffffffffffff8
++	addi.w	$t0,$r0,8			# 0x8
++	andi	$t4,$t2,7
++	add.d	$t5,$t1,$t4
++	and	$t2,$t2,$t3
++	ldptr.d	$t7,$t2,0
++	slli.w	$t3,$t5,3
++	slli.w	$t6,$t4,3
++	bgtu	$t1,$t0,.L17
++	bgtu	$t5,$t0,.L18
++	addi.w	$t3,$t3,-1
++	addi.w	$a0,$r0,2			# 0x2
++	sll.d	$a0,$a0,$t3
++	addi.d	$a0,$a0,-1
++	and	$a0,$a0,$t7
++	sra.d	$a0,$a0,$t6
++	b	.L1
++.L17:
++	addi.w	$t1,$r0,16			# 0x10
++	ld.d	$t8,$t2,8
++	sra.d	$t7,$t7,$t6
++	sub.d	$t0,$t0,$t4
++	bgtu	$t5,$t1,.L19
++	addi.w	$t3,$t3,-65
++	addi.w	$a1,$r0,2			# 0x2
++	sll.d	$a1,$a1,$t3
++	addi.d	$a1,$a1,-1
++	and	$a1,$a1,$t8
++	slli.w	$t0,$t0,2
++	sll.d	$a0,$a1,$t0
++	sll.d	$a0,$a0,$t0
++	or	$a0,$a0,$t7
++	sra.d	$a1,$a1,$t6
++	b	.L1
++.L18:
++	ld.d	$t2,$t2,8
++	addi.w	$t3,$t3,-65
++	addi.w	$t1,$r0,2			# 0x2
++	sll.d	$t1,$t1,$t3
++	addi.d	$t1,$t1,-1
++	sub.d	$t0,$t0,$t4
++	and	$t1,$t1,$t2
++	slli.w	$t0,$t0,3
++	sll.d	$t0,$t1,$t0
++	sra.d	$t7,$t7,$t6
++	or	$a0,$t0,$t7
++	b	.L1
++.L19:
++	ld.d	$t2,$t2,16
++	addi.w	$t3,$t3,-129
++	addi.w	$t1,$r0,2			# 0x2
++	sll.d	$t1,$t1,$t3
++	addi.d	$t1,$t1,-1
++	slli.w	$t0,$t0,3
++	and	$t1,$t1,$t2
++	sll.d	$a0,$t8,$t0
++	sll.d	$t0,$t1,$t0
++	sra.d	$t8,$t8,$t6
++	or	$a0,$a0,$t7
++	or	$a1,$t0,$t8
++	b	.L1
++	.cfi_endproc
++.LFE0:
++	.size	vacall_receiver, .-vacall_receiver
++#if defined __linux__ || defined __FreeBSD__ || defined __FreeBSD_kernel__ || defined __DragonFly__
++	.section .note.GNU-stack,"",@progbits
++#endif
 diff --git a/vacall/vacall-loongarch64.c b/vacall/vacall-loongarch64.c
 new file mode 100644
-index 0000000..e3899c0
+index 0000000..d5cfa7f
 --- /dev/null
 +++ b/vacall/vacall-loongarch64.c
 @@ -0,0 +1,238 @@

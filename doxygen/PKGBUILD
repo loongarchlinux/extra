@@ -21,7 +21,12 @@ prepare() {
   # Install the man pages in the right place
   sed -i 's:DESTINATION man/man1:DESTINATION "${CMAKE_INSTALL_PREFIX}/share/man/man1":g' \
     doc/CMakeLists.txt
-  sed -i -e '/addJob("ps"/ s/"ps"/"eps"/g' src/dot.cpp
+
+  # Call dot with -Teps instead of -Tps for EPS generation - bug #282150
+	sed -i -e '/addJob("ps"/ s/"ps"/"eps"/g' src/dot.cpp
+
+	# fix pdf doc
+	sed -i.orig -e "s:g_kowal:g kowal:" doc/maintainers.txt
 }
 
 build() {
@@ -32,7 +37,7 @@ build() {
     -DDOC_INSTALL_DIR:PATH=share/doc/doxygen \
     -DPYTHON_EXECUTABLE:FILE=/usr/bin/python \
     -Dbuild_doc:BOOL=ON \
-    -Dbuild_wizard:BOOL=ON
+    -Dbuild_wizard:BOOL=ON -DSPHINX_WARNINGS_AS_ERRORS=OFF
   make -C build
   make -C build docs -j1
 }
