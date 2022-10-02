@@ -9,7 +9,7 @@ pkgdesc="Open-source legacy BIOS implementation"
 arch=(any)
 url="https://www.seabios.org/SeaBIOS"
 license=(GPL3 LGPL3)
-makedepends=(iasl inetutils python)
+makedepends=(iasl inetutils python x86_64-linux-gnu-gcc)
 options=(!makeflags !strip)
 source=(
   seabios-$pkgver.tar.gz::https://github.com/coreboot/seabios/archive/rel-$pkgver.tar.gz
@@ -67,19 +67,23 @@ _build_bios() {
   local build_target=$4
 
   echo "Building target with config $config, output_name $output_name, binary_name $binary_name and build_target $build_target..."
+  CFLAGS=${CFLAGS/-mabi=lp64d -march=la464/}
+  CXXFLAGS=${CXXFLAGS/-mabi=lp64d -march=la464/}
 
   make clean distclean -C $pkgbase-rel-$pkgver
 
   cp -v $config $pkgbase-rel-$pkgver/.config
   # NOTE: refer to $pkgbase-rel-$pkgver/src/config.h for explanation of debug levels
   echo "CONFIG_DEBUG_LEVEL=$_debug_level" >> $pkgbase-rel-$pkgver/.config
-  make oldnoconfig V=1 -C $pkgbase-rel-$pkgver
+  make oldnoconfig V=1 -C $pkgbase-rel-$pkgver \
+      CROSS_PREFIX=x86_64-linux-gnu-
 
   make -C $pkgbase-rel-$pkgver \
     V=1 \
     EXTRAVERSION="-$pkgrel" \
     PYTHON=python3 \
-    $build_target
+    $build_target \
+    CROSS_PREFIX=x86_64-linux-gnu-
 
   cp $pkgbase-rel-$pkgver/out/$output_name output/$binary_name
 }
