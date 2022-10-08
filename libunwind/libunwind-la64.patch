@@ -90,7 +90,7 @@ index 2893f0cf..8f7cfda0 100644
  ])
 diff --git a/include/libunwind-loongarch64.h b/include/libunwind-loongarch64.h
 new file mode 100644
-index 00000000..806cf7df
+index 00000000..1e9366ed
 --- /dev/null
 +++ b/include/libunwind-loongarch64.h
 @@ -0,0 +1,139 @@
@@ -184,7 +184,7 @@ index 00000000..806cf7df
 +    UNW_LOONGARCH64_R30,
 +    UNW_LOONGARCH64_R31,
 +
-+    UNW_LOONGARCH64_PC = 32,
++    UNW_LOONGARCH64_PC = 33,
 +
 +    /* FIXME: Other registers!  */
 +
@@ -1843,10 +1843,10 @@ index 00000000..7c27f0de
 +}
 diff --git a/src/loongarch64/Gresume.c b/src/loongarch64/Gresume.c
 new file mode 100644
-index 00000000..9a9c717e
+index 00000000..66ce277c
 --- /dev/null
 +++ b/src/loongarch64/Gresume.c
-@@ -0,0 +1,132 @@
+@@ -0,0 +1,133 @@
 +/* libunwind - a platform-independent unwind library
 +   Copyright (C) 2008 CodeSourcery
 +   Copyright (C) 2021 Loongson Technology Corporation Limited
@@ -1914,6 +1914,7 @@ index 00000000..9a9c717e
 +        : "r" (uc->uc_mcontext.__gregs),
 +          "r" (sp),
 +          "r" (ra)
++        : "$t0", "$t1", "$t2", "memory"
 +      );
 +    }
 +  else /* c->sigcontext_format == LOONGARCH64_SCF_LINUX_RT_SIGFRAME */
@@ -1981,10 +1982,10 @@ index 00000000..9a9c717e
 +}
 diff --git a/src/loongarch64/Gstep.c b/src/loongarch64/Gstep.c
 new file mode 100644
-index 00000000..5743694b
+index 00000000..be03849d
 --- /dev/null
 +++ b/src/loongarch64/Gstep.c
-@@ -0,0 +1,145 @@
+@@ -0,0 +1,144 @@
 +/* libunwind - a platform-independent unwind library
 +   Copyright (C) 2008 CodeSourcery
 +   Copyright (C) 2015 Imagination Technologies Limited
@@ -2023,8 +2024,7 @@ index 00000000..5743694b
 +  int ret;
 +
 +  if (unw_is_signal_frame (cursor)) {
-+    sc_addr = sp_addr + LINUX_SF_TRAMP_SIZE + sizeof (siginfo_t) +
-+              LINUX_UC_MCONTEXT_OFF;
++    sc_addr = sp_addr + sizeof (siginfo_t) + LINUX_UC_MCONTEXT_OFF;
 +  } else {
 +    c->sigcontext_format = LOONGARCH64_SCF_NONE;
 +    return -UNW_EUNSPEC;
@@ -2453,29 +2453,25 @@ index 00000000..3aa27195
 +}
 diff --git a/src/loongarch64/offsets.h b/src/loongarch64/offsets.h
 new file mode 100644
-index 00000000..9e46cff6
+index 00000000..8657a119
 --- /dev/null
 +++ b/src/loongarch64/offsets.h
-@@ -0,0 +1,54 @@
+@@ -0,0 +1,50 @@
 +/* Linux-specific definitions: */
 +
 +/* Define various structure offsets to simplify cross-compilation.  */
 +
 +/* Offsets for LoongArch64 Linux "ucontext_t":  */
 +
-+/* First 24 bytes in sigframe are argument save space and padding for
-+what used to be signal trampolines. Ref: arch/loongarch/kernel/signal.c */
-+#define LINUX_SF_TRAMP_SIZE 0x18
-+
 +# define LINUX_UC_FLAGS_OFF		0x0	/* offsetof(struct ucontext_t, __uc_flags) */
 +# define LINUX_UC_LINK_OFF		0x8	/* offsetof(struct ucontext_t, uc_link) */
 +# define LINUX_UC_STACK_OFF		0x10	/* offsetof(struct ucontext_t, uc_stack) */
 +# define LINUX_UC_SIGMASK_OFF		0x28	/* offsetof(struct ucontext_t, uc_sigmask) */
-+# define LINUX_UC_MCONTEXT_OFF		0xc0	/* offsetof(struct ucontext_t, uc_mcontext) */
++# define LINUX_UC_MCONTEXT_OFF		0xb0	/* offsetof(struct ucontext_t, uc_mcontext) */
 +
-+# define LINUX_UC_MCONTEXT_PC		0xc0	/* offsetof(struct ucontext_t, uc_mcontext.__pc) */
-+# define LINUX_UC_MCONTEXT_GREGS	0xc8	/* offsetof(struct ucontext_t, uc_mcontext.__gregs) */
-+/* Offsets for AArch64 Linux "struct sigcontext": */
++# define LINUX_UC_MCONTEXT_PC		0xb0	/* offsetof(struct ucontext_t, uc_mcontext.__pc) */
++# define LINUX_UC_MCONTEXT_GREGS	0xb8	/* offsetof(struct ucontext_t, uc_mcontext.__gregs) */
++/* Offsets for LoongArch64 Linux "struct sigcontext": */
 +#define LINUX_SC_R0_OFF   (LINUX_UC_MCONTEXT_GREGS - LINUX_UC_MCONTEXT_OFF)
 +#define LINUX_SC_R1_OFF   (LINUX_SC_R0_OFF + 1*8)
 +#define LINUX_SC_R2_OFF   (LINUX_SC_R0_OFF + 2*8)
@@ -2728,6 +2724,21 @@ index b7dd3b79..9e30bc41 100644
  #else
  # error Fix me.
  #endif
+diff --git a/tests/Makefile.am b/tests/Makefile.am
+index c783fc31..f816436a 100644
+--- a/tests/Makefile.am
++++ b/tests/Makefile.am
+@@ -125,6 +125,10 @@ if ARCH_ARM
+ XFAIL_TESTS += $(XFAIL_TESTS_PTRACE_SINGLESTEP)
+ endif
+ 
++if ARCH_LOONGARCH64
++XFAIL_TESTS += $(XFAIL_TESTS_PTRACE_SINGLESTEP)
++endif
++
+ # This is meant for multilib binaries, -m32.
+ # ptrace gives EBADREG when testing,
+ # but generally everything else works.
 diff --git a/tests/check-namespace.sh.in b/tests/check-namespace.sh.in
 index f99fb59f..5cbffc13 100644
 --- a/tests/check-namespace.sh.in
