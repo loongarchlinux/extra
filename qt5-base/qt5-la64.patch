@@ -1,0 +1,37 @@
+diff --git a/src/corelib/global/archdetect.cpp b/src/corelib/global/archdetect.cpp
+index 1d00b7f..8ca6efe 100644
+--- a/src/corelib/global/archdetect.cpp
++++ b/src/corelib/global/archdetect.cpp
+@@ -59,6 +59,10 @@
+ #  define ARCH_PROCESSOR "x86_64"
+ #elif defined(Q_PROCESSOR_IA64)
+ #  define ARCH_PROCESSOR "ia64"
++#elif defined(Q_PROCESSOR_LOONGARCH_64)
++#  define ARCH_PROCESSOR "loongarch64"
++#elif defined(Q_PROCESSOR_LOONGARCH)
++#  define ARCH_PROCESSOR "loongarch"
+ #elif defined(Q_PROCESSOR_MIPS_64)
+ #  define ARCH_PROCESSOR "mips64"
+ #elif defined(Q_PROCESSOR_MIPS)
+diff --git a/src/corelib/global/qprocessordetection.h b/src/corelib/global/qprocessordetection.h
+index a6ead54..fd734b4 100644
+--- a/src/corelib/global/qprocessordetection.h
++++ b/src/corelib/global/qprocessordetection.h
+@@ -228,6 +228,17 @@
+ #  define Q_PROCESSOR_WORDSIZE   8
+ // Q_BYTE_ORDER not defined, use endianness auto-detection
+ 
++/*
++    MIPS family, known revisions: I, II, III, IV, 32, 64
++
++    MIPS is bi-endian, use endianness auto-detection implemented below.
++*/
++#elif defined(_loongarch) || defined(__loongarch__) 
++#  define Q_PROCESSOR_LOONGARCH
++#  if defined(__loongarch64)
++#    define Q_PROCESSOR_LOONGARCH_64
++#    define Q_PROCESSOR_WORDSIZE 8
++#  endif
+ /*
+     MIPS family, known revisions: I, II, III, IV, 32, 64
+ 
