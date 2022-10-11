@@ -29,6 +29,7 @@ source=(
   remove-include-linux-fs.h.patch
   rust-la64-1.63.patch
   rust-la64-1.63-feature-differ.patch
+  rustc-bootstrap-no-frozen.patch
 )
 sha256sums=('1f9580295642ef5da7e475a8da2397d65153d3f2cb92849dbd08ed0effca99d0'
             'SKIP'
@@ -38,7 +39,8 @@ sha256sums=('1f9580295642ef5da7e475a8da2397d65153d3f2cb92849dbd08ed0effca99d0'
             '26bf232d144b81a303ed91f6a331ddf004c5d9fefd41a11e36b61812a34459aa'
             '34ed866e313e4580130a50118a4410d36fa0159123982521b6ef049439fc32ad'
             '86f4fc0f28255517e2e414be5ad1079c2483383bb6514c1c513e644c86d953bf'
-            '9f7aaae921f48e5133b96f28e5b9172097d5adaafac05b562231addc10fc5825')
+            '9f7aaae921f48e5133b96f28e5b9172097d5adaafac05b562231addc10fc5825'
+            'b2ab49d0f0aab2278d2be41294aaf242c96e561c5190fb9f22772ffb1ec73fe9')
 
 validpgpkeys=(108F66205EAEB0AAA8DD5E1C85AB96E6FA1BE5FE  # Rust Language (Tag and Release Signing Key) <rust-key@rust-lang.org>
               474E22316ABF4785A88C6E8EA2C794A986419D8A) # Tom Stellard <tstellar@redhat.com>
@@ -61,7 +63,9 @@ prepare() {
   patch -Np1 -d src/llvm-project < ../remove-include-linux-fs.h.patch
   patch -Np1 -i ../rust-la64-1.63.patch
   patch -Np1 -i ../rust-la64-1.63-feature-differ.patch
+  patch -Np1 -i ../rustc-bootstrap-no-frozen.patch
 
+  find -name Cargo.lock -exec rm -f {} \;
   mkdir -p .cargo
   cat > .cargo/config.toml <<EOF
 [registries]
@@ -79,7 +83,7 @@ target = [ "loongarch64-unknown-linux-gnu" ]
 cargo = "/usr/bin/cargo"
 rustc = "/usr/bin/rustc"
 rustfmt = "/usr/bin/rustfmt"
-locked-deps = true
+locked-deps = false
 vendor = false
 tools = ["cargo", "rls", "clippy", "rustfmt", "analysis", "src", "rust-demangler"]
 sanitizers = false
