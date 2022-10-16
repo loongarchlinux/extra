@@ -1,8 +1,8 @@
 diff --git a/archinstall/lib/disk/helpers.py b/archinstall/lib/disk/helpers.py
-index 85c0390f..38b81697 100644
+index f19125f4..ce51399c 100644
 --- a/archinstall/lib/disk/helpers.py
 +++ b/archinstall/lib/disk/helpers.py
-@@ -242,6 +242,8 @@ def all_blockdevices(mappers=False, partitions=False, error=False) -> Dict[str,
+@@ -254,6 +254,8 @@ def all_blockdevices(mappers=False, partitions=False, error=False) -> Dict[str,
  			elif path_info.get('PARTUUID') or path_info.get('PART_ENTRY_NUMBER'):
  				if partitions:
  					instances[path] = Partition(path, block_device=BlockDevice(get_parent_of_partition(pathlib.Path(path))))
@@ -40,10 +40,10 @@ index 9660ea95..7d60b780 100644
  		"vulkan-radeon",
  	],
 diff --git a/archinstall/lib/mirrors.py b/archinstall/lib/mirrors.py
-index 73921cef..d6c68fe3 100644
+index d76e0473..f1e5ea59 100644
 --- a/archinstall/lib/mirrors.py
 +++ b/archinstall/lib/mirrors.py
-@@ -64,9 +64,10 @@ def filter_mirrors_by_region(regions :str,
+@@ -66,9 +66,10 @@ def filter_mirrors_by_region(regions :str,
  	:param regions: A series of country codes separated by `,`. For instance `SE,US` for sweden and United States.
  	:type regions: str
  	"""
@@ -57,19 +57,19 @@ index 73921cef..d6c68fe3 100644
  
  	if sort_order:
  		new_list = sort_mirrorlist(new_list, sort_order=sort_order)
-@@ -146,6 +147,10 @@ def re_rank_mirrors(
+@@ -147,6 +148,10 @@ def re_rank_mirrors(
+ 
  def list_mirrors(sort_order :List[str] = ["https", "http"]) -> Dict[str, Any]:
- 	url = "https://archlinux.org/mirrorlist/?protocol=https&protocol=http&ip_version=4&ip_version=6&use_mirror_status=on"
  	regions = {}
 +	regions = {
 +            "China": "https://mirrors.wsyu.edu.cn/loongarch/2022.03/$repo/os/$arch"
 +            }
 +    return regions
  
- 	try:
- 		response = urllib.request.urlopen(url)
+ 	if storage['arguments']['offline']:
+ 		with pathlib.Path('/etc/pacman.d/mirrorlist').open('rb') as fh:
 diff --git a/examples/guided.py b/examples/guided.py
-index 635baf6a..82ab5d87 100644
+index 6f289caa..78f6997e 100644
 --- a/examples/guided.py
 +++ b/examples/guided.py
 @@ -43,7 +43,7 @@ def ask_user_questions():
@@ -81,3 +81,29 @@ index 635baf6a..82ab5d87 100644
  
  	global_menu.enable('sys-language')
  	global_menu.enable('sys-encoding')
+@@ -278,25 +278,6 @@ def perform_installation(mountpoint):
+ 	archinstall.log(f"Disk states after installing: {archinstall.disk_layouts()}", level=logging.DEBUG)
+ 
+ 
+-if not (archinstall.check_mirror_reachable() or archinstall.arguments.get('skip-mirror-check', False)):
+-	log_file = os.path.join(archinstall.storage.get('LOG_PATH', None), archinstall.storage.get('LOG_FILE', None))
+-	archinstall.log(f"Arch Linux mirrors are not reachable. Please check your internet connection and the log file '{log_file}'.", level=logging.INFO, fg="red")
+-	exit(1)
+-
+-if not archinstall.arguments.get('offline'):
+-	latest_version_archlinux_keyring = max([k.pkg_version for k in archinstall.find_package('archlinux-keyring')])
+-
+-	# If we want to check for keyring updates
+-	# and the installed package version is lower than the upstream version
+-	if archinstall.arguments.get('skip-keyring-update', False) is False and \
+-		archinstall.installed_package('archlinux-keyring').version < latest_version_archlinux_keyring:
+-
+-		# Then we update the keyring in the ISO environment
+-		if not archinstall.update_keyring():
+-			log_file = os.path.join(archinstall.storage.get('LOG_PATH', None), archinstall.storage.get('LOG_FILE', None))
+-			archinstall.log(f"Failed to update the keyring. Please check your internet connection and the log file '{log_file}'.", level=logging.INFO, fg="red")
+-			exit(1)
+-
+ if not archinstall.arguments.get('silent'):
+ 	ask_user_questions()
+ 
