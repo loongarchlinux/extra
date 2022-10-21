@@ -40,10 +40,10 @@ index 9660ea95..7d60b780 100644
  		"vulkan-radeon",
  	],
 diff --git a/archinstall/lib/installer.py b/archinstall/lib/installer.py
-index 1270959e..ea484195 100644
+index 1270959e..bca56cee 100644
 --- a/archinstall/lib/installer.py
 +++ b/archinstall/lib/installer.py
-@@ -462,6 +462,15 @@ class Installer:
+@@ -462,6 +462,16 @@ class Installer:
  			modifier = f"@{modifier}"
  		# - End patch
  
@@ -55,11 +55,12 @@ index 1270959e..ea484195 100644
 +				fh.write(f'export QT_IM_MODULE=fcitx\n')
 +				fh.write(f'export XMODIFIERS="@im=fcitx"\n')
 +			os.chmod(f'{self.target}/etc/X11/xinit/xinitrc.d/50-input.sh', 0o755)
++			SysCommand(f'/usr/bin/arch-chroot {self.target} sed -i -e \'s/^#zh_CN.UTF-8/zh_CN.UTF-8/\' -e \'s/^#en_US.UTF-8/en_US.UTF-8/\' /etc/locale.gen')
 +
  		with open(f'{self.target}/etc/locale.gen', 'a') as fh:
  			fh.write(f'{locale}.{encoding}{modifier} {encoding}\n')
  		with open(f'{self.target}/etc/locale.conf', 'w') as fh:
-@@ -925,10 +934,10 @@ class Installer:
+@@ -925,10 +935,10 @@ class Installer:
  		if has_uefi():
  			self.pacstrap('efibootmgr') # TODO: Do we need? Yes, but remove from minimal_installation() instead?
  			try:
