@@ -38,15 +38,12 @@ export CARGO_PROFILE_RELEASE_DEBUG=2
 
 build() {
   cd librsvg
+  find -name Cargo.lock -exec rm -f {} \;
   mkdir .cargo
   cat > .cargo/config.toml <<EOF
-[source]
 [source.crates-io]
 registry = "https://gitee.com/yetist/crates.io-index"
-[registries]
-registry = { index = "https://gitee.com/yetist/crates.io-index" }
 EOF
-  cargo update
   ./configure --prefix=/usr --disable-static --enable-vala --enable-gtk-doc
   sed -i -e 's/ -shared / -Wl,-O1,--as-needed\0 /g' libtool
   make
