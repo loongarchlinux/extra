@@ -3,10 +3,10 @@
 
 pkgbase=pyside6
 pkgname=(shiboken6 pyside6)
-_qtver=6.4.0.1
+_qtver=6.4.1
 _clangver=14.0.6
 pkgver=${_qtver/-/}
-pkgrel=1
+pkgrel=2
 arch=(loong64 x86_64)
 url='https://www.qt.io'
 license=(LGPL)
@@ -14,23 +14,25 @@ makedepends=(cmake ninja clang llvm python-setuptools vulkan-headers python-nump
              qt6-tools qt6-svg qt6-3d qt6-scxml qt6-datavis3d qt6-charts qt6-multimedia qt6-quick3d
              qt6-positioning qt6-networkauth qt6-remoteobjects qt6-sensors qt6-serialport qt6-connectivity
              qt6-webchannel qt6-webengine qt6-websockets qt6-shadertools qt6-speech qt6-httpserver)
-_pkgfn=pyside-setup-opensource-src-${_qtver%.*}
+_pkgfn=pyside-setup-opensource-src-$_qtver
 source=(https://download.qt.io/official_releases/QtForPython/pyside6/PySide6-$pkgver-src/${_pkgfn}.tar.xz
-        designer-plugin-install-dir.patch)
-sha256sums=('6e5be5defccacd21ec7e2579d6d6493366dd8e00f8899746abd174f1eb1eff14'
-            '66e895e07d5b01c64a94092353854c946fd7fc445b6181068dca290b5a3887e0')
+        designer-plugin-install-dir.patch
+        pysidebug-2127.patch)
+sha256sums=('807954ce284e1137475f78faf3bcf0ae9d17ec3690d1a43d09c98e973a3d556b'
+            '66e895e07d5b01c64a94092353854c946fd7fc445b6181068dca290b5a3887e0'
+            '54e5968cf36083c454cfc86453122276c865203b846db153a276e69a0a8a7121')
 options=(debug)
 
 prepare() {
   patch -d $_pkgfn -p1 < designer-plugin-install-dir.patch # Fix designer plugin install dir
+  patch -d $_pkgfn -p1 < pysidebug-2127.patch # Fix build
 }
 
 build() {
   cmake -B build -S $_pkgfn -G Ninja \
     -DCMAKE_INSTALL_PREFIX=/usr \
     -DCMAKE_BUILD_TYPE=None \
-    -DBUILD_TESTS=OFF \
-    -DPYTHON_EXECUTABLE=/usr/bin/python
+    -DBUILD_TESTS=OFF
   PYTHONPATH="$PWD"/build/sources \
   cmake --build build
 }
@@ -44,6 +46,7 @@ package_shiboken6() {
 
 # Install egg-info
   export PATH="/usr/lib/qt6/bin:$PATH"
+  export SETUPTOOLS_USE_DISTUTILS=stdlib
   cd $_pkgfn
   python setup.py egg_info --build-type=shiboken6
   _pythonpath=`python -c "from sysconfig import get_path; print(get_path('platlib'))"`
@@ -74,6 +77,7 @@ package_pyside6() {
 
 # Install egg-info
   export PATH="/usr/lib/qt6/bin:$PATH"
+  export SETUPTOOLS_USE_DISTUTILS=stdlib
   cd $_pkgfn
   python setup.py egg_info --build-type=pyside6
   _pythonpath=`python -c "from sysconfig import get_path; print(get_path('platlib'))"`
