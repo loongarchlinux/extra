@@ -3,21 +3,27 @@
 # Contributor: Andrea Scarpino <andrea@archlinux.org>
 
 pkgname=libkdcraw
-pkgver=22.08.3
-pkgrel=1
+pkgver=22.12.0
+pkgrel=2
 pkgdesc='A C++ interface used to decode RAW picture'
 url='https://www.kde.org/'
 arch=(loong64 x86_64)
 license=(GPL LGPL FDL)
 depends=(qt5-base libraw)
 makedepends=(extra-cmake-modules)
-source=(https://download.kde.org/stable/release-service/$pkgver/src/$pkgname-$pkgver.tar.xz{,.sig})
-sha256sums=('8d94b9987a4bcc381eb4fe4cbd20f4c57eb5a16a747039d40496ba3562d89fe0'
-            'SKIP')
+source=(https://download.kde.org/stable/release-service/$pkgver/src/$pkgname-$pkgver.tar.xz{,.sig}
+        libkdcraw-libraw-0.21.patch)
+sha256sums=('e609cbafe53d7e79ed0674bdb514a42c36b8a8984cfd49348d24b3bce163c164'
+            'SKIP'
+            '73afee3d0d6a50b809fa9370a4505ba44c35f9d9ea69aab878ca28b932549488')
 validpgpkeys=(CA262C6C83DE4D2FB28A332A3A6A4DB839EAA6D7  # Albert Astals Cid <aacid@kde.org>
               F23275E4BF10AFC1DF6914A6DBD2CE893E2D1C87  # Christoph Feck <cfeck@kde.org>
               D81C0CB38EB725EF6691C385BB463350D6EF31EF) # Heiko Becker <heiko.becker@kde.org>
 options=(debug)
+
+prepare() {
+  patch -d $pkgname-$pkgver -p1 < libkdcraw-libraw-0.21.patch # Fix build with libraw 0.21
+}
 
 build() {
   cmake -B build -S $pkgname-$pkgver \

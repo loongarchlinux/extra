@@ -3,8 +3,8 @@
 # Contributor: Chocobo1 <chocobo1@archlinux.net>
 
 pkgname=rav1e
-pkgver=0.5.1
-pkgrel=2
+pkgver=0.6.2
+pkgrel=1
 pkgdesc='An AV1 encoder focused on speed and safety'
 arch=(loong64 x86_64)
 url=https://github.com/xiph/rav1e/
@@ -12,6 +12,7 @@ license=(BSD)
 depends=(
   gcc-libs
   glibc
+  libgit2.so
 )
 makedepends=(
   cargo-c
@@ -20,13 +21,13 @@ makedepends=(
   rust
 )
 provides=(librav1e.so)
-_tag=1aff20cd23f718866ae7460e866f8d60b41f4422
+_tag=b57f8150d566ff353253e52d20623c2684243476
 source=(
   git+https://github.com/xiph/rav1e.git#tag=${_tag}
-  https://github.com/xiph/rav1e/releases/download/v${pkgver}/Cargo.lock
+  Cargo-rav1e-${pkgver}.lock::https://github.com/xiph/rav1e/releases/download/v${pkgver}/Cargo.lock
 )
-sha256sums=('SKIP'
-            '6baeb4e72ee86dd4c3d6c9acfcfac6a2e58a580101eb181daced09199a136868')
+b2sums=('SKIP'
+        'aba9c2e8ce62d65c7eab224f935d25dbc2fb15701035a7934193044aa949e99d5077e381d2fa45a500d8c001390ba0f00dbd67bdc31ab408bfa68ae4a687a6b6')
 
 pkgver() {
   cd rav1e
@@ -34,13 +35,14 @@ pkgver() {
 }
 
 prepare() {
-  cp -f Cargo.lock rav1e/
+  cp -f Cargo-rav1e-${pkgver}.lock rav1e/Cargo.lock
   cargo fetch \
     --locked \
     --manifest-path rav1e/Cargo.toml
 }
 
 build() {
+  export LDFLAGS+=' -lgit2'
   cargo build \
     --release \
     --frozen \
@@ -61,7 +63,6 @@ check() {
 
 package() {
   cd rav1e
-
   cargo install \
     --frozen \
     --offline \
