@@ -22,21 +22,20 @@ checkdepends=(procps-ng gdb)
 SKIPCONFIG=1
 source=(
   "https://static.rust-lang.org/dist/rustc-$pkgver-src.tar.gz"{,.asc}
+  rust-llvm-project-14.0.6.tar.xz
   0001-cargo-Change-libexec-dir.patch
   0001-bootstrap-Change-libexec-dir.patch
   0002-compiler-Change-LLVM-targets.patch
   0003-compiler-Use-wasm-ld-for-wasm-targets.patch
-  rust-la64-1.64.patch
+  llvm-module-1.65.patch
+  rust-1.65.patch
 )
 sha256sums=('5828bb67f677eabf8c384020582b0ce7af884e1c84389484f7f8d00dd82c0038'
             'SKIP'
             'c901a9bb036c29ca092f7dbc8b447efdd9aa1044a902a88f9d024cb22681dc19'
-            '84ae2843d5ed83e9400e96d5f2d8cf3d1b89809bea76897c2762743460e06a87'
-            '1986e62bd2826eacaadd681e294943d890d75f24fd1f54fbd4015c3c622ac097'
-            '8fa64a2bdfb798184bde1c80d4775889a91d8b2ed076a6ea29ea99df9a2098cc'
+            'c88389c7ac2ce832c39450171af8fbd9bfe26f8e683f28b776b492c972fda359'
             '34ed866e313e4580130a50118a4410d36fa0159123982521b6ef049439fc32ad'
             'b2ab49d0f0aab2278d2be41294aaf242c96e561c5190fb9f22772ffb1ec73fe9')
-
 validpgpkeys=(108F66205EAEB0AAA8DD5E1C85AB96E6FA1BE5FE  # Rust Language (Tag and Release Signing Key) <rust-key@rust-lang.org>
               474E22316ABF4785A88C6E8EA2C794A986419D8A) # Tom Stellard <tstellar@redhat.com>
 
@@ -54,7 +53,10 @@ prepare() {
   # Use our wasm-ld
   patch -Np1 -i ../0003-compiler-Use-wasm-ld-for-wasm-targets.patch
 
-  patch -Np1 -i ../rust-la64-1.64.patch
+  rm -rf src/llvm-project
+  ln -sf ../../llvm-project src/llvm-project
+
+  patch -Np1 -i ../rust-1.65.patch
 
   find -name Cargo.lock -exec rm -f {} \;
   mkdir -p $HOME/.cargo
@@ -66,8 +68,8 @@ EOF
 changelog-seen = 2
 profile = "user"
 
-[source.crates-io]
-registry = "https://gitee.com/yetist/crates.io-index"
+#[source.crates-io]
+#registry = "https://gitee.com/yetist/crates.io-index"
 
 [llvm]
 link-shared = true
@@ -80,8 +82,8 @@ rustfmt = "/usr/bin/rustfmt"
 locked-deps = false
 vendor = false
 tools = ["cargo", "rls", "clippy", "rustfmt", "analysis", "src", "rust-demangler"]
-sanitizers = false
-profiler = true
+sanitizers = true
+profiler = false
 
 # Generating docs fails with the wasm32-* targets
 docs = false
@@ -95,8 +97,8 @@ channel = "stable"
 description = "Arch Linux $pkgbase $epoch:$pkgver-$pkgrel"
 rpath = false
 backtrace-on-ice = true
-remap-debuginfo = true
-jemalloc = false
+remap-debuginfo = false
+jemalloc = true
 
 # LLVM crashes when passing an object through ThinLTO twice.  This is triggered
 # when using rust code in cross-language LTO if libstd was built using ThinLTO.
@@ -153,7 +155,7 @@ build() {
 
   export RUST_BACKTRACE=1
 
-  DESTDIR="$srcdir/dest-rust" proxychains python ./x.py install -j "$(nproc)"
+  DESTDIR="$srcdir/dest-rust" python ./x.py install -j "$(nproc)"
 
   cd ../dest-rust
 
@@ -240,36 +242,30 @@ sha256sums=('b3cd9f481e1a2901bf6f3808d30c69cc4ea80d93c4cc4e2ed52258b180381205'
             '1986e62bd2826eacaadd681e294943d890d75f24fd1f54fbd4015c3c622ac097'
             '8fa64a2bdfb798184bde1c80d4775889a91d8b2ed076a6ea29ea99df9a2098cc'
             '34ed866e313e4580130a50118a4410d36fa0159123982521b6ef049439fc32ad'
-            'cc41166a40241c61c2ca77c41f281567ed63a7ca3b71071b07d75633880f9a7a')
-sha256sums=('b3cd9f481e1a2901bf6f3808d30c69cc4ea80d93c4cc4e2ed52258b180381205'
+            'c074e952a83f9b191f774570f8ca60b0e9b1ae88234e876937e8f310a378b860'
+            'bb1094873e7ebae1a8f1fa5498a627a63dfb3242c5277b83c191effa490fee1a')
+sha256sums=('5828bb67f677eabf8c384020582b0ce7af884e1c84389484f7f8d00dd82c0038'
             'SKIP'
             'c901a9bb036c29ca092f7dbc8b447efdd9aa1044a902a88f9d024cb22681dc19'
             '84ae2843d5ed83e9400e96d5f2d8cf3d1b89809bea76897c2762743460e06a87'
             '1986e62bd2826eacaadd681e294943d890d75f24fd1f54fbd4015c3c622ac097'
             '8fa64a2bdfb798184bde1c80d4775889a91d8b2ed076a6ea29ea99df9a2098cc'
-            '34ed866e313e4580130a50118a4410d36fa0159123982521b6ef049439fc32ad'
-            '6d86fe63d9271c2372cde4f0f2a075293585b060a11c9c0860972b372ac1a42c')
-sha256sums=('b3cd9f481e1a2901bf6f3808d30c69cc4ea80d93c4cc4e2ed52258b180381205'
+            'c074e952a83f9b191f774570f8ca60b0e9b1ae88234e876937e8f310a378b860'
+            'bb1094873e7ebae1a8f1fa5498a627a63dfb3242c5277b83c191effa490fee1a')
+sha256sums=('5828bb67f677eabf8c384020582b0ce7af884e1c84389484f7f8d00dd82c0038'
             'SKIP'
             'c901a9bb036c29ca092f7dbc8b447efdd9aa1044a902a88f9d024cb22681dc19'
-            '84ae2843d5ed83e9400e96d5f2d8cf3d1b89809bea76897c2762743460e06a87'
-            '1986e62bd2826eacaadd681e294943d890d75f24fd1f54fbd4015c3c622ac097'
-            '8fa64a2bdfb798184bde1c80d4775889a91d8b2ed076a6ea29ea99df9a2098cc'
-            '34ed866e313e4580130a50118a4410d36fa0159123982521b6ef049439fc32ad'
-            'cc41166a40241c61c2ca77c41f281567ed63a7ca3b71071b07d75633880f9a7a')
-sha256sums=('b3cd9f481e1a2901bf6f3808d30c69cc4ea80d93c4cc4e2ed52258b180381205'
+            'c88389c7ac2ce832c39450171af8fbd9bfe26f8e683f28b776b492c972fda359'
+            '5fd1d52cb58c31fb6b0179eec41f5234523dfce799c8f895b1d2d663ca0573db'
+            '27cc0fa1ef37c1ced77f62c6b0de7590b8aa88256dced3f9b87adb7c488ffa5e'
+            'c074e952a83f9b191f774570f8ca60b0e9b1ae88234e876937e8f310a378b860'
+            'bb1094873e7ebae1a8f1fa5498a627a63dfb3242c5277b83c191effa490fee1a')
+sha256sums=('5828bb67f677eabf8c384020582b0ce7af884e1c84389484f7f8d00dd82c0038'
             'SKIP'
+            '4e9054acedc76469946aeb35659b49c1a53e72052289cd4e898fb6f24f1c21a8'
             'c901a9bb036c29ca092f7dbc8b447efdd9aa1044a902a88f9d024cb22681dc19'
-            '84ae2843d5ed83e9400e96d5f2d8cf3d1b89809bea76897c2762743460e06a87'
-            '1986e62bd2826eacaadd681e294943d890d75f24fd1f54fbd4015c3c622ac097'
-            '8fa64a2bdfb798184bde1c80d4775889a91d8b2ed076a6ea29ea99df9a2098cc'
-            '34ed866e313e4580130a50118a4410d36fa0159123982521b6ef049439fc32ad'
-            'b5ed293208a3849711da83076887c0347679b0e832b02a24f56d62b03a5c7fb5')
-sha256sums=('b3cd9f481e1a2901bf6f3808d30c69cc4ea80d93c4cc4e2ed52258b180381205'
-            'SKIP'
-            'c901a9bb036c29ca092f7dbc8b447efdd9aa1044a902a88f9d024cb22681dc19'
-            '84ae2843d5ed83e9400e96d5f2d8cf3d1b89809bea76897c2762743460e06a87'
-            '1986e62bd2826eacaadd681e294943d890d75f24fd1f54fbd4015c3c622ac097'
-            '8fa64a2bdfb798184bde1c80d4775889a91d8b2ed076a6ea29ea99df9a2098cc'
-            '34ed866e313e4580130a50118a4410d36fa0159123982521b6ef049439fc32ad'
-            'cc41166a40241c61c2ca77c41f281567ed63a7ca3b71071b07d75633880f9a7a')
+            'c88389c7ac2ce832c39450171af8fbd9bfe26f8e683f28b776b492c972fda359'
+            '5fd1d52cb58c31fb6b0179eec41f5234523dfce799c8f895b1d2d663ca0573db'
+            '27cc0fa1ef37c1ced77f62c6b0de7590b8aa88256dced3f9b87adb7c488ffa5e'
+            'c074e952a83f9b191f774570f8ca60b0e9b1ae88234e876937e8f310a378b860'
+            'bb1094873e7ebae1a8f1fa5498a627a63dfb3242c5277b83c191effa490fee1a')
