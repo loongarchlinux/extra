@@ -2,11 +2,11 @@
 # Maintainer: Felix Yan <felixonmars@archlinux.org>
 
 pkgbase=pyside6
-pkgname=(shiboken6 pyside6)
-_qtver=6.4.1
-_clangver=14.0.6
+pkgname=(shiboken6 pyside6 pyside6-tools)
+_qtver=6.4.2
+_clangver=15.0.7
 pkgver=${_qtver/-/}
-pkgrel=2
+pkgrel=5
 arch=(loong64 x86_64)
 url='https://www.qt.io'
 license=(LGPL)
@@ -17,22 +17,22 @@ makedepends=(cmake ninja clang llvm python-setuptools vulkan-headers python-nump
 _pkgfn=pyside-setup-opensource-src-$_qtver
 source=(https://download.qt.io/official_releases/QtForPython/pyside6/PySide6-$pkgver-src/${_pkgfn}.tar.xz
         designer-plugin-install-dir.patch
-        pysidebug-2127.patch)
-sha256sums=('807954ce284e1137475f78faf3bcf0ae9d17ec3690d1a43d09c98e973a3d556b'
+        pyside-2183.patch::https://code.qt.io/cgit/pyside/pyside-setup.git/patch/?id=196ec4c5)
+sha256sums=('1ec9d0936332efd229650cf10fed36cadddff7a613a2ea6e897de4d504c1b505'
             '66e895e07d5b01c64a94092353854c946fd7fc445b6181068dca290b5a3887e0'
-            '54e5968cf36083c454cfc86453122276c865203b846db153a276e69a0a8a7121')
-options=(debug)
+            '9f796e791cf2a684353d44af2455af30e46116dcb7fff5afa239181faf5dd9c8')
 
 prepare() {
   patch -d $_pkgfn -p1 < designer-plugin-install-dir.patch # Fix designer plugin install dir
-  patch -d $_pkgfn -p1 < pysidebug-2127.patch # Fix build
+  patch -d $_pkgfn -p1 < pyside-2183.patch # Fix installing support module
 }
 
 build() {
   cmake -B build -S $_pkgfn -G Ninja \
     -DCMAKE_INSTALL_PREFIX=/usr \
     -DCMAKE_BUILD_TYPE=None \
-    -DBUILD_TESTS=OFF
+    -DBUILD_TESTS=OFF \
+    -DNO_QT_TOOLS=yes
   PYTHONPATH="$PWD"/build/sources \
   cmake --build build
 }
@@ -49,8 +49,9 @@ package_shiboken6() {
   export SETUPTOOLS_USE_DISTUTILS=stdlib
   cd $_pkgfn
   python setup.py egg_info --build-type=shiboken6
+  python setup.py egg_info --build-type=shiboken6-generator
   _pythonpath=`python -c "from sysconfig import get_path; print(get_path('platlib'))"`
-  cp -r shiboken6.egg-info "$pkgdir"/$_pythonpath
+  cp -r shiboken6*.egg-info "$pkgdir"/$_pythonpath
 }
 
 package_pyside6() {
@@ -77,7 +78,6 @@ package_pyside6() {
 
 # Install egg-info
   export PATH="/usr/lib/qt6/bin:$PATH"
-  export SETUPTOOLS_USE_DISTUTILS=stdlib
   cd $_pkgfn
   python setup.py egg_info --build-type=pyside6
   _pythonpath=`python -c "from sysconfig import get_path; print(get_path('platlib'))"`
@@ -85,4 +85,11 @@ package_pyside6() {
 
 # Install pyi files
   install -Dm644 "$srcdir"/build/sources/pyside6/PySide6/*.pyi -t "$pkgdir"/usr/lib/python*/site-packages/PySide6
+}
+
+package_pyside6-tools() {
+  pkgdesc='Tools for pyside6'
+  depends=(pyside6)
+
+  DESTDIR="$pkgdir" cmake --install build/sources/pyside-tools
 }

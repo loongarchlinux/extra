@@ -1,17 +1,17 @@
 # Maintainer: Felix Yan <felixonmars@archlinux.org>
 
 pkgname=python-validate-pyproject
-pkgver=0.10.1
+pkgver=0.12.1
 pkgrel=1
 pkgdesc="Validation library and CLI tool for checking on 'pyproject.toml' files using JSON Schema"
 url="https://github.com/abravalheri/validate-pyproject"
 license=('MPL')
 arch=('any')
-depends=('python-packaging' 'python-trove-classifiers' 'python-tomli')
+depends=('python-fastjsonschema' 'python-packaging' 'python-trove-classifiers' 'python-tomli')
 makedepends=('python-build' 'python-installer' 'python-wheel' 'python-setuptools-scm')
 checkdepends=('python-pytest')
 source=("https://github.com/abravalheri/validate-pyproject/archive/v$pkgver/$pkgname-$pkgver.tar.gz")
-sha512sums=('e8212813a782e305b53a89104f16f45b357ab1bbfaf7f6652ac848581102df4bf534d5d408acb8d910ebd7dc4b88e3c9fea3b2dcf41eeb14907cfbc5c9b8ad56')
+sha512sums=('7add0a3f53c4d7437e1967e905b8e787dc9bfe5b64b246712e60896df017e863213978799e4f0a8714e9d6d27fc6f3a47112e06bbd256202f558e932fa1044d2')
 
 export SETUPTOOLS_SCM_PRETEND_VERSION=$pkgver
 
@@ -22,16 +22,6 @@ prepare() {
   echo "recursive-include src *.template *.json LICENSE LICENSE.*" > MANIFEST.in
 
   sed -i '/--cov/d' setup.cfg
-
-  # Devendor fastjsonschema
-  # Disabled: functional differences due to changes in vendored copy
-  # rm -r src/validate_pyproject/_vendor
-  # sed -e 's/from validate_pyproject._vendor.fastjsonschema import/from fastjsonschema import/' \
-  #     -e 's/from validate_pyproject._vendor import fastjsonschema/import fastjsonschema/' \
-  #     -e 's/from .._vendor import fastjsonschema/import fastjsonschema/' \
-  #     -e 's/from ._vendor.fastjsonschema import/from fastjsonschema import/' \
-  #     -e 's/from ._vendor import fastjsonschema/import fastjsonschema/' \
-  #     -i src/validate_pyproject/*.py tests/*.py src/validate_pyproject/pre_compile/*.template src/validate_pyproject/pre_compile/*.py
 }
 
 build() {
@@ -40,11 +30,13 @@ build() {
 }
 
 check() {
+  local site_packages=$(python -c "import site; print(site.getsitepackages()[0])")
+
   cd validate-pyproject-$pkgver
   python -m installer --destdir=tmp_install dist/*.whl
-  PYTHONPATH="$PWD/tmp_install/usr/lib/python3.10/site-packages:$PYTHONPATH" pytest --doctest-modules --ignore src/validate_pyproject/_vendor src
+  PYTHONPATH="$PWD/tmp_install/$site_packages:$PYTHONPATH" pytest --doctest-modules --ignore src/validate_pyproject/_vendor src
   # Deselected tests requiring a installed validate-pyproject
-  PYTHONPATH="$PWD/tmp_install/usr/lib/python3.10/site-packages:$PYTHONPATH" pytest --deselect tests/test_pre_compile.py --deselect tests/test_vendoring.py
+  PYTHONPATH="$PWD/tmp_install/$site_packages:$PYTHONPATH" pytest --deselect tests/test_pre_compile.py --deselect tests/test_vendoring.py
 }
 
 package() {
