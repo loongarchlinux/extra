@@ -2,30 +2,31 @@
 # Contributor: Jan "heftig" Steffens <jan.steffens@gmail.com>
 
 pkgname=('llvm' 'llvm-libs')
-pkgver=14.0.6
-pkgrel=4
+pkgver=16.0.0
+rdate=20230213
+pkgrel=1
 arch=('loong64' 'x86_64')
 url="https://llvm.org/"
 license=('custom:Apache 2.0 with LLVM Exception')
-makedepends=('cmake' 'ninja' 'libffi' 'libedit' 'ncurses' 'libxml2'
-             'python-setuptools' 'python-psutil' 'python-sphinx'
+makedepends=('cmake' 'ninja' 'zlib' 'zstd' 'libffi' 'libedit' 'ncurses'
+             'libxml2' 'python-setuptools' 'python-psutil' 'python-sphinx'
              'python-recommonmark')
 options=('staticlibs' 'debug' '!lto') # Getting thousands of test failures with LTO
 _source_base=https://github.com/llvm/llvm-project/releases/download/llvmorg-$pkgver
-source=($_source_base/llvm-$pkgver.src.tar.xz{,.sig}
-        llvm-config.h
-        llvm-14.0.6-la64.patch
-        llvm-loong64.patch)
-sha256sums=('050922ecaaca5781fdf6631ea92bc715183f202f9d2f15147226f023414f619a'
-            'SKIP'
-            '597dc5968c695bbdbb0eac9e8eb5117fcd2773bc91edf5ec103ecffffab8bc48'
-            'b27651ed6964c3b6ad77d6a6703037ba96a4adf5507940b1567493f06999b6e0'
-            '43c66f16ac510842ca7e6ae12869d671838799925c8009ddacae8a1af8f0d7e5')
+source=($_source_base/llvm-$pkgver-$rdate.tar.xz
+        $_source_base/cmake-$pkgver-$rdate.tar.xz
+        $_source_base/third-party-$pkgver-$rdate.tar.xz
+        llvm-config.h)
+sha256sums=('bbcf15a5f98234f877a5cb13116ea33dccc26bd1f75333a01cb2cb8fbd6956ac'
+            'd5b0bf2c26b3492fba353763aed7fb2e66f18f18e2e090fa1f8b22ae85b7db4b'
+            '9f74cc12403f726243863883c551352eb6d5aa9422f8930ae115aaede92506ce'
+            '597dc5968c695bbdbb0eac9e8eb5117fcd2773bc91edf5ec103ecffffab8bc48')
 validpgpkeys=('474E22316ABF4785A88C6E8EA2C794A986419D8A') # Tom Stellard <tstellar@redhat.com>
 
 prepare() {
+  mv cmake{-$pkgver.src,}
+  mv third-party{-$pkgver.src,}
   cd llvm-$pkgver.src
-  patch -p1 -i $srcdir/llvm-loong64.patch
   mkdir build
 }
 
@@ -33,8 +34,8 @@ build() {
   cd llvm-$pkgver.src/build
 
   # Build only minimal debug info to reduce size
-  CFLAGS+=' -g1'
-  CXXFLAGS+=' -g1'
+  CFLAGS=${CFLAGS/-g /-g1 }
+  CXXFLAGS=${CXXFLAGS/-g /-g1 }
 
   local cmake_args=(
     -G Ninja
@@ -98,7 +99,7 @@ package_llvm() {
 
 package_llvm-libs() {
   pkgdesc="LLVM runtime libraries"
-  depends=('gcc-libs' 'zlib' 'libffi' 'libedit' 'ncurses' 'libxml2')
+  depends=('gcc-libs' 'zlib' 'zstd' 'libffi' 'libedit' 'ncurses' 'libxml2')
 
   install -d "$pkgdir/usr/lib"
   cp -P \
