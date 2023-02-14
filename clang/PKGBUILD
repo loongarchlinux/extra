@@ -2,8 +2,9 @@
 # Contributor: Jan "heftig" Steffens <jan.steffens@gmail.com>
 
 pkgname=clang
-pkgver=14.0.6
-pkgrel=4
+pkgver=16.0.0
+rdate=20230213
+pkgrel=1
 pkgdesc="C language family frontend for LLVM"
 arch=('loong64' 'x86_64')
 url="https://clang.llvm.org/"
@@ -18,27 +19,16 @@ conflicts=('clang-analyzer' 'clang-tools-extra')
 replaces=('clang-analyzer' 'clang-tools-extra')
 options=('debug')
 _source_base=https://github.com/llvm/llvm-project/releases/download/llvmorg-$pkgver
-source=($_source_base/clang-$pkgver.src.tar.xz{,.sig}
-        $_source_base/clang-tools-extra-$pkgver.src.tar.xz{,.sig}
-        $_source_base/llvm-$pkgver.src.tar.xz{,.sig}
-        enforce-instantiation-of-constexpr-template-functions.patch
-        clang-coroutines-ubsan.patch
-        clang-tidy-fix-standalone-build.patch
-        enable-fstack-protector-strong-by-default.patch
-        0001-add-loong64-support.patch
-        0002-add-loong64-support.patch)
-sha256sums=('2b5847b6a63118b9efe5c85548363c81ffe096b66c3b3675e953e26342ae4031'
-            'SKIP'
-            '7cf3b8ff56c65c4d1eae3c56883fc4a6cbc3ff9f3a1530a74d66e45d27271866'
-            'SKIP'
-            '050922ecaaca5781fdf6631ea92bc715183f202f9d2f15147226f023414f619a'
-            'SKIP'
-            'eb2916131ae63b3bd1689f6a27dc0c2fadad73a5c5f2c828062c8a2c547e4a0d'
-            '2c25ddf0ba6be01949842873fef4d285456321aaccd4ba95db61b69a4c580106'
-            '081a7ebc1ae524b13fc6be3dc73feb2c9eb7cf4b99f7f13d9ed37a688311f58a'
-            '7a9ce949579a3b02d4b91b6835c4fb45adc5f743007572fb0e28e6433e48f3a5'
-            'ac0284b611d21a01327b66ad1ab9dfb83cb883b7f99b7960418477b7d2c04dfc'
-            '192ecde3154897e13b6d23de9aefca3022ad43a1339a1c4bfa27832e6166886c')
+source=($_source_base/clang-$pkgver-$rdate.tar.xz
+        $_source_base/cmake-$pkgver-$rdate.tar.xz
+        $_source_base/clang-tools-extra-$pkgver-$rdate.tar.xz
+        $_source_base/llvm-$pkgver-$rdate.tar.xz
+        enable-fstack-protector-strong-by-default.patch)
+sha256sums=('f998b2c8d99ab4395052c20d144f81989092b4f6cdc7202074e8191975d5651d'
+            'd5b0bf2c26b3492fba353763aed7fb2e66f18f18e2e090fa1f8b22ae85b7db4b'
+            'f118511aac3be78f27cf2031027ff98574869ac2641c2a64495a30bb44a9575f'
+            'bbcf15a5f98234f877a5cb13116ea33dccc26bd1f75333a01cb2cb8fbd6956ac'
+            '7a9ce949579a3b02d4b91b6835c4fb45adc5f743007572fb0e28e6433e48f3a5')
 validpgpkeys=('474E22316ABF4785A88C6E8EA2C794A986419D8A') # Tom Stellard <tstellar@redhat.com>
 
 # Utilizing LLVM_DISTRIBUTION_COMPONENTS to avoid
@@ -64,21 +54,11 @@ _get_distribution_components() {
 }
 
 prepare() {
+  mv cmake{-$pkgver.src,}
   cd clang-$pkgver.src
   mkdir build
   mv "$srcdir/clang-tools-extra-$pkgver.src" tools/extra
-  patch -Np2 -i ../enable-fstack-protector-strong-by-default.patch
-
-  # https://github.com/llvm/llvm-project/issues/55560
-  patch -Np2 -i ../enforce-instantiation-of-constexpr-template-functions.patch
-
-  # https://github.com/llvm/llvm-project/issues/49689
-  patch -Np2 -i ../clang-coroutines-ubsan.patch
-
-  # https://github.com/llvm/llvm-project/issues/54116
-  patch -Np0 -i ../clang-tidy-fix-standalone-build.patch
-  patch -Np1 -i ../0001-add-loong64-support.patch
-  patch -Np1 -i ../0002-add-loong64-support.patch
+#  patch -Np2 -i ../enable-fstack-protector-strong-by-default.patch
 
   # Attempt to convert script to Python 3
   2to3 -wn --no-diffs \
@@ -102,7 +82,7 @@ build() {
     -DCLANG_LINK_CLANG_DYLIB=ON
     -DENABLE_LINKER_BUILD_ID=ON
     -DLLVM_BUILD_DOCS=ON
-    -DLLVM_BUILD_TESTS=ON
+    -DLLVM_BUILD_TESTS=OFF
     -DLLVM_ENABLE_RTTI=ON
     -DLLVM_ENABLE_SPHINX=ON
     -DLLVM_EXTERNAL_LIT=/usr/bin/lit
