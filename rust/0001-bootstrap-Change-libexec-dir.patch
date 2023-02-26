@@ -45,33 +45,3 @@ index eec74b2675a1..4bf1d7348e43 100644
          t!(fs::create_dir_all(&libexec_path));
          builder.copy(&path, &libexec_path.join("rust-analyzer-proc-macro-srv"));
  
-diff --git a/src/tools/rust-analyzer/crates/rust-analyzer/src/cli/load_cargo.rs b/src/tools/rust-analyzer/crates/rust-analyzer/src/cli/load_cargo.rs
-index 5dba545b8718..befaeb9e70db 100644
---- a/src/tools/rust-analyzer/crates/rust-analyzer/src/cli/load_cargo.rs
-+++ b/src/tools/rust-analyzer/crates/rust-analyzer/src/cli/load_cargo.rs
-@@ -69,7 +69,7 @@ pub fn load_workspace(
-             if let Some(sysroot) = sysroot.as_ref() {
-                 let standalone_server_name =
-                     format!("rust-analyzer-proc-macro-srv{}", std::env::consts::EXE_SUFFIX);
--                let server_path = sysroot.root().join("libexec").join(&standalone_server_name);
-+                let server_path = sysroot.root().join("lib").join(&standalone_server_name);
-                 if std::fs::metadata(&server_path).is_ok() {
-                     path = server_path;
-                     args = vec![];
-diff --git a/src/tools/rust-analyzer/crates/rust-analyzer/src/reload.rs b/src/tools/rust-analyzer/crates/rust-analyzer/src/reload.rs
-index e1f651786dee..77d6efca231e 100644
---- a/src/tools/rust-analyzer/crates/rust-analyzer/src/reload.rs
-+++ b/src/tools/rust-analyzer/crates/rust-analyzer/src/reload.rs
-@@ -322,10 +322,8 @@ fn eq_ignore_build_data<'a>(
-                             | ProjectWorkspace::Json { sysroot, .. } = ws
-                             {
-                                 if let Some(sysroot) = sysroot.as_ref() {
--                                    let server_path = sysroot
--                                        .root()
--                                        .join("libexec")
--                                        .join(&standalone_server_name);
-+                                    let server_path =
-+                                        sysroot.root().join("lib").join(&standalone_server_name);
-                                     if std::fs::metadata(&server_path).is_ok() {
-                                         tracing::debug!(
-                                             "Sysroot proc-macro server exists at {}",
