@@ -19,7 +19,7 @@ _minorver=0
 _securityver=18
 _updatever=10
 pkgver=${_majorver}.${_minorver}.${_securityver}.u${_updatever}
-pkgrel=2
+pkgrel=3
 _git_tag=jdk-${_majorver}.${_minorver}.${_securityver}+${_updatever}
 arch=('loong64' 'x86_64')
 url='https://openjdk.java.net/'
@@ -33,22 +33,22 @@ source=(https://github.com/openjdk/jdk${_majorver}u/archive/${_git_tag}.tar.gz
         freedesktop-java.desktop
         freedesktop-jconsole.desktop
         freedesktop-jshell.desktop
-        jdk19-la64.patch)
+        jdk11-la64.patch)
 sha256sums=('04af71fc7adda41a49861870f9ec0ac0f059c2cf9393ce32995ea8ef4279a1b1'
             '575587ad58dfa9908f046d307b9afc7b0b2eb20a1eb454f8fdbbd539ea7b3d01'
             '2f57b7c7dd671eabe9fa10c4f1283573e99d7f7c36eccd82c95b705979a2e8cb'
             'f271618a8c2a892b554caf26857af41efdf0d8bcb95d57ce7ba535d6979e96da'
-            '008cbcb9226e7f89570e05c8f73869be7489d60e4a8a866171e0bb0a9b432b34')
+            '64ead1305df28dab782f3dfa0283ed28a76d701cff9fe697d5124a386ab7b647')
 
 case "${CARCH}" in
   x86_64) _JARCH='x86_64';;
   i686)   _JARCH='x86';;
-  loong64)   _JARCH='loongarch64';;
+  loong64) _JARCH='loongarch64';;
 esac
 
 _jvmdir=/usr/lib/jvm/java-${_majorver}-openjdk
 _jdkdir=jdk${_majorver}u-${_git_tag//+/-}
-_imgdir=${_jdkdir}/build/linux-${_JARCH}-normal-zero-release/images
+_imgdir=${_jdkdir}/build/linux-${_JARCH}-normal-server-release/images
 
 _nonheadless=(lib/libawt_xawt.so
               lib/libjawt.so
@@ -58,7 +58,7 @@ _nonheadless=(lib/libawt_xawt.so
 prepare() {
   cd ${_jdkdir}
 
-  patch -Np1 -i "${srcdir}"/jdk19-la64.patch
+  patch -Np1 -i "${srcdir}"/jdk11-la64.patch
 }
 
 build() {
@@ -107,13 +107,12 @@ build() {
     --with-lcms=system \
     --with-zlib=system \
     --with-harfbuzz=system \
+    --with-jvm-features=zgc,shenandoahgc \
     --with-native-debug-symbols=internal \
-    --with-jvm-variants=zero \
     --enable-unlimited-crypto \
     --disable-warnings-as-errors \
     ${NUM_PROC_OPT}
     #--disable-javac-server
-#    --with-jvm-features=zgc,shenandoahgc
 
   make images legacy-jre-image #docs
 
