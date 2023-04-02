@@ -27,12 +27,12 @@ source=(https://github.com/openjdk/jdk${_majorver}u/archive/${_git_tag}.tar.gz
         freedesktop-java.desktop
         freedesktop-jconsole.desktop
         freedesktop-jshell.desktop
-        jdk19-la64.patch)
+        jdk17-la64.patch)
 sha256sums=('331bad1f80e98761eb9692863146fec647db573db5a5efa5b9bd6326d53a3472'
             '85c4742764590783160af74587a47269e6797fbdf17ec485c7644bd239adf61d'
             'abac1ab09a33a3654378bc69be5a7cf075263ab3ae9efec1eb25cf388e711bb7'
             'e7cce0ecf868f656d8dc2eb25ab82ab665526a0a28aba20f02632dd29962dac3'
-            '008cbcb9226e7f89570e05c8f73869be7489d60e4a8a866171e0bb0a9b432b34')
+            '66c0c016456132fd31112b1ce7a77ae1d916bca473f7601d8a6e762cf61df97b')
 
 case "${CARCH}" in
   x86_64) _JARCH='x86_64';;
@@ -42,12 +42,7 @@ esac
 
 _jvmdir=/usr/lib/jvm/java-${_majorver}-openjdk
 _jdkdir=jdk${_majorver}u-${_git_tag//+/-}
-case "${CARCH}" in
-loong64)
-_imgdir=${_jdkdir}/build/linux-${_JARCH}-zero-release/images ;;
-*)
-_imgdir=${_jdkdir}/build/linux-${_JARCH}-server-release/images ;;
-esac
+_imgdir=${_jdkdir}/build/linux-${_JARCH}-server-release/images
 
 _nonheadless=(lib/libawt_xawt.so
               lib/libjawt.so
@@ -57,7 +52,7 @@ _nonheadless=(lib/libawt_xawt.so
 prepare() {
   cd ${_jdkdir}
 
-  patch -Np1 -i "${srcdir}"/jdk19-la64.patch
+  patch -Np1 -i "${srcdir}"/jdk17-la64.patch
 }
 
 build() {
@@ -114,13 +109,11 @@ build() {
     --with-lcms=system \
     --with-zlib=system \
     --with-harfbuzz=system \
-    --enable-jvm-feature-zero \
+    --with-jvm-features=zgc \
     --with-native-debug-symbols=internal \
     --enable-unlimited-crypto \
-    --with-jvm-variants=zero \
     --disable-warnings-as-errors \
     ${NUM_PROC_OPT}
-    #--disable-javac-server
 
   make images legacy-jre-image #docs
 
