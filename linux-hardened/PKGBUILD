@@ -22,6 +22,8 @@ source=(
   https://www.kernel.org/pub/linux/kernel/v${pkgver%%.*}.x/${_srcname}.tar.{xz,sign}
   https://github.com/anthraxx/${pkgbase}/releases/download/${_srctag}/${pkgbase}-${_srctag}.patch{,.sig}
   config         # the main kernel config file
+  register_names_loong64.patch
+  config.la64
 )
 validpgpkeys=(
   'ABAF11C65A2970B130ABE3C479BE3E4300411886'  # Linus Torvalds
@@ -32,7 +34,9 @@ sha256sums=('48841319f4b0077da15e4176e624032d8332d961ee660e1b85e1ce73ded17a67'
             'SKIP'
             '3965a4a9cea353696442bafa045062030c0c4cfc933ab34dca832dbcc17225f3'
             'SKIP'
-            '12486625f5ef44b81bcf1935a990785b74bd5a335f3ca983feaf4ea0444be038')
+            '12486625f5ef44b81bcf1935a990785b74bd5a335f3ca983feaf4ea0444be038'
+            '845fd80f200567d163ede7e62149acf7e15f35c98b40e6b32ba722d8f01d43bc'
+            '21472a8550b441fe743fa3bd8966f0794effe426e1daa4ddd301df446f2031de')
 
 export KBUILD_BUILD_HOST=archlinux
 export KBUILD_BUILD_USER=$pkgbase
@@ -56,9 +60,9 @@ prepare() {
   done
 
   echo "Setting config..."
-  cp ../config .config
+  cp ../config.la64 .config
   make olddefconfig
-  diff -u ../config .config || :
+  diff -u ../config.la64 .config || :
 
   make -s kernelrelease > version
   echo "Prepared $pkgbase version $(<version)"
@@ -108,19 +112,27 @@ _package-headers() {
   install -Dt "$builddir" -m644 .config Makefile Module.symvers System.map \
     localversion.* version vmlinux
   install -Dt "$builddir/kernel" -m644 kernel/Makefile
-  install -Dt "$builddir/arch/x86" -m644 arch/x86/Makefile
+  if [ $CARCH == x86_64 ];then
+    install -Dt "$builddir/arch/x86" -m644 arch/x86/Makefile
+  elif [ $CARCH == loong64 ];then
+    install -Dt "$builddir/arch/loongarch" -m644 arch/loongarch/Makefile
+  fi
   cp -t "$builddir" -a scripts
 
   # required when STACK_VALIDATION is enabled
-  install -Dt "$builddir/tools/objtool" tools/objtool/objtool
+#  install -Dt "$builddir/tools/objtool" tools/objtool/objtool
 
   # required when DEBUG_INFO_BTF_MODULES is enabled
   # install -Dt "$builddir/tools/bpf/resolve_btfids" tools/bpf/resolve_btfids/resolve_btfids
 
   echo "Installing headers..."
   cp -t "$builddir" -a include
-  cp -t "$builddir/arch/x86" -a arch/x86/include
-  install -Dt "$builddir/arch/x86/kernel" -m644 arch/x86/kernel/asm-offsets.s
+  if [ $CARCH == x86_64 ];then
+      cp -t "$builddir/arch/x86" -a arch/x86/include
+      install -Dt "$builddir/arch/x86/kernel" -m644 arch/x86/kernel/asm-offsets.s
+  elif [ $CARCH == loong64 ];then
+      cp -t "$builddir/arch/loongarch" -a arch/loongarch/include
+  fi
 
   install -Dt "$builddir/drivers/md" -m644 drivers/md/*.h
   install -Dt "$builddir/net/mac80211" -m644 net/mac80211/*.h
@@ -142,7 +154,7 @@ _package-headers() {
   echo "Removing unneeded architectures..."
   local arch
   for arch in "$builddir"/arch/*/; do
-    [[ $arch = */x86/ ]] && continue
+    [[ $arch = */loongarch/ ]] && continue
     echo "Removing $(basename "$arch")"
     rm -r "$arch"
   done
