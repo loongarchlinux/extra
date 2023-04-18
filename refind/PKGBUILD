@@ -9,15 +9,16 @@ arch=(any)
 url="https://www.rodsbooks.com/refind/"
 makedepends=(bash dosfstools efibootmgr gnu-efi)
 source=(https://sourceforge.net/projects/refind/files/$pkgver/$pkgname-src-$pkgver.tar.gz
-        refind-la64-0.13.3.patch)
+        refind-la64-0.14.0.patch)
 sha512sums=('41c120c1afec37c508aa5c0ec09a6563c3047ef84932308c91701795b950431dfad17d25cf664039b490a302d475add98441b75f90ff71cadce41febedc68a9e'
-            '0237c5834b37fdd3a62bc68831900db185f49a72b8d4c9d41d3433c98798618c37c18da989ecb226446b36a46ccca7e16ee214d224334538e4a839e1aa28dfbe')
+            '413d4db728d0942036a8afbd7e0b68473e6175ab13834f79586a2597043803cb505d70081bfbd00f2f74f96ee54c85baecc2efab8c4a80b999193eaa9cfaffdd')
 b2sums=('02019ddb872ce44d2a2119902edebd633f925d49634e3bcc6bfb2c9dedb8ce213166909395a333d3a37e95c67720e31b1f5fcf25083801c17d645372aa54a06a'
-        '81e27d26932955fd32ddcaebb4e442981a00018ab9668421b924f73a7aae5903d0493e78fd34d1319d732b8200293493433e2a555d671b76db7b6909d0c1c7bb')
+        'd54284e8da0292bddb79edb230ff36058053b6c5a3452c1b0d4b12a05d535169c83ff1dd9b31569de2d9e97a64eecff9c9f441369bbaccfc219f16aba383679f')
 _arch='x64'
 
 prepare() {
   cd $pkgbase-$pkgver
+  patch -p1 -i $srcdir/refind-la64-0.14.0.patch
   # remove the path prefix from the css reference, so that the css can live
   # in the same directory
   sed -e 's|../Styles/||g' -i docs/$pkgbase/*.html
@@ -25,7 +26,6 @@ prepare() {
   sed -e 's|RefindDir=\"\$ThisDir/refind\"|RefindDir="/usr/share/refind/"|g' -i refind-install
   # add vendor line to the sbat file
   printf 'refind.%s,%s,%s,refind,%s,%s\n' 'arch' '1' 'Arch Linux' "${epoch:+${epoch}:}${pkgver}-${pkgrel}" 'https://archlinux.org/packages/?q=refind' >> refind-sbat.csv
-  patch -p1 -i $srcdir/refind-la64-0.13.3.patch
 }
 
 build() {
