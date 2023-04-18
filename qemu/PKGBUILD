@@ -106,6 +106,7 @@ source=(
   99-qemu-guest-agent.rules
   # fixes https://gitlab.com/qemu-project/qemu/-/issues/1471
   $pkgbase-7.2.0-gen_adcox.patch::https://gitlab.com/qemu-project/qemu/-/commit/60c7dd22e1383754d5f150bc9f7c2785c662a7b6.patch
+  qemu-syscall.patch
   qemu-loong64-pflash.patch
 )
 sha512sums=('e286dc66c923a5df77eb02d69235d048e80a7cced638fae52fbed385b4c3cd736cfea66bb3c9843bebf0a33e81ea141fc015e0bd82108df304f148ce59d9ae8a'
@@ -116,6 +117,7 @@ sha512sums=('e286dc66c923a5df77eb02d69235d048e80a7cced638fae52fbed385b4c3cd736cf
             'bdf05f99407491e27a03aaf845b7cc8acfa2e0e59968236f10ffc905e5e3d5e8569df496fd71c887da2b5b8d1902494520c7da2d3a8258f7fd93a881dd610c99'
             '93b905046fcea8a0a89513b9259c222494ab3b91319dde23baebcb40dc17376a56661b159b99785d6e816831974a0f3cbd7b2f7d89e5fc3c258f88f4492f3839'
             '505ddd4e387a29882a6ae1abac1d972371abac9abe0141358c0ab65bb11c5ac89c6e50d2639e4b8bb5e0ad9c3b805cbe3a01e33baaa44f8005db1f084fb2c4a3'
+            '8a9559a91ece4cfcde6d5f18ae696793f5e4deaccaf14b032909bd882d57ea159997be4c160dd8ef0629040f932851ac342049c2a845a9ad13d87fd1312e496e'
             'ee1bc13ef7545eda1788cddb82259c3d1f2201d8b77ec66d85d86c738a7549f4f2038f2c433938706fd1ae2ba4f97b7b902ca8fa713ab84d18ae715d1d6c1340')
 b2sums=('bae1df5d332beaca313c4bac88f06dd5992988d7c1b6fdc6ced4043d858f437339cd7d0009ae667f9e66705117697bee7ee44ec4e911cc203d34eecc3d8f139b'
         'SKIP'
@@ -125,8 +127,8 @@ b2sums=('bae1df5d332beaca313c4bac88f06dd5992988d7c1b6fdc6ced4043d858f437339cd7d0
         '3559fe9c4f744194939770047a0a02d07ff791c845a80726d0bc7b8c4801ed5f11150e7d5adab813844b3dab1cf38c3a5a87fb6efbb8fc9dccdda9fa56409ed8'
         'a9a2bdfeeb44eb86cbe88ac7c65f72800bdb2fd5cecb02f3a258cf9470b52832180aab43c89d481f7fd4d067342a9a27dd6c8a94d625b95d6e2b912e47d274e7'
         '6f8b1004835d0a9834c5b609f88589bdd243185b989cb1b4ce9c2792bb38f213a65c662d5f230099ee7e823481a28997997dd3082a95de54de26fd7d76b9d273'
+        '9404a2d94526cda17c9dc73ef8dc082a17967a570fb04e741ccc22fd3d4f95c8dc8281ab888ee97f38517362b6c68db3a5fe5d0361507963bce9957f451d325d'
         '15ea05bfa3b59398a2fa30d18abc08d597cedbccd4009cfaaa1a4f367d87b1941620deb223d5229bc2de6f51a47624a8d33263901e9ef2ca70f44fc0419c5413')
->>>>>>> cf4f32f1 (loongarch: support)
 validpgpkeys=('CEACC9E15534EBABB82D3FA03353C9CEF108B584') # Michael Roth <flukshun@gmail.com>
 
 _qemu_system_deps=(
@@ -171,7 +173,6 @@ _qemu_optdepends=(
   'qemu-block-gluster: for Gluster block driver'
   'qemu-block-iscsi: for iSCSI block driver'
   'qemu-block-nfs: for NFS block driver'
-#  'qemu-block-rbd: for Ceph/RBD block driver'
   'qemu-block-ssh: for SSH block driver'
   'qemu-chardev-baum: for Baum chardev driver'
   'qemu-chardev-spice: for spice chardev driver'
@@ -416,7 +417,6 @@ package_qemu-common() {
     _pick qemu-block-gluster usr/lib/qemu/block-gluster.so
     _pick qemu-block-iscsi usr/lib/qemu/block-iscsi.so
     _pick qemu-block-nfs usr/lib/qemu/block-nfs.so
-#_pick qemu-block-rbd usr/lib/qemu/block-rbd.so
     _pick qemu-block-ssh usr/lib/qemu/block-ssh.so
 
     _pick qemu-chardev-baum usr/lib/qemu/chardev-baum.so
