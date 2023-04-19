@@ -10,7 +10,7 @@ _majorver=8
 _minorver=362
 _updatever=09
 pkgver=${_majorver}.${_minorver}.u${_updatever}
-pkgrel=2
+pkgrel=3
 arch=('loong64' 'x86_64')
 url='https://openjdk.java.net/'
 license=('custom')
@@ -32,10 +32,12 @@ makedepends=(
 options=(!lto)
 source=(https://github.com/openjdk/jdk${_majorver}u/archive/refs/tags/jdk${_majorver}u${_minorver}-b${_updatever}.tar.gz
         gcc11.patch
-        0001-add-support-for-la64.patch)
+        0001-add-support-for-la64.patch
+        0001-29453-Some-cpu-features-use-hwcap-detect.patch)
 b2sums=('f415dad93d2525f0f02450bd86268cd8382376e80188803995df97e5d04ade8f9818d402f1cbb7b961f5ab0947dc8ce33635cdf187ad637c3f7b959487c86b4a'
         '9679e4dfb6027a87376081489c09810812d6849573afac4ea96abe3a3e00ca5b6af7d0ffb010c43b93cfa913f9e97fbb9f11e19fcc86a89b4548442671c32da1'
-        '3ba65c27dc81dd2596483817003b40dd18e5360473188611c42d1c46eab2fab9755e671aef3ea4c2f4b89f46cb30002325229592422b70c41b0a528648723bf8')
+        '3ba65c27dc81dd2596483817003b40dd18e5360473188611c42d1c46eab2fab9755e671aef3ea4c2f4b89f46cb30002325229592422b70c41b0a528648723bf8'
+        '482982f63313ca52fc6d1da2cbfb24659982d91f0ba3960b27212ecdffc612ffa8924c3a04f51fb938297a07285fb7f0ff9b6659d61572689d3f5f6f8c2dc1eb')
 
 SKIPCONFIG=1
 case "${CARCH}" in
@@ -59,6 +61,7 @@ prepare() {
   # Fix build with C++17 (Fedora)
   patch -Np1 -i "${srcdir}"/gcc11.patch
   patch -Np1 -i "${srcdir}"/0001-add-support-for-la64.patch
+  patch -Np1 -i "${srcdir}"/0001-29453-Some-cpu-features-use-hwcap-detect.patch
 }
 
 build() {
