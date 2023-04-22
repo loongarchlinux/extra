@@ -1,0 +1,81 @@
+From 897c4e35be04c6c851c75b30083c31a167a1e8c0 Mon Sep 17 00:00:00 2001
+From: Xiaotian Wu <wuxiaotian@loongson.cn>
+Date: Fri, 21 Apr 2023 17:57:59 +0800
+Subject: [PATCH] Add support for LoongArch
+
+refer: https://loongson.github.io/LoongArch-Documentation/LoongArch-ELF-ABI-EN.html#_e_flags_identifies_abi_type_and_version
+---
+ elftools/elf/constants.py    |  7 +++++++
+ elftools/elf/descriptions.py |  1 +
+ elftools/elf/enums.py        |  1 +
+ scripts/readelf.py           | 12 ++++++++++++
+ 4 files changed, 21 insertions(+)
+
+diff --git a/elftools/elf/constants.py b/elftools/elf/constants.py
+index fc55aac..61101c3 100644
+--- a/elftools/elf/constants.py
++++ b/elftools/elf/constants.py
+@@ -51,6 +51,13 @@ class E_FLAGS(object):
+     EF_MIPS_ARCH_32R2=0x70000000
+     EF_MIPS_ARCH_64R2=0x80000000
+ 
++    EF_LOONGARCH_ABI=0x000000C0
++    EF_LOONGARCH_ABI_V0=0x00000000
++    EF_LOONGARCH_ABI_V1=0x00000040
++    EF_LOONGARCH_FLOAT_ABI=0x00000003
++    EF_LOONGARCH_FLOAT_ABI_SOFT=0x00000001
++    EF_LOONGARCH_FLOAT_ABI_SINGLE=0x00000002
++    EF_LOONGARCH_FLOAT_ABI_DOUBLE=0x00000003
+ 
+ class E_FLAGS_MASKS(object):
+     """Masks to be used for convenience when working with E_FLAGS
+diff --git a/elftools/elf/descriptions.py b/elftools/elf/descriptions.py
+index 38c80b6..681ed4e 100644
+--- a/elftools/elf/descriptions.py
++++ b/elftools/elf/descriptions.py
+@@ -389,6 +389,7 @@ _DESCR_E_MACHINE = dict(
+     EM_BLACKFIN='Analog Devices Blackfin',
+     EM_PPC='PowerPC',
+     EM_PPC64='PowerPC64',
++    EM_LOONGARCH='LoongArch',
+     RESERVED='RESERVED',
+ )
+ 
+diff --git a/elftools/elf/enums.py b/elftools/elf/enums.py
+index 745aefc..780a1f8 100644
+--- a/elftools/elf/enums.py
++++ b/elftools/elf/enums.py
+@@ -257,6 +257,7 @@ ENUM_E_MACHINE = dict(
+     EM_RISCV         = 243, # RISC-V
+     EM_BPF           = 247,	# Linux BPF - in-kernel virtual machine
+     EM_CSKY          = 252,	# C-SKY
++    EM_LOONGARCH     = 258, # LoongArch
+     EM_FRV           = 0x5441, # Fujitsu FR-V
+     # Reservations
+     # reserved  11-14   Reserved for future use
+diff --git a/scripts/readelf.py b/scripts/readelf.py
+index 2095c91..7d6e442 100755
+--- a/scripts/readelf.py
++++ b/scripts/readelf.py
+@@ -244,6 +244,18 @@ class ReadElf(object):
+             if (flags & E_FLAGS.EF_MIPS_ARCH) == E_FLAGS.EF_MIPS_ARCH_64:
+                 description += ", mips64"
+ 
++        elif self.elffile['e_machine'] == "EM_LOONGARCH":
++            if (flags & E_FLAGS.EF_LOONGARCH_FLOAT_ABI) == E_FLAGS.EF_LOONGARCH_FLOAT_ABI_SOFT:
++                description += ", SOFT-FLOAT"
++            if (flags & E_FLAGS.EF_LOONGARCH_FLOAT_ABI) == E_FLAGS.EF_LOONGARCH_FLOAT_ABI_SINGLE:
++                description += ", SINGLE-FLOAT"
++            if (flags & E_FLAGS.EF_LOONGARCH_FLOAT_ABI) == E_FLAGS.EF_LOONGARCH_FLOAT_ABI_DOUBLE:
++                description += ", DOUBLE-FLOAT"
++            if (flags & E_FLAGS.EF_LOONGARCH_ABI) == E_FLAGS.EF_LOONGARCH_ABI_V0:
++                description += ", OBJ-v0"
++            if (flags & E_FLAGS.EF_LOONGARCH_ABI) == E_FLAGS.EF_LOONGARCH_ABI_V1:
++                description += ", OBJ-v1"
++
+         return description
+ 
+     def display_program_headers(self, show_heading=True):
+-- 
+2.39.2
+
