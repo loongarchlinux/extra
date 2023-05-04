@@ -1,5 +1,5 @@
 diff --git a/Cargo.lock b/Cargo.lock
-index 64df70f68e9..c622ac310ec 100644
+index c4bb084d908..05785b7286d 100644
 --- a/Cargo.lock
 +++ b/Cargo.lock
 @@ -2462,7 +2462,7 @@ dependencies = [
@@ -41,6 +41,19 @@ index 941d3179587..d350498bc96 100644
              );
              if !is_stable && !self.tcx.features().asm_experimental_arch {
                  feature_err(
+diff --git a/compiler/rustc_codegen_cranelift/Cargo.lock b/compiler/rustc_codegen_cranelift/Cargo.lock
+index e4d3e9ca5ae..1fd5d7c3470 100644
+--- a/compiler/rustc_codegen_cranelift/Cargo.lock
++++ b/compiler/rustc_codegen_cranelift/Cargo.lock
+@@ -301,7 +301,7 @@ checksum = "2dffe52ecf27772e601905b7522cb4ef790d2cc203488bbd0e2fe85fcb74566d"
+ name = "object"
+ version = "0.29.0"
+ source = "registry+https://github.com/rust-lang/crates.io-index"
+-checksum = "21158b2c33aa6d4561f1c0a6ea283ca92bc54802a93b263e910746d679a7eb53"
++checksum = "4fd77a6240ea835e07b2cc429b52bb9b13e21b14076a475e40aec332e4c5edfa"
+ dependencies = [
+  "crc32fast",
+  "hashbrown",
 diff --git a/compiler/rustc_codegen_gcc/example/alloc_system.rs b/compiler/rustc_codegen_gcc/example/alloc_system.rs
 index fd01fcf1fc8..31894638c0e 100644
 --- a/compiler/rustc_codegen_gcc/example/alloc_system.rs
@@ -395,18 +408,9 @@ index 00000000000..7ace1647ded
 +    }
 +}
 diff --git a/compiler/rustc_target/src/asm/mod.rs b/compiler/rustc_target/src/asm/mod.rs
-index 70cd883be09..c7f79ebc076 100644
+index 70cd883be09..3eaac631bcb 100644
 --- a/compiler/rustc_target/src/asm/mod.rs
 +++ b/compiler/rustc_target/src/asm/mod.rs
-@@ -87,7 +87,7 @@ pub fn parse(name: &str) -> Result<Self, &'static str> {
-                     $(
-                         $($bad_reg)|* => Err($error),
-                     )*
--                    _ => Err("unknown register"),
-+                    _ => Err("========unknown register"),
-                 }
-             }
- 
 @@ -167,6 +167,7 @@ macro_rules! types {
  mod avr;
  mod bpf;
@@ -730,21 +734,8 @@ index 9cf43fc7a21..520e2544e0c 100644
          'm68k': 'm68k',
          'powerpc': 'powerpc',
          'powerpc64': 'powerpc64',
-diff --git a/src/bootstrap/config.rs b/src/bootstrap/config.rs
-index b41d60d51a8..92b05b27f0c 100644
---- a/src/bootstrap/config.rs
-+++ b/src/bootstrap/config.rs
-@@ -1190,6 +1190,8 @@ fn parse_inner<'a>(args: &[String], get_toml: impl 'a + Fn(&Path) -> TomlConfig)
-                 }
-             };
- 
-+            println!("============ config.llvm_from_ci {}\n", config.llvm_from_ci);
-+
-             if config.llvm_from_ci {
-                 // None of the LLVM options, except assertions, are supported
-                 // when using downloaded LLVM. We could just ignore these but
 diff --git a/src/bootstrap/lib.rs b/src/bootstrap/lib.rs
-index d44b96cfb99..d370ae7776c 100644
+index 0474ab344fe..d1d2a01c151 100644
 --- a/src/bootstrap/lib.rs
 +++ b/src/bootstrap/lib.rs
 @@ -218,7 +218,8 @@ pub unsafe fn setup(_build: &mut crate::Build) {}
@@ -757,20 +748,11 @@ index d44b96cfb99..d370ae7776c 100644
      ),
      /* Extra names used by dependencies */
      // FIXME: Used by rustfmt is their test but is invalid (neither cargo nor bootstrap ever set
-@@ -456,6 +457,8 @@ pub fn new(mut config: Config) -> Build {
-         // we always try to use git for LLVM builds
-         let in_tree_llvm_info = channel::GitInfo::new(false, &src.join("src/llvm-project"));
- 
-+	println!("====config.initial_rustc {:?}",config.initial_rustc);
-+
-         let initial_target_libdir_str = if config.dry_run() {
-             "/dummy/lib/path/to/lib/".to_string()
-         } else {
 diff --git a/src/bootstrap/native.rs b/src/bootstrap/native.rs
-index e0d1504c9c7..5d6a0e0ec63 100644
+index e0d1504c9c7..5c4bf35e483 100644
 --- a/src/bootstrap/native.rs
 +++ b/src/bootstrap/native.rs
-@@ -208,12 +208,15 @@ pub(crate) fn is_ci_llvm_available(config: &Config, asserts: bool) -> bool {
+@@ -208,6 +208,7 @@ pub(crate) fn is_ci_llvm_available(config: &Config, asserts: bool) -> bool {
          "x86_64-unknown-illumos",
          "x86_64-unknown-linux-musl",
          "x86_64-unknown-netbsd",
@@ -778,24 +760,16 @@ index e0d1504c9c7..5d6a0e0ec63 100644
      ];
      if !supported_platforms.contains(&&*config.build.triple) {
          return false;
-     }
- 
-+
-     let triple = &*config.build.triple;
-+    println!("========triple {}", triple);
-     if (triple == "aarch64-unknown-linux-gnu" || triple.contains("i686")) && asserts {
-         // No alt builder for aarch64-unknown-linux-gnu today.
-         return false;
-@@ -233,7 +236,7 @@ pub(crate) fn is_ci_llvm_available(config: &Config, asserts: bool) -> bool {
+@@ -233,7 +234,7 @@ pub(crate) fn is_ci_llvm_available(config: &Config, asserts: bool) -> bool {
          }
      }
  
 -    true
-+   false 
++   false
  }
  
  #[derive(Debug, Copy, Clone, Hash, PartialEq, Eq)]
-@@ -301,7 +304,7 @@ fn run(self, builder: &Builder<'_>) -> LlvmResult {
+@@ -301,7 +302,7 @@ fn run(self, builder: &Builder<'_>) -> LlvmResult {
          let llvm_targets = match &builder.config.llvm_targets {
              Some(s) => s,
              None => {
