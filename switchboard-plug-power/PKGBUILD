@@ -1,0 +1,42 @@
+# Maintainer: Maxime Gauduin <alucryd@archlinux.org>
+
+pkgname=switchboard-plug-power
+pkgver=2.7.0
+pkgrel=1
+pkgdesc='Switchboard Power Plug'
+arch=(loong64 x86_64)
+url=https://github.com/elementary/switchboard-plug-power
+license=(GPL3)
+groups=(pantheon)
+depends=(
+  glib2
+  gtk3
+  libgee
+  libswitchboard-2.0.so
+  polkit
+)
+makedepends=(
+  git
+  meson
+  vala
+)
+_tag=baebae823c522a3e1110be940a2baad4805332d6
+source=(git+https://github.com/elementary/switchboard-plug-power.git#tag=${_tag})
+sha256sums=(SKIP)
+
+pkgver() {
+  cd switchboard-plug-power
+
+  git describe --tags
+}
+
+build() {
+  arch-meson switchboard-plug-power build
+  ninja -C build
+}
+
+package() {
+  DESTDIR="${pkgdir}" ninja -C build install
+}
+
+# vim: ts=2 sw=2 et:

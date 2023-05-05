@@ -1,0 +1,56 @@
+# Maintainer: David Runge <dvzrv@archlinux.org>
+
+pkgname=midi_matrix.lv2
+pkgver=0.30.0
+pkgrel=3
+pkgdesc="A plugin for MIDI channel filtering, multiplication and rerouting"
+arch=(loong64 x86_64)
+url="https://git.open-music-kontrollers.ch/~hp/midi_matrix.lv2"
+license=(Artistic2.0)
+groups=(
+  lv2-plugins
+  pro-audio
+)
+depends=(
+  glibc
+  libglvnd
+  libx11
+  lv2-host
+)
+makedepends=(
+  glew
+  glu
+  lv2
+  meson
+  sord
+)
+checkdepends=(lv2lint)
+source=(
+  $pkgname-$pkgver.tar.gz::$url/archive/$pkgver.tar.gz
+  $pkgname-$pkgver.tar.gz.asc::$url/archive/$pkgver.tar.gz.asc
+)
+sha512sums=('ddeee9acbf8c1c1cf1e65834b93fed6ec3a12deed45c068466ac45f79dfe432b24616fc306d0ab6913e5bce687a0e654a805138f8b3359a5fa3a3b939e068a5d'
+            'SKIP')
+b2sums=('d634f0c1f88a560589402147151e71faa364834ab120b9396e515f06bf18b719f6db4592a91023b120351317fc2a7002ac59f2a837cdad9d0061a1f0796fd36b'
+        'SKIP')
+validpgpkeys=('5AE26CEBBF49705C19FB273A30258F99258CB76A') # Hanspeter Portner <dev@open-music-kontrollers.ch>
+
+build() {
+  arch-meson build $pkgname-$pkgver
+  meson compile -C build
+}
+
+check() {
+  meson test -C build --print-errorlogs
+}
+
+
+package() {
+  depends+=(
+    glew libGLEW.so
+  )
+
+  meson install -C build --destdir "$pkgdir"
+  # docs
+  install -vDm 644 $pkgname-$pkgver/{ChangeLog,README.md} -t "$pkgdir/usr/share/doc/$pkgname/"
+}

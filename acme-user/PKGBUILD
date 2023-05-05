@@ -1,0 +1,21 @@
+# Maintainer: Bruno Pagani <archange@archlinux.org>
+
+pkgname=acme-user
+pkgver=1.0.1
+pkgrel=1
+pkgdesc="acme-tiny systemd files for running as dedicated user instead of root."
+arch=(any)
+url="https://github.com/ArchangeGabriel/acme-user"
+license=(GPL)
+depends=(acme-tiny systemd)
+source=(${url}/releases/download/v${pkgver}/${pkgname}-${pkgver}.tar.zst{,.asc})
+sha256sums=(bbc14de2b86d4ebaa2c3559de92df42beac556a96d098fce5d9ac75a9a8cb933 SKIP)
+validpgpkeys=(69DA34D78FE0EFD596AC6D049D893EC4DAAF9129)
+
+package() {
+  install -Dm755 acme-renew.sh "${pkgdir}"/usr/bin/acme-renew
+  install -Dm755 acme-post.sh "${pkgdir}"/usr/bin/acme-post
+  install -Dm644 acme.{service,timer} -t "${pkgdir}"/usr/lib/systemd/system/
+  install -Dm644 acme.tmpfiles "${pkgdir}"/usr/lib/tmpfiles.d/acme.conf
+  install -Dm644 acme.sysusers "${pkgdir}"/usr/lib/sysusers.d/acme.conf
+}

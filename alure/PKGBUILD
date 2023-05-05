@@ -1,0 +1,40 @@
+# Maintainer: Lukas Fleischer <lfleischer@archlinux.org>
+# Contributor: Markus Martin <markus@archwyrm.net>
+
+pkgname=alure
+pkgver=1.2
+pkgrel=10
+pkgdesc='Utility library to help manage common tasks with OpenAL applications.'
+arch=('loong64' 'x86_64')
+url='https://kcat.tomasu.net/alure.html'
+license=('MIT')
+depends=('openal' 'libsndfile' 'libvorbis' 'flac' 'mpg123' 'dumb' 'fluidsynth')
+makedepends=('cmake')
+source=("https://kcat.tomasu.net/alure-releases/${pkgname}-${pkgver}.tar.bz2"
+        build.patch
+        dumb-2.patch)
+sha256sums=('465e6adae68927be3a023903764662d64404e40c4c152d160e3a8838b1d70f71'
+            '21029cfc8900b8270f6c7a79235e09a05d45d0b03b221d9d856a27e98cc0931b'
+            '379210476980d5e2754b015d5505dff620ed3297a99c08509c757fa88ef46300')
+
+prepare() {
+  cd $pkgname-$pkgver
+  patch -p1 -i ../build.patch
+  patch -p1 -i ../dumb-2.patch # Fix build with dumb 2 (Gentoo)
+}
+
+build() {
+  cmake -B build -S $pkgname-$pkgver \
+    -DCMAKE_INSTALL_PREFIX=/usr \
+    -DCMAKE_CXX_FLAGS="$CXXFLAGS -ffat-lto-objects" \
+    -DDYNLOAD=OFF
+# Fix build with fluidsynth 2.4
+  find -name build.make | xargs sed -e 's|\;| |g' -i
+  cmake --build build
+}
+
+package() {
+  DESTDIR="$pkgdir" cmake --install build
+
+  install -Dm0644 $pkgname-$pkgver/COPYING -t "$pkgdir"/usr/share/licenses/$pkgname
+}

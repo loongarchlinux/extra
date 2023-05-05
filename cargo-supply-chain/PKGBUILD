@@ -1,0 +1,46 @@
+# Maintainer: George Rawlinson <grawlinson@archlinux.org>
+
+pkgname=cargo-supply-chain
+pkgver=0.3.2
+pkgrel=1
+pkgdesc='Gather author, contributor and publisher data on crates in your dependency graph'
+arch=('loong64' 'x86_64')
+url='https://github.com/rust-secure-code/cargo-supply-chain'
+license=('Apache' 'MIT' 'ZLIB')
+depends=('gcc-libs')
+makedepends=('rust')
+options=('!lto')
+source=("$pkgname-$pkgver.tar.gz::https://static.crates.io/crates/$pkgname/$pkgname-$pkgver.crate")
+sha512sums=('1ae7882db47c1fd2b0cbbfb8bd43b1a571bb72bfd5ba3d113102b1fc56d2f8a7ae79d2b700de0d6435b48b0d553d485dd633240934034e50ee10c817d279875e')
+b2sums=('c196e9b8bd6882c6fa4360f27d623ff91275a0209612a1b74043a9869ead3e21557052d107d15d8daa378e35722ead6a519f5969d5882c63622547d467b6a6b4')
+
+prepare() {
+  cd "$pkgname-$pkgver"
+
+  cargo fetch --locked --target "$CARCH-unknown-linux-gnu"
+}
+
+build() {
+  cd "$pkgname-$pkgver"
+
+  cargo build --release --frozen --all-features
+}
+
+check() {
+  cd "$pkgname-$pkgver"
+
+  cargo test --frozen --all-features
+}
+
+package() {
+  cd "$pkgname-$pkgver"
+
+  # binary
+  install -vDm755 -t "$pkgdir/usr/bin" "target/release/$pkgname"
+
+  # documentation
+  install -vDm644 -t "$pkgdir/usr/share/doc/$pkgname" ./*.md
+
+  # licenses
+  install -vDm644 -t "$pkgdir/usr/share/licenses/$pkgname" LICENSE*
+}

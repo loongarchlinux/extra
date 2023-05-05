@@ -1,0 +1,44 @@
+# Maintainer: George Rawlinson <grawlinson@archlinux.org>
+
+pkgname=qbe
+pkgver=1.1
+pkgrel=1
+pkgdesc='Small embeddable C compiler backend'
+arch=('loong64' 'x86_64')
+url='https://c9x.me/compile/'
+license=('MIT')
+depends=('glibc')
+makedepends=('git')
+_commit='f1b21d145ba03c6052b4b722dc457f8e944e6fca'
+source=("git://c9x.me/qbe.git#commit=$_commit")
+b2sums=('SKIP')
+
+pkgver() {
+  cd qbe
+
+  git describe --tags | sed 's/^v//'
+}
+
+build() {
+  cd qbe
+
+  make
+}
+
+check() {
+  cd qbe
+
+  make -k check
+}
+
+package() {
+  cd qbe
+
+  make DESTDIR="$pkgdir" PREFIX=/usr install
+
+  # documentation
+  install -vDm644 -t "$pkgdir/usr/share/doc/$pkgname" doc/*
+
+  # license
+  install -vDm644 -t "$pkgdir/usr/share/licenses/$pkgname" LICENSE
+}

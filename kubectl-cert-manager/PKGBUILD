@@ -1,0 +1,45 @@
+# Maintainer: Christian Rebischke <chris.rebischke@archlinux.org>
+# Contributor: ml <>
+pkgname=kubectl-cert-manager
+pkgver=1.9.0
+pkgrel=1
+pkgdesc='Automatically provision and manage TLS certificates in Kubernetes'
+arch=('loong64' 'x86_64' 'aarch64')
+url='https://github.com/jetstack/cert-manager'
+license=('Apache')
+depends=('kubectl')
+makedepends=('git' 'go')
+groups=('kubectl-plugins')
+source=("$url/archive/v$pkgver/$pkgname-$pkgver.tar.gz")
+sha512sums=('8c2bdfcdfbacd321c02bb0c68a0ed23c1d4ae902c90e5b036898ec70cdf9e80557367dbbf731b21d0e407d5715277ae74431d40e0051c8da26eb7886d089f1be')
+b2sums=('80c08ab52521ffa680789a7ad8f516c1dcb5a060edef6a19ccad127a46ed8b236406c3f815f46cdafc22fc05684fd5fd3ba3f59695ae2da5feb3fe75e3566772')
+
+build() {
+  local _x _commit
+  _commit=$(bsdcat "$pkgname-$pkgver.tar.gz" | git get-tar-commit-id)
+  _x=(
+    AppVersion="v$pkgver"
+    AppGitCommit="${_commit:?}"
+    AppGitState="clean"
+  )
+
+  cd cert-manager-"$pkgver"
+  export CGO_ENABLED=1
+  export CGO_LDFLAGS="$LDFLAGS"
+  export CGO_CFLAGS="$CFLAGS"
+  export CGO_CPPFLAGS="$CPPFLAGS"
+  export CGO_CXXFLAGS="$CXXFLAGS"
+  export GOFLAGS='-buildmode=pie -trimpath -modcacherw -mod=readonly'
+  go build -ldflags="-linkmode=external ${_x[*]/#/-X=github.com/jetstack/cert-manager/pkg/util.}" ./cmd/ctl
+}
+
+check() {
+  cd cert-manager-"$pkgver"
+  # we don't want e2e and other tests that explicitly want bazel
+  go test -short ./cmd/ctl/...
+}
+
+package() {
+  cd cert-manager-"$pkgver"
+  install -Dm755 ctl "$pkgdir"/usr/bin/kubectl-cert_manager
+}

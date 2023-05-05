@@ -1,0 +1,45 @@
+# Maintainer: George Rawlinson <grawlinson@archlinux.org>
+# Contributor: Kyle Keen <keenerd@gmail.com>
+
+pkgname=arch-wiki-lite
+pkgver=20230228
+pkgrel=1
+pkgdesc='Arch Wiki without HTML. 1/9 as big, easily searched & viewable on console'
+arch=('any')
+url='https://gitlab.archlinux.org/grawlinson/arch-wiki-lite'
+license=('GPL2' 'FDL')
+depends=('bash' 'gzip')
+makedepends=(
+  'git'
+  'python'
+  'arch-wiki-docs'
+)
+optdepends=(
+  'dialog: for interactive menu'
+  'arch-wiki-docs: for wiki-search-html'
+  'xdg-utils: for wiki-search-html'
+)
+_commit='a9673ee216ba152377543339e1b26e024975d804'
+source=("$pkgname::git+$url.git#commit=$_commit")
+b2sums=('SKIP')
+
+build() {
+  cd "$pkgname"
+
+  LC_ALL=en_US.UTF-8 python3 wiki_lite.py
+}
+
+package() {
+  cd "$pkgname"
+
+  # cli scripts
+  install -vDm755 -t "$pkgdir/usr/bin" wiki-search{,-html}
+
+  # assets
+  install -vd "$pkgdir/usr/share/doc/arch-wiki/text"
+  cp -vr wiki/* "$pkgdir/usr/share/doc/arch-wiki/text"
+
+  # dialog
+  install -vDm644 -t "$pkgdir/etc/dialog.d" wiki-search.dialog.rc
+}
+

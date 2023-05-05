@@ -1,0 +1,70 @@
+# Maintainer: George Rawlinson <grawlinson@archlinux.org>
+# Contributor: Marco A Rojas <marco.rojas@zentek.com.mx>
+
+pkgname=dbmate
+pkgver=2.2.0
+pkgrel=1
+pkgdesc='A lightweight, framework-agnostic database migration tool'
+arch=('loong64' 'x86_64')
+url='https://github.com/amacneil/dbmate'
+license=('MIT')
+depends=('glibc')
+makedepends=('git' 'go')
+optdepends=(
+  'mariadb: for local MariaDB instance'
+  'postgresql: for local PostgreSQL instance'
+  'sqlite: for local SQLite instance'
+)
+options=('!lto')
+_commit='02a179075e18a8f769a4e1efd58302ab5724393c'
+source=("$pkgname::git+$url.git#commit=$_commit")
+b2sums=('SKIP')
+
+pkgver() {
+  cd "$pkgname"
+  git describe --tags | sed 's/^v//'
+}
+
+prepare() {
+  cd "$pkgname"
+
+  # create directory for build output
+  mkdir build
+
+  # download dependencies
+  export GOPATH="${srcdir}"
+  go mod download
+}
+
+build() {
+  cd "$pkgname"
+
+  # set Go flags
+  export CGO_CPPFLAGS="${CPPFLAGS}"
+  export CGO_CFLAGS="${CFLAGS}"
+  export CGO_CXXFLAGS="${CXXFLAGS}"
+  export GOPATH="${srcdir}"
+
+  go build -v \
+    -buildmode=pie \
+    -mod=readonly \
+    -modcacherw \
+    -ldflags "-compressdwarf=false \
+    -linkmode external \
+    -extldflags ${LDFLAGS}" \
+    -o build \
+    .
+}
+
+package() {
+  cd "$pkgname"
+
+  # binary
+  install -vDm755 -t "$pkgdir/usr/bin" "build/$pkgname"
+
+  # documentation
+  install -vDm644 -t "$pkgdir/usr/share/doc/$pkgname" README.md
+
+  # license
+  install -vDm644 -t "$pkgdir/usr/share/licenses/$pkgname" LICENSE
+}

@@ -1,0 +1,32 @@
+# Maintainer: Felix Yan <felixonmars@archlinux.org>
+
+pkgname=gost
+pkgver=2.11.5
+pkgrel=1
+pkgdesc="GO Simple Tunnel"
+arch=('loong64' 'x86_64')
+url="https://github.com/ginuerzh/gost"
+license=('MIT')
+depends=('glibc')
+makedepends=('go' 'git')
+source=("$pkgname-$pkgver.tar.gz::https://github.com/ginuerzh/gost/archive/v$pkgver.tar.gz"
+        LICENSE)
+sha512sums=('13f7b797cd4d0fe663278eb04f8aacd6f07b938c80ac331c64ee2be8d55afe356125b1a80b8dcb9a4067f408c6118b344c9ba893f41b2413a7bbc852337c54b2'
+            '8815c27a49d747e90fbcbf03c6011a76b95bc72a6c963ee8df9490e6aba9a3f4f9895e6a7759988aef123160ef8a6d2de85e8fce01c5980f8744e212792ad07c')
+
+build() {
+  export CGO_CPPFLAGS="${CPPFLAGS}"
+  export CGO_CFLAGS="${CFLAGS}"
+  export CGO_CXXFLAGS="${CXXFLAGS}"
+  export CGO_LDFLAGS="${LDFLAGS}"
+  export GOFLAGS="-buildmode=pie -trimpath -ldflags=-linkmode=external -mod=readonly -modcacherw"
+
+  cd gost-$pkgver/cmd/gost
+  go build
+}
+
+package() {
+  cd gost-$pkgver
+  install -Dm755 cmd/gost/gost "$pkgdir/usr/bin/gost"
+  install -Dm644 ../LICENSE "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
+}

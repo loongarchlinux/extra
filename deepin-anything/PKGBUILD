@@ -1,0 +1,50 @@
+# Maintainer: Felix Yan <felixonmars@archlinux.org>
+
+pkgbase=deepin-anything
+pkgname=(deepin-anything deepin-anything-dkms)
+pkgver=5.0.18
+_extramodules=extramodules-ARCH
+pkgrel=1
+pkgdesc="Deepin Anything file search tool"
+arch=('loong64' 'x86_64')
+url="https://github.com/linuxdeepin/deepin-anything"
+license=('GPL3')
+makedepends=('dtkcore' 'udisks2-qt5')
+source=("https://github.com/linuxdeepin/deepin-anything/archive/$pkgver/$pkgname-$pkgver.tar.gz"
+        deepin-anything-server.sysusers)
+sha512sums=('73cc90f394b53a8d8edc17b258b63789cddd3094008de8403b24cdb0ed94e677cb9eedac297b73e8142204612a4ae5119450ebb08be4ea1c94abf0d375f8b51d'
+            '0ff6a6de1fbfb0c33eaac511b989da321a9e43ece92708af88aee34ad1a05e55572713b1290bc2705d70b91dc7bec4fb4abd3dc664a0abe01de27d88bd9e9c85')
+
+prepare() {
+  cd deepin-anything-$pkgver
+  sed -i 's|^systemd_service.path.*|systemd_service.path = /usr/lib/systemd/system|' server/monitor/src/src.pro server/tool/tool.pro
+}
+
+build() {
+  cd deepin-anything-$pkgver
+  make VERSION=$pkgver
+}
+
+package_deepin-anything-dkms() {
+  depends=('dkms')
+  provides=('DEEPIN-ANYTHING-MODULE')
+  conflicts=('DEEPIN-ANYTHING-MODULE')
+
+  cd deepin-anything-$pkgver
+  install -dm 755 "$pkgdir"/usr/src
+  cp -r kernelmod "$pkgdir"/usr/src/deepin-anything-$pkgver
+  install -m644 debian/deepin-anything-dkms.dkms "$pkgdir"/usr/src/deepin-anything-$pkgver/dkms.conf
+}
+
+package_deepin-anything() {
+  depends=('DEEPIN-ANYTHING-MODULE' 'dtkcore' 'udisks2-qt5')
+  groups=('deepin')
+
+  cd deepin-anything-$pkgver
+  make VERSION=$pkgver DESTDIR="$pkgdir" install
+  rm -r "$pkgdir"/usr/src
+
+  mv "$pkgdir"/etc/dbus-1/system.d "$pkgdir"/usr/share/dbus-1/system.d
+
+  install -Dm644 ../deepin-anything-server.sysusers "$pkgdir/usr/lib/sysusers.d/deepin-anything-server.conf"
+}

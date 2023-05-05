@@ -1,0 +1,39 @@
+# Maintainer: Morten Linderud <foxboron@archlinux.org>
+# Maintainer: Maxim Baz <$pkgname at maximbaz dot com>
+# Contributor: Frank Lenormand <lenormf at gmail dot com>
+pkgname=kakoune
+pkgver=2022.10.31
+pkgrel=1
+pkgdesc="Multiple-selection, UNIX-flavored modal editor"
+arch=("loong64" "x86_64")
+url="https://kakoune.org/"
+license=("custom:unlicense")
+depends=("gcc-libs")
+optdepends=(
+    "aspell: spell check, correct text"
+    "clang: error reporting and diagnostics, completion"
+    "editorconfig-core-c: set formatting options project-wide"
+    "git: display and cycle through hunks, blame lines, handle file status"
+    "kak-lsp: Language Server Protocol (LSP) client"
+    "tmux: split windows, spawn tabs"
+    "xdotool: X11 window management"
+    "xorg-xmessage: print detailed crash information in a separate window"
+)
+source=("https://github.com/mawww/kakoune/releases/download/v${pkgver}/kakoune-${pkgver}.tar.bz2")
+sha256sums=('fb317b62c9048ddc7567fe83dfc409c252ef85778b24bd2863be2762d4e4e58b')
+
+build() {
+    cd "${pkgname}-${pkgver}/src"
+    make
+}
+
+check() {
+    cd "${pkgname}-${pkgver}/src"
+    make test
+}
+
+package() {
+    cd "${pkgname}-${pkgver}/src"
+    make install-strip DESTDIR="${pkgdir}" PREFIX=/usr libexecdir="${pkgdir}/usr/lib/kak"
+    install -D ../UNLICENSE "${pkgdir}/usr/share/licenses/${pkgname}/LICENSE"
+}

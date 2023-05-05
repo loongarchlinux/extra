@@ -1,0 +1,28 @@
+# Maintainer: Antonio Rojas <arojas@archlinux.org>
+
+pkgname=krita-plugin-gmic
+pkgver=3.2.1.2
+pkgrel=1
+pkgdesc='GMic plugin for Krita'
+arch=(loong64 x86_64)
+url='https://github.com/amyspark/gmic'
+license=(custom:CeCILL)
+depends=(krita gmic)
+makedepends=(extra-cmake-modules qt5-tools)
+source=(https://github.com/amyspark/gmic/releases/download/v$pkgver/gmic-$pkgver-patched.tar.xz{,.asc})
+sha256sums=('78e22eb1763802a266d25e19d1d17b727a0c0170e0a329716ef583ad1a57ad0a'
+            'SKIP')
+validpgpkeys=(4894424D2412FEE5176732A3FC00108CFD9DBF1E) # https://github.com/amyspark.gpg
+
+build() {
+  cmake -B build -S gmic-$pkgver-patched/gmic-qt \
+    -DCMAKE_INSTALL_PREFIX=/usr \
+    -DGMIC_QT_HOST=krita-plugin
+  cmake --build build
+}
+
+package() {
+  DESTDIR="$pkgdir" cmake --install build
+  rm "$pkgdir"/usr/share/gmic/gmic_cluts.gmz # Provided by gmic
+  install -Dm644 gmic-$pkgver-patched/COPYING -t "$pkgdir"/usr/share/licenses/$pkgname
+}

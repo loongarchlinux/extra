@@ -1,0 +1,99 @@
+diff -wbBur phpLDAPadmin-1.2.6.4/lib/functions.php phpLDAPadmin-1.2.6.4.my/lib/functions.php
+--- phpLDAPadmin-1.2.6.4/lib/functions.php	2022-12-21 18:43:40.596996754 +0300
++++ phpLDAPadmin-1.2.6.4.my/lib/functions.php	2022-12-21 18:43:30.240329853 +0300
+@@ -2113,9 +2113,11 @@
+ 
+ 			} else {
+ 				$jpeg_dimensions = getimagesize($jpeg_filename);
++				if (!empty($jpeg_dimensions)) {
+ 				$width = $jpeg_dimensions[0];
+ 				$height = $jpeg_dimensions[1];
+ 			}
++			}
+ 
+ 			unlink($jpeg_filename);
+ 		}
+@@ -2131,7 +2133,7 @@
+ 		$img_height = $height;
+ 	}
+ 
+-	$href = sprintf('view_jpeg_photo.php?dn=%s&index=%s&attr=%s',rawurlencode($dn),$index,$attr_name);
++	$href = sprintf('view_jpeg_photo.php?dn=%s&index=%s&attr=%s',rawurlencode((string)$dn),$index,$attr_name);
+ 
+ 	printf('<acronym title="%s %s. %s x %s %s.">',number_format($outjpeg),_('bytes'),$width,$height,_('pixels'));
+ 
+@@ -2649,7 +2649,7 @@
+  * encoded) into \<hexcode>.
+  */
+ function ldap_explode_dn_patch($dn,$with_attrib) {
+-	$result = ldap_explode_dn($dn,$with_attrib);
++	$result = ldap_explode_dn((string)$dn,$with_attrib);
+ 	if (! $result)
+ 		return null;
+ 
+diff -wbBur phpLDAPadmin-1.2.6.4.q/lib/page.php phpLDAPadmin-1.2.6.4/lib/page.php
+--- phpLDAPadmin-1.2.6.4.q/lib/page.php	2022-08-05 03:49:10.000000000 +0300
++++ phpLDAPadmin-1.2.6.4/lib/page.php	2023-02-05 02:45:35.280735011 +0300
+@@ -12,6 +12,7 @@
+  * @package phpLDAPadmin
+  * @subpackage Page
+  */
++#[AllowDynamicProperties]
+ class page {
+ 	# pre-HTML headers
+ 	protected $_pageheader;
+diff -wbBur phpLDAPadmin-1.2.6.4.q/lib/Template.php phpLDAPadmin-1.2.6.4/lib/Template.php
+--- phpLDAPadmin-1.2.6.4.q/lib/Template.php	2022-08-05 03:49:10.000000000 +0300
++++ phpLDAPadmin-1.2.6.4/lib/Template.php	2023-02-05 02:45:24.740735139 +0300
+@@ -28,6 +28,7 @@
+  * @todo RDN attributes need to be checked that are included in the schema, otherwise mark it is invalid
+  * @todo askcontainer is no longer used?
+  */
++#[AllowDynamicProperties]
+ class Template extends xmlTemplate {
+ 	# If this template visible on the template choice list
+ 	private $visible = true;
+diff -wbBur phpLDAPadmin-1.2.6.4.q/lib/TemplateRender.php phpLDAPadmin-1.2.6.4/lib/TemplateRender.php
+--- phpLDAPadmin-1.2.6.4.q/lib/TemplateRender.php	2023-02-05 02:45:05.520735361 +0300
++++ phpLDAPadmin-1.2.6.4/lib/TemplateRender.php	2023-02-05 02:45:29.850735078 +0300
+@@ -12,6 +12,7 @@
+  * @package phpLDAPadmin
+  * @subpackage Templates
+  */
++#[AllowDynamicProperties]
+ class TemplateRender extends PageRender {
+ 	# Page number
+ 	private $pagelast;
+diff -wbBur phpLDAPadmin-1.2.6.4.org/lib/PLAAttribute.php phpLDAPadmin-1.2.6.4/lib/PLAAttribute.php
+--- phpLDAPadmin-1.2.6.4.org/lib/PLAAttribute.php	2022-08-05 03:49:10.000000000 +0300
++++ phpLDAPadmin-1.2.6.4/lib/PLAAttribute.php	2023-02-10 18:26:14.114672713 +0300
+@@ -12,6 +12,7 @@
+  * @package phpLDAPadmin
+  * @subpackage Templates
+  */
++#[AllowDynamicProperties]
+ class PLAAttribute {
+ 	# Attribute Name
+ 	public $name;
+diff -wbBur phpLDAPadmin-1.2.6.4.org/lib/import_functions.php phpLDAPadmin-1.2.6.4/lib/import_functions.php
+--- phpLDAPadmin-1.2.6.4.org/lib/import_functions.php	2022-08-05 03:49:10.000000000 +0300
++++ phpLDAPadmin-1.2.6.4/lib/import_functions.php	2023-02-16 02:05:49.159978183 +0300
+@@ -144,6 +144,7 @@
+  * @package phpLDAPadmin
+  * @subpackage Import
+  */
++#[AllowDynamicProperties]
+ class ImportLDIF extends Import {
+ 	private $_currentLineNumber = 0;
+ 	private $_currentLine = '';
+diff -wbBur phpLDAPadmin-1.2.6.4.org/lib/Query.php phpLDAPadmin-1.2.6.4/lib/Query.php
+--- phpLDAPadmin-1.2.6.4.org/lib/Query.php	2022-08-05 03:49:10.000000000 +0300
++++ phpLDAPadmin-1.2.6.4/lib/Query.php	2023-02-16 02:05:15.176645250 +0300
+@@ -12,6 +12,7 @@
+  * @package phpLDAPadmin
+  * @subpackage Queries
+  */
++#[AllowDynamicProperties]
+ class Query extends xmlTemplate {
+ 	protected $description = '';
+ 	public $results = array();

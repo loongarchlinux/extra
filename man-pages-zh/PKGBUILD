@@ -1,0 +1,57 @@
+# Maintainer: Felix Yan <felixonmars@archlinux.org>
+# Contributor: dickeny@gmail.com
+# Contributor: cuihao <cuihao dot leo at gmail dot com>
+
+pkgbase=man-pages-zh
+pkgname=(man-pages-zh_cn man-pages-zh_tw)
+pkgver=1.6.4.0
+_commit=f1170c10185d1be9d42146e9779249bde89b2b08
+pkgrel=2
+arch=('any')
+url='https://github.com/man-pages-zh/manpages-zh'
+license=('custom:GFDL1.2')
+depends=('man')
+makedepends=('opencc' 'python' 'git')
+source=("git+https://github.com/man-pages-zh/manpages-zh.git#commit=$_commit")
+sha512sums=('SKIP')
+
+build() {
+  cd manpages-zh
+  autoreconf -i
+  ./configure --prefix=/usr
+  make
+}
+
+package_man-pages-zh_cn() {
+  pkgdesc='Simplified Chinese Linux man pages'
+
+  cd manpages-zh
+  make install DESTDIR="$pkgdir"
+
+  install -dm755 "$pkgdir"/usr/share/licenses/$pkgname
+  mv "$pkgdir"/usr/share/doc/manpages-zh/COPYRIGHT "$pkgdir"/usr/share/licenses/$pkgname/
+  rmdir "$pkgdir"/usr/share/doc/manpages-zh "$pkgdir"/usr/share/doc
+
+  rm -r "$pkgdir"/usr/share/man/zh_TW
+
+  # remove conflicted files with shadow
+  cd "$pkgdir"/usr/share/man/zh_CN
+  rm ./man1/groups*
+}
+
+package_man-pages-zh_tw() {
+  pkgdesc='Traditional Chinese Linux man pages'
+
+  cd manpages-zh
+  make install DESTDIR="$pkgdir"
+
+  install -dm755 "$pkgdir"/usr/share/licenses/$pkgname
+  mv "$pkgdir"/usr/share/doc/manpages-zh/COPYRIGHT "$pkgdir"/usr/share/licenses/$pkgname/
+  rmdir "$pkgdir"/usr/share/doc/manpages-zh "$pkgdir"/usr/share/doc
+
+  rm -r "$pkgdir"/usr/share/man/zh_CN
+
+  # remove conflicted files with shadow
+  cd "$pkgdir"/usr/share/man/zh_TW
+  rm ./man1/groups*
+}

@@ -1,0 +1,31 @@
+# Maintainer: Levente Polyak <anthraxx[at]archlinux[dot]org>
+# Maintainer: Andreas 'Segaja' Schleifer <segaja at archlinux dot org>
+
+_gemname=pcaprub
+pkgname=ruby-${_gemname}
+pkgver=0.13.1
+pkgrel=1
+pkgdesc='Consistent interface to libpcap packet capture library'
+url='https://github.com/pcaprub/pcaprub'
+arch=('loong64' 'x86_64')
+license=('LGPL2.1')
+depends=('ruby' 'libpcap')
+makedepends=('ruby-rdoc')
+options=('!emptydirs')
+source=(https://rubygems.org/downloads/${_gemname}-${pkgver}.gem)
+noextract=(${_gemname}-${pkgver}.gem)
+sha512sums=('3079a5f7b29df502b5bbf0afdb7c670c9a43fbb4024163001018ebffd660597197cb0c146005f1ce027f00f2ba4c2e0430a8574cb10c4fac310a8b04411c53dd')
+
+package() {
+  local _gemdir="$(gem env gemdir)"
+  gem install --ignore-dependencies --no-user-install -i "${pkgdir}${_gemdir}" -n "${pkgdir}/usr/bin" ${_gemname}-${pkgver}.gem
+  install -Dm 644 "${pkgdir}${_gemdir}/gems/${_gemname}-${pkgver}/"{USAGE.rdoc,README.rdoc,FAQ.rdoc} \
+    -t "${pkgdir}/usr/share/doc/${pkgname}"
+  ln -s "${_gemdir}/gems/${_gemname}-${pkgver}/examples" "${pkgdir}/usr/share/doc/${pkgname}"
+  find "${pkgdir}" \( -name gem_make.out -o -name mkmf.log \) -delete
+  rm "${pkgdir}/${_gemdir}/cache/${_gemname}-${pkgver}.gem" \
+    "${pkgdir}/${_gemdir}/gems/${_gemname}-${pkgver}/ext/pcaprub_c/Makefile"
+  rm -rf "${pkgdir}/${_gemdir}/doc/${_gemname}-${pkgver}/ri/ext/"
+}
+
+# vim: ts=2 sw=2 et:

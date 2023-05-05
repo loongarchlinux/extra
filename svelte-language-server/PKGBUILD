@@ -1,0 +1,47 @@
+# Maintainer: Daniel M. Capella <polyzen@archlinux.org>
+
+pkgname=svelte-language-server
+pkgver=0.15.9
+pkgrel=1
+pkgdesc='Language server for Svelte'
+url=https://github.com/sveltejs/language-tools/tree/master/packages/language-server
+license=('MIT')
+arch=('any')
+depends=('nodejs')
+makedepends=('yarn')
+conflicts=("nodejs-$pkgname")
+replaces=("nodejs-$pkgname")
+source=("https://github.com/sveltejs/language-tools/archive/language-server-$pkgver/$pkgname-$pkgver.tar.gz")
+b2sums=('c1433ff8a3d0e1f272c35fa5f97c270a243d9760690d197007a7f2bdeae95cab003893ca33974159f9e5e518d53b3a3ab3169dbfa4626cbcfa13a8346d25fc75')
+
+build() {
+  cd language-tools-language-server-$pkgver
+  yarn --frozen-lockfile
+  yarn workspace svelte2tsx build
+  cd packages/language-server
+  yarn build
+}
+
+check() {
+  cd language-tools-language-server-$pkgver/packages/language-server
+  yarn test
+}
+
+package() {
+  install -d "$pkgdir"/usr/{bin,lib/node_modules/$pkgname}
+  ln -s ../lib/node_modules/$pkgname/bin/server.js \
+    "$pkgdir"/usr/bin/svelteserver
+
+  cd language-tools-language-server-$pkgver
+  install -Dm644 -t "$pkgdir"/usr/share/licenses/$pkgname LICENSE
+
+  # Emulate `npm prune --production`
+  mv package.json{,.bak}
+  cd packages/language-server
+  yarn --frozen-lockfile --production
+  mv ../../package.json{.bak,}
+
+  cp -r bin dist node_modules package.json \
+    "$pkgdir"/usr/lib/node_modules/$pkgname
+  install -Dm644 -t "$pkgdir"/usr/share/doc/$pkgname README.md
+}

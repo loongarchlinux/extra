@@ -1,0 +1,46 @@
+# Maintainer: Levente Polyak <anthraxx[at]archlinux[dot]org>
+# Maintainer: Caleb Maclennan <caleb@alerque.com>
+# Contributor: Fredy García <frealgagu at gmail dot com>
+# Contributor: fuero <fuerob@gmail.com>
+
+pkgname=lazygit
+pkgver=0.38.2
+pkgrel=1
+pkgdesc='Simple terminal UI for git commands'
+url='https://github.com/jesseduffield/lazygit'
+arch=('loong64' 'x86_64')
+license=('MIT')
+depends=('git' 'glibc')
+makedepends=('go')
+source=("${url}/archive/v${pkgver}/${pkgname}-${pkgver}.tar.gz")
+sha256sums=('2e727db952022c0518443d18c9b8a97a882970b93c5ab198ff33bb8ed2166c2f')
+b2sums=('c3dcc40f0accecceda1b663503e522076ba98fb09268f65f95af0c79e51ac6f9706a0cd18ca8b13f3b3b855ca0ebd665a9fd083d1f5257c652b1e68b3677d00e')
+
+build() {
+  cd ${pkgname}-${pkgver}
+
+  export CGO_CPPFLAGS="${CPPFLAGS}"
+  export CGO_CFLAGS="${CFLAGS}"
+  export CGO_CXXFLAGS="${CXXFLAGS}"
+  export GOFLAGS="-buildmode=pie -trimpath -mod=readonly -modcacherw -x -v"
+
+  go build \
+    -ldflags "\
+      -linkmode external \
+      -extldflags '${LDFLAGS}' \
+      -X main.date=$(date --date=@${SOURCE_DATE_EPOCH} -u +%Y-%m-%dT%H:%M:%SZ) \
+      -X main.buildSource=binaryRelease \
+      -X main.version=${pkgver} \
+      -X main.commit=v${pkgver} \
+    "
+}
+
+package() {
+  cd ${pkgname}-${pkgver}
+  install -Dm 755 lazygit -t "${pkgdir}/usr/bin"
+  install -Dm 644 README*.md -t "${pkgdir}/usr/share/doc/${pkgname}"
+  cp -r docs/* -t "${pkgdir}/usr/share/doc/${pkgname}"
+  install -Dm 644 LICENSE -t "${pkgdir}/usr/share/licenses/${pkgname}"
+}
+
+# vim: ts=2 sw=2 et:

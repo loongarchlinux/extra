@@ -1,0 +1,42 @@
+# Maintainer: Orhun Parmaksız <orhun@archlinux.org>
+
+pkgname=arch-repro-status
+pkgver=1.3.7
+pkgrel=1
+pkgdesc="Check the reproducibility status of your Arch Linux packages"
+arch=('loong64' 'x86_64')
+url="https://gitlab.archlinux.org/archlinux/arch-repro-status"
+license=('MIT')
+depends=('pacman')
+makedepends=('cargo')
+groups=('archlinux-tools')
+source=("$pkgname-$pkgver.tar.gz::$url/-/archive/v$pkgver/$pkgname-v$pkgver.tar.gz")
+sha512sums=('03471545aa332fd5f99263a353583713d675678e7e687778634ede422d05686f15dcbb59ba8b4a55e64dba5d518f92c8808c45d1643c754864c15d31e46615eb')
+
+prepare() {
+  cd "$pkgname-v$pkgver"
+  mkdir completions/
+  cargo fetch --locked --target "$CARCH-unknown-linux-gnu"
+}
+
+build() {
+  cd "$pkgname-v$pkgver"
+  cargo build --frozen --release
+  OUT_DIR=completions/ ./target/release/$pkgname-completions
+}
+
+check() {
+  cd "$pkgname-v$pkgver"
+  cargo test --frozen
+}
+
+package() {
+  cd "$pkgname-v$pkgver"
+  install -Dm 755 "target/release/$pkgname" -t "$pkgdir/usr/bin"
+  install -Dm 644 README.md -t "$pkgdir/usr/share/doc/$pkgname"
+  install -Dm 644 LICENSE -t "$pkgdir/usr/share/licenses/$pkgname"
+  install -Dm 644 "man/$pkgname.1" -t "$pkgdir/usr/share/man/man1"
+  install -Dm 644 "completions/$pkgname.bash" "$pkgdir/usr/share/bash-completion/completions/$pkgname"
+  install -Dm 644 "completions/$pkgname.fish" -t "$pkgdir/usr/share/fish/vendor_completions.d"
+  install -Dm 644 "completions/_$pkgname" -t "$pkgdir/usr/share/zsh/site-functions"
+}

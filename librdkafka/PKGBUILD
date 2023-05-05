@@ -1,0 +1,40 @@
+# Maintainer: Anatol Pomozov
+# Contributor: Andrew Sun <adsun701 at gmail dot com>
+# Contributor: Joel Teichroeb <joel at teichroeb dot net>
+# Contributor: Alim Gokkaya <alimgokkaya at gmail dot com>
+
+pkgname=librdkafka
+pkgver=2.1.1
+pkgrel=1
+pkgdesc='The Apache Kafka C/C++ library'
+arch=(loong64 x86_64)
+url='https://github.com/edenhill/librdkafka'
+license=(BSD)
+depends=(
+  curl
+  gcc-libs
+  glibc
+  libsasl
+  lz4
+  openssl
+  zlib
+  zstd
+)
+makedepends=(python rapidjson)
+source=(librdkafka-$pkgver.tar.gz::https://github.com/edenhill/librdkafka/archive/v$pkgver.tar.gz)
+sha256sums=('7be1fc37ab10ebdc037d5c5a9b35b48931edafffae054b488faaff99e60e0108')
+
+build() {
+  cd $pkgname-$pkgver
+  ./configure --prefix=/usr
+  make
+}
+
+check() {
+  make -k check -C $pkgname-$pkgver
+}
+
+package() {
+  make DESTDIR="$pkgdir" install -C $pkgname-$pkgver
+  install -vDm 644 $pkgname-$pkgver/LICENSE* -t "$pkgdir/usr/share/licenses/$pkgname/"
+}

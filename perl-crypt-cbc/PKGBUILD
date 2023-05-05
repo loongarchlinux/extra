@@ -1,0 +1,28 @@
+# Maintainer: Sergej Pupykin <pupykin.s+arch@gmail.com>
+# Maintainer: Charles Mauch <cmauch@gmail.com>
+# Contributor: Francois Charette <firmicus@gmx.net>
+
+pkgname=perl-crypt-cbc
+pkgver=3.04
+pkgrel=3
+pkgdesc="Cipherblock chaining for Crypt::DES/IDEA"
+arch=('any')
+depends=('perl')
+url="https://search.cpan.org/dist/Crypt-CBC"
+license=('GPL' 'PerlArtistic')
+options=('!emptydirs')
+source=(https://www.cpan.org/authors/id/L/LD/LDS/Crypt-CBC-$pkgver.tar.gz)
+sha256sums=('4026c57d0dbf6496c0d561a26f161b763d3b8edf351139c073492e21b5fbce07')
+
+build() {
+  cd  "$srcdir"/Crypt-CBC-$pkgver
+  PERL_MM_USE_DEFAULT=1 perl Makefile.PL INSTALLDIRS=vendor
+  make
+}
+
+package() {
+  cd  "$srcdir"/Crypt-CBC-$pkgver
+  make pure_install doc_install DESTDIR="$pkgdir"
+  find "$pkgdir" -name '.packlist' -delete
+  find "$pkgdir" -name '*.pod' -delete
+}

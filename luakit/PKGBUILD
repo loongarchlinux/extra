@@ -1,0 +1,50 @@
+# Maintainer: Maxime Gauduin <alucryd@archlinux.org>
+# Contributor: Aoibhinn Nic Aoidh <oibindnicaoidh@gmail.com>
+# Contributor: Alexander F Rødseth <xyproto@archlinux.org>
+# Contributor: Bartłomiej Piotrowski <bpiotrowski@archlinux.org>
+# Contributor: Thomas Dziedzic <gostrc@gmail.com>
+# Contributor: J. W. Birdsong <jwbirdsong@gmail.com>
+
+pkgname=luakit
+pkgver=2.3.3
+pkgrel=1
+pkgdesc='Fast, small, webkit based browser framework extensible by Lua'
+arch=(loong64 x86_64)
+url=https://luakit.github.io/
+license=(GPL3)
+depends=(
+  lua51-filesystem
+  luajit
+  webkit2gtk
+)
+makedepends=(
+  git
+  help2man
+)
+backup=(
+  etc/xdg/luakit/rc.lua
+  etc/xdg/luakit/theme.lua
+)
+_tag=68e4ffc74ce2381f09e242d95bf03d0a4f1cc95e
+source=(git+https://github.com/luakit/luakit.git#tag=${_tag})
+b2sums=(SKIP)
+
+prepare() {
+  cd luakit
+  git cherry-pick -n e9c7693f387835bdf2d1ada85c2ba0b813686ebb
+}
+
+pkgver() {
+  cd luakit
+  git describe --tags
+}
+
+build() {
+  make DEVELOPMENT_PATHS=0 PREFIX=/usr USE_LUAJIT=1 -C luakit
+}
+
+package() {
+  make DESTDIR="${pkgdir}" PREFIX=/usr -C luakit install
+}
+
+# vim: ts=2 sw=2 et:

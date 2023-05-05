@@ -1,0 +1,39 @@
+# Maintainer: Sergej Pupykin <pupykin.s+arch@gmail.com>
+# Maintainer: Alexander Fehr <pizzapunk gmail com>
+
+pkgname=parcellite
+pkgver=1.2.2
+pkgrel=1
+pkgdesc="Lightweight GTK+ clipboard manager"
+arch=('loong64' 'x86_64')
+url="http://parcellite.sourceforge.net/"
+license=('GPL3')
+depends=('gtk2')
+makedepends=('intltool' 'psmisc')
+optdepends=('xdotool')
+source=("$pkgname-$pkgver.tar.gz::https://github.com/rickyrockrat/parcellite/archive/refs/tags/$pkgver.tar.gz")
+sha256sums=('50c45015c82c75d7b90586d5f4c0fa02568b769806c39afa2369f5713d2f9f49')
+
+prepare() {
+  cd "$srcdir/parcellite-$pkgver"
+  touch src/config.simple.h
+}
+
+build() {
+  cd "$srcdir/parcellite-$pkgver"
+  test -x configure || (
+    # Hack: was not able to avoid final warning easily in gettextize
+    (sleep 5 ; killall gettextize)&
+    ./autogen.sh
+  )
+  ./configure \
+    --prefix=/usr \
+    --sysconfdir=/etc \
+    --enable-appindicator=no
+  make
+}
+
+package() {
+  cd "$srcdir/parcellite-$pkgver"
+  make DESTDIR="$pkgdir" install
+}

@@ -1,0 +1,39 @@
+# Maintainer: NicoHood <archlinux {cat} nicohood {dog} de>
+# PGP ID: 97312D5EB9D7AE7D0BD4307351DAE9B7C1AE9161
+# Contributor: Fabio 'Lolix' Loli <fabio.loli@disroot.org> -> https://github.com/FabioLolix
+# Contributor: Balló György <ballogyor+arch at gmail dot com>
+# Contributor: Konrad <konrad AT knauber DOT name>
+# Contributor: Javier Steinaker <jsteinaker@gmail.com>
+
+pkgname='pinta'
+pkgver=2.1.1
+pkgrel=1
+pkgdesc="Drawing/editing program modeled after Paint.NET. It's goal is to provide a simplified alternative to GIMP for casual users"
+arch=('any')
+url="https://pinta-project.com/"
+license=('MIT')
+depends=('gtk3>=3.24.21' 'dotnet-runtime-7.0' 'webp-pixbuf-loader')
+makedepends=('intltool' 'dotnet-sdk-7.0')
+source=("${pkgname}-${pkgver}.tar.gz::https://github.com/PintaProject/Pinta/releases/download/${pkgver}/${pkgname}-${pkgver}.tar.gz"
+        "${pkgname}-${pkgver}.tar.gz.asc::https://github.com/PintaProject/Pinta/releases/download/${pkgver}/${pkgname}-${pkgver}.tar.gz.asc")
+sha512sums=('1ec3437aa75c9b4de71a118222b93a37af8fe3b660b9e705004866af15f864b9f3f623a4c8840b6dfe481c615d47d1a8131c7c881d50fd06ca7c4ff1440f3fd6'
+            'SKIP')
+validpgpkeys=('5BDA30D0C2E985E598089E444CF80E80E77C5C35') # Cameron White
+
+prepare() {
+  cd "${pkgname}-${pkgver}"
+  sed -i '/^PINTA_BUILD_OPTS/ s/$/ -maxcpucount:1/' Makefile.in
+}
+
+build() {
+  cd "${pkgname}-${pkgver}"
+  ./configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var
+  make
+}
+
+package() {
+  cd "${pkgname}-${pkgver}"
+  make DESTDIR="${pkgdir}" install
+
+  install -Dm644 -t "${pkgdir}/usr/share/licenses/${pkgname}/" license-*.txt readme.md
+}

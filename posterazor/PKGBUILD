@@ -1,0 +1,49 @@
+# Maintainer: Alexander F. Rødseth <xyproto@archlinux.org>
+# Contributor: Alois Nespor <alium@artixlinux.org>
+
+pkgname=posterazor
+# 1.9.7 is not yet released, but 1.9.6 does not compile.
+# After applying patches, the "about" dialog shows "1.9.7".
+pkgver=1.9.7.pre
+pkgrel=3
+pkgdesc='Cut an image or PDF into pieces which can be printed and assembled to a poster'
+arch=(loong64 x86_64)
+url='https://github.com/aportale/posterazor'
+license=(GPL)
+depends=(poppler-qt5)
+makedepends=(git)
+# branch PosteRazor_1_9_6
+source=("git+$url#commit=5ffc88db94451872da50fa3f2b526ca6c41dab1c"
+        posterazor.desktop
+        posterazor.xpm
+        qt.patch::https://github.com/aportale/posterazor/commit/004cf52db5ff79fe1a083277c743fea4ac2e8321.patch
+        update.patch)
+b2sums=('SKIP'
+        '1f7e5c55fcf7864141927308e2d2c4081b31c894d73a97937ab7fb8b5da567e1c43882fb40f27dd1d078231afd704a5a5a261bbc1751f87300c3f46cdf5a4966'
+        'b18ce8c67b02b8818596117ce9ae99852d2164e084d4a446d096501ff6bb7c0cc19aa0a0037b015a2c3897e9117ee0fd8d49f6f208cfb3e4af838f69e2b6f211'
+        '0f938dc23b3aae118b8a95a6e4fe63da005811d0484acd4a6e180335c29e74b0ed302379aef77875957be9e8d353cc19bf9ed700833fc60e23f79e4d3e213aae'
+        '12b14e86b3ad3c0e213c67995d647e83b8655663ac73a9aa52bad61268d843da67b28e0c0c247cdf1cd9b8203a5ece6b8571f83fff2f0e0a1758bc0c58101a82')
+
+prepare() {
+  cd posterazor
+  patch -p1 -i ../update.patch
+  patch -p1 -i ../qt.patch
+}
+
+build() {
+  cd posterazor/src
+  qmake-qt5 \
+    QMAKE_CFLAGS_RELEASE="$CPPFLAGS $CFLAGS" \
+    QMAKE_CXXFLAGS_RELEASE="$CPPFLAGS $CXXFLAGS" \
+    QMAKE_LFLAGS_RELEASE="$LDFLAGS" \
+    posterazor.pro
+  make
+}
+package() {
+  cd posterazor/src
+  install -Dm755 PosteRazor "$pkgdir/usr/bin/posterazor"
+  install -Dm644 "$srcdir/posterazor.desktop" \
+    "$pkgdir/usr/share/applications/posterazor.desktop"
+  install -Dm644 "$srcdir/posterazor.xpm" \
+    "$pkgdir/usr/share/icons/posterazor.xpm"
+}

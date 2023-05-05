@@ -1,0 +1,39 @@
+# Maintainer: Sergej Pupykin <pupykin.s+arch@gmail.com>
+# Contributor: Jacek Poplawski <jacekpoplawski@gmail.com>
+
+pkgname=rocksndiamonds
+pkgver=4.3.4.0
+pkgrel=1
+pkgdesc="game similiar to Boulderdash with lots of levels"
+arch=(loong64 x86_64)
+url="https://www.artsoft.org/rocksndiamonds/"
+license=('GPL')
+depends=('sdl2' 'sdl2_image' 'sdl2_mixer' 'sdl2_net')
+makedepends=('unzip' 'p7zip')
+source=(https://www.artsoft.org/RELEASES/linux/rocksndiamonds/rocksndiamonds-$pkgver-linux.tar.gz
+	rocksndiamonds.desktop)
+sha256sums=('81d815e1296c041ed94ae9777397f40fdf5d13ecb5b375202af96a3119904ad7'
+            '90008d356dd30034287ca763a05feb482d7e0c4508572abb08b5215fcb4fe922')
+
+build() {
+  cd "$srcdir"/rocksndiamonds-$pkgver
+  make clean
+  make BASE_PATH=/usr/share/rocksndiamonds
+}
+
+package() {
+  depends+=('rocksndiamonds-data' 'rocksndiamonds-contrib')
+
+  cd "$srcdir"/rocksndiamonds-$pkgver
+
+  install -d "$pkgdir"/usr/bin
+  cp "$srcdir"/rocksndiamonds-$pkgver/rocksndiamonds "$pkgdir"/usr/bin/rocksndiamonds
+
+#  install -d "$pkgdir"/usr/share/man/man1
+#  cp "$srcdir"/rocksndiamonds-$pkgver/rocksndiamonds.1 "$pkgdir"/usr/share/man/man1
+
+  install -d "$pkgdir"/usr/share/doc/$pkgname/
+  cp -a docs/elements "$pkgdir"/usr/share/doc/$pkgname/
+
+  install -Dm0644 "$srcdir"/rocksndiamonds.desktop "$pkgdir"/usr/share/applications/rocksndiamonds.desktop
+}

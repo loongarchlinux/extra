@@ -1,0 +1,37 @@
+# Maintainer: Christian Rebischke <chris.rebischke@archlinux.org>
+
+pkgname=fluxctl
+_pkgname=flux
+pkgver=1.25.4
+pkgrel=1
+pkgdesc="Controller for the GitOps Kubernetes operator flux"
+arch=('loong64' 'x86_64')
+url="https://github.com/fluxcd/flux"
+license=('Apache')
+makedepends=('go' 'git')
+depends=('glibc')
+source=("${pkgname}-${pkgver}.tar.gz::https://github.com/fluxcd/flux/archive/${pkgver}.tar.gz")
+sha512sums=('5050d8b035f804b9c1c767664b761f3ee739f7b4160624c60627cc1eec6eb9b552c5779da7910410927425de8d1ff5abf01f476e5fa0cb9aebb7d916ae8f57d5')
+b2sums=('1ec352b6e6f328208abaead491674db0adc43286d7c58ef2ab5f1030d58efa272b4c41ea08411e5d9765bedb87b79c484561f495489af8ce954057eb2df150c9')
+options=("!lto")
+
+build() {
+  cd "${_pkgname}-${pkgver}/cmd/fluxctl"
+  export CGO_CPPFLAGS="${CPPFLAGS}"
+  export CGO_CFLAGS="${CFLAGS}"
+  export CGO_CXXFLAGS="${CXXFLAGS}"
+  export CGO_LDFLAGS="${LDFLAGS}"
+  export GOFLAGS="-buildmode=pie -trimpath -mod=readonly -modcacherw"
+  go build -ldflags "-w -X main.version="${pkgver}" -linkmode=external" .
+  chmod +x ./fluxctl
+}
+
+check() {
+  cd "${_pkgname}-${pkgver}/cmd/fluxctl"
+  go test ./...
+}
+
+package() {
+  cd "${_pkgname}-${pkgver}/cmd/fluxctl"
+  install -Dsm755 ./fluxctl "${pkgdir}/usr/bin/fluxctl"
+}

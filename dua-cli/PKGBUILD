@@ -1,0 +1,24 @@
+# Maintainer: Sven-Hendrik Haase <svenstaro@archlinux.org>
+# Contributor: mexus <gilaldpellaeon@gmail.com>
+pkgname=dua-cli
+pkgver=2.19.2
+pkgrel=1
+pkgdesc="A tool to conveniently learn about the disk usage of directories, fast!"
+arch=('loong64' 'x86_64')
+url="https://github.com/Byron/dua-cli"
+license=('MIT')
+depends=('gcc-libs')
+makedepends=('rust')
+source=("$pkgname-$pkgver.tar.gz::https://github.com/Byron/${pkgname}/archive/v${pkgver}.tar.gz")
+sha512sums=('b4877759dc6432cbba1c0b0f1aa642fbc7bd581cfb2ed65d78e25cbbb99c830fefdf194290ae3472e7323f09f68e73b76141f0c765c6f265fc494be57caeaf09')
+
+build() {
+  cd "$srcdir/$pkgname-$pkgver"
+  cargo build --release --locked
+}
+
+package() {
+  cd "$srcdir/$pkgname-$pkgver"
+  install -Dm 644 "LICENSE" "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
+  install -Dm 755 "target/release/dua" "$pkgdir/usr/bin/dua"
+}

@@ -1,0 +1,24 @@
+# Maintainer: Morten Linderud <foxboron@archlinux.org>
+
+pkgname=bucklespring
+pkgver=1.5.1
+pkgrel=1
+pkgdesc="Nostalgia bucklespring keyboard sound, sampled from IBM's Model-M"
+arch=('i686' 'loong64' 'x86_64')
+url="https://github.com/zevv/bucklespring"
+license=('MIT')
+depends=('openal' 'alure' 'libxtst' 'dumb' 'mpg123')
+source=("$pkgname-$pkgver.tar.gz::https://github.com/zevv/bucklespring/archive/v${pkgver}.tar.gz")
+sha256sums=('8d75d9809aa1f45b6f613bd6547f52a4ba9b207119775e48497c1a17fe98d541')
+
+build() {
+  cd "$pkgname-$pkgver"
+  make PATH_AUDIO=/usr/share/bucklespring
+}
+
+package() {
+  cd "$pkgname-$pkgver"
+  install -Dm755 buckle "$pkgdir"/usr/bin/buckle
+  install -Dm644 -t "$pkgdir"/usr/share/bucklespring/ wav/*
+  install -Dm644 LICENSE "$pkgdir"/usr/share/licenses/$pkgname/LICENSE
+}

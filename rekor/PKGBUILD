@@ -1,0 +1,49 @@
+# Maintainer: Santiago Torres-Arias <santiago@archlinux.org>
+# Maintainer: Christian Rebischke <chris.rebischke@archlinux.org>
+
+pkgname=rekor
+pkgver=1.1.0
+pkgrel=1
+pkgdesc="Signature Transparency Log -- Sigstore client and server tools"
+arch=('loong64' 'x86_64')
+url="https://github.com/sigstore/rekor"
+license=('Apache')
+makedepends=('go' 'git')
+checkdepends=('openssh')
+source=("${pkgname}-${pkgver}.tar.gz::https://github.com/sigstore/rekor/archive/v${pkgver}.tar.gz")
+sha256sums=('7f5491170f4d330797740bfbc04537effdca5cc4c96d68266726a2edd9654088')
+options=('!lto')
+
+build() {
+  cd "${pkgname}-${pkgver}"
+  export CGO_CPPFLAGS="${CPPFLAGS}"
+  export CGO_CFLAGS="${CFLAGS}"
+  export CGO_CXXFLAGS="${CXXFLAGS}"
+  export CGO_LDFLAGS="${LDFLAGS}"
+  export GOFLAGS="-buildmode=pie -ldflags=-linkmode=external -trimpath -mod=readonly -modcacherw -ldflags=-X=sigs.k8s.io/release-utils/version.gitVersion=v$pkgver"
+  go build -o cmd/rekor-cli/rekor-cli cmd/rekor-cli/main.go
+  go build -o cmd/rekor-server/rekor-server cmd/rekor-server/main.go
+}
+
+check() {
+  cd "${pkgname}-${pkgver}"
+  go test -v ./...
+}
+
+package() {
+  cd "${pkgname}-${pkgver}"
+  install -Dsm755 cmd/rekor-cli/rekor-cli "${pkgdir}/usr/bin/rekor-cli"
+  install -Dsm755 cmd/rekor-server/rekor-server "${pkgdir}/usr/bin/rekor-server"
+
+  install -d "${pkgdir}/usr/share/bash-completion/completions" \
+             "${pkgdir}/usr/share/zsh/site-functions" \
+             "${pkgdir}/usr/share/fish/vendor_completions.d"
+
+  "${pkgdir}/usr/bin/rekor-cli" completion bash > "${pkgdir}/usr/share/bash-completion/completions/rekor-cli"
+  "${pkgdir}/usr/bin/rekor-cli" completion zsh > "${pkgdir}/usr/share/zsh/site-functions/_rekor-cli"
+  "${pkgdir}/usr/bin/rekor-cli" completion fish > "${pkgdir}/usr/share/fish/vendor_completions.d/rekor-cli.fish"
+
+  "${pkgdir}/usr/bin/rekor-server" completion bash > "${pkgdir}/usr/share/bash-completion/completions/rekor-server"
+  "${pkgdir}/usr/bin/rekor-server" completion zsh > "${pkgdir}/usr/share/zsh/site-functions/_rekor-server"
+  "${pkgdir}/usr/bin/rekor-server" completion fish > "${pkgdir}/usr/share/fish/vendor_completions.d/rekor-server.fish"
+}

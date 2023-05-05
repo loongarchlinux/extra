@@ -1,0 +1,55 @@
+# Maintainer: David Runge <dvzrv@archlinux.org>
+
+pkgname=openpgp-card-tools
+pkgver=0.9.3
+pkgrel=1
+pkgdesc="CLI tool to inspect, manage and use OpenPGP cards"
+arch=(loong64 x86_64)
+url="https://codeberg.org/openpgp-card/openpgp-card-tools"
+license=(Apache)
+depends=(
+  ccid
+  gcc-libs
+  glibc
+  gmp
+)
+makedepends=(
+  bzip2
+  cargo
+  clang
+  nettle
+  pcsclite
+)
+source=($pkgname-$pkgver.tar.gz::$url/archive/v$pkgver.tar.gz)
+sha512sums=('949e4078726652c121370ecb2b76228e9bc1920d7098bc2e9adbbbe2527e03ebfec4dff21bba0fc18a75e609aafd99c3552138c01e8611f937d89988c515188b')
+b2sums=('05954ad134d37ddf7014f36ef125c964e5993cc5569f88ba08eae04e847641313e56006117c06837900c886e88ce5e200bc27d3ca0ed975acdd3f05cc358608a')
+
+prepare() {
+  cd $pkgname
+  cargo fetch --locked --target "$CARCH-unknown-linux-gnu"
+}
+
+build() {
+  cd $pkgname
+  export RUSTUP_TOOLCHAIN=stable
+  export CARGO_TARGET_DIR=target
+  cargo build --frozen --release --bin opgpcard
+}
+
+check() {
+  cd $pkgname
+  export RUSTUP_TOOLCHAIN=stable
+  cargo test --frozen --all-features
+}
+
+package() {
+  depends+=(
+    bzip2 libbz2.so
+    nettle libhogweed.so libnettle.so
+    pcsclite libpcsclite.so
+  )
+
+  cd $pkgname
+  install -vDm 755 target/release/opgpcard -t "$pkgdir/usr/bin/"
+  install -vDm 644 {scripting,README}.md -t "$pkgdir/usr/share/doc/$pkgname/"
+}

@@ -1,0 +1,33 @@
+# Maintainer: Filipe Laíns (FFY00) <lains@archlinux.org>
+# Contributor: Kyle Keen <keenerd@gmail.com>
+
+pkgname=multimon-ng
+pkgver=1.2.0
+pkgrel=1
+pkgdesc="An sdr decoder, supports pocsag, ufsk, clipfsk, afsk, hapn, fsk, dtmf, zvei."
+url="https://github.com/EliasOenal/multimon-ng"
+arch=('loong64' 'x86_64')
+license=("GPL2")
+depends=('ncurses' 'libpulse')
+makedepends=('cmake')
+optdepends=('sox: wav conversion')
+source=("$pkgname-$pkgver.tar.gz::$url/archive/$pkgver.tar.gz")
+sha512sums=('927006703e1a6592cbde6539cedd9c1258378f258eb27ed93f1c367cb0db2a6da890fb8f4f19b7abf3cba44f1a8273f32333c66dfd353ec41d0f93491fc9988b')
+
+build() {
+  mkdir "$srcdir"/$pkgname-$pkgver/build
+  cd "$srcdir"/$pkgname-$pkgver/build
+
+  cmake .. \
+    -DCMAKE_INSTALL_PREFIX=/usr \
+    -DCMAKE_BUILD_TYPE=Release
+
+  make
+}
+
+package() {
+  cd "$srcdir"/$pkgname-$pkgver/build
+
+  make DESTDIR="$pkgdir" install
+}
+

@@ -1,0 +1,34 @@
+# Maintainer: Christian Rebischke <chris.rebischke@archlinux.org>
+
+pkgname=popeye
+pkgver=0.10.1
+pkgrel=2
+pkgdesc="Kubernetes cluster resource sanitizer"
+arch=('loong64' 'x86_64')
+url="https://github.com/derailed/popeye"
+license=('Apache')
+makedepends=('go' 'git')
+depends=('glibc')
+source=("${pkgname}-${pkgver}.tar.gz::https://github.com/derailed/popeye/archive/v${pkgver}.tar.gz")
+sha512sums=('e0beaae8b6852b3925bbaea473b277c701be443267033e20b5ecbaa21066358d4dc4b0bb8078946c9ed778c472a7f625c77a5f328da51ce3300eb45da417c118')
+
+build(){
+  cd "${pkgname}-${pkgver}"
+  export CGO_CPPFLAGS="${CPPFLAGS}"
+  export CGO_CFLAGS="${CFLAGS}"
+  export CGO_CXXFLAGS="${CXXFLAGS}"
+  export CGO_LDFLAGS="${LDFLAGS}"
+  export GOFLAGS="-buildmode=pie -trimpath -mod=readonly -modcacherw -ldflags=-linkmode=external"
+  go build .
+  chmod +x ./popeye
+}
+
+check(){
+  cd "${pkgname}-${pkgver}"
+  go test ./...
+}
+
+package(){
+  cd "${pkgname}-${pkgver}"
+  install -Dsm755 ./popeye "${pkgdir}/usr/bin/popeye"
+}

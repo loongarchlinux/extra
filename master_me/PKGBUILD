@@ -1,0 +1,167 @@
+# Maintainer: David Runge <dvzrv@archlinux.org>
+
+pkgname=master_me
+pkgname=(
+  master_me
+  master_me-{clap,ladspa,lv2,standalone,vst,vst3}
+)
+pkgver=1.2.0
+pkgrel=1
+pkgdesc="Automatic mastering plugin for live streaming, podcasts and internet radio"
+arch=(loong64 x86_64)
+url="https://github.com/trummerschlunk/master_me"
+license=(GPL3)
+makedepends=(
+  faustpp
+  gcc-libs
+  gendesk
+  glibc
+  libglvnd
+  libx11
+  libxext
+  libxrandr
+)
+source=(https://github.com/trummerschlunk/$pkgname/releases/download/$pkgver/$pkgname-$pkgver.tar.xz)
+sha512sums=('a47b156f176003ffb0eaa96b72bc9da749892507901a895cbb5aa27d3bdc1e0abc1a3ff9c0d008353e80c859c09c0668678a67b3727b8f5821490bf48ded2948')
+b2sums=('356f7c9c6a6c10cb8ac3ea77ccb0c51376c01424955bd059466ea2655d12f8709d96a65b4dc15b9ffeebc9ab9a02940da19502b3c9ef6ecd33fa038378cd5704')
+
+_pick() {
+  local p="$1" f d; shift
+  for f; do
+    d="$srcdir/$p/${f#$pkgdir/}"
+    mkdir -p "$(dirname "$d")"
+    mv "$f" "$d"
+    rmdir -p --ignore-fail-on-non-empty "$(dirname "$f")"
+  done
+}
+
+prepare() {
+  gendesk -n -f \
+          --pkgname "com.github.Trummerschlunk.Master_me" \
+          --name "master_me" \
+          --exec "master_me" \
+          --icon "master_me" \
+          --genericname "Automatic mastering plugin"
+}
+
+build() {
+  make -C $pkgname-$pkgver
+}
+
+package_master_me() {
+  depends=(
+    master_me-{clap,ladspa,lv2,standalone,vst,vst3}=$pkgver
+  )
+
+  make DESTDIR="$pkgdir/" PREFIX=/usr install -C $pkgname-$pkgver
+
+  (
+    cd "$pkgdir"
+    # have find-libdeps resolve dependencies properly:
+    # https://gitlab.archlinux.org/archlinux/devtools/-/issues/102
+    find usr/lib -type f \( -iname "*.clap" -or -iname "*.so" \) -exec chmod +x {} \;
+
+    _pick master_me-clap usr/lib/clap
+    _pick master_me-ladspa usr/lib/ladspa
+    _pick master_me-lv2 usr/lib/lv2/
+    _pick master_me-standalone usr/bin/
+    _pick master_me-vst usr/lib/vst/
+    _pick master_me-vst3 usr/lib/vst3/
+  )
+}
+
+package_master_me-clap() {
+  pkgdesc+=" - CLAP plugin"
+  depends=(
+    gcc-libs
+    glibc
+    libglvnd
+    libx11
+    libxext
+    libxrandr
+    clap-host
+  )
+  groups=(clap-plugins)
+
+  mv -v $pkgname/* "$pkgdir"
+}
+
+package_master_me-ladspa() {
+  pkgdesc+=" - LADSPA plugin"
+  depends=(
+    gcc-libs
+    glibc
+    ladspa-host
+  )
+  groups=(ladspa-plugins)
+
+  mv -v $pkgname/* "$pkgdir"
+}
+
+package_master_me-lv2() {
+  pkgdesc+=" - LV2 plugin"
+  depends=(
+    gcc-libs
+    glibc
+    libglvnd
+    libx11
+    libxext
+    libxrandr
+    lv2-host
+  )
+  groups=(lv2-plugins)
+
+  mv -v $pkgname/* "$pkgdir"
+}
+
+package_master_me-standalone() {
+  pkgdesc+=" - standalone"
+  depends=(
+    gcc-libs
+    glibc
+    hicolor-icon-theme
+    libglvnd
+    libx11
+    libxext
+    libxrandr
+  )
+  conflicts=($pkgbase-jack)
+  replaces=($pkgbase-jack)
+
+  mv -v $pkgname/* "$pkgdir"
+
+  install -vDm 644 ./*.desktop -t "$pkgdir/usr/share/applications/"
+  install -vDm 644 $pkgbase-$pkgver/artwork/LogoAssets/signet_master_me_black.svg "$pkgdir/usr/share/icons/hicolor/scalable/apps/master_me.svg"
+}
+
+package_master_me-vst() {
+  pkgdesc+=" - VST plugin"
+  depends=(
+    gcc-libs
+    glibc
+    libglvnd
+    libx11
+    libxext
+    libxrandr
+    vst-host
+  )
+  groups=(vst-plugins)
+
+  mv -v $pkgname/* "$pkgdir"
+}
+
+package_master_me-vst3() {
+  pkgdesc+=" - VST3 plugin"
+  depends=(
+    gcc-libs
+    glibc
+    libglvnd
+    libx11
+    libxext
+    libxrandr
+    vst3-host
+  )
+  groups=(vst3-plugins)
+
+  mv -v $pkgname/* "$pkgdir"
+}

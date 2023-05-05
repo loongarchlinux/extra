@@ -1,0 +1,38 @@
+# Maintainer: Felix Yan <felixonmars@archlinux.org>
+# Contributor: xgdgsc<xgdgsc@gmail.com>
+# Contributor: Philanecros Heliostein <philanecros@gmail.com>
+
+pkgname=isatapd
+pkgver=0.9.7
+pkgrel=7
+pkgdesc="Creates and maintains an ISATAP tunnel (rfc5214) in Linux"
+arch=('loong64' 'x86_64')
+url="http://www.saschahlusiak.de/linux/isatap.htm"
+license=('GPL')
+depends=('glibc')
+source=("http://www.saschahlusiak.de/linux/${pkgname}-${pkgver}.tar.gz"
+        isatapd@.service isatapd-linux-4.8.patch)
+md5sums=('79f13a360b9a14cb0afcdf7a2af9c6de'
+         'e33e0a5b31f958b9d52c345439b455af'
+         '5bccaa89ccc7bfb4402941adef0c0637')
+sha256sums=('927e1bb5fff4582723c642b41561c5ee6d57b15d05c19ea00c589168898897fa'
+            'e5606303d560b97c6ab4554aaf2c8be29247015babfa7802511baade9752bcfd'
+            '786039838dfc4943662be7335baa0610587143132f60f1abc89593df24ea80d4')
+
+prepare() {
+  cd $pkgname-$pkgver
+  patch -p1 -i ../isatapd-linux-4.8.patch # Fix build with linux-headers 4.8 (Debian)
+}
+
+build() {
+  cd "${srcdir}/${pkgname}-${pkgver}"
+  ./configure --prefix=/usr --sbindir=/usr/bin
+  make
+}
+
+package() {
+  cd "${srcdir}/${pkgname}-${pkgver}"
+  make DESTDIR="${pkgdir}/" install
+
+  install -Dm644 "${srcdir}/${pkgname}@.service" "${pkgdir}/usr/lib/systemd/system/${pkgname}@.service"
+}

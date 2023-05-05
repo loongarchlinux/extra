@@ -1,0 +1,40 @@
+# Maintainer: Laurent Carlier <lordheavym@gmail.com>
+# Contributor: Andrea Scarpino <andrea@archlinux.org>
+# Contributor: Gilles CHAUVIN <gcnweb ][ gmail ? com>
+# Contributor: Jonathan Schaeffer <joschaeffer ][ gmail ? com>
+# Contributor: chfoxli <lg ][ romandie ? com>
+
+pkgname=kphotoalbum
+pkgver=5.10.0
+pkgrel=1
+pkgdesc="KDE Photo Album, picture collection manager"
+url="https://www.kphotoalbum.org/"
+arch=('loong64' 'x86_64')
+license=('GPL')
+depends=('libkdcraw' 'marble-common' 'exiv2' 'purpose' 'perl')
+makedepends=('extra-cmake-modules' 'kdoctools')
+optdepends=()
+source=("https://download.kde.org/stable/${pkgname}/${pkgver}/${pkgname}-${pkgver}.tar.xz"{,.sig})
+sha256sums=('add117820e61c2ee765c98add3b01bad2c3b90b0cd2be2296c8c0a095fcb869f'
+            'SKIP')
+validpgpkeys=('8A53F0CB9F752E6F4F72FEC6F8DECD0DDF0F74A8') # Tobias Leupold <tobias.leupold@gmx.de>
+validpgpkeys+=('A53563BC888E6CE5215535992523842AF9681DDF')
+
+prepare() {
+  mkdir -p build
+}
+
+build() {
+  cd build
+
+  cmake ../${pkgname}-${pkgver} \
+    -DCMAKE_INSTALL_PREFIX=/usr \
+    -DBUILD_TESTING=OFF
+  make
+}
+
+package() {
+  cd "${srcdir}"/build
+
+  make DESTDIR="${pkgdir}" install
+}

@@ -1,0 +1,56 @@
+# Maintainer: Daniel M. Capella <polyzen@archlinux.org>
+# Maintainer: George Rawlinson <grawlinson@archlinux.org>
+# Contributor: Markus Richter <mqus at disroot dot org>
+
+pkgname=vaultwarden-web
+_pkgver=2023.3.0b
+pkgver=2023.3.0.b
+_upstreamver=${_pkgver%[[:lower:]]}
+#_patchver=$_upstreamver
+_patchver=2023.3.0 # almost always out of sync now
+pkgrel=1
+pkgdesc='Bitwarden web vault with the patches to make it work with Vaultwarden'
+arch=('any')
+url='https://github.com/dani-garcia/bw_web_builds'
+license=('GPL3')
+depends=('vaultwarden')
+makedepends=('git' 'nodejs-lts-gallium' 'npm')
+provides=('bitwarden_rs-vault' 'bitwarden_rs-web')
+replaces=('bitwarden_rs-vault' 'bitwarden_rs-web')
+install=$pkgname.install
+source=(
+  "bitwarden-clients::git+https://github.com/bitwarden/clients.git#tag=web-v$_upstreamver"
+  "bw_web_builds::git+https://github.com/dani-garcia/bw_web_builds#tag=v$_pkgver"
+)
+b2sums=('SKIP'
+        'SKIP')
+
+pkgver() {
+  echo $_pkgver | sed 's/[[:lower:]]$/.&/'
+}
+
+prepare() {
+  cd bitwarden-clients
+
+  # copy vaultwarden images
+  cp -vr "$srcdir/bw_web_builds/resources/"{logo-{dark,white}@2x,icon-white}.png apps/web/src/images
+
+  # apply vaultwarden patch
+  patch --forward --strip=1 --input="$srcdir/bw_web_builds/patches/v$_patchver.patch"
+
+  npm ci
+}
+
+build() {
+  cd bitwarden-clients/apps/web
+
+  npm run dist:oss:selfhost
+}
+
+package() {
+  install -d "$pkgdir/usr/share/webapps/$pkgname"
+
+  cp -R bitwarden-clients/apps/web/build/* "$pkgdir/usr/share/webapps/$pkgname"
+}
+
+# vim:set ts=2 sw=2 et:

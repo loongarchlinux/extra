@@ -1,0 +1,37 @@
+# Maintainer: Maxim Baz <$pkgname at maximbaz dot com>
+# Maintainer: Caleb Maclennan <caleb@alerque.com>
+# Contributor: Mikuro Kagamine <mikurok@forgecrushing.com>
+
+pkgname=croc
+pkgver=9.6.4
+pkgrel=1
+pkgdesc='Easily and securely send things from one computer to another.'
+arch=('loong64' 'x86_64')
+url="https://github.com/schollz/${pkgname}"
+license=('MIT')
+depends=('glibc')
+makedepends=('go')
+source=("${url}/releases/download/v${pkgver}/${pkgname}_${pkgver}_src.tar.gz")
+sha256sums=('012e8e836c76e3432fecac924e4d44a5bee73cc2fa30f4ecfb1b322bcd83f089')
+
+build() {
+    cd "${pkgname}-${pkgver}"
+    export CGO_CPPFLAGS="${CPPFLAGS}"
+    export CGO_CFLAGS="${CFLAGS}"
+    export CGO_CXXFLAGS="${CXXFLAGS}"
+    export CGO_LDFLAGS="${LDFLAGS}"
+    export GOFLAGS="-buildmode=pie -trimpath -ldflags=-linkmode=external -mod=vendor -modcacherw -buildvcs=false"
+    go build
+}
+
+check() {
+    cd "${pkgname}-${pkgver}"
+    go test ./...
+}
+
+package() {
+    cd "${pkgname}-${pkgver}"
+    install -Dm755 -t "${pkgdir}/usr/bin/" "${pkgname}"
+    install -Dm644 -t "${pkgdir}/usr/lib/systemd/system/" "${pkgname}.service"
+    install -Dm644 -t "${pkgdir}/usr/share/licenses/${pkgname}/" LICENSE
+}

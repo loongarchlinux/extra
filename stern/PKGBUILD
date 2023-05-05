@@ -1,0 +1,48 @@
+# Maintainer: Andreas 'Segaja' Schleifer <segaja at archlinux dot org>
+
+pkgname=stern
+pkgdesc="Multi pod and container log tailing for Kubernetes"
+pkgver=1.25.0
+pkgrel=1
+arch=('loong64' 'x86_64')
+url="https://github.com/stern/stern"
+license=('apache')
+options=(!lto)
+depends=('glibc')
+makedepends=('go')
+optdepends=('bash-completion: for bash completion support')
+source=("${url}/archive/v${pkgver}/${pkgname}-${pkgver}.tar.gz")
+sha512sums=('c7fc531c9d01b32cd5edfdb2f036f7524fee2fb13eec35d01e7c053a383db3f3f98454329bfcc8660cb5b1f851364e8adb5637539035712e6defbf3a6cd0d9b3')
+b2sums=('089b3fe36f452c3fa8b44b924af59de129284d189d42088cd272253d6f1b52a5fa96c0a09b7153f63e739724899ab20f35cb4cdd6aa78ce9100f90e4cccf56e6')
+
+build() {
+  cd "${pkgname}-${pkgver}"
+
+  export CGO_CPPFLAGS="${CPPFLAGS}"
+  export CGO_CFLAGS="${CFLAGS}"
+  export CGO_CXXFLAGS="${CXXFLAGS}"
+  export CGO_LDFLAGS="${LDFLAGS}"
+  export GOFLAGS="-buildmode=pie -trimpath -mod=readonly -modcacherw"
+
+  go build -v -x \
+    -ldflags "-linkmode external -X \"github.com/stern/stern/cmd.version=${pkgver}\"" \
+    -o "./out/${pkgname}"
+}
+
+check() {
+  cd "${pkgname}-${pkgver}"
+
+  go test -v ./...
+}
+
+package() {
+  cd "${pkgname}-${pkgver}"
+
+  install --verbose -D --mode=0755 "./out/${pkgname}" "${pkgdir}/usr/bin/${pkgname}"
+
+  "${pkgdir}/usr/bin/${pkgname}" --completion=bash | install --verbose -D --mode=0644 /dev/stdin "${pkgdir}/usr/share/bash-completion/completions/${pkgname}"
+  "${pkgdir}/usr/bin/${pkgname}" --completion=fish | install --verbose -D --mode=0644 /dev/stdin "${pkgdir}/usr/share/fish/vendor_completions.d/${pkgname}.fish"
+  "${pkgdir}/usr/bin/${pkgname}" --completion=zsh | install --verbose -D --mode=0644 /dev/stdin "${pkgdir}/usr/share/zsh/site-functions/_${pkgname}"
+
+  install --verbose -D --mode=0644 *.md --target-directory "${pkgdir}/usr/share/doc/${pkgname}"
+}

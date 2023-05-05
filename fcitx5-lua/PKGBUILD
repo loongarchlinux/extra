@@ -1,0 +1,32 @@
+# Maintainer: Felix Yan <felixonmars@archlinux.org>
+
+pkgname=fcitx5-lua
+pkgver=5.0.10
+pkgrel=1
+pkgdesc="Lua support for Fcitx 5"
+arch=('loong64' 'x86_64')
+url="https://github.com/fcitx/fcitx5-lua"
+license=('GPL')
+depends=('fcitx5' 'lua')
+makedepends=('extra-cmake-modules' 'ninja')
+source=("https://download.fcitx-im.org/fcitx5/$pkgname/$pkgname-$pkgver.tar.xz"{,.sig})
+sha512sums=('621757735f1647ba1cf7d0f972c4afa92683592c259c4a669a9ee9dbd7d6f96b0e85793b12094757004d6abce705e4f1d0ed57d0c4d348fa7ec502d6d9291827'
+            'SKIP')
+validpgpkeys=('2CC8A0609AD2A479C65B6D5C8E8B898CBF2412F9') # Weng Xuetian <wengxt@gmail.com>
+
+build() {
+  cd $pkgname-$pkgver
+
+  cmake -GNinja -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_INSTALL_LIBDIR=/usr/lib .
+  ninja
+}
+
+check() {
+  cd $pkgname-$pkgver
+  ninja test
+}
+
+package() {
+  cd $pkgname-$pkgver
+  DESTDIR="$pkgdir" ninja install
+}

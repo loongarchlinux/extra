@@ -1,0 +1,86 @@
+# Maintainer: Levente Polyak <anthraxx[at]archlinux[dot]org>
+# Maintainer: Andreas 'Segaja' Schleifer <segaja at archlinux dot org>
+
+_gemname='sqlite3'
+pkgname="ruby-${_gemname}"
+pkgver=1.5.4
+pkgrel=1
+pkgdesc='Ruby bindings for the SQLite3 embedded database'
+url='https://github.com/luislavena/sqlite3-ruby'
+arch=('loong64' 'x86_64')
+license=('BSD')
+options=('!emptydirs')
+depends=('ruby' 'ruby-mini_portile2' 'sqlcipher' 'sqlite')
+makedepends=('ruby-rake' 'ruby-rake-compiler' 'ruby-rake-compiler-dock')
+source=("https://github.com/sparklemotion/sqlite3-ruby/archive/v${pkgver}/${pkgname}-v${pkgver}.tar.gz")
+sha512sums=('dc78660380d8000d0b48b7c1f0f8af2f3212c943cf2d735b4b6e3e00f7cedbcb28a0b4352d896971fdc7466770a7c23d0c37dd30811408482eb7ad7f86df91dd')
+b2sums=('517c03411b0bd7eb4c9b5a943d380d63502383b35f9333fee48547124099bccf10bab7011a7835a914c607c01ce7d489068f61d5bcc1385b7668ec7d48f053b3')
+
+prepare() {
+  cd "${_gemname}-ruby-${pkgver}"
+
+  # update gemspec/Gemfile to allow newer version of the dependencies
+  sed --in-place --regexp-extended 's|~>|>=|g' "${_gemname}.gemspec"
+}
+
+build() {
+  cd "${_gemname}-ruby-${pkgver}"
+
+  rake compile -- --enable-system-libraries --with-sqlcipher
+  rake build
+}
+
+check() {
+  cd "${_gemname}-ruby-${pkgver}"
+
+  rake test
+}
+
+package() {
+  cd "${_gemname}-ruby-${pkgver}"
+
+  local _gemdir="$(gem env gemdir)"
+
+  gem install \
+    --local \
+    --verbose \
+    --ignore-dependencies \
+    --no-user-install \
+    --install-dir "${pkgdir}/${_gemdir}" \
+    --bindir "${pkgdir}/usr/bin" \
+    "pkg/${_gemname}-${pkgver}.gem" \
+    -- \
+    --enable-system-libraries \
+    --with-sqlcipher
+
+  # remove unrepreducible files
+  rm --force --recursive --verbose \
+    "${pkgdir}/${_gemdir}/cache/" \
+    "${pkgdir}/${_gemdir}/gems/${_gemname}-${pkgver}/vendor/" \
+    "${pkgdir}/${_gemdir}/doc/${_gemname}-${pkgver}/ri/ext/"
+
+  find "${pkgdir}/${_gemdir}/gems/" \
+    -type f \
+    \( \
+      -iname "*.o" -o \
+      -iname "*.c" -o \
+      -iname "*.so" -o \
+      -iname "*.time" -o \
+      -iname "gem.build_complete" -o \
+      -iname "Makefile" \
+    \) \
+    -delete
+
+  find "${pkgdir}/${_gemdir}/extensions/" \
+    -type f \
+    \( \
+      -iname "mkmf.log" -o \
+      -iname "gem_make.out" \
+    \) \
+    -delete
+
+  install --verbose -D --mode=0644 LICENSE "${pkgdir}/usr/share/licenses/${pkgname}/LICENSE"
+  install --verbose -D --mode=0644 *.md --target-directory "${pkgdir}/usr/share/doc/${pkgname}"
+}
+
+# vim: ts=2 sw=2 et:

@@ -1,0 +1,30 @@
+# Maintainer: Felix Yan <felixonmars@archlinux.org>
+
+pkgname=shadowsocks-v2ray-plugin
+pkgver=5.3.0
+pkgrel=1
+pkgdesc='A SIP003 plugin based on v2ray for shadowsocks'
+arch=('loong64' 'x86_64')
+url='https://github.com/teddysun/v2ray-plugin'
+license=('GPL')
+options=('!lto')
+depends=('glibc')
+makedepends=('go' 'git')
+source=("https://github.com/teddysun/v2ray-plugin/archive/v$pkgver/$pkgname-$pkgver.tar.gz")
+sha512sums=('8296d4690a75d5fcb4fdec49ee7e9ebfa9ea8bd995c406bd52fcf277cdd4c4c9c238c0a4f6cb56d32c5ce152d5697688adf4cd8b24138ef60dd7a555bf671926')
+
+build() {
+  export CGO_CPPFLAGS="${CPPFLAGS}"
+  export CGO_CFLAGS="${CFLAGS}"
+  export CGO_CXXFLAGS="${CXXFLAGS}"
+  export CGO_LDFLAGS="${LDFLAGS}"
+  export GOFLAGS="-buildmode=pie -trimpath -mod=readonly -modcacherw"
+
+  cd v2ray-plugin-$pkgver
+  go build
+}
+
+package() {
+  cd v2ray-plugin-$pkgver
+  install -Dm755 v2ray-plugin "$pkgdir"/usr/bin/v2ray-plugin
+}

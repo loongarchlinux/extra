@@ -1,0 +1,25 @@
+# Maintainer: Sergej Pupykin <pupykin.s+arch@gmail.com>
+# Contributor: Shinlun Hsieh <yngwiexx@yahoo.com.tw>
+
+pkgname=gensio
+pkgver=2.6.2
+pkgrel=1
+pkgdesc="General Stream I/O"
+arch=(loong64 x86_64)
+url="https://sourceforge.net/projects/ser2net/"
+license=('GPL')
+depends=()
+source=("$pkgname-$pkgver.tar.gz::https://github.com/cminyard/gensio/archive/v$pkgver.tar.gz")
+sha256sums=('c23f720e97227cdc384edc938b6d49eb02c1d3e5daa0d6e8655395c22efca0ce')
+
+build() {
+  cd "$srcdir"/${pkgname}-${pkgver/rc/-rc}
+  test -x configure || ./reconf
+  ./configure --prefix=/usr --sbindir=/usr/bin --libexecdir=/usr/lib/ --with-python=no
+  make
+}
+
+package() {
+  cd "$srcdir"/${pkgname}-${pkgver/rc/-rc}
+  make DESTDIR="$pkgdir" install
+}

@@ -1,0 +1,44 @@
+# Maintainer: Frederik Schwan <freswa at archlinux dot org>
+# Contributor: Amish <contact at via dot aur>
+# Contributor: Justin Davis <jrcd83@gmail.com>
+# Contributor: Tony Sokhon <tonyskn@gmail.com>
+
+pkgname=perl-par-packer
+pkgver=1.057
+pkgrel=1
+pkgdesc='PAR Packager'
+arch=('loong64' 'x86_64')
+url='https://metacpan.org/release/PAR-Packer'
+license=('GPL')
+depends=('perl-archive-zip' 'perl-getopt-argvfile' 'perl-ipc-run3'
+         'perl-module-scandeps' 'perl-par' 'perl-par-dist')
+makedepends=('perl' 'perl-extutils-makemaker')
+options=('!emptydirs' purge)
+source=("https://cpan.metacpan.org/authors/id/R/RS/RSCHUPP/PAR-Packer-${pkgver}.tar.gz")
+b2sums=('03bb48a99357953410665b9dbde28cdc51012e60075684d638cce2f9e3dc450547f4824abb579047c31b74d90ddbec1f507b4f61e4683949a1ce34842fa55103')
+
+build() {
+  cd PAR-Packer-${pkgver}
+  unset PERL5LIB PERL_MM_OPT PERL_LOCAL_LIB_ROOT
+  export PERL_MM_USE_DEFAULT=1 PERL_AUTOINSTALL=--skipdeps
+  perl Makefile.PL
+  make
+}
+
+check() {
+  cd PAR-Packer-${pkgver}
+  unset PERL5LIB PERL_MM_OPT PERL_LOCAL_LIB_ROOT
+  export PERL_MM_USE_DEFAULT=1
+  make test
+}
+
+package() {
+  local _perlver=$(perl -e 'print substr($^V, 1)')
+  depends+=("perl=${_perlver}") # versioned dependency down to patch version
+
+  cd PAR-Packer-${pkgver}
+  unset PERL5LIB PERL_MM_OPT PERL_LOCAL_LIB_ROOT
+  make install INSTALLDIRS=vendor DESTDIR="${pkgdir}"
+  #remove conflicting and empty man page
+  rm "${pkgdir}"/usr/share/man/man1/pp.1
+}

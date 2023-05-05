@@ -1,0 +1,73 @@
+# Maintainer: Massimiliano Torromeo <massimiliano.torromeo@gmail.com>
+# Contributor: D. Can Celasun <dcelasun[at]gmail[dot]com>
+# Contributor: Felix Hanley <felix@seconddrawer.com.au>
+# Contributor: Sławomir Kowalski <suawekk@gmail.com>
+
+pkgname=percona-toolkit
+pkgver=3.5.2
+pkgrel=1
+pkgdesc="Collection of advanced command-line tools to perform a variety of MySQL and system tasks."
+url="https://www.percona.com/software/database-tools/percona-toolkit"
+arch=('loong64' 'x86_64')
+license=('GPL')
+depends=('perl-term-readkey')
+makedepends=('perl-dbd-mysql' 'perl-dbi' 'go' 'git')
+optdepends=(
+    'perl-dbd-mysql: MySQL connections'
+    'perl-dbi: MySQL connections'
+)
+options=('!emptydirs' 'purge' '!lto')
+source=("https://github.com/percona/$pkgname/archive/v$pkgver/$pkgname-$pkgver.tar.gz")
+sha256sums=('1604cd5248f6c560763ead72f4d710cf23f2ca4ef81fd801136be97c3185e8c1')
+
+prepare() {
+    mkdir -p "$srcdir"/src/github.com/percona
+    cd "$srcdir"/src/github.com/percona
+    mv "$srcdir"/$pkgname-$pkgver $pkgname
+    cd $pkgname
+
+    sed -ri src/go{,/*}/Makefile \
+        -e "s#\\$\\(shell git describe --abbrev=0\\)#v$pkgver#" \
+        -e "s#\\$\\(shell git rev-(parse|list).* HEAD\\)#v$pkgver#" \
+        -e "s#\\$\\(shell git rev-parse --show-toplevel\\)#$srcdir/src/github.com/percona/$pkgname#" \
+        -e "s#\\$\\(shell basename \`git rev-parse --show-toplevel\`\\)#$pkgname#" \
+        -e "s#\\bLDFLAGS\\b#PTLDFLAGS#" \
+        -e 's#^PTLDFLAGS="#PTLDFLAGS="-extldflags \\"$(LDFLAGS)\\" #'
+
+    # disable go dep
+    sed '/dep ensure/d' -i src/go/Makefile
+}
+
+build() {
+    export CGO_CPPFLAGS="${CPPFLAGS}"
+    export CGO_CFLAGS="${CFLAGS}"
+    export CGO_CXXFLAGS="${CXXFLAGS}"
+    export CGO_LDFLAGS="${LDFLAGS}"
+    export GOFLAGS="-buildmode=pie -trimpath -mod=readonly -modcacherw"
+
+    export GOPATH="$srcdir"
+    export PATH="$GOPATH/bin:$PATH"
+
+    cd "$srcdir"/src/github.com/percona/$pkgname
+    unset PERL5LIB PERL_MM_OPT PERL_LOCAL_LIB_ROOT
+    export PERL_MM_USE_DEFAULT=1 PERL_AUTOINSTALL=--skipdeps MODULEBUILDRC=/dev/null
+    perl Makefile.PL INSTALLDIRS=vendor
+    make
+
+    cd src/go
+    make linux-amd64
+}
+
+package() {
+    cd "$srcdir"/src/github.com/percona/$pkgname
+    unset PERL5LIB PERL_MM_OPT PERL_LOCAL_LIB_ROOT
+    make install DESTDIR="$pkgdir"
+    rm -rf "$pkgdir"/usr/lib
+
+    cd bin
+    for bin in *; do
+        if [ ! -f "$pkgdir/usr/bin/vendor_perl/$bin" ]; then
+            install -Dm755 "$bin" "$pkgdir/usr/bin/$bin"
+        fi
+    done
+}

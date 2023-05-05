@@ -1,0 +1,26 @@
+# Maintainer: Antonio Rojas <arojas@archlinux.org>
+# Contributor: Elvis Angelaccio <elvis dot angelaccio at kde dot org>
+
+pkgname=kronometer
+pkgver=2.3.0
+pkgrel=1
+pkgdesc="A simple chronometer application"
+arch=(loong64 x86_64)
+url="https://userbase.kde.org/Kronometer"
+license=(GPL2)
+depends=(kxmlgui hicolor-icon-theme)
+makedepends=(extra-cmake-modules kdoctools)
+source=(https://download.kde.org/stable/$pkgname/$pkgver/src/$pkgname-$pkgver.tar.xz{,.sig})
+sha256sums=('75b9e1a26f0f468d016b2dc3cd2d8fd31412ac968c5c3e7551a7502f7cfac476'
+            'SKIP')
+validpgpkeys=(F07D85CAA18ACF46A346FD017C7FC6EA8633B4EA) # Elvis Angelaccio <elvis.angelaccio@kde.org>
+
+build() {
+  cmake -B build -S $pkgname-$pkgver \
+    -DBUILD_TESTING=OFF
+  cmake --build build
+}
+
+package() {
+  DESTDIR="$pkgdir" cmake --install build
+}

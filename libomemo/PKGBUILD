@@ -1,0 +1,32 @@
+# Maintainer: Frederik Schwan <freswa at archlinux dot org>
+
+pkgname=libomemo
+pkgver=0.8.1
+pkgrel=1
+pkgdesc='Implementation of OMEMO (XEP-0384) in C'
+arch=('loong64' 'x86_64')
+url='https://github.com/gkdr/libomemo'
+license=('MIT')
+depends=('sqlite' 'libgcrypt' 'mxml' 'glib2')
+makedepends=('cmake' 'cmocka')
+provides=('libomemo.so')
+source=("https://github.com/gkdr/libomemo/archive/v${pkgver}/${pkgname}-${pkgver}.tar.gz")
+b2sums=('b75ad298946dff680705ba0927293ea30cb8bf616a417c6584cef9f84e0894c5581462782a4b1003bf9e530695eea10bba9f37ae94e957a0008a35c862f17f62')
+
+build() {
+  cmake -B build -S ${pkgname}-${pkgver} -DCMAKE_INSTALL_PREFIX='/usr'
+  cmake --build build
+}
+
+check() {
+  cd build
+  ctest --output-on-failure
+}
+
+package() {
+  DESTDIR="${pkgdir}" cmake --install build
+  chmod a+x "${pkgdir}"/usr/lib/libomemo.so.${pkgver}
+  ln -sf libomemo.so.${pkgver} "${pkgdir}"/usr/lib/libomemo.so
+  ln -sf libomemo.so.${pkgver} "${pkgdir}"/usr/lib/libomemo.so.${pkgver%%.*}
+  install -Dm644 -t "${pkgdir}"/usr/share/licenses/${pkgname} ${pkgname}-${pkgver}/LICENSE
+}

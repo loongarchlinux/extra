@@ -1,0 +1,45 @@
+# Maintainer: Florian Pritz <bluewind@xinu.at>
+
+pkgname=perl-cgi
+pkgver=4.56
+pkgrel=1
+pkgdesc='Handle Common Gateway Interface requests and responses'
+arch=(any)
+license=(PerlArtistic GPL)
+options=(!emptydirs)
+depends=('perl>=5.8.1' perl-html-parser)
+checkdepends=(perl-test-nowarnings 'perl-test-warn>=0.3')
+url=https://metacpan.org/release/CGI
+source=("https://cpan.metacpan.org/authors/id/L/LE/LEEJO/CGI-$pkgver.tar.gz")
+md5sums=(2b86f1dbf79d34570d0451289e721f9c)
+sha512sums=(b4fb61aa186e46f507945d6a87d8470d9b879a4307094ad09d7ce8611984897c1b4fd96d2344062f966959dab0c40e40b03c3104dcacb66e76ce6fd3d778de56)
+_ddir="CGI-$pkgver"
+
+build()
+(
+  cd "$srcdir/$_ddir"
+  export PERL_MM_USE_DEFAULT=1 PERL_AUTOINSTALL=--skipdeps
+  unset PERL5LIB PERL_MM_OPT
+  /usr/bin/perl Makefile.PL
+  make
+)
+
+check()
+(
+  cd "$srcdir/$_ddir"
+  export PERL_MM_USE_DEFAULT=1
+  unset PERL5LIB
+  make test
+)
+
+package()
+(
+  cd "$srcdir/$_ddir"
+  make install INSTALLDIRS=vendor DESTDIR="$pkgdir"
+)
+
+# Local Variables:
+# mode: shell-script
+# sh-basic-offset: 2
+# End:
+# vim:set ts=2 sw=2 et:

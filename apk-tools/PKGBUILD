@@ -1,0 +1,35 @@
+# Maintainer: kpcyrd <kpcyrd[at]archlinux[dot]org>
+
+pkgname=apk-tools
+pkgver=2.12.11
+pkgrel=1
+pkgdesc="Alpine Package Keeper - package manager for alpine"
+url="https://gitlab.alpinelinux.org/alpine/apk-tools"
+arch=('loong64' 'x86_64')
+license=("GPL2")
+depends=(zlib openssl)
+makedepends=(scdoc lua53 lua53-zlib)
+source=("https://gitlab.alpinelinux.org/alpine/${pkgname}/-/archive/v${pkgver}/${pkgname}-v${pkgver}.tar.gz")
+b2sums=('f74bb618c0c8f44036adcb07fc5cc5d67a284fff00f878e1a5f28fbe262b059a5356d73f58af4fc52d635333ddd710af633bafffdc8c39924a31c87a9fc2a26d')
+
+prepare() {
+  cd "${pkgname}-v${pkgver}"
+  sed -i -e 's:-Werror::' Make.rules
+}
+
+build() {
+  cd "${pkgname}-v${pkgver}"
+  make SBINDIR=/usr/bin LIBDIR=/usr/lib
+}
+
+check() {
+  cd "${pkgname}-v${pkgver}"
+  make test
+}
+
+package() {
+  cd "${pkgname}-v${pkgver}"
+  make install DESTDIR="${pkgdir}" SBINDIR=/usr/bin LIBDIR=/usr/lib
+}
+
+# vim: ts=2 sw=2 et:

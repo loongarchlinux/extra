@@ -1,0 +1,31 @@
+# Maintainer : Daniel Bermond <dbermond@archlinux.org>
+# Contributor: Jonathan Steel <jsteel at aur.archlinux.org>
+# Contributor: Sebastian Wolf < fatmike303 at gmail dot com >
+# Contributor: Guilherme Calé <gui@cabritacale.eu>
+
+pkgname=fs-uae
+pkgver=3.1.66
+pkgrel=2
+pkgdesc='An Amiga emulator based on UAE/WinUAE with a focus on emulating games'
+arch=('loong64' 'x86_64')
+url='https://fs-uae.net/'
+license=('GPL2')
+depends=('glib2' 'libmpeg2' 'libpng' 'libx11' 'openal' 'sdl2' 'zlib'
+         'hicolor-icon-theme')
+optdepends=('fs-uae-launcher: for the graphical user interface')
+makedepends=('libxi' 'zip')
+source=("https://fs-uae.net/files/FS-UAE/Stable/${pkgver}/${pkgname}-${pkgver}.tar.xz")
+sha256sums=('606e1868b500413d69bd33bb469f8fd08d6c08988801f17b7dd022f3fbe23832')
+
+build() {
+    cd "${pkgname}-${pkgver}"
+    
+    # need to disable the jit compiler to add PIE to binaries
+    ./configure --prefix='/usr' --disable-jit
+    
+    make 
+}
+
+package() {
+    make -C "${pkgname}-${pkgver}" DESTDIR="$pkgdir" install
+}

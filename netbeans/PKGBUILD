@@ -1,0 +1,105 @@
+# Maintainer: Santiago Torres-Arias <santiago@archlinux.org>
+# Contributor: Timm Preetz <timm@preetz.us>
+# Contributor: Daniel J Griffiths <ghost1227@archlinux.us>
+# Contributor: Ben Wolsieffer <benwolsieffer@gmail.com>
+
+pkgname=netbeans
+pkgver=16
+pkgrel=1
+pkgdesc='IDE for Java, HTML5, PHP, Groovy, C and C++'
+arch=('any')
+url='https://netbeans.apache.org/'
+license=('Apache')
+# classpath is not needed, see FS#38567 (Oracle JDK does not need atk either)
+depends=('ttf-font' 'which')
+makedepends=('ant' 'java-environment=11' 'php' 'groovy' 'imagemagick')
+optdepends=('php: for developing programs in php'
+            'groovy: for developing programs in groovy'
+            'lib32-glibc')
+
+# you can figure out what's the best urlbase in case you want to override it by going to:
+# https://www.apache.org/dyn/closer.cgi/netbeans/netbeans/11.1/netbeans-11.1-source.zip
+options=(!debug)
+urlbase="https://ftp.wayne.edu/apache/"
+source=("$pkgname.desktop"
+        "${urlbase}/${pkgname}/${pkgname}/${pkgver}/${pkgname}-${pkgver}-source.zip"
+        "https://www.apache.org/dist/${pkgname}/${pkgname}/${pkgver/_/-}/${pkgname}-${pkgver/_/-}-source.zip.asc"
+       "netbeans.clusters")
+
+sha256sums=('2b0e1624f3578e47a4357b038832eafa333139654448d931dbc3febd2730befe'
+            'a0dd4c33aaafb42c1b3740f8527d4856e63a6eab9c8808fc7ae8c4efc9f1c750'
+            'SKIP'
+            'a7849ee0f21acef34a7bbd1216e8f822aba38284e3138ea04532224ad6f227c2')
+
+validpgpkeys=("1A83C352499305B6682E3D95CF7BA0AB1CCF4647" # Emilian Marius Bold <emi@apache.org>
+              "79C8F02A726E9EF53646D712B2BF814FA145CB2D" # Laszlo Kishalmi <lkishalmi@apache.org>
+              "51B0E375B4941714A809F90E13E9F7AE3A4FD551" # Geert Jan <geertjan@apache.org>
+              "E6B7A203AA18497AB25202A7B4C1940FEA9364F1" # Jan Lahoda <jlahoda@apache.org>
+              "7B037EEBE0F0DEDFEE65B6983703AC389A12A9D4" # Neil C Smith <neilcsmith@apache.org>
+              "D0410592D20D84582E23D7F057D5896CD86C1320" # Reema Taneja <rtaneja@apache.org>
+              "8FE1C26F15E0320E740BAED84A2601CEDA9382F3" # Eric Barboni (Signing Key) <skygo@apache.org>
+              "86D47EECC6B9B9F77B3D7C9FE860B148D27236F9" # Jaroslav Tulach (Key for signing Apache NetBeans & co. releases.) <jtulach@apache.org>
+              "3A0ACAC1BAFC17905B26FCAE6FA863B0C32A18B1" # 'Arunava Sinha (CODE SIGNING KEY) <arusinha@apache.org>'
+              "DE8B8FB2B223C84F45142DC93ED477750C09D18D" # John McDonnell (CODE SIGNING KEY) <johnmcdonnell@apache.org>
+              "FDF1E067FF3EABE8760380975CDA98F97CD37A42" # Anton Epple <toni.epple@eppleton.de>
+              "4F14EF3E48BBEC63608D7EB213548D7CCAFAE80D" # Jaroslav Tulach (2nd key for signing NetBeans releases) <jtulach@apache.org>
+              "0EEFAD6B9554FD485FF115477022397A0BFA52E9" # Geertjan Wielenga (2nd key for signing NetBeans releases) <geertjan@apache.org>
+            )
+
+build() {
+  # full cluster configuration is not available at this time
+  export LDFLAGS_EXTRA=$LDFLAGS CFLAGS_EXTRA=$CFLAGS
+  ant -quiet -Dcluster.config=full
+  #ant -quiet
+}
+
+# It appears that they have disabled the CI tests upstream, so I'll disable these for now...
+# see the parms here: https://travis-ci.org/apache/incubator-netbeans/jobs/473379270 
+# check() {
+#   cd "${srcdir}"
+#   ant -quiet test -Djavac.compilerargs=-nowarn -Dbuild.compiler.deprecation=false -Dtest.includes=NoTestsJustBuild
+# }
+
+package() {
+  depends+=('java-environment>=11')
+
+  # install launcher script
+  install -Dm755 "nbbuild/${pkgname}/bin/${pkgname}" "${pkgdir}/usr/bin/${pkgname}"
+
+  # Resources for platform config
+  mkdir -p "${pkgdir}/usr/lib/${pkgname}"
+
+  local built=$(find nbbuild/${pkgname}/ -name "nb.cluster.*.built" | cut -d '.' -f 3)
+  for plugin in $built
+  do
+    if [ -d "nbbuild/${pkgname}/${plugin}" ]
+    then
+        cp -r "nbbuild/${pkgname}/${plugin}" "${pkgdir}/usr/lib/${pkgname}"
+    fi
+  done
+  install -Dm644 "${srcdir}/nbbuild/netbeans/etc/netbeans.import" -t "${pkgdir}/usr/lib/${pkgname}/etc/"
+
+  # copy cluster configuration
+  install -Dm644 "${srcdir}/nbbuild/netbeans/etc/netbeans."* -t "${pkgdir}/usr/etc/"
+  install -Dm644 "netbeans."* -t "${pkgdir}/usr/etc/"
+
+  # Desktop shortcut and icon
+  install -Dm644 "$pkgname.desktop" "${pkgdir}/usr/share/applications/${pkgname}.desktop"
+  install -Dm644 "${srcdir}/nb/ide.branding/release/netbeans.png" "${pkgdir}/usr/share/pixmaps/${pkgname}.png"
+
+  # I'm leaving these as they seem to be necessary for building native
+  # executables (see bug #66706). I'd like to ideally build them with our 
+  # CFLAGS, but alas...
+  # rm -rf "${pkgdir}/usr/lib/${pkgname}/ide/bin/nativeexecution/SunOS"*
+  # rm -rf "${pkgdir}/usr/lib/${pkgname}/ide/bin/nativeexecution/MacOSX"*
+  # rm -rf "${pkgdir}/usr/lib/${pkgname}/ide/bin/nativeexecution/Windows"*
+  # rm -rf "${pkgdir}/usr/lib/${pkgname}/ide/bin/nativeexecution/"*-sparc_64
+  # rm -rf "${pkgdir}/usr/lib/${pkgname}/profiler/lib/deployed/jdk16/solaris-"*
+  # rm -rf "${pkgdir}/usr/lib/${pkgname}/profiler/lib/deployed/jdk16/hpux-"*
+  # rm -rf "${pkgdir}/usr/lib/${pkgname}/profiler/lib/deployed/jdk16/linux-arm"*
+  # rm -rf "${pkgdir}/usr/lib/${pkgname}/profiler/lib/deployed/jdk15/hpux-"*
+  # rm -rf "${pkgdir}/usr/lib/${pkgname}/profiler/lib/deployed/jdk15/solaris-"*
+  # find "${pkgdir}/usr/lib/${pkgname}/" -name "*.exe" -exec rm {} \;
+  # find "${pkgdir}/usr/lib/${pkgname}/" -name "*.dll" -exec rm {} \;
+
+}

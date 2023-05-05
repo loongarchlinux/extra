@@ -1,0 +1,29 @@
+# Maintainer: Sergej Pupykin <pupykin.s+arch@gmail.com>
+# Contributor: Francois Charette <firmicus@gmx.net>
+
+pkgname=perl-xml-atom
+pkgver=0.43
+pkgrel=1
+pkgdesc="Atom feed and API implementation "
+arch=('any')
+url="https://search.cpan.org/dist/XML-Atom"
+license=('GPL' 'PerlArtistic')
+depends=('perl-class-data-inheritable' 'perl-uri' 'perl-xml-libxml>=1.64'
+	 'perl-xml-xpath')
+makedepends=('perl-module-build-tiny')
+options=('!emptydirs')
+source=(https://www.cpan.org/authors/id/M/MI/MIYAGAWA/XML-Atom-$pkgver.tar.gz)
+sha512sums=('408d0753d651da7ab4cc50d79b654e9f3680f17830a3fa36e0d1869a4e7aabb17aaf5132a91ff20f1144af09290f109fe7812baa61b23b5b89de384228649fd9')
+
+build() {
+  cd  "$srcdir"/XML-Atom-$pkgver
+  perl Build.PL installdirs=vendor destdir="$pkgdir/"
+  ./Build
+}
+
+package() {
+  cd  "$srcdir"/XML-Atom-$pkgver
+  ./Build install --destdir="$pkgdir/"
+  find "$pkgdir" -name '.packlist' -delete
+  find "$pkgdir" -name '*.pod' -delete
+}

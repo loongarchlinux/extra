@@ -1,0 +1,41 @@
+# Maintainer: Morten Linderud <foxboron@archlinux.org>
+# Contributor: Nicolas Leclercq <nicolas.private@gmail.com>
+# Contributor: Adam S Levy <adam@aslevy.com>
+# Contributor: Charles B. Johnson <mail@cbjohnson.info>
+# Contributor: Daichi Shinozaki <dsdseg@gmail.com>
+# Contributor: Ben Alex <ben.alex@acegi.com.au>
+
+pkgname=influxdb
+pkgver=2.7.1
+_commit_sha=407fa62
+pkgrel=1
+pkgdesc='Scalable datastore for metrics, events, and real-time analytics'
+arch=('loong64' 'x86_64')
+url='https://github.com/InfluxData/influxdb'
+license=('MIT')
+makedepends=('go' 'go-tools' 'git' 'bzr' 'protobuf' 'yarn' 'cargo' 'clang' 'llvm')
+options=('!lto')
+backup=('etc/influxdb/influxdb.conf')
+source=("git+https://github.com/influxdata/influxdb.git#tag=v${pkgver}"
+        "influxdb.service")
+sha256sums=('SKIP'
+            '51444fae4a286d467ddd1cdfec4c54692ad9201f64c5c2af58304c1a7fe504ad')
+
+build(){
+  cd "$pkgname"
+  export GOFLAGS="-trimpath -mod=readonly -modcacherw"
+  export LDFLAGS=""
+  PATH="$(go env GOPATH)/bin:$PATH" make -j1 VERSION=$pkgver COMMIT=$_commit_sha INFLUXDB_SHA=$_commit_sha
+}
+
+check(){
+  cd "$pkgname"
+  PATH="$(go env GOPATH)/bin:$PATH" make test || true
+}
+
+package(){
+  cd "$pkgname"
+  install -Dm644 ../influxdb.service -t "$pkgdir/usr/lib/systemd/system"
+  install -Dm755 bin/linux/influxd -t "$pkgdir/usr/bin"
+  install -Dm644 LICENSE -t "$pkgdir/usr/share/licenses/influxdb"
+}

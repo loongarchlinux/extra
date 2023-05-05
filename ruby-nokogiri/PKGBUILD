@@ -1,0 +1,97 @@
+# Maintainer: Anatol Pomozov <anatol.pomozov@gmail.com>
+# Maintainer: Andreas 'Segaja' Schleifer <segaja at archlinux dot org>
+
+_gemname='nokogiri'
+pkgname="ruby-${_gemname}"
+pkgver=1.13.9
+pkgrel=1
+pkgdesc='Nokogiri (鋸) is an HTML, XML, SAX, and Reader parser'
+arch=('loong64' 'x86_64')
+url='https://nokogiri.org'
+license=('MIT')
+depends=('libxslt' 'ruby' 'ruby-mini_portile2')
+checkdepends=('ruby-minitest-reporters' 'ruby-rake-compiler' 'ruby-rake-compiler-dock' 'ruby-ruby_memcheck' 'ruby-simplecov')
+options=('!emptydirs')
+source=("https://github.com/sparklemotion/${_gemname}/archive/v${pkgver}/${pkgname}-${pkgver}.tar.gz")
+sha512sums=('d24698221e916c043f0ef8c22f0e224da3c14df4b3780a867b93ba680600bdc8f4b0411dc5d149df2c7122d4f56347f750a609f3526ee3b100f72292b1c8a3e9')
+
+prepare() {
+  cd "${_gemname}-${pkgver}"
+
+  # update gemspec/Gemfile to allow newer version of the dependencies
+  sed --in-place --regexp-extended 's|~>|>=|g' "${_gemname}.gemspec"
+
+  # we don't do jruby
+  sed --in-place '/\.java/d' "${_gemname}.gemspec"
+  sed --in-place '/\.jar/d' "${_gemname}.gemspec"
+
+  # we don't have hoe/markdown in the repos
+  rm --verbose rakelib/markdown.rake
+
+  # we don't have rubocop in the repos
+  rm --verbose rakelib/rubocop.rake
+}
+
+build() {
+  cd "${_gemname}-${pkgver}"
+
+  local _gemdir="$(gem env gemdir)"
+
+  export CFLAGS+=' -ffat-lto-objects'
+
+  gem build "${_gemname}.gemspec" -- --use-system-libraries
+
+  gem install \
+    --local \
+    --verbose \
+    --ignore-dependencies \
+    --no-user-install \
+    --install-dir "tmp_install/${_gemdir}" \
+    --bindir "tmp_install/usr/bin" \
+    "${_gemname}-${pkgver}.gem" \
+    -- \
+    --use-system-libraries
+
+  # remove unrepreducible files
+  rm --force --recursive --verbose \
+    "tmp_install/${_gemdir}/cache/" \
+    "tmp_install/${_gemdir}/gems/${_gemname}-${pkgver}/vendor/" \
+    "tmp_install/${_gemdir}/doc/${_gemname}-${pkgver}/ri/ext/"
+
+  find "tmp_install/${_gemdir}/gems/" \
+    -type f \
+    \( \
+      -iname "*.o" -o \
+      -iname "*.c" -o \
+      -iname "*.so" -o \
+      -iname "*.time" -o \
+      -iname "gem.build_complete" -o \
+      -iname "Makefile" \
+    \) \
+    -delete
+
+  find "tmp_install/${_gemdir}/extensions/" \
+    -type f \
+    \( \
+      -iname "mkmf.log" -o \
+      -iname "gem_make.out" \
+    \) \
+    -delete
+}
+
+check() {
+  cd "${_gemname}-${pkgver}"
+
+  local _gemdir="$(gem env gemdir)"
+
+  GEM_HOME="tmp_install/${_gemdir}" rake test
+}
+
+package() {
+  cd "${_gemname}-${pkgver}"
+
+  cp --archive --verbose tmp_install/* "${pkgdir}"
+
+  install --verbose -D --mode=0644 LICENSE* --target-directory "${pkgdir}/usr/share/licenses/${pkgname}"
+  install --verbose -D --mode=0644 *.md --target-directory "${pkgdir}/usr/share/doc/${pkgname}"
+}

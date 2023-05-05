@@ -1,0 +1,40 @@
+# Maintainer: Muflone http://www.muflone.com/contacts/english/
+# Contributor: Brian Bidulock <bidulock@openss7.org>
+# Contributor: Jason St. John <jstjohn .. purdue . edu>
+
+pkgname=perl-config-general
+_perl_namespace=Config
+_perl_module=General
+pkgver=2.65
+pkgrel=1
+pkgdesc="Generic Config Module"
+arch=('any')
+url="https://metacpan.org/dist/${_perl_namespace}-${_perl_module}"
+license=('PerlArtistic' 'GPL')
+depends=('perl')
+source=("https://www.cpan.org/modules/by-module/${_perl_namespace}/${_perl_namespace}-${_perl_module}-${pkgver}.tar.gz")
+sha256sums=('4d6d5754be3a9f30906836f0cc10e554c8832e14e7a1341efb15b05d706fc58f')
+options=('!emptydirs')
+
+build() {
+  cd "${_perl_namespace}-${_perl_module}-${pkgver}"
+  unset PERL5LIB PERL_MM_OPT PERL_MB_OPT PERL_LOCAL_LIB_ROOT
+  export PERL_MM_USE_DEFAULT=1 PERL_AUTOINSTALL=--skipdeps
+  perl Makefile.PL
+  make
+}
+
+check() {
+  cd "${_perl_namespace}-${_perl_module}-${pkgver}"
+  unset PERL5LIB PERL_MM_OPT PERL_MB_OPT PERL_LOCAL_LIB_ROOT
+  export PERL_MM_USE_DEFAULT=1
+  make test
+}
+
+package() {
+  cd "${_perl_namespace}-${_perl_module}-${pkgver}"
+  unset PERL5LIB PERL_MM_OPT PERL_MB_OPT PERL_LOCAL_LIB_ROOT
+  make pure_install INSTALLDIRS=vendor DESTDIR="${pkgdir}"
+  # Delete unuseful files
+  find "${pkgdir}" -name '.packlist' -delete
+}

@@ -1,0 +1,51 @@
+# Maintainer: Levente Polyak <anthraxx[at]archlinux[dot]org>
+# Maintainer: kpcyrd <kpcyrd[at]archlinux[dot]org>
+# Contributor: Kevin MacMartin <prurigro@gmail.com>
+# Contributor: openfbt
+# Contributor: Werecat
+# Contributor: Xyne
+
+pkgname=cjdns
+pkgver=22
+pkgrel=1
+pkgdesc='Routing engine designed for security, scalability, speed and ease of use'
+url='https://github.com/cjdelisle/cjdns'
+arch=('loong64' 'x86_64')
+license=('GPL3')
+depends=('glibc' 'sh')
+optdepends=('nodejs: optional utilities support')
+makedepends=('nodejs' 'python' 'libseccomp' 'util-linux' 'which' 'audit' 'rust' 'linux-headers')
+install=cjdns.install
+source=(${pkgname}-${pkgver}.tar.gz::https://github.com/cjdelisle/${pkgname}/archive/cjdns-v${pkgver}.tar.gz)
+sha512sums=('fd22ae084edf174052b2683fc5591aeb036791b1a710f49d57cab475b1fdc7e7a2d4fcc3482d5fd401e15b8fef49a8985bea93a4b5a192c62b31647c4667b610')
+b2sums=('06bd852cd22e93eea9f215409253270f0ba1e781a50d2c333f14c1ddac3eec4f93c02c93cb55adca26b76aab1586d85a3e559aa250ce0ddbf8ee2d6ca134b4c8')
+
+build() {
+  cd ${pkgname}-${pkgname}-v${pkgver}
+  export CROSS="true"
+  export CJDNS_RELEASE_VERSION="${pkgver}"
+  "./cross-do"
+}
+
+package() {
+  cd ${pkgname}-${pkgname}-v${pkgver}
+  install -Dm 755 cjdroute -t "${pkgdir}/usr/bin"
+  install -Dm 644 contrib/systemd/{cjdns,cjdns-resume}.service \
+    -t "${pkgdir}/usr/lib/systemd/system"
+  install -Dm 644 doc/man/cjdroute.conf.5 -t "${pkgdir}/usr/share/man/man5"
+  install -Dm 644 -t "${pkgdir}/usr/share/doc/${pkgname}" \
+    README.md \
+    doc/admin-api.md \
+    doc/configure.md \
+    doc/djc_layer_model.md \
+    doc/nat-gateway.md \
+    doc/network-services.md \
+    doc/non-root-user.md \
+    doc/security_specification.md \
+    doc/shorewall_and_vpn_gateway_howto.md \
+    doc/tunnel.md
+  cp -a tools "${pkgdir}/usr/lib/${pkgname}"
+  cp -a node_modules "${pkgdir}/usr/lib/${pkgname}/node_modules"
+}
+
+# vim: ts=2 sw=2 et:

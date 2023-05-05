@@ -1,0 +1,41 @@
+# Maintainer: Orhun Parmaksız <orhun@archlinux.org>
+# Contributor: KokaKiwi <kokakiwi+aur at kokakiwi dot net>
+
+pkgname=cargo-nextest
+pkgver=0.9.51
+pkgrel=1
+pkgdesc="A next-generation test runner for Rust."
+arch=('loong64' 'x86_64')
+url="https://github.com/nextest-rs/nextest"
+license=('Apache' 'MIT')
+depends=('gcc-libs')
+makedepends=('cargo')
+source=("$pkgname-$pkgver.tar.gz::$url/archive/refs/tags/cargo-nextest-$pkgver.tar.gz")
+sha256sums=('fb86dc11ff727a34c1c7b81644f4cbbb33f0b23e9d64a84a7fe258491f35533a')
+b2sums=('19d5957c310f0ed0e7187317b884f8172a6eb6a13cb9324f1e2db8f25c48dca133bf252bfeb3ac64d46300466120538fbd4141b6ad9e59d433342eaa59dc6a1e')
+options=('!lto')
+
+prepare() {
+  mv "nextest-$pkgname-$pkgver" "$pkgname-$pkgver"
+  cd "$pkgname-$pkgver"
+  cargo fetch --locked --target "$CARCH-unknown-linux-gnu"
+}
+
+build() {
+  cd "$pkgname-$pkgver"
+  cargo build --release --frozen --package "$pkgname" --no-default-features --features default-no-update
+}
+
+check() {
+  cd "$pkgname-$pkgver"
+  cargo run --package cargo-nextest -- nextest run --profile ci
+}
+
+package() {
+  cd "$pkgname-$pkgver"
+  install -Dm 755 "target/release/$pkgname" -t "$pkgdir/usr/bin"
+  install -Dm 644 README.md -t "$pkgdir/usr/share/doc/$pkgname"
+  install -Dm 644 LICENSE-MIT -t "$pkgdir/usr/share/licenses/$pkgname"
+}
+
+# vim: ts=2 sw=2 et:

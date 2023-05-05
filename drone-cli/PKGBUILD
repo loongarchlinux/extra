@@ -1,0 +1,70 @@
+# Maintainer: George Rawlinson <grawlinson@archlinux.org>
+# Contributor: "Amhairghin" Oscar Garcia Amor (https://ogarcia.me)
+# Contributor: Franklyn Tackitt <franklyn@tackitt.net>
+# Contributor: Christian Höppner <chris@mkaito.com>
+
+pkgname=drone-cli
+pkgver=1.7.0
+pkgrel=1
+pkgdesc='Command line interface for Drone CI'
+arch=('loong64' 'x86_64')
+url='https://docs.drone.io/cli'
+license=('Apache')
+depends=('glibc')
+makedepends=('go' 'git')
+options=('!lto')
+_commit='c75a1a82d46e687d2d961115c849bf3a137b8e9d'
+source=("$pkgname::git+https://github.com/harness/drone-cli.git#commit=$_commit")
+md5sums=('SKIP')
+
+pkgver() {
+  cd "$pkgname"
+  git describe --tags | sed 's/^[vV]//;s/-/+/g'
+}
+
+prepare() {
+  cd "$pkgname"
+
+  # create directory for build output
+  mkdir build
+
+  # download dependencies
+  go mod download
+}
+
+build() {
+  cd "$pkgname"
+
+  # set Go flags
+  export CGO_CPPFLAGS="${CPPFLAGS}"
+  export CGO_CFLAGS="${CFLAGS}"
+  export CGO_CXXFLAGS="${CXXFLAGS}"
+  export GOPATH="${srcdir}"
+
+  go build -v \
+    -buildmode=pie \
+    -mod=readonly \
+    -modcacherw \
+    -ldflags "-compressdwarf=false \
+    -linkmode external \
+    -extldflags ${LDFLAGS} \
+    -X main.version=$pkgver" \
+    -o build \
+    ./...
+}
+
+check() {
+  cd "$pkgname"
+
+  go test -v ./...
+}
+
+package() {
+  cd "$pkgname"
+
+  # binary
+  install -vDm755 -t "$pkgdir/usr/bin" build/drone
+
+  # documentation
+  install -vDm644 -t "$pkgdir/usr/share/doc/$pkgname" *.md
+}

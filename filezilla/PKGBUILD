@@ -1,0 +1,41 @@
+# Maintainer: Levente Polyak <anthraxx[at]archlinux[dot]org>
+# Contributor: Daniel J Griffiths <ghost1227@archlinux.us>
+# Contributor: Alexander Fehr <pizzapunk gmail com>
+
+pkgname=filezilla
+pkgver=3.64.0
+pkgrel=1
+pkgdesc='Fast and reliable FTP, FTPS and SFTP client'
+url='https://filezilla-project.org/'
+arch=('loong64' 'x86_64')
+license=('GPL')
+depends=(
+  'dbus' 'xdg-utils' 'wxwidgets-gtk3' 'libidn' 'hicolor-icon-theme' 'sqlite'
+  'gnutls' 'libfilezilla'
+  libfilezilla.so libdbus-1.so libgtk-3.so libgdk-3.so libnettle.so
+)
+source=(https://download.filezilla-project.org/client/FileZilla_${pkgver}_src.tar.xz)
+sha256sums=('813d184d54984cf0fb27a455423089070e273b2ef8a70cb613e741170edf479a')
+sha512sums=('4c4ab1969613e789999bf634d62b612f21be5e221b969941c8097b7cb3525b089f4dd846e6489a3e66df7671732445e7fb8f77fc8d59cb34a78044136a3d2a99')
+
+prepare() {
+  cd ${pkgname}-${pkgver}
+  autoreconf -vif
+}
+
+build() {
+  cd ${pkgname}-${pkgver}
+  ./configure \
+    --prefix=/usr \
+    --disable-manualupdatecheck \
+    --disable-autoupdatecheck \
+    --with-pugixml=builtin
+  make
+}
+
+package() {
+  cd ${pkgname}-${pkgver}
+  make DESTDIR="${pkgdir}" install
+}
+
+# vim: ts=2 sw=2 et:

@@ -1,0 +1,69 @@
+# Maintainer: David Runge <dvzrv@archlinux.org>
+# Contributor: speps <speps at aur dot archlinux dot org>
+
+pkgname=ams
+pkgver=2.2.1
+pkgrel=1
+pkgdesc="A real-time modular synthesizer and effect processor"
+arch=('loong64' 'x86_64')
+url="http://alsamodular.sourceforge.net/"
+license=(GPL2)
+groups=(pro-audio)
+depends=(
+  cmt
+  gcc-libs
+  glibc
+  qt5-base
+  mcp-plugins
+  rev-plugins
+  swh-plugins
+  vco-plugins
+)
+makedepends=(
+  alsa-lib
+  fftw
+  gendesk
+  jack
+  ladspa
+  liblo
+  qt5-tools
+  zita-alsa-pcmi
+)
+source=(https://downloads.sourceforge.net/project/alsamodular/alsamodular/$pkgver/$pkgname-$pkgver.tar.bz2)
+sha512sums=('45d0aefe819b2e4628b4960978d24434fa59c1f35c207eb3572e68a1e6be1f9295f12ac1660bcfc2ad5c41be101b83d6c876e346fbe00b4e92131319ec6af71f')
+b2sums=('83693980d5e57634853b5063efabc567536a25595ab7cce342a68eec177f0dbc256c90040e3c7cbcc7258035ab81241df44b1c075d58142a896b86dc12ea54c6')
+
+prepare() {
+  gendesk -n \
+          --pkgname $pkgname \
+          --name $pkgname \
+          --pkgdesc "A real-time modular synthesizer and effect processor" \
+          --genericname "Synthesizer" \
+          --icon "${pkgname}_32.xpm" \
+          --categories "AudioVideo;Audio"
+
+  cd $pkgname-$pkgver
+  autoreconf -fiv
+}
+
+build() {
+  cd $pkgname-$pkgver
+  ./configure --prefix=/usr
+  make
+}
+
+package() {
+  depends+=(
+    alsa-lib libasound.so
+    fftw libfftw3.so
+    jack libjack.so
+    liblo liblo.so
+    zita-alsa-pcmi libzita-alsa-pcmi.so
+  )
+
+  make DESTDIR="$pkgdir/" install -C $pkgname-$pkgver
+  # XDG desktop file and icon
+  install -vDm 644 $pkgname.desktop -t "$pkgdir/usr/share/applications/"
+  # docs
+  install -vDm 644 $pkgname-$pkgver/{AUTHORS,ChangeLog,NEWS,README} -t "$pkgdir/usr/share/doc/$pkgname/"
+}

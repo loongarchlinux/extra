@@ -1,0 +1,30 @@
+# Maintainer: Felix Yan <felixonmars@archlinux.org>
+
+pkgname=golang-github-alecthomas-units
+pkgver=0.0.20211218
+_commit=b94a6e3cc13755c0a75fffecbb089eb346fc4289
+pkgrel=1
+pkgdesc='Helpful unit multipliers and functions for Go'
+arch=('any')
+url="https://github.com/alecthomas/units"
+license=('MIT')
+depends=('go')
+checkdepends=('golang-github-stretchr-testify')
+source=("$pkgname-$_commit.tar.gz::https://github.com/alecthomas/units/archive/$_commit.tar.gz")
+sha512sums=('5733f879db5b6a5351ef2f0be1ea359dfe1b1494789cb54f207186701ed8a47bddd04440b9de460334860dab6251c67dbac792644cfe6b179c2b0a554a017ff0')
+
+check() {
+  export GOPATH="$srcdir/build:/usr/share/gocode"
+  export GO111MODULE=off
+  mkdir -p "$srcdir"/build/src/github.com/alecthomas
+  cp -a "$srcdir"/units-$_commit "$srcdir"/build/src/github.com/alecthomas/units
+  cd "$srcdir"/build/src/github.com/alecthomas/units
+  go test -v $(go list ./...)
+}
+
+package() {
+  mkdir -p "$pkgdir"/usr/share/gocode/src/github.com/alecthomas
+  cp -a "$srcdir"/units-$_commit "$pkgdir"/usr/share/gocode/src/github.com/alecthomas/units
+
+  install -Dm644 units-$_commit/COPYING "$pkgdir"/usr/share/licenses/$pkgname/COPYING
+}

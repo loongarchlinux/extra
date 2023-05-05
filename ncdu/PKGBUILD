@@ -1,0 +1,64 @@
+# Maintainer: Levente Polyak <anthraxx[at]archlinux[dot]org>
+# Maintainer: Andreas 'Segaja' Schleifer <segaja at archlinux dot org>
+# Maintainer: Daurnimator <daurnimator@archlinux.org>
+# Contributor: Eli Schwartz <eschwartz@archlinux.org>
+# Contributor: lp76 <l.peduto@gmail.com>
+# Contributor: Daenyth <Daenyth+Arch AT gmail DOT com>
+# Contributor: Gaetan Bisson <bisson@archlinux.org>
+
+pkgname='ncdu'
+pkgver=2.2.2
+pkgrel=2
+pkgdesc='Disk usage analyzer with an ncurses interface'
+url='https://dev.yorhel.nl/ncdu'
+license=('MIT')
+depends=('ncurses')
+makedepends=('zig')
+arch=('loong64' 'x86_64')
+source=("https://dev.yorhel.nl/download/${pkgname}-${pkgver}.tar.gz"{,.asc}
+        "ncdu-pie.patch")
+sha256sums=('90d920024e752318b469776ce57e03b3c702d49329ad9825aeeab36c3babf993'
+            'SKIP'
+            '05e2a1809dc62fe85b5b47f1e6fff3487f7302da72889ac6d2a73d0aa5bba886')
+b2sums=('fca41e74e4eb2509496276aa964ecf6a20db860d0b1d6bab9a169d8d6c5c7c2d41f088241cf57c92d7cf51bb5d84642c2a3a6db99410e6332061e6d35efa94e6'
+        'SKIP'
+        '0c42f7d004b8293c3d5a937cdc850e63ecb3133e38cdbdb36e89832250d75b6423b5f3da3b1b91c304e8a2ec44dfca3f9f0c84c253ce610e1e5d8c68da0a95b4')
+validpgpkeys=('74460D32B80810EBA9AFA2E962394C698C2739FA') # Yoran Heling <projects@yorhel.nl>
+
+prepare() {
+    cd "${pkgname}-${pkgver}"
+
+    patch -i ../ncdu-pie.patch
+}
+
+build() {
+    cd "${pkgname}-${pkgver}"
+
+    DESTDIR="build" zig build \
+      --prefix /usr \
+      --search-prefix /usr \
+      -Dtarget=native-linux.5.15-gnu \
+      -Dcpu=baseline \
+      -Drelease-safe
+}
+
+check() {
+    cd "${pkgname}-${pkgver}"
+
+    zig build test \
+      --prefix /usr \
+      --search-prefix /usr \
+      -Dtarget=native-linux.5.15-gnu \
+      -Dcpu=baseline \
+      -Drelease-safe
+}
+
+package() {
+    cd "${pkgname}-${pkgver}"
+
+    cp -a build/* "$pkgdir"
+
+    make install-doc PREFIX="${pkgdir}/usr"
+
+    install --verbose -D --mode=644 LICENSES/MIT.txt "${pkgdir}/usr/share/licenses/${pkgname}/LICENSE"
+}

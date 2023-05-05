@@ -1,0 +1,38 @@
+# Maintainer: Felix Yan <felixonmars@archlinux.org>
+# Contributor: Simon Doppler <dopsi[at]dopsi[dot]ch>
+# Contributor: Kyle Brooks <brookskd[at]gmail[dot]com>
+# Contributor: bl4ckb0x <navkamal90[at]gmail[dot]com>
+
+pkgname=systemc
+pkgver=2.3.4
+pkgrel=1
+pkgdesc="Set of C++ classes and macros which provide an event-driven simulation interface for modeling and describing complex hardware systems"
+url="http://www.accellera.org/downloads/standards/systemc"
+arch=('loong64' 'x86_64')
+license=('Apache')
+depends=('gcc-libs')
+makedepends=('cmake' 'ninja')
+replaces=('systemc-cmake')
+source=("$pkgname-$pkgver.tar.gz::https://github.com/accellera-official/systemc/archive/$pkgver.tar.gz")
+sha512sums=('3ef4b5e9c05b8d03e856598ddc27ad50a0a39a7f9334cd00faefeacdf954b6527104d3238c4e8bfa88c00dc382f4da5a50efbd845fe0b6cc2f5a025c993deefd')
+
+prepare() {
+  mkdir -p build
+  sed -i 's/set (CMAKE_BUILD_TYPE Release/set (CMAKE_BUILD_TYPE ""/' $pkgname-$pkgver/CMakeLists.txt
+}
+
+build() {
+  cd build
+  cmake -GNinja -DCMAKE_CXX_STANDARD=17 -DCMAKE_INSTALL_PREFIX=/usr ../$pkgname-$pkgver
+  ninja
+}
+
+check() {
+  cd build
+  ninja check
+}
+
+package() {
+  cd build
+  DESTDIR="$pkgdir" ninja install
+}

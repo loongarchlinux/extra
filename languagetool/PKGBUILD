@@ -1,0 +1,38 @@
+# Maintainer: Antonio Rojas <arojas@archlinux.org>
+# Contributor: Andrzej Giniewicz <gginiu@gmail.com>
+# Contributor: Julien MISCHKOWITZ <wain@archlinux.fr>
+# Contributor: Panagiotis Papadopoulos pano_90 (AT) gmx (DOT) net
+
+pkgname=languagetool
+pkgver=6.1
+pkgrel=3
+pkgdesc='An open source language checker'
+arch=(any)
+url='https://www.languagetool.org'
+license=(LGPL)
+depends=(java-runtime-headless)
+makedepends=(unzip)
+optdepends=('java-runtime: needed for the GUI version'
+            'libxtst: needed for the GUI version'
+            'gtk3: GTK style for the GUI')
+source=(https://www.languagetool.org/download/LanguageTool-${pkgver}.zip
+        languagetool.sh
+        languagetool.service)
+noextract=($pkgname-$pkgver.zip)
+sha256sums=('ea4d8bb3a92d109e63ab6d0ef6a1ef1b5b73f4dd16cdd7b2a7a02a0e74c7651d'
+            'e395fe51eb107365bb6e5456a2e1a144a60296e52554b8407f241e195e434359'
+            '628e59208af02dd41c678135ef6dd8b328905701301d8257316b388d36d6c52b')
+
+package() {
+  install -d "$pkgdir"/usr/{bin,share/java/$pkgname/libs}
+  unzip -q LanguageTool-$pkgver.zip -d "$pkgdir"/usr/share
+  cd "$pkgdir"/usr/share/
+  mv LanguageTool-$pkgver $pkgname
+  cd $pkgname
+  mv *.jar "$pkgdir"/usr/share/java/$pkgname
+  mv libs/*.jar "$pkgdir"/usr/share/java/$pkgname/libs
+  rm -rf libs
+  install -m755 "$srcdir"/$pkgname.sh "$pkgdir"/usr/bin/$pkgname
+  mkdir -p "$pkgdir"/usr/lib/systemd/system
+  install -m644 "$srcdir"/$pkgname.service "$pkgdir"/usr/lib/systemd/system/$pkgname.service
+}

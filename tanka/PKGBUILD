@@ -1,0 +1,42 @@
+# Maintainer: Christian Rebischke <chris.rebischke@archlinux.org>
+
+pkgname=tanka
+pkgver=0.24.0
+pkgrel=1
+pkgdesc="Flexible, reusable and concise configuration for Kubernetes"
+arch=('loong64' 'x86_64')
+url="https://github.com/grafana/tanka"
+license=('Apache')
+makedepends=('go')
+depends=('glibc')
+source=("${pkgname}-${pkgver}.tar.gz::https://github.com/grafana/tanka/archive/v${pkgver}.tar.gz")
+sha512sums=('d11040df94fdbcb938bc19c7efd3445108648ab15f8068ea0b506ddd1354dc78eb9d58e4c985a050599c9a7577d81ea587d862e5909d907eb2ad40a5d563f8f0')
+options=('!lto')
+
+prepare() {
+  export GOPATH="${srcdir}"
+  mkdir -p src/github.com/grafana "${GOPATH}/bin"
+  mv "${pkgname}-${pkgver}" "src/github.com/grafana/${pkgname}"
+  export PACKAGE_ROOT="${GOPATH}/src/github.com/grafana/${pkgname}"
+}
+
+build() {
+  cd "${PACKAGE_ROOT}/cmd/tk/"
+  export CGO_CPPFLAGS="${CPPFLAGS}"
+  export CGO_CFLAGS="${CFLAGS}"
+  export CGO_CXXFLAGS="${CXXFLAGS}"
+  export CGO_LDFLAGS="${LDFLAGS}"
+  export GOFLAGS="-buildmode=pie -trimpath -mod=readonly -modcacherw"
+  go build -ldflags "-s -w -linkmode=external -X github.com/grafana/tanka/pkg/tanka.CURRENT_VERSION=${pkgver}" -v .
+  chmod +x ./tk
+}
+
+#check() {
+#  cd "${PACKAGE_ROOT}"
+#  go test -v ./...
+#}
+
+package() {
+  cd "${PACKAGE_ROOT}/cmd/tk/"
+  install -Dsm755 ./tk "${pkgdir}/usr/bin/tk"
+}

@@ -1,0 +1,29 @@
+# Maintainer: Jiachen Yang <farseerfc@archlinux.org>
+# Maintainer: Bruno Pagani <archange@archlinux.org>
+# Contributor: Andreas Bilke <andreas@bilke>
+
+pkgname=pdfpc
+pkgver=4.6.0
+pkgrel=1
+pkgdesc="Presenter console with multi-monitor support for PDF files"
+arch=(loong64 x86_64)
+url="https://pdfpc.github.io/"
+license=(GPL)
+depends=(gtk3 poppler-glib libgee gstreamer gst-plugins-base webkit2gtk discount
+         libsoup qrencode)
+optdepends=('gst-plugin-gtk: for video playback'
+            'gst-plugins-good: more codecs for video playback support'
+            'gst-libav: more codecs for video playback support')
+makedepends=(cmake vala)
+source=(https://github.com/pdfpc/pdfpc/archive/v$pkgver/$pkgname-$pkgver.tar.gz)
+sha256sums=('3b1a393f36a1b0ddc29a3d5111d8707f25fb2dd2d93b0401ff1c66fa95f50294')
+
+build() {
+    cmake -B build -S $pkgname-$pkgver \
+        -DCMAKE_INSTALL_PREFIX=/usr
+    cmake --build build
+}
+
+package() {
+    DESTDIR="$pkgdir" cmake --install build
+}

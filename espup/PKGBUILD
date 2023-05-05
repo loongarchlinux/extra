@@ -1,0 +1,38 @@
+# Maintainer: kpcyrd <kpcyrd[at]archlinux[dot]org>
+
+pkgname=espup
+pkgver=0.4.0
+pkgrel=1
+pkgdesc="Tool for installing and maintaining ESP Rust ecosystem"
+url='https://github.com/esp-rs/espup'
+arch=('loong64' 'x86_64')
+license=('MIT' 'Apache-2.0')
+depends=('curl' 'git' 'ldproxy' 'libbz2.so' 'liblzma.so' 'pkg-config' 'python' 'python-pip' 'udev')
+makedepends=('cargo')
+options=(!lto)
+source=(https://github.com/esp-rs/${pkgname}/archive/v${pkgver}/${pkgname}-${pkgver}.tar.gz)
+sha256sums=('3aa69409551eb5973c16efbae1715bf7fb94cd619d35fc67aebf70bed752b756')
+b2sums=('ad2cdb196906a6401dcff0e65bcd3eb58e059978b15e9d3d5f7f04788f2e8e6b91a0eaad3340f14095907efd559b545c9394459a10cea1dcdd73ccb86c1b4a5a')
+
+prepare() {
+  cd "${pkgname}-${pkgver}"
+  cargo fetch --locked --target "$CARCH-unknown-linux-gnu"
+}
+
+build() {
+  cd ${pkgname}-${pkgver}
+  cargo build --frozen --release
+}
+
+check() {
+  cd ${pkgname}-${pkgver}
+  cargo test --frozen
+}
+
+package() {
+  cd ${pkgname}-${pkgver}
+  install -Dm 755 -t "${pkgdir}/usr/bin" \
+    target/release/${pkgname}
+}
+
+# vim: ts=2 sw=2 et:

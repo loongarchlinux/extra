@@ -1,0 +1,32 @@
+# Maintainer: Antonio Rojas <arojas@archlinux.org>
+
+pkgname=brial
+pkgver=1.2.12
+pkgrel=2
+pkgdesc='Library for polynomials over boolean rings'
+arch=(loong64 x86_64)
+url='https://github.com/BRiAl/BRiAl'
+license=(GPL)
+depends=(m4ri)
+makedepends=(boost)
+source=(https://github.com/BRiAl/BRiAl/releases/download/$pkgver/brial-$pkgver.tar.bz2)
+sha256sums=('ca009e3722dd3f0a60d15501caed1413146c80abced57423e32ae0116f407494')
+
+build() {
+  cd $pkgname-$pkgver 
+
+  ./configure --prefix=/usr --enable-shared
+  sed -i -e 's/ -shared / -Wl,-O1,--as-needed\0/g' libtool # https://bugzilla.gnome.org/show_bug.cgi?id=655517
+  make
+}
+
+check() {
+  cd $pkgname-$pkgver
+  make check
+}
+
+package() {
+  cd $pkgname-$pkgver
+
+  make DESTDIR="$pkgdir" install
+}

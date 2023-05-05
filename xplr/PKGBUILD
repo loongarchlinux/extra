@@ -1,0 +1,55 @@
+# Maintainer: Orhun Parmaksız <orhun@archlinux.org>
+# Maintainer: Maxim Baz <$pkgname at maximbaz dot com>
+
+pkgname=xplr
+pkgver=0.21.1
+pkgrel=2
+pkgdesc="A hackable, minimal, fast TUI file explorer"
+arch=('loong64' 'x86_64')
+url="https://github.com/sayanarijit/xplr"
+license=('MIT')
+depends=('gcc-libs' 'hicolor-icon-theme' 'luajit')
+makedepends=('cargo')
+source=("$pkgname-$pkgver.tar.gz::$url/archive/v$pkgver.tar.gz"
+        "$pkgname-$pkgver.tar.gz.asc::$url/releases/download/v${pkgver}/source.tar.gz.asc"
+        use-system-luajit.patch)
+sha512sums=('75cb1781106516ba53b937577e6c05de46eb3f770505808c72e4aae7ed68fb53a1c4079d4f42724ad9765c8ba11eb149c53c9785c9144d19816891f4762aa883'
+            'SKIP'
+            '9c2154f3023da17ce1edab91913308f06fd0d6e618dc477a2f1b2742cc4ffb78459263df7df3cf6217967e2b2bbbb5334e725c4778fdd91d8415039dd067860e')
+validpgpkeys=('D59CA14710C17C6B24717AF90F8EF5258DC38077') # Arijit Basu (June 3, 2021)
+options=('!lto')
+
+prepare() {
+  cd "$pkgname-$pkgver"
+  patch -p0 -i ../use-system-luajit.patch
+  cargo update -p mlua
+}
+
+build() {
+  cd "$pkgname-$pkgver"
+  cargo build --locked --release
+}
+
+check() {
+  cd "$pkgname-$pkgver"
+
+  # unit tests need the binary, so build it first.
+  # building in debug mode (both bin and tests) in order to not overwrite the binary produced in build() that we will later package
+  cargo build --locked
+  cargo test --locked
+}
+
+package() {
+  cd "$pkgname-$pkgver"
+  install -Dm 755 "target/release/$pkgname" -t "$pkgdir/usr/bin"
+  install -Dm 644 docs/en/src/* -t "$pkgdir/usr/share/doc/$pkgname"
+  install -Dm 644 LICENSE -t "$pkgdir/usr/share/licenses/$pkgname"
+  install -Dm 644 src/init.lua -t "$pkgdir/usr/share/$pkgname/examples"
+  install -Dm 644 "assets/desktop/$pkgname.desktop" -t "$pkgdir/usr/share/applications"
+  for i in 128 16 32 64; do
+    install -Dm 644 "assets/icon/${pkgname}${i}.png" "$pkgdir/usr/share/icons/hicolor/${i}x${i}/apps/${pkgname}.png"
+  done
+  install -Dm 644 "assets/icon/$pkgname.svg" -t "$pkgdir/usr/share/icons/hicolor/scalable/apps"
+}
+
+# vim:set ts=2 sw=2 et:

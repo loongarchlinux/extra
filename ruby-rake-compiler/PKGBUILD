@@ -1,0 +1,41 @@
+# Maintainer: Levente Polyak <anthraxx[at]archlinux[dot]org>
+
+_gemname=rake-compiler
+pkgname=ruby-${_gemname}
+pkgver=1.2.0
+pkgrel=1
+pkgdesc='Rake-based Ruby Extension (C, Java) task generator'
+url='https://github.com/rake-compiler/rake-compiler'
+arch=('any')
+license=('MIT')
+depends=('ruby' 'rubygems' 'ruby-rake')
+makedepends=('ruby-rdoc')
+options=('!emptydirs')
+source=(https://github.com/rake-compiler/rake-compiler/archive/v${pkgver}/${pkgname}-v${pkgver}.tar.gz)
+sha512sums=('77b6dd8b976039484ec7d6bb9e0b2432d40153f218ce2e1d242246711d40dc3ed9be7ba6ec99ee8fd89192ab04d5d1a97b4d1c089c86c7d20b163eb8d4ae68d5')
+b2sums=('56394a2a8d6761f0f36bbc9fa63b2c36e57a33ba6c0bc660f31ef671e9fa90c581d65acb218ba8699dda7793fe6b8eac03e988c9a6dd486df422fd1228bc8b72')
+
+prepare() {
+  cd ${_gemname}-${pkgver}
+  sed -r 's|~>|>=|g' -i ${_gemname}.gemspec
+}
+
+build() {
+  cd ${_gemname}-${pkgver}
+  gem build ${_gemname}.gemspec
+}
+
+package() {
+  cd ${_gemname}-${pkgver}
+  local _gemdir="$(gem env gemdir)"
+  gem install --ignore-dependencies --no-user-install -i "${pkgdir}${_gemdir}" \
+    -n "${pkgdir}/usr/bin" ${_gemname}-${pkgver}.gem
+  install -Dm 644 LICENSE.txt -t "${pkgdir}/usr/share/licenses/${pkgname}"
+  install -Dm 644 README.md History.md -t "${pkgdir}/usr/share/doc/${pkgname}"
+
+  cd "${pkgdir}/${_gemdir}"
+  rm -rf cache gems/${_gemname}-${pkgver}/{ext,lib/*/*.so} \
+    extensions/*/*/${_gemname}-${pkgver}/{mkmf.log,gem_make.out}
+}
+
+# vim: ts=2 sw=2 et:

@@ -1,0 +1,44 @@
+# Maintainer: Felix Yan <felixonmars@archlinux.org>
+# Contributor: Ariel AxionL <i@axionl.me>
+# Contributor: Luke Yue <lukedyue@gmail.com>
+
+pkgname=clash
+pkgver=1.15.1
+pkgrel=1
+pkgdesc="A rule based proxy in Go"
+arch=('loong64' 'x86_64')
+url="https://github.com/Dreamacro/clash"
+license=('GPL3')
+options=('!lto')
+depends=('glibc')
+makedepends=('go' 'git')
+source=("clash@.service"
+        "clash_user.service"
+        "${pkgname}-${pkgver}.tar.gz::https://github.com/Dreamacro/clash/archive/v${pkgver}.tar.gz")
+sha512sums=('5b53faea10bba16df98a74fcbffebb6c8b7f8c238999a147bb848b2c30732688813915fd6bc32f44ec6f90024ad29dbde059e70760c91ccea198dd05da52d077'
+            '3ae61e1c6f0213ea8c3113c62f27c704f04f657cda8c726c0e487194dd5c1ce36e448f6e22b61aeef65f4a1910a2df62a3798f0cba9bae10c8e80a7cb1cfb7b3'
+            '20b8b50952cd7e5b9eae43a062e6cd58d9b6e5fb202366b356f82b66c8c7bd07d618b842c1b66e8d69e8855065420b045e2628e5fe23226f5a255d62bc00c465')
+
+build() {
+    export CGO_CPPFLAGS="${CPPFLAGS}"
+    export CGO_CFLAGS="${CFLAGS}"
+    export CGO_CXXFLAGS="${CXXFLAGS}"
+    export CGO_LDFLAGS="${LDFLAGS}"
+    export GOFLAGS="-buildmode=pie -trimpath -mod=readonly -modcacherw"
+
+    cd "${pkgname}-${pkgver}"
+    go build -trimpath -ldflags "-X github.com/Dreamacro/clash/constant.Version=${pkgver}" -mod=readonly
+}
+
+check() {
+    cd "${pkgname}-${pkgver}"
+    go test github.com/Dreamacro/clash/...
+}
+
+package() {
+    cd "${srcdir}/${pkgname}-${pkgver}"
+    install -Dm755 "clash" "${pkgdir}/usr/bin/clash"
+    install -Dm644 "LICENSE" "${pkgdir}/usr/share/licenses/clash/LICENSE"
+    install -Dm644 "${srcdir}/clash@.service" "${pkgdir}/usr/lib/systemd/system/clash@.service"
+    install -Dm644 "${srcdir}/clash_user.service" "${pkgdir}/usr/lib/systemd/user/clash.service"
+}

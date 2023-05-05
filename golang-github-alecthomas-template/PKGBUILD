@@ -1,0 +1,28 @@
+# Maintainer: Felix Yan <felixonmars@archlinux.org>
+
+pkgname=golang-github-alecthomas-template
+pkgver=0.0.20190718
+_commit=fb15b899a75114aa79cc930e33c46b577cc664b1
+pkgrel=1
+pkgdesc="Fork of Go's text/template adding newline elision"
+arch=('any')
+url="https://github.com/alecthomas/template"
+license=('BSD')
+depends=('go')
+source=("$pkgname-$_commit.tar.gz::https://github.com/alecthomas/template/archive/$_commit.tar.gz")
+sha512sums=('a2355c5ce4509ac4a5548d8b1d7b4b63b1c15781efb6dcf2b67c6b475ba9895b7f71f5f6f53923112acf205398023ac5a5d44b8f9edb339dc83d4d72a81d7c08')
+
+check() {
+  export GOPATH="$srcdir/build:/usr/share/gocode"
+  mkdir -p "$srcdir"/build/src/github.com/alecthomas
+  cp -a "$srcdir"/template-$_commit "$srcdir"/build/src/github.com/alecthomas/template
+  cd "$srcdir"/build/src/github.com/alecthomas/template
+  go test -v $(go list ./...)
+}
+
+package() {
+  mkdir -p "$pkgdir"/usr/share/gocode/src/github.com/alecthomas
+  cp -a "$srcdir"/template-$_commit "$pkgdir"/usr/share/gocode/src/github.com/alecthomas/template
+
+  install -Dm644 template-$_commit/LICENSE -t "$pkgdir"/usr/share/licenses/$pkgname/
+}

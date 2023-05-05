@@ -1,0 +1,69 @@
+# Maintainer: Thore Bödecker <foxxx0@archlinux.org>
+# Contributor: Sergej Pupykin <arch+pub@sergej.pp.ru>
+# Contributor: Arthur Țițeică arthur.titeica/gmail/com
+# Contributor: Hao Zhang <theivorytower [at] gmail [dot] com>
+
+pkgname=opendmarc
+pkgver=1.4.2
+pkgrel=2
+_tarball_folder="OpenDMARC-rel-${pkgname}-${pkgver//./-}"
+pkgdesc="Free open source software implementation of the DMARC specification"
+arch=('loong64' 'x86_64')
+url="https://github.com/trusteddomainproject/OpenDMARC"
+license=('custom')
+depends=('smtp-server' 'libspf2' 'libbsd' 'libidn' 'perl-json')
+makedepends=('libmilter')
+optdepends=('opendbx: acts as a middleware layer between OpenDMARC and a SQL backend of choice'
+            'python: run opendmarc scripts at /usr/share/doc/opendmarc'
+            'perl: run opendmarc scripts at /usr/share/doc/opendmarc'
+            'perl-switch: generate DMARC reports'
+            'perl-dbd-mysql: generate DMARC reports'
+            'perl-libwww: generate DMARC reports')
+backup=('etc/opendmarc/opendmarc.conf')
+source=("https://github.com/trusteddomainproject/OpenDMARC/archive/rel-${pkgname}-${pkgver//./-}.tar.gz"
+        'opendmarc.service'
+        'opendmarc.conf'
+        'opendmarc.sysusers')
+sha512sums=('415278c6c09460379538ad10ea4033815a677ddad138b8a07609c287360d1739acdba5d1fe07d0e35764850af8a141c0c70a9311254104b93d2c1bbc8b6f7a69'
+            '738de0cd286dd30713f32034f9ecf9009b6f64038c573c9f8aedaf10df8293bb9eec9d19492a03a2ebf2d2960289bdf48be9b1eb25395dbe9a490f7e3b25cb34'
+            '2753ad4477b499947ca07bb385ad0e10f327efa61a9059884091ead8e8e2bd65793436053d5a9c734e4c0676b7823982083ea7b35fae967eeacaeafb6226ff20'
+            'fbd5e81ded35281e3a63b4858a368033fa27696dee22a5dcf52e3e04b0762476e1ffa6edb489cf76612f3b4ffaee0fce586ab97d1da9805a089bbaf3487c907b')
+
+prepare() {
+  cd "${srcdir}/${_tarball_folder}"
+  mkdir docs
+  touch docs/Makefile.in
+}
+
+build() {
+  cd "${srcdir}/${_tarball_folder}"
+#  export LDFLAGS="${LDFLAGS//,--as-needed}"
+  test -x configure || autoreconf -v -i
+  ./configure --prefix=/usr \
+              --bindir=/usr/bin \
+              --sbindir=/usr/bin \
+              --sysconfdir="/etc/${pkgname}" \
+              --with-spf \
+              --with-spf2-include=/usr/include/spf2 \
+              --with-spf2-lib=/usr/lib/
+  make
+}
+
+check() {
+  cd "${srcdir}/${_tarball_folder}"
+  make -k check
+}
+
+package() {
+  cd "${srcdir}/${_tarball_folder}"
+  make DESTDIR="${pkgdir}/" install
+  # config
+  install -D -m640 -o 335 -g 12 "${srcdir}/opendmarc.conf" "${pkgdir}/etc/${pkgname}/opendmarc.conf"
+  # License
+  install -D -m644 "LICENSE" "${pkgdir}/usr/share/licenses/${pkgname}/LICENSE"
+  rm "${pkgdir}/usr/share/doc/${pkgname}/LICENSE"
+  # systemd service
+  install -D -m644 "${srcdir}/${pkgname}.service" "${pkgdir}/usr/lib/systemd/system/${pkgname}.service"
+  # sysusers.d snippet
+  install -D -m644 "${srcdir}/${pkgname}.sysusers" "${pkgdir}/usr/lib/sysusers.d/${pkgname}.conf"
+}

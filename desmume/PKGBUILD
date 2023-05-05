@@ -1,0 +1,60 @@
+# Maintainer: Maxime Gauduin <alucryd@archlinux.org>
+# Contributor: schuay <jakob.gruber@gmail.com>
+# Contributor: Jonathan Conder <jonno dot conder at gmail dot com>
+# Contributor: Brad Fanella <bradfanella@archlinux.us>
+# Contributor: Arkham <arkham at archlinux dot us>
+# Contributor: Nathan Jones <nathanj@insightbb.com>
+# Contributor: Javier "Phrodo_00" Aravena <phrodo.00 at gmail dot com>
+# Contributor: angvp <angvp at archlinux dot us>
+# Contributor: Allan <mcrae_allan at hotmail dot com>
+# Contributor: w0rm <w0rmtux at gmail dot com>
+# Contributor: vEX <vex at niechift dot com>
+# Contributor: Asher256 <achrafcherti at gmail dot com>
+
+pkgname=desmume
+pkgver=0.9.13
+pkgrel=1
+pkgdesc='Nintendo DS emulator'
+arch=(loong64 x86_64)
+url=https://desmume.org/
+license=(GPL)
+depends=(
+  alsa-lib
+  desktop-file-utils
+  glu
+  gtk3
+  libopenal.so
+  libpcap
+  sdl2
+  soundtouch
+  zlib
+  zziplib
+)
+makedepends=(
+  git
+  intltool
+  mesa
+  meson
+)
+_tag=08b6fade0bc95749acc9820cb9688aaf39d00c87
+source=(git+https://github.com/TASEmulators/desmume.git#tag=${_tag})
+b2sums=(SKIP)
+
+pkgver() {
+  cd desmume
+  git describe --tags | sed 's/^release_//; s/_/./g'
+}
+
+build() {
+  export CXXFLAGS+=' -Wno-format-security'
+  arch-meson desmume/desmume/src/frontend/posix build \
+    -D openal=true \
+    -D wifi=true
+  ninja -C build
+}
+
+package() {
+  DESTDIR="${pkgdir}" ninja install -C build
+}
+
+# vim: ts=2 sw=2 et:

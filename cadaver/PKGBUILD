@@ -1,0 +1,26 @@
+# Maintainer: Sergej Pupykin <pupykin.s+arch@gmail.com>
+# Maintainer: William Rea <sillywilly@gmail.com>
+
+pkgname=cadaver
+pkgver=0.24
+pkgrel=1
+pkgdesc="Command-line WebDAV client for Unix"
+arch=('loong64' 'x86_64')
+#url="http://www.webdav.org/cadaver"
+url="https://notroj.github.io/cadaver/"
+license=('GPL')
+depends=('neon')
+source=("$pkgname-$pkgver.tar.gz::https://github.com/notroj/cadaver/archive/refs/tags/$pkgver.tar.gz")
+sha256sums=('df4fabc042ae9d90dae793cd36fcba5f250f96e5f43de20e9a5929a06d71085d')
+
+build() {
+  cd "$srcdir"/cadaver-$pkgver
+  test -x ./configure || ./autogen.sh
+  ./configure --prefix=/usr --with-ssl
+  make
+}
+
+package() {
+  cd "$srcdir"/cadaver-$pkgver
+  make prefix="$pkgdir"/usr install
+}

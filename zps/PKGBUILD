@@ -1,0 +1,30 @@
+# Maintainer: Orhun Parmaksız <orhun@archlinux.org>
+
+pkgname=zps
+pkgver=1.2.8
+pkgrel=1
+pkgdesc="A small utility for listing and cleaning up zombie processes"
+arch=('loong64' 'x86_64')
+url="https://github.com/orhun/zps"
+license=('GPL3')
+depends=('glibc')
+makedepends=('cmake')
+source=("$pkgname-$pkgver.tar.gz::$url/archive/$pkgver.tar.gz")
+sha512sums=('660a4c92c62391e555d1fe526f200f5610e02809186b3fa2e6aa474fb164c32616532c3248f62ab5db7fbc13e5261476dc0fdb28dbad63162c0d6193660cdbe6')
+
+build() {
+  cd "$pkgname-$pkgver"
+  mkdir -p build && cd build/
+  cmake ../ -DCMAKE_INSTALL_PREFIX=/usr
+  make
+}
+
+package() {
+  cd "$pkgname-$pkgver/build"
+  make DESTDIR="$pkgdir" install
+  install -Dm 644 "../README.md" -t "$pkgdir/usr/share/doc/$pkgname"
+  install -Dm 644 "../man/$pkgname.1" -t "$pkgdir/usr/share/man/man1"
+  install -Dm 644 "../.application/$pkgname.desktop" -t "$pkgdir/usr/share/applications"
+}
+
+# vim: ts=2 sw=2 et:

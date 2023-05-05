@@ -1,0 +1,58 @@
+# Maintainer: Maxime Gauduin <alucryd@gmail.com>
+# Contributor: David Runge <dvzrv@archlinux.org>
+# Contributor: said <atvordhosbn@gmail.com>
+# Contributor: clinx <clinx.hacker@googlemail.com>
+
+pkgname=rbutil
+pkgver=1.5.1
+pkgrel=1
+pkgdesc='Rockbox Utility'
+arch=(loong64 x86_64)
+url=https://www.rockbox.org/twiki/bin/view/Main/RockboxUtility
+license=(GPL)
+depends=(
+  gcc-libs
+  glibc
+  libbz2.so
+  libusb-1.0.so
+  qt6-5compat
+  qt6-base
+  qt6-multimedia
+  qt6-svg
+  zlib
+)
+makedepends=(
+  cmake
+  git
+  ninja
+  qt6-tools
+)
+optdepends=('speex: voice files support')
+_tag=f8d54d0d1e8ae891d9da9cf787aa0dd045cc193b
+source=(git+https://git.rockbox.org/cgit/rockbox.git#tag=${_tag})
+b2sums=(SKIP)
+
+prepare() {
+  sed '/add_subdirectory(themeeditor)/d' -i rockbox/utils/CMakeLists.txt
+}
+
+pkgver() {
+  cd rockbox
+  git describe --tags | sed 's/rbutil_//'
+}
+
+build() {
+  cmake -S rockbox/utils -B build -G Ninja \
+    -DCMAKE_BUILD_TYPE=None \
+    -DCMAKE_INSTALL_PREFIX=/usr \
+    -Wno-dev
+  cmake --build build
+}
+
+package(){
+  install -Dm 755 build/rbutilqt/RockboxUtility -t "${pkgdir}"/usr/bin/
+  install -Dm 644 rockbox/utils/rbutilqt/RockboxUtility.desktop -t "${pkgdir}"/usr/share/applications/
+  install -Dm 644 rockbox/docs/logo/rockbox-clef.svg -t "${pkgdir}"/usr/share/pixmaps/
+}
+
+# vim: ts=2 sw=2 et:

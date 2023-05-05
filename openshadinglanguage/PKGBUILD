@@ -1,0 +1,38 @@
+# Maintainer: Sven-Hendrik Haase <svenstaro@archlinux.org>
+pkgname=openshadinglanguage
+pkgver=1.12.12.0
+pkgrel=1
+pkgdesc="Advanced shading language for production GI renderers"
+arch=('loong64' 'x86_64')
+url="https://github.com/imageworks/OpenShadingLanguage"
+license=('custom')
+depends=('boost-libs' 'openimageio' 'imath' 'freetype2' 'libpng'
+         'libtiff' 'zlib' 'ncurses' 'clang')
+makedepends=('boost' 'cmake' 'python' 'llvm' 'ninja')
+optdepends=('python: the Python module')
+source=($pkgname-$pkgver.tar.gz::https://github.com/AcademySoftwareFoundation/OpenShadingLanguage/archive/refs/tags/v${pkgver}.tar.gz)
+sha512sums=('66095602cd5e500e0b9b9c2c86e80ab91f07941805163121b47f18c099ce0f77b13b69ce2b13aefaa1b4ee740541236fd939be7b16788b422591a917e7c8a2c9')
+
+build() {
+  cd OpenShadingLanguage-$pkgver
+
+  cmake \
+    -B build \
+    -GNinja \
+    -DCMAKE_INSTALL_PREFIX=/usr \
+    -DCMAKE_INSTALL_LIBDIR=lib \
+    -DCMAKE_CXX_STANDARD=14 \
+    -DLLVM_STATIC=0 \
+    -DSTOP_ON_WARNING=OFF
+  ninja -C build
+}
+
+package() {
+  cd OpenShadingLanguage-$pkgver
+
+  DESTDIR="$pkgdir/" ninja -C build install
+
+  install -Dm644 LICENSE.md "$pkgdir"/usr/share/licenses/$pkgname/LICENSE.md
+}
+
+# vim:set ts=2 sw=2 et:

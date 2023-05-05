@@ -1,0 +1,52 @@
+# Maintainer: Felix Yan <felixonmars@archlinux.org>
+# Contributor: xRemaLx <anton.komolov@gmail.com>
+
+pkgname=perl-module-build-tiny
+_pkgname=Module-Build-Tiny
+pkgver=0.041
+pkgrel=1
+pkgdesc="A tiny replacement for Module::Build"
+arch=('any')
+license=('PerlArtistic' 'GPL')
+options=('!emptydirs')
+depends=('perl' 'perl-extutils-config' 'perl-extutils-helpers' 'perl-extutils-installpaths')
+makedepends=('perl-test-harness')
+url="https://search.cpan.org/dist/Module-Build-Tiny"
+source=("https://search.cpan.org/CPAN/authors/id/L/LE/LEONT/${_pkgname}-${pkgver}.tar.gz")
+sha512sums=('b7503f7618071340d66f49975f82d70fc3c81d725b381cdb464ca67e0b1f537667b18f7b2668cc674f67f1055893315c20dc926a46fdc8fdf8334454d4b8faa9')
+
+build() {
+  ( export PERL_MM_USE_DEFAULT=1 PERL5LIB=""                 \
+      PERL_AUTOINSTALL=--skipdeps                            \
+      PERL_MM_OPT="INSTALLDIRS=vendor DESTDIR='$pkgdir'"     \
+      PERL_MB_OPT="--installdirs vendor --destdir '$pkgdir'" \
+      MODULEBUILDRC=/dev/null
+
+    cd "${srcdir}/${_pkgname}-${pkgver}"
+    /usr/bin/perl Build.PL
+    ./Build
+  )
+}
+
+check() {
+  cd "${srcdir}/${_pkgname}-${pkgver}"
+  ( export PERL_MM_USE_DEFAULT=1 PERL5LIB=""
+    ./Build test
+  )
+}
+
+package() {
+  cd "${srcdir}/${_pkgname}-${pkgver}"
+  ( export PERL_AUTOINSTALL=--skipdeps                       \
+      PERL_MM_OPT="INSTALLDIRS=vendor DESTDIR='$pkgdir'"     \
+      PERL_MB_OPT="--installdirs vendor --destdir '$pkgdir'"
+    ./Build install
+  )
+  find "$pkgdir" -name .packlist -o -name perllocal.pod -delete
+}
+
+# Local Variables:
+# mode: shell-script
+# sh-basic-offset: 2
+# End:
+# vim:set ts=2 sw=2 et:

@@ -1,0 +1,43 @@
+# Maintainer: Orhun Parmaksız <orhun@archlinux.org>
+# Contributor: Julien Nicoulaud <julien.nicoulaud@gmail.com>
+
+pkgname=zellij
+pkgver=0.36.0
+pkgrel=1
+pkgdesc="A terminal multiplexer"
+arch=('loong64' 'x86_64')
+url="https://zellij.dev"
+license=('MIT')
+depends=('gcc-libs')
+makedepends=('cargo' 'mandown')
+source=("${pkgname}-${pkgver}.tar.gz::https://github.com/zellij-org/${pkgname}/archive/v${pkgver}.tar.gz")
+sha512sums=('a5271245fc51d7dbe5c311e5cb0a0437ca86160c0d26014580d1a21ab5d498586f6bb115af3bccd6f64aec2b1d30eb4df6aaf085214fc9f565a4c8f7bd1ce941')
+options=('!lto')
+
+prepare() {
+  cd "$pkgname-$pkgver"
+  cargo fetch --locked --target "$CARCH-unknown-linux-gnu"
+}
+
+build() {
+  cd "$pkgname-$pkgver"
+  RUSTUP_TOOLCHAIN=stable cargo build --release --frozen
+  ./target/release/zellij setup --generate-completion bash > target/zellij.bash
+  ./target/release/zellij setup --generate-completion fish > target/zellij.fish
+  ./target/release/zellij setup --generate-completion zsh > target/zellij.zsh
+  mandown docs/MANPAGE.md > assets/zellij.1
+}
+
+package() {
+  cd "$pkgname-$pkgver"
+  install -Dm755 target/release/zellij -t "${pkgdir}/usr/bin"
+  install -Dm644 GOVERNANCE.md README.md -t "${pkgdir}/usr/share/doc/zellij"
+  install -Dm644 LICENSE.md -t "${pkgdir}/usr/share/licenses/zellij"
+  install -Dm644 target/zellij.bash "${pkgdir}/usr/share/bash-completion/completions/zellij"
+  install -Dm644 target/zellij.fish "${pkgdir}/usr/share/fish/vendor_completions.d/zellij.fish"
+  install -Dm644 target/zellij.zsh "${pkgdir}/usr/share/zsh/site-functions/_zellij"
+  install -Dm644 assets/zellij.1 "${pkgdir}/usr/share/man/man1/zellij.1"
+  install -Dm644 assets/zellij.desktop "${pkgdir}/usr/share/applications/zellij.desktop"
+}
+
+# vim: ts=2 sw=2 et:

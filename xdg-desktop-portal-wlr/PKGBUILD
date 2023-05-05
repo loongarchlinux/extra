@@ -1,0 +1,35 @@
+# Maintainer: Christian Rebischke <chris.rebischke@archlinux.org>
+# Maintainer: Maxim Baz <$pkgname at maximbaz dot com>
+# Contributor: Stefan Tatschner <stefan@rumpelsepp.org>
+
+pkgname=xdg-desktop-portal-wlr
+pkgver=0.7.0
+pkgrel=1
+pkgdesc='xdg-desktop-portal backend for wlroots'
+url="https://github.com/emersion/xdg-desktop-portal-wlr"
+arch=('loong64' 'x86_64')
+license=('MIT')
+provides=('xdg-desktop-portal-impl')
+depends=('xdg-desktop-portal' 'pipewire' 'pipewire-session-manager' 'libinih')
+makedepends=('meson' 'wayland-protocols' 'wayland' 'scdoc')
+optdepends=(
+    'slurp: to choose which output to screencast using slurp'
+    'wofi: to choose which output to screencast using wofi'
+    'bemenu: to choose which output to screencast using bemenu'
+)
+source=(
+    "${pkgname}-${pkgver}::https://github.com/emersion/xdg-desktop-portal-wlr/archive/v${pkgver}.tar.gz"
+)
+sha512sums=('238fbcb5b4cab92ee1ec79a56491e8d426d9d1127660dfc8cbe688ed27af5019b54fde09d6181e28d4e2c66e2709386537d042a00da05c9a29f77e4ccfc5b4b2')
+
+build() {
+    cd "${pkgname}-${pkgver}"
+    arch-meson -Dsd-bus-provider=libsystemd build
+    ninja -C build
+}
+
+package() {
+    cd "${pkgname}-${pkgver}"
+    DESTDIR="${pkgdir}" ninja -C build install
+    install -Dm644 -t "$pkgdir/usr/share/licenses/${pkgname}" LICENSE
+}

@@ -1,0 +1,53 @@
+# Maintainer: Daurnimator <daurnimator@archlinux.org>
+# Maintainer: Caleb Maclennan <caleb@alerque.com>
+
+pkgname=('lua-say' 'lua51-say' 'lua52-say' 'lua53-say')
+pkgver=1.4.1
+pkgrel=1
+_rockrel=3
+pkgdesc='Lua string hashing library, useful for internationalization'
+arch=('any')
+url='https://github.com/lunarmodules/say'
+license=('MIT')
+makedepends=('luarocks'
+             # https://github.com/luarocks/luarocks/issues/1275
+             'lua51'
+             'lua52'
+             'lua53'
+             'lua')
+_archive="say-$pkgver"
+source=("$url/archive/v$pkgver/$_archive.tar.gz")
+sha256sums=('ce07547ca49ef42cc799e2a30b3c65ce77039978e32e7961799a252d61a56486')
+
+build() {
+    cd "$_archive"
+    for v in 5.1 5.2 5.3 5.4; do
+        mkdir -p "$v/"
+        luarocks make --pack-binary-rock --lua-version="$v" --deps-mode=none rockspecs/$_archive-$_rockrel.rockspec
+        mv "$_archive-$_rockrel".*.rock "$v/"
+    done
+}
+
+_package() {
+    pkgdesc+=" for Lua $1"
+    cd "$_archive"
+    depends+=("${pkgname%-*}")
+    luarocks install --lua-version="$1" --tree="$pkgdir/usr/" --deps-mode=none --no-manifest "$1"/*.rock
+    install -Dm0644 -t "$pkgdir/usr/share/licenses/$pkgname/" LICENSE
+}
+
+package_lua51-say() {
+    _package 5.1
+}
+
+package_lua52-say() {
+    _package 5.2
+}
+
+package_lua53-say() {
+    _package 5.3
+}
+
+package_lua-say() {
+    _package 5.4
+}

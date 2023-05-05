@@ -1,0 +1,32 @@
+# Maintainer: Felix Yan <felixonmars@archlinux.org>
+# Contributor: Bruno Galeotti <bgaleotti at gmail dot com>
+
+pkgname=ts-node
+pkgver=10.9.1
+pkgrel=1
+pkgdesc="TypeScript execution and REPL for node.js, with source map support"
+arch=('any')
+url="https://github.com/TypeStrong/ts-node"
+license=('MIT')
+depends=('nodejs' 'typescript')
+makedepends=('npm')
+source=(https://registry.npmjs.org/$pkgname/-/$pkgname-$pkgver.tgz)
+noextract=($pkgname-$pkgver.tgz)
+sha512sums=('36d572b153e4c71af0146514c466217eec7c93bf29401dc9a9805794b45981d194a933b9c14fd4c87a29e69ef48846c6841eeae4a9a26625346372a526b49c13')
+
+package() {
+  npm install -g --prefix "$pkgdir"/usr "$srcdir"/$pkgname-$pkgver.tgz
+
+  # Non-deterministic race in npm gives 777 permissions to random directories.
+  # See https://github.com/npm/npm/issues/9359 for details.
+  chmod -R u=rwX,go=rX "$pkgdir"
+
+  # npm installs package.json owned by build user
+  # https://bugs.archlinux.org/task/63396
+  chown -R root:root "$pkgdir"
+
+  # Dedup typescript
+  rm -r "$pkgdir"/usr/lib/node_modules/ts-node/node_modules/{typescript,.bin/{tsc,tsserver}}
+}
+
+# vim:set ts=2 sw=2 et:

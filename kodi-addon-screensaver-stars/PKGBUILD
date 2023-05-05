@@ -1,0 +1,34 @@
+# Maintainer: BlackEagle <ike.devolder@gmail.com>>
+
+pkgname=kodi-addon-screensaver-stars
+epoch=1
+pkgver=20.1.0
+_codename=Nexus
+pkgrel=5
+pkgdesc="Starfield screensaver for Kodi"
+arch=('loong64' 'x86_64')
+url='https://github.com/xbmc/screensaver.stars'
+license=('GPL')
+groups=('kodi-addons' 'kodi-addons-screensaver')
+makedepends=('cmake' 'kodi-dev')
+options=(!lto)
+source=("$pkgname-$pkgver.tar.gz::https://github.com/xbmc/screensaver.stars/archive/$pkgver-$_codename.tar.gz")
+sha512sums=('1ebd5b02dbe058131919a8ff5f4b7368053744b62d91477c215192bfcfa8520662b81bad73f7f5bcc51f347c1e141cda51be308fe644d58a23e1ca1c15e973a4')
+
+build() {
+    cd "screensaver.stars-$pkgver-$_codename"
+    cmake \
+        -DCMAKE_INSTALL_PREFIX=/usr \
+        -DCMAKE_BUILD_TYPE=Release \
+        -DBUILD_SHARED_LIBS=1 \
+        -DUSE_LTO=1 \
+        .
+    make
+}
+
+package() {
+    depends=('kodi')
+    cd "screensaver.stars-$pkgver-$_codename"
+    make DESTDIR="$pkgdir/" install
+}
+

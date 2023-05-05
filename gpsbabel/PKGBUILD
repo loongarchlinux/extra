@@ -1,0 +1,48 @@
+# Maintainer: Balló György <ballogyor+arch at gmail dot com>
+# Contributor: Sergej Pupykin <pupykin.s+arch@gmail.com>
+# Contributor: dibblethewrecker dibblethewrecker.at.jiwe.dot.org
+# Contributor: William Rea <sillywilly@gmail.com>
+
+pkgname=gpsbabel
+pkgver=1.8.0
+pkgrel=1
+pkgdesc="Read, write and manipulate GPS waypoints in a variety of formats"
+arch=(loong64 x86_64)
+url="https://www.gpsbabel.org/"
+license=(GPL)
+depends=(hicolor-icon-theme libusb shapelib qt6-serialport qt6-5compat)
+makedepends=(cmake libicns qt6-tools)
+source=(https://github.com/gpsbabel/$pkgname/archive/${pkgname}_${pkgver//./_}.tar.gz
+        gpsbabel.appdata.xml)
+sha256sums=('448379f0bf5f5e4514ed9ca8a1069b132f4d0e2ab350e2277e0166bf126b0832'
+            '5eb52ab0c4bdde61c747856e849f9bce9ca660e942c15f730a4330a38fd6a39a')
+
+prepare() {
+  icns2png -x $pkgname-${pkgname}_${pkgver//./_}/gui/images/appicon.icns
+}
+
+build() {
+  cmake -B build -S $pkgname-${pkgname}_${pkgver//./_} \
+    -DCMAKE_INSTALL_PREFIX=/usr \
+    -DGPSBABEL_WITH_ZLIB=pkgconfig \
+    -DGPSBABEL_WITH_SHAPELIB=pkgconfig \
+    -DGPSBABEL_WITH_LIBUSB=pkgconfig \
+    -DGPSBABEL_MAPPREVIEW=OFF
+  cmake --build build
+}
+
+package() {
+  DESTDIR="$pkgdir" cmake --install build
+
+# make install is broken
+  install -Dm755 build/gpsbabel build/gui/GPSBabelFE/gpsbabelfe -t "$pkgdir"/usr/bin
+  install -Dm644 $pkgname-${pkgname}_${pkgver//./_}/gui/*.qm $pkgname-${pkgname}_${pkgver//./_}/gui/coretool/*.qm -t "$pkgdir"/usr/share/gpsbabel/translations
+  install -Dm644 $pkgname-${pkgname}_${pkgver//./_}/gui/gmapbase.html -t "$pkgdir"/usr/share/gpsbabel
+  install -Dm644 $pkgname-${pkgname}_${pkgver//./_}/gui/gpsbabel.desktop -t "$pkgdir"/usr/share/applications
+  install -Dm644 $pkgname.appdata.xml -t "$pkgdir/usr/share/metainfo"
+
+  for res in 16 32 128 256 512; do
+    install -Dm644 appicon_${res}x${res}x32.png \
+      "$pkgdir/usr/share/icons/hicolor/${res}x${res}/apps/$pkgname.png"
+  done
+}

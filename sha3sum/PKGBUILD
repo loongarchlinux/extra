@@ -1,0 +1,33 @@
+# Maintainer: Frederik Schwan <freswa at archlinux dot org>
+# Contributor: Mattias Andrée <`base64 -d`(bWFhbmRyZWUK)@kth.se>
+
+pkgname=sha3sum
+pkgver=1.2.2
+pkgrel=1
+pkgdesc="Keccak-family checksum calculator, including SHA-3"
+arch=('loong64' 'x86_64')
+url='https://github.com/maandree/sha3sum'
+license=('custom:ISC')
+depends=('libkeccak>=1.2')
+source=("https://github.com/maandree/sha3sum/archive/${pkgver}/${pkgname}-${pkgver}.tar.gz")
+b2sums=('b98d7d5b2f7ee36c95d9ae1c5b0b86cda212bd4a6eabc56a93d9773a4c26111da250a70210fde8ff70b3fd2848ccd3d4d69b7ac9f279c58c2df84af12ad819dd')
+
+prepare() {
+  cd ${pkgname}-${pkgver}
+  sed -i 's#FLAGS\s\+=#FLAGS +=#g' config.mk
+}
+
+build() {
+  cd ${pkgname}-${pkgver}
+  make PREFIX=/usr
+}
+
+check() {
+  cd ${pkgname}-${pkgver}
+  make check
+}
+
+package() {
+  cd ${pkgname}-${pkgver}
+  make PREFIX=/usr DESTDIR="${pkgdir}" install
+}

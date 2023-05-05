@@ -1,0 +1,75 @@
+# Maintainer: Christian Hesse <mail@eworm.de>
+
+pkgname=vis
+_tag='688f730c248343a000801b1a925b6267a9f9e8f6' # git rev-parse v${pkgver}
+pkgver=0.8
+pkgrel=1
+pkgdesc='modern, legacy free, simple yet efficient vim-like editor'
+arch=('loong64' 'x86_64')
+url='https://github.com/martanne/vis#vis-a-vim-like-text-editor'
+depends=('acl' 'libacl.so' 'bash' 'ncurses' 'libncursesw.so' 'libtermkey'
+         'libtermkey.so' 'lua' 'lua-lpeg' 'tre' 'file')
+optdepends=('wl-clipboard: wayland clipboard support'
+            'xclip: X11 clipboard support'
+            'xsel: X11 clipboard support')
+makedepends=('git')
+checkdepends=('vim')
+license=('custom:ISC')
+backup=('etc/vis/visrc.lua')
+validpgpkeys=('54A47F12462D26A7D078A932C83A52CD1962562C') # Marc André Tanner <mat@brain-dump.org>
+# TODO: can we have signed tag back?
+source=("git+https://github.com/martanne/vis.git#tag=${_tag}"
+        'git+https://github.com/martanne/vis-test.git')
+sha256sums=('SKIP'
+            'SKIP')
+
+_backports=(
+)
+
+_reverts=(
+)
+
+prepare() {
+  cd vis/
+
+  git config --file=.gitmodules submodule.test.url ../vis-test/
+  git update-index --assume-unchanged .gitmodules
+  git submodule init
+  git -c protocol.file.allow=always submodule update
+  
+  local _c
+  for _c in "${_backports[@]}"; do
+    git log --oneline -1 "${_c}"
+    git cherry-pick -n "${_c}"
+  done
+  for _c in "${_reverts[@]}"; do
+    git log --oneline -1 "${_c}"
+    git revert -n "${_c}"
+  done
+}
+
+build() {
+  cd vis/
+
+  ./configure \
+    --prefix=/usr
+
+  make
+}
+
+check() {
+  cd vis/
+
+  make -C test/
+}
+
+package() {
+  cd vis/
+
+  make DESTDIR="${pkgdir}" install
+
+  install -D -m0644 lua/visrc.lua "${pkgdir}"/etc/vis/visrc.lua
+
+  install -D -m0644 'LICENSE' "${pkgdir}/usr/share/licenses/vis/LICENSE"
+}
+

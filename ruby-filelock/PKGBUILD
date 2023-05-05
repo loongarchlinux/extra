@@ -1,0 +1,60 @@
+# Maintainer: Felix Yan <felixonmars@archlinux.org>
+
+pkgname=ruby-filelock
+pkgver=1.1.1
+_commit=7e5efd7bb8ef8513f4a8d39f738d6dcb4310addf
+pkgrel=2
+pkgdesc='Heavily tested yet simple filelocking solution using flock'
+arch=(any)
+url='https://github.com/sheerun/filelock'
+license=(MIT)
+depends=(ruby)
+makedepends=(git)
+checkdepends=(ruby-rspec)
+options=(!emptydirs)
+source=(git+https://github.com/sheerun/filelock.git#commit=$_commit)
+sha256sums=('SKIP')
+
+prepare() {
+  cd filelock
+  # https://github.com/sheerun/filelock/pull/17
+  git cherry-pick -n 86ca5bc5a38c126a5e9262a7b10251fa79f7c118
+}
+
+build() {
+  local _gemdir="$(gem env gemdir)"
+  cd filelock
+  gem build filelock.gemspec
+  gem install \
+    --local \
+    --verbose \
+    --ignore-dependencies \
+    --no-user-install \
+    --install-dir "tmp_install/$_gemdir" \
+    --bindir "tmp_install/usr/bin" \
+    filelock-$pkgver.gem
+  find "tmp_install/$_gemdir/gems/" \
+    -type f \
+    \( \
+        -iname "*.o" -o \
+        -iname "*.c" -o \
+        -iname "*.so" -o \
+        -iname "*.time" -o \
+        -iname "gem.build_complete" -o \
+        -iname "Makefile" \
+    \) \
+    -delete
+  rm -r tmp_install/$_gemdir/cache
+}
+
+check() {
+  local _gemdir="$(gem env gemdir)"
+  cd filelock
+  GEM_HOME="tmp_install/$_gemdir" rspec
+}
+
+package() {
+  cd filelock
+  cp -a tmp_install/* "$pkgdir"/
+  install -Dm644 LICENSE.txt -t "$pkgdir"/usr/share/licenses/$pkgname/
+}

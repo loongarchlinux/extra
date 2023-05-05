@@ -1,0 +1,34 @@
+# Maintainer: Sven-Hendrik Haase <svenstaro@gmail.com>
+# Contributor: Doug Newgard <scimmia at archlinux dot info>
+
+pkgname=qmltermwidget
+pkgrel=1
+pkgver=0.2.0.git1
+pkgdesc='QML port of qtermwidget'
+arch=('loong64' 'x86_64')
+url='https://github.com/Swordfish90/qmltermwidget'
+license=('GPL')
+depends=('qt5-declarative')
+makedepends=('git')
+source=("git+https://github.com/Swordfish90/qmltermwidget.git#commit=6322802"
+        $pkgname-pr31.patch::https://github.com/Swordfish90/qmltermwidget/pull/31.patch)
+sha512sums=('SKIP'
+            '319971c928e8d2cf4582fc985e81579981d0aeca7b8dc9286e6b2da3df5a004d13aa3b458e99af515b6f44a89660801a9d2b77ca482c697faac0ac91c1ce5594')
+
+prepare() {
+  cd $pkgname
+  patch -Np1 -i "$srcdir"/$pkgname-pr31.patch
+}
+
+build() {
+  cd $pkgname
+
+  qmake
+  make
+}
+
+package() {
+  cd $pkgname
+
+  make INSTALL_ROOT="$pkgdir" install -j1
+}

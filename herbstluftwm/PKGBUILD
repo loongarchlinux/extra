@@ -1,0 +1,44 @@
+# Maintainer: Jonathan Steel <jsteel at archlinux.org>
+# Contributor: thorsten w. <p@thorsten-wissmann.de>
+
+pkgname=herbstluftwm
+pkgver=0.9.5
+pkgrel=1
+pkgdesc="Manual tiling window manager for X"
+arch=('loong64' 'x86_64')
+url="https://herbstluftwm.org"
+license=('BSD')
+depends=('libxinerama' 'libxrandr' 'libxft' 'libxext' 'libxfixes' 'libxrender' 'freetype2')
+makedepends=('cmake' 'asciidoc')
+optdepends=('xorg-xsetroot: to set wallpaper color in default autostart'
+            'xterm: used as the terminal in default autostart'
+            'dzen2: used in the default panel.sh'
+            'dmenu: used in some example scripts')
+source=(https://herbstluftwm.org/tarballs/$pkgname-$pkgver.tar.gz{,.sig})
+sha256sums=('b2d4600909e5bece5ad63818dfb30bb19fd2ac9f52847b1a7a74ad4040718105'
+            'SKIP')
+validpgpkeys=('72B6C05CDFF309C6396167D464EF02821CAFF810') # Thorsten Wißmann <edu@thorsten-wissmann.de>
+
+build() {
+  cd $pkgname-$pkgver
+
+  mkdir -p build; cd build
+
+  cmake \
+    -DBASHCOMPLETIONDIR=/usr/share/bash-completion/completions \
+    -DZSHCOMPLETIONDIR=/usr/share/zsh/functions/Completion/X \
+    -DCMAKE_INSTALL_PREFIX="/usr" ..
+
+  make
+}
+
+package() {
+  cd $pkgname-$pkgver/build
+
+  make DESTDIR="$pkgdir" install
+
+  install -d "$pkgdir"/usr/share/licenses/$pkgname/
+
+  ln -s /usr/share/doc/$pkgname/LICENSE \
+    "$pkgdir"/usr/share/licenses/$pkgname/LICENSE
+}

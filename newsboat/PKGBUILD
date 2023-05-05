@@ -1,0 +1,46 @@
+# Maintainer: Jaroslav Lichtblau <svetlemodry@archlinux.org>
+# Maintainer: Daniel M. Capella <polyzen@archlinux.org>
+# Maintainer: T.J. Townsend <blakkheim@archlinux.org>
+# Contributor: Sven Pfleiderer <pfleidi@roothausen.de>
+
+pkgname=newsboat
+pkgver=2.31
+pkgrel=1
+pkgdesc="RSS/Atom feed reader for text terminals"
+arch=('loong64' 'x86_64')
+url="https://newsboat.org/"
+license=('MIT')
+depends=('curl' 'hicolor-icon-theme' 'json-c' 'libxml2' 'sqlite' 'stfl')
+makedepends=('asciidoctor' 'rust' 'swig')
+optdepends=('buku: for bookmark-buku.sh'
+            'kitty: for kitty-img-pager.sh'
+            'perl: for pinboard.pl'
+            'python: for exportOPMLWithTags.py'
+            'ruby: for feedgrabber.rb, heise.rb, and slashdot.rb')
+replaces=('newsbeuter')
+options=('!makeflags' '!lto')
+changelog=$pkgname.changelog
+source=("https://newsboat.org/releases/$pkgver/$pkgname-$pkgver.tar.xz"{,.asc})
+sha256sums=('4baf7de25cf569924eebb63a5ddc467cd58dd3f0e7190b327b49d0c1e454c1da'
+            'SKIP')
+validpgpkeys=('B8B1756A0DDBF0760CE67CCF4ED6CD61932B9EBE') # Newsboat project <newsboat@googlegroups.com>
+
+prepare() {
+  cd $pkgname-$pkgver
+
+  cargo fetch --locked --target "$CARCH-unknown-linux-gnu"
+}
+
+build() {
+  cd $pkgname-$pkgver
+
+  make prefix=/usr
+  make doc
+}
+
+package() {
+  cd $pkgname-$pkgver
+
+  make prefix=/usr DESTDIR="$pkgdir" install
+  install -Dm644 -t "$pkgdir"/usr/share/licenses/$pkgname LICENSE
+}

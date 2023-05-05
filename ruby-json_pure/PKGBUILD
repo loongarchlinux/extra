@@ -1,0 +1,51 @@
+# Maintainer: Felix Yan <felixonmars@archlinux.org>
+
+pkgname=ruby-json_pure
+pkgver=2.6.3
+pkgrel=1
+pkgdesc='A JSON implementation in pure Ruby'
+arch=(any)
+url='http://flori.github.io/json/'
+license=(RUBY)
+depends=(ruby)
+makedepends=(ruby-rake)
+options=(!emptydirs)
+source=(https://github.com/flori/json/archive/v$pkgver/$pkgname-$pkgver.tar.gz)
+sha256sums=('41151b4cca7f58a94b559c73ad5e6c1940fc35521e0f69d741de79f80fa50d1a')
+
+build() {
+  local _gemdir="$(gem env gemdir)"
+  cd json-$pkgver
+  gem build json_pure.gemspec
+  gem install \
+    --local \
+    --verbose \
+    --ignore-dependencies \
+    --no-user-install \
+    --install-dir "tmp_install/$_gemdir" \
+    --bindir "tmp_install/usr/bin" \
+    json_pure-$pkgver.gem
+  find "tmp_install/$_gemdir/gems/" \
+    -type f \
+    \( \
+        -iname "*.o" -o \
+        -iname "*.c" -o \
+        -iname "*.so" -o \
+        -iname "*.time" -o \
+        -iname "gem.build_complete" -o \
+        -iname "Makefile" \
+    \) \
+    -delete
+  rm -r tmp_install/$_gemdir/cache
+}
+
+check() {
+  local _gemdir="$(gem env gemdir)"
+  cd json-$pkgver
+  GEM_HOME="tmp_install/$_gemdir" rake test_pure
+}
+
+package() {
+  cd json-$pkgver
+  cp -a tmp_install/* "$pkgdir"/
+}

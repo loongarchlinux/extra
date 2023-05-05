@@ -1,0 +1,59 @@
+# Maintainer: Felix Yan <felixonmars@archlinux.org>
+
+pkgname=ruby-fakefs
+pkgver=2.4.0
+_commit=5aa29fe01ae7033627e45854f3be3833c5c96055
+pkgrel=1
+pkgdesc='A fake filesystem. Use it in your tests.'
+arch=(any)
+url='https://github.com/fakefs/fakefs'
+license=(MIT)
+depends=(ruby)
+makedepends=(git)
+checkdepends=(ruby-bump ruby-maxitest ruby-pry ruby-rake ruby-rspec ruby-rubocop)
+options=(!emptydirs)
+source=(git+https://github.com/fakefs/fakefs.git#commit=$_commit)
+sha256sums=('SKIP')
+
+prepare() {
+  cd fakefs
+  sed -r -e 's|~>|>=|' -i fakefs.gemspec
+}
+
+build() {
+  local _gemdir="$(gem env gemdir)"
+  cd fakefs
+  gem build fakefs.gemspec
+  gem install \
+    --local \
+    --verbose \
+    --ignore-dependencies \
+    --no-user-install \
+    --install-dir "tmp_install/$_gemdir" \
+    --bindir "tmp_install/usr/bin" \
+    fakefs-$pkgver.gem
+  find "tmp_install/$_gemdir/gems/" \
+    -type f \
+    \( \
+        -iname "*.o" -o \
+        -iname "*.c" -o \
+        -iname "*.so" -o \
+        -iname "*.time" -o \
+        -iname "gem.build_complete" -o \
+        -iname "Makefile" \
+    \) \
+    -delete
+  rm -r tmp_install/$_gemdir/cache
+}
+
+check() {
+  local _gemdir="$(gem env gemdir)"
+  cd fakefs
+  GEM_HOME="tmp_install/$_gemdir" rake test spec
+}
+
+package() {
+  cd fakefs
+  cp -a tmp_install/* "$pkgdir"/
+  install -Dm644 LICENSE -t "$pkgdir"/usr/share/licenses/$pkgname/
+}

@@ -1,0 +1,31 @@
+# Maintainer: Felix Yan <felixonmars@archlinux.org>
+# Contributor: Cedric Girard <girard.cedric@gmail.com>
+
+pkgname=proxychains-ng
+pkgver=4.16
+pkgrel=2
+pkgdesc="A hook preloader that allows to redirect TCP traffic of existing dynamically linked programs through one or more SOCKS or HTTP proxies"
+arch=('loong64' 'x86_64')
+url="https://github.com/rofl0r/proxychains-ng"
+license=('GPL')
+provides=('proxychains')
+replaces=('proxychains')
+conflicts=('proxychains')
+depends=('glibc')
+backup=('etc/proxychains.conf')
+source=("https://github.com/rofl0r/proxychains-ng/archive/v$pkgver/$pkgname-$pkgver.tar.gz")
+sha512sums=('a929a6caa0e648e23eadb393ef7d0930ff92a84d77a8eff940b83e45f9410dc6bf6be225554254f63bc215bb043a024d4e82274eb17330cae41985d64be1050e')
+
+build() {
+  cd proxychains-ng-$pkgver
+  ./configure --prefix=/usr --sysconfdir=/etc
+  make
+}
+
+package() {
+  cd proxychains-ng-$pkgver
+  make DESTDIR="$pkgdir/" install install-config
+  ln -s proxychains4 "$pkgdir/usr/bin/proxychains"
+}
+
+# vim:set ts=2 sw=2 et:

@@ -1,0 +1,45 @@
+# Maintainer: Sven-Hendrik Haase <svenstaro@archlinux.org>
+# Contributor: Arkham <arkham at archlinux dot us>
+# Contributor: Christoph Zeiler <rabyte*gmail>
+
+pkgname=widelands
+pkgver=1.1
+epoch=1
+pkgrel=2
+pkgdesc="A realtime strategy game with emphasis on economy and transport"
+arch=('loong64' 'x86_64')
+url="https://widelands.org/"
+license=('GPL')
+depends=('sdl2_mixer' 'sdl2_image' 'sdl2_ttf' 'lua' 'glew' 'python' 'dbus' 'minizip')
+makedepends=('cmake' 'mesa' 'ninja' 'git' 'asio')
+replaces=('widelands-data')
+source=("$pkgname-$pkgver.tar.gz::https://github.com/widelands/widelands/archive/refs/tags/v${pkgver}.tar.gz")
+sha512sums=('29dbeae0940468c8aad6f0fa610c8467bdb6ecf2ba5fe9175683b7cdaab5f977fa86beb71de29057c829e9738568d15e10bc22fa7fc9e58132151a1a02d72d9d')
+
+build() {
+  cd $pkgname-$pkgver
+
+  cmake \
+      -GNinja \
+      -Bbuild \
+      -DCMAKE_BUILD_TYPE=Release \
+      -DCMAKE_INSTALL_PREFIX=/usr \
+      -DWL_INSTALL_BINDIR=bin \
+      -DWL_INSTALL_BASEDIR=/usr \
+      -DWL_INSTALL_DATADIR=/usr/share/widelands
+  ninja -C build
+}
+
+package() {
+  cd $pkgname-$pkgver
+
+  DESTDIR="$pkgdir" ninja -C build install
+
+  # Fix wrong locations of some installed files (upstream bug)
+  # See also FS#72240
+  mv "$pkgdir"/usr/{VERSION,ChangeLog,CREDITS} "$pkgdir"/usr/share/widelands
+
+  mkdir -p "$pkgdir"/usr/share/licenses/$pkgname
+  mv "$pkgdir"/usr/COPYING "$pkgdir"/usr/share/licenses/$pkgname
+
+}

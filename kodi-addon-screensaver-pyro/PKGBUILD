@@ -1,0 +1,34 @@
+# Maintainer: BlackEagle <ike.devolder@gmail.com>>
+
+pkgname=kodi-addon-screensaver-pyro
+epoch=1
+pkgver=20.1.0
+_codename=Nexus
+pkgrel=5
+pkgdesc="Pyro screensaver for Kodi"
+arch=('loong64' 'x86_64')
+url='https://github.com/xbmc/screensaver.pyro'
+license=('GPL')
+groups=('kodi-addons' 'kodi-addons-screensaver')
+makedepends=('git' 'cmake' 'kodi-dev')
+options=(!lto)
+source=("$pkgname-$pkgver.tar.gz::https://github.com/xbmc/screensaver.pyro/archive/$pkgver-$_codename.tar.gz")
+sha512sums=('5be671bdb3e28ef430362f9ec270175138e0dc493274e665f2779472ab44d4df0c1dce717c6f9765d5e34f6f948916fb1f44cc42141d6015974124868f7e5c60')
+
+build() {
+    cd "screensaver.pyro-$pkgver-$_codename"
+    cmake \
+        -DCMAKE_INSTALL_PREFIX=/usr \
+        -DCMAKE_BUILD_TYPE=Release \
+        -DBUILD_SHARED_LIBS=1 \
+        -DUSE_LTO=1 \
+        .
+    make
+}
+
+package() {
+    depends=('kodi')
+    cd "screensaver.pyro-$pkgver-$_codename"
+    make DESTDIR="$pkgdir/" install
+}
+

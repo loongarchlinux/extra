@@ -1,0 +1,50 @@
+# Maintainer: Alexander F. Rødseth <xyproto@archlinux.org>
+# Contributor: Brad Fanella <cesura@archlinux.org>
+# Contributor: Musikolo <musikolo@hotmail.com>
+# Contributor: Ruben Fonseca <fonseka@gmail.com>
+# Contributor: Andreas W. Hauser <andy-aur@splashground.de>
+
+pkgname=groovy
+pkgver=4.0.10
+pkgrel=1
+pkgdesc='Programming language for the Java platform, inspired by Python, Ruby and Smalltalk'
+arch=(any)
+url='https://groovy-lang.org/'
+license=(Apache)
+makedepends=(gendesk)
+depends=(bash java-environment)
+optdepends=('groovy-docs: html and pdf documentation for Groovy')
+source=("https://groovy.jfrog.io/artifactory/dist-release-local/groovy-zips/apache-groovy-binary-$pkgver.zip")
+b2sums=('7c76102b0dd65c1268d53b63def5540953922f4ab67c7739eadf40a574438ba85fb73c17a282ff86e80ae496b03c2de58e8b3c974edb6546850b688eb1530ca9')
+
+prepare() {
+  gendesk -f -n \
+    --pkgname $pkgname \
+    --pkgdesc 'Groovy programming language' \
+    --exec groovyConsole \
+    --name 'Groovy Console'
+
+  for f in $pkgname-$pkgver/bin/*; do
+    sed 's:bin/env\ sh:bin/env\ sh\nGROOVY_HOME=/usr/share/groovy\nexport _JAVA_OPTIONS="-Dawt.useSystemAAFontSettings=gasp $_JAVA_OPTIONS":' -i "$f"
+  done
+}
+
+package() {
+  cd $pkgname-$pkgver
+
+  # Create the directories and package the files
+  install -d "$pkgdir/usr/share/groovy" "$pkgdir/usr/bin"
+  cp -r lib conf "$pkgdir/usr/share/groovy"
+  cp bin/* "$pkgdir/usr/bin"
+  rm "$pkgdir"/usr/bin/*completion
+  install -Dm644 bin/*completion -t "$pkgdir"/usr/share/bash-completion/completions
+
+  # Remove all DOS/Windows batch files
+  find "$pkgdir" -name '*.bat' -type f -exec rm {} \;
+
+  # Package the license file
+  install -Dm644 LICENSE -t "$pkgdir"/usr/share/licenses/$pkgname
+
+  # Package the desktop shortcut for Groovy Console
+  install -Dm644 "$srcdir/$pkgname.desktop" -t "$pkgdir"/usr/share/applications
+}

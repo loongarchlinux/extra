@@ -1,0 +1,61 @@
+# Maintainer: Felix Yan <felixonmars@archlinux.org>
+
+pkgname=ruby-async-websocket
+pkgver=0.25.0
+_commit=f05d33646a4b7866581c43c683ff0abbadf8acc2
+pkgrel=1
+pkgdesc='An async websocket library on top of websocket-driver'
+arch=(any)
+url='https://github.com/socketry/async-websocket'
+license=(MIT)
+depends=(ruby-async-http ruby-async-io ruby-protocol-rack ruby-protocol-websocket)
+makedepends=(git)
+checkdepends=(ruby-bake-modernize ruby-bake-test ruby-bake-test-external ruby-rack ruby-covered
+              ruby-sus ruby-sus-fixtures-async-http)
+options=(!emptydirs)
+source=(git+https://github.com/socketry/async-websocket.git#commit=$_commit)
+sha256sums=('SKIP')
+
+prepare() {
+  cd async-websocket
+  sed -r -e 's|~>|>=|g' -e '/signing_key/d' -i async-websocket.gemspec
+  sed -i '/bake-gem/d;/utopia-project/d' gems.rb
+}
+
+build() {
+  local _gemdir="$(gem env gemdir)"
+  cd async-websocket
+  gem build async-websocket.gemspec
+  gem install \
+    --local \
+    --verbose \
+    --ignore-dependencies \
+    --no-user-install \
+    --install-dir "tmp_install/$_gemdir" \
+    --bindir "tmp_install/usr/bin" \
+    async-websocket-$pkgver.gem
+  find "tmp_install/$_gemdir/gems/" \
+    -type f \
+    \( \
+        -iname "*.o" -o \
+        -iname "*.c" -o \
+        -iname "*.so" -o \
+        -iname "*.time" -o \
+        -iname "gem.build_complete" -o \
+        -iname "Makefile" \
+    \) \
+    -delete
+  rm -r tmp_install/$_gemdir/cache
+}
+
+check() {
+  local _gemdir="$(gem env gemdir)"
+  cd async-websocket
+  GEM_HOME="tmp_install/$_gemdir" bake test
+}
+
+package() {
+  cd async-websocket
+  cp -a tmp_install/* "$pkgdir"/
+  install -Dm644 license.md -t "$pkgdir"/usr/share/licenses/$pkgname/
+}

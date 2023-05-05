@@ -1,0 +1,34 @@
+# Maintainer: Justin Kromlinger <hashworks@archlinux.org>
+
+pkgname=opensearch-observability-plugin
+pkgver=2.6.0.0
+pkgrel=1
+_opensearchver=2.6.0
+_jdkver=11
+pkgdesc="OpenSearch Observability Plugin"
+arch=('loong64' 'x86_64')
+url="https://github.com/opensearch-project/observability"
+license=('Apache')
+depends=("opensearch=${_opensearchver}")
+makedepends=("java-environment=${_jdkver}" 'unzip')
+source=(
+  "${pkgname}-${pkgver}.tar.gz::https://github.com/opensearch-project/observability/archive/${pkgver}.tar.gz"
+)
+sha256sums=('69002a3c469a7d7fe67d5e126dc49d4d9a460de28c51e66e196199d9b76a1e98')
+
+build() {
+  cd "observability-${pkgver}"
+  export JAVA_HOME="/usr/lib/jvm/java-${_jdkver}-openjdk"
+  export PATH="/usr/lib/jvm/java-${_jdkver}-openjdk/bin:$PATH"
+  export GRADLE_OPTS="-Dbuild.snapshot=false -Dopensearch.version=${_opensearchver}"
+  ./gradlew assemble \
+    --exclude-task ":jacocoTestReport"
+}
+
+package() {
+  install -dm755 "${pkgdir}/usr/share/opensearch/plugins/opensearch-observability"
+  cd "${pkgdir}/usr/share/opensearch/plugins/opensearch-observability"
+  unzip "${srcdir}/observability-${pkgver}/build/distributions/opensearch-observability-${pkgver}.zip"
+
+  install -Dm644 "${srcdir}/observability-${pkgver}/LICENSE" "${pkgdir}/usr/share/licenses/${pkgname}/LICENSE"
+}

@@ -1,0 +1,34 @@
+# Maintainer: BlackEagle <ike.devolder@gmail.com>>
+
+pkgname=kodi-addon-visualization-spectrum
+epoch=1
+pkgver=20.2.0
+_codename=Nexus
+pkgrel=5
+pkgdesc="Spectrum visualizer for Kodi"
+arch=('loong64' 'x86_64')
+url='https://github.com/xbmc/visualization.spectrum'
+license=('GPL')
+groups=('kodi-addons' 'kodi-addons-visualization')
+makedepends=('cmake' 'glm' 'kodi-dev')
+options=(!lto)
+source=("$pkgname-$pkgver.tar.gz::https://github.com/xbmc/visualization.spectrum/archive/$pkgver-$_codename.tar.gz")
+sha512sums=('b5f07e51058ec644c6b2a889be9e49403c566c8e14a7745b7a3610304467412a6ee7df8bf0ada4123915fac38b8efd658d6b41ba32bbfb29d9df13669d68dded')
+
+build() {
+    cd "visualization.spectrum-$pkgver-$_codename"
+    cmake \
+        -DCMAKE_INSTALL_PREFIX=/usr \
+        -DCMAKE_BUILD_TYPE=Release \
+        -DBUILD_SHARED_LIBS=1 \
+        -DUSE_LTO=1 \
+        .
+    make
+}
+
+package() {
+    depends=('kodi' 'glm')
+    cd "visualization.spectrum-$pkgver-$_codename"
+    make DESTDIR="$pkgdir/" install
+}
+

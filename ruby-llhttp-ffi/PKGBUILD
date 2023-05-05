@@ -1,0 +1,51 @@
+# Maintainer: Felix Yan <felixonmars@archlinux.org>
+
+pkgname=ruby-llhttp-ffi
+pkgver=0.5.0
+_commit=eb61456a325d87fcbc9e4c5a7512d9589737abae
+pkgrel=1
+pkgdesc='Ruby FFI bindings for llhttp'
+arch=(loong64 x86_64)
+url='https://github.com/metabahn/llhttp/'
+license=(Apache)
+depends=(ruby-ffi-compiler ruby-rake)
+makedepends=(ruby-rake-compiler ruby-async-io ruby-rspec)
+options=(!emptydirs)
+source=(https://github.com/metabahn/llhttp/archive/$_commit/$pkgname-$_commit.tar.gz)
+sha256sums=('e964e432afa0ad881145dc064fa8f07dbe676b57913fea381f07fa83ba446260')
+
+build() {
+  local _gemdir="$(gem env gemdir)"
+  cd llhttp-$_commit/ffi
+  gem build llhttp-ffi.gemspec
+  gem install \
+    --local \
+    --verbose \
+    --ignore-dependencies \
+    --no-user-install \
+    --install-dir "tmp_install/$_gemdir" \
+    --bindir "tmp_install/usr/bin" \
+    llhttp-ffi-$pkgver.gem
+  find "tmp_install/$_gemdir/gems/" \
+    -type f \
+    \( \
+        -iname "*.o" -o \
+        -iname "*.c" -o \
+        -iname "*.time" -o \
+        -iname "gem.build_complete" -o \
+        -iname "Makefile" \
+    \) \
+    -delete
+  rm -r tmp_install/$_gemdir/cache
+}
+
+check() {
+  local _gemdir="$(gem env gemdir)"
+  cd llhttp-$_commit/ffi
+  GEM_HOME="tmp_install/$_gemdir" rspec
+}
+
+package() {
+  cd llhttp-$_commit/ffi
+  cp -a tmp_install/* "$pkgdir"/
+}

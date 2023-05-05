@@ -1,0 +1,53 @@
+# Maintainer: Dan Printzell <wild@archlinux.org>
+
+pkgname=('dfmt')
+pkgver=0.14.2
+pkgrel=1
+_pkgcommit=6a24f0dc7c490f4cb06cdc9d21b841bee84615f4
+pkgdesc="Dfmt is a formatter for D source code"
+arch=('loong64' 'x86_64')
+url="https://github.com/dlang-community/dfmt"
+license=("custom")
+groups=('dlang')
+makedepends=('ldc' 'git')
+depends=('liblphobos')
+
+source=(
+	"git+https://github.com/dlang-community/dfmt#commit=$_pkgcommit"
+	"git+https://github.com/dlang-community/libdparse"
+	"git+https://github.com/sociomantic-tsunami/makd"
+	"git+https://github.com/sociomantic-tsunami/beaver"
+	"git+https://github.com/dlang-community/stdx-allocator"
+)
+sha256sums=('SKIP'
+            'SKIP'
+            'SKIP'
+            'SKIP'
+            'SKIP')
+
+prepare() {
+	cd "$srcdir/dfmt"
+
+	git submodule init
+	git config submodule.libdparse.url "$srcdir/libdparse"
+	git config submodule.makd.url "$srcdir/makd"
+	git config submodule.beaver.url "$srcdir/beaver"
+	git config submodule.stdx-allocator.url "$srcdir/stdx-allocator"
+	git submodule update
+
+	_extraFlags="-O5 -flto=full -linker=gold -link-defaultlib-shared=false -L=\"$LDFLAGS\""
+	sed -i "/LDC_FLAGS \:=/ a override LDC_FLAGS += $_extraFlags" makefile
+}
+
+build() {
+	cd "$srcdir/dfmt"
+	make ldc
+}
+
+package() {
+	# binaries
+	install -Dm755 "$srcdir/dfmt/bin/dfmt" "$pkgdir/usr/bin/dfmt"
+
+	# license
+	install -Dm644 "$srcdir/dfmt/LICENSE.txt" "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
+}

@@ -1,0 +1,54 @@
+# Maintainer: David Runge <dvzrv@archlinux.org>
+
+pkgname=sherlock.lv2
+pkgver=0.28.0
+pkgrel=2
+pkgdesc="An investigative plugin bundle"
+arch=(loong64 x86_64)
+url="https://git.open-music-kontrollers.ch/~hp/sherlock.lv2"
+license=(Artistic2.0)
+groups=(
+  lv2-plugins
+  pro-audio
+)
+depends=(
+  glew
+  glibc
+  libglvnd
+  libx11
+  lv2-host
+  sratom
+)
+makedepends=(
+  flex
+  glu
+  lv2
+  meson
+  serd
+  sord
+)
+checkdepends=(lv2lint)
+source=(
+  $pkgname-$pkgver.tar.gz::$url/archive/$pkgver.tar.gz
+  $pkgname-$pkgver.tar.gz.asc::$url/archive/$pkgver.tar.gz.asc
+)
+sha512sums=('9e0ce1f1e7f0e87507b9862034b39782cefafc8bf8edd5a7a8a9dba7b17be70543352118c45d4ab6cd3eb01fcf0e5e999933cdba876080ef4c693511ecca0f62'
+            'SKIP')
+b2sums=('9c431cac69dc60bb24c229f9ee1e0b7ae849134083464d67b29c396ac8256d8bf577f128935d657126332c18ad78a4c7771046a31677c7a5a11ed61ec409c539'
+        'SKIP')
+validpgpkeys=('5AE26CEBBF49705C19FB273A30258F99258CB76A') # Hanspeter Portner <dev@open-music-kontrollers.ch>
+
+build() {
+  arch-meson build $pkgname-$pkgver
+  meson compile -C build
+}
+
+check() {
+  meson test -C build --print-errorlogs
+}
+
+package() {
+  meson install -C build --destdir "$pkgdir"
+  # docs
+  install -vDm 644 $pkgname-$pkgver/{ChangeLog,README.md} -t "$pkgdir/usr/share/doc/$pkgname/"
+}

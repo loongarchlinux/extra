@@ -1,0 +1,53 @@
+# Maintainer: Felix Yan <felixonmars@archlinux.org>
+
+pkgname=ruby-samovar
+pkgver=2.1.4
+_commit=4bc6ee6268c78277968c4cdca7aa41cc4653312d
+pkgrel=3
+pkgdesc='A flexible option parser excellent support for sub-commands and help documentation'
+arch=(any)
+url='https://github.com/ioquatix/samovar'
+license=(MIT)
+depends=(ruby-console ruby-mapping)
+makedepends=(git)
+checkdepends=(ruby-covered ruby-rake ruby-rspec)
+options=(!emptydirs)
+source=(git+https://github.com/ioquatix/samovar.git#commit=$_commit)
+sha256sums=('SKIP')
+
+build() {
+  local _gemdir="$(gem env gemdir)"
+  cd samovar
+  rake build
+  gem install \
+    --local \
+    --verbose \
+    --ignore-dependencies \
+    --no-user-install \
+    --install-dir "tmp_install/$_gemdir" \
+    --bindir "tmp_install/usr/bin" \
+    pkg/samovar-$pkgver.gem
+  find "tmp_install/$_gemdir/gems/" \
+    -type f \
+    \( \
+        -iname "*.o" -o \
+        -iname "*.c" -o \
+        -iname "*.so" -o \
+        -iname "*.time" -o \
+        -iname "gem.build_complete" -o \
+        -iname "Makefile" \
+    \) \
+    -delete
+  rm -r tmp_install/$_gemdir/cache
+}
+
+check() {
+  local _gemdir="$(gem env gemdir)"
+  cd samovar
+  GEM_HOME="tmp_install/$_gemdir" rspec
+}
+
+package() {
+  cd samovar
+  cp -a tmp_install/* "$pkgdir"/
+}

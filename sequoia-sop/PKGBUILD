@@ -1,0 +1,47 @@
+# Maintainer: Levente Polyak <anthraxx[at]archlinux[dot]org>
+
+pkgname=sequoia-sop
+pkgver=0.27.3
+_commit=ddc5e5b119f51934c0086ddbdf85cca7685508c0  # refs/tags/0.27.3^{}
+pkgrel=1
+pkgdesc='Implementation of the Stateless OpenPGP Interface using Sequoia'
+url='https://sequoia-pgp.org/'
+arch=('loong64' 'x86_64')
+license=('GPL2')
+groups=('sequoia')
+depends=('glibc' 'nettle' 'libnettle.so' 'libhogweed.so'
+         'bzip2' 'libbz2.so' 'gcc-libs' 'gmp')
+makedepends=('git' 'cargo' 'clang')
+source=(sequoia-sop::"git+https://gitlab.com/sequoia-pgp/sequoia-sop.git#commit=$_commit?signed")
+sha512sums=('SKIP')
+validpgpkeys=(
+  D2F2C5D45BE9FDE6A4EE0AAF31855247603831FD # justus@sequoia-pgp.org
+  CBCD8F030588653EEDD7E2659B7DD433F254904A # justus@sequoia-pgp.org
+)
+
+prepare() {
+  cd ${pkgname}
+  cargo fetch --locked --target "$CARCH-unknown-linux-gnu"
+}
+
+build() {
+  export RUSTUP_TOOLCHAIN=stable
+  export CARGO_TARGET_DIR=target
+  cd ${pkgname}
+  cargo build --release --frozen --features 'cli crypto-nettle compression'
+}
+
+check() {
+  export RUSTUP_TOOLCHAIN=stable
+  cd ${pkgname}
+  cargo test --release --frozen --features 'cli crypto-nettle compression'
+}
+
+package() {
+  cd ${pkgname}
+  install -Dm 755 target/release/sqop -t "${pkgdir}/usr/bin"
+  install -Dm 644 man-sqop/*.1 -t "${pkgdir}/usr/share/man/man1"
+  install -Dm 644 README.md -t "${pkgdir}/usr/share/doc/${pkgname}"
+}
+
+# vim: ts=2 sw=2 et:

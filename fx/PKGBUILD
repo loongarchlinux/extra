@@ -1,0 +1,37 @@
+# Maintainer: Caleb Maclennan <caleb@alerque.com>
+# Contributor: Caltlgin Stsodaat <contact@fossdaily.xyz>
+
+pkgname=fx
+pkgver=24.1.0
+pkgrel=1
+pkgdesc='Command-line tool and terminal JSON viewer'
+arch=(loong64 x86_64)
+url="https://github.com/antonmedv/$pkgname"
+license=(MIT)
+depends=(glibc)
+makedepends=(go)
+_archive="$pkgname-$pkgver"
+source=("$url/archive/$pkgver/$_archive.tar.gz")
+sha256sums=('1e034ac1d815b05a06a193fa409da1bcbf35453a04759e2c76c745a82da1ad87')
+
+prepare() {
+	cd "$_archive"
+	go mod vendor
+}
+
+build() {
+	cd "$_archive"
+	export CGO_CPPFLAGS="$CPPFLAGS"
+	export CGO_CFLAGS="$CFLAGS"
+	export CGO_CXXFLAGS="$CXXFLAGS"
+	export CGO_LDFLAGS="$LDFLAGS"
+	export GOFLAGS="-buildmode=pie -trimpath -modcacherw -ldflags=-linkmode=external"
+	go build .
+}
+
+package() {
+	cd "$_archive"
+	install -Dm0755 -t "$pkgdir/usr/bin/" "$pkgname"
+	install -Dm0644 -t "$pkgdir/usr/share/doc/$pkgname/" README.md
+	install -Dm0644 -t "$pkgdir/usr/share/licenses/$pkgname/" LICENSE
+}

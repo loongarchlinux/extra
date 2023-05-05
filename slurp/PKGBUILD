@@ -1,0 +1,32 @@
+# Maintainer: Ainola <ainola@archlinux.org>
+# Maintainer: Maxim Baz <$pkgname at maximbaz dot com>
+
+pkgname=slurp
+pkgver=1.4.0
+pkgrel=1
+pkgdesc='Select a region in a Wayland compositor'
+arch=('loong64' 'x86_64')
+url="https://github.com/emersion/slurp"
+license=('MIT')
+depends=('cairo' 'wayland' 'libxkbcommon')
+makedepends=('meson' 'scdoc' 'wayland-protocols')
+options=(debug)
+source=(
+    "$pkgname-$pkgver.tar.gz::https://github.com/emersion/slurp/releases/download/v$pkgver/slurp-$pkgver.tar.gz"
+    "$pkgname-$pkgver.tar.gz.sig::https://github.com/emersion/slurp/releases/download/v$pkgver/slurp-$pkgver.tar.gz.sig"
+)
+validpgpkeys=("34FF9526CFEF0E97A340E2E40FDE7BE0E88F5E48") # emersion
+sha256sums=('98f6bb692be6bd015aa6251830837ea4fd9a0c5d51ce832ad147aa62ae7f095d'
+            'SKIP')
+
+build() {
+    arch-meson "$pkgname-$pkgver" build
+    ninja -C build
+}
+
+package() {
+    DESTDIR="$pkgdir" ninja -C build install
+    cd "$pkgname-$pkgver"
+    install -Dm 0644 LICENSE -t "$pkgdir/usr/share/licenses/slurp/"
+    install -Dm 0644 README.md -t "$pkgdir/usr/share/doc/slurp/"
+}

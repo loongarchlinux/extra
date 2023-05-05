@@ -1,0 +1,31 @@
+# Maintainer: Sergej Pupykin <arch+pub@sergej.pp.ru>
+# Contributor: Quentin Stievenart <quentin.stievenart@gmail.com>
+# Contributor: Andy Weidenbaum <archbaum@gmail.com>
+# Maintainer: Stefan Husmann <stefan-husmann@t-online.de>
+
+pkgname=mk-configure
+pkgver=0.38.2
+pkgrel=1
+pkgdesc="Lightweight replacement for GNU autotools"
+arch=('any')
+makedepends=('bmake' 'bmkdep')
+url="https://github.com/cheusov/mk-configure"
+license=('BSD')
+depends=('bash' 'gawk')
+source=("https://github.com/cheusov/$pkgname/archive/$pkgname-$pkgver.tar.gz")
+sha256sums=('4e25f5644fc7930a89127b6436e534a0ef2e041d55566deb78fc9bf6c0bfd136')
+
+build() {
+  cd $pkgname-$pkgname-$pkgver
+  export USE_AWK=/usr/bin/gawk
+  export USE_INSTALL=/usr/bin/install
+  export PREFIX=/usr SYSCONFDIR=/etc MANDIR=/usr/share/man LIBEXECDIR=/usr/lib
+  bmake CUSTOM.prog_nbmkdep=/usr/bin/bmkdep all
+}
+
+package() {
+  cd $pkgname-$pkgname-$pkgver
+  export PREFIX=/usr SYSCONFDIR=/etc MANDIR=/usr/share/man LIBEXECDIR=/usr/lib
+  bmake CUSTOM.prog_nbmkdep=/usr/bin/bmkdep DESTDIR="$pkgdir" install
+  install -Dm644 doc/LICENSE "$pkgdir"/usr/share/licenses/$pkgname/LICENCE
+}

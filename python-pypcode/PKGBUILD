@@ -1,0 +1,31 @@
+# Maintainer: Levente Polyak <anthraxx[at]archlinux[dot]org>
+# Contributor: Letu Ren <fantasquex at gmail dot com>
+
+_pyname=pypcode
+pkgname=python-${_pyname}
+pkgver=1.1.2
+pkgrel=1
+pkgdesc="Python bindings to Ghidra's SLEIGH library for disassembly and lifting to p-code IR"
+url='https://github.com/angr/pypcode'
+license=('custom')
+arch=('loong64' 'x86_64')
+depends=('python' 'python-cffi')
+makedepends=('cmake' 'python-build' 'python-installer' 'python-wheel' 'python-setuptools')
+checkdepends=('python-pytest')
+source=("${url}/archive/v${pkgver}/${pkgname}-${pkgver}.tar.gz")
+sha512sums=('e4f81de74fe96be3c1260ee025ffb72d53ffb9800a2c5a1ee61c810e92e13c0130cd988c6b60c26d4859154a90abbb611c63e922f1a2a661ea3649d5efd4ae4b')
+b2sums=('9990dec2f605872204c199e51016e25d4aef6a1936656755a6db3977d534d3548b5e18cff4efe20360725ca5f16e546f4f37a7f874a2a8501f415f192cce8bc6')
+
+build() {
+  cd ${_pyname}-${pkgver}
+  python -m build --wheel --no-isolation --skip-dependency-check
+}
+
+package() {
+  cd ${_pyname}-${pkgver}
+  python -m installer --destdir="$pkgdir" dist/*.whl
+  install -Dm 644 LICENSE.txt -t "${pkgdir}/usr/share/licenses/${pkgname}"
+  install -Dm 644 README.md -t "${pkgdir}/usr/share/doc/${pkgname}"
+}
+
+# vim: ts=2 sw=2 et:

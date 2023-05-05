@@ -1,0 +1,48 @@
+# Maintainer: Caleb Macalennan <caleb@alerque.com>
+# Maintainer: Justin Kromlinger <hashworks@archlinux.org>
+# Contributor: Bruno Pagani <archange@archlinux.org>
+
+pkgname=matterbridge
+pkgver=1.26.0
+pkgrel=1
+pkgdesc='Multi-protocols (IRC/XMPP/Mattermost/Slack/Matrix/etc) bridge'
+arch=(loong64 x86_64)
+url="https://github.com/42wim/$pkgname"
+license=(Apache GPL3)
+depends=(glibc
+         gcc-libs)
+makedepends=(go
+             git)
+backup=("etc/$pkgname.toml")
+_archive="$pkgname-$pkgver"
+source=("$url/archive/v$pkgver/$_archive.tar.gz"
+        "$_archive.tar.gz.asc::$url/releases/download/v$pkgver/v$pkgver.tar.gz.asc"
+        "$pkgname.service")
+sha256sums=('00e1bbfe3b32f2feccf9a7f13a6f12b1ce28a5eb04cc7b922b344e3493497425'
+            'SKIP'
+            '338171f409a0e55589b86959e37871d61d21dc89cec6b212b552eaf4e516e069')
+validpgpkeys=(CC7D978417C1AEA1E4CDD7240E41AB4BF4C610B4) # wim <wim@42.be>
+
+prepare() {
+	cd "$_archive"
+	go mod vendor
+}
+
+build() {
+	cd "$_archive"
+	export CGO_CPPFLAGS="$CPPFLAGS"
+	export CGO_CFLAGS="$CFLAGS"
+	export CGO_CXXFLAGS="$CXXFLAGS"
+	# export CGO_LDFLAGS="$LDFLAGS"
+	# See https://bugs.archlinux.org/task/75560
+	export CGO_LDFLAGS="$LDFLAGS -Wl,-z,noexecstack"
+	export GOFLAGS="-buildmode=pie -trimpath -mod=readonly -modcacherw -ldflags=-linkmode=external"
+	go build -tags whatsappmulti -v -o "$pkgname" .
+}
+
+package() {
+	cd "$_archive"
+	install -Dm0755 -t "$pkgdir/usr/bin/" "$pkgname"
+	install -Dm0644 -t "$pkgdir/usr/lib/systemd/system/" "../$pkgname.service"
+	install -Dm0600 matterbridge.toml.sample "$pkgdir/etc/$pkgname.toml"
+}

@@ -1,0 +1,43 @@
+# Maintainer: Filipe Laíns (FFY00) <lains@archlinux.org>
+# Contributor: Eric Lehmann <katyl@katyl.info>
+# Contributor: Thomas Fanninger <thomas@fanninger.at>
+# Contributor: ultraviolet <ultravioletnanokitty@gmail.com>
+# Contributor: Pablo Lezeta <prflr88@gmail.com>
+
+pkgname=iio-sensor-proxy
+pkgver=3.4
+pkgrel=1
+pkgdesc='IIO accelerometer sensor to input device proxy'
+arch=('loong64' 'x86_64')
+url='https://gitlab.freedesktop.org/hadess/iio-sensor-proxy/'
+license=('GPL2')
+depends=('systemd' 'libgudev' 'gtk3' 'polkit')
+makedepends=('meson')
+checkdepends=('python-gobject' 'python-dbusmock' 'python-psutil' 'umockdev')
+source=("$url/-/archive/$pkgver/$pkgname-$pkgver.tar.gz")
+sha512sums=('2067c89ca47b4be57f68b5c15b5accdfe50e4f266a3fa11d4690745db8dd1e8e647ffde4306524cdb5faaef215a6bd529a646f1703d9e9ba529688d2b32de14d')
+
+build() {
+  mkdir $pkgname-$pkgver/build
+  cd $pkgname-$pkgver/build
+
+  arch-meson .. \
+    -Dsystemdsystemunitdir=/usr/lib/systemd/system \
+    -Dudevrulesdir=/usr/lib/udev/rules.d \
+    -Dsysconfdir=/usr/share
+
+  ninja
+}
+
+check() {
+  cd $pkgname-$pkgver/build
+
+  ninja test
+}
+
+package() {
+  cd $pkgname-$pkgver/build
+
+  DESTDIR="$pkgdir" ninja install
+}
+

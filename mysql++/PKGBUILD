@@ -1,0 +1,41 @@
+# Maintainer: Sven-Hendrik Haase <svenstaro@gmail.com>
+# Contributor: Sergej Pupykin <pupykin.s+arch@gmail.com>
+# Contributor: Markus Härer <markus.haerer@gmx.net>
+
+pkgname=mysql++
+pkgver=3.3.0
+pkgrel=1
+pkgdesc="A C++ wrapper for MySQLs C API"
+arch=("loong64" "x86_64")
+url="http://tangentsoft.net/mysql++/"
+license=("LGPL" "custom")
+depends=("mariadb-libs")
+options=('docs')
+source=("https://tangentsoft.net/mysqlpp/releases/$pkgname-$pkgver.tar.gz"
+	"mysql++-fix-cstring.patch"
+	"mysql++-fix-size_t.patch")
+sha256sums=('449cbc46556cc2cc9f9d6736904169a8df6415f6960528ee658998f96ca0e7cf'
+            'c005b6a8736578f935996e5249e8048e887d7cfb9c76ab0428543710b7622af0'
+            '22a1aed639923206b0b79ec1e3f2a1b3c1bd896b52519526fd0af08c54fd3762')
+
+build() {
+  unset LDFLAGS
+  cd "$srcdir/$pkgname-$pkgver/"
+  patch -p1 <"$srcdir"/mysql++-fix-cstring.patch
+  patch -p1 <"$srcdir"/mysql++-fix-size_t.patch
+  ./configure --prefix=/usr
+  make
+}
+
+package() {
+  cd "$srcdir/$pkgname-$pkgver/"
+  make DESTDIR="$pkgdir" install
+
+  #install docs
+  mkdir -p "$pkgdir"/usr/share/doc/mysql++
+  cp -r doc/html "$pkgdir"/usr/share/doc/mysql++
+  cp -r doc/pdf "$pkgdir"/usr/share/doc/mysql++
+
+  #install doc licence
+  install -Dm0644 doc/userman/LICENSE.txt "$pkgdir"/usr/share/licenses/mysql++/LICENSE
+}

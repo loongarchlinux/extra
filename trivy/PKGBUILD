@@ -1,0 +1,47 @@
+# Maintainer: Justin Kromlinger <hashworks@archlinux.org>
+# Contributor: Hao Long <imlonghao@archlinuxcn.org>
+
+pkgname=trivy
+pkgver=0.41.0
+pkgrel=1
+pkgdesc='A Simple and Comprehensive Vulnerability Scanner for Containers, Suitable for CI'
+arch=('loong64' 'x86_64')
+url='https://github.com/aquasecurity/trivy'
+license=('Apache')
+depends=('glibc')
+optdepends=('rpm: RHEL/CentOS based image support')
+makedepends=('go' 'btrfs-progs')
+provides=('trivy')
+conflicts=('trivy')
+source=("${pkgname}-${pkgver}.tar.gz::${url}/archive/v${pkgver}.tar.gz")
+b2sums=('48e8cc03137d653ff434f2b29baf01b8a862df9ae59ce14eed958ff8b5e56c726d74d38faa539cb6c16855b4cae9f76c4010397fae3d967bf5aad954db0181f7')
+
+prepare() {
+  cd ${pkgname}-${pkgver}
+
+  find docs -type f -name "*.md" \
+    -exec sed "s|\(../\)*imgs/\(.*\.[a-z]\{3\}\)|${url}/raw/main/docs/imgs/\2|g" -i {} \;
+
+  rm -Rf docs/{build,imgs}
+}
+
+build() {
+  cd ${pkgname}-${pkgver}/cmd/trivy
+
+  export CGO_CPPFLAGS="${CPPFLAGS}"
+  export CGO_CFLAGS="${CFLAGS}"
+  export CGO_CXXFLAGS="${CXXFLAGS}"
+  export CGO_LDFLAGS="${LDFLAGS}"
+  export GOFLAGS="-buildmode=pie -trimpath -mod=readonly -modcacherw"
+  go build -ldflags "-linkmode=external -s -w -X=main.version=${pkgver}" .
+}
+
+package() {
+  cd ${pkgname}-${pkgver}
+
+  install -Dm644 LICENSE "${pkgdir}/usr/share/licenses/${pkgname}/LICENSE"
+  install -Dm755 "cmd/trivy/${pkgname}" "${pkgdir}/usr/bin/${pkgname}"
+
+  mkdir -p "${pkgdir}/usr/share/doc"
+  cp -r docs "${pkgdir}/usr/share/doc/${pkgname}"
+}

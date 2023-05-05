@@ -1,0 +1,29 @@
+# Maintainer: Balló György <ballogyor+arch at gmail dot com>
+# Contributor: Raffaele Zamorano
+# Contributor: Jose Riha <jose1711 gmail com>
+# Contributor: Nikolay Korotkiy <sikmir@gmail.com>
+
+pkgname=gpxsee
+_pkgname=GPXSee
+pkgver=13.0
+pkgrel=1
+pkgdesc='GPS log file viewer and analyzer'
+arch=(loong64 x86_64)
+url='https://www.gpxsee.org/'
+license=(GPL3)
+depends=(qt6-imageformats qt6-5compat qt6-positioning qt6-svg qt6-serialport)
+makedepends=(qt6-tools)
+source=(https://downloads.sourceforge.net/$pkgname/$_pkgname-$pkgver.tar.gz)
+sha256sums=('94d6853bc6027028f5dc2888e633e7505c2978323b4544b7a3576726e007a3f4')
+
+build() {
+  cd $_pkgname-$pkgver
+  /usr/lib/qt6/bin/lrelease gpxsee.pro
+  qmake6 gpxsee.pro PREFIX=/usr
+  make
+}
+
+package() {
+  cd $_pkgname-$pkgver
+  make INSTALL_ROOT="$pkgdir" install
+}

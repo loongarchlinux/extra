@@ -1,0 +1,61 @@
+# Maintainer: Felix Yan <felixonmars@archlinux.org>
+
+pkgname=ruby-async-http
+pkgver=0.59.5
+pkgrel=1
+pkgdesc='A HTTP client and server library'
+arch=(any)
+url='https://github.com/socketry/async-http'
+license=(MIT)
+depends=(ruby-async ruby-async-io ruby-async-pool ruby-protocol-http ruby-protocol-http1
+         ruby-protocol-http2 ruby-traces)
+checkdepends=(ruby-bake ruby-bake-modernize ruby-bake-test ruby-bake-test-external
+              ruby-async-container ruby-async-rspec ruby-covered ruby-localhost ruby-rack-test
+              ruby-rspec ruby-sus ruby-thread-local)
+options=(!emptydirs)
+source=(https://github.com/socketry/async-http/archive/v$pkgver/$pkgname-$pkgver.tar.gz)
+sha256sums=('9a66e8f57322d8be705e72664c611a2e042f623367d94c78fba7a44c78fd3836')
+
+prepare() {
+  cd async-http-$pkgver
+  sed -r -e 's|~>|>=|g' -e '/signing_key/d' -i async-http.gemspec
+  sed -i '/bake-gem/d;/bake-github-pages/d;/utopia-project/d' gems.rb
+}
+
+build() {
+  local _gemdir="$(gem env gemdir)"
+  cd async-http-$pkgver
+  gem build async-http.gemspec
+  gem install \
+    --local \
+    --verbose \
+    --ignore-dependencies \
+    --no-user-install \
+    --install-dir "tmp_install/$_gemdir" \
+    --bindir "tmp_install/usr/bin" \
+    async-http-$pkgver.gem
+  find "tmp_install/$_gemdir/gems/" \
+    -type f \
+    \( \
+        -iname "*.o" -o \
+        -iname "*.c" -o \
+        -iname "*.so" -o \
+        -iname "*.time" -o \
+        -iname "gem.build_complete" -o \
+        -iname "Makefile" \
+    \) \
+    -delete
+  rm -r tmp_install/$_gemdir/cache
+}
+
+check() {
+  local _gemdir="$(gem env gemdir)"
+  cd async-http-$pkgver
+  GEM_HOME="tmp_install/$_gemdir" bake test
+  GEM_HOME="tmp_install/$_gemdir" sus
+}
+
+package() {
+  cd async-http-$pkgver
+  cp -a tmp_install/* "$pkgdir"/
+}

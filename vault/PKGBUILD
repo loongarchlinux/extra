@@ -1,0 +1,70 @@
+# Maintainer : Christian Rebischke <Chris.Rebischke@archlinux.org>
+# Contributor: Tim Meusel <tim@bastelfreak.de>
+# Contributor: Sebastian Rakel <sebastian@devunit.eu>
+# Contributor: Justin Kromlinger <hashworks@archlinux.org>
+# Contributor: Andrew Tyler <assimilat@gmail.com>
+
+pkgname=vault
+pkgdesc='A tool for managing secrets'
+pkgver=1.13.1
+pkgrel=1
+url="https://vaultproject.io/"
+license=('MPL')
+arch=('loong64' 'x86_64')
+depends=('glibc')
+makedepends=('go' 'git' 'yarn' 'bower' 'nodejs-lts-fermium' 'npm' 'zip' 'gox' 'go-tools')
+install=vault.install
+backup=('etc/vault.hcl')
+_vault_commit='4472e4a3fbcc984b7e3dc48f5a8283f3efe6f282'
+source=("git+https://github.com/hashicorp/vault#commit=${_vault_commit}"
+  'vault.service'
+  'vault.sysusers'
+  'vault.tmpfiles'
+  'vault.hcl')
+sha512sums=('SKIP'
+            '6619cf57668e995cddb29fb6c388c18c21b251052a53832415e415bb4fe538361ef77b74536f5b082b9cda6cd71b598fc50d8b7f51092c4d60262052c5725af2'
+            '92616ccf83fa5ca9f8b0d022cf8ceb1f3549e12b66bf21d9f77f3eb26bd75ec1dc36c155948ec987c642067b85fbfc30a9217d6c503d952a402aa5ef63e50928'
+            '073f0f400cba78521cd2709ce86d88fbb14125117f9f3beca657f625d04eab8e00f7a01b5d9a1cfc03e9038844f5732bdbb1a85dd65a803d3f0b90f8bf87880e'
+            '46106cc76151eef2dd5e4b2caa6a96aae4d6ce1ecbf977dcc8667a3f6c829cbea95133622adafcb15cdfaa066ecc94c73c983e7613ee2f6573694981569729fe')
+
+pkgver() {
+  cd vault
+  git describe --tags --match 'v*' | sed 's/^v//;s/\([^-]*-g\)/r\1/;s/-/./g'
+}
+
+build() {
+  mkdir -p "${srcdir}/vault/http/web_ui"
+  cd "${srcdir}/vault/ui"
+  yarn install --ignore-optional
+  npm rebuild node-sass
+  yarn --verbose run build
+
+  cd "${srcdir}/vault"
+  export CGO_CPPFLAGS="${CPPFLAGS}"
+  export CGO_CFLAGS="${CFLAGS}"
+  export CGO_CXXFLAGS="${CXXFLAGS}"
+  export CGO_LDFLAGS="${LDFLAGS}"
+  export GOPATH="${srcdir}"
+  mkdir -p bin
+  go build \
+    -buildmode=pie \
+    -mod=readonly \
+    -modcacherw \
+    -ldflags "-linkmode=external -compressdwarf=false -X github.com/hashicorp/vault/sdk/version.Version=${pkgver} -X github.com/hashicorp/vault/sdk/version.GitCommit=${_vault_commit} -X github.com/hashicorp/vault/sdk/version.BuildDate=$(date -u '+%Y-%m-%dT%H:%M:%SZ')" \
+    -tags ui \
+    -o dist/ \
+    .
+}
+
+package() {
+  install -Dm644 "${srcdir}/vault.hcl" "${pkgdir}/etc/vault.hcl"
+  install -Dm644 "${srcdir}/vault.service" "${pkgdir}/usr/lib/systemd/system/vault.service"
+  install -Dm644 "${srcdir}/vault.sysusers" "${pkgdir}/usr/lib/sysusers.d/vault.conf"
+  install -Dm644 "${srcdir}/vault.tmpfiles" "${pkgdir}/usr/lib/tmpfiles.d/vault.conf"
+  cd "${srcdir}/vault"
+  install -Dm755 "dist/vault" "${pkgdir}/usr/bin/vault"
+  install -Dm644 "LICENSE" "${pkgdir}/usr/share/licenses/${pkgname}/LICENSE"
+  for file in README.md CHANGELOG.md CONTRIBUTING.md; do
+    install -Dm644 "${file}" "${pkgdir}/usr/share/doc/${pkgname}/${file}"
+  done
+}

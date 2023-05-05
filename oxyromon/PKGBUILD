@@ -1,0 +1,76 @@
+# Maintainer: Maxime Gauduin <alucryd@archlinux.org>
+
+pkgname=oxyromon
+pkgver=0.15.0
+pkgrel=1
+pkgdesc='Rusty ROM OrgaNizer'
+arch=(loong64 x86_64)
+url=https://github.com/alucryd/oxyromon
+license=(GPL3)
+depends=(
+  gcc-libs
+  glibc
+)
+makedepends=(
+  cmake
+  git
+  mame-tools
+  maxcso
+  p7zip
+  rust
+  yarn
+)
+optdepends=(
+  'cdrtools: IRD support'
+  'dolphin-emu: RVZ support'
+  'mame-tools: CHD support'
+  'maxcso: CSO support'
+  'p7zip: 7Z and ZIP support'
+)
+_tag=bd19cf9bc7f2abd84e75fe2c97b512c30fdd4251
+source=(git+https://github.com/alucryd/oxyromon.git#tag=${_tag})
+validpgpkeys=(95220BE99CE6FF778AE0DC670F65C7D881506130) # Maxime Gauduin <alucryd@archlinux.org>
+b2sums=(SKIP)
+options=(!lto)
+
+prepare() {
+  cd oxyromon
+  yarn install \
+    --frozen-lockfile
+  cargo fetch \
+    --locked
+}
+
+pkgver() {
+  cd oxyromon
+  git describe --tags
+}
+
+build() {
+  cd oxyromon
+  yarn build
+  cargo build \
+    --features benchmark,server \
+    --release \
+    --frozen
+}
+
+check() {
+  cargo test \
+    --features benchmark,server \
+    --release \
+    --frozen \
+    --manifest-path oxyromon/Cargo.toml
+}
+
+package() {
+  cargo install \
+    --features benchmark,server \
+    --frozen \
+    --offline \
+    --no-track \
+    --path oxyromon \
+    --root "${pkgdir}"/usr
+}
+
+# vim: ts=2 sw=2 et:

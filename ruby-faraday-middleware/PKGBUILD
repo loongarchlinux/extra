@@ -1,0 +1,47 @@
+# Maintainer: Tim Meusel <tim@bastelfreak.de>
+# Contributor: Felix Yan <felixonmars@archlinux.org>
+# Contributor: Carsten Feuls <archlinux@carstenfeuls.de>
+
+_gemname=faraday_middleware
+pkgname=ruby-faraday-middleware
+pkgver=1.2.0
+pkgrel=1
+pkgdesc='Various middleware for Faraday'
+arch=('any')
+url="https://github.com/lostisland/${_gemname}"
+license=('MIT')
+depends=('ruby' 'ruby-faraday')
+makedepends=('ruby-rdoc' 'ruby-rake' 'ruby-bundler')
+checkdepends=('ruby-rspec' 'ruby-webmock' 'ruby-rack-test' 'ruby-rack')
+options=('!emptydirs')
+source=("${url}/archive/v${pkgver}/${_gemname}-v${pkgver}.tar.gz")
+sha512sums=('abfc6faf725c4646d0c1c59d2bde23db13dd78f81e74d313368bd0ec4945c33f24c8e8f3f252c6fa499fa845bdda19544876ea93bb9118b3fa4d3c7615366283')
+
+prepare() {
+  cd "${srcdir}/${_gemname}-${pkgver}/spec/unit/"
+  # remove unit test for ruby-hashie/ruby-rash/ruby-multi_xml/ruby-brotli/ruby-rack-cache/ruby-simple_oauth
+  # we don't have them in the repos
+  rm mashify_spec.rb rashify_spec.rb parse_xml_spec.rb gzip_spec.rb caching_spec.rb oauth_spec.rb
+}
+
+build() {
+  cd "${srcdir}/${_gemname}-${pkgver}"
+  gem build "${_gemname}.gemspec"
+}
+
+check() {
+  cd "${srcdir}/${_gemname}-${pkgver}"
+  rake spec
+}
+
+package() {
+cd "${srcdir}/${_gemname}-${pkgver}"
+  local _gemdir="$(gem env gemdir)"
+  gem install --verbose --ignore-dependencies --no-user-install --install-dir "${pkgdir}/${_gemdir}" --bindir "${pkgdir}/usr/bin" "${_gemname}-${pkgver}.gem"
+
+  install -Dm 644 LICENSE.md -t "${pkgdir}/usr/share/licenses/${pkgname}/"
+
+  install -Dm 644 README.md CONTRIBUTING.md docs/* -t "${pkgdir}/usr/share/doc/${pkgname}"
+
+  rm -rf "${pkgdir}/${_gemdir}/cache"
+}

@@ -1,0 +1,59 @@
+# Maintainer: David Runge <dvzrv@archlinux.org>
+# Contributor: Ray Rashif <schiv@archlinux.org>
+# Contributor: Tobias Kieslich <tobias@archlinux.org>
+
+pkgname=qjackctl
+pkgver=0.9.10
+pkgrel=1
+pkgdesc="A Qt front-end for the JACK low-latency audio server"
+arch=(loong64 x86_64)
+url="https://qjackctl.sourceforge.io"
+license=(GPL2)
+groups=(pro-audio)
+depends=(
+  gcc-libs
+  glibc
+  hicolor-icon-theme
+  qt6-base
+  qt6-svg
+)
+makedepends=(
+  alsa-lib
+  cmake
+  jack2
+  jack2-dbus
+  qt6-tools
+  portaudio
+)
+optdepends=(
+  'jack2-dbus: for JACK dbus support'
+  'qt6-wayland: for native wayland support'
+)
+source=(https://downloads.sourceforge.net/$pkgname/$pkgname-$pkgver.tar.gz)
+sha512sums=('e209b1814ac2ea0b2d885d7f265b515f95f8f94acb19c6475a0cc37073ca099d7c6ac4949c646b49ffcf0e38a188ea5587dfae54b350d0df5eae9600615b7645')
+b2sums=('923310e8f6541ae8c0c463a2f256c3f960a45c1025608a9b5712873983243498178541dda4ca08dc0558b35765ec0abab48fef9ee727963bea57cae82285f146')
+
+build() {
+  local cmake_options=(
+    -B build
+    -D CMAKE_BUILD_TYPE=None
+    -D CMAKE_INSTALL_PREFIX=/usr
+    -D CONFIG_QT6=ON
+    -S $pkgname-$pkgver
+    -W no-dev
+  )
+
+  cmake "${cmake_options[@]}"
+  cmake --build build --verbose
+}
+
+package() {
+  depends+=(
+    alsa-lib libasound.so
+    jack libjack.so
+    portaudio libportaudio.so
+  )
+
+  DESTDIR="$pkgdir" cmake --install build
+  install -vDm 644 $pkgname-$pkgver/{ChangeLog,README,TRANSLATORS} -t "$pkgdir/usr/share/doc/$pkgname"
+}

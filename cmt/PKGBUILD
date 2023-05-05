@@ -1,0 +1,37 @@
+#Maintainer: David Runge <dvzrv@archlinux.org>
+#Contributor: Damir Perisa <damir.perisa@bluewin.ch>
+#Contributor: Robert Emil Berge <robert@rebi.no>
+
+pkgname=cmt
+pkgver=1.18
+pkgrel=3
+pkgdesc="LADSPA plugins for use with software synthesis and recording packages on Linux"
+arch=(loong64 x86_64)
+license=(GPL2)
+url="https://www.ladspa.org/cmt/overview.html"
+groups=(
+  ladspa-plugins
+  pro-audio
+)
+depends=(
+  gcc-libs
+  glibc
+)
+makedepends=(ladspa)
+source=(https://www.ladspa.org/download/${pkgname}_$pkgver.tgz)
+sha512sums=('8ad8b62bd74f521274a729810e6fd61da9d56b571ef8a13104fe8855c8e29cb5cd6b4c75ea69d0f224807418136c504e26948e8da0513d8ce9e6e31e4cb7d4c5')
+b2sums=('d071d0b6f39fd2ecf562053a878d21e3895a4960f28ed4e6a7cf5d582c4beec6acc571148d054a1a65d78b0497300f18b9b5a05d95afaa64eac1ab56d60c874d')
+
+prepare(){
+  # inserting CFLAGS and LDFLAGS for full RELRO
+  sed -e "s|-O2|${CFLAGS} ${LDFLAGS}|" -i ${pkgname}_$pkgver/src/Makefile
+}
+
+build() {
+  make -C ${pkgname}_$pkgver/src
+}
+
+package() {
+  install -vDm 755 ${pkgname}_$pkgver/plugins/cmt.so -t "$pkgdir/usr/lib/ladspa/"
+  install -vDm 644 ${pkgname}_$pkgver/{README,doc/*.html} -t "$pkgdir/usr/share/doc/$pkgname/"
+}

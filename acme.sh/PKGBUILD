@@ -1,0 +1,30 @@
+# Maintainer: Felix Yan <felixonmars@archlinux.org>
+# Contributor: Gavin Lloyd <gavinhungry@gmail.com>
+
+pkgname=acme.sh
+pkgver=3.0.5
+pkgrel=1
+pkgdesc='An ACME Shell script, an acme client alternative to certbot'
+arch=('any')
+url='https://github.com/acmesh-official/acme.sh'
+license=('GPL3')
+depends=('bash')
+optdepends=('socat: for standalone mode')
+source=("$pkgname-$pkgver.tar.gz::${url}/archive/refs/tags/v${pkgver}.tar.gz")
+sha512sums=('882768c84182a8b11f4f315a9b429cd84399145a97b64772a42e0c7fc478c6c5f93a6c73289410b4d2108786a7c275e99f2e47991bdca315fd7d80a4282eefc9')
+
+package() {
+  cd $pkgname-$pkgver
+
+  install -dm755 "$pkgdir"/usr/share/acme.sh/deploy
+  install -dm755 "$pkgdir"/usr/share/acme.sh/dnsapi
+  install -dm755 "$pkgdir"/usr/share/acme.sh/notify
+  install -dm755 "$pkgdir"/usr/bin
+
+  install -m755 acme.sh "$pkgdir"/usr/share/acme.sh/
+  install -m755 deploy/*.sh "$pkgdir"/usr/share/acme.sh/deploy/
+  install -m755 dnsapi/*.sh "$pkgdir"/usr/share/acme.sh/dnsapi/
+  install -m755 notify/*.sh "$pkgdir"/usr/share/acme.sh/notify/
+
+  ln -s /usr/share/acme.sh/acme.sh "$pkgdir"/usr/bin/acme.sh
+}

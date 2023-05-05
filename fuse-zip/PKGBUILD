@@ -1,0 +1,29 @@
+# Maintainer: Alexander F. Rødseth <xyproto@archlinux.org>
+# Contributor: Benjamin Auder <benjamin.a@mailoo.org>
+
+pkgname=fuse-zip
+pkgver=0.7.2
+pkgrel=3
+pkgdesc='Mount and modify zip files'
+arch=(loong64 x86_64)
+url='https://bitbucket.org/agalanin/fuse-zip'
+license=(GPL)
+depends=(fuse libzip)
+makedepends=(setconf)
+source=("https://bitbucket.org/agalanin/fuse-zip/downloads/$pkgname-$pkgver.tar.gz")
+b2sums=('b7cd0ad3dc605434e40f1914424d3da681308ef758d2aa613323eb0e3ca5c32a9f10377e67f8e4577f670ca80ca039963f8a8ffd4166819584fafce9d3cbe9f1')
+
+prepare() {
+  cd $pkgname-$pkgver
+  setconf Makefile prefix /usr
+  setconf Makefile RELEASE_CXXFLAGS '-O3 -w'
+}
+
+build() {
+  make -C $pkgname-$pkgver release
+}
+
+package() {
+  install -d "$pkgdir/usr/"{bin,share/man/man1}
+  make -C $pkgname-$pkgver DESTDIR="$pkgdir" install
+}

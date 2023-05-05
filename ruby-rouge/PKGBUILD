@@ -1,0 +1,36 @@
+# Maintainer: Levente Polyak <anthraxx[at]archlinux[dot]org>
+
+_gemname=rouge
+pkgname=ruby-rouge
+pkgver=4.1.0
+pkgrel=1
+pkgdesc='Pure-ruby code highlighter that is compatible with pygments'
+url='http://rouge.jneen.net/'
+arch=('any')
+license=('MIT')
+depends=('ruby' 'ruby-rdoc')
+options=('!emptydirs')
+source=(https://github.com/jneen/rouge/archive/v${pkgver}/${pkgname}-${pkgver}.tar.gz)
+sha512sums=('02bcdcf57d3eb896a006513439930791e4a7486c83e1124fff8d8d2abe211d151b238b52dac1a14019dfed061a44ab249ce7979b94602df730c5684522320252')
+b2sums=('4cbff8d855d36e2d4ab79bc7c125eb2e757f11dabfc5501f59687d7203d3ca1ac503a44caa938de05a99676b4fbe885dd7c012139dbbbfe110d5409e7d3ffc1a')
+
+prepare() {
+  cd ${_gemname}-${pkgver}
+  sed -r 's|~>|>=|g' -i ${_gemname}.gemspec
+}
+
+build() {
+  cd ${_gemname}-${pkgver}
+  gem build ${_gemname}.gemspec
+}
+
+package() {
+  cd ${_gemname}-${pkgver}
+  local _gemdir="$(gem env gemdir)"
+  gem install --ignore-dependencies --no-user-install -i "${pkgdir}${_gemdir}" -n "${pkgdir}/usr/bin" ${_gemname}-${pkgver}.gem
+  install -Dm 644 README.md CHANGELOG.md -t "${pkgdir}/usr/share/doc/${pkgname}"
+  install -Dm 644 LICENSE -t "${pkgdir}/usr/share/licenses/${pkgname}"
+  rm "${pkgdir}/${_gemdir}/cache/${_gemname}-${pkgver}.gem"
+}
+
+# vim: ts=2 sw=2 et:

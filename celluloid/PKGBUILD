@@ -1,0 +1,29 @@
+# Maintainer: Balló György <ballogyor+arch at gmail dot com>
+# Contributor: Ainola
+
+pkgname=celluloid
+pkgver=0.25
+pkgrel=1
+pkgdesc='Simple GTK+ frontend for mpv'
+arch=('loong64' 'x86_64')
+url='https://celluloid-player.github.io/'
+license=('GPL3')
+depends=('gtk4' 'mpv' 'libadwaita')
+makedepends=('appstream-glib' 'meson')
+replaces=('gnome-mpv')
+source=("https://github.com/celluloid-player/$pkgname/releases/download/v$pkgver/$pkgname-$pkgver.tar.xz")
+#validpgpkeys=('4BA23A4D2F798D926C7A0E0D0F9039A19BE2326C') # gnome-mpv
+sha256sums=('4f03cb73fd64b327ed847b106453ab69ab4a02523234bcf3869068903e45c92a')
+
+build() {
+  arch-meson $pkgname-$pkgver build
+  meson compile -C build
+}
+
+check() {
+  meson test -C build --print-errorlogs
+}
+
+package() {
+  meson install -C build --destdir "$pkgdir"
+}

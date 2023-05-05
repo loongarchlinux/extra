@@ -1,0 +1,89 @@
+# Maintainer: Andreas 'Segaja' Schleifer <segaja at archlinux dot org>
+# Contributor: Mario Finelli <mario at finel dot li>
+
+_gemname='rubocop-performance'
+pkgname="ruby-${_gemname}"
+pkgver=1.15.1
+pkgrel=1
+pkgdesc='An extension of RuboCop focused on code performance checks'
+arch=('any')
+url='https://docs.rubocop.org/rubocop-performance/'
+license=('MIT')
+depends=('ruby' 'rubocop' 'ruby-rubocop-ast')
+checkdepends=('ruby-bump' 'ruby-parallel' 'ruby-rubocop-rspec' 'ruby-rspec' 'ruby-simplecov' 'ruby-test-queue' 'ruby-yard')
+options=('!emptydirs')
+source=("https://github.com/rubocop/${_gemname}/archive/v${pkgver}/${pkgname}-${pkgver}.tar.gz")
+sha512sums=('6ef0a120ae2b79d6ee35f5b3e1b77fb1d2bab083b9be1fc68022e371613c6c995340fd5cc8206ef611b32f155dd6f3274dbb275c45ef0b5ec28385092206df24')
+b2sums=('0665bc97fd36950f8dfd17dc329ff5cd023825456c33a03239ca0ae92540cc73e68bee0cb70fd5416355237edc969db43d0d5b904f0ff14ee4188b28aec05362')
+
+prepare() {
+  cd "${_gemname}-${pkgver}"
+
+  # update gemspec/Gemfile to allow newer version of the dependencies
+  sed --in-place --regexp-extended 's|~>|>=|g' "${_gemname}.gemspec" Gemfile
+
+  # we have rubocop as a package so we don't need a git checkout
+  sed --in-place --regexp-extended "s|, github: 'rubocop/rubocop'||g" Gemfile
+}
+
+build() {
+  cd "${_gemname}-${pkgver}"
+
+  local _gemdir="$(gem env gemdir)"
+
+  gem build "${_gemname}.gemspec"
+
+  gem install \
+    --local \
+    --verbose \
+    --ignore-dependencies \
+    --no-user-install \
+    --install-dir "tmp_install/${_gemdir}" \
+    --bindir "tmp_install/usr/bin" \
+    "${_gemname}-${pkgver}.gem"
+
+  # remove unrepreducible files
+  rm --force --recursive --verbose \
+    "tmp_install/${_gemdir}/cache/" \
+    "tmp_install/${_gemdir}/gems/${_gemname}-${pkgver}/vendor/" \
+    "tmp_install/${_gemdir}/doc/${_gemname}-${pkgver}/ri/ext/"
+
+  find "tmp_install/${_gemdir}/gems/" \
+    -type f \
+    \( \
+      -iname "*.o" -o \
+      -iname "*.c" -o \
+      -iname "*.so" -o \
+      -iname "*.time" -o \
+      -iname "gem.build_complete" -o \
+      -iname "Makefile" \
+    \) \
+    -delete
+
+  find "tmp_install/${_gemdir}/extensions/" \
+    -type f \
+    \( \
+      -iname "mkmf.log" -o \
+      -iname "gem_make.out" \
+    \) \
+    -delete
+}
+
+check() {
+  cd "${_gemname}-${pkgver}"
+
+  local _gemdir="$(gem env gemdir)"
+
+  GEM_HOME="tmp_install/${_gemdir}" rake spec
+}
+
+package() {
+  cd "${_gemname}-${pkgver}"
+
+  cp --archive --verbose tmp_install/* "${pkgdir}"
+
+  install --verbose -D --mode=0644 LICENSE.txt "${pkgdir}/usr/share/licenses/${pkgname}/LICENSE"
+  install --verbose -D --mode=0644 *.md --target-directory "${pkgdir}/usr/share/doc/${pkgname}"
+}
+
+# vim: tabstop=2 shiftwidth=2 expandtab:

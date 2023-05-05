@@ -1,0 +1,50 @@
+# Maintainer: Maxime Gauduin <alucryd@archlinux.org>
+# Contributor: Eric Bélanger <eric@archlinux.org>
+
+pkgname=gpac
+pkgver=2.2.0
+pkgrel=1
+epoch=1
+pkgdesc='A multimedia framework based on the MPEG-4 Systems standard'
+arch=(loong64 x86_64)
+url=https://gpac.wp.imt.fr/
+license=(LGPL)
+depends=(
+  glibc
+  libnghttp2
+  openssl
+  xz
+  zlib
+)
+makedepends=(git)
+optdepends=('python: python bindings')
+provides=(libgpac.so)
+_tag=ab012bbfba2c1fdcc4ff60052ce127fe84c7c286
+source=(git+https://github.com/gpac/gpac.git#tag=${_tag})
+b2sums=(SKIP)
+
+pkgver() {
+  cd gpac
+  git describe --tags | sed 's/^v//'
+}
+
+build() {
+  export CFLAGS+=" -ffat-lto-objects"
+  export CXXFLAGS+=" -ffat-lto-objects"
+  cd gpac
+  ./configure \
+    --prefix=/usr \
+    --mandir=/usr/share/man \
+    --disable-oss-audio \
+    --disable-dvb4linux \
+    --disable-qjs \
+    --enable-pic
+  make
+}
+
+package() {
+  make DESTDIR="${pkgdir}" STRIP=true -C gpac install
+  make DESTDIR="${pkgdir}" STRIP=true -C gpac install-lib
+}
+
+# vim: ts=2 sw=2 et:

@@ -1,0 +1,41 @@
+# Maintainer: Levente Polyak <anthraxx[at]archlinux[dot]org>
+# Contributor: Nicolas Hureau <archlinux@kalenz.net>
+
+pkgname=jadx
+pkgver=1.4.7
+pkgrel=1
+pkgdesc='Command line and GUI tools to produce Java source code from Android Dex and APK files'
+url='https://github.com/skylot/jadx'
+arch=('any')
+license=('Apache')
+depends=('java-runtime>=11' 'bash')
+makedepends=('java-environment>=11' 'gradle')
+source=(https://github.com/skylot/${pkgname}/archive/v${pkgver}/${pkgname}-${pkgver}.tar.gz)
+sha512sums=('df97966e2bec5a33afa19208785c01ea64c18a96e43f59769fe1763814c89a0af9dffb16f070b84e378271957024d3436f8e2606fea11b5609245b54ba0a34a2')
+b2sums=('9ffbae25cde905b26ab486936dc06fb1580335b232cd52a3a6836d7f518891efdf60be651a4b2d7d8f27d8502a1f3fb84dd0ae8098b99f91a7b68a36cb9c2f47')
+
+build() {
+  cd ${pkgname}-${pkgver}
+  gradle dist
+}
+
+check() {
+  cd ${pkgname}-${pkgver}
+  gradle test
+}
+
+package() {
+  cd ${pkgname}-${pkgver}/build/jadx
+
+  install -Dm 755 bin/{jadx,jadx-gui} -t "${pkgdir}/usr/share/java/${pkgname}/bin"
+  install -Dm 644 lib/* -t "${pkgdir}/usr/share/java/${pkgname}/lib"
+
+  install -d "${pkgdir}/usr/bin"
+  ln -s /usr/share/java/${pkgname}/bin/jadx "${pkgdir}/usr/bin/jadx"
+  ln -s /usr/share/java/${pkgname}/bin/jadx-gui "${pkgdir}/usr/bin/jadx-gui"
+
+  install -Dm 644 LICENSE -t "${pkgdir}/usr/share/licenses/${pkgname}"
+  install -Dm 644 NOTICE README.md -t "${pkgdir}/usr/share/doc/${pkgname}"
+}
+
+# vim: ts=2 sw=2 et:

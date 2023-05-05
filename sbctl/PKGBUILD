@@ -1,0 +1,27 @@
+# Maintainer: Morten Linderud <foxboron@archlinux.org>
+
+pkgname=sbctl
+pkgver=0.11
+pkgrel=1
+pkgdesc="Secure Boot key manager"
+arch=("loong64" "x86_64" "aarch64")
+url="https://github.com/Foxboron/sbctl"
+license=("MIT")
+depends=("binutils" "util-linux")
+makedepends=("go" "git" "asciidoc")
+source=("https://github.com/Foxboron/sbctl/releases/download/${pkgver}/${pkgname}-${pkgver}.tar.gz"{,.sig})
+validpgpkeys=("C100346676634E80C940FB9E9C02FF419FECBE16")
+sha256sums=('8060d51bd26d16fe54a3aee39dcc547eb551d789fd87b4ad52049093ce327e8d'
+            'SKIP')
+
+build(){
+    cd "${pkgname}-${pkgver}"
+    export GOFLAGS="-buildmode=pie -trimpath -modcacherw"
+    make
+}
+
+package(){
+    cd "${pkgname}-${pkgver}"
+    make PREFIX="$pkgdir/usr" install
+    install -Dm644 ./contrib/pacman/ZZ-sbctl.hook "${pkgdir}/usr/share/libalpm/hooks/zz-sbctl.hook"
+}

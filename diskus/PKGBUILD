@@ -1,0 +1,37 @@
+# Maintainer: Daniel M. Capella <polyzen@archlinux.org>
+
+pkgname=diskus
+pkgver=0.7.0
+pkgrel=2
+pkgdesc="Minimal, fast alternative to 'du -sh'"
+arch=('loong64' 'x86_64')
+url=https://github.com/sharkdp/diskus
+license=('Apache' 'MIT')
+depends=('gcc-libs')
+makedepends=('rust')
+source=("diskus-$pkgver.tar.gz::https://static.crates.io/crates/diskus/diskus-$pkgver.crate")
+b2sums=('870a68e2fef66377ef6fdd3b5e5344c006ff029bd18a82413e2fc9e748766b17dcde451b48cb7122b6226e3a57dc85f87105066391c881b4310332d7a1f6c179')
+
+prepare() {
+  cd diskus-$pkgver
+  cargo fetch --locked --target "$CARCH-unknown-linux-gnu"
+}
+
+build() {
+  cd diskus-$pkgver
+  cargo build --release --locked --offline
+}
+
+check() {
+  cd diskus-$pkgver
+  cargo test --locked --offline
+}
+
+package() {
+  cd diskus-$pkgver
+  install -Dt "$pkgdir"/usr/bin target/release/diskus
+  install -Dm644 -t "$pkgdir"/usr/share/man/man1 doc/diskus.1
+  install -Dm644 -t "$pkgdir"/usr/share/licenses/diskus LICENSE-MIT
+}
+
+# vim:set ts=2 sw=2 et:

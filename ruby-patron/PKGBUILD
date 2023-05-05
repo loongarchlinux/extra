@@ -1,0 +1,63 @@
+# Maintainer: Felix Yan <felixonmars@archlinux.org>
+
+pkgname=ruby-patron
+pkgver=0.13.3
+_commit=6828083e8db2d2c5f7ea1db7143a9e1a9d13ef78
+pkgrel=2
+pkgdesc='Ruby HTTP client library based on libcurl'
+arch=(loong64 x86_64)
+url='https://github.com/toland/patron'
+license=(MIT)
+depends=(ruby curl)
+makedepends=(git ruby-rake-compiler ruby-rack ruby-rspec ruby-puma ruby-yard)
+options=(!emptydirs)
+source=(git+https://github.com/toland/patron.git#commit=$_commit
+        $pkgname-puma-5.patch)
+sha256sums=('SKIP'
+            '85977d0082234adb7b31308c4338f870a6ae30c3f2182c81d7c1736c33c0dc25')
+
+prepare() {
+  cd patron
+  patch -p1 -i ../$pkgname-puma-5.patch
+  # we don't do version pinning
+  sed -r -e 's|~>|>=|g' -i patron.gemspec
+}
+
+build() {
+  local _gemdir="$(gem env gemdir)"
+  cd patron
+  rake build
+  gem install \
+    --local \
+    --verbose \
+    --ignore-dependencies \
+    --no-user-install \
+    --install-dir "tmp_install/$_gemdir" \
+    --bindir "tmp_install/usr/bin" \
+    pkg/patron-$pkgver.gem
+  find "tmp_install/$_gemdir/gems/" \
+    -type f \
+    \( \
+        -iname "*.o" -o \
+        -iname "*.c" -o \
+        -iname "*.so" -o \
+        -iname "*.time" -o \
+        -iname "gem.build_complete" -o \
+        -iname "Makefile" \
+    \) \
+    -delete
+}
+
+check() {
+  local _gemdir="$(gem env gemdir)"
+  cd patron
+  # https://github.com/toland/patron/pull/193
+  GEM_HOME="tmp_install/$_gemdir" rake spec || echo "Tests failed"
+}
+
+package() {
+  cd patron
+  cp -a tmp_install/* "$pkgdir"/
+
+  install -Dm644 LICENSE -t "$pkgdir"/usr/share/licenses/$pkgname/
+}

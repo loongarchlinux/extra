@@ -1,0 +1,57 @@
+# Maintainer: Dan Printzell <wild@archlinux.org>
+# Maintainer: Filipe Laíns (FFY00) <lains@archlinux.org>
+
+pkgname=dscanner
+pkgver=0.14.0
+pkgrel=1
+_pkgcommit=d5d6920502bf1bfdb29474007a59fd606df0aadc
+pkgdesc="Swiss-army knife for D source code"
+arch=('loong64' 'x86_64')
+url="https://github.com/dlang-community/D-Scanner"
+license=("custom")
+groups=('dlang')
+makedepends=('ldc' 'git')
+depends=('liblphobos')
+source=("git+https://github.com/dlang-community/D-Scanner#commit=$_pkgcommit"
+        "git+https://github.com/dlang-community/libdparse"
+        "git+https://github.com/burner/inifiled"
+        "git+https://github.com/dlang-community/containers"
+        "git+https://github.com/dlang-community/libddoc"
+        "git+https://github.com/dlang-community/d-test-utils"
+        "git+https://github.com/dlang-community/DCD")
+sha512sums=('SKIP'
+            'SKIP'
+            'SKIP'
+            'SKIP'
+            'SKIP'
+            'SKIP'
+            'SKIP')
+
+prepare() {
+  cd "$srcdir/D-Scanner"
+
+  git submodule init
+  git config submodule.libdparse.url "$srcdir/libdparse"
+  git config submodule.inifiled.url "$srcdir/inifiled"
+  git config submodule.containers.url "$srcdir/containers"
+  git config submodule.libddoc.url "$srcdir/libddoc"
+  git config submodule.d-test-utils.url "$srcdir/d-test-utils"
+  git config submodule.DCD.url "$srcdir/DCD"
+  git -c protocol.file.allow=always submodule update
+
+  # Only LDC have -O5, and add DC_FLAGS to linking
+  sed -i -e "s/-O5/-O5 -flto=full -link-defaultlib-shared=false -L=\"$LDFLAGS\"/g" -e 's/OBJ_BY_DC} \${WRITE_TO_TARGET_NAME}/OBJ_BY_DC} ${WRITE_TO_TARGET_NAME} ${DC_FLAGS}/' makefile
+}
+
+build() {
+  cd "$srcdir/D-Scanner"
+  DC=ldc2 make
+}
+
+package() {
+  # binaries
+  install -Dm755 "$srcdir/D-Scanner/bin/dscanner" "$pkgdir/usr/bin/dscanner"
+
+  # license
+  install -Dm644 "$srcdir/D-Scanner/LICENSE_1_0.txt" "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
+}

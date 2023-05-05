@@ -1,0 +1,27 @@
+# Maintainer: Alexander F. Rødseth <xyproto@archlinux.org>
+# Contributor: Roberto Alsina <ralsina@kde.org>
+
+pkgname=e3
+pkgver=2.82
+pkgrel=6
+pkgdesc='Tiny editor without dependencies, written in assembly'
+arch=(loong64 x86_64)
+url='https://sites.google.com/site/e3editor/'
+license=(GPL2)
+makedepends=(yasm)
+options=(!strip)
+source=("$pkgname-$pkgver.tar.gz::https://drive.google.com/uc?export=download&id=1ZNWI-Fl7Zc69H0hX1WpLpwG9mxUcZf30")
+b2sums=('09edea9063657373cf6d7d9d8290dddf17b8fb516538d89b83462176127b8b43832bd81f326eec5504116f05ab780023832b8b5d41d72e3ab8e726d89e364a36')
+
+build() {
+  make -C $pkgname-$pkgver NASM_OR_YASM=yasm clean 64
+}
+
+package() {
+  cd "$pkgname-$pkgver"
+  install -Dm755 e3 "$pkgdir/usr/bin/e3"
+  for f in e3ws e3em e3pi e3vi e3ne; do
+    ln -sf /usr/bin/e3 "$pkgdir/usr/bin/$f"
+  done
+  install -Dm644 e3.man "$pkgdir/usr/share/man/man1/e3.1"
+}

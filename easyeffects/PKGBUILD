@@ -1,0 +1,38 @@
+# Maintainer: Filipe Laíns (FFY00) <lains@archlinux.org>
+# Maintainer: Frederik Schwan <freswa at archlinux dot org>
+# Maintainer: Justin Kromlinger <hashworks@archlinux.org>
+# Contributor: Wellington <wellingtonwallace@gmail.com>
+# Contributor: robertfoster
+
+pkgname=easyeffects
+pkgver=7.0.3
+pkgrel=1
+pkgdesc='Audio Effects for Pipewire applications'
+arch=('loong64' 'x86_64')
+url='https://github.com/wwmm/easyeffects'
+license=('GPL3')
+depends=('fftw' 'libfmt.so' 'gsl' 'gtk4' 'libadwaita-1.so'
+         'libbs2b.so' 'libebur128' 'libsamplerate.so'
+         'libsigc-3.0.so' 'libsndfile.so' 'liblilv-0.so'
+         'pipewire' 'rnnoise' 'librubberband.so'
+         'speexdsp' 'tbb' 'zita-convolver')
+makedepends=('appstream-glib' 'itstool' 'meson' 'nlohmann-json' 'speex' 'lv2')
+optdepends=(
+  'calf: limiter, exciter, bass enhancer and others'
+  'lsp-plugins-lv2: equalizer, compressor, delay, loudness'
+  'zam-plugins-lv2: maximizer'
+  'mda.lv2: bass loudness plugin'
+  'yelp: in-app help'
+)
+replaces=('pulseeffects')
+source=("${url}/archive/v${pkgver}/${pkgname}-v${pkgver}.tar.gz")
+sha512sums=('68975c6e5f09987a57b6e6b0db56e7f02376a10aebd7e44311f0d92d04a93c5358fb835cdaeb4f7c193fdbf90833827eb31d38707ae4e75feeab7b04ba66fc39')
+
+build() {
+  arch-meson ${pkgname}-${pkgver} build
+  ninja -C build
+}
+
+package() {
+  DESTDIR="${pkgdir}" ninja install -C build
+}

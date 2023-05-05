@@ -1,0 +1,42 @@
+# Maintainer: George Rawlinson <grawlinson@archlinux.org>
+# Contributor: Robert R Miller <robertrmiller@outlook.com>
+# Contributor: June Tate-Gans <june@theonelab.com>
+
+pkgname=libfixposix
+pkgver=0.5.1
+pkgrel=1
+pkgdesc='Thin wrapper over POSIX syscalls'
+arch=('loong64' 'x86_64')
+url='https://github.com/sionescu/libfixposix'
+license=('Boost')
+depends=('glibc')
+makedepends=('git')
+_commit='66bda012a7afb232877e315c91e21d6ddaffbdab'
+source=("libfixposix::git+https://github.com/sionescu/libfixposix#commit=$_commit")
+b2sums=('SKIP')
+
+pkgver() {
+  cd "$pkgname"
+
+  git describe --tags | sed 's/^v//'
+}
+
+prepare() {
+  cd "$pkgname"
+
+  autoreconf -fiv
+}
+
+build() {
+  cd "$pkgname"
+
+  ./configure --prefix=/usr
+
+  make
+}
+
+package() {
+  cd "$pkgname"
+
+  make DESTDIR="$pkgdir" install
+}

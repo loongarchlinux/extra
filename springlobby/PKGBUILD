@@ -1,0 +1,41 @@
+# Maintainer: Sven-Hendrik Haase <svenstaro@archlinux.org>
+# Contributor: DuGi <dugi@irc.pl>
+
+pkgname=springlobby
+pkgver=0.274
+pkgrel=1
+pkgdesc="A free cross-platform lobby client for the Spring RTS project"
+arch=('loong64' 'x86_64')
+url="https://springlobby.springrts.com/"
+license=('GPL2')
+depends=('hicolor-icon-theme' 'wxwidgets-gtk3' 'curl' 'jsoncpp' 'alure'
+         'minizip' 'libsm')
+makedepends=('boost' 'cmake' 'ninja')
+source=("https://springlobby.springrts.com/dl/stable/springlobby-${pkgver}.tar.bz2")
+sha512sums=('eef1a58ffbcf4c8aa3c4bf2c555775412649f5e8a589a47d004c605576570c2e441f35ea20a22bf618a2be6b3b104dbbec1f45d6cd221d3537eee7b0c4c754a0')
+
+prepare() {
+  cd $pkgname-$pkgver
+  # remove bundled libraries
+  rm -r src/downloader/lib/src/lib/jsoncpp
+  rm -r src/downloader/lib/src/lib/minizip
+}
+
+build() {
+  cd $pkgname-$pkgver
+
+  cmake \
+    -GNinja \
+    -Bbuild \
+    -DCMAKE_INSTALL_PREFIX=/usr \
+    -DPRD_JSONCPP_INTERNAL=OFF
+  ninja -C build
+}
+
+package() {
+  cd $pkgname-$pkgver
+
+  DESTDIR="$pkgdir" ninja -C build install
+}
+
+# vim: sw=2:ts=2 et:

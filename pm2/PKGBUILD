@@ -1,0 +1,36 @@
+# Maintainer: Felix Yan <felixonmars@archlinux.org>
+
+pkgname=pm2
+pkgver=5.3.0
+pkgrel=1
+pkgdesc='Production process manager for Node.JS applications with a built-in load balancer'
+arch=('any')
+url='https://pm2.keymetrics.io'
+license=('AGPL3')
+depends=('nodejs' 'semver')
+makedepends=('npm' 'git')
+install=pm2.install
+source=(https://registry.npmjs.org/$pkgname/-/$pkgname-$pkgver.tgz
+        pm2.service)
+noextract=($pkgname-$pkgver.tgz)
+sha512sums=('c6c7264220007fa02b5662a18ca4de78df3e4dded92a7b991453f0d431a47453d1ff4232c7e9bed7e3a909d7fdf87428a57dd53dcf7fc2a3d01ea54e7c7ba6f7'
+            '0d80c16d4694511cc19970a3eb4a2e10f706a58c5cdc554809e12a12093a5b29ff6d30027cbe8646f837a42e40f7d9b7fe2853f96a76a38f47ddc14833f141ef')
+
+package() {
+  npm install -g --prefix "$pkgdir"/usr "$srcdir"/$pkgname-$pkgver.tgz
+  install -Dm644 pm2.service "$pkgdir"/usr/lib/systemd/system/pm2.service
+
+  # Non-deterministic race in npm gives 777 permissions to random directories.
+  # See https://github.com/npm/npm/issues/9359 for details.
+  chmod -R u=rwX,go=rX "$pkgdir"
+
+  # npm installs package.json owned by build user
+  # https://bugs.archlinux.org/task/63396
+  chown -R root:root "$pkgdir"
+
+  # Experimental dedup
+  cd "$pkgdir"/usr/lib/node_modules/$pkgname/node_modules
+  for dep in semver; do
+    rm -r $dep;
+  done
+}

@@ -1,0 +1,63 @@
+# Maintainer: Torsten Keßler <tpkessler at archlinux dot org>
+# Contributor: Markus Näther <naether.markus@gmail.com>
+pkgname=rocblas
+pkgver=5.4.3
+pkgrel=2
+pkgdesc='Next generation BLAS implementation for ROCm platform'
+arch=('loong64' 'x86_64')
+url='https://rocblas.readthedocs.io/en/latest'
+license=('MIT')
+depends=('hip' 'openmp')
+makedepends=('rocm-cmake' 'python' 'python-virtualenv' 'python-pyaml' 'python-wheel'
+             'perl-file-which' 'python-msgpack' 'msgpack-cxx' 'gcc-fortran')
+_rocblas='https://github.com/ROCmSoftwarePlatform/rocBLAS'
+_tensile='https://github.com/ROCmSoftwarePlatform/Tensile'
+source=("$pkgname-$pkgver.tar.gz::$_rocblas/archive/rocm-$pkgver.tar.gz"
+        "$pkgname-tensile-$pkgver.tar.gz::$_tensile/archive/refs/tags/rocm-$pkgver.tar.gz"
+        "find-msgpack-5.patch")
+sha256sums=('d82cd334b7a9b40d16ec4f4bb1fb5662382dcbfc86ee5e262413ed63d9e6a701'
+            'a4c5e62edd33ea6b8528eb3f017a14c28eaa67c540f5c9023f6a245340198b0f'
+            '3f91bf087e4ea72eaef5acd500e16b61aa69c029cfcca14666799a7c42a0c5aa')
+options=(!lto)
+_dirname="$(basename "$_rocblas")-$(basename "${source[0]}" ".tar.gz")"
+_tensile_dir="$(basename "$_tensile")-$(basename "${source[1]}" ".tar.gz")"
+
+prepare() {
+    cd "$_tensile_dir"
+    patch -Np1 -i "$srcdir/find-msgpack-5.patch"
+}
+
+build() {
+  # Compile source code for supported GPU archs in parallel
+  export HIPCC_COMPILE_FLAGS_APPEND="-parallel-jobs=$(nproc)"
+  export HIPCC_LINK_FLAGS_APPEND="-parallel-jobs=$(nproc)"
+  # -fcf-protection is not supported by HIP, see
+  # https://docs.amd.com/bundle/ROCm-Compiler-Reference-Guide-v5.4/page/Appendix_A.html
+  PATH="/opt/rocm/llvm/bin:/opt/rocm/bin:${PATH}" \
+  CXXFLAGS="${CXXFLAGS} -fcf-protection=none" \
+  cmake \
+    -Wno-dev \
+    -B build \
+    -S "$_dirname" \
+    -DCMAKE_BUILD_TYPE=None \
+    -DCMAKE_CXX_COMPILER=/opt/rocm/bin/hipcc \
+    -DCMAKE_INSTALL_PREFIX=/opt/rocm \
+    -DCMAKE_PREFIX_PATH=/opt/rocm/llvm/lib/cmake/llvm \
+    -Damd_comgr_DIR=/opt/rocm/lib/cmake/amd_comgr \
+    -DBUILD_WITH_TENSILE=ON \
+    -DTensile_LIBRARY_FORMAT=msgpack \
+    -DTensile_CODE_OBJECT_VERSION=V3 \
+    -DCMAKE_TOOLCHAIN_FILE=toolchain-linux.cmake \
+    -DBUILD_FILE_REORG_BACKWARD_COMPATIBILITY=ON \
+    -DTensile_TEST_LOCAL_PATH="$srcdir/$_tensile_dir"
+  cmake --build build
+}
+
+package() {
+  DESTDIR="$pkgdir" cmake --install build
+
+  echo "/opt/rocm/$pkgname/lib" > "$pkgname.conf"
+  install -Dm644 "$pkgname.conf" "$pkgdir/etc/ld.so.conf.d/rocblas.conf"
+
+  install -Dm644 "$_dirname/LICENSE.md" "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
+}

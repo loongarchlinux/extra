@@ -1,0 +1,36 @@
+# Maintainer: Felix Yan <felixonmars@archlinux.org>
+# Maintainer: Morten Linderud <foxboron@archlinux.org>
+
+pkgname=glider
+pkgver=0.16.3
+pkgrel=1
+pkgdesc="A forward proxy with multiple protocols support"
+arch=('loong64' 'x86_64')
+url="https://github.com/nadoo/glider"
+license=('GPL')
+options=('!lto')
+depends=('glibc')
+makedepends=('go' 'git')
+source=("$pkgname-$pkgver.tar.gz::https://github.com/nadoo/glider/archive/v$pkgver.tar.gz")
+sha512sums=('6c0a733e79a638e98b68f8ab16e72dbddfd5e21fc23467017294da1092821ef64a7ac0f3b3ea8f9dd6c27eb20aa28e6539d20fc0fb3812f5e1538c59dd3d99c0')
+
+build() {
+  cd glider-$pkgver
+  export GOFLAGS="-buildmode=pie -trimpath -ldflags=-linkmode=external"
+  export CGO_LDFLAGS="${LDFLAGS}"
+  export CGO_CFLAGS="${CFLAGS}"
+  export CGO_CPPFLAGS="${CPPFLAGS}"
+  go build -o glider .
+}
+
+check(){
+  cd glider-$pkgver
+  go test -v ./...
+}
+
+package() {
+  cd glider-$pkgver
+  install -Dm755 glider "$pkgdir"/usr/bin/glider
+  install -Dm644 config/glider.conf.example "$pkgdir"/etc/glider/glider.conf.example
+  install -Dm644 systemd/glider@.service "$pkgdir"/usr/lib/systemd/system/glider@.service
+}

@@ -1,0 +1,44 @@
+# Maintainer: BlackIkeEagle <ike DOT devolder AT gmail DOT com>
+# Contributor: Sergej Pupykin <pupykin.s+arch@gmail.com>
+# Contributor: John Gerritse <john.gerritse@gmail.com>
+
+pkgname=atop
+pkgver=2.8.1
+pkgrel=1
+pkgdesc='A system and process level monitor'
+arch=('loong64' 'x86_64')
+url='https://www.atoptool.nl/'
+license=('GPL')
+depends=('ncurses' 'sh' 'zlib')
+optdepends=(
+    'python-pynvml: NVIDIA gpu reporting AUR'
+)
+backup=('etc/default/atop')
+source=("https://www.atoptool.nl/download/atop-${pkgver/_/-}.tar.gz"
+        'atop.default')
+sha512sums=('d84c1e7f5ba9fd1809b3c1b69db89d596d7df5a9035cc21f12c98ef623dfef90e23756f1f7fc5903234760c75f64b1c6ba314700c41a5cfd09141f16524106cd'
+            '3583738b48d9b5ed1ada323a753cd30bfd41a118d7f96ab9f536858ac356cdd5dd2acf30de5c000745c0b817e9e0ee115731fbe9828086488c3c9df773a05d08')
+
+#prepare() {
+    #cd "$pkgname-$pkgver"
+    #patch -p1 -i "$srcdir/1e93ac6a8e486dfda633af049c950040020373c9.patch"
+#}
+
+build() {
+    cd "$pkgname-$pkgver"
+    make
+}
+
+package() {
+    cd "$pkgname-$pkgver"
+    ## default folder not properly created
+    mkdir -p "$pkgdir/etc/default"
+    make DESTDIR="$pkgdir" install \
+        SBINPATH=/usr/bin \
+        SYSDPATH=/usr/lib/systemd/system
+    install -Dm644 "$srcdir/atop.default" "$pkgdir/etc/default/atop"
+    # enable atop-rotate.timer by default
+    install -dm755 "$pkgdir/usr/lib/systemd/system/timers.target.wants"
+    ln -s ../atop-rotate.timer \
+        "$pkgdir/usr/lib/systemd/system/timers.target.wants/atop-rotate.timer"
+}

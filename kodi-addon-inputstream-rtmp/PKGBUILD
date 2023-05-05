@@ -1,0 +1,33 @@
+# Maintainer: BlackIkeEagle <ike DOT devolder AT gmail DOT com>
+# Contributor: kevku <kevku@gmx.com>
+
+pkgname=kodi-addon-inputstream-rtmp
+pkgver=20.3.0
+_codename=Nexus
+pkgrel=5
+pkgdesc="RTMP input stream add-on for Kodi"
+arch=('loong64' 'x86_64')
+url="https://github.com/xbmc/inputstream.rtmp"
+license=('GPL2')
+groups=('kodi-addons' 'kodi-addons-inputstream')
+makedepends=('cmake' 'rtmpdump' 'p8-platform' 'kodi-dev')
+options=(!lto)
+source=("$pkgname-$pkgver.tar.gz::https://github.com/xbmc/inputstream.rtmp/archive/$pkgver-$_codename.tar.gz")
+sha512sums=('4c70d3df184eae19e359460560257012fece6cbd571d9a27c01f0dbdff84f1ce12b88527a1797cdc3c2a12e39edb92a7a82dd1cfd5721b553290a295733df9f6')
+
+build() {
+    cd "inputstream.rtmp-$pkgver-$_codename"
+    cmake \
+        -DCMAKE_INSTALL_PREFIX=/usr \
+        -DCMAKE_BUILD_TYPE=Release \
+        -DBUILD_SHARED_LIBS=1 \
+        -DUSE_LTO=1 \
+        .
+    make
+}
+
+package() {
+    depends=('kodi' 'rtmpdump' 'p8-platform')
+    cd "inputstream.rtmp-$pkgver-$_codename"
+    make DESTDIR="$pkgdir/" install
+}

@@ -1,0 +1,38 @@
+# Maintainer: Jelle van der Waa <jelle@archlinux.org>
+# Contributor: Daniel Milde <daniel@milde.cz>
+# Contributor: George Rawlinson <george@rawlinson.net.nz>
+
+pkgname=esbuild
+pkgver=0.17.18
+pkgrel=1
+pkgdesc="An extremely fast JavaScript and CSS bundler and minifier."
+arch=('loong64' 'x86_64')
+url="https://esbuild.github.io/"
+license=('MIT')
+depends=(glibc)
+makedepends=(go)
+source=("${pkgname}-${pkgver}.tar.gz::https://github.com/evanw/${pkgname}/archive/v${pkgver}.tar.gz")
+sha512sums=('5d366479a439a354c7600109001fd35b23c15c56ed86f5fd59d7f1fddd0353ac744bc0c1077be6daccfe56068672bfeacaa58bb9b55f36cb060126eb88a5115b')
+
+export CGO_CPPFLAGS="${CPPFLAGS}"
+export CGO_CFLAGS="${CFLAGS}"
+export CGO_CXXFLAGS="${CXXFLAGS}"
+export CGO_LDFLAGS="${LDFLAGS}"
+export GOFLAGS="-buildmode=pie -trimpath -ldflags=-linkmode=external -mod=readonly -modcacherw"
+
+build() {
+    cd "${pkgname}-${pkgver}"
+    go build \
+    -trimpath \
+    -buildmode=pie \
+    -mod=readonly \
+    -modcacherw \
+    -ldflags "-linkmode external -extldflags \"${LDFLAGS}\"" \
+    ./cmd/esbuild
+}
+
+package() {
+    cd "${pkgname}-${pkgver}"
+    install -Dm755 "${pkgname}" "${pkgdir}/usr/bin/${pkgname}"
+    install -Dm644 -t "${pkgdir}/usr/share/licenses/${pkgname}" "LICENSE.md"
+}

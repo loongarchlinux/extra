@@ -1,0 +1,71 @@
+# Maintainer: David Runge <dvzrv@archlinux.org>
+
+pkgname=avldrums.lv2
+_commit=2e1b5ca0ccfd3ea447b8616eb3d3c19b9e12462a  # refs/tags/v0.6.0
+pkgver=0.6.0
+pkgrel=1
+pkgdesc="A simple Drum Sample Player Plugin, dedicated to the AVLinux Drumkits"
+arch=(loong64 x86_64)
+url="https://x42-plugins.com/x42/x42-avldrums"
+license=(GPL2)
+groups=(pro-audio lv2-plugins)
+depends=(
+  cairo
+  glibc
+  libx11
+  lv2-host
+)
+makedepends=(
+  fluidsynth
+  git
+  glib2
+  glu
+  libglvnd
+  lv2
+  pango
+)
+checkdepends=(lv2lint)
+source=(
+  git+https://github.com/x42/$pkgname.git#tag=$_commit
+  git+https://github.com/x42/robtk
+  $pkgname-0.6.0-use-system-fluidsynth.patch
+)
+sha512sums=('SKIP'
+            'SKIP'
+            'fdf48b606630d8c17df0e5b7cfda5b580c77d0237c5c76bdf6c831f693a70401ad66a94a2e4dc2ec04636654bf65256a27b985a963c5ad4c8948baa61a726f4d')
+b2sums=('SKIP'
+        'SKIP'
+        'b9a492b48ed34c0705e8e75a3ce4c971bd61e2efe93432c81785cb314815995edb6144a311841025acdbaa0ceef2684cc2f1d872a53a191518909f263c88571a')
+
+prepare() {
+  (
+    cd $pkgname
+    git submodule init
+    git config submodule.robtk.url "$srcdir/robtk"
+    git -c protocol.file.allow=always submodule update
+  )
+
+  # build against system fluidsynth
+  patch -Np1 -d $pkgname -i ../$pkgname-0.6.0-use-system-fluidsynth.patch
+}
+
+build() {
+  make -C $pkgname
+}
+
+check() {
+  for _name in BlackPearl BlackPearlMulti RedZeppelin RedZeppelinMulti; do
+    lv2lint -Mpack -I "$pkgname/build/" "http://gareus.org/oss/lv2/avldrums#$_name"
+  done
+}
+
+package() {
+  depends+=(
+    fluidsynth libfluidsynth.so
+    glib2 libgobject-2.0.so
+    libglvnd libGL.so
+    pango libpango-1.0.so libpangocairo-1.0.so
+  )
+
+  make DESTDIR="$pkgdir" PREFIX=/usr install -C $pkgname
+}

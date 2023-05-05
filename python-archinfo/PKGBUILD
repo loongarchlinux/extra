@@ -1,0 +1,35 @@
+# Maintainer: Levente Polyak <anthraxx[at]archlinux[dot]org>
+
+_pyname=archinfo
+pkgname=python-${_pyname}
+pkgver=9.2.49
+pkgrel=1
+pkgdesc='Classes with architecture-specific information useful to other projects'
+url='https://github.com/angr/archinfo'
+arch=('any')
+license=('custom:BSD2')
+depends=('python')
+makedepends=('python-build' 'python-installer' 'python-wheel' 'python-setuptools')
+optdepends=(
+  'python-capstone'
+  'python-unicorn'
+  'python-keystone'
+  'python-pyvex'
+)
+source=("${url}/archive/v${pkgver}/${pkgname}-${pkgver}.tar.gz")
+sha512sums=('d98f7bfcaca493b82f6e11c8a84324b60d3b69154f29cbe2d9882712e13592b0971f600c3d461d764c67cf7afde12995110ca349f75030c013ef379e21f9c55e')
+b2sums=('faa6344f873efb0b376d07214502d0ffc767315a3b605c45184580622b199ce385c0c44141435f103cf8c39084c11d767a40520b986c3c3947db4f52a3e270bc')
+
+build() {
+  cd "${_pyname}-${pkgver}"
+  python -m build --wheel --no-isolation
+}
+
+package() {
+  cd "${_pyname}-${pkgver}"
+  python -m installer --destdir="$pkgdir" dist/*.whl
+  install -Dm 644 README.md -t "${pkgdir}/usr/share/doc/${pkgname}"
+  install -Dm 644 LICENSE -t "${pkgdir}/usr/share/licenses/${pkgname}"
+}
+
+# vim: ts=2 sw=2 et:

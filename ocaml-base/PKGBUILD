@@ -1,0 +1,34 @@
+# Maintainer: Felix Yan <felixonmars@archlinux.org>
+# Contributor: Daniel Peukert <daniel@peukert.cc>
+# Contributor: Jakob Gahde <j5lx@fmail.co.uk>
+
+pkgname=ocaml-base
+pkgver=0.15.1
+_commit=adb4623168f6cdc26a7e9e953a82b9ceb16d1e19
+pkgrel=1
+pkgdesc='Full standard library replacement for OCaml'
+arch=('loong64' 'x86_64')
+url="https://github.com/janestreet/base"
+license=('MIT')
+depends=('ocaml>=4.14.0' 'ocaml-sexplib0')
+makedepends=('git' 'dune' 'ocaml-compiler-libs')
+options=('!strip')
+source=("git+https://github.com/janestreet/base.git#commit=$_commit")
+sha256sums=('SKIP')
+
+build() {
+	cd base
+	OCAMLPATH=/usr/lib/ocaml dune build --release
+}
+
+package() {
+	cd base
+	DESTDIR="$pkgdir" dune install --prefix '/usr' --libdir '/usr/lib/ocaml' --release
+
+	install -dm755 "$pkgdir/usr/share/doc/$pkgname"
+	mv "$pkgdir/usr/doc/base/"* "$pkgdir/usr/share/doc/$pkgname/"
+	rm -r "$pkgdir/usr/doc/"
+
+	install -dm755 "$pkgdir/usr/share/licenses/$pkgname"
+	ln -sf "/usr/share/doc/$pkgname/LICENSE.md" "$pkgdir/usr/share/licenses/$pkgname/LICENSE.md"
+}

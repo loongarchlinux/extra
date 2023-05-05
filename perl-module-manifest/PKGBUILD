@@ -1,0 +1,37 @@
+# Maintainer: Jaroslav Lichtblau <svetlemodry@archlinux.org>
+# Contributor: John D Jones III
+
+pkgname=perl-module-manifest
+pkgver=1.09
+pkgrel=1
+pkgdesc="Parse and examine a Perl distribution MANIFEST file"
+arch=('any')
+url='https://search.cpan.org/dist/Module-Manifest/'
+license=('GPL' 'PerlArtistic')
+depends=('perl' 'perl-params-util' 'perl' 'perl-file-slurp')
+checkdepends=('perl-test-exception' 'perl-test-warn')
+options=('!emptydirs')
+source=(https://search.cpan.org/CPAN/authors/id/E/ET/ETHER/Module-Manifest-$pkgver.tar.gz)
+sha256sums=('a395f80ff15ea0e66fd6c453844b6787ed4a875a3cd8df9f7e29280250bd539b')
+
+build() {
+  cd "${srcdir}"/Module-Manifest-$pkgver
+
+  PERL_USE_UNSAFE_INC=1 PERL_MM_USE_DEFAULT=1 perl Makefile.PL installdirs=vendor
+  make
+}
+
+check() {
+  cd "${srcdir}"/Module-Manifest-$pkgver
+
+  make test
+}
+
+package() {
+  cd "${srcdir}"/Module-Manifest-$pkgver
+
+  make install DESTDIR="${pkgdir}"
+
+  find "${pkgdir}" -name '.packlist' -delete
+  find "${pkgdir}" -name '*.pod' -delete
+}

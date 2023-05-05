@@ -1,0 +1,36 @@
+# Maintainer: christian rebischke <chris.rebischke@archlinux.org>
+
+pkgname=gopass-hibp
+pkgver=1.14.3
+pkgrel=1
+pkgdesc="haveibeenpwnd.com integration for gopass"
+arch=('loong64' 'x86_64')
+url="https://github.com/gopasspw/gopass-hibp"
+license=('MIT')
+depends=('glibc')
+makedepends=('go')
+source=("${pkgname}-${pkgver}.tar.gz::https://github.com/gopasspw/gopass-hibp/archive/refs/tags/v${pkgver}.tar.gz")
+sha512sums=('9566ea654f5bb91703b17eb6224694056e34694a4c38635192fac8e5dae630fe12cc398df17fe2a89de6fd6db4fa6e97c2d3b3c77e1d73c1775cb6355b37cfda')
+options=('!lto')
+
+prepare(){
+  cd ${pkgname}-${pkgver}
+  sed -i 's|-gcflags="-trimpath=$(GOPATH)" -asmflags="-trimpath=$(GOPATH)"||' Makefile
+  sed -i 's/install-completion//g' Makefile
+}
+
+build(){
+  cd ${pkgname}-${pkgver}
+  export CGO_CPPFLAGS="${CPPFLAGS}"
+  export CGO_CFLAGS="${CFLAGS}"
+  export CGO_CXXFLAGS="${CXXFLAGS}"
+  export CGO_LDFLAGS="${LDFLAGS}"
+  export GOFLAGS="-buildmode=pie -trimpath -mod=readonly -modcacherw"
+  make
+}
+
+package() {
+  cd ${pkgname}-${pkgver}
+  make DESTDIR="${pkgdir}" PREFIX="/usr" install
+  install -Dm644 LICENSE "${pkgdir}/usr/share/licenses/${pkgname}/LICENSE"
+}

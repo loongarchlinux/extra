@@ -1,0 +1,41 @@
+# Maintainer: Sven-Hendrik Haase <svenstaro@archlinux.org>
+# Contributor: Julius Michaelis <gitter@liftm.de>
+
+pkgname=wasmer
+pkgver=3.2.1
+pkgrel=1
+pkgdesc="Universal Binaries Powered by WebAssembly"
+arch=('loong64' 'x86_64')
+url="https://github.com/wasmerio/wasmer"
+license=('MIT')
+depends=('gcc-libs' 'zlib' 'ncurses' 'libffi' 'libxkbcommon')
+makedepends=('rustup' 'cmake')
+source=("$pkgname-$pkgver.tar.gz::https://github.com/wasmerio/wasmer/archive/refs/tags/v${pkgver}.tar.gz"
+        wasmer-fix-install-target.patch)
+sha512sums=('a3a2088212e846ad95dd0b5f79fc13000a3255f54b908efbfa9e1731f36f10c093fc1cc325697be88c17ac40403eae90d8367d13746f82a3f20f64dd8b5b0b76'
+            'fef3788413e4ab32c6063d0038479c94004a85cd997ff954e3e9d9da835e704f3b9423b640a2134f4bdd5b5ad1b253bce4e3463e34fcc46c9ce6d9e0d034673b')
+options=('staticlibs' '!lto')
+
+prepare() {
+  cd "$pkgname-$pkgver"
+  patch -Np1 -i "$srcdir/wasmer-fix-install-target.patch"
+}
+
+build() {
+  cd "$pkgname-$pkgver"
+  # Activate LLVM once
+  # https://github.com/TheDan64/inkwell/issues/406 lands.
+  make ENABLE_CRANELIFT=1 ENABLE_LLVM=0 WASMER_INSTALL_PREFIX=/usr
+}
+
+check() {
+  cd "$pkgname-$pkgver"
+  make test-compilers test-examples
+}
+
+package() {
+  cd "$pkgname-$pkgver"
+  make DESTDIR="$pkgdir"/usr install
+}
+
+# vim:set ts=2 sw=2 et:

@@ -1,0 +1,36 @@
+# Maintainer: Justin Kromlinger <hashworks@archlinux.org>
+pkgname=piping-server
+pkgver=0.16.0
+pkgrel=1
+pkgdesc='Infinitely transfer between every device over pure HTTP with pipes or browsers'
+arch=('loong64' 'x86_64')
+url="https://github.com/nwtgck/piping-server-rust"
+license=('MIT')
+depends=('gcc-libs')
+makedepends=('cargo')
+options=(!lto)
+source=("$pkgname-$pkgver.tar.gz::$url/archive/v$pkgver.tar.gz"
+        "$pkgname.service")
+sha256sums=('3735eea652c178ec36118958414b7ce35a246fd64790e2fd04b5d5912f072d30'
+            '9182467638a583b29bed0ae69ed00013b1721ce8753e5ba90a56cbaac07d768c')
+
+build() {
+  cd "piping-server-rust-$pkgver"
+  cargo build --release --locked --target-dir=target
+}
+
+check() {
+  cd "piping-server-rust-$pkgver"
+  cargo test --release --locked
+}
+
+package() {
+  install -Dm644 piping-server.service "$pkgdir/usr/lib/systemd/system/piping-server.service"
+
+  cd "piping-server-rust-$pkgver"
+
+  install -Dm755 "target/release/$pkgname" "$pkgdir/usr/bin/$pkgname"
+
+  install -Dm 644 "LICENSE" "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
+  install -Dm 644 README.md "$pkgdir/usr/share/doc/$pkgname/README.md"
+}

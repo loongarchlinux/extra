@@ -1,0 +1,36 @@
+# Maintainer: Felix Yan <felixonmars@archlinux.org>
+
+pkgname=deepin-network-utils
+pkgver=5.4.13
+pkgrel=1
+pkgdesc='DDE network utils'
+arch=('loong64' 'x86_64')
+url="https://github.com/linuxdeepin/dde-network-utils"
+license=('GPL3')
+depends=('deepin-qt-dbus-factory' 'gio-qt' 'gsettings-qt')
+makedepends=('qt5-tools' 'gtest')
+groups=('deepin')
+source=("$pkgname-$pkgver.tar.gz::https://github.com/linuxdeepin/dde-network-utils/archive/$pkgver.tar.gz")
+sha512sums=('dae416cff31421c0159ee157171d2701f75307ec035e795d7cb6d360368a2a1761bf8f2bd6d6ae19ed43788ad48903e590a2d5ec53342801cd3a147c3faa38e7')
+
+prepare() {
+  cd dde-network-utils-$pkgver
+  # Use our own url instead of commercial company's homepage
+  sed -i '/www.uniontech.com/i \    "https://archlinux.org/favicon.ico",' dde-network-utils/connectivitychecker.cpp
+}
+
+build() {
+  cd dde-network-utils-$pkgver
+  qmake-qt5 PREFIX=/usr
+  make
+}
+
+check() {
+  cd dde-network-utils-$pkgver
+  # make test
+}
+
+package() {
+  cd dde-network-utils-$pkgver
+  make INSTALL_ROOT="$pkgdir" install
+}

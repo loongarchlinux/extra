@@ -1,0 +1,28 @@
+# Maintainer: Felix Yan <felixonmars@archlinux.org>
+# Contributor: csslayer <wengxt AT gmail com>
+
+pkgname=fcitx5-chewing
+pkgver=5.0.14
+pkgrel=1
+pkgdesc="Chewing Wrapper for Fcitx5"
+arch=('loong64' 'x86_64')
+url="https://github.com/fcitx/fcitx5-chewing"
+license=('GPL')
+depends=('fcitx5' 'libchewing')
+makedepends=('extra-cmake-modules' 'ninja')
+source=("https://download.fcitx-im.org/fcitx5/fcitx5-chewing/fcitx5-chewing-$pkgver.tar.xz"{,.sig})
+sha512sums=('4abe98ee1380f89746cf8f5195c77dff2369bd9a5a93ffbc4b6f15796400bb92bc25ea2aec995cca869c20b95e25d3b0392ded0bd840f36992e30381fbcb5fb4'
+            'SKIP')
+validpgpkeys=('2CC8A0609AD2A479C65B6D5C8E8B898CBF2412F9') # Weng Xuetian <wengxt@gmail.com>
+
+build(){
+  cd $pkgname-$pkgver
+
+  cmake -GNinja -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_INSTALL_LIBDIR=/usr/lib .
+  ninja
+}
+
+package() {
+  cd $pkgname-$pkgver
+  DESTDIR="$pkgdir" ninja install
+}

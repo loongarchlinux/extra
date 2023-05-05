@@ -1,0 +1,41 @@
+# Maintainer: Felix Yan <felixonmars@archlinux.org>
+# Maintainer: Levente Polyak <anthraxx[at]archlinux[dot]org>
+# Contributor: Mario Finelli <mario at finel dot li>
+# Contributor: Artem Vorotnikov <artem at vorotnikov dot me>
+
+_gemname=addressable
+pkgname=ruby-addressable
+pkgver=2.8.1
+pkgrel=1
+pkgdesc='URI Implementation'
+arch=('any')
+url='https://github.com/sporkmonger/addressable'
+license=('Apache')
+depends=('ruby' 'ruby-public_suffix')
+makedepends=('ruby-rdoc')
+options=('!emptydirs')
+source=(${pkgname}-${pkgver}.tar.gz::https://github.com/sporkmonger/addressable/archive/addressable-${pkgver}.tar.gz)
+sha256sums=('55974fd23822a7ef1b90d0fc83cf34f0d3a9587b663ceb7feeba93e1fd638435')
+sha512sums=('8477687612b0b49bbfc08e0ad6aad03112c1e0317027559c0c20a2cfefa0c59619198067feb8db8eb6cbe1abfabd79b1e9fe17ff583a7a3e3ae58e42c1fd484a')
+
+prepare() {
+  cd ${_gemname}-${_gemname}-${pkgver}
+  sed -E 's|~>|>=|g' -i ${_gemname}.gemspec
+  sed -E 's|"< [0-9.]+", ||g' -i ${_gemname}.gemspec
+}
+
+build() {
+  cd ${_gemname}-${_gemname}-${pkgver}
+  gem build ${_gemname}.gemspec
+}
+
+package() {
+  cd ${_gemname}-${_gemname}-${pkgver}
+  local _gemdir="$(gem env gemdir)"
+  gem install --ignore-dependencies --no-user-install -i "${pkgdir}${_gemdir}" -n "${pkgdir}/usr/bin" ${_gemname}-${pkgver}.gem
+  install -Dm 644 README.md CHANGELOG.md -t "${pkgdir}/usr/share/doc/${pkgname}"
+  install -Dm 644 LICENSE.txt -t "${pkgdir}/usr/share/licenses/${pkgname}"
+  rm "${pkgdir}/${_gemdir}/cache/${_gemname}-${pkgver}.gem"
+}
+
+# vim: ts=2 sw=2 et:

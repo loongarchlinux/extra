@@ -1,0 +1,46 @@
+# Maintainer: Bruno Pagani <archange@archlinux.org>
+
+_pkg=pnetcdf
+_mpi=openmpi
+pkgname=${_pkg}-${_mpi}
+pkgver=1.12.3
+pkgrel=3
+pkgdesc="Parallel I/O Library for NetCDF File Access (${_mpi} version)"
+arch=(loong64 x86_64)
+url="https://parallel-netcdf.github.io/"
+license=(custom)
+depends=("${_mpi}" "netcdf-${_mpi}")
+makedepends=(gcc-fortran)
+checkdepends=(inetutils)
+provides=(parallel-netcdf parallel-netcdf-openmpi)
+conflicts=(parallel-netcdf parallel-netcdf-openmpi)
+replaces=(parallel-netcdf parallel-netcdf-openmpi)
+options=(staticlibs)
+source=("${url}/Release/${_pkg}-${pkgver}.tar.gz")
+sha256sums=('439e359d09bb93d0e58a6e3f928f39c2eae965b6c97f64e67cd42220d6034f77')
+
+prepare() {
+  cd ${_pkg}-${pkgver}
+  autoreconf -vfi
+}
+
+build() {
+  cd ${_pkg}-${pkgver}
+  export CFLAGS+=" -ffat-lto-objects"
+  ./configure --prefix=/usr --enable-shared --enable-netcdf4
+  sed -i -e 's/ -shared / -Wl,-O1,--as-needed\0/g' libtool
+  make LIBTOOLFLAGS=--verbose
+}
+
+check() {
+  cd ${_pkg}-${pkgver}
+  export OMPI_MCA_opal_warn_on_missing_libcuda=0
+  make check
+  make ptest
+}
+
+package() {
+  cd ${_pkg}-${pkgver}
+  make DESTDIR="${pkgdir}" install
+  install -Dm644 COPYRIGHT -t "${pkgdir}"/usr/share/licenses/${_pkg}
+}

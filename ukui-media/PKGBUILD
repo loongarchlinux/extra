@@ -1,0 +1,40 @@
+# Maintainer: Felix Yan <felixonmars@archlinux.org>
+
+pkgname=ukui-media
+pkgver=3.0.4
+pkgrel=1
+pkgdesc="UKUI media utilities"
+arch=('loong64' 'x86_64')
+license=('GPL')
+url="https://github.com/ukui/ukui-media"
+groups=('ukui')
+depends=('gsettings-qt' 'kwindowsystem' 'libmatemixer' 'libqtxdg' 'mate-desktop' 'qt5-multimedia'
+         'qt5-svg' 'libcanberra' 'ukui-interface')
+makedepends=('autoconf-archive' 'intltool' 'mate-common' 'qt5-tools')
+source=("$pkgname-$pkgver.tar.gz::https://github.com/ukui/ukui-media/archive/v$pkgver.tar.gz")
+sha512sums=('402e4d47518591190a3e02de1b7ef38548934b3faaff0c7206c7480cb35aff3255ced5f28ff292aae4c6e3a83c1f2899419a6f25846a1800516cdb001d0d05d1')
+
+prepare() {
+  cd $pkgname-$pkgver
+  sed -i 's|systemddir = /lib/systemd/system|systemddir = /usr/lib/systemd/system|' data/Makefile.am
+
+  NOCONFIGURE=1 ./autogen.sh
+}
+
+build() {
+  cd $pkgname-$pkgver
+  ./configure --prefix=/usr --libexecdir=/usr/lib/$pkgname --sysconfdir=/etc
+  make
+
+  cd ukui-volume-control-applet-qt
+  qmake PREFIX=/usr/share/ukui-media
+  make
+}
+
+package() {
+  cd $pkgname-$pkgver
+  make DESTDIR="$pkgdir" install
+
+  cd ukui-volume-control-applet-qt
+  make INSTALL_ROOT="$pkgdir" install
+}

@@ -1,0 +1,63 @@
+# Maintainer: George Rawlinson <grawlinson@archlinux.org>
+# Contributor: Danilo Bargen <aur at dbrgn dot ch>
+# Contributor: Maxim Andersson <thesilentboatman@gmail.com>
+
+pkgname=tealdeer
+_binname=tldr
+pkgver=1.6.1
+pkgrel=1
+pkgdesc='A fast tldr client in Rust'
+arch=('loong64' 'x86_64')
+url='https://github.com/dbrgn/tealdeer'
+license=('MIT' 'Apache')
+depends=('gcc-libs')
+makedepends=('git' 'rust')
+provides=('tldr')
+conflicts=('tldr')
+options=('!lto')
+_commit='7c371a6852d4b2bdad280be766283abbf93e56ff'
+source=("$pkgname::git+$url#commit=$_commit")
+b2sums=('SKIP')
+
+pkgver() {
+  cd "$pkgname"
+
+  git describe --tags | sed 's/^v//'
+}
+
+prepare() {
+  cd "$pkgname"
+
+  # download dependencies
+  cargo fetch --locked --target "$CARCH-unknown-linux-gnu"
+}
+
+build() {
+  cd "$pkgname"
+
+  cargo build --release --frozen
+}
+
+check() {
+  cd "$pkgname"
+
+  cargo test --frozen
+}
+
+package() {
+  cd "$pkgname"
+
+  # binary
+  install -vDm755 -t "$pkgdir/usr/bin" "target/release/$_binname"
+
+  # licenses
+  install -vDm644 -t "$pkgdir/usr/share/licenses/$pkgname" LICENSE*
+
+  # completions
+  cd completion
+  install -vDm644 bash_tealdeer "$pkgdir/usr/share/bash-completion/completions/$_binname"
+  install -vDm644 fish_tealdeer "$pkgdir/usr/share/fish/vendor_completions.d/$_binname.fish"
+  install -vDm644 zsh_tealdeer "$pkgdir/usr/share/zsh/site-functions/_$_binname"
+}
+
+# vim:set ts=2 sw=2 et:

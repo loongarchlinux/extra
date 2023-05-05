@@ -1,0 +1,41 @@
+# Maintainer: George Rawlinson <grawlinson@archlinux.org>
+# Contributor: Jokler <aur@jokler.xyz>
+
+pkgname=bacon
+pkgver=2.8.1
+pkgrel=1
+pkgdesc='A background rust code checker'
+arch=('loong64' 'x86_64')
+url='https://dystroy.org/bacon'
+license=('AGPL3')
+depends=('glibc' 'gcc-libs')
+makedepends=('rust')
+options=('!lto')
+source=("$pkgname-$pkgver.tar.gz::https://github.com/Canop/bacon/archive/refs/tags/v${pkgver}.tar.gz")
+b2sums=('911ad71c80b8adfcc57853df7c6efa730a24d4538fd1d1b1d888514537689a5ea89af8ff037e97e8bff2df7d89d993ef3c31d3e755b986b97926f9c7903ad88d')
+
+prepare() {
+  cd "$pkgname-$pkgver"
+
+  cargo fetch --locked --target "$CARCH-unknown-linux-gnu"
+}
+
+build() {
+  cd "$pkgname-$pkgver"
+
+  cargo build --frozen --release --all-features
+}
+
+check() {
+  cd "$pkgname-$pkgver"
+
+  cargo test --frozen --all-features
+}
+
+package() {
+  cd "$pkgname-$pkgver"
+
+  install -vDm755 -t "$pkgdir/usr/bin" "target/release/$pkgname"
+  install -vDm644 -t "$pkgdir/usr/share/doc/$pkgname" ./*.md
+  install -vDm644 LICENSE "$pkgdir/usr/share/licenses/$pkgname"
+}

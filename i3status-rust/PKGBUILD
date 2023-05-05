@@ -1,0 +1,56 @@
+# Maintainer: Frederik Schwan <freswa at archlinux dot org>
+# Contributor: Daniel M. Capella <polyzen@archlinux.org>
+# Contributor: Josip Ponjavic <josipponjavic at gmail dot com>
+
+pkgname=i3status-rust
+pkgver=0.31.1
+pkgrel=1
+pkgdesc='Resourcefriendly and feature-rich replacement for i3status, written in pure Rust'
+arch=('loong64' 'x86_64')
+url='https://github.com/greshake/i3status-rust'
+license=('GPL3')
+depends=('libpulse' 'lm_sensors')
+makedepends=('rust' 'pandoc')
+optdepends=('alsa-utils: for the volume block'
+            'bluez: for the bluetooth block'
+            'fakeroot: for the pacman block to show pending updates'
+            'kdeconnect: for the kdeconnect block'
+            'powerline-fonts: for all themes using the Powerline arrow char'
+            'pulseaudio: for the volume block'
+            'speedtest-cli: for the speedtest block'
+            'ttf-font-awesome: for the awesome icons'
+            'upower: for the battery block')
+source=(${pkgname}-${pkgver}.tar.gz::"https://github.com/greshake/i3status-rust/archive/refs/tags/v${pkgver}.tar.gz")
+b2sums=('15d0bd0176146febfff634c1d408d81f9e4ca01bca596d440e08f6ae6a43b85652c1f97d0d6834376c996e1eba800272ad14d912e3081b61dbadb5e6c2cf869f')
+
+prepare() {
+  cd ${pkgname}-${pkgver}
+  cargo fetch --locked --target "$CARCH-unknown-linux-gnu"
+}
+
+
+build() {
+  cd ${pkgname}-${pkgver}
+  export RUSTUP_TOOLCHAIN=stable
+  export CARGO_TARGET_DIR=target
+  cargo build --release --locked --features 'pulseaudio maildir'
+  cargo xtask generate-manpage
+}
+
+package() {
+  cd ${pkgname}-${pkgver}
+  install -Dm755 -t "${pkgdir}"/usr/bin target/release/i3status-rs
+  install -Dm644 -t "${pkgdir}"/usr/share/man/man1 man/i3status-rs.1
+
+  for icon in files/icons/*.toml; do
+    install -Dm644 -t "${pkgdir}"/usr/share/${pkgname}/icons "${icon}"
+  done
+
+  for theme in files/themes/*.toml; do
+    install -Dm644 -t "${pkgdir}"/usr/share/${pkgname}/themes "${theme}"
+  done
+
+  for example in examples/*.toml; do
+    install -Dm644 -t "${pkgdir}"/usr/share/doc/${pkgname}/examples/ ${example}
+  done
+}

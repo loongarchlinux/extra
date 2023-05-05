@@ -1,0 +1,27 @@
+# Maintainer: Sergej Pupykin <pupykin.s+arch@gmail.com>
+# Maintainer: Charles Mauch <cmauch@gmail.com>
+
+pkgname=perl-xml-rsslite
+pkgver=0.17
+pkgrel=1
+pkgdesc="Perl/CPAN Module XML::RSSLite"
+arch=(any)
+depends=('perl')
+url="https://search.cpan.org/dist/XML-RSSLite/"
+license=("GPL" "PerlArtistic")
+options=('!emptydirs')
+source=("https://www.cpan.org/authors/id/J/JP/JPIERCE/XML-RSSLite-$pkgver.tgz")
+sha256sums=('01509fea5bff544322a2f7b521a5867f2ef90fde12455144cf92fb343e817a6d')
+
+build() {
+  cd "$srcdir"/XML-RSSLite-$pkgver
+  PERL_MM_USE_DEFAULT=1 perl Makefile.PL INSTALLDIRS=vendor
+  make
+}
+
+package() {
+  cd "$srcdir"/XML-RSSLite-$pkgver
+  make install DESTDIR="$pkgdir"
+  find "$pkgdir" -name '.packlist' -delete
+  find "$pkgdir" -name '*.pod' -delete
+}

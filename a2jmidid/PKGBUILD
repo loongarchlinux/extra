@@ -1,0 +1,43 @@
+# Maintainer: David Runge <dvzrv@archlinux.org>
+# Contributor: speps <speps at aur dot archlinux dot org>
+# Contributor: Jiyunatori <tori@0xc29.net>
+
+pkgname=a2jmidid
+pkgver=9
+pkgrel=4
+pkgdesc="A daemon for exposing legacy ALSA sequencer applications in JACK MIDI system."
+arch=(loong64 x86_64)
+url="https://github.com/linuxaudio/a2jmidid"
+license=(GPL2)
+groups=(pro-audio)
+arch=(loong64 x86_64)
+depends=(glibc)
+makedepends=(
+  alsa-lib
+  dbus
+  jack
+  meson
+)
+optdepends=(
+  'bash: for a2j'
+  'python-dbus: for a2j and a2j_control'
+)
+source=($url/archive/$pkgver/$pkgname-$pkgver.tar.gz)
+sha512sums=('5bd13b6904ed68c5bfe40ca516fd49b7eb4d4a946b9908ee04687265848734c8e1a81579f0f1a5bd0752595be8858dc748da10487b7f366394c09a5ffc7d5e5c')
+b2sums=('ad079e76a54f56ee8f82150c306f91aead52f86632978ea6f3376a0bf163744379210b34701b39da4ee14fc4d8a1c6be82d1052abeb8ccf79410bc242d174d62')
+
+build() {
+  arch-meson build $pkgname-$pkgver
+  ninja -C build
+}
+
+package() {
+  depends+=(
+    alsa-lib libasound.so
+    dbus libdbus-1.so
+    jack libjack.so
+  )
+
+  DESTDIR="$pkgdir" meson install -C build
+  install -vDm 644 $pkgname-$pkgver/{AUTHORS,CHANGELOG,INSTALLATION,README}.rst -t "$pkgdir/usr/share/doc/$pkgname/"
+}

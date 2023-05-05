@@ -1,0 +1,34 @@
+# Maintainer: BlackEagle <ike.devolder@gmail.com>>
+
+pkgname=kodi-addon-audioencoder-vorbis
+epoch=1
+pkgver=20.2.0
+_codename=Nexus
+pkgrel=4
+pkgdesc="Vorbis Audio Encoder add-on for Kodi"
+arch=('loong64' 'x86_64')
+url='https://github.com/xbmc/audioencoder.vorbis'
+license=('GPL')
+groups=('kodi-addons' 'kodi-addons-audioencoder')
+makedepends=('cmake' 'kodi-dev')
+options=(!lto)
+source=("$pkgname-$pkgver.tar.gz::https://github.com/xbmc/audioencoder.vorbis/archive/$pkgver-$_codename.tar.gz")
+sha512sums=('8465b4ad73efee6adaa385eeaa75ceca725a8257fbf4867c8094661408fcb7d028f977b913c9f873ff1cbd6fa7e20afdc92b95ed38e48dfcba9c00e3ac4b81ae')
+
+build() {
+    cd "audioencoder.vorbis-$pkgver-$_codename"
+    cmake \
+        -DCMAKE_INSTALL_PREFIX=/usr \
+        -DCMAKE_BUILD_TYPE=Release \
+        -DBUILD_SHARED_LIBS=1 \
+        -DUSE_LTO=1 \
+        .
+    make
+}
+
+package() {
+    depends=('kodi')
+    cd "audioencoder.vorbis-$pkgver-$_codename"
+    make DESTDIR="$pkgdir/" install
+}
+

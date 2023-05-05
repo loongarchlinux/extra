@@ -1,0 +1,29 @@
+# Maintainer: Sven-Hendrik Haase <svenstaro@archlinux.org>
+# Contributor: Auguste <auguste@gmail.com>
+# Contributor: Jose Negron <josenj.arch@mailnull.com>
+
+pkgname=libharu
+pkgver=2.4.3
+pkgrel=1
+pkgdesc="C library for generating PDF documents"
+arch=('loong64' 'x86_64')
+url="https://github.com/libharu/libharu"
+license=(custom:ZLIB)
+depends=('libpng' 'zlib')
+makedepends=('cmake')
+source=(${url}/archive/v${pkgver}/${pkgname}-${pkgver}.tar.gz)
+sha512sums=('4b01dd0d23bdcaec6f69fe5f059902e7f49eafdf19d53d4cce8b4d52a54b2057b764de29390f4da9e75aeb32cb6af8606b23478b04edf9f7dcb1e4b769c5fff2')
+
+build() {
+  cmake -B build -S ${pkgname}-${pkgver} \
+    -DCMAKE_BUILD_TYPE=Release \
+    -DCMAKE_INSTALL_PREFIX=/usr \
+    -DLIBHPDF_STATIC=OFF
+  make -C build
+}
+
+package() {
+  make -C build DESTDIR="${pkgdir}" install
+  install -Dm755 build/src/libhpdf.so "${pkgdir}"/usr/lib/libhpdf.so
+  install -Dm644 ${pkgname}-${pkgver}/LICENSE "${pkgdir}"/usr/share/licenses/${pkgname}/LICENSE
+}

@@ -1,0 +1,61 @@
+# Maintainer: Alexander F. Rødseth <xyproto@archlinux.org>
+# Contributor: Fredy García <frealgagu at gmail dot com>
+# Contributor: Randy Ramos <rramos1295 at gmail dot com>
+# Contributor: Peter Vasil <mail@petervasil.net>
+# Contributor: Lucas De Marchi <lucas.de.marchi@gmail.com>
+# Contributor: Matthias Meulien <orontee@gmail.com>
+
+pkgname=global
+pkgver=6.6.9
+pkgrel=1
+pkgdesc='Source code tagging system'
+arch=(loong64 x86_64)
+url='https://www.gnu.org/software/global/'
+license=(GPL)
+depends=(libltdl perl python sqlite)
+optdepends=(ctags emacs idutils python-pygments vim)
+options=(!emptydirs !libtool)
+validpgpkeys=("26F631B43D624A927E6F1C33969C3BE389DDA6EB")
+source=("https://ftp.gnu.org/pub/gnu/$pkgname/$pkgname-$pkgver.tar.gz"{,.sig})
+b2sums=('53b48a0aaa57160f5dc57c4096e91f2463c8ae1453b9f68b94639eeae1178d9fbe3bef3d75700ddfeeff4c47030f2a89ab4ae3a1b801ceb128cd3fb369ff0c14'
+        'SKIP')
+
+prepare() {
+  cd $pkgname-$pkgver
+  sed -i 's/\.la/.so/g' gtags.conf.in
+  # Rename lid to lid-idutils to avoid a name collision with idutils from AUR
+  sed -i 's/usable("lid")/usable("lid-idutils")/g' "$pkgname/$pkgname.c"
+}
+
+build() {
+  cd $pkgname-$pkgver
+  autoreconf -fi
+  ./configure \
+    --prefix=/usr \
+    --with-exuberant-ctags=/usr/bin/etags \
+    --with-sqlite3 \
+    --with-universal-ctags=/usr/bin/ctags
+  make
+}
+
+check() {
+  make -C $pkgname-$pkgver -k check
+}
+
+package() {
+  cd $pkgname-$pkgver
+
+  make DESTDIR="$pkgdir" install
+
+  # Package the emacs script
+  install -d "$pkgdir/usr/share/emacs/site-lisp"
+  mv "$pkgdir/usr/share/gtags/gtags.el" \
+    "$pkgdir/usr/share/emacs/site-lisp/gtags.el"
+
+  # Package the vim scripts
+  install -d "$pkgdir/usr/share/vim/vimfiles/plugin"
+  mv "$pkgdir/usr/share/gtags/gtags.vim" \
+    "$pkgdir/usr/share/vim/vimfiles/plugin/gtags.vim"
+  mv "$pkgdir/usr/share/gtags/gtags-cscope.vim" \
+    "$pkgdir/usr/share/vim/vimfiles/plugin/gtags-cscope.vim"
+}

@@ -1,0 +1,83 @@
+# Maintainer: George Rawlinson <grawlinson@archlinux.org>
+# Contributor: Alkindi42
+
+pkgname=sqlc
+pkgver=1.17.2
+pkgrel=1
+pkgdesc='Compile SQL to type-safe Go'
+arch=('loong64' 'x86_64')
+url='https://sqlc.dev'
+license=('MIT')
+depends=('glibc' 'gcc-libs')
+makedepends=('git' 'go')
+options=('!lto')
+_commit='140db73005598164c08ae3bc3d2f5c7ffa63f26b'
+source=("$pkgname::git+https://github.com/kyleconroy/sqlc.git#commit=$_commit")
+b2sums=('SKIP')
+
+pkgver() {
+  cd "$pkgname"
+
+  git describe --tags | sed 's/^v//'
+}
+
+prepare() {
+  cd "$pkgname"
+
+  # create folder for build output
+  mkdir -p build
+
+  # download dependencies
+  export GOPATH="${srcdir}"
+  go mod download
+}
+
+build() {
+  cd "$pkgname"
+
+  # set Go flags
+  export CGO_CPPFLAGS="${CPPFLAGS}"
+  export CGO_CFLAGS="${CFLAGS}"
+  export CGO_CXXFLAGS="${CXXFLAGS}"
+  export GOPATH="${srcdir}"
+
+  # build binary
+  go build -v \
+    -buildmode=pie \
+    -mod=readonly \
+    -modcacherw \
+    -ldflags "-compressdwarf=false \
+    -linkmode external \
+    -extldflags ${LDFLAGS}" \
+    -o build \
+    ./cmd/...
+
+  # generate shell completions
+  for sh in bash fish zsh; do
+    ./build/sqlc completion "$sh" > "build/$sh"
+  done
+}
+
+check() {
+  cd "$pkgname"
+
+  # skip internal/endtoend
+  rm -f internal/endtoend/endtoend_test.go
+
+  go test -v ./...
+}
+
+package() {
+  cd "$pkgname"
+
+  # binary
+  install -vDm755 -t "$pkgdir/usr/bin" build/sqlc
+
+  # license
+  install -vDm644 -t "$pkgdir/usr/share/licenses/$pkgname" LICENSE
+
+  # shell completions
+  install -vDm644 build/bash "$pkgdir/usr/share/bash-completion/completions/sqlc"
+  install -vDm644 build/fish "$pkgdir/usr/share/fish/vendor_completions.d/sqlc.fish"
+  install -vDm644 build/zsh "$pkgdir/usr/share/zsh/site-functions/_sqlc"
+}

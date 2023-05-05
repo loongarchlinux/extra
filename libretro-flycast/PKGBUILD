@@ -1,0 +1,67 @@
+# Maintainer: Maxime Gauduin <alucryd@archlinux.org>
+
+pkgname=libretro-flycast
+pkgver=5542
+pkgrel=1
+pkgdesc='Sega Dreamcast core'
+arch=(loong64 x86_64)
+url=https://github.com/libretro/flycast
+license=(GPL2)
+groups=(libretro)
+depends=(
+  libgl
+  libretro-core-info
+  zlib
+)
+makedepends=(
+  cmake
+  git
+  mesa
+  ninja
+)
+_commit=187674ddac84038922bb29a0f89e99ecf3135e52
+source=(
+  git+https://github.com/flyinghead/flycast.git#commit=${_commit}
+  git+https://github.com/KhronosGroup/glslang.git
+  flycast-libchdr::git+https://github.com/flyinghead/libchdr.git
+  git+https://github.com/KhronosGroup/Vulkan-Headers.git
+  git+https://github.com/GPUOpen-LibrariesAndSDKs/VulkanMemoryAllocator.git
+)
+b2sums=('SKIP'
+        'SKIP'
+        'SKIP'
+        'SKIP'
+        'SKIP')
+
+prepare() {
+  cd flycast
+  for submodule in core/deps/{glslang,Vulkan-Headers,VulkanMemoryAllocator}; do
+    git submodule init ${submodule}
+    git submodule set-url ${submodule} "${srcdir}/${submodule##*/}"
+    git -c protocol.file.allow=always submodule update ${submodule}
+  done
+  for submodule in core/deps/libchdr; do
+    git submodule init ${submodule}
+    git submodule set-url ${submodule} "${srcdir}/flycast-${submodule##*/}"
+    git -c protocol.file.allow=always submodule update ${submodule}
+  done
+}
+
+pkgver() {
+  cd flycast
+  git rev-list --count HEAD
+}
+
+build() {
+  cmake -S flycast -B build -G Ninja \
+    -DCMAKE_BUILD_TYPE=None \
+    -DLIBRETRO=ON \
+    -Wno-dev
+  cmake --build build
+}
+
+package() {
+  install -Dm 644 build/flycast_libretro.so -t "${pkgdir}"/usr/lib/libretro/
+}
+
+# vim: ts=2 sw=2 et:

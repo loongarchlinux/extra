@@ -1,0 +1,60 @@
+# Maintainer: Felix Yan <felixonmars@archlinux.org>
+
+pkgname=ruby-sequel
+pkgver=5.67.0
+_commit=ca0d2b3d3881bdff612d1349a22aa6c67d0034aa
+pkgrel=1
+pkgdesc='Sequel: The Database Toolkit for Ruby'
+arch=(any)
+url='https://github.com/jeremyevans/sequel'
+license=(MIT)
+depends=(ruby)
+makedepends=(git ruby-minitest ruby-minitest-hooks ruby-minitest-global_expectations ruby-tzinfo
+             ruby-nokogiri)
+options=(!emptydirs)
+source=(git+https://github.com/jeremyevans/sequel.git#commit=$_commit)
+sha256sums=('SKIP')
+
+prepare() {
+  cd sequel
+  sed '/activemodel/d' -i sequel.gemspec
+  rm spec/extensions/active_model_spec.rb
+}
+
+build() {
+  local _gemdir="$(gem env gemdir)"
+  cd sequel
+  gem build sequel.gemspec
+  gem install \
+    --local \
+    --verbose \
+    --ignore-dependencies \
+    --no-user-install \
+    --install-dir "tmp_install/$_gemdir" \
+    --bindir "tmp_install/usr/bin" \
+    sequel-$pkgver.gem
+  find "tmp_install/$_gemdir/gems/" \
+    -type f \
+    \( \
+        -iname "*.o" -o \
+        -iname "*.c" -o \
+        -iname "*.so" -o \
+        -iname "*.time" -o \
+        -iname "gem.build_complete" -o \
+        -iname "Makefile" \
+    \) \
+    -delete
+  rm -r tmp_install/$_gemdir/cache
+}
+
+check() {
+  local _gemdir="$(gem env gemdir)"
+  cd sequel
+  GEM_HOME="tmp_install/$_gemdir" rake
+}
+
+package() {
+  cd sequel
+  cp -a tmp_install/* "$pkgdir"/
+  install -Dm644 MIT-LICENSE -t "$pkgdir"/usr/share/licenses/$pkgname/
+}

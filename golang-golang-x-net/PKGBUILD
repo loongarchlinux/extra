@@ -1,0 +1,30 @@
+# Maintainer: Felix Yan <felixonmars@archlinux.org>
+
+pkgname=golang-golang-x-net
+pkgver=0.0.20220826
+_commit=83b083e8dc8b4507e702ce59208711115b23ec25
+pkgrel=1
+pkgdesc='Supplementary Go networking libraries'
+arch=('any')
+url="https://github.com/golang/net"
+license=('BSD')
+depends=('go' 'golang-golang-x-sys' 'golang-golang-x-term' 'golang-golang-x-text')
+checkdepends=('git')
+source=("$pkgname-$_commit.tar.gz::https://github.com/golang/net/archive/$_commit.tar.gz")
+sha512sums=('cfa00918d3bdbc246d5d4805d8b1d535db721ea4936994d3d78dd8a1d9b22227183c20d9f5a7e4e6b636c47cb4c84f369b99d64912cbf26c64e613a15172b604')
+
+check() {
+  export GO111MODULE=off
+  export GOPATH="$srcdir/build:/usr/share/gocode"
+  mkdir -p "$srcdir"/build/src/golang.org/x
+  cp -a "$srcdir"/net-$_commit "$srcdir"/build/src/golang.org/x/net
+  cd "$srcdir"/build/src/golang.org/x/net
+  go test -v $(go list ./...)
+}
+
+package() {
+  mkdir -p "$pkgdir"/usr/share/gocode/src/golang.org/x
+  cp -a "$srcdir"/net-$_commit "$pkgdir"/usr/share/gocode/src/golang.org/x/net
+
+  install -Dm644 net-$_commit/LICENSE "$pkgdir"/usr/share/licenses/$pkgname/LICENSE
+}

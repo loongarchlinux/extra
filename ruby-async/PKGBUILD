@@ -1,0 +1,44 @@
+# Maintainer: Levente Polyak <anthraxx[at]archlinux[dot]org>
+# Maintainer: Andreas 'Segaja' Schleifer <segaja at archlinux dot org>
+
+_gemname=async
+pkgname=ruby-${_gemname}
+pkgver=1.30.3
+pkgrel=2
+pkgdesc='Composable asynchronous I/O'
+url='https://github.com/socketry/async'
+arch=('any')
+license=('MIT')
+depends=('ruby' 'ruby-console' 'ruby-nio4r' 'ruby-timers')
+makedepends=('ruby-rdoc')
+options=('!emptydirs')
+source=(https://github.com/socketry/async/archive/v${pkgver}/${pkgname}-${pkgver}.tar.gz)
+sha256sums=('f378e8d136c1b58f8df38956a5253b170f87ce815ae8c7d88b50ea964a8e8bb1')
+sha512sums=('337a51ca8fd0e6685528e2eca9b584344ba583f7254f2600110ee62da6e4ccabeb471e7d94f36ab6f8d0eb3eada9e23335a262a50c8d035f67708fce0a590e5e')
+
+prepare() {
+  cd ${_gemname}-${pkgver}
+  sed 's|git ls-files|find|' -i ${_gemname}.gemspec
+  sed 's|~>|>=|g' -i ${_gemname}.gemspec # don't give a fuck about rubys bla bla
+}
+
+build() {
+  cd ${_gemname}-${pkgver}
+  gem build ${_gemname}.gemspec
+}
+
+package() {
+  cd ${_gemname}-${pkgver}
+  local _gemdir="$(gem env gemdir)"
+  gem install --ignore-dependencies --no-user-install -i "${pkgdir}/${_gemdir}" \
+    -n "${pkgdir}/usr/bin" ${_gemname}-${pkgver}.gem
+
+  install -Dm 644 README.md -t "${pkgdir}/usr/share/doc/${pkgname}"
+  install -Dm 644 README.md -t "${pkgdir}/usr/share/licenses/${pkgname}"
+
+  cd "${pkgdir}/${_gemdir}"
+  rm -rf cache gems/${_gemname}-${pkgver}/{ext,lib/*/*.so} \
+    extensions/*/*/${_gemname}-${pkgver}/{mkmf.log,gem_make.out}
+}
+
+# vim: ts=2 sw=2 et:

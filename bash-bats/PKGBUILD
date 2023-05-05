@@ -1,0 +1,43 @@
+# Maintainer: Felix Yan <felixonmars@archlinux.org>
+# Maintainer: Morten Linderud <foxboron@archlinux.org>
+# Contributor: Andre Schröder <andre.schroedr at gmail dot com>
+# Contributor: Jan-Erik Rediger <badboy at archlinux dot us>
+
+pkgname=bash-bats
+pkgver=1.9.0
+pkgrel=1
+pkgdesc="Bash Automated Testing System"
+arch=("any")
+url="https://github.com/bats-core/bats-core"
+license=("MIT")
+depends=('bash')
+source=($pkgname-$pkgver.tar.gz::$url/archive/v$pkgver.tar.gz)
+sha256sums=('3c64295318d157616ca2478de819371e2c579ccdab30c1f0b7279f7b214fb1f4')
+
+check() {
+  cd "bats-core-${pkgver}"
+  TERM=linux bin/bats --tap test || true
+}
+
+package() {
+  cd "bats-core-${pkgver}"
+
+  # Also rename the bats-core/ folder to bats/
+  sed -i 's|BATS_ROOT/libexec/bats-core/bats|BATS_ROOT/lib/bats/bats|g' bin/bats
+  sed -i 's|BATS_ROOT/lib/bats-core/|BATS_ROOT/lib/bats/|g' libexec/bats-core/*
+  sed -i 's|BATS_ROOT/lib/bats-core/|BATS_ROOT/lib/bats/|g' lib/bats-core/*
+
+  for fn in libexec/bats-core/*; do
+    install -Dm755 ${fn} \
+      "${pkgdir}"/usr/lib/bats/$(basename ${fn})
+  done
+
+  install -Dm755 bin/bats "${pkgdir}/usr/bin/bats"
+
+  install -Dm755 lib/bats-core/* -t "${pkgdir}/usr/lib/bats"
+
+  install -Dm644 man/bats.1 "${pkgdir}/usr/share/man/man1/bats.1"
+  install -Dm644 man/bats.7 "${pkgdir}/usr/share/man/man7/bats.7"
+  install -Dm644 LICENSE.md "${pkgdir}"/usr/share/licenses/${pkgname}/LICENSE
+
+}

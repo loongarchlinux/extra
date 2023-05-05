@@ -1,0 +1,87 @@
+# Maintainer: David Runge <dvzrv@archlinux.org>
+# Contributor: speps <speps at aur dot archlinux dot org>
+# Contributor: Alessio Biancalana <dottorblaster@gmail.com>
+
+pkgname=amsynth
+pkgver=1.13.2
+pkgrel=1
+pkgdesc="Analogue Modeling SYNTHesizer"
+arch=(loong64 x86_64)
+url="https://amsynth.github.io/"
+license=(GPL2)
+groups=(dssi-plugins lv2-plugins pro-audio vst-plugins)
+depends=(cairo gcc-libs glibc)
+makedepends=(
+  atk
+  autoconf-archive
+  dssi
+  fontconfig
+  freetype2
+  gdk-pixbuf2
+  glib2
+  gtk2
+  harfbuzz
+  intltool
+  jack
+  ladspa
+  liblo
+  lv2
+  pandoc
+)
+checkdepends=(lv2lint)
+optdepends=(
+  'alsa-lib: for standalone application'
+  'dssi-host: for DSSI plugin'
+  'jack: for standalone application'
+  'liblo: for standalone application and DSSI plugin'
+  'new-session-manager: for session management with the standalone application'
+  'lv2-host: for LV2 plugin'
+  'vst-host: for VST plugin'
+)
+source=(
+  $pkgname-$pkgver.tar.gz::https://github.com/amsynth/amsynth/archive/release-$pkgver.tar.gz
+)
+sha512sums=('522c0ad1e57bbf20fe91eac9ae2a5c3220bb17128b9ab3c50d91b8e554fa2b9f67d6aa36da2572b0ee7c99134f9c1497180064357f1d93596d31f2d631eeaef8')
+b2sums=('d96b9338870bd9e6a3691c4b366dfa5daddc1e2623b663b01d48ca4ce08e116d3fca8d971cbae363a1268ec9fbcb445e8d430a807f72809b706bc5c53dad21b6')
+
+prepare() {
+  cd $pkgname-release-$pkgver
+  autoreconf -fiv
+  intltoolize -f
+}
+
+build() {
+  local configure_options=(
+    --prefix=/usr
+    --with-alsa
+    --with-jack
+    --with-dssi
+    --with-lv2
+    --with-vst
+    --with-pandoc
+  )
+
+  cd $pkgname-release-$pkgver
+  ./configure "${configure_options[@]}"
+  # prevent excessive overlinking due to libtool
+  sed -i -e 's/ -shared / -Wl,-O1,--as-needed\0/g' libtool
+  make
+}
+
+check() {
+  cd $pkgname-release-$pkgver
+  cp .libs/${pkgname}_lv2*.so data/$pkgname.lv2/
+  lv2lint -Mpack -I data/$pkgname.lv2 "http://code.google.com/p/amsynth/amsynth"
+}
+
+package() {
+  depends+=(
+    atk libatk-1.0.so
+    gdk-pixbuf2 libgdk_pixbuf-2.0.so
+    gtk2 libgdk-x11-2.0.so libgtk-x11-2.0.so
+    glib2 libgio-2.0.so libglib-2.0.so libgobject-2.0.so
+  )
+
+  make DESTDIR="$pkgdir/" install -C $pkgname-release-$pkgver
+  install -vDm 644 $pkgname-release-$pkgver/{AUTHORS,NEWS,README} -t "$pkgdir/usr/share/doc/$pkgname/"
+}

@@ -1,0 +1,39 @@
+# Maintainer: Felix Yan <felixonmars@archlinux.org>
+
+pkgname=ukui-interface
+pkgver=1.0.1
+pkgrel=2
+pkgdesc="UKUI interface for system configuration and related libraries"
+arch=('loong64' 'x86_64')
+license=('GPL')
+url="https://github.com/ukui/ukui-interface"
+groups=('ukui')
+depends=('dconf' 'gsettings-qt' 'iniparser')
+source=("https://github.com/ukui/ukui-interface/archive/v$pkgver/$pkgname-$pkgver.tar.gz")
+sha512sums=('b02579c3f02f30a4ab33f5d48d8f77fc0c7353f28b8963de489537b397199bdbab7abcb03c720ec6f60b298e1ff53856d1f6e691c8ef7ec2f5a80da6479cb88e')
+
+prepare() {
+  cd $pkgname-$pkgver
+  # https://github.com/ukui/ukui-interface/issues/7
+  sed -i 's|iniparser/iniparser.h|iniparser.h|' src/common/kylin-com4cxx.cpp src/common/kylin-com4c.c
+
+  NOCONFIGURE=1 ./autogen.sh
+}
+
+build() {
+  cd $pkgname-$pkgver
+  ./configure --prefix=/usr --libexecdir=/usr/lib/$pkgname --sysconfdir=/etc
+  make
+
+  cd src/log4qt
+  qmake-qt5 PREFIX=/usr
+  make
+}
+
+package() {
+  cd $pkgname-$pkgver
+  make DESTDIR="$pkgdir" install
+
+  cd src/log4qt
+  make INSTALL_ROOT="$pkgdir" install
+}

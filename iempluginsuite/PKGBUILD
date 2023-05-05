@@ -1,0 +1,152 @@
+# Maintainer: David Runge <dvzrv@archlinux.org>
+
+_name=IEMPluginSuite
+pkgname=iempluginsuite
+pkgver=1.13.0
+pkgrel=1
+pkgdesc="Plug-in suite including Ambisonic plug-ins up to 7th order"
+arch=(loong64 x86_64)
+url="https://plugins.iem.at"
+license=(GPL3)
+groups=(pro-audio vst3-plugins)
+depends=(gcc-libs glibc libglvnd libpng libx11 libxcursor libxext libxinerama
+libxrandr zlib)
+makedepends=(alsa-lib cmake curl fftw freetype2 gendesk jack juce libjpeg-turbo
+xorg-server-xvfb)
+source=(
+  $pkgname-$pkgver.tar.gz::https://git.iem.at/audioplugins/$_name/-/archive/v$pkgver/$_name-v$pkgver.tar.gz
+  $pkgname-1.13.0-remove_deps.patch::https://gitlab.com/iem.at/IEMPluginSuite/-/commit/77a12032e41aeda4378180ff84eb11149a732f8f.patch
+  $pkgname-1.13.0-juce7.patch::https://gitlab.com/dvzrv/IEMPluginSuite/-/commit/439670832afddaedb4d05ea03b0138af847e1249.diff
+  $pkgname-1.13.0-system_juce.patch::https://gitlab.com/iem.at/IEMPluginSuite/-/commit/f6bfeb08a626b8d7b6a20936145cf69f281e7ab4.patch
+  $pkgname.directory
+  $pkgname.menu
+)
+sha512sums=('9138596e510acb569ab38c30e4d17cc1029c0d0db2a1e02b85126825634d49a2d5915299995227dab04c62dec8b5d5767b5b6209fac777d7045fb5891a9bb718'
+            '0e7f288f8628f880620aa232dd64b0fe41e06ecffd446c03f1a03b47048a0468316b385a4f94f58fb37906e8c6a1be7c2d2ceae5eb88d5ffcce44c8fe95a8594'
+            'd30b5935695af09cef33c57881e1fa8bab04cec875e6256887b2595c361adcd883279bea84e2aca66b4535a1ddfac490405fd92a33dd8bbdf325008cecde9992'
+            '9cc9ceab59bbceb77525be626115eca7ae7d05793def276097a4af2a580592c2c806b69eb1cb0d630990fcfccd01c24bf55081c8b35c76083934ef4adc2ed10c'
+            '412ac2581089babfe57b10c06dca86c19a8b708b76af70283d3b35dd1deffc8f7c654d9e7d182da8b0fa2f40cafe46fc855890e0aed7d11530de3c0d56bf17dd'
+            '2d290b5b8c9320013abb97e0a9051c6687a92700433454c88d4c89fe122c9b1537e128faf7060715c63eb28e93ad9f3f1a98765a7a5934e4f8bd0a8c20254ab3')
+b2sums=('483989ab947cdfc01f7030951ab568790d0ca72ab602348aef31d07607ae2a3f25d3ff000ac3bba5f8567ba07c1c2dd4267c8a09df5e126027a907834c5d731b'
+        '36af4af4923df1bc513251aead09fea9aaa6b9cd64478129a228dba8b23aa490f7597520c0b4c483a68ed1bb65080599cdd19e36498ff0d6ba95c2c0e0bf73ea'
+        '1f6d9ddf899a07126f20073457f6dec1f7f32e7785d5f9593169d2bda9674d2e2e385692df6c17b9d34038772d02cf0fed972bd6d3098447433324011fbe2acf'
+        '8387a8189f53567f7a1541a7600f4d998d111721aba7ba6a1117afcaf0e7c33e6d07a1d899bf1b7120a61ea63c1fa30af42c57189d895a036ea3592496f98e32'
+        'fa85f3ced5143524fac1d6403179052a520307e880902bddd0d239e580c6c2fe1368f6f78bad2950e2e06217e1fd318a52ef810b65e0870636006d87615c7e99'
+        '1ea251abb358de7675012b9c9bc6a7187c4c171267f4466437e1d324c1a19ed6e8f5b2eeb625093cfa0303ea534f9d4cd900966338b18126a09a41b6a3939dfc')
+_names=(
+  AllRADecoder
+  BinauralDecoder
+  CoordinateConverter
+  DirectionalCompressor
+  DirectivityShaper
+  DistanceCompensator
+  DualDelay
+  EnergyVisualizer
+  FdnReverb
+  MatrixMultiplier
+  MultiBandCompressor
+  MultiEQ
+  MultiEncoder
+  OmniCompressor
+  ProbeDecoder
+  RoomEncoder
+  SceneRotator
+  SimpleDecoder
+  StereoEncoder
+  ToolBox
+)
+
+prepare() {
+  local name
+
+  declare -A comments=(
+    ['AllRADecoder']="Design an Ambisonic decoder for an arbitrary loudspeaker layout using the AllRAD approach."
+    ['BinauralDecoder']="Renders the Ambisonic input signal to a binaural headphone signal using the MagLS approach."
+    ['CoordinateConverter']="Converts VST parameters from a spherical representation to a cartesian, and vice versa."
+    ['DirectionalCompressor']="A more sophisticated Ambisonic compressor/limiter which lets you control the dynamics for different spatial regions."
+    ['DirectivityShaper']="Filter input signal into four independent bands, to which different directivity patterns can be applied to."
+    ['DistanceCompensator']="Calculate the needed delays and gains in order to compensate for distance differences."
+    ['DualDelay']="Two delay-lines, which can be configured independently."
+    ['EnergyVisualizer']="Visualizes the energy distribution on the sphere of the Ambisonic input signal using a Hammer-Aitoff projection (a spherical projection which is area-preserving)"
+    ['FdnReverb']="A Feedback-Delay-Network reverberation."
+    ['MatrixMultiplier']="Load a configuration which contains a TransformationMatrix object which will be applied to the input signal."
+    ['MultiBandCompressor']="Splits an Ambisonic signal into four bands and compresses them individually."
+    ['MultiEQ']="A simple multi-channel equalizer, filtering up to 64 audio channels."
+    ['MultiEncoder']="Encode multiple sources with just one plug-in."
+    ['OmniCompressor']="An Ambisonic compressor which can also be used as a limiter."
+    ['ProbeDecoder']="A little tool to sample/decode the Ambisonic input signal for one specific direction and listen to the output."
+    ['RoomEncoder']="Puts a source and a listener into a virtual shoebox-shaped room and renders over 200 wall reflections."
+    ['SceneRotator']="An Ambisonic rotator plug-in, which rotates the Ambisonic scene."
+    ['SimpleDecoder']="Reads JSON configuration files and decodes the Ambisonic input signal to loudspeaker signals."
+    ['StereoEncoder']="Encodes mono or stereo audio signals into the Ambisonic domain."
+    ['ToolBox']="Flips the Ambisonic input signal along the x, y and/or z axis."
+  )
+  declare -A generic=(
+    ['AllRADecoder']="Ambisonic Decoder Designer"
+    ['BinauralDecoder']="Binaural Decoder"
+    ['CoordinateConverter']="VST Coordinate Converter"
+    ['DirectionalCompressor']="Compressor Limiter"
+    ['DirectivityShaper']="Directivity Shaper"
+    ['DistanceCompensator']="Distance Compensation"
+    ['DualDelay']="Delay"
+    ['EnergyVisualizer']="Audio Visualizer"
+    ['FdnReverb']="Reverb"
+    ['MatrixMultiplier']="Matrix Transformation"
+    ['MultiBandCompressor']="Multiband Compressor"
+    ['MultiEQ']="Multichannel Equalizer"
+    ['MultiEncoder']="Ambisonics Encoder"
+    ['OmniCompressor']="Ambisonic Limiter Compressor"
+    ['ProbeDecoder']="Ambisonic Decoder"
+    ['RoomEncoder']="Room Encoder"
+    ['SceneRotator']="Ambisonic Scene Rotator"
+    ['SimpleDecoder']="Ambisonic Decoder"
+    ['StereoEncoder']="Ambisonic Encoder"
+    ['ToolBox']="Ambisonic Transformation"
+  )
+  for name in "${_names[@]}"; do
+    gendesk -n \
+            --pkgname at.iem.plugins.$name \
+            --name $name \
+            --exec $name \
+            --icon $pkgname \
+            --pkgdesc "${comments[$name]}" \
+            --genericname "${generic[$name]}" \
+            --categories $pkgname
+  done
+
+  # fix for juce >= 7.0.2 compatibility: https://gitlab.com/iem.at/IEMPluginSuite/-/merge_requests/2
+  patch -Np1 -d $_name-v$pkgver -i ../$pkgname-1.13.0-juce7.patch
+  # build against system juce: https://gitlab.com/iem.at/IEMPluginSuite/-/merge_requests/1
+  patch -Np1 -d $_name-v$pkgver -i ../$pkgname-1.13.0-system_juce.patch
+  # remove unnecessary dependencies
+  patch -Np1 -d $_name-v$pkgver -i ../$pkgname-1.13.0-remove_deps.patch
+}
+
+build() {
+  cmake \
+    -B build \
+    -S $_name-v$pkgver \
+    -DCMAKE_BUILD_TYPE=None \
+    -DCMAKE_INSTALL_PREFIX=/usr \
+    -DIEM_BUILD_STANDALONE=ON \
+    -DIEM_USE_SYSTEM_JUCE=ON \
+    -Wno-dev
+  cmake --build build
+}
+
+package() {
+  local name
+
+  depends+=(libasound.so libcurl.so libfftw3f.so libfreetype.so libjack.so
+  libjpeg.so)
+
+  for name in "${_names[@]}"; do
+    install -vDm 755 build/$name/${name}_artefacts/None/Standalone/$name -t "$pkgdir/usr/bin/"
+    install -vDm 755 build/$name/${name}_artefacts/None/VST3/$name.vst3/Contents/$CARCH-linux/$name.so -t "$pkgdir/usr/lib/vst3/$name.vst3/Contents/$CARCH-linux/"
+  done
+
+  install -vDm 644 *.desktop -t "$pkgdir/usr/share/applications/"
+  install -vDm 644 $pkgname.menu -t "$pkgdir/etc/xdg/menus/applications-merged/"
+  install -vDm 644 $pkgname.directory -t "$pkgdir/usr/share/desktop-directories/"
+  install -vDm 644 $_name-v$pkgver/{ChangeLog,README}.md -t "$pkgdir/usr/share/doc/$pkgname/"
+}

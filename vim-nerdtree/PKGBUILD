@@ -1,0 +1,37 @@
+# Maintainer: Levente Polyak <anthraxx[at]archlinux[dot]org>
+# Maintainer: Caleb Maclennan <caleb@alerque.com>
+# Contributor: Alexander F Rødseth <xyproto@archlinux.org>
+# Contributor: Andrea Scarpino <andrea@archlinux.org>
+# Contributor: Kwpolska <kwpolska@gmail.com>
+# Contributor: Thomas Dziedzic < gostrc at gmail >
+# Contributor: Laszlo Papp <djszapi @ gmail at com>
+
+pkgname=vim-nerdtree
+pkgver=6.10.16
+pkgrel=1
+pkgdesc='Tree explorer plugin for navigating the filesystem'
+url='https://github.com/preservim/nerdtree'
+arch=('any')
+license=('custom:WTFPL')
+depends=('vim-plugin-runtime')
+groups=('vim-plugins')
+source=($url/archive/${pkgver}/${pkgname}-${pkgver}.tar.gz)
+sha512sums=('c4c46a0ca3d7bb6ea3f5ae8312b874b745de1daa5f87013da5048534a51bbf0e5320f4a0e01038ccb2274f73b0aa099dd46977c2f82e4bd089576c5778790fc1')
+b2sums=('678a55a2ead54792a85caf0d778795ef4c5283bcea1d282f9573c91f6f56b5ce417df33ce3fd06a89aa326693bcd1966ebe0af292daadde25adc2ffc46cea7f1')
+
+prepare() {
+  cd nerdtree-${pkgver}
+  sed 's|\[s:rootNERDTreePath,|["/usr/share/doc/vim-nerdtree",|' -i autoload/nerdtree.vim
+}
+
+package() {
+  cd nerdtree-${pkgver}
+  local _installpath="${pkgdir}/usr/share/vim/vimfiles"
+  install -d "${_installpath}"
+  cp -r -t "${_installpath}" autoload doc plugin syntax nerdtree_plugin lib
+  install -Dm 644 CHANGELOG.md -t "${pkgdir}/usr/share/doc/${pkgname}"
+  install -Dm 644 LICENCE -t "${pkgdir}/usr/share/licenses/${pkgname}"
+  install -Dm 644 README.markdown CHANGELOG.md -t "${pkgdir}/usr/share/doc/${pkgname}"
+}
+
+# vim: ts=2 sw=2 et:

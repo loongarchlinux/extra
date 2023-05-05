@@ -1,0 +1,28 @@
+# Maintainer: Sven-Hendrik Haase <svenstaro@gmail.com>
+# Contributor: scippio <scippio@berounet.cz>
+pkgname=ois
+pkgver=1.5.1
+pkgrel=1
+pkgdesc="Object Oriented Input System"
+arch=('loong64' 'x86_64')
+url="https://github.com/wgois/OIS"
+license=('custom:zlib')
+makedepends=('cmake' 'gcc' 'libxaw')
+source=("https://github.com/wgois/OIS/archive/v${pkgver}.tar.gz")
+sha512sums=('20598aef999a70900cb7f75ffaf62059acf8e811822971cb21986b5d25d28dacb79e4b4cf4770c70e00d3c55cdd01ef3e68a77c2dd148677784fc4df38891340')
+
+build() {
+  cd OIS-*/
+
+  mkdir -p build && cd build
+  cmake -DCMAKE_INSTALL_PREFIX=/usr ..
+  make
+}
+
+package() {
+  cd OIS-*/build
+
+  make DESTDIR="${pkgdir}" install
+
+  install -Dm644 ../LICENSE.md "${pkgdir}"/usr/share/licenses/$pkgname/LICENSE
+}

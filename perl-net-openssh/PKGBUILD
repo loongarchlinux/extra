@@ -1,0 +1,44 @@
+# Maintainer: Florian Pritz <bluewind@xinu.at>
+
+pkgname=perl-net-openssh
+pkgver=0.83
+pkgrel=1
+pkgdesc='Perl SSH client package implemented on top of OpenSSH'
+arch=(any)
+license=(PerlArtistic GPL)
+options=(!emptydirs)
+depends=(perl)
+url=https://metacpan.org/release/Net-OpenSSH
+source=("https://cpan.metacpan.org/authors/id/S/SA/SALVA/Net-OpenSSH-$pkgver.tar.gz")
+md5sums=(8df20f8bc0b086de550307371f0739f4)
+sha512sums=(85844bdb821773ae19c24fc7dd9f9feae58b21532173b842ed9a50f74424ae61b89b03a12a711a5c2ab73687240ed62964daa5250b1c0211cecf7c3fb9fe8f3c)
+_ddir="Net-OpenSSH-$pkgver"
+
+build()
+(
+  cd "$srcdir/$_ddir"
+  export PERL_MM_USE_DEFAULT=1 PERL_AUTOINSTALL=--skipdeps
+  unset PERL5LIB PERL_MM_OPT
+  /usr/bin/perl Makefile.PL
+  make
+)
+
+check()
+(
+  cd "$srcdir/$_ddir"
+  export PERL_MM_USE_DEFAULT=1
+  unset PERL5LIB
+  make test
+)
+
+package()
+(
+  cd "$srcdir/$_ddir"
+  make install INSTALLDIRS=vendor DESTDIR="$pkgdir"
+)
+
+# Local Variables:
+# mode: shell-script
+# sh-basic-offset: 2
+# End:
+# vim:set ts=2 sw=2 et:

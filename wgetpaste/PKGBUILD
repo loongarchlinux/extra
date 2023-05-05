@@ -1,0 +1,29 @@
+# Maintainer: Jaroslav Lichtblau <svetlemodry@archlinux.org>
+
+pkgname=wgetpaste
+pkgver=2.33
+pkgrel=1
+pkgdesc="A script that automates pasting to a number of pastebin services"
+arch=('any')
+url="https://wgetpaste.zlin.dk/"
+license=('custom')
+depends=('wget')
+optdepends=('xclip: interface to Xclipboard')
+changelog=$pkgname.changelog
+source=(https://github.com/zlin/$pkgname/releases/download/$pkgver/$pkgname-$pkgver.tar.xz{,.sig}
+        https://wgetpaste.zlin.dk/$pkgname.example)
+sha256sums=('e9359d84a3a63bbbd128621535c5302f2e3a85e23a52200e81e8fab9b77e971b'
+            'SKIP'
+            'cbc0437f7e04d95ffd224011ee2a056a84dfd7143e314e6962688295f68def4d')
+validpgpkeys=('D81C0CB38EB725EF6691C385BB463350D6EF31EF') # Heiko Becker <heirecka@exherbo.org>
+
+package() {
+  cd "${srcdir}"/${pkgname}-${pkgver}
+
+  install -Dm755 ${pkgname} "${pkgdir}"/usr/bin/${pkgname}
+  install -Dm644 _${pkgname} "${pkgdir}"/usr/share/zsh/site-functions/_${pkgname}
+  install -Dm644 "${srcdir}"/${pkgname}.example ${pkgdir}/usr/share/${pkgname}/${pkgname}.example
+
+# license
+  install -Dm644 LICENSE "${pkgdir}"/usr/share/licenses/$pkgname/LICENSE
+}

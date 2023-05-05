@@ -1,0 +1,43 @@
+# Maintainer: Levente Polyak <anthraxx[at]archlinux[dot]org>
+# Maintainer: Jelle van der Waa <jelle@archlinux.org>
+# Contributor: Thorsten Töpper <atsutane-tu@freethoughts.de>
+
+pkgname=i3lock
+pkgver=2.14.1
+pkgrel=1
+pkgdesc='Improved screenlocker based upon XCB and PAM'
+url='https://i3wm.org/i3lock/'
+arch=('loong64' 'x86_64')
+license=('MIT')
+groups=('i3')
+makedepends=('meson')
+depends=('xcb-util-image' 'xcb-util-xrm' 'libev' 'cairo' 'libxkbcommon-x11' 'pam')
+options=('docs')
+backup=('etc/pam.d/i3lock')
+source=(https://i3wm.org/i3lock/$pkgname-$pkgver.tar.xz{,.asc})
+sha512sums=('63b6bd73f66654fe52639434f7d3da64006144ec2ed685ba8683186730d4cc2c10d5aa66174f965030030243f59afaf6def3ff732f710ae441410218f84d6deb'
+            'SKIP')
+validpgpkeys=('424E14D703E7C6D43D9D6F364E7160ED4AC8EE1D') # Michael Stapelberg
+
+prepare() {
+  cd ${pkgname}-${pkgver}
+
+  # Fix ticket FS#31544, sed line taken from gentoo
+  sed -i -e 's:login:system-auth:' pam/i3lock
+}
+
+
+build() {
+  arch-meson $pkgname-$pkgver build
+  meson compile -C build
+}
+
+package() {
+  DESTDIR="$pkgdir" meson install -C build
+
+  cd ${pkgname}-${pkgver}
+  install -Dm 644 i3lock.1 -t "${pkgdir}/usr/share/man/man1"
+  install -Dm 644 LICENSE -t "${pkgdir}/usr/share/licenses/${pkgname}"
+}
+
+# vim: ts=2 sw=2 et:

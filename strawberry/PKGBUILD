@@ -1,0 +1,29 @@
+# Maintainer: Antonio Rojas <arojas@archlinux.org>
+# Contributor: Fabio 'Lolix' Loli <lolix@disroot.org> -> https://github.com/FabioLolix
+
+pkgname=strawberry
+pkgver=1.0.17
+pkgrel=2
+pkgdesc='A music player aimed at audio enthusiasts and music collectors'
+arch=(loong64 x86_64)
+url='https://www.strawbs.org/'
+license=(GPL3)
+depends=(qt6-base chromaprint protobuf gst-plugins-base gst-plugins-good udisks2 libcdio libgpod libmtp fftw)
+makedepends=(cmake boost qt6-tools)
+optdepends=('gst-libav: additional codecs'
+            'gst-plugins-bad: additional codecs'
+            'gst-plugins-ugly: additional codecs')
+source=(https://github.com/strawberrymusicplayer/strawberry/releases/download/$pkgver/$pkgname-$pkgver.tar.xz)
+sha256sums=('d5a4af4202813f5b5eb81c202ba632f964493cc381730e15ee3f6106321a714a')
+
+build() {
+  cmake -B build -S $pkgname-$pkgver \
+    -DCMAKE_INSTALL_PREFIX=/usr \
+    -DBUILD_WITH_QT6=ON \
+    -DCMAKE_CXX_FLAGS="$CXXFLAGS -DQT_NO_DEBUG_OUTPUT"
+  cmake --build build
+}
+
+package() {
+  DESTDIR="$pkgdir" cmake --install build
+}

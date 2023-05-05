@@ -1,0 +1,32 @@
+# Maintainer: Felix Yan <felixonmars@archlinux.org>
+
+pkgname=deepin-voice-note
+pkgver=5.11.1
+_commit=b93284dc394afc15bdadea70609eb3128bc0a2fd
+pkgrel=1
+pkgdesc='A lightweight memo tool to make text notes and voice recordings'
+arch=('loong64' 'x86_64')
+url="https://github.com/linuxdeepin/deepin-voice-note"
+license=('GPL3')
+replaces=('deepin-voice-recorder')
+depends=('deepin-qt5integration' 'deepin-qt-dbus-factory' 'qt5-multimedia' 'qt5-webengine' 'vlc')
+makedepends=('git' 'cmake' 'gmock' 'gtest' 'ninja' 'qt5-tools')
+groups=('deepin-extra')
+source=("git+https://github.com/linuxdeepin/deepin-voice-note.git#commit=$_commit")
+sha512sums=('SKIP')
+
+build() {
+  cd deepin-voice-note
+  cmake -GNinja .
+  ninja
+}
+
+check() {
+  cd deepin-voice-note
+  ninja test || :
+}
+
+package() {
+  cd deepin-voice-note
+  DESTDIR="$pkgdir" ninja install
+}

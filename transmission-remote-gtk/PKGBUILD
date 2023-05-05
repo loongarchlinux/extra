@@ -1,0 +1,27 @@
+# Maintainer: Bruno Pagani <archange@archlinux.org>
+# Contributor: Sébastien LEBEAU <sebcbi1 at gmail dot com>
+# Contributor: Patrick Griffis <tingping@fedoraproject.org>
+
+pkgname=transmission-remote-gtk
+pkgver=1.5.1
+pkgrel=1
+pkgdesc="GTK remote control for the Transmission BitTorrent client"
+arch=(loong64 x86_64)
+url="https://github.com/transmission-remote-gtk/transmission-remote-gtk"
+license=(GPL2)
+depends=(curl glib2 gtk3 json-glib libappindicator-gtk3 libproxy geoip)
+makedepends=(meson)
+# The new maintainer does not sign releases
+#source=(${url}/releases/download/${pkgver}/${pkgname}-${pkgver}.tar.xz{,.asc})
+source=(${url}/releases/download/${pkgver}/${pkgname}-${pkgver}.tar.xz)
+sha256sums=('4ee0d809585336e73c503cd6fea3eeba4d65915644901a8ef77e2811efe6a2d1')
+#validpgpkeys=('108BF2212A051F4A72B18448B3C7CE210DE76DFC') # Patrick Griffis <tingping@tingping.se>
+
+build() {
+  arch-meson -D mrss=disabled ${pkgname}-${pkgver} build
+  meson compile -C build
+}
+
+package() {
+  meson install -C build --destdir "${pkgdir}"
+}

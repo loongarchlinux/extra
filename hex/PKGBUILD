@@ -1,0 +1,43 @@
+# Maintainer: Orhun Parmaksız <orhun@archlinux.org>
+# Contributor: Sven-Hendrik Haase <svenstaro@gmail.com>
+
+pkgname=hex
+pkgver=0.4.2
+pkgrel=2
+pkgdesc="Futuristic take on hexdump"
+arch=('loong64' 'x86_64')
+url="https://github.com/sitkevij/hex"
+license=(MIT)
+depends=('gcc-libs')
+makedepends=('rust')
+source=($pkgname-$pkgver.tar.gz::https://github.com/sitkevij/hex/archive/v${pkgver}.tar.gz)
+sha512sums=('5b5706d931c4f6a9a21de5e883b264c9a2831a8be463a5283ac4cd3552eb44c480f45779fa6364dd97390a2d38f252b44313e4567186ec42c594451f295e648f')
+
+prepare() {
+  cd "$srcdir/$pkgname-$pkgver"
+
+  cargo fetch --locked  
+}
+
+build() {
+  cd "$srcdir/$pkgname-$pkgver"
+
+  cargo build --release --frozen
+}
+
+check() {
+  cd "$srcdir/$pkgname-$pkgver"
+
+  cargo build --frozen
+  cargo test --frozen
+}
+
+package() {
+  cd "$srcdir/$pkgname-$pkgver"
+
+  install -Dm755 target/release/hx "$pkgdir"/usr/bin/hx
+  install -Dm644 LICENSE "$pkgdir"/usr/share/licenses/$pkgname/LICENSE
+  install -Dm644 README.md "$pkgdir"/usr/share/doc/$pkgname/README.md
+}
+
+# vim:set ts=2 sw=2 et:

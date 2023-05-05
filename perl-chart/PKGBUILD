@@ -1,0 +1,33 @@
+# Maintainer: Sergej Pupykin <pupykin.s+arch@gmail.com>
+# Contributor: Sergej Pupykin <pupykin.s+aur@gmail.com>
+
+pkgname=perl-chart
+pkgver=2.403.7
+pkgrel=1
+pkgdesc="Business chart widget collection"
+arch=('any')
+url="https://search.cpan.org/dist/Chart"
+license=('GPL' 'PerlArtistic')
+depends=('perl-gd>=1.2')
+makedepends=('perl-test-warn')
+options=('!emptydirs')
+source=(https://www.cpan.org/authors/id/L/LI/LICHTKIND/Chart-v$pkgver.tar.gz)
+sha256sums=('0bf1152236b404162ac6779f6a1f65d2192289a038432bdb3bbf9b20e1113bb4')
+
+build() {
+  cd  "$srcdir"/Chart-v$pkgver
+  PERL_MM_USE_DEFAULT=1 perl Makefile.PL INSTALLDIRS=vendor
+  make
+}
+
+check() {
+  cd  "$srcdir"/Chart-v$pkgver
+  make test
+}
+
+package() {
+  cd  "$srcdir"/Chart-v$pkgver
+  make install DESTDIR="$pkgdir"
+  find "$pkgdir" -name '.packlist' -delete
+  find "$pkgdir" -name '*.pod' -delete
+}

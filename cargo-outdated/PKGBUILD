@@ -1,0 +1,38 @@
+# Maintainer: kpcyrd <kpcyrd[at]archlinux[dot]org>
+# Maintainer: Orhun Parmaksız <orhun@archlinux.org>
+# Contributor: Jian Zeng <anonymousknight96+aur AT gmail.com>
+# Contributor: Alexandre Bury <alexandre.bury+aur AT gmail.com>
+# Contributor: Vlad M. <vlad@archlinux.net>
+
+pkgname=cargo-outdated
+pkgver=0.11.2
+pkgrel=1
+pkgdesc="A cargo subcommand for displaying when Rust dependencies are out of date"
+url="https://github.com/kbknapp/cargo-outdated"
+arch=('loong64' 'x86_64')
+license=('MIT')
+depends=('cargo' 'libgit2')
+makedepends=('libssh2')
+source=("${pkgname}-${pkgver}.tar.gz::https://crates.io/api/v1/crates/${pkgname}/${pkgver}/download")
+sha256sums=('c85f2e3018a0a12ca969bcf7022e76347655100cf4e410bfd84f8b129e88802b')
+b2sums=('2ac2b9fd7723461e7f960f1ab54a467ef393fbd164f42894bd24003c17247b3a9ec8ec336830671104ad422c918bd2387b82a0788796c0b59f38c59b9ca99735')
+options=('!lto')
+
+prepare() {
+  cd "${pkgname}-${pkgver}"
+  cargo fetch --locked --target "$CARCH-unknown-linux-gnu"
+}
+
+build() {
+  cd "${pkgname}-${pkgver}"
+  export LIBSSH2_SYS_USE_PKG_CONFIG=1
+  cargo build --frozen --release
+}
+
+package() {
+  cd "${pkgname}-${pkgver}"
+  install -Dm755 "target/release/${pkgname}" "${pkgdir}/usr/bin/${pkgname}"
+  install -Dm644 LICENSE-MIT -t "${pkgdir}/usr/share/licenses/${pkgname}"
+}
+
+# vim: ts=2 sw=2 et:

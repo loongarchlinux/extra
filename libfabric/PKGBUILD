@@ -1,0 +1,35 @@
+# Maintainer: Bruno Pagani <archange@archlinux.org>
+
+pkgname=libfabric
+pkgver=1.18.0
+pkgrel=1
+pkgdesc="User-space API for OpenFabrics Interfaces (OFI)"
+arch=(loong64 x86_64)
+url="https://ofiwg.github.io/libfabric/"
+license=(GPL2)
+depends=(glibc gcc-libs numactl)
+options=(!lto)
+source=(https://github.com/ofiwg/libfabric/releases/download/v${pkgver}/libfabric-${pkgver}.tar.bz2)
+sha512sums=('c120d9ba83597760853e5204719b8820c6dfc693db6a8b15a0b0922912b99432b2aee28b2c5c28738d5fb4f013efafae23c96bbbc8942250df86a24eacd834ec')
+
+prepare() {
+  cd ${pkgname}-${pkgver}
+  autoreconf -fvi
+}
+
+build() {
+  cd ${pkgname}-${pkgver}
+  ./configure --prefix=/usr
+  sed -i -e 's/ -shared / -Wl,-O1,--as-needed\0/g' libtool
+  make
+}
+
+check() {
+  cd ${pkgname}-${pkgver}
+  make test
+}
+
+package() {
+  cd ${pkgname}-${pkgver}
+  make DESTDIR="${pkgdir}" install
+}

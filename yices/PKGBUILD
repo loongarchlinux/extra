@@ -1,0 +1,28 @@
+# Maintainer: Felix Yan <felixonmars@archlinux.org>
+# Contributor: Brent Carmer
+# Contributor: Alex J. Malozemoff <amaloz@galois.com>
+
+pkgname=yices
+pkgver=2.6.4
+pkgrel=1
+pkgdesc="The Yices SMT Solver"
+arch=('loong64' 'x86_64')
+url="http://yices.csl.sri.com/"
+license=('GPL')
+depends=('cudd' 'gmp' 'libpoly')
+makedepends=('gperf')
+# Since 2.6.3 sources are not published in http://yices.csl.sri.com/releases/ anymore.
+source=("https://github.com/SRI-CSL/yices2/archive/Yices-$pkgver.tar.gz")
+sha512sums=('d8102c41fda0e200fd1336ae317b516d2797d10c187b8f7aecf0c9b08b4b487b90bef8c358099b2da51c0367326939f9610fd4e6d5a41a392cf1114bd04b8763')
+
+build() {
+  cd yices2-Yices-$pkgver
+  autoconf
+  ./configure --prefix=/usr --enable-mcsat
+  make
+}
+
+package() {
+  cd yices2-Yices-$pkgver
+  make DESTDIR="$pkgdir/" install
+}

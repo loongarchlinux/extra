@@ -1,0 +1,44 @@
+# Maintainer: Daniel M. Capella <polyzen@archlinux.org>
+
+pkgname=('ublock-origin' 'firefox-ublock-origin')
+pkgbase=ublock-origin
+pkgver=1.49.2
+pkgrel=1
+pkgdesc='Efficient blocker add-on for various browsers. Fast, potent, and lean'
+arch=('any')
+url=https://github.com/gorhill/uBlock
+license=('GPL3')
+makedepends=('git' 'python' 'strip-nondeterminism' 'zip')
+source=("git+$url.git#commit=$pkgver?signed")
+b2sums=('SKIP')
+validpgpkeys=('603B28AA5D6CD687A554347425E1490B761470C2') # Raymond Hill <rhill@raymondhill.net>
+
+prepare() {
+  cd uBlock
+  DES=dist/build/uAssets
+  sed -i "s/ \$(assets)//" Makefile
+  git clone --depth 1 --branch master https://github.com/uBlockOrigin/uAssets $DES/main
+  git clone --depth 1 --branch gh-pages https://github.com/uBlockOrigin/uAssets $DES/prod
+}
+
+build() {
+  cd uBlock
+  make chromium firefox
+  strip-nondeterminism -t zip dist/build/uBlock0.firefox.xpi
+}
+
+package_ublock-origin() {
+  pkgdesc+=' (unpacked webextension)'
+  provides=('chromium-ublock-origin')
+  replaces=('chromium-ublock-origin')
+  cd uBlock/dist/build/uBlock0.chromium
+  install -d "$pkgdir"/usr/lib/$pkgbase
+  cp -r -- * "$pkgdir"/usr/lib/$pkgbase
+}
+
+package_firefox-ublock-origin() {
+  groups=('firefox-addons')
+  cd uBlock/dist/build
+  install -Dm644 uBlock0.firefox.xpi \
+    "$pkgdir"/usr/lib/firefox/browser/extensions/uBlock0@raymondhill.net.xpi
+}

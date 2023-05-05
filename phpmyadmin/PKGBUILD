@@ -1,0 +1,29 @@
+# Maintainer:
+# Contributor: Bartłomiej Piotrowski <bpiotrowski@archlinux.org>
+# Contributor: Sergej Pupykin <pupykin.s+arch@gmail.com>
+# Contributor: tobias <tobias@archlinux.org>
+# Contributor: Manolis Tzanidakis <manolis@archlinux.org>
+# Contributor: Simon Lackerbauer <calypso "at" strpg.org>
+
+pkgname=phpmyadmin
+pkgver=5.2.1
+pkgrel=1
+pkgdesc='PHP and hence web-based tool to administrate MySQL over the WWW'
+arch=('any')
+url='https://www.phpmyadmin.net'
+license=('GPL')
+depends=('mysql-clients' 'php')
+backup=(etc/webapps/phpmyadmin/config.inc.php)
+source=(https://files.phpmyadmin.net/phpMyAdmin/$pkgver/phpMyAdmin-$pkgver-all-languages.tar.xz)
+sha512sums=('8b440d90d887fa0391810732cad2b4bf502f0e045324e1f159cb06e34dae4268febaef0a6a8ac0e58d0cb0f945f3497354313585f80555f199c609de378ca873')
+
+package() {
+  _instdir="$pkgdir"/usr/share/webapps/phpMyAdmin
+  mkdir -p "$_instdir" "$pkgdir"/etc/webapps/phpmyadmin
+  cd "$_instdir"
+
+  cp -ra "$srcdir"/phpMyAdmin-$pkgver-all-languages/* .
+
+  ln -s /etc/webapps/phpmyadmin/config.inc.php "$_instdir"/config.inc.php
+  cp "$_instdir"/config.sample.inc.php "$pkgdir"/etc/webapps/phpmyadmin/config.inc.php
+}

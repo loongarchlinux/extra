@@ -1,0 +1,31 @@
+# Maintainer: Balló György <ballogyor+arch at gmail dot com>
+# Maintainer: Jaroslav Lichtblau <svetlemodry@archlinux.org>
+# Contributor: Peter Mattern <pmattern at arcor dot de>
+
+pkgname=featherpad
+pkgver=1.4.0
+pkgrel=1
+pkgdesc='Lightweight Qt plain text editor'
+arch=('loong64' 'x86_64')
+url='https://github.com/tsujan/FeatherPad'
+license=('GPL3')
+depends=('hicolor-icon-theme' 'hunspell' 'qt6-svg')
+makedepends=('cmake' 'ninja' 'qt6-tools')
+source=("https://github.com/tsujan/FeatherPad/releases/download/V$pkgver/FeatherPad-$pkgver.tar.xz"{,.asc})
+sha256sums=('56d54ff6494a5ebfb628f7a6cabf370d09b9fb6f747b3533abeda6c3d8871671'
+            'SKIP')
+validpgpkeys=('19DFDF3A579BD509DBB572D8BE793007AD22DF7E')
+
+build() {
+  cmake -B build -S FeatherPad-$pkgver \
+        -G Ninja \
+        -DCMAKE_INSTALL_PREFIX='/usr' \
+        -DCMAKE_BUILD_TYPE=None \
+        -DENABLE_QT5=OFF \
+        -Wno-dev
+  cmake --build build
+}
+
+package() {
+  DESTDIR="$pkgdir" cmake --install build
+}

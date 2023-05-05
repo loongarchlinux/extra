@@ -1,0 +1,36 @@
+# Maintainer: Jaroslav Lichtblau <svetlemodry@archlinux.org>
+# Contributor: Sergej Pupykin <pupykin.s+arch@gmail.com>
+# Contributor: David Moore <davidm@sjsoft.com>
+
+pkgname=aqbanking
+pkgver=6.5.3
+pkgrel=1
+pkgdesc="A library for online banking and financial applications"
+arch=('loong64' 'x86_64')
+url="https://www.aquamaniac.de/rdm/projects/aqbanking"
+license=('GPL')
+depends=('gwenhywfar')
+options=('!makeflags')
+source=(https://www.aquamaniac.de/rdm/attachments/download/467/$pkgname-$pkgver.tar.gz
+        https://www.aquamaniac.de/rdm/attachments/download/466/$pkgname-$pkgver.tar.gz.asc)
+validpgpkeys=('42400AF5EB2A17F0A69BB551E9899D784A977416') #AqBanking Package Key <packages@aqbanking.de>
+sha256sums=('6c62bf26aa42e69b21e188b54f6a5d825d6da34de1a14cbc3b67d85a9705136e'
+            'SKIP')
+
+build() {
+  cd "${srcdir}"/$pkgname-$pkgver
+
+  BUILD_DATE="$(date --utc --date="@${SOURCE_DATE_EPOCH:-$(date +%s)}" +%Y-%m-%d)"
+
+  export PKG_CONFIG=/usr/bin/pkg-config
+  ./configure --prefix=/usr --enable-gwenhywfar \
+              --with-build-datetime=$(BUILD_DATE) \
+              --with-backends="aqhbci aqofxconnect aqpaypal aqnone" # aqnone https://www.aquamaniac.de/rdm/issues/258
+  make
+}
+
+package() {
+  cd "${srcdir}"/$pkgname-$pkgver
+
+  make DESTDIR="${pkgdir}" install
+}

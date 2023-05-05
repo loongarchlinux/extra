@@ -1,0 +1,42 @@
+# Maintainer: Maxime Gauduin <alucryd@archlinux.org>
+
+pkgname=switchboard-plug-printers
+pkgver=2.2.1
+pkgrel=1
+pkgdesc='Switchboard Printers Plug'
+arch=(loong64 x86_64)
+url=https://github.com/elementary/switchboard-plug-printers
+license=(GPL3)
+groups=(pantheon)
+depends=(
+  glib2
+  gtk3
+  libcups
+  libgee
+  libgranite.so
+  libswitchboard-2.0.so
+)
+makedepends=(
+  git
+  meson
+  vala
+)
+_tag=cf3bf32e4a7699d0027900b4ee81b4df73b6b742
+source=(git+https://github.com/elementary/switchboard-plug-printers.git#tag=${_tag})
+sha256sums=(SKIP)
+
+pkgver() {
+  cd switchboard-plug-printers
+  git describe --tags
+}
+
+build() {
+  arch-meson switchboard-plug-printers build
+  ninja -C build
+}
+
+package() {
+  DESTDIR="${pkgdir}" ninja -C build install
+}
+
+# vim: ts=2 sw=2 et:

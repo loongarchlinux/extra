@@ -1,0 +1,42 @@
+# Maintainer: George Rawlinson <grawlinson@archlinux.org>
+# Contributor: Thayne McCombs <bytecurry.software@gmail.com>
+
+pkgname=roswell
+pkgver=22.12.14.113
+pkgrel=1
+pkgdesc='Environment for Common Lisp development'
+arch=('loong64' 'x86_64')
+url='https://roswell.github.io'
+license=('MIT')
+depends=('glibc' 'bash' 'curl')
+makedepends=('git')
+_commit='f9bbd2e1e782e8e57925976a37900cf29c3ebf13'
+source=("$pkgname::git+https://github.com/roswell/roswell#commit=$_commit")
+b2sums=('SKIP')
+
+pkgver() {
+  cd "$pkgname"
+
+  git describe --tags | sed 's/^v//'
+}
+
+build() {
+  cd "$pkgname"
+
+  ./bootstrap
+
+  ./configure \
+    --prefix=/usr \
+    --sysconfdir=/etc
+
+  make
+}
+
+package() {
+  cd "$pkgname"
+
+  make DESTDIR="$pkgdir" install
+
+  # license
+  install -vDm644 -t "$pkgdir/usr/share/licenses/$pkgname" COPYING
+}

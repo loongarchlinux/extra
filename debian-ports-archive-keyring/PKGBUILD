@@ -1,0 +1,36 @@
+# Maintainer: Felix Yan <felixonmars@archlinux.org>
+
+pkgname=debian-ports-archive-keyring
+pkgver=2023.02.01
+pkgrel=1
+pkgdesc="GnuPG archive keys of the debian-ports archive"
+arch=('any')
+url="https://packages.debian.org/sid/debian-ports-archive-keyring"
+license=('GPL')
+depends=('gnupg')
+source=("https://mirrors.kernel.org/debian/pool/main/d/debian-ports-archive-keyring/debian-ports-archive-keyring_$pkgver.tar.xz")
+sha512sums=('74a10256bb285500d0fab7b99f021398be51eec7e6d8221ba4a8119488229e0923818e2e6950385bfdc89e11f92836ac7939a3f091136f53ad16788cbce30a3a')
+
+build() {
+  cd $pkgname-$pkgver
+  # Translated from debian/rules
+
+  # Build keyrings
+  mkdir -p build/keyrings
+  gpg --no-keyring --import-options import-export --import active-keys/* > build/keyrings/debian-ports-archive-keyring.gpg
+  gpg --no-keyring --import-options import-export --import removed-keys/* > build/keyrings/debian-ports-archive-keyring-removed.gpg
+  
+  # Build fragment files
+  mkdir -p build/trusted.gpg.d
+  for k in $(ls active-keys); do
+    gpg --no-keyring --import-options import-export --import active-keys/$k > build/trusted.gpg.d/${k%.key}.gpg
+  done
+}
+
+package() {
+  cd $pkgname-$pkgver
+  install -Dm644 build/trusted.gpg.d/*gpg -t "$pkgdir"/etc/apt/trusted.gpg.d/
+  install -Dm644 build/keyrings/*gpg -t "$pkgdir"/usr/share/keyrings/
+}
+
+# vim:set ts=2 sw=2 et:

@@ -1,0 +1,62 @@
+# Maintainer: Sven-Hendrik Haase <svenstaro@gmail.com>
+# Contributor: Andrew Belitsky <belitsky.a@gmail.com>
+pkgname=mygui
+replaces=('mygui-docs')
+pkgver=3.4.1
+pkgrel=1
+pkgdesc="A multilayer and overlappable GUI System"
+arch=('loong64' 'x86_64')
+url="http://mygui.info/"
+license=('LGPL')
+depends=('sdl2' 'sdl2_image' 'glu')
+makedepends=('cmake' 'doxygen' 'graphviz' 'ttf-dejavu')
+install=mygui.install
+source=("https://github.com/MyGUI/mygui/archive/MyGUI${pkgver}.tar.gz")
+sha512sums=('9d36272345b1a755db88848c8a0919feb6f8ae09d048efa3b8ed833bb5ddb9c65e1e7e0d26ad39eecd2a4de53fb654f4099c555e9ebd21ce9541a1a74580ef05')
+
+prepare() {
+  mkdir -p mygui-MyGUI${pkgver}/build
+}
+
+build() {
+  cd mygui-MyGUI${pkgver}/build
+
+  # change CMake config so demos install to /opt
+  sed -i 's:"bin:"../opt/MYGUI:' ../CMake/Utils/MyGUIConfigTargets.cmake
+  sed -i -e 's:../share:/usr/share:' \
+         -e 's:"bin":"../opt/MYGUI":' \
+         ../CMake/InstallResources.cmake
+
+  # generate CMake Makefile
+  cmake .. \
+    -DCMAKE_INSTALL_PREFIX=/usr \
+    -DMYGUI_INSTALL_SAMPLES=TRUE \
+    -DMYGUI_INSTALL_TOOLS=TRUE \
+    -DMYGUI_INSTALL_DOCS=TRUE \
+    -DMYGUI_INSTALL_MEDIA=TRUE \
+    -DMYGUI_BUILD_DEMOS=TRUE \
+    -DMYGUI_BUILD_TOOLS=TRUE \
+    -DCMAKE_BUILD_TYPE=Release \
+    -DMYGUI_RENDERSYSTEM=7 \
+    -DBUILD_SHARED_LIBS=TRUE
+
+  make
+  make api-docs
+}
+
+package() {
+  cd mygui-MyGUI${pkgver}/build
+
+  make DESTDIR="$pkgdir" install
+
+  # make demos work
+  # install -Dm775 lib/libCommon.so ${pkgdir}/usr/lib/libCommon.so
+  # chown root:users $pkgdir/opt/MYGUI
+  # chmod 775 $pkgdir/opt/MYGUI
+
+  # install docs
+  install -d "${pkgdir}"/usr/share/doc/
+  cp -r Docs/html "${pkgdir}"/usr/share/doc/MYGUI
+}
+
+# vim:set ts=2 sw=2 et:

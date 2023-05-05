@@ -1,0 +1,38 @@
+# Maintainer: Leonidas Spyropoulos <artafinde at archlinux dot org>
+# Contributor: Maurizio D'Addona <mauritiusdadd@gmail.com>
+# Contributor: Mathieu Pasquet <mathieui@mathieui.net>
+# Contributor: Bernhard Walle <bernhard.walle@gmx.de>
+# Contributor: Michael Eckert <michael.eckert@linuxmail.org>
+# Contributor: Guilherme G. Piccoli <gpiccoli@igalia.com>
+
+pkgname=makedumpfile
+pkgver=1.7.3
+pkgrel=2
+pkgdesc="A tool to generate smaller dumpfiles from kdump memory dumps"
+license=('GPL2')
+depends=('perl' 'libelf' 'zstd')
+makedepends=('git')
+arch=('i686' 'loong64' 'x86_64')
+url="https://github.com/makedumpfile/makedumpfile"
+source=("git+$url.git?signed#tag=${pkgver}")
+sha256sums=('SKIP')
+validpgpkeys=(
+  'F4BA97F873AB047F217F8D16B0E0CE20E95D17F5' # Kazuhito Hagio <k-hagio-ab@nec.com>
+  '60C5A596A37CDE6C357C5C623136D252B5E85FA9' # Kazuhito Hagio <k-hagio@ab.jp.nec.com>
+)
+
+build() {
+  cd "${pkgname}"
+  make -O \
+    LINKTYPE=dynamic \
+    USEZSTD=on \
+    V=1
+}
+
+package() {
+  cd "${pkgname}"
+  make install DESTDIR="${pkgdir}"
+  mv "${pkgdir}/usr/sbin" "${pkgdir}/usr/bin"
+}
+
+# vim:set ts=2 sw=2 et:

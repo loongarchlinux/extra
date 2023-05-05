@@ -1,0 +1,45 @@
+# Maintainer: David Runge <dvzrv@archlinux.org>
+# Maintainer: Daurnimator <daurnimator@archlinux.org>
+
+pkgname=waylock
+pkgver=0.6.2
+pkgrel=1
+pkgdesc="A simple screenlocker for wayland compositors"
+arch=(loong64 x86_64)
+url="https://github.com/ifreund/waylock"
+license=(MIT)
+depends=(gcc-libs glibc)
+makedepends=(libxkbcommon pam scdoc wayland wayland-protocols zig)
+source=("https://github.com/ifreund/waylock/releases/download/v$pkgver/$pkgname-$pkgver.tar.gz"{,.sig})
+sha256sums=('4a794dedd1b11f3b9bb7b46f8a93c20aac5ac1d40a851cabaa7ae84fd36686fa'
+            'SKIP')
+validpgpkeys=('5FBDF84DD2278DB2B8AD8A5286DED400DDFD7A11') # Isaac Freund <mail@isaacfreund.com>
+
+build() {
+  local zig_options=(
+    --prefix /usr
+    --search-prefix /usr
+    -Dtarget=native-linux.5.15-gnu
+    -Dcpu=baseline
+    -Drelease-safe
+    -Dpie
+  )
+
+  cd $pkgname-$pkgver
+  DESTDIR="build" zig build "${zig_options[@]}"
+}
+
+package() {
+  depends+=(
+    pam libpam.so
+    wayland libwayland-client.so
+    libxkbcommon libxkbcommon.so
+  )
+
+  cd $pkgname-$pkgver
+
+  mv -v build/* "$pkgdir"
+
+  install -vDm 644 LICENSE -t "$pkgdir/usr/share/licenses/$pkgname/"
+  install -vDm 644 README.md -t "$pkgdir/usr/share/doc/$pkgname/"
+}

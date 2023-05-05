@@ -1,0 +1,44 @@
+# Maintainer: Caleb Maclennan <caleb@alerque.com>
+# Contributor: George Rawlinson <grawlinson@archlinux.org>
+
+pkgname=lapce
+pkgver=0.2.7
+pkgrel=1
+pkgdesc='Lightning-fast and Powerful Code Editor'
+arch=(loong64 x86_64)
+url=https://lapce.dev
+_url="https://github.com/$pkgname/$pkgname"
+license=(Apache)
+depends=(expat
+         fontconfig
+         freetype2
+         gcc-libs
+         gtk3
+         libxcb
+         libxkbcommon)
+makedepends=(cargo
+             python
+             cmake)
+options=('!lto')
+_archive="$pkgname-$pkgver"
+source=("$_url/archive/v$pkgver/$_archive.tar.gz")
+sha256sums=('c4e0668bf98e83a8c451fe69173c51d8345511a1bd580c412750f3b940531c27')
+
+prepare() {
+	cd "$_archive"
+	cargo fetch --locked --target "$CARCH-unknown-linux-gnu"
+}
+
+build() {
+	cd "$_archive"
+	cargo build --frozen --profile release-lto --all-features
+}
+
+package() {
+	cd "$_archive"
+	install -Dm0755 -t "$pkgdir/usr/bin/" "target/release-lto/$pkgname"{,-proxy}
+	local lname=dev.lapce.lapce
+	install -Dm0644 -t "$pkgdir/usr/share/applications/" extra/linux/$lname.desktop
+	install -Dm0644 -t "$pkgdir/usr/share/metainfo/" extra/linux/$lname.metainfo.xml
+	install -Dm0644 extra/images/logo.png "$pkgdir/usr/share/pixmaps/$lname.png"
+}

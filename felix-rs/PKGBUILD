@@ -1,0 +1,44 @@
+# Maintainer: Orhun Parmaksız <orhun@archlinux.org>
+# Contributor: Kyohei Uto <im@kyoheiu.dev>
+
+pkgname=felix-rs
+_pkgname=felix
+pkgver=2.2.6
+pkgrel=1
+pkgdesc="A TUI file manager with Vim-like key mapping"
+arch=('loong64' 'x86_64')
+url="https://github.com/kyoheiu/felix"
+license=('MIT')
+depends=('gcc-libs' 'bzip2')
+makedepends=('cargo')
+optdepends=('chafa: preview images'
+            'zoxide: jump to directories')
+checkdepends=('zoxide')
+install="$pkgname.install"
+source=("$pkgname-$pkgver.tar.gz::$url/archive/v$pkgver.tar.gz")
+sha512sums=('02aad001e972e72289f9cf8bbc98b8dfba6f2d8473f0c59da86b58bb36478b3e38ae08e5f079077762fc0d91eddc33d456d1b1f992693728c045ea2143c7f3ed')
+options=('!lto')
+
+prepare() {
+  cd "$_pkgname-$pkgver"
+  cargo fetch --locked --target "$CARCH-unknown-linux-gnu"
+}
+
+build() {
+  cd "$_pkgname-$pkgver"
+  cargo build --release --frozen
+}
+
+check() {
+  cd "$_pkgname-$pkgver"
+  cargo test --frozen
+}
+
+package() {
+  cd "$_pkgname-$pkgver"
+  install -Dm 755 "target/release/fx" "$pkgdir/usr/bin/$_pkgname"
+  install -Dm 644 README.md -t "$pkgdir/usr/share/doc/$pkgname"
+  install -Dm 644 LICENSE -t "$pkgdir/usr/share/licenses/$pkgname"
+}
+
+# vim: ts=2 sw=2 et:

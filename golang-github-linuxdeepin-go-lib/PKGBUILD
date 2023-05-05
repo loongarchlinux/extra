@@ -1,0 +1,44 @@
+# Maintainer: Felix Yan <felixonmars@archlinux.org>
+
+pkgname=golang-github-linuxdeepin-go-lib
+pkgver=5.8.27
+pkgrel=1
+pkgdesc='A library containing many useful go routines for things such as glib, gettext, archive, graphic, etc.'
+arch=('any')
+url="https://github.com/linuxdeepin/go-lib"
+license=('GPL3')
+depends=('dbus' 'go' 'libpulse' 'alsa-lib' 'libcanberra' 'gdk-pixbuf2' 'gdk-pixbuf-xlib'
+         'mobile-broadband-provider-info' 'libx11' 'golang-gopkg-alecthomas-kingpin.v2' 'golang-deepin-gir'
+         'golang-github-linuxdeepin-go-x11-client' 'golang-golang-x-net' 'golang-golang-x-image')
+checkdepends=('iso-codes' 'golang-gopkg-check.v1' 'golang-gopkg-yaml.v3'
+              'golang-github-fsnotify-fsnotify' 'golang-github-stretchr-testify' 'git' 'dash') # git needed only for go get
+replaces=('golang-deepin-lib')
+conflicts=('golang-deepin-lib')
+provides=('golang-deepin-lib')
+source=("https://github.com/linuxdeepin/go-lib/archive/$pkgver/$pkgname-$pkgver.tar.gz")
+sha512sums=('cbee59a4860f3daa2386630fe58c0dfda21d771cf918488a80966025c4d6983106235d6dbc1edf474f2d2efc05a85080ef2ae4e5cc9aab5f5f74bbc604d2918f')
+
+prepare() {
+  cd go-lib-$pkgver
+  sed -i 's|"sh"|"dash"|' shell/shell_test.go
+}
+
+check() {
+  export GO111MODULE=off
+  export GOPATH="$srcdir/build:/usr/share/gocode"
+  mkdir -p "$srcdir"/build/src/github.com/linuxdeepin
+  cp -a "$srcdir"/go-lib-$pkgver "$srcdir"/build/src/github.com/linuxdeepin/go-lib
+  cd "$srcdir"/build/src/github.com/linuxdeepin/go-lib
+  # TODO: make packages for them
+  go get github.com/cryptix/wav github.com/smartystreets/goconvey/convey github.com/mozillazg/go-pinyin github.com/godbus/dbus github.com/youpy/go-wav
+  # passwd: test needs to access /etc/passwd
+  # gm: needs gmssl
+  go test -v $(go list ./... | grep -v -e lib/users/passwd -e lib/gm)
+}
+
+package() {
+  mkdir -p "$pkgdir"/usr/share/gocode/src/github.com/linuxdeepin
+  cp -a "$srcdir"/go-lib-$pkgver "$pkgdir"/usr/share/gocode/src/github.com/linuxdeepin/go-lib
+
+  rm -r "$pkgdir"/usr/share/gocode/src/github.com/linuxdeepin/go-lib/debian
+}

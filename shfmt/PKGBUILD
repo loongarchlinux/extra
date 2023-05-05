@@ -1,0 +1,41 @@
+# Maintainer: Christian Rebischke <chris.rebischke@archlinux.org>
+# Maintainer: Maxim Baz <$pkgname at maximbaz dot com>
+# Contributor: Daniel Martí <mvdan@mvdan.cc>
+
+pkgname=shfmt
+pkgver=3.6.0
+pkgrel=1
+pkgdesc="Format shell programs"
+url="https://github.com/mvdan/sh"
+license=('BSD')
+arch=('loong64' 'x86_64')
+depends=('glibc')
+makedepends=('git' 'go' 'scdoc')
+options=('!lto')
+source=("${pkgname}-${pkgver}.tar.gz::https://github.com/mvdan/sh/archive/v${pkgver}.tar.gz")
+b2sums=('a4b9e711eb1d8889e317775fcbab95a273c0bef9ff46ce043c1db39b4b21ca944272b595f60d190bf169ce4924f6c37c9aa1945155e62f9f27c7af2ff9008e3f')
+
+build() {
+    cd "${srcdir}/sh-${pkgver}/cmd/shfmt/"
+
+    export CGO_CPPFLAGS="${CPPFLAGS}"
+    export CGO_CFLAGS="${CFLAGS}"
+    export CGO_CXXFLAGS="${CXXFLAGS}"
+    export CGO_LDFLAGS="${LDFLAGS}"
+    export GOFLAGS="-buildmode=pie -trimpath -ldflags=-linkmode=external -mod=readonly -modcacherw"
+    go build -ldflags "-linkmode=external -extldflags=$LDFLAGS -X main.version=${pkgver}"
+
+    scdoc < "${pkgname}.1.scd" | gzip > "${pkgname}.1.gz"
+}
+
+check() {
+    cd "${srcdir}/sh-${pkgver}/"
+    go test ./...
+}
+
+package() {
+    cd "${srcdir}/sh-${pkgver}/"
+    install -Dm755 -t "${pkgdir}/usr/bin/" "cmd/${pkgname}/${pkgname}"
+    install -Dm644 -t "${pkgdir}/usr/share/man/man1/" "cmd/${pkgname}/${pkgname}.1.gz"
+    install -Dm644 -t "${pkgdir}/usr/share/licenses/${pkgname}/" LICENSE
+}

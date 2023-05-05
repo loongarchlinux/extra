@@ -1,0 +1,39 @@
+# Maintainer: Levente Polyak <anthraxx[at]archlinux[dot]org>
+# Maintainer: kpcyrd <git@rxv.cc>
+
+pkgname=evilginx
+pkgdesc='Man-in-the-middle attack framework used for phishing login credentials'
+pkgver=2.4.0
+pkgrel=3
+url='https://github.com/kgretzky/evilginx2'
+license=('GPL3')
+arch=('loong64' 'x86_64')
+depends=('glibc')
+makedepends=('go' 'git')
+options=('!lto')
+source=(https://github.com/kgretzky/evilginx2/archive/${pkgver}/${pkgname}-${pkgver}.tar.gz)
+sha512sums=('9023569cfddf49eeef3231b3e3a58db79e268ce14f2f1a1a6122135ff7268f0993de4fc14766c8033f4a70d5995bdcf7aeb93d498feb815fba83e606e43cc333')
+
+build() {
+  cd "${pkgname}2-${pkgver}"
+  export CGO_CPPFLAGS="${CPPFLAGS}"
+  export CGO_CFLAGS="${CFLAGS}"
+  export CGO_CXXFLAGS="${CXXFLAGS}"
+  export CGO_LDFLAGS="${LDFLAGS}"
+  export GOFLAGS="-buildmode=pie -trimpath -mod=readonly -modcacherw"
+  go build -v -o ./bin/evilginx main.go
+}
+
+check() {
+  cd "${pkgname}2-${pkgver}"
+  go test ./...
+}
+
+package() {
+  cd "${pkgname}2-${pkgver}"
+  install -Dm 755 bin/evilginx -t "${pkgdir}/usr/bin"
+  install -Dm 644 phishlets/* -t "${pkgdir}/usr/share/evilginx/phishlets"
+  install -Dm 644 README.md CHANGELOG -t "${pkgdir}/usr/share/doc/${pkgname}"
+}
+
+# vim: ts=2 sw=2 et:

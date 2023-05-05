@@ -1,0 +1,30 @@
+# Maintainer: Massimiliano Torromeo <massimiliano.torromeo@gmail.com>
+# Contributor: xav <xav at ethertricks dot net>
+
+pkgname=arp-scan
+pkgver=1.10.0
+pkgrel=2
+pkgdesc="A tool that uses ARP to discover and fingerprint IP hosts on the local network"
+arch=('loong64' 'x86_64')
+url="https://github.com/royhills/arp-scan"
+license=('GPL')
+depends=('libpcap' 'perl-libwww')
+backup=('etc/arp-scan/mac-vendor.txt')
+source=(https://github.com/royhills/$pkgname/archive/$pkgver/$pkgname-$pkgver.tar.gz)
+sha256sums=('204b13487158b8e46bf6dd207757a52621148fdd1d2467ebd104de17493bab25')
+
+build() {
+    cd "$srcdir"/$pkgname-$pkgver
+    autoreconf --install
+    ./configure \
+        --prefix=/usr \
+        --sysconfdir=/etc \
+        --localstatedir=/var \
+        --mandir=/usr/share/man
+    make
+}
+
+package() {
+    cd "$srcdir"/$pkgname-$pkgver
+    make DESTDIR="${pkgdir}" install
+}

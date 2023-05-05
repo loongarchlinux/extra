@@ -1,0 +1,95 @@
+# Maintainer: Sven-Hendrik Haase <svenstaro@archlinux.org>
+# Contributor: Kyle Keen <keenerd@gmail.com>
+
+pkgbase=cataclysm-dda
+pkgname=(cataclysm-dda cataclysm-dda-tiles)
+pkgname=cataclysm-dda
+pkgver=0.G
+_pkgver=0.G
+pkgrel=2
+pkgdesc="A post-apocalyptic roguelike."
+url="https://cataclysmdda.org/"
+arch=('loong64' 'x86_64')
+license=("CCPL")
+depends=('ncurses' 'hicolor-icon-theme' 'gettext')
+makedepends=('sdl2_image' 'sdl2_ttf' 'sdl2_mixer' 'freetype2' 'astyle')
+source=("$pkgname-$_pkgver.tar.gz::https://github.com/CleverRaven/Cataclysm-DDA/archive/$_pkgver.tar.gz")
+sha256sums=('e559d0d495b314ed39890920b222b4ae5067db183b5d39d4263700bfd66f36fb')
+
+prepare() {
+  cd "Cataclysm-DDA-$_pkgver"
+
+  # They forgot to adjust the version in 0.G!
+  sed -i "s/0.F/0.G/" Makefile
+}
+
+build() {
+  cd "Cataclysm-DDA-$_pkgver"
+
+  export CXXFLAGS="${CXXFLAGS/-Wp,-D_GLIBCXX_ASSERTIONS}"
+  export CXXFLAGS="${CXXFLAGS/-fcf-protection}"
+  export CXXFLAGS="${CXXFLAGS/-fstack-clash-protection}"
+
+  make PREFIX=/usr PCH=0 RELEASE=1 USE_XDG_DIR=1 LTO=1 RUNTESTS=0 LOCALIZE=1 LANGUAGES=all
+  make PREFIX=/usr PCH=0 RELEASE=1 USE_XDG_DIR=1 LTO=1 RUNTESTS=0 LOCALIZE=1 LANGUAGES=all TILES=1 SOUND=1
+  ./lang/compile_mo.sh
+}
+
+package_cataclysm-dda() {
+  cd "Cataclysm-DDA-$_pkgver"
+
+  make DESTDIR="$pkgdir" PREFIX=/usr PCH=0 RELEASE=1 USE_XDG_DIR=1 LTO=1 RUNTESTS=0 LOCALIZE=1 LANGUAGES=all install
+
+  # Docs
+  install -d "$pkgdir/usr/share/doc/cataclysm-dda"
+  cp -r doc/* "$pkgdir/usr/share/doc/cataclysm-dda"
+  # undo symlink
+  rm "$pkgdir/usr/share/doc/cataclysm-dda/JSON_LOADING_ORDER.md"
+  cp 'data/json/LOADING_ORDER.md' "$pkgdir/usr/share/doc/cataclysm-dda/JSON_LOADING_ORDER.md"
+
+  # Manpage
+  rm "$pkgdir/usr/share/doc/cataclysm-dda/"*.6
+  install -Dm644 -t "$pkgdir/usr/share/man/man6" "doc/cataclysm.6"
+
+  # License
+  install -Dm644 LICENSE.txt "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
+
+  # Languages
+  cd lang/mo
+  for i in *; do
+    install -d "${pkgdir}/usr/share/locale/${i}/LC_MESSAGES"
+    cp "${i}/LC_MESSAGES/cataclysm-dda.mo" "${pkgdir}/usr/share/locale/${i}/LC_MESSAGES"
+  done
+
+  # Help
+  cd ./../..
+  cp -r --no-preserve=ownership "./data/help" "${pkgdir}/usr/share/${pkgname}/"
+}
+
+package_cataclysm-dda-tiles() {
+  pkgdesc="A graphical post-apocalyptic roguelike."
+  depends=('cataclysm-dda' 'sdl2_image' 'sdl2_ttf' 'freetype2' 'sdl2_mixer')
+  cd "Cataclysm-DDA-$_pkgver"
+
+  make DESTDIR="$pkgdir" PREFIX=/usr PCH=0 RELEASE=1 USE_XDG_DIR=1 LTO=1 LOCALIZE=1 LANGUAGES=all TILES=1 SOUND=1 install
+
+  # Icons
+  cd build-data/osx/AppIcon.iconset
+  for i in *.png
+  do
+    local _isize="$(echo "$i" | sed -Ee 's/icon_([[:digit:]]+)x\1\.png/\1x\1/')"
+    install -Dm644 "$i" "$pkgdir/usr/share/icons/hicolor/$_isize/apps/cataclysm-dda.png"
+  done
+  cd ../../..
+
+  # Manpage
+  install -Dm644 -t "$pkgdir/usr/share/man/man6" "doc/cataclysm-tiles.6"
+
+  install -Dm644 LICENSE.txt "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
+
+  # hack: remove overlapping files
+  cd "$pkgdir/../cataclysm-dda"
+  find . -type f -exec rm -f "$pkgdir"/{} \;
+  cd "$pkgdir"
+  find . -type d -empty -delete
+}

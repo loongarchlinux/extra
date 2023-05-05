@@ -1,0 +1,192 @@
+# Maintainer: George Rawlinson <grawlinson@archlinux.org>
+
+pkgbase=dexed
+pkgname=('dexed' 'dexed-docs' 'dexed-clap' 'dexed-vst3' 'dexed-standalone')
+pkgver=0.9.6.r90.g9e01c0c
+pkgrel=1
+pkgdesc='A software synth closely modelled on the Yamaha DX7'
+arch=('loong64' 'x86_64')
+url='https://asb2m10.github.io/dexed'
+license=('GPL3')
+groups=('pro-audio')
+makedepends=(
+  'alsa-lib'
+  'cmake'
+  'curl'
+  'freetype2'
+  'gendesk'
+  'git'
+  'jack'
+  'libpng'
+  'libx11'
+  'libxrandr'
+  'libxinerama'
+  'libxcursor'
+  'webkit2gtk'
+)
+_commit='9e01c0cbb1ff68297b180ffdeee0b5fb09af7e56'
+source=(
+  "$pkgbase::git+https://github.com/asb2m10/dexed#commit=$_commit"
+  'github.com-steinbergmedia-vst3sdk::git+https://github.com/steinbergmedia/vst3sdk'
+  'github.com-surge-synthesizer-tuning-library::git+https://github.com/surge-synthesizer/tuning-library'
+  'github.com-surge-synthesizer-surgesynthteam_tuningui::git+https://github.com/surge-synthesizer/surgesynthteam_tuningui'
+  'github.com-ODDSound-MTS-ESP::git+https://github.com/ODDSound/MTS-ESP'
+  'github.com-juce-framework-JUCE::git+https://github.com/juce-framework/JUCE'
+  'github.com-free-audio-clap-juce-extensions::git+https://github.com/free-audio/clap-juce-extensions'
+  # clap-juce-extensions
+  'github.com-free-audio-clap::git+https://github.com/free-audio/clap'
+  'github.com-free-audio-clap-helpers::git+https://github.com/free-audio/clap-helpers'
+  # steinbergmedia-vst3sdk
+  'github.com-steinbergmedia-vst3_base::git+https://github.com/steinbergmedia/vst3_base'
+  'github.com-steinbergmedia-vst3_cmake::git+https://github.com/steinbergmedia/vst3_cmake'
+  'github.com-steinbergmedia-vst3_doc::git+https://github.com/steinbergmedia/vst3_doc'
+  'github.com-steinbergmedia-vst3_pluginterfaces::git+https://github.com/steinbergmedia/vst3_pluginterfaces'
+  'github.com-steinbergmedia-vst3_public_sdk::git+https://github.com/steinbergmedia/vst3_public_sdk'
+  'github.com-steinbergmedia-vstgui::git+https://github.com/steinbergmedia/vstgui'
+)
+b2sums=('SKIP'
+        'SKIP'
+        'SKIP'
+        'SKIP'
+        'SKIP'
+        'SKIP'
+        'SKIP'
+        'SKIP'
+        'SKIP'
+        'SKIP'
+        'SKIP'
+        'SKIP'
+        'SKIP'
+        'SKIP'
+        'SKIP')
+
+pkgver() {
+  cd "$pkgbase"
+
+  git describe --tags --exclude 'NIGHTLY' | sed -e 's/^v//' -e 's/-/.r/' -e 's/-/./g'
+}
+
+prepare() {
+  cd "$pkgbase"
+
+  # prepare git submodule(s)
+  git submodule init
+  git config submodule.libs/vst3sdk.url "$srcdir/github.com-steinbergmedia-vst3sdk"
+  git config submodule.libs/tuning-library.url "$srcdir/github.com-surge-synthesizer-tuning-library"
+  git config submodule.libs/surgesynthteam_tuningui.url "$srcdir/github.com-surge-synthesizer-surgesynthteam_tuningui"
+  git config submodule.libs/MTS-ESP.url "$srcdir/github.com-ODDSound-MTS-ESP"
+  git config submodule.libs/JUCE.url "$srcdir/github.com-juce-framework-JUCE"
+  git config submodule.libs/clap-juce-extensions.url "$srcdir/github.com-free-audio-clap-juce-extensions"
+  git -c protocol.file.allow=always submodule update --init
+
+  pushd libs/clap-juce-extensions
+  git submodule init
+  git config submodule.clap-libs/clap.url "$srcdir/github.com-free-audio-clap"
+  git config submodule.clap-libs/clap-helpers.url "$srcdir/github.com-free-audio-clap-helpers"
+  git -c protocol.file.allow=always submodule update --init
+  popd
+
+  pushd libs/vst3sdk
+  git submodule init
+  git config submodule.base.url "$srcdir/github.com-steinbergmedia-vst3_base"
+  git config submodule.cmake.url "$srcdir/github.com-steinbergmedia-vst3_cmake"
+  git config submodule.doc.url "$srcdir/github.com-steinbergmedia-vst3_doc"
+  git config submodule.pluginterfaces.url "$srcdir/github.com-steinbergmedia-vst3_pluginterfaces"
+  git config submodule.public.sdk.url "$srcdir/github.com-steinbergmedia-vst3_public_sdk"
+  git config submodule.vstgui4.url "$srcdir/github.com-steinbergmedia-vstgui"
+  git -c protocol.file.allow=always submodule update --init
+  popd
+
+  # any missing submodules? yes, probably
+  git submodule update --init --recursive
+
+  # generate desktop file
+  gendesk -n \
+    --exec Dexed \
+    --name Dexed \
+    --pkgname com.digitalsuburban.Dexed \
+    --pkgdesc "$pkgdesc" \
+    --icon "$pkgbase" \
+    --genericname "Virtual FM synthesizer"
+
+  # add version to program
+  sed -e "s/DEVBUILD/$pkgver/" -i Source/Dexed.h
+}
+
+build() {
+  cmake \
+    -S "$pkgbase" \
+    -B build \
+    -DCMAKE_INSTALL_PREFIX='/usr'
+
+  cmake --build build
+}
+
+package_dexed() {
+  depends=($pkgbase-{docs,clap,vst3,standalone}=$pkgver)
+}
+
+package_dexed-docs() {
+  pkgdesc+=' - documentation'
+
+  cd "$pkgbase"
+
+  # documentation
+  install -vDm644 -t "$pkgdir/usr/share/doc/$pkgname" Documentation/* README.md
+}
+
+package_dexed-clap() {
+  pkgdesc+=' - CLAP plugin'
+  groups+=('clap-plugins')
+  depends=(
+    'glibc'
+    'gcc-libs'
+    'alsa-lib'
+    'freetype2'
+    'clap-host'
+  )
+  optdepends=("$pkgbase-docs: documentation")
+
+  cd build/Source/Dexed_artefacts
+  install -vDm755 -t "$pkgdir/usr/lib/clap" CLAP/Dexed.clap
+}
+
+package_dexed-vst3() {
+  pkgdesc+=' - VST3 plugin'
+  groups+=('vst3-plugins')
+  depends=(
+    'glibc'
+    'gcc-libs'
+    'alsa-lib'
+    'freetype2'
+    'vst3-host'
+  )
+  optdepends=("$pkgbase-docs: documentation")
+
+  cd build/Source/Dexed_artefacts
+
+  install -vd "$pkgdir/usr/lib/vst3"
+  cp -vr VST3/Dexed.vst3 "$pkgdir/usr/lib/vst3"
+}
+
+package_dexed-standalone() {
+  pkgdesc+=' - standalone'
+  depends=(
+    'glibc'
+    'gcc-libs'
+    'alsa-lib'
+    'freetype2'
+    'hicolor-icon-theme'
+    'jack'
+  )
+  optdepends=("$pkgbase-docs: documentation")
+
+  # desktop icon/file
+  pushd "$pkgbase"
+  install -vDm644 Resources/ui/dexedIcon.png "$pkgdir/usr/share/icons/hicolor/512x512/apps/dexed.png"
+  install -vDm644 com.digitalsuburban.Dexed.desktop -t "$pkgdir/usr/share/applications"
+  popd
+
+  cd build/Source/Dexed_artefacts
+  install -vDm755 -t "$pkgdir/usr/bin" Standalone/Dexed
+}

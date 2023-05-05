@@ -1,0 +1,38 @@
+# Maintainer: kpcyrd <kpcyrd[at]archlinux[dot]org>
+
+pkgname=kube-linter
+pkgver=0.6.3
+pkgrel=1
+pkgdesc='Static analysis tool that checks Kubernetes YAML files and Helm charts'
+url='https://github.com/stackrox/kube-linter'
+arch=('loong64' 'x86_64')
+license=('Apache')
+makedepends=('go')
+source=(https://github.com/stackrox/${pkgname}/archive/v${pkgver}/${pkgname}-${pkgver}.tar.gz)
+sha512sums=('7ff01080b983bdebec6bdae8f884a3ce6c58021d6227fc053704801e165686abe829cdb8da1d1168f44a1e9247938c17399b574c3a5726f25766acc7ba222b9e')
+b2sums=('ccd85fc5adad9fc8cf901668f4c796e4ac3ad2ac2f510eb569d42a364a3c0cb97302c8e9abeb42ac2d7f95fb0afd3dcf7bb324d4237ada1882b1e711ee0a01cf')
+
+build() {
+  cd ${pkgname}-${pkgver}
+  go build \
+    -trimpath \
+    -buildmode=pie \
+    -mod=readonly \
+    -modcacherw \
+    -ldflags "-linkmode external -extldflags \"${LDFLAGS}\"" \
+    ./cmd/kube-linter
+
+  for i in bash fish zsh; do
+    ./kube-linter completion ${i} > ./kube-linter.${i}
+  done
+}
+
+package() {
+  cd ${pkgname}-${pkgver}
+  install -Dm755 kube-linter -t "${pkgdir}/usr/bin"
+  install -Dm644 kube-linter.bash "${pkgdir}"/usr/share/bash-completion/completions/kube-linter
+  install -Dm644 kube-linter.fish "${pkgdir}"/usr/share/fish/completions/kube-linter.fish
+  install -Dm644 kube-linter.zsh "${pkgdir}"/usr/share/zsh/site-functions/_kube-linter
+}
+
+# vim: ts=2 sw=2 et:

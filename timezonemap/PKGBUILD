@@ -1,0 +1,36 @@
+# Maintainer: Eli Schwartz <eschwartz@archlinux.org>
+
+pkgname=timezonemap
+pkgver=0.4.5.2
+pkgrel=1
+pkgdesc="Gtk3 timezone map widget, forked from gnome which forked from Ubiquity"
+arch=('loong64' 'x86_64')
+url="https://github.com/dashea/${pkgname}"
+license=('GPL3')
+depends=('gtk3' 'libsoup')
+makedepends=('gobject-introspection')
+source=(https://github.com/dashea/$pkgname/archive/$pkgver/$pkgname-$pkgver.tar.gz)
+sha256sums=('80f631f79754c772ccbb80f5b6f9d232766f5706089bcfa7897bdf093323b6be')
+b2sums=('56e3497e85e313cc14759e7c00921b3a347b6599ce2f7c01636e6d68b36466f2bc55ae252b3734213919dd9864b2bcc183771a42e533364cd9852dabc5cd2aff')
+
+prepare() {
+    cd ${pkgname}-${pkgver}
+
+    autoreconf -fi
+}
+
+build() {
+    cd ${pkgname}-${pkgver}
+
+    ./configure --prefix=/usr
+    # https://bugzilla.gnome.org/show_bug.cgi?id=656231
+    sed -i -e 's/ -shared / -Wl,-O1,--as-needed\0/g' libtool
+
+    make
+}
+
+package() {
+    cd ${pkgname}-${pkgver}
+
+    make DESTDIR="${pkgdir}" install
+}

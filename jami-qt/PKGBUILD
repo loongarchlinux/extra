@@ -1,0 +1,51 @@
+# Maintainer: Bruno Pagani <archange@archlinux.org>
+
+pkgname=jami-qt
+pkgver=20230323
+pkgrel=1
+pkgdesc="Free and universal communication platform which preserves the users’ privacy and freedoms (Qt client)"
+arch=(loong64 x86_64)
+url="https://jami.net"
+license=(GPL3)
+groups=(jami)
+depends=(jami-daemon glib2 gdk-pixbuf2 libnm libnotify qrencode
+         qt6-declarative qt6-multimedia qt6-svg qt6-5compat qt6-webengine
+         qt6-webchannel)
+makedepends=(git cmake python qt6-networkauth qt6-tools)
+replaces=(jami-gnome jami-libclient)
+conflicts=(jami-gnome jami-libclient)
+_commit=1510ccaede0726a4e002be0445fef06a840dbde6
+_sfpmcommit=a2a0c72e4db38e1c5478bd3e0f67ff99fae11f00
+source=(git+https://git.jami.net/savoirfairelinux/jami-client-qt.git#commit=${_commit}
+        git+https://github.com/atraczyk/SortFilterProxyModel#commit=${_sfpmcommit}
+        drop-qt-version-check.patch)
+sha256sums=('SKIP'
+            'SKIP'
+            'd0118269d637b984f13755a5c3548b2509215789aeda2c3b9ac7850c2bd7cf3e')
+
+pkgver() {
+  cd jami-client-qt
+  TZ=UTC git show -s --pretty=%cd --date=format-local:%Y%m%d HEAD
+}
+
+prepare() {
+  # Drop strict Qt version check. Qt is ABI stable and jami is not using any private API
+  patch -p1 -d jami-client-qt < drop-qt-version-check.patch
+
+  cd jami-client-qt
+  rm -r 3rdparty/SortFilterProxyModel
+  mv "$srcdir"/SortFilterProxyModel 3rdparty
+}
+
+build() {
+  cmake -B build -S jami-client-qt \
+    -DCMAKE_INSTALL_PREFIX=/usr \
+    -DCMAKE_BUILD_TYPE=None \
+    -DENABLE_LIBWRAP=ON \
+    -Wno-dev
+  make -C build
+}
+
+package() {
+  make -C build DESTDIR="${pkgdir}" install
+}

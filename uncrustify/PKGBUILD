@@ -1,0 +1,34 @@
+# Maintainer: Pierre Neidhardt <ambrevar@gmail.com>
+# Contributor: Auguste Pop <auguste [at] gmail [dot] com>
+
+pkgname=uncrustify
+pkgver=0.75.1
+pkgrel=1
+pkgdesc="A source code beautifier"
+arch=(loong64 x86_64)
+url="http://uncrustify.sourceforge.net/"
+license=(GPL)
+depends=(gcc-libs)
+makedepends=(cmake python)
+source=("https://github.com/uncrustify/uncrustify/archive/uncrustify-$pkgver.tar.gz")
+sha256sums=('fd14acc0a31ed88b33137bdc26d32964327488c835f885696473ef07caf2e182')
+
+prepare() {
+  mkdir -p build
+}
+
+build() {
+  cd build
+  cmake ../$pkgname-$pkgname-$pkgver \
+    -DCMAKE_INSTALL_PREFIX=/usr
+  make
+}
+
+package() {
+  cd build
+  make DESTDIR="$pkgdir" PREFIX=/usr install
+
+  cd ../$pkgname-$pkgname-$pkgver
+  install -d -m755 "$pkgdir"/usr/share/uncrustify
+  install -m644 etc/*.cfg "$pkgdir"/usr/share/uncrustify
+}

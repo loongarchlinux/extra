@@ -1,0 +1,42 @@
+# Maintainer: Felix Yan <felixonmars@archlinux.org>
+
+pkgname=mongo-c-driver
+pkgver=1.23.3
+pkgrel=1
+pkgdesc='A client library written in C for MongoDB'
+arch=('loong64' 'x86_64')
+url='https://www.mongodb.org/display/DOCS/C+Language+Center'
+license=('Apache')
+depends=('libsasl' 'icu' 'snappy' 'zlib' 'zstd')
+makedepends=('cmake')
+provides=('libbson' 'libmongoc')
+conflicts=('libbson' 'libmongoc')
+replaces=('libbson' 'libmongoc')
+source=("https://github.com/mongodb/mongo-c-driver/releases/download/$pkgver/$pkgname-$pkgver.tar.gz")
+sha512sums=('0312951f995f0a60792206e8118ff46c87834f62b9dd0bccdee0d02eef756d68939218117a481ca012af7c1d5351934f64a7b066c462ac51763635ce2fde4714')
+
+prepare() {
+  mkdir -p build
+}
+
+build() {
+  cd build
+  cmake ../mongo-c-driver-$pkgver \
+    -DCMAKE_BUILD_TYPE=Release \
+    -DCMAKE_INSTALL_PREFIX=/usr \
+    -DCMAKE_INSTALL_LIBDIR=lib \
+    -DENABLE_STATIC=OFF -DENABLE_TESTS=OFF
+    # Test profiles are not found even with ENABLE_TESTS=ON
+  make
+}
+
+check() {
+  cd build
+  # No test profile found
+  # pifpaf run mongodb --port 27017 make test || echo "Tests failed"
+}
+
+package() {
+  cd build
+  make DESTDIR="$pkgdir/" install
+}

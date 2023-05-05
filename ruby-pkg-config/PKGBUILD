@@ -1,0 +1,56 @@
+# Maintainer: George Rawlinson <grawlinson@archlinux.org>
+# Contributor: Alexander Rødseth <rodseth@gmail.com>
+# Contributor: Brad Fanella <bradfanella@archlinux.us>
+# Contributor: gem2arch 0.1
+# Contributor: theapodan
+
+pkgname=ruby-pkg-config
+_pkgname="${pkgname#ruby-}"
+pkgver=1.5.1
+pkgrel=1
+pkgdesc='Implementation of pkg-config in Ruby'
+arch=('any')
+url='https://github.com/ruby-gnome/pkg-config'
+license=('LGPL')
+depends=('ruby')
+makedepends=('git')
+provides=('ruby-pkgconfig')
+replaces=('ruby-pkgconfig')
+conflicts=('ruby-pkgconfig')
+_commit='20285cd18aa7d9fe7d66cc99a81e3e7429fe3ad7'
+source=("$pkgname::git+$url#commit=$_commit")
+b2sums=('SKIP')
+
+pkgver() {
+  cd "$pkgname"
+
+  git describe --tags | sed 's/^v//'
+}
+
+build() {
+  cd "$pkgname"
+
+  gem build "$_pkgname.gemspec"
+}
+
+package() {
+  cd "$pkgname"
+
+  local _gemdir="$(ruby -e'puts Gem.default_dir')"
+
+  gem install \
+    --local \
+    --verbose \
+    --ignore-dependencies \
+    --no-user-install \
+    --install-dir "$pkgdir/$_gemdir" \
+    --bindir "$pkgdir/usr/bin" \
+    "$_pkgname-$pkgver.gem"
+
+  # delete cache
+  rm -rf "$pkgdir/$_gemdir/cache"
+
+  # license
+  install -vd "$pkgdir/usr/share/licenses/$pkgname"
+  ln -sf "$_gemdir/gems/$_pkgname-$pkgver/LGPL-2.1" "$pkgdir/usr/share/licenses/$pkgname"
+}

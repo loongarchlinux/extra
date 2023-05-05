@@ -1,0 +1,60 @@
+# Maintainer: Felix Yan <felixonmars@archlinux.org>
+
+pkgname=ruby-multi_test
+pkgver=1.1.0
+_commit=9f984893ba8409bb124dfc3e753b1872105cad37
+pkgrel=2
+pkgdesc='Wafter-thin gem to help control rogue test/unit/autorun requires'
+arch=(any)
+url='https://github.com/cucumber/multi_test'
+license=(MIT)
+depends=(ruby)
+makedepends=(git)
+checkdepends=(ruby-activesupport ruby-rspec)
+options=(!emptydirs)
+source=(git+https://github.com/cucumber/multi_test.git#commit=$_commit)
+sha256sums=('SKIP')
+
+prepare() {
+  cd multi_test
+  sed -i '/bundle install/d' test-gemfile
+  sed -r 's|~>|>=|g' -i test/gemfiles/*/Gemfile
+}
+
+build() {
+  local _gemdir="$(gem env gemdir)"
+  cd multi_test
+  gem build multi_test.gemspec
+  gem install \
+    --local \
+    --verbose \
+    --ignore-dependencies \
+    --no-user-install \
+    --install-dir "tmp_install/$_gemdir" \
+    --bindir "tmp_install/usr/bin" \
+    multi_test-$pkgver.gem
+  find "tmp_install/$_gemdir/gems/" \
+    -type f \
+    \( \
+        -iname "*.o" -o \
+        -iname "*.c" -o \
+        -iname "*.so" -o \
+        -iname "*.time" -o \
+        -iname "gem.build_complete" -o \
+        -iname "Makefile" \
+    \) \
+    -delete
+  rm -r tmp_install/$_gemdir/cache
+}
+
+check() {
+  local _gemdir="$(gem env gemdir)"
+  cd multi_test
+  GEM_HOME="tmp_install/$_gemdir" ./test-all
+}
+
+package() {
+  cd multi_test
+  cp -a tmp_install/* "$pkgdir"/
+  install -Dm644 LICENSE -t "$pkgdir"/usr/share/licenses/$pkgname/
+}

@@ -1,0 +1,53 @@
+# Maintainer: David Runge <dvzrv@archlinux.org>
+# Maintainer: Andreas 'Segaja' Schleifer <archlinux at segaja dot de>
+
+_name=zeitwerk
+pkgname=ruby-zeitwerk
+pkgver=2.6.1
+pkgrel=1
+pkgdesc="Efficient and thread-safe code loader for Ruby"
+arch=(any)
+url="https://github.com/fxn/zeitwerk"
+license=(MIT)
+depends=(ruby)
+makedepends=(ruby-rake ruby-rdoc)
+# TODO: package ruby-minitest-focus
+# TODO: package ruby-minitest-reporters
+# checkdepends=(ruby-minitest ruby-minitest-focus ruby-minitest-reporters)
+options=(!emptydirs)
+source=($pkgname-$pkgver.tar.gz::https://github.com/fxn/$_name/archive/v$pkgver.tar.gz)
+sha512sums=('d8eb9b2e9f7f4a1a4e0e0f5d0cf877810ce0b3dba818446e8b2ccfc238fea20f5fd58c22b86369e72e8ed0af174eef51ced59bad9e29a473a9cb0c374a240b64')
+b2sums=('965992dac9fd18482e568dbc2a5a4806f2af7a8f7e5ab669bf81e51b7e2dde73c054ba9220027970c9b525b09f7042fee426b3dbac49ae51fcbceab978fec2a1')
+
+prepare() {
+  cd $_name-$pkgver
+  # we don't do version pinning
+  sed -r 's|~>|>=|g' -i *.gemspec Rakefile
+  # we can't rely on Gemfiles
+  rm -v Gemfile
+
+  sed '/minitest\/focus/d' -i test/test_helper.rb
+  sed '/minitest\/reporters/d' -i test/test_helper.rb
+}
+
+build() {
+  cd $_name-$pkgver
+  gem build $_name.gemspec
+}
+
+# check() {
+#   cd $_name-$pkgver
+#   rake test
+# }
+
+package() {
+  local _gemdir="$(gem env gemdir)"
+
+  cd $_name-$pkgver
+  gem install --ignore-dependencies --no-user-install -i "$pkgdir/$_gemdir" -n "$pkgdir/usr/bin" $_name-$pkgver.gem
+  install -vDm 644 MIT-LICENSE "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
+
+  # remove all unneeded stuff
+  cd "$pkgdir/$_gemdir"
+  rm -rvf cache gems/$_name-$pkgver/{ext,lib/*/*.so} extensions/*/*/$_name-$pkgver/{mkmf.log,gem_make.out}
+}

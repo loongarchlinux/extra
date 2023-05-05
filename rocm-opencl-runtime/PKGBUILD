@@ -1,0 +1,54 @@
+# Maintainer: Torsten Keßler <tpkessler at archlinux dot org>
+# Contributor: Ranieri Althoff <ranisalt+aur at gmail dot com>
+# Contributor: acxz <akashpatel2008 at yahoo dot com>
+
+pkgname=rocm-opencl-runtime
+pkgver=5.4.3
+pkgrel=1
+pkgdesc='OpenCL implementation for AMD'
+arch=('loong64' 'x86_64')
+url='https://github.com/RadeonOpenCompute/ROCm-OpenCL-Runtime'
+license=('MIT')
+depends=('hsakmt-roct' 'hsa-rocr' 'comgr' 'mesa' 'opencl-icd-loader')
+makedepends=('rocm-cmake')
+provides=('opencl-driver')
+_rocclr='https://github.com/ROCm-Developer-Tools/ROCclr'
+source=("$pkgname-$pkgver.tar.gz::$url/archive/rocm-$pkgver.tar.gz"
+        "$pkgname-rocclr-$pkgver.tar.gz::$_rocclr/archive/rocm-$pkgver.tar.gz")
+sha256sums=('b0f8339c844a2e62773bd85cd1e7c5ecddfe71d7c8e8d604e1a1d60900c30873'
+            '71d9668619ab57ec8a4564d11860438c5aad5bd161a3e58fbc49555fbd59182d')
+_dirname="$(basename "$url")-$(basename "${source[0]}" .tar.gz)"
+_rocclr_dir="$(basename "$_rocclr")-$(basename "${source[1]}" .tar.gz)"
+
+build() {
+    cmake \
+        -Wno-dev \
+        -B build-rocclr \
+        -S "$_rocclr_dir" \
+        -DCMAKE_BUILD_TYPE=None \
+        -DAMD_OPENCL_PATH="$srcdir/$_dirname"
+    cmake --build build-rocclr
+
+    cmake \
+        -Wno-dev \
+        -B build \
+        -S "$_dirname" \
+        -DCMAKE_BUILD_TYPE=None \
+        -DCMAKE_INSTALL_PREFIX=/opt/rocm \
+        -DROCM_PATH=/opt/rocm \
+        -DCMAKE_PREFIX_PATH="$srcdir/$_rocclr_dir;/opt/rocm" \
+        -DAMD_OPENCL_PATH="$srcdir/$_dirname"
+    cmake --build build
+}
+
+package() {
+    DESTDIR="$pkgdir" cmake --install build
+
+    install -Dm644 "$_dirname/LICENSE.txt" "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
+
+    echo '/opt/rocm/lib' > "$pkgname.conf"
+    install -Dm644 "$pkgname.conf" "$pkgdir/etc/ld.so.conf.d/$pkgname.conf"
+
+    echo '/opt/rocm/lib/libamdocl64.so' > 'amdocl64.icd'
+    install -Dm644 'amdocl64.icd' "$pkgdir/etc/OpenCL/vendors/amdocl64.icd"
+}

@@ -1,0 +1,55 @@
+# Maintainer: Caleb Maclennan <caleb@alerque.com>
+
+pkgbase=lua-cliargs
+_rockname=${pkgbase#lua-}
+pkgname=("$pkgbase" "lua51-$_rockname" "lua52-$_rockname" "lua53-$_rockname")
+pkgver=3.0
+pkgrel=8
+_rockrel=2
+pkgdesc='A command-line argument parser'
+arch=(any)
+url="https://github.com/amireh/${pkgbase/-/_}"
+license=(MIT)
+makedepends=(lua
+             lua51
+             lua52
+             lua53
+             luarocks)
+checkdepends=(busted
+              lua-inifile
+              lua-yaml)
+_optdepends=('inifile: load config file from INI'
+             'yaml: load config file from YAML')
+_archive="${pkgbase/-/_}-$pkgver-$_rockrel"
+source=("$url/archive/v$pkgver-$_rockrel/$_archive.tar.gz")
+sha256sums=('971d6f1440a55bdf9db581d4b2bcbf472a301d76f696a0d0ed9423957c7d176e')
+
+check() {
+	cd "$_archive"
+	busted
+}
+
+_package() {
+	cd "$_archive"
+	depends=("${pkgname%-*}")
+	optdepends=("${_optdepends[@]/#/${pkgname%-*}-}")
+	luarocks --lua-version="$1" --tree="$pkgdir/usr/" \
+		make --deps-mode=none --no-manifest "${pkgbase/-/_}-$pkgver-$_rockrel.rockspec"
+	install -Dm0644 -t "$pkgdir/usr/share/licenses/$pkgname/" LICENSE
+}
+
+package_lua-cliargs() {
+	_package 5.4
+}
+
+package_lua51-cliargs() {
+	_package 5.1
+}
+
+package_lua52-cliargs() {
+	_package 5.2
+}
+
+package_lua53-cliargs() {
+	_package 5.3
+}

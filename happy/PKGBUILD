@@ -1,0 +1,31 @@
+# Maintainer: Felix Yan <felixonmars@archlinux.org>
+# Contributor: Thomas Dziedzic <gostrc@gmail.com>
+# Contributor: simo <simo@archlinux.org>
+# Contributor: Vesa Kaihlavirta <vegai@iki.fi>
+
+pkgname=happy
+pkgver=1.20.1.1
+pkgrel=1
+pkgdesc="The Parser Generator for Haskell"
+url="https://hackage.haskell.org/package/happy"
+arch=('loong64' 'x86_64')
+license=("custom:BSD2")
+depends=('ghc-libs')
+makedepends=('ghc')
+source=("https://hackage.haskell.org/packages/archive/${pkgname}/${pkgver}/${pkgname}-${pkgver}.tar.gz")
+sha512sums=('a2ff6a1778884de22f4900a22b8a451ed5dc8a8e66020ce9e186a03068257748a3810c63b56f1efa0b646d99fe637f87178983f387d4c49bc33b82613877ec48')
+
+build() {
+  cd "${srcdir}/${pkgname}-${pkgver}"
+
+  runhaskell Setup configure -O --enable-shared --enable-executable-dynamic --disable-library-vanilla \
+        --ghc-option='-dynload=deploy' --prefix=/usr --datasubdir=$pkgname
+  runhaskell Setup build $MAKEFLAGS
+}
+
+package() {
+  cd "${srcdir}/${pkgname}-${pkgver}"
+  runhaskell Setup copy --destdir="${pkgdir}"
+  rm -r "$pkgdir/usr/share/doc"
+  install -D -m644 LICENSE "${pkgdir}/usr/share/licenses/${pkgname}/LICENSE"
+}

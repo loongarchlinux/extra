@@ -1,0 +1,106 @@
+# Maintainer: Maxime Gauduin <alucryd@archlinux.org>
+
+pkgname=skia-sharp
+pkgver=2.88.3
+_major=88
+_minor=0
+_release=0
+pkgrel=1
+pkgdesc='The Skia 2D Graphics library from Google exposed to .NET languages and runtimes across the board'
+arch=(loong64 x86_64)
+url=https://github.com/mono/SkiaSharp
+license=(MIT)
+depends=(
+  expat
+  fontconfig
+  libfreetype.so
+  libjpeg-turbo
+  libheif
+  libpng
+  libwebp
+  zlib
+)
+makedepends=(
+  clang
+  git
+  python
+)
+provides=(libSkiaSharp.so)
+_tag=655cff084fa9365efde6e989004eb818294c9b0f
+source=(
+  git+https://github.com/mono/SkiaSharp.git#tag=${_tag}
+  git+https://chromium.googlesource.com/chromium/tools/depot_tools.git
+  git+https://github.com/mono/skia.git
+  skia-sharp-missing-include.patch
+)
+b2sums=('SKIP'
+        'SKIP'
+        'SKIP'
+        '8b4c33381f22225557fceae587fd1b8f7ac6fc75814fbb27db6eb6b0c772825f87d779d8e3d38849603a4f6c7c5ec7cdb88f34ecc58c0e0f83f1890b730b9df7')
+
+pkgver() {
+  cd SkiaSharp
+  git describe --tags | sed 's/^v//; s/-preview.*//'
+}
+
+prepare() {
+  cd SkiaSharp
+  for submodule in externals/{depot_tools,skia}; do
+    git submodule init ${submodule}
+    git config submodule.${submodule}.url ../${submodule#*/}
+    git submodule update ${submodule}
+  done
+
+  pushd externals/skia
+  patch -Np1 -i ../../../skia-sharp-missing-include.patch
+  python tools/git-sync-deps
+  popd
+}
+
+build(){
+  cd SkiaSharp/externals/skia
+
+  export PATH="${srcdir}/SkiaSharp/externals/depot_tools:$PATH"
+
+  CFLAGS="$CFLAGS \
+    -I/usr/include/freetype2 \
+    -DSKIA_C_DLL"
+
+  extra_cflags=""
+  for cflag in $CFLAGS; do
+    extra_cflags+="\"${cflag}\","
+  done
+  extra_ldflags=""
+  for ldflag in $LDFLAGS; do
+    extra_ldflags+="\"${ldflag}\","
+  done
+
+  bin/gn gen out \
+    --args="target_os=\"linux\" \
+            target_cpu=\"x64\" \
+            cc=\"clang\" \
+            cxx=\"clang++\" \
+            extra_cflags=[${extra_cflags}] \
+            extra_ldflags=[${extra_ldflags}] \
+            skia_enable_gpu=true \
+            skia_enable_tools=false \
+            skia_use_dng_sdk=true \
+            skia_use_heif=true \
+            skia_use_icu=false \
+            skia_use_piex=true \
+            skia_use_sfntly=false \
+            is_component_build=false \
+            is_debug=false \
+            is_official_build=true \
+            linux_soname_version=\"${_major}.${_minor}.${_release}\""
+  ninja -C out
+}
+
+package() {
+  install -Dm 755 SkiaSharp/externals/skia/out/libSkiaSharp.so.${_major}.${_minor}.${_release} -t "${pkgdir}"/usr/lib/
+  ln -s libSkiaSharp.so.${_major}.${_minor}.${_release} "${pkgdir}"/usr/lib/libSkiaSharp.so.${_major}
+  ln -s libSkiaSharp.so.${_major} "${pkgdir}"/usr/lib/libSkiaSharp.so
+  install -Dm 644 SkiaSharp/LICENSE.md -t "${pkgdir}"/usr/share/licenses/skia-sharp/
+}
+
+# vim: ts=2 sw=2 et:

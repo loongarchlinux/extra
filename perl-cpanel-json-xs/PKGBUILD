@@ -1,0 +1,38 @@
+# Maintainer: Muflone http://www.muflone.com/contacts/english/
+# Contributor: Ordoban <dirk.langer@vvovgonik.de>
+
+pkgname=perl-cpanel-json-xs
+_perl_namespace=Cpanel
+_perl_module=JSON-XS
+pkgver=4.36
+pkgrel=1
+pkgdesc="cPanel fork of JSON::XS, fast and correct serializing"
+arch=('loong64' 'x86_64')
+license=('PerlArtistic' 'GPL')
+depends=('perl')
+url="https://metacpan.org/dist/${_perl_namespace}-${_perl_module}"
+source=("https://cpan.metacpan.org/authors/id/R/RU/RURBAN/${_perl_namespace}-${_perl_module}-${pkgver}.tar.gz")
+sha512sums=('3e080bfb2842e7d1270c1bee7463f6ee3579b526f385b2a55abfceaf57af45786a22d45d5e7d6490f0998cd5b3bf305f608fb744ca0bbfffc6644456ea17c22d')
+
+build() {
+  cd "${_perl_namespace}-${_perl_module}-${pkgver}"
+  unset PERL5LIB PERL_MM_OPT PERL_MB_OPT PERL_LOCAL_LIB_ROOT
+  export PERL_MM_USE_DEFAULT=1 PERL_AUTOINSTALL=--skipdeps
+  perl Makefile.PL
+  make
+}
+
+check() {
+  cd "${_perl_namespace}-${_perl_module}-${pkgver}"
+  unset PERL5LIB PERL_MM_OPT PERL_MB_OPT PERL_LOCAL_LIB_ROOT
+  export PERL_MM_USE_DEFAULT=1
+  make test
+}
+
+package() {
+  cd "${_perl_namespace}-${_perl_module}-${pkgver}"
+  unset PERL5LIB PERL_MM_OPT PERL_MB_OPT PERL_LOCAL_LIB_ROOT
+  make pure_install INSTALLDIRS=vendor DESTDIR="${pkgdir}"
+  # Delete unuseful files
+  find "${pkgdir}" -name '.packlist' -delete
+}

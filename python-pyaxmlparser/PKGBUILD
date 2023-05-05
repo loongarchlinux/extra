@@ -1,0 +1,40 @@
+# Maintainer: Levente Polyak <anthraxx[at]archlinux[dot]org>
+
+_pyname=pyaxmlparser
+pkgname=python-${_pyname}
+pkgver=0.3.28
+pkgrel=1
+pkgdesc='Parser for Android XML file and get Application Name without using Androguard'
+url='https://github.com/appknox/pyaxmlparser'
+arch=('any')
+license=('Apache')
+depends=('python' 'python-lxml' 'python-click' 'python-asn1crypto' 'python-magic')
+makedepends=('python-build' 'python-installer' 'python-wheel' 'python-setuptools')
+checkdepends=('python-pytest')
+source=("${url}/archive/v${pkgver}/${pkgname}-${pkgver}.tar.gz")
+sha512sums=('ede5d9821ceb71b121731462830252eade8114b9f3fb3cd1d767072f0b0a5d50764ad8d97dbacaf1cbfacd323b7aae52968bd63217beaa6290a4be442682c397')
+b2sums=('8b04b2e635d87501f909d592c696613b66fb33ca4fbaaa6b6b914aed7eacb5233085eb45a76f7fda440e802c972ec86682036eea53f6d87989b1bf44b0336c33')
+
+prepare() {
+  cd ${_pyname}-${pkgver}
+  sed -i "s|man/man1|share/man/man1|g" -i setup.py
+}
+
+build() {
+  cd ${_pyname}-${pkgver}
+  python -m build --wheel --no-isolation
+}
+
+check() {
+  cd ${_pyname}-${pkgver}
+  PYTHONPATH=build/lib pytest
+}
+
+package() {
+  cd ${_pyname}-${pkgver}
+  python -m installer --destdir="$pkgdir" dist/*.whl
+  install -Dm 644 LICENSE -t "${pkgdir}/usr/share/licenses/${pkgname}"
+  install -Dm 644 README.rst -t "${pkgdir}/usr/share/doc/${pkgname}"
+}
+
+# vim: ts=2 sw=2 et:

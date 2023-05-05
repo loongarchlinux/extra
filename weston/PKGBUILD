@@ -1,0 +1,52 @@
+# Maintainer: Sébastien Luttringer
+# Contributor: Joel Teichroeb <joel@teichroeb.net>
+
+pkgname=weston
+pkgver=11.0.1
+pkgrel=1
+pkgdesc='Reference implementation of a Wayland compositor'
+arch=('loong64' 'x86_64')
+url='https://wayland.freedesktop.org/'
+license=('MIT')
+depends=('glibc' 'wayland' 'libxkbcommon' 'libinput' 'libunwind' 'pixman'
+         'libdrm' 'pam' 'systemd-libs' 'cairo' 'libpng' 'libjpeg-turbo' 'libwebp'
+         'mesa' 'libegl' 'libgles' 'glib2' 'pango' 'lcms2' 'mtdev' 'libx11'
+         'libxcb' 'dbus' 'libva' 'libxcursor' 'colord' 'pipewire' 'seatd')
+makedepends=('wayland-protocols' 'meson' 'ninja' 'freerdp')
+optdepends=('freerdp: support rdp backend')
+options=(!lto)
+validpgpkeys=('7032877A3EB1EAE3E4DC9DFBF63412E60947D6EF' # Marius Vlad <marius.vlad@collabora.com>
+              '34FF9526CFEF0E97A340E2E40FDE7BE0E88F5E48' # emersion <contact@emersion.fr>
+              'C7223EBE4EF66513B892598911A30156E0E67611' # Bryce Harrington
+              'C0066D7DB8E9AC6844D728715E54498E697F11D7') # Derek Foreman
+source=('https://gitlab.freedesktop.org/wayland/weston/uploads/f5648c818fba5432edc3ea63c4db4813/weston-11.0.1.tar.xz'
+        'https://gitlab.freedesktop.org/wayland/weston/uploads/bb54e28b5ee47aaccb30a8ffbc31f977/weston-11.0.1.tar.xz.sig')
+sha256sums=('a413f68c252957fc3191c3650823ec356ae8c124ccc0cb440da5cdc4e2cb9e57'
+            'SKIP')
+
+prepare() {
+  cd $pkgname-$pkgver
+  # apply patch from the source array (should be a pacman feature)
+  local src
+  for src in "${source[@]}"; do
+    src="${src%%::*}"
+    src="${src##*/}"
+    [[ $src = *.patch ]] || continue
+    echo "Applying patch $src..."
+    patch -Np1 < "../$src"
+  done
+}
+
+build() {
+  arch-meson $pkgname-$pkgver build \
+    --libexec=lib/weston -D b_lto=false
+  ninja -C build
+}
+
+package() {
+  DESTDIR="$pkgdir" meson install -C build
+  # license
+  install -Dm644 $pkgname-$pkgver/COPYING "$pkgdir/usr/share/licenses/$pkgname/COPYING"
+}
+
+# vim:set ts=2 sw=2 et:

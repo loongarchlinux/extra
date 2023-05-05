@@ -1,0 +1,98 @@
+# Maintainer: David Runge <dvzrv@archlinux.org>
+# Contributor: Rob Til Freedmen <rob.til.freedman@gmail.com>
+# Contributor: Ray Rashif <schiv@archlinux.org>
+# Contributor: tobias <tobias@archlinux.org>
+
+pkgname=hydrogen
+pkgver=1.2.0
+pkgrel=1
+pkgdesc="An advanced drum machine"
+arch=(loong64 x86_64)
+url="http://www.hydrogen-music.org/"
+license=(GPL2)
+groups=(pro-audio)
+depends=(
+  gcc-libs
+  glibc
+  hicolor-icon-theme
+  qt5-base
+  qt5-svg
+  qt5-xmlpatterns
+)
+makedepends=(
+  alsa-lib
+  cmake
+  jack
+  ladspa
+  libarchive
+  liblo
+  liblrdf
+  libpulse
+  libsndfile
+  portaudio
+  portmidi
+  python
+  qt5-tools
+)
+checkdepends=(cppunit)
+optdepends=('new-session-manager: for session management')
+source=(
+  https://github.com/$pkgname-music/$pkgname/archive/$pkgver/$pkgname-$pkgver.tar.gz
+  $pkgname-1.2.0-format.patch::https://github.com/hydrogen-music/hydrogen/commit/f98a3fbd325a53084202bd7bee0d15fc567a4063.patch
+)
+sha512sums=('610dc292ab26880897030ee7e969caf11e2758e0cccdc15b21711a2114564e12af855b50f0cf13964689b6697255c5f2080e2114c916ea6fbe3909057e7de1df'
+            'a4a077a2b4b23afc4d616554b7e3e6518b52011d1944e1f657d96008c285b3e61284b88f551d6955d5b5c7b64182f5260dce015b50314bac8c8bb34672917ffa')
+b2sums=('606bfd977e67a962933e331bd1d4985a898e14c3d72656aa38fc3d50fa1daeb301a00778114e46a4890af548816befc8deb598bbc65a122e8a36694ce7740776'
+        '97db0021bf06641cd4587fb003885ae5944fd6295c48e6289f819ea555430473e71aea63f0d01de30e90fad1c361a27175d9e5801d30196185c711cbd9accac4')
+
+prepare() {
+  # https://github.com/hydrogen-music/hydrogen/issues/1739
+  patch -Np1 -d $pkgname-$pkgver -i ../$pkgname-1.2.0-format.patch
+}
+
+build() {
+  local cmake_options=(
+    -B build
+    -D CMAKE_INSTALL_PREFIX=/usr
+    -D CMAKE_BUILD_TYPE=None
+    -D WANT_DEBUG=OFF
+    -D WANT_CPPUNIT=ON
+    -D WANT_LRDF=ON
+    -D WANT_PORTAUDIO=ON
+    -D WANT_PORTMIDI=ON
+    -D WANT_PULSEAUDIO=ON
+    -S $pkgname-$pkgver
+    -W no-dev
+  )
+
+  cmake "${cmake_options[@]}"
+  cmake --build build --verbose
+  # update translations
+  (
+    cd $pkgname-$pkgver/data/i18n
+    ./updateTranslations.sh
+  )
+}
+
+check() {
+  ctest --test-dir build --output-on-failure
+}
+
+package() {
+  depends+=(
+    alsa-lib libasound.so
+    jack libjack.so
+    libarchive libarchive.so
+    liblo liblo.so
+    liblrdf liblrdf.so
+    libpulse libpulse.so
+    libsndfile libsndfile.so
+    portaudio libportaudio.so
+    portmidi libportmidi.so
+  )
+
+  DESTDIR="$pkgdir" cmake --install build
+  install -vDm 644 $pkgname-$pkgver/{ChangeLog,DEVELOPERS,INSTALL.md,README.md} -t "$pkgdir/usr/share/doc/$pkgname/"
+}
+
+# vim:set ts=2 sw=2 et:

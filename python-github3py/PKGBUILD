@@ -1,0 +1,25 @@
+# Maintainer: Sven-Hendrik Haase <svenstaro@archlinux.org>
+# Contributor: Diego Nieto Cid <dnietoc@gmail.com>
+
+pkgname=python-github3py
+pkgver=4.0.1
+pkgrel=1
+pkgdesc="A comprehensive wrapper around the GitHub API (v3)"
+arch=("any")
+url="https://github.com/sigmavirus24/github3.py"
+license=("BSD")
+makedepends=("python-build" "python-installer" "python-hatchling")
+depends=("python" "python-requests" "python-uritemplate" "python-dateutil" "python-jwcrypto")
+source=("$pkgname-$pkgver.tar.gz::https://github.com/sigmavirus24/github3.py/archive/refs/tags/$pkgver.tar.gz")
+sha256sums=('7a1c3f157aa3b9e0973e957ac0b402c09a83d405247d278c10eb4c390977f132')
+
+build() {
+    cd "github3.py-${pkgver}"
+    python -m build --wheel --no-isolation
+}
+
+package() {
+    cd "github3.py-${pkgver}"
+    python -m installer --destdir="$pkgdir" dist/*.whl
+    install -Dm644 LICENSE "$pkgdir"/usr/share/licenses/${pkgname}/LICENSE
+}

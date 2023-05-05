@@ -1,0 +1,50 @@
+# Maintainer: Justin Kronotificationsinger <hashworks@archlinux.org>
+
+pkgname=opensearch-notifications-plugin
+pkgver=2.6.0.0
+pkgrel=1
+_opensearchver=2.6.0
+_jdkver=11
+pkgdesc="OpenSearch Notifications Plugin"
+arch=('loong64' 'x86_64')
+url="https://opensearch.org/docs/latest/notifications-plugin/index/"
+license=('Apache')
+depends=("opensearch=${_opensearchver}")
+makedepends=("java-environment=${_jdkver}" 'unzip')
+source=(
+  "${pkgname}-${pkgver}.tar.gz::https://github.com/opensearch-project/notifications/archive/${pkgver}.tar.gz"
+)
+sha256sums=('44958b32b2621af69c872e1f2100e58460d272df56d5dfc47100f4272a2af625')
+
+build() {
+  cd "notifications-${pkgver}/notifications"
+  export JAVA_HOME="/usr/lib/jvm/java-${_jdkver}-openjdk"
+  export PATH="/usr/lib/jvm/java-${_jdkver}-openjdk/bin:$PATH"
+  export GRADLE_OPTS="-Dbuild.snapshot=false -Dopensearch.version=${_opensearchver}"
+  ./gradlew build \
+    --exclude-task "notifications:jacocoTestCoverageVerification" \
+    --exclude-task "opensearch-notifications-core:jacocoTestCoverageVerification" \
+    --exclude-task "opensearch-notifications-core-spi:jacocoTestCoverageVerification" \
+    --exclude-task "notifications:jacocoTestReport" \
+    --exclude-task "opensearch-notifications-core:jacocoTestReport" \
+    --exclude-task "opensearch-notifications-core-spi:jacocoTestReport" \
+    --exclude-task ":notifications:notificationsBwcCluster#fullRestartClusterTask" \
+    --exclude-task ":notifications:notificationsBwcCluster#mixedClusterTask" \
+    --exclude-task ":notifications:notificationsBwcCluster#oldVersionClusterTask0" \
+    --exclude-task ":notifications:notificationsBwcCluster#oldVersionClusterTask1" \
+    --exclude-task ":notifications:notificationsBwcCluster#rollingUpgradeClusterTask" \
+    --exclude-task ":notifications:notificationsBwcCluster#twoThirdsUpgradedClusterTask"
+}
+
+package() {
+  install -dm755 "${pkgdir}/usr/share/opensearch/plugins/opensearch-notifications"
+  cd "${pkgdir}/usr/share/opensearch/plugins/opensearch-notifications"
+  unzip "${srcdir}/notifications-${pkgver}/notifications/notifications/build/distributions/opensearch-notifications-${pkgver}.zip"
+
+  install -dm755 "${pkgdir}/usr/share/opensearch/plugins/opensearch-notifications-core"
+  cd "${pkgdir}/usr/share/opensearch/plugins/opensearch-notifications-core"
+  unzip "${srcdir}/notifications-${pkgver}/notifications/core/build/distributions/opensearch-notifications-core-${pkgver}.zip"
+
+
+  install -Dm644 "${srcdir}/notifications-${pkgver}/LICENSE.txt" "${pkgdir}/usr/share/licenses/${pkgname}/LICENSE"
+}

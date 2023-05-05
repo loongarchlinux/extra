@@ -1,0 +1,41 @@
+# Maintainer: Bruno Pagani <archange@archlinux.org>
+# Contributor: Eli Schwartz <eschwartz@archlinux.org>
+# Contributor: Nate Simon <aurpkg (at natesimon.net)>
+
+pkgname=xreader
+pkgver=3.6.3
+pkgrel=1
+pkgdesc="Document viewer for files like PDF and Postscript. X-Apps Project."
+arch=(loong64 x86_64)
+url="https://github.com/linuxmint/${pkgname}"
+license=(GPL)
+groups=(x-apps)
+depends=(poppler-glib webkit2gtk xapp)
+optdepends=('djvulibre: support for djvu files'
+            'libgxps: support for xps files'
+            'libspectre: support for dvi and ps files'
+            'mathjax2: support for math in epub files'
+            'texlive-bin: support for dvi files')
+makedepends=(meson samurai intltool itstool gobject-introspection djvulibre
+             libgxps libspectre texlive-bin)
+source=(${url}/archive/${pkgver}/${pkgname}-${pkgver}.tar.gz)
+sha256sums=('bd7ffd121f45bf65ed0b7bd8e47685b047ad8c5ff6ec00e3a9793183b46b41b5')
+b2sums=('0ae2523a1faea11dd842a023b28d23d66cddc32a21b68b81a4ef88091e23e79ac16d9e532008f05d4a67a973708e7c31f002691369a978eb83a83205ec260b85')
+
+build() {
+  arch-meson ${pkgname}-${pkgver} build \
+    --libexecdir=lib/${pkgname} \
+    -Dmathjax-directory=/usr/share/mathjax2 \
+    -Dcomics=true \
+    -Ddjvu=true \
+    -Ddvi=true \
+    -Dt1lib=true \
+    -Dpixbuf=true \
+    -Dhelp_files=true \
+    -Dintrospection=true
+  samu -C build
+}
+
+package(){
+  DESTDIR="${pkgdir}" samu -C build install
+}

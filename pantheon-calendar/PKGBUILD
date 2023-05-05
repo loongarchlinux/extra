@@ -1,0 +1,56 @@
+# Maintainer: Maxime Gauduin <alucryd@archlinux.org>
+
+pkgname=pantheon-calendar
+pkgver=6.1.2
+pkgrel=1
+pkgdesc='The Pantheon Calendar'
+arch=(loong64 x86_64)
+url=https://github.com/elementary/calendar
+license=(GPL3)
+groups=(pantheon)
+depends=(
+  clutter
+  evolution-data-server
+  folks
+  gdk-pixbuf2
+  geoclue
+  geocode-glib
+  glib2
+  gtk3
+  libchamplain
+  libfolks.so
+  libgee
+  libgranite.so
+  libhandy-1.so
+  libical
+)
+makedepends=(
+  git
+  intltool
+  meson
+  vala
+)
+_tag=7ade6132c099e0f594ff318b2eaab5a90da45176
+source=(pantheon-calendar::git+https://github.com/elementary/calendar.git#tag=${_tag})
+sha256sums=(SKIP)
+
+prepare() {
+  cd pantheon-calendar
+  git cherry-pick -n 9c6308b2a1f3a57b1c5fffbbc2550a08fefe2cca
+}
+
+pkgver() {
+  cd pantheon-calendar
+  git describe --tags
+}
+
+build() {
+  arch-meson pantheon-calendar build
+  meson compile -C build
+}
+
+package() {
+  meson install -C build --destdir "${pkgdir}"
+}
+
+# vim: ts=2 sw=2 et:

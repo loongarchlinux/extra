@@ -1,0 +1,30 @@
+# Maintainer: Jaroslav Lichtblau <svetlemodry@archlinux.org>
+
+pkgname=datovka
+pkgver=4.22.0
+pkgrel=1
+pkgdesc="GUI application for a 'Databox' - an electronic communication interface endorsed by the Czech government"
+arch=('i686' 'loong64' 'x86_64')
+url='https://www.datovka.cz/'
+license=('custom')
+depends=('qt6-base' 'qt6-svg' 'qt6-5compat' 'quazip-qt6' 'qt6-websockets'
+         'libdatovka' 'openssl' 'hicolor-icon-theme')
+makedepends=('qt6-tools')
+source=(https://secure.nic.cz/files/datove_schranky/$pkgver/$pkgname-$pkgver.tar.xz)
+sha256sums=('4390b04a3308041d668b792c276a497f492f84013644fcc66653d4480bc19489')
+
+build() {
+  cd "${srcdir}"/$pkgname-$pkgver
+
+  /usr/lib/qt6/bin/lrelease datovka.pro
+  qmake6 PREFIX=/usr
+  make
+}
+
+package() {
+  cd "${srcdir}"/$pkgname-$pkgver
+
+  make INSTALL_ROOT="${pkgdir}" install
+
+  install -Dm644 COPYING "${pkgdir}"/usr/share/licenses/$pkgname/LICENSE
+}

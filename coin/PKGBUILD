@@ -1,0 +1,56 @@
+# Maintainer: Alexander F. Rødseth <xyproto@archlinux.org>
+# Contributor: Gabriel Souza Franco
+# Contributor: Florian Pritz
+# Contributor: Christian Hesse <mail@eworm.de>
+# Contributor: Thomas Dziedzic <gostrc at gmail>
+# Contributor: Mickele
+# Contributor: Marcus Fritzsch <fritschy@googlemail.com>
+
+pkgname=coin
+pkgver=4.0.0.04c190
+pkgrel=4
+pkgdesc='3D graphics library compatible with Open Inventor'
+url='https://github.com/coin3d/coin'
+license=(GPL)
+arch=(loong64 x86_64)
+depends=(libgl)
+makedepends=(boost cmake doxygen ninja git glu)
+optdepends=('fontconfig: dynamic linking support'
+            'freetype2: dynamic linking support'
+            'openal: audio/dynamic linking support'
+            'zlib: dynamic linking support')
+# 04c190 is the same as version 4.0.0 + patches
+source=("git+$url#commit=04c19005bfd124d980e8946cb5bc1fc2b37bda29"
+        'man3.patch::https://github.com/coin3d/coin/commit/5a97506a7fa80c5ebcc8aa4685d5cd07b7d95bed.patch')
+b2sums=('SKIP'
+        'd1b2d7f740f8abca17e080b53e5d7c22c699b4cfe65c6115dc2a721484ac429a1f6a5fffd3fd4ce705a62b68cd276bc4ad3c2bd3c1a0ddb5e28a20ed4ba80889')
+
+prepare() {
+  cd coin
+  patch -i ../man3.patch -p1 -s -t
+}
+
+build() {
+  cmake \
+    -B build \
+    -D CMAKE_C_FLAGS="$CFLAGS -fPIC -w" \
+    -D CMAKE_CXX_FLAGS="$CXXFLAGS -fPIC -w" \
+    -D CMAKE_INSTALL_LIBDIR=lib \
+    -D CMAKE_INSTALL_PREFIX=/usr \
+    -D COIN_BUILD_DOCUMENTATION=ON \
+    -D COIN_BUILD_DOCUMENTATION_CHM=OFF \
+    -D COIN_BUILD_DOCUMENTATION_MAN=ON \
+    -D COIN_THREADSAFE=ON \
+    -D USE_EXTERNAL_EXPAT=ON \
+    -G Ninja \
+    -S coin
+  ninja -C build
+}
+
+package() {
+  DESTDIR="$pkgdir" ninja -C build install
+  # Skip the HTML documentation
+  rm -rf "$pkgdir/usr/share/doc"
+  # Remove an empty directory
+  rmdir "$pkgdir/usr/share/Coin/profiler"
+}

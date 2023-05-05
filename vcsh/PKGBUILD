@@ -1,0 +1,37 @@
+# Maintainer: Caleb Maclennan <caleb@alerque.com>
+# Contributor: Evan Pitstick <nerdx00 at gmail dot com>
+# Contributor: Chet Gray <chetgray@gmail.com>
+# Contributor: joni <kljohann@gmail.com>
+# Contributor: Dieter Plaetinck <dieter@plaetinck.be>
+
+pkgname=vcsh
+pkgver=2.0.5
+pkgrel=1
+pkgdesc='Version Control System for $HOME that manages multiple Git repositories'
+arch=(any)
+url="https://github.com/RichiH/$pkgname"
+license=(GPL)
+depends=(git)
+checkdepends=(perl
+              perl-shell-command
+              perl-test-most)
+optdepends=('myrepos: manage multiple vcsh repos through mr')
+_archive="$pkgname-$pkgver"
+source=("$url/releases/download/v$pkgver/$_archive.tar.xz")
+sha256sums=('01d01ebe864fa8ee5c740f909f9fe9b89ef92612c578d4f42c8777bf987ac32d')
+
+build() {
+	cd "$_archive"
+	./configure --prefix /usr
+	make
+}
+
+check() {
+	cd "$_archive"
+	make test
+}
+
+package() {
+	cd "$_archive"
+	make DESTDIR="$pkgdir" install
+}

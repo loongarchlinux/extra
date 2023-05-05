@@ -1,0 +1,62 @@
+# Maintainer: Felix Yan <felixonmars@archlinux.org>
+
+pkgname=ruby-nenv
+pkgver=0.3.0
+_commit=4d415f31d55deab8d338bdb343175959f855b2b0
+pkgrel=2
+pkgdesc="Convenient wrapper for Ruby's ENV"
+arch=(any)
+url='https://github.com/e2/nenv'
+license=(MIT)
+depends=(ruby)
+makedepends=(git)
+checkdepends=(ruby-rspec ruby-rake ruby-rubocop)
+options=(!emptydirs)
+source=(git+https://github.com/e2/nenv.git#commit=$_commit)
+sha256sums=('SKIP')
+
+prepare() {
+  cd nenv
+  sed -i '/[cC]overalls/d' spec/spec_helper.rb
+
+  # https://github.com/e2/nenv/issues/10
+  sed -i '/rubocop/d' Rakefile
+}
+
+build() {
+  local _gemdir="$(gem env gemdir)"
+  cd nenv
+  gem build nenv.gemspec
+  gem install \
+    --local \
+    --verbose \
+    --ignore-dependencies \
+    --no-user-install \
+    --install-dir "tmp_install/$_gemdir" \
+    --bindir "tmp_install/usr/bin" \
+    nenv-$pkgver.gem
+  find "tmp_install/$_gemdir/gems/" \
+    -type f \
+    \( \
+        -iname "*.o" -o \
+        -iname "*.c" -o \
+        -iname "*.so" -o \
+        -iname "*.time" -o \
+        -iname "gem.build_complete" -o \
+        -iname "Makefile" \
+    \) \
+    -delete
+  rm -r tmp_install/$_gemdir/cache
+}
+
+check() {
+  local _gemdir="$(gem env gemdir)"
+  cd nenv
+  GEM_HOME="tmp_install/$_gemdir" rake
+}
+
+package() {
+  cd nenv
+  cp -a tmp_install/* "$pkgdir"/
+  install -Dm644 LICENSE.txt -t "$pkgdir"/usr/share/licenses/$pkgname/
+}

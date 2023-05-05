@@ -1,0 +1,80 @@
+# Maintainer: Ivy Foster <iff@archlinux.org>
+# Maintainer: Christian Rebischke <chris.rebischke@archlinux.org>
+
+pkgbase=bemenu
+pkgname=(bemenu bemenu-ncurses bemenu-x11 bemenu-wayland)
+pkgver=0.6.14
+pkgrel=1
+
+# Wayland without wlroots is not supported.
+# https://github.com/Cloudef/bemenu/issues/79#issuecomment-572867783
+pkgdesc='Dynamic menu library and client program inspired by dmenu'
+url='https://github.com/Cloudef/bemenu'
+arch=(loong64 x86_64)
+license=(GPL3 LGPL3)
+
+makedepends=(
+	git ncurses scdoc
+	libxinerama libxkbcommon pango
+	wayland wayland-protocols wlroots
+)
+
+source=(
+	"bemenu-$pkgver.tar.gz::https://github.com/Cloudef/bemenu/releases/download/$pkgver/bemenu-$pkgver.tar.gz"
+	"bemenu-$pkgver.tar.gz.asc::https://github.com/Cloudef/bemenu/releases/download/$pkgver/bemenu-$pkgver.tar.gz.asc"
+)
+
+# Checksums provided by packager makepkg -g
+sha256sums=(
+	603358a039ac0014de14339d3e143dae67035cb84fa7c021563c7798064cdee8
+	SKIP
+)
+validpgpkeys=(16B6B7CACAF339DECE9F154729317348D687B86B)
+
+build() {
+	cd "bemenu-$pkgver"
+	make PREFIX=/usr
+}
+
+# make test seems to have been removed with cmake
+#check() {
+#	cd "bemenu-$pkgver"
+#	make test
+#}
+
+package_bemenu() {
+	depends=(bemenu-renderer)
+	provides=(libbemenu)
+
+	cd "bemenu-$pkgver"
+	make DESTDIR="$pkgdir" PREFIX=/usr install-base install-docs
+}
+
+package_bemenu-ncurses() {
+	pkgdesc='ncurses renderer for bemenu'
+	provides=(bemenu-renderer)
+	depends=(libbemenu ncurses)
+
+	cd "bemenu-$pkgver"
+	make DESTDIR="$pkgdir" PREFIX=/usr install-curses
+}
+
+package_bemenu-wayland() {
+	pkgdesc='Wayland (wlroots-based compositors) renderer for bemenu'
+	provides=(bemenu-renderer bemenu-wlroots)
+	depends=(libbemenu libxkbcommon pango wayland)
+	replaces=(bemenu-wlroots)
+	install=bemenu-wayland.install
+
+	cd "bemenu-$pkgver"
+	make DESTDIR="$pkgdir" PREFIX=/usr install-wayland
+}
+
+package_bemenu-x11() {
+	pkgdesc='X11 renderer for bemenu'
+	provides=(bemenu-renderer)
+	depends=(libbemenu libxinerama pango)
+
+	cd "bemenu-$pkgver"
+	make DESTDIR="$pkgdir" PREFIX=/usr install-x11
+}

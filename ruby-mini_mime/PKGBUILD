@@ -1,0 +1,25 @@
+
+pkgname=ruby-mini_mime
+pkgver=1.1.2
+pkgrel=1
+pkgdesc='A lightweight mime type lookup toy'
+arch=('any')
+url='https://github.com/discourse/mini_mime'
+depends=('ruby')
+license=('MIT')
+options=('!emptydirs')
+source=("https://rubygems.org/downloads/${pkgname#*-}-${pkgver}.gem")
+noextract=("${pkgname#*-}-${pkgver}.gem")
+sha256sums=('a54aec0cc7438a03a850adb00daca2bdb60747f839e28186994df057cea87151')
+
+package() {
+  local _gemdir="$(ruby -e'puts Gem.default_dir')"
+
+  gem install --ignore-dependencies --no-user-install -N -i "${pkgdir}"/${_gemdir} ${pkgname#*-}-${pkgver}.gem
+  find "${pkgdir}" -type f -name *.gem -delete
+
+  install -dm 755 "${pkgdir}"/usr/share/licenses/${pkgname}
+  ln -s ${_gemdir}/gems/${pkgname#*-}-${pkgver}/LICENSE.txt "${pkgdir}"/usr/share/licenses/${pkgname}/
+}
+
+# vim: ts=2 sw=2 et:

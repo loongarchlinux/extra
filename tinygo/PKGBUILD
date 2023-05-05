@@ -1,0 +1,88 @@
+# Maintainer: Anatol Pomozov <anatol.pomozov@gmail.com>
+
+pkgname=tinygo
+pkgver=0.27.0
+pkgrel=1
+pkgdesc='Go compiler for small places. Microcontrollers, WebAssembly, and command-line tools. Based on LLVM.'
+arch=(loong64 x86_64)
+url='https://github.com/tinygo-org/tinygo'
+license=(BSD)
+options=(!strip !lto)
+# TODO: re-add these deps when switching back to system LLVM
+#depends=(llvm-libs clang lld)
+# TODO: add llvm + remove cmake/ninja/python from build deps
+makedepends=(go git cmake ninja python)
+# use git as we need to fetch submodules
+source=(git+https://github.com/tinygo-org/tinygo#tag=v$pkgver
+        git+https://github.com/NordicSemiconductor/nrfx.git
+        git+https://github.com/ARM-software/CMSIS.git
+        git+https://github.com/avr-rust/avr-mcu.git
+        git+https://github.com/tinygo-org/cmsis-svd
+        git+https://github.com/CraneStation/wasi-libc
+        git+https://github.com/keith-packard/picolibc.git
+        git+https://github.com/tinygo-org/stm32-svd
+        git://git.musl-libc.org/musl
+        git+https://github.com/WebAssembly/binaryen.git
+        git+https://github.com/mingw-w64/mingw-w64.git
+        git+https://github.com/aykevl/macos-minimal-sdk.git
+        git+https://github.com/espressif/llvm-project#branch=xtensa_release_15.x
+	llvm_build_j1.patch)
+sha256sums=('SKIP'
+            'SKIP'
+            'SKIP'
+            'SKIP'
+            'SKIP'
+            'SKIP'
+            'SKIP'
+            'SKIP'
+            'SKIP'
+            'SKIP'
+            'SKIP'
+            'SKIP'
+            'SKIP'
+            'a5352a32ed89120af415825fa5b73a0e7bb907fa6efaa63529ad721a53cf4844')
+
+prepare() {
+  cd tinygo
+
+  git submodule init
+  git config -f .gitmodules 'submodule.lib/nrfx.url' "$srcdir/nrfx"
+  git config -f .gitmodules 'submodule.lib/CMSIS.url' "$srcdir/CMSIS"
+  git config -f .gitmodules 'submodule.lib/avr.url' "$srcdir/avr-mcu"
+  git config -f .gitmodules 'submodule.lib/cmsis-svd.url' "$srcdir/cmsis-svd"
+  git config -f .gitmodules 'submodule.lib/wasi-libc.url' "$srcdir/wasi-libc"
+  git config -f .gitmodules 'submodule.lib/picolibc.url' "$srcdir/picolibc"
+  git config -f .gitmodules 'submodule.lib/stm32-svd.url' "$srcdir/stm32-svd"
+  git config -f .gitmodules 'submodule.lib/musl.url' "$srcdir/musl"
+  git config -f .gitmodules 'submodule.lib/binaryen.url' "$srcdir/binaryen"
+  git config -f .gitmodules 'submodule.lib/mingw-w64.url' "$srcdir/mingw-w64"
+  git config -f .gitmodules 'submodule.lib/macos-minimal-sdk.url' "$srcdir/macos-minimal-sdk"
+
+  git submodule sync
+  # 'protocol.file.allow=always' is a workaround for https://vielmetti.typepad.com/logbook/2022/10/git-security-fixes-lead-to-fatal-transport-file-not-allowed-error-in-ci-systems-cve-2022-39253.html
+  git -c protocol.file.allow=always submodule update
+
+  ln -sf ../llvm-project
+
+  patch -p1 < ../llvm_build_j1.patch
+}
+
+build() {
+  cd tinygo
+  make llvm-build
+  make build/release
+}
+
+check() {
+  cd tinygo
+  # it reqreires a lot of dependencies. todo enable the tests
+  # make test tinygo-test smoketest
+}
+
+package() {
+  cd tinygo
+
+  install -d "$pkgdir"/usr/bin "$pkgdir"/usr/lib/tinygo
+  mv build/release/tinygo/* "$pkgdir"/usr/lib/tinygo
+  ln -s /usr/lib/tinygo/bin/tinygo "$pkgdir"/usr/bin/tinygo
+}

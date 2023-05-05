@@ -1,0 +1,39 @@
+# Maintainer: Maxime Gauduin <alucryd@archlinux.org>
+
+pkgname=libretro-beetle-supergrafx
+pkgver=978
+pkgrel=1
+pkgdesc='NEC SuperGrafx core'
+arch=(loong64 x86_64)
+url=https://github.com/libretro/beetle-supergrafx-libretro
+license=(GPL2)
+groups=(libretro)
+depends=(
+  gcc-libs
+  glibc
+  libretro-core-info
+  zlib
+)
+makedepends=(git)
+_commit=4c6f55186c17b509343f61dda9992e48299930aa
+source=(libretro-beetle-supergrafx::git+https://github.com/libretro/beetle-supergrafx-libretro.git#commit=${_commit})
+sha256sums=(SKIP)
+
+pkgver() {
+  cd libretro-beetle-supergrafx
+
+  git rev-list --count HEAD
+}
+
+build() {
+  make \
+    SYSTEM_LIBCHDR=0 \
+    SYSTEM_ZLIB=1 \
+    -C libretro-beetle-supergrafx
+}
+
+package() {
+  install -Dm 644 libretro-beetle-supergrafx/mednafen_supergrafx_libretro.so -t "${pkgdir}"/usr/lib/libretro/
+}
+
+# vim: ts=2 sw=2 et:

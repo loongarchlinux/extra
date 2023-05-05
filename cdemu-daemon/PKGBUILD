@@ -1,0 +1,48 @@
+# Maintainer: Jan Alexander Steffens (heftig) <heftig@archlinux.org>
+# Contributor: Ray Rashif <schiv@archlinux.org>
+# Contributor: Mateusz Herych <heniekk@gmail.com>
+# Contributor: Charles Lindsay <charles@chaoslizard.org>
+
+pkgname=cdemu-daemon
+pkgver=3.2.6
+pkgrel=1
+pkgdesc="CD/DVD-ROM device emulator daemon"
+arch=(loong64 x86_64)
+url="https://cdemu.sourceforge.io/"
+license=(GPL)
+depends=(dbus VHBA-MODULE libao 'libmirage>=3.2.0')
+makedepends=(cmake intltool)
+optdepends=('alsa-lib: to enable the ALSA audio driver'
+            'pulseaudio: to enable the PA audio driver')
+install=cdemu-daemon.install
+source=("https://downloads.sourceforge.net/cdemu/$pkgname/$pkgname-$pkgver.tar.xz")
+sha256sums=('a6e404e3ef75c6146e36354f65880dfd63b4b8ef1f54039dc5058e190f857d8f')
+
+prepare() {
+  cd $pkgname-$pkgver
+}
+
+build() {
+  cmake -S $pkgname-$pkgver -B build \
+    -DCMAKE_BUILD_TYPE=Release \
+    -DCMAKE_INSTALL_PREFIX=/usr
+  cmake --build build
+}
+
+package() {
+  DESTDIR="$pkgdir" cmake --install build
+
+  install -Dt "$pkgdir/usr/share/doc/$pkgname" -m644 $pkgname-$pkgver/README
+  install -Dt "$pkgdir/usr/lib/systemd/user" -m644 \
+    $pkgname-$pkgver/service-example/cdemu-daemon.service
+  install -Dt "$pkgdir/usr/share/dbus-1/services" -m644 \
+    $pkgname-$pkgver/service-example/net.sf.cdemu.CDEmuDaemon.service
+
+  echo vhba | install -Dm644 /dev/stdin "$pkgdir/usr/lib/modules-load.d/cdemu.conf"
+  echo 'g cdemu - -' | install -Dm644 /dev/stdin "$pkgdir/usr/lib/sysusers.d/cdemu.conf"
+  install -Dm644 /dev/stdin "$pkgdir/usr/lib/udev/rules.d/60-cdemu.rules" <<END
+ACTION=="add", KERNEL=="vhba_ctl", MODE="0660", OWNER="root", GROUP="cdemu", TAG+="uaccess"
+END
+}
+
+# vim:set sw=2 et:

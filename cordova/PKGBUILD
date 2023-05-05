@@ -1,0 +1,34 @@
+# Maintainer: Felix Yan <felixonmars@archlinux.org>
+
+pkgname=cordova
+pkgver=11.1.0
+pkgrel=1
+pkgdesc='Cordova command line interface tool'
+arch=('any')
+url='https://cordova.apache.org'
+license=('Apache')
+depends=('node-gyp' 'nodejs-nopt' 'npm' 'semver')
+install=cordova.install
+source=("https://registry.npmjs.org/$pkgname/-/$pkgname-$pkgver.tgz")
+noextract=("$pkgname-$pkgver.tgz")
+sha512sums=('0ae17dc077062c2ede7f5b62d58a4ecb7fb75e8bf99fcce76ce8a929b1e3a595045ed6041c3bf6f86b9aa9007a9e390763e6717e8b2b215fc154c2e99290fc77')
+
+package() {
+  npm install -g --prefix "$pkgdir"/usr "$srcdir"/$pkgname-$pkgver.tgz
+
+  # Non-deterministic race in npm gives 777 permissions to random directories.
+  # See https://github.com/npm/npm/issues/9359 for details.
+  chmod -R u=rwX,go=rX "$pkgdir"
+
+  # npm installs package.json owned by build user
+  # https://bugs.archlinux.org/task/63396
+  chown -R root:root "$pkgdir"
+
+  # Delete npm installed pyc files
+  find "$pkgdir" -name "*.pyc" -delete
+
+  # Experimental dedup
+  rm -r "$pkgdir"/usr/lib/node_modules/$pkgname/node_modules/{,.bin/}node-gyp
+  rm -r "$pkgdir"/usr/lib/node_modules/$pkgname/node_modules/{,.bin/}nopt
+  rm -r "$pkgdir"/usr/lib/node_modules/$pkgname/node_modules/{,.bin/}semver
+}

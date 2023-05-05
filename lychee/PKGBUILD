@@ -1,0 +1,42 @@
+# Maintainer: Orhun Parmaksız <orhun@archlinux.org>
+# Maintainer: Daniel M. Capella <polyzen@archlinux.org>
+
+pkgname=lychee
+pkgver=0.12.0
+pkgrel=1
+pkgdesc='Fast, async, resource-friendly link checker written in Rust'
+arch=('loong64' 'x86_64')
+url=https://lychee.cli.rs
+license=('Apache' 'MIT')
+depends=('gcc-libs' 'openssl')
+makedepends=('rust')
+checkdepends=('cargo-nextest')
+conflicts=('lychee-link-checker' 'lychee-rs')
+replaces=('lychee-link-checker' 'lychee-rs')
+options=('!lto')
+source=("$pkgname-$pkgver.tar.gz::https://github.com/lycheeverse/lychee/archive/v$pkgver/$pkgname-$pkgver.tar.gz")
+b2sums=('afe883ae19367ae93a611576d67332d905bb72deed621f432ed0ed986086e907eccbb7bc3f465a1257c3cdfa01a44540a2fbc1503651b4ccc20e0f114d73f848')
+
+prepare() {
+  cd $pkgname-$pkgver
+  cargo fetch --locked --target "$CARCH-unknown-linux-gnu"
+}
+
+build() {
+  cd $pkgname-$pkgver
+  cargo build --release --frozen
+}
+
+check() {
+  cd $pkgname-$pkgver
+  cargo nextest run --all-targets --all-features --filter-expr '!test(test_exclude_example_domains)' --test-threads 1
+  cargo nextest run --filter-expr 'test(test_exclude_example_domains)' --test-threads 1
+  cargo test --doc
+}
+
+package() {
+  cd $pkgname-$pkgver
+  install -Dt "$pkgdir"/usr/bin target/release/$pkgname
+  install -Dm644 -t "$pkgdir"/usr/share/doc/$pkgname README.md
+  install -Dm644 -t "$pkgdir"/usr/share/licenses/$pkgname LICENSE-MIT
+}

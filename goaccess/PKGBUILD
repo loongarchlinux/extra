@@ -1,0 +1,27 @@
+# Maintainer: Felix Yan <felixonmars@archlinux.org>
+# Contributor: Josh VanderLinden <arch@cloudlery.com>
+# Contributor: Nicolas Storme <nicolas@atelier-web.com>
+
+pkgname=goaccess
+pkgver=1.7.2
+pkgrel=1
+pkgdesc="An open source real-time web log analyzer and interactive viewer"
+arch=('loong64' 'x86_64')
+url='https://goaccess.io'
+license=('GPL')
+depends=('ncurses' 'libmaxminddb' 'openssl')
+optdepends=('geoip2-database: for geoip support')
+backup=('etc/goaccess/goaccess.conf')
+source=("https://tar.goaccess.io/$pkgname-$pkgver.tar.gz")
+sha512sums=('0e057c9d49d5a9189af0b8f12e867d4402326ca0d2f562771b4d2c73fcfc2e5d79a826465ee56e03e036fbcddb7c6171005cd06ba28a2c25fc1683fe37bd59a7')
+
+build() {
+  cd $pkgname-$pkgver
+  ./configure --enable-geoip=mmdb --enable-utf8 --with-openssl
+  make prefix=/usr sysconfdir=/etc
+}
+
+package() {
+  cd $pkgname-$pkgver
+  make prefix="$pkgdir/usr" sysconfdir="$pkgdir/etc" install
+}

@@ -1,0 +1,31 @@
+# Maintainer: Jaroslav Lichtblau <svetlemodry@archlinux.org>
+# Contributor: Alexander Fehr <pizzapunk gmail com>
+# Contributor: Xilon <xilonmu@gmail.com>
+
+pkgname=powertop
+pkgver=2.15
+pkgrel=1
+pkgdesc='A tool to diagnose issues with power consumption and power management'
+arch=('loong64' 'x86_64')
+url='https://01.org/powertop/'
+license=('GPL2')
+depends=('gcc-libs' 'libnl' 'ncurses' 'pciutils')
+makedepends=('autoconf-archive' 'patch')
+optdepends=('xorg-xset: for the --calibrate function')
+changelog=$pkgname.changelog
+source=($pkgname-$pkgver.tar.gz::https://github.com/fenrus75/powertop/archive/v$pkgver.tar.gz)
+sha256sums=('e58ab3fd7b8ff5f4dd0d17f11848817e7d83c0a6918145ac81de03b5dccf8f49')
+
+build() {
+  cd "${srcdir}"/$pkgname-$pkgver
+
+  ./autogen.sh
+  ./configure --prefix=/usr --sbindir=/usr/bin
+  make
+}
+
+package() {
+  cd "${srcdir}"/$pkgname-$pkgver
+
+  make DESTDIR="${pkgdir}" install
+}

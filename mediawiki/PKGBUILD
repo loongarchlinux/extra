@@ -1,0 +1,69 @@
+# Maintainer: Sergej Pupykin <pupykin.s+arch@gmail.com>
+# Contributor: Sergej Pupykin <pupykin.s+arch@gmail.com>
+
+pkgname=mediawiki
+pkgver=1.39.3
+_basever=${pkgver%.*}
+pkgrel=1
+pkgdesc="MediaWiki engine"
+arch=('any')
+url="https://www.mediawiki.org/wiki/MediaWiki"
+license=("GPL")
+backup=('etc/webapps/mediawiki/LocalSettings.php')
+depends=('php' 'diffutils')
+optdepends=('pcre2: for regular expressions support'
+	    'php-intl: to handle Unicode normalization'
+#	    'php-mysql: for MySQL database support'
+	    'php-pgsql: for PostgreSQL database support'
+	    'php-sqlite: for sqlite database support'
+#	    'php-apcu: for cache support'
+#	    'php-xcache: for cache support'
+	    'memcached: for cache support'
+	    'php-gd: for thumbnails rendering'
+	    'imagemagick: for thumbnails rendering'
+	    'smtp-forwarder: for mail sending'
+            'python: required for SyntaxHighlight/ConfirmEdit extensions'
+            'perl: compare_schemas.pl and mediawiki_mysql2postgres.pl'
+            'git: hash versions on Special:Version')
+install=mediawiki.install
+options=(!strip)
+validpgpkeys=('41B2ABE817ADD3E52BDA946F72BC1C5D23107F8A'
+              '1D98867E82982C8FE0ABC25F9B69B3109D3BB7B0'
+              'C83A8E4D3C8FEB7C8A3A1998131910E01605D9AA')
+source=("https://releases.wikimedia.org/mediawiki/${_basever}/mediawiki-$pkgver.tar.gz"{,.sig}
+	apache.example.conf)
+sha256sums=('e35769343876af42496da43ae2f47224fb8c779b8f45705c4147c6ff3522cc1d'
+            'SKIP'
+            'cfeff68331e930b6a93f166c12666ac59a84aa24334f94520eff3f988f37ce2b')
+
+package() {
+  cd "$srcdir"
+  install -vdm0755 "$pkgdir"/usr/share/webapps
+  install -vdm0755 "$pkgdir"/etc/webapps/mediawiki
+  cp -a $pkgname-$pkgver "$pkgdir"/usr/share/webapps/mediawiki
+
+  install -vDm0644 "$srcdir"/apache.example.conf "$pkgdir"/etc/webapps/mediawiki/apache.example.conf
+
+  cd "$pkgdir"/usr/share/webapps/mediawiki
+#  yes | php /usr/bin/composer update --no-dev \
+#    --ignore-platform-req=ext-calendar \
+#    --ignore-platform-req=ext-iconv \
+#    --ignore-platform-req=ext-intl \
+#    --ignore-platform-req=ext-iconv
+
+  # config
+  ln -sf /etc/webapps/mediawiki/LocalSettings.php LocalSettings.php
+
+  # move cache and images to /var
+  install -vdm0755 -o 33 -g 33 "$pkgdir"/var/cache/mediawiki
+  install -vdm0755 -o 33 -g 33 "$pkgdir"/var/lib/mediawiki
+
+  mv cache/.htaccess "$pkgdir"/var/cache/mediawiki/
+  rmdir cache
+  ln -sf /var/cache/mediawiki cache
+
+  mv images/* "$pkgdir"/var/lib/mediawiki/
+  mv images/.htaccess "$pkgdir"/var/lib/mediawiki/
+  rmdir images
+  ln -sf /var/lib/mediawiki images
+}

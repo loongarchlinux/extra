@@ -1,0 +1,70 @@
+# Maintainer: George Rawlinson <grawlinson@archlinux.org>
+# Maintainer: Daniel M. Capella <polyzen@archlinux.org>
+# Contributor: fenuks
+
+pkgname=skim
+pkgver=0.10.4
+pkgrel=1
+pkgdesc='Fuzzy Finder in Rust!'
+arch=('loong64' 'x86_64')
+url='https://github.com/lotabout/skim'
+license=('MIT')
+depends=('ncurses')
+makedepends=('git' 'rust')
+optdepends=(
+  'bash: for resp. completions and key bindings, and for sk-tmux script'
+  'fish: for resp. key bindings'
+  'tmux: for sk-tmux script'
+  'vim-plugin-runtime: for N/Vim plugin'
+  'zsh: for resp. completions and key bindings'
+)
+_commit='db9f194c12486343ae23b37781123ff0dbfaaf16'
+source=("$pkgname::git+$url#commit=$_commit")
+b2sums=('SKIP')
+
+pkgver() {
+  cd "$pkgname"
+
+  git describe --tags | sed 's/^v//'
+}
+
+prepare() {
+  cd "$pkgname"
+
+  # download dependencies
+  cargo fetch --locked --target "$CARCH-unknown-linux-gnu"
+}
+
+build() {
+  cd "$pkgname"
+
+  cargo build --frozen --release --all-features
+}
+
+check() {
+  cd "$pkgname"
+
+  cargo test --frozen --all-features
+}
+
+package() {
+  cd "$pkgname"
+
+  # binary
+  install -vDm755 -t "$pkgdir/usr/bin" target/release/sk bin/sk-tmux
+
+  # man pages
+  install -vDm644 -t "$pkgdir/usr/share/man/man1" man/man1/*
+
+  # vim plugin
+  install -vDm644 -t "$pkgdir/usr/share/vim/vimfiles/plugin" plugin/skim.vim
+
+  # key bindings
+  install -vDm644 -t "$pkgdir/usr/share/skim" shell/*.bash shell/*.zsh
+  install -vDm644 shell/key-bindings.fish "$pkgdir/usr/share/fish/functions/skim_key_bindings.fish"
+
+  # license
+  install -vDm644 -t "$pkgdir/usr/share/licenses/$pkgname" LICENSE
+}
+
+# vim:set ts=2 sw=2 et:

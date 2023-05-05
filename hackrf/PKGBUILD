@@ -1,0 +1,44 @@
+# Maintainer:
+# Contributor: Kyle Keen <keenerd@gmail.com>
+# Contributor: Dominik Heidler <dheidler@gmail.com>
+
+pkgname=hackrf
+pkgver=2023.01.1
+pkgrel=1
+pkgdesc="Driver for HackRF, allowing general purpose software defined radio (SDR)."
+arch=('loong64' 'x86_64')
+url="https://github.com/mossmann/hackrf"
+license=('GPL2')
+depends=('libusb' 'fftw')
+makedepends=('cmake')
+source=("https://github.com/mossmann/hackrf/releases/download/v${pkgver}/hackrf-$pkgver.tar.xz"
+        'hackrf.conf')
+sha256sums=('32a03f943a30be4ba478e94bf69f14a5b7d55be6761007f4a4f5453418206a11'
+            '8246a539049ec2bd6226337d8d9b4f48bd503d77de13408a5751d2a60dc76965')
+
+prepare() {
+  cd $pkgname-$pkgver/host
+  # FS#41895
+  sed -i 's|MODE.*$|TAG+="uaccess"|' libhackrf/53-hackrf.rules*
+}
+
+build() {
+  cmake -B build -S $pkgname-$pkgver/host \
+    -DCMAKE_INSTALL_PREFIX=/usr
+  cmake --build build
+}
+
+package() {
+  DESTDIR="$pkgdir" cmake --install build
+  cd $pkgname-$pkgver
+  pushd host/libhackrf
+  install -vD -m644 53-hackrf.rules "$pkgdir/usr/lib/udev/rules.d/53-hackrf.rules"
+  popd
+  pushd firmware-bin
+  #for i in *.{bin,dfu,xsvf}; do
+  for i in *.{bin,dfu}; do
+    install -vDm644 "$i" "$pkgdir/usr/share/hackrf/$i"
+  done
+  popd
+  install -Dm644 "$srcdir/hackrf.conf" "$pkgdir/etc/modprobe.d/hackrf.conf"
+}

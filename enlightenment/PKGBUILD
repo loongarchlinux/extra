@@ -1,0 +1,53 @@
+# Contributor: Ronald van Haren <ronald@archlinux.org>
+# Contributor: Enlightenment Developers <enlightenment-devel@enlightenment.org>>
+
+pkgname=enlightenment
+pkgver=0.25.4
+pkgrel=2
+pkgdesc="Enlightenment window manager"
+arch=('loong64' 'x86_64')
+url="http://www.enlightenment.org"
+license=('BSD')
+depends=('alsa-lib' 'bc' 'bluez-libs' 'efl' 'hicolor-icon-theme' 'libexif' 'librsvg' 'libpulse'
+         'libxkbcommon' 'pam' 'pulseaudio' 'ttf-font' 'udisks2' 'util-linux-libs' 'wayland'
+         'xorg-server-xwayland')
+optdepends=('acpid: power events on laptop lid close'
+            'bluez: Bluetooth control module'
+            'connman: network connection manager module'
+            'fprintd: fingerprint password settings'
+            'geoclue: geolocation module'
+            'packagekit: package manager integration module')
+makedepends=('meson' 'ninja' 'wayland-protocols')
+backup=('etc/enlightenment/sysactions.conf'
+        'etc/enlightenment/system.conf'
+        'etc/xdg/menus/e-applications.menu')
+source=("https://download.enlightenment.org/rel/apps/${pkgname}/$pkgname-$pkgver.tar.xz")
+sha256sums=('56db5d206b821b9a8831d26e713e410ac70b2255a6f43fcdf7c01eefde23b7a2')
+
+
+build() {
+  cd "${srcdir}/${pkgname}-${pkgver}"
+
+  CFLAGS+=' -fcommon' # https://wiki.gentoo.org/wiki/Gcc_10_porting_notes/fno_common
+
+  CFLAGS+=' -fvisibility=hidden'
+
+  if [ -d build ]; then
+    rm -f build
+  fi
+  mkdir build
+  meson --prefix=/usr \
+    -Dwl=true \
+    . build
+
+  ninja -C build
+  }
+
+
+package() {
+  cd "${srcdir}/${pkgname}-${pkgver}"
+  DESTDIR="$pkgdir" ninja -C build install
+  
+  # install LICENSE
+  install -Dm644 COPYING "$pkgdir/usr/share/licenses/$pkgname/COPYING"
+}

@@ -1,0 +1,86 @@
+# Maintainer: Andreas 'Segaja' Schleifer <archlinux at segaja dot de>
+
+_gemname='simplecov_json_formatter'
+pkgname="ruby-${_gemname}"
+pkgver=0.1.4
+pkgrel=1
+pkgdesc='JSON formatter for SimpleCov'
+arch=('any')
+url="https://github.com/codeclimate-community/${_gemname}"
+license=('MIT')
+depends=('ruby')
+checkdepends=('ruby-bundler' 'ruby-rake' 'ruby-rspec' 'ruby-simplecov')
+options=(!emptydirs)
+source=("${url}/archive/${pkgver}/${pkgname}-${pkgver}.tar.gz")
+sha512sums=('8aaf71d330c2debd0fc19e709df327ee90c30ca1f7352564b4dc12cc0676e86ef4aa6466bca1316345b452f402881f41cadf157766cfb27afa130ec871198b6e')
+
+prepare() {
+  cd "${_gemname}-${pkgver}"
+
+  sed --in-place --regexp-extended 's|~>|>=|g' "${_gemname}.gemspec"
+
+  rm --verbose Gemfile*
+
+  # fix tests
+  local simplecov_version="$(ruby -e 'require("simplecov"); puts SimpleCov::VERSION')"
+
+  sed --in-place '/byebug/d' spec/simplecov_json_formatter_spec.rb
+  sed --in-place --regexp-extended "s/\"simplecov_version\": \"[0-9]+\.[0-9]+\.[0-9]+\"/\"simplecov_version\": \"${simplecov_version}\"/" spec/fixtures/*.json
+  sed --in-place --regexp-extended "s|/gem/|${srcdir}/${_gemname}-${pkgver}/|" spec/fixtures/*.json
+}
+
+build() {
+  cd "${_gemname}-${pkgver}"
+
+  gem build "${_gemname}.gemspec"
+}
+
+check() {
+  cd "${_gemname}-${pkgver}"
+
+  rake spec
+}
+
+package() {
+  cd "${_gemname}-${pkgver}"
+
+  local _gemdir="$(gem env gemdir)"
+
+  gem install \
+    --local \
+    --verbose \
+    --ignore-dependencies \
+    --no-user-install \
+    --install-dir "${pkgdir}/${_gemdir}" \
+    --bindir "${pkgdir}/usr/bin" \
+    "${_gemname}-${pkgver}.gem"
+
+  # remove unrepreducible files
+  rm --force --recursive --verbose \
+    "${pkgdir}/${_gemdir}/cache/" \
+    "${pkgdir}/${_gemdir}/gems/${_gemname}-${pkgver}/vendor/" \
+    "${pkgdir}/${_gemdir}/doc/${_gemname}-${pkgver}/ri/ext/"
+
+  find "${pkgdir}/${_gemdir}/gems/" \
+    -type f \
+    \( \
+      -iname "*.o" -o \
+      -iname "*.c" -o \
+      -iname "*.so" -o \
+      -iname "*.time" -o \
+      -iname "gem.build_complete" -o \
+      -iname "Makefile" \
+    \) \
+    -delete
+
+  find "${pkgdir}/${_gemdir}/extensions/" \
+    -type f \
+    \( \
+      -iname "mkmf.log" -o \
+      -iname "gem_make.out" \
+    \) \
+    -delete
+
+  install --verbose -D --mode=644 LICENSE "${pkgdir}/usr/share/licenses/${pkgname}/LICENSE"
+  install --verbose -D --mode=644 *.md --target-directory "${pkgdir}/usr/share/doc/${pkgname}"
+}

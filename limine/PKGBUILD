@@ -1,0 +1,25 @@
+# Maintainer: Robin Candau <antiz@archlinux.org>
+# Contributor: Mintsuki <mintsuki@protonmail.com>
+
+pkgname=limine
+pkgver=4.20230503.0
+pkgrel=1
+pkgdesc="An advanced, portable, multiprotocol bootloader"
+arch=('loong64' 'x86_64')
+url="https://limine-bootloader.org/"
+license=('BSD')
+source=("https://github.com/limine-bootloader/limine/releases/download/v${pkgver}/limine-${pkgver}.tar.xz")
+b2sums=('d268a1e6ff6c0da46d457ba077227f8552a272992d6eb399241e57bfd7de2321f44e616cf2cade05fae70c55c3cdea8d122b09939202ade153c18bae72393eb3')
+makedepends=('nasm' 'mtools' 'llvm' 'lld' 'clang')
+
+build() {
+	cd "${pkgname}-${pkgver}"
+	./configure --prefix=/usr --enable-all TOOLCHAIN_FOR_TARGET=llvm
+	make
+}
+
+package() {
+	cd "${pkgname}-${pkgver}"
+  	make DESTDIR="${pkgdir}" install
+  	install -Dm 644 LICENSE "${pkgdir}/usr/share/licenses/${pkgname}/LICENSE"
+}

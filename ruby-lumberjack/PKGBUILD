@@ -1,0 +1,54 @@
+# Maintainer: Felix Yan <felixonmars@archlinux.org>
+
+pkgname=ruby-lumberjack
+pkgver=1.2.8
+_commit=05a9ad8d8f462c376848089cd6c1ac341fad359a
+pkgrel=2
+pkgdesc='A simple, powerful, and very fast logging utility that can be a drop in replacement for Logger'
+arch=(any)
+url='https://github.com/bdurand/lumberjack'
+license=(MIT)
+depends=(ruby)
+makedepends=(git)
+checkdepends=(ruby-rspec ruby-timecop)
+options=(!emptydirs)
+source=(git+https://github.com/bdurand/lumberjack.git#commit=$_commit)
+sha256sums=('SKIP')
+
+build() {
+  local _gemdir="$(gem env gemdir)"
+  cd lumberjack
+  gem build lumberjack.gemspec
+  gem install \
+    --local \
+    --verbose \
+    --ignore-dependencies \
+    --no-user-install \
+    --install-dir "tmp_install/$_gemdir" \
+    --bindir "tmp_install/usr/bin" \
+    lumberjack-$pkgver.gem
+  find "tmp_install/$_gemdir/gems/" \
+    -type f \
+    \( \
+        -iname "*.o" -o \
+        -iname "*.c" -o \
+        -iname "*.so" -o \
+        -iname "*.time" -o \
+        -iname "gem.build_complete" -o \
+        -iname "Makefile" \
+    \) \
+    -delete
+  rm -r tmp_install/$_gemdir/cache
+}
+
+check() {
+  local _gemdir="$(gem env gemdir)"
+  cd lumberjack
+  GEM_HOME="tmp_install/$_gemdir" rspec
+}
+
+package() {
+  cd lumberjack
+  cp -a tmp_install/* "$pkgdir"/
+  install -Dm644 MIT_LICENSE.txt -t "$pkgdir"/usr/share/licenses/$pkgname/
+}

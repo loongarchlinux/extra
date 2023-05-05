@@ -1,0 +1,39 @@
+# Maintainer: David Runge <dvzrv@archlinux.org>
+# Contributor: Ainola
+# Contributor: rtfreedman
+
+_name=CsoundQt
+pkgname=csoundqt
+pkgver=1.1.1
+pkgrel=1
+epoch=1
+pkgdesc="A frontend for Csound"
+arch=(loong64 x86_64)
+url="https://csoundqt.github.io/"
+license=(CCPL FDL GPL LGPL2.1)
+groups=(pro-audio)
+depends=(csound-doc gcc-libs glibc hicolor-icon-theme qt5-base qt5-declarative
+qt5-webengine)
+makedepends=(csound rtmidi)
+optdepends=('python: for examples')
+source=($pkgname-$pkgver.tar.gz::https://github.com/$pkgname/$pkgname/archive/v$pkgver.tar.gz)
+sha512sums=('5a4b4eb1c94e134919a69f80819ff8ba9044c5c0545a393130c8036e79df958ea62c2b8db18d4d9d2b67f6b631c0305bc6bc679c9bb103f322528ec426401a2b')
+b2sums=('77048937c690f8e4af359369d59782cbbc72a66d602d6b8b33d0f322468bdb3bb7284fc0d6c10f8fbbc6b79f6f2be2dd8688a89c9c576181cfc71a2fcd56fe77')
+
+build() {
+  cd $_name-$pkgver
+  qmake-qt5 qcs.pro \
+    SHARE_DIR="$pkgdir/usr/share" \
+    INSTALL_DIR="$pkgdir/usr" \
+    CONFIG+=rtmidi \
+    CONFIG+=html_webengine \
+    CONFIG+=record_support
+  make
+}
+
+package() {
+  depends+=(libcsnd6.so libcsound64.so librtmidi.so)
+
+  make DESTDIR="${pkgdir}" install -C $_name-$pkgver
+  install -vDm 644 $_name-$pkgver/{ChangeLog,README.md} -t "$pkgdir/usr/share/doc/$pkgname/"
+}

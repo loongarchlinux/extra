@@ -1,0 +1,98 @@
+# Maintainer: George Rawlinson <grawlinson@archlinux.org>
+# Contributor: Lex Black <autumn-wind@web.de>
+# Contributor: Alex Gentilucci <alexander.gentilucci@gmail.com>
+
+pkgname=ft2-clone
+pkgver=1.63
+pkgrel=1
+pkgdesc='Portable Fasttracker II clone'
+arch=('loong64' 'x86_64')
+url='https://16-bits.org/ft2.php'
+license=(
+  'BSD'
+  'MIT'
+  'custom:CC-BY-NC-SA-4.0'
+)
+depends=(
+  'alsa-lib'
+  'sdl2'
+  'flac'
+  'hicolor-icon-theme'
+)
+makedepends=(
+  'git'
+  'libicns'
+  'cmake'
+  'gendesk'
+)
+_commit='f7063748617e4dc6742294e8a471383e7b2ba497'
+source=(
+  "$pkgname::git+https://github.com/8bitbubsy/ft2-clone#commit=$_commit"
+  'templatify-build-date.patch'
+)
+b2sums=('SKIP'
+        '191f6b3e3dbff4b4751867d62bf46a3c9a47cff93f8d16be79caaa036a2e1a2e7e41b6cac3c58246a58a9e4075bc106edb851e6fc38fac2f8e3d16396a7cebe3')
+
+pkgver() {
+  cd "$pkgname"
+
+  git describe --tags | sed 's/^v//'
+}
+
+prepare() {
+  cd "$pkgname"
+
+  # convert icons
+  icns2png -x \
+    release/macos/ft2-clone-macos.app/Contents/Resources/ft2-clone-macos.icns
+
+  # generate desktop file
+  gendesk -n \
+    --exec "$pkgname" \
+    --name 'Fasttracker II Clone' \
+    --pkgname "$pkgname" \
+    --pkgdesc "$pkgdesc" \
+    --icon "$pkgname" \
+    --genericname 'Chiptune Tracker'
+
+  # attempt repro build by using commit date as build date
+  local commit_date="$(git show --no-patch --format=%cd --date=format:'%d %B %Y')"
+
+  # apply template
+  patch -p1 -i "$srcdir/templatify-build-date.patch"
+
+  # patch in commit date
+  sed -e "s/@DATE@/$commit_date/" -i src/ft2_header.h
+}
+
+build() {
+  cmake \
+    -S "$pkgname" \
+    -B build \
+    -DEXTERNAL_LIBFLAC=ON \
+    -DCMAKE_BUILD_TYPE='None' \
+    -DCMAKE_INSTALL_PREFIX='/usr' \
+    -Wno-dev
+
+  cmake --build build
+}
+
+package() {
+  DESTDIR="$pkgdir" cmake --install build
+
+  cd "$pkgname"
+
+  # application icons
+  for i in 16 32 48 128 256; do
+    install -vDm644 "ft2-clone-macos_${i}x${i}x32.png" "$pkgdir/usr/share/icons/hicolor/${i}x${i}/apps/ft2-clone.png"
+  done
+
+  # desktop file
+  install -vDm644 -t "$pkgdir/usr/share/applications" ft2-clone.desktop
+
+  # documentation
+  install -vDm644 -t "$pkgdir/usr/share/doc/$pkgname" README.md
+
+  # licensing
+  install -vDm644 -t "$pkgdir/usr/share/licenses/$pkgname" release/LICENSES.txt
+}

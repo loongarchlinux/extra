@@ -1,0 +1,35 @@
+# Maintainer: Johannes Löthberg <johannes@kyriasis.com>
+# Maintainer: George Rawlinson <grawlinson@archlinux.org>
+
+pkgname=libzen
+pkgver=0.4.41
+pkgrel=1
+pkgdesc='A C++ utility library'
+arch=('loong64' 'x86_64')
+url='https://mediaarea.net'
+license=('BSD')
+depends=('glibc' 'gcc-libs')
+source=("$pkgname-$pkgver.tar.gz::https://github.com/MediaArea/ZenLib/archive/v$pkgver.tar.gz")
+sha512sums=('4232eb6e73e9b380f6fe2ce3cfeb9fe343936362a35ca8d088c783dc6277332df762d689efe023e3f1418c2e6d2629e0b82ac93df9cce3ae0ab346c2ed1911f1')
+b2sums=('aee8971c682deb176ec32bd98e160112633d94e48eb153bff6d001b0f575ca5249837d7e1023527c4358d2ae1f89e0bb0dba8c15b7faf7f5f64b4e02f9e397cc')
+
+build() {
+  cd "ZenLib-$pkgver/Project/GNU/Library"
+
+  ./autogen.sh
+
+  ./configure --prefix=/usr --enable-shared
+
+  make
+}
+
+package() {
+  cd "ZenLib-$pkgver"
+
+  # license
+  install -vDm644 -t "$pkgdir/usr/share/licenses/$pkgname" License.txt
+
+  cd Project/GNU/Library
+
+  make DESTDIR="$pkgdir" install
+}

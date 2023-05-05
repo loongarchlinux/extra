@@ -1,0 +1,29 @@
+# Maintainer: Alexander F. Rødseth <xyproto@archlinux.org>
+# Contributor: Mikko Sysikaski <mikko.sysikaski@gmail.com>
+
+pkgname=elfkickers
+pkgver=3.2
+pkgrel=4
+pkgdesc='Collection of ELF utilities (includes sstrip)'
+arch=(loong64 x86_64)
+url='https://www.muppetlabs.com/~breadbox/software/elfkickers.html'
+license=(GPL2)
+makedepends=(git setconf)
+source=("git+https://github.com/BR903/ELFKickers#commit=e7fba942df51e756897224cff5aa853de8fafd90") # "Updated Changelog for 3.2 release", no tag available
+b2sums=(SKIP)
+
+prepare() {
+  for tool in ebfc elfls elftoc infect objres rebind sstrip; do
+    setconf ELFKickers/$tool/Makefile CFLAGS "-O2 -I ../elfrw $CFLAGS -Wl,-z,relro,-z,now"
+    setconf ELFKickers/$tool/Makefile LDFLAGS "$LDFLAGS -z,relro,-z,now"
+  done
+}
+
+build() {
+  make -C ELFKickers -j1
+}
+
+package() {
+  install -d "$pkgdir/usr/"{bin,share/man/man1}
+  make -C ELFKickers prefix="$pkgdir/usr" install -j1
+}

@@ -1,0 +1,34 @@
+# Maintainer: Alexander Epaneshnikov <alex19ep@archlinux.org>
+# Contributor: Eli Schwartz <eschwartz@archlinux.org>
+
+pkgname=aurpublish
+pkgver=r40.gf88c7ae
+pkgrel=2
+pkgdesc="PKGBUILD management/upload framework for the Arch User Repository"
+arch=('any')
+url="https://github.com/eli-schwartz/${pkgname}"
+license=('GPL')
+depends=('git' 'openssh')
+makedepends=('asciidoc')
+_commit=f88c7aea4506f9f2abde4ea91d0fdacdce4ffdb7
+source=("git+${url}.git?signed#commit=${_commit}")
+sha512sums=('SKIP')
+validpgpkeys=('BD27B07A5EF45C2ADAF70E0484818A6819AF4A9B') # Eli Schwartz <eschwartz@archlinux.org>
+
+pkgver() {
+    cd ${pkgname}
+
+    printf "r%s.g%s" "$(git rev-list --count HEAD)" "$(git rev-parse --short HEAD)"
+}
+
+build() {
+    cd ${pkgname}
+
+    make PREFIX=/usr
+}
+
+package() {
+    cd ${pkgname}
+
+    make PREFIX=/usr DESTDIR="${pkgdir}" install
+}

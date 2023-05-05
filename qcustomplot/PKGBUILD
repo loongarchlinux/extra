@@ -1,0 +1,64 @@
+# Maintainer: David Runge <dvzrv@archlinux.org>
+
+_name=QCustomPlot
+pkgbase=qcustomplot
+pkgname=('qcustomplot' 'qcustomplot-doc')
+pkgver=2.1.1
+pkgrel=1
+pkgdesc="Qt C++ widget for plotting and data visualization"
+arch=('loong64' 'x86_64')
+url="https://www.qcustomplot.com/"
+license=('GPL3')
+makedepends=('doxygen' 'graphviz' 'qt5-tools')
+source=(
+  "${pkgname}-${pkgver}.tar.bz2::https://gitlab.com/DerManu/${_name}/-/archive/v${pkgver}/${_name}-v${pkgver}.tar.bz2"
+  "${pkgname}-${pkgver}-source.tar.gz::https://www.qcustomplot.com/release/${pkgver}/${_name}-source.tar.gz"
+)
+sha512sums=('a9c0fe0c2393858b5de66e78606ef96e57b00e405e0417df7d59d5e93a89f706a1d4767316bf015c76514aedd69553229fd347569b9d68e387103486ee29988f'
+            '1feb4f45ef90d7709edb26c9964f0ec85ef4aa30f0a7e9fcd803fae586875e8d6744dbcfe08b21f461816ca426c8a6612f8e9c7ef9d3f5a7150c3de8fa5ee57d')
+b2sums=('6525e5ca60ba978c2c09e86786339bd92ff4a995a170f3bc30e17e183134acb9d8d7515259eb65cb006f2cd713f1ed6bce69248fe228e8bd8a913857b0800170'
+        '985ce5fbfe2888ac2346a8c694e832f8d9e3d20ae1c2f93af8757f6a7c803e24ae429c11240aeaf9e79625d8eb0e8a835dca023b73eac4ca1338d21434bd3c67')
+
+prepare() {
+  mv -v "${_name}-v${pkgver}" "${pkgbase}-${pkgver}"
+  cd "${pkgbase}-${pkgver}"
+  # move required amalgameted sources into place
+  mv -v "../${pkgname}-source/"*.{cpp,h} .
+}
+
+build() {
+  cd "${pkgbase}-${pkgver}"
+  qmake-qt5 sharedlib/sharedlib-compilation/sharedlib-compilation.pro
+  make
+  # create documentation
+  doxygen
+  qhelpgenerator documentation/html/index.qhp \
+    -o documentation/qthelp/qcustomplot.qch
+  find documentation/html -type f \
+    -iname "*.qhp" -or -iname "*.map" -or -iname "*.md5" -delete
+}
+
+package_qcustomplot() {
+  depends=('qt5-base')
+  provides=('libqcustomplot.so')
+  replaces=('qcustomplot-qt5')
+
+  cd "${pkgbase}-${pkgver}"
+  # there is no install target
+  install -vDm 644 "${pkgname}.h" -t "${pkgdir}/usr/include/"
+  install -vdm 755 "${pkgdir}/usr/lib/"
+  cp -av "lib${pkgname}.so"* "${pkgdir}/usr/lib/"
+  install -vDm 644 changelog.txt -t "${pkgdir}/usr/share/doc/${pkgname}/"
+}
+
+package_qcustomplot-doc() {
+  pkgdesc+=" (docs)"
+
+  cd "${pkgbase}-${pkgver}"
+  install -vDm 644 documentation/qthelp/*.qch -t "${pkgdir}/usr/share/doc/qt/"
+  find examples -type f -exec install -vDm 644 {} "${pkgdir}/usr/share/doc/${pkgbase}/"{} \;
+  (
+    cd documentation
+    find html -type f -exec install -vDm 644 {} "${pkgdir}/usr/share/doc/${pkgbase}/"{} \;
+  )
+}

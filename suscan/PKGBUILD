@@ -1,0 +1,33 @@
+# Maintainer: Filipe Laíns (FFY00) <lains@archlinux.org>
+
+pkgname=suscan
+pkgver=0.3.0
+pkgrel=1
+pkgdesc='Channel scanner based on sigutils library'
+arch=('loong64' 'x86_64')
+url='https://github.com/BatchDrake/suscan'
+license=('GPL3')
+depends=('sigutils' 'libsndfile' 'fftw' 'soapysdr' 'libxml2' 'libvolk')
+makedepends=('cmake')
+source=("$pkgname-$pkgver.tar.gz::$url/archive/v$pkgver.tar.gz")
+sha512sums=('7074217e2abfd06ace2acef6dbdea1c44e58e8c7a11f798686a6ed1b914e0f0a3c19c45bed9975781f889d8bc237e3d18083ee751b6921947939c0e24f3833cd')
+
+build() {
+  mkdir $pkgname-$pkgver/build
+  cd $pkgname-$pkgver/build
+
+  export CFLAGS+=" ${CPPFLAGS}"
+  export CXXFLAGS+=" ${CPPFLAGS}"
+
+  cmake .. \
+    -DCMAKE_INSTALL_PREFIX=/usr \
+    -DCMAKE_BUILD_TYPE=None
+
+  make
+}
+
+package() {
+  cd $pkgname-$pkgver/build
+
+  make DESTDIR="$pkgdir" install
+}

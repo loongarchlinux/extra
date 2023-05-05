@@ -1,0 +1,49 @@
+# Maintainer: George Rawlinson <grawlinson@archlinux.org>
+# Contributor: Thayne McCombs <astrothayne@gmail.com>
+
+pkgname=dart-sass
+pkgver=1.62.0
+pkgrel=1
+pkgdesc='Sass makes CSS fun again'
+arch=('loong64' 'x86_64')
+url='http://sass-lang.com/'
+license=('MIT')
+depends=('glibc')
+makedepends=('git' 'dart')
+options=('!strip')
+provides=('sass')
+conflicts=('ruby-sass')
+_commit='c55235d166591e86ed342a1b5937b3d600e4d4de'
+source=("$pkgname::git+https://github.com/sass/dart-sass.git#commit=$_commit")
+md5sums=('SKIP')
+
+pkgver() {
+  cd "$pkgname"
+
+  git describe --tags
+}
+
+prepare() {
+  cd "$pkgname"
+
+  # disable analytics
+  dart --disable-analytics
+
+  # download dependencies
+  dart pub get
+}
+
+build() {
+  cd "$pkgname"
+  dart compile exe -Dversion=$pkgver -o sass bin/sass.dart
+}
+
+package() {
+  cd "$pkgname"
+
+  # binary
+  install -vDm755 -t "$pkgdir/usr/bin" sass
+
+  # license
+  install -vDm644 -t "$pkgdir/usr/share/licenses/$pkgname" LICENSE
+}

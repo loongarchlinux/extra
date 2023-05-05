@@ -1,0 +1,53 @@
+# Maintainer: David Runge <dvzrv@archlinux.org>
+
+pkgname=vm.lv2
+pkgver=0.14.0
+pkgrel=3
+pkgdesc="A virtual machine LV2 plugin bundle"
+arch=(loong64 x86_64)
+url="https://git.open-music-kontrollers.ch/~hp/vm.lv2"
+license=(Artistic2.0)
+groups=(
+  lv2-plugins
+  pro-audio
+)
+depends=(
+  glibc
+  libglvnd
+  libx11
+  lv2-host
+)
+makedepends=(
+  glew
+  glu
+  lv2
+  meson
+)
+checkdepends=(lv2lint)
+source=(
+  $pkgname-$pkgver.tar.gz::$url/archive/$pkgver.tar.gz
+  $pkgname-$pkgver.tar.gz.asc::$url/archive/$pkgver.tar.gz.asc
+)
+sha512sums=('653a0a153fc3c56619fce027249a15f7d24ff1eb2450e84a6b657cc33261e2a5bada8ffe1592f02bb55eaea8953dc4ce02bacb5a890b82354e9d1a0c0ac0376f'
+            'SKIP')
+b2sums=('bd0c1cb7ea44e351e4435d6ea4871c14cad4b05fd21f254f28875baa0d37aa59df6275b2c367e718551e829e2270bab8427cbc35e5485809b80f483fed98e204'
+        'SKIP')
+validpgpkeys=('5AE26CEBBF49705C19FB273A30258F99258CB76A') # Hanspeter Portner <dev@open-music-kontrollers.ch>
+
+build() {
+  arch-meson build $pkgname-$pkgver
+  meson compile -C build
+}
+
+check() {
+  meson test -C build --print-errorlogs
+}
+
+package() {
+  depends+=(
+    glew libGLEW.so
+  )
+
+  meson install -C build --destdir "$pkgdir"
+  install -vDm 644 $pkgname-$pkgver/{ChangeLog,README.md} -t "$pkgdir/usr/share/doc/$pkgname/"
+}

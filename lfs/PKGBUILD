@@ -1,0 +1,32 @@
+# Maintainer: Orhun Parmaksız <orhun@archlinux.org>
+
+pkgname=lfs
+pkgver=2.6.0
+pkgrel=1
+pkgdesc="Get information on your mounted filesystems"
+arch=('loong64' 'x86_64')
+url="https://github.com/Canop/lfs"
+license=('MIT')
+depends=('gcc-libs')
+makedepends=('cargo')
+source=("$pkgname-$pkgver.tar.gz::$url/archive/v$pkgver.tar.gz")
+sha512sums=('1e640ed0fc0b8d0932999c129557252713a25aadbbbcdd11c54bde5c7bc644b5bc601a9e553ea004e3c10c5f02673fdc02b886b4b10185a1945b7418e5a7e45f')
+
+prepare() {
+  cd "$pkgname-$pkgver"
+  cargo fetch --locked --target "$CARCH-unknown-linux-gnu"
+}
+
+build() {
+  cd "$pkgname-$pkgver"
+  cargo build --release --frozen
+}
+
+package() {
+  cd "$pkgname-$pkgver"
+  install -Dm 755 "target/release/$pkgname" -t "$pkgdir/usr/bin"
+  install -Dm 644 README.md -t "$pkgdir/usr/share/doc/$pkgname"
+  install -Dm 644 LICENSE -t "$pkgdir/usr/share/licenses/$pkgname"
+}
+
+# vim: ts=2 sw=2 et:

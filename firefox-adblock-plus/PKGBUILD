@@ -1,0 +1,31 @@
+# Maintainer: Sergej Pupykin <pupykin.s+arch@gmail.com>
+# Maintainer: Eli Schwartz <eschwartz@archlinux.org>
+
+pkgname=firefox-adblock-plus
+pkgver=3.16.2
+pkgrel=1
+_file=4080833
+pkgdesc="Extension for firefox which block ads and banners"
+arch=('any')
+url="https://adblockplus.org/"
+license=('GPL3')
+checkdepends=('jq')
+groups=('firefox-addons')
+# https://addons.mozilla.org/en-US/firefox/addon/adblock-plus/versions/
+# wget -qO- https://addons.mozilla.org/en-US/firefox/addon/adblock-plus/versions/ | grep -oP '/\d+/adblock_plus-\S+.xpi'
+source=("https://addons.mozilla.org/firefox/downloads/file/${_file}/adblock-plus-${pkgver}.xpi")
+noextract=("adblock-plus-$pkgver.xpi")
+sha256sums=('a7b729b1d37c1636d8bdf2f3b04fc9a1b2beb08f4e4dba45a2f5ba71f6873e9a')
+
+check() {
+  bsdtar xf adblock-plus-$pkgver.xpi manifest.json
+  jq '.version' manifest.json | grep -E '^"'$pkgver'"$'
+}
+
+package() {
+  depends=("firefox")
+
+  _extension_id="{d10d0bf8-f5b5-c8b4-a8b2-2b9879e08c5d}"
+  _extension_dest="${pkgdir}/usr/lib/firefox/browser/extensions/${_extension_id}"
+  install -Dm644 "${srcdir}"/adblock-plus-${pkgver}.xpi "${_extension_dest}.xpi"
+}

@@ -1,0 +1,48 @@
+# Maintainer: Tim Meusel <tim@bastelfreak.de>
+
+_gemname='toml'
+pkgname="ruby-${_gemname}"
+pkgver=0.3.0
+pkgrel=1
+pkgdesc='Parser construction library with great error reporting in Ruby'
+arch=('any')
+url="https://github.com/jm/${_gemname}"
+license=('MIT')
+makedepends=('ruby-rake' 'ruby-rdoc' 'ruby-bundler')
+checkdepends=('ruby-multi_json' 'ruby-minitest')
+depends=('ruby' 'ruby-parslet')
+source=("${url}/archive/v${pkgver}/v${pkgname}-${pkgver}.tar.gz" 'disable_simplecov.patch' 'toml.gemspec.patch')
+options=("!emptydirs")
+sha512sums=('5b09fdb1ca54ea06637e5aaf76b5232dcc39318c048090b3bc8bae659b39e386057ab3758fb647b65c752af7996295902517962cf5bec765fe74d70bd6ffbc7b'
+            'c363263059cad44c3faa10553f1d8760c6f3cc072efa1f1cbdcf0a715da4173e9fac98dabdf72144d796c2ebc1496554438096018a1e41c088f8e513e0d8efdb'
+            '1e2fb6c1758fc8e4c76193896d838380648e123e851640872198ef3192a9bcf5e2e0044a3ba55091475380e3339f32d9a80a199072687cc573d8a5ba1c13ffbe')
+
+prepare() {
+  cd "${_gemname}-${pkgver}"
+  sed --in-place '/simplecov/d' Gemfile
+  patch --forward --verbose --strip=1 --input='../disable_simplecov.patch'
+  patch --forward --verbose --strip=1 --input='../toml.gemspec.patch'
+}
+
+build() {
+  cd "${_gemname}-${pkgver}"
+  gem build "${_gemname}.gemspec"
+}
+
+check() {
+  cd "${_gemname}-${pkgver}"
+  rake test
+}
+
+package() {
+  cd "${_gemname}-${pkgver}"
+  local _gemdir="$(gem env gemdir)"
+  gem install --verbose --ignore-dependencies --no-user-install --install-dir "${pkgdir}/${_gemdir}" --bindir "${pkgdir}/usr/bin" "${_gemname}-${pkgver}.gem"
+
+  install -Dm 644 README.md CHANGELOG.md -t "${pkgdir}/usr/share/doc/${pkgname}"
+  install -Dm 644 LICENSE -t "${pkgdir}/usr/share/licenses/${pkgname}/"
+
+  rm -rf "${pkgdir}/${_gemdir}/cache"
+}
+
+# vim: ts=2 sw=2 et:

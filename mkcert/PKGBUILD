@@ -1,0 +1,36 @@
+# Maintainer : Christian Rebischke <chris.rebischke@archlinux.org>
+# Contributor: Simon Legner <Simon.Legner@gmail.com>
+
+pkgname=mkcert
+_package="github.com/FiloSottile/${pkgname}"
+pkgver=1.4.4
+pkgrel=1
+pkgdesc="Simple tool for making locally-trusted development certificates"
+arch=('loong64' 'x86_64')
+url="https://github.com/FiloSottile/mkcert"
+license=('BSD')
+makedepends=('go' 'git')
+depends=('glibc')
+source=("${pkgname}-${pkgver}.tar.gz::https://github.com/FiloSottile/${pkgname}/archive/v${pkgver}.tar.gz")
+sha512sums=('480672618df409f153535f42ed4777447635b2ac78e38d9cc62aa9baa47b074aa01fa94ade4666f9ad31bf870caec53e5f0de69791c5e094a911d59f82382b05')
+
+build() {
+  cd "${pkgname}-${pkgver}"
+  export CGO_CPPFLAGS="${CPPFLAGS}"
+  export CGO_CFLAGS="${CFLAGS}"
+  export CGO_CXXFLAGS="${CXXFLAGS}"
+  export CGO_LDFLAGS="${LDFLAGS}"
+  export GOFLAGS="-buildmode=pie -trimpath -mod=readonly -modcacherw -ldflags=-linkmode=external"
+  go build -v
+}
+
+check() {
+  cd "${pkgname}-${pkgver}"
+  go test -v ./...
+}
+
+package() {
+  cd "${pkgname}-${pkgver}"
+  install -Dm755 "${pkgname}" "${pkgdir}/usr/bin/${pkgname}"
+  install -Dm644 LICENSE "${pkgdir}/usr/share/licenses/${pkgname}/LICENSE"
+}

@@ -1,0 +1,30 @@
+# Maintainer: Filipe Laíns (FFY00) <lains@archlinux.org>
+
+pkgname=adrdox
+pkgver=2.5.3
+pkgrel=3
+pkgdesc='Documentation generator for D'
+arch=('loong64' 'x86_64')
+url='https://github.com/adamdruppe/adrdox'
+license=('Boost')
+depends=('liblphobos' 'postgresql-libs')
+makedepends=('ldc')
+source=("$pkgname-$pkgver.tar.gz::$url/archive/v$pkgver.tar.gz")
+sha512sums=('8d919cf43fe87be26ee1127925673f9d1e565b1521c5e1b7bf7b79cde3cfd8a520344c02d882e7214934aee0642eb1a56961e3854240d32fee6c619439e1aafd')
+
+prepare() {
+    cd $pkgname-$pkgver
+    sed -i "s/-g/-g -L=\"$LDFLAGS\"/g" Makefile
+}
+
+build() {
+    cd $pkgname-$pkgver
+
+    make ldc
+}
+
+package() {
+    cd $pkgname-$pkgver
+
+    install -Dm 755 $pkgname.main "$pkgdir"/usr/bin/$pkgname
+}

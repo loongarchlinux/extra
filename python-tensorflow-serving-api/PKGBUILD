@@ -1,0 +1,39 @@
+# Maintainer: Sven-Hendrik Haase <svenstaro@archlinux.org>
+# Contributor: getzze <getzze at gmail dot com>
+pkgbase=python-tensorflow-serving-api
+pkgname=("${pkgbase}" "${pkgbase}"-gpu)
+_pkgname=tensorflow_serving_api
+pkgver=2.11.1
+pkgrel=1
+pkgdesc="Serving system for machine learning models, designed for production environments"
+arch=(any)
+url="https://www.tensorflow.org/serving/"
+license=('Apache')
+depends=('python' 'python-grpcio' 'python-tensorflow' 'python-protobuf')
+makedepends=('bazel' 'git' 'python-build' 'python-installer' 'python-wheel')
+source=("$pkgname-$pkgver.tar.gz::https://github.com/tensorflow/serving/archive/${pkgver}.tar.gz")
+b2sums=('de26c4a49f59a9136225a8311308090fcb146bc1f116e52a7653a8e2079205b7f4b30112dd348e922501fa713a94060918e66e6dbc0d9b08a4491e67c8be5f30')
+
+build() {
+  cd serving-*
+  bazel build -c opt tensorflow_serving/tools/pip_package:build_pip_package
+  sed -i "s|bazel-genfiles/|bazel-out/k8-opt/bin/|g" tensorflow_serving/tools/pip_package/build_pip_package.sh
+  mkdir "${srcdir}/dist"
+  bazel-bin/tensorflow_serving/tools/pip_package/build_pip_package "${srcdir}/dist"
+  ls -lah "${srcdir}/dist"
+}
+
+package_python-tensorflow-serving-api() {
+  cd serving-*
+  python -m installer --destdir="${pkgdir}" "${srcdir}/dist/${_pkgname}"-*.whl
+  install -Dm644 LICENSE "${pkgdir}"/usr/share/licenses/"${pkgname}"/LICENSE
+}
+
+package_python-tensorflow-serving-api-gpu() {
+  pkgdesc+=" (with GPU support)"
+  provides=(python-tensorflow-serving-api)
+  conflicts=(python-tensorflow-serving-api)
+  cd serving-*
+  python -m installer --destdir="${pkgdir}" "${srcdir}/dist/${_pkgname}"_gpu-*.whl
+  install -Dm644 LICENSE "${pkgdir}"/usr/share/licenses/"${pkgname}"/LICENSE
+}

@@ -1,0 +1,50 @@
+# Maintainer: Bruno Pagani <archange@archlinux.org>
+
+pkgbase=ktikz
+pkgname=(ktikz qtikz)
+pkgver=0.13.2
+pkgrel=1
+pkgdesc="Small application helping you to create TikZ diagrams (from the LaTeX pgf package)"
+arch=(loong64 x86_64)
+url="https://github.com/fhackenberger/ktikz"
+license=(GPL)
+depends=(poppler-qt5)
+makedepends=(cmake extra-cmake-modules qt5-base qt5-tools
+             kdoctools kxmlgui ktexteditor kparts kiconthemes
+             poppler poppler-qt5)
+source=(${url}/archive/${pkgver}/${pkgbase}-${pkgver}.tar.gz)
+sha256sums=('1b7f5b7a8daacea68b5a93c1e5a946c9ba9f776b8708f11ca047e591a446f300')
+
+prepare() {
+    mkdir buildqt
+}
+
+build() {
+    # Build ktikz
+    cmake -B build -S ${pkgbase}-${pkgver} \
+        -DCMAKE_INSTALL_PREFIX=/usr \
+        -DCMAKE_BUILD_TYPE=None
+    make -C build
+    # Build qtikz
+    cd buildqt
+    qmake ../${pkgbase}-${pkgver}/qtikz.pro
+    make
+}
+
+package_ktikz() {
+    pkgdesc+=" – KDE version"
+    depends+=(kparts ktexteditor)
+    make -C build DESTDIR="${pkgdir}" install
+}
+
+package_qtikz() {
+    pkgdesc+=" – Qt version"
+    make -C buildqt INSTALL_ROOT="${pkgdir}" install
+    # Fix icons path
+    sed -i 's:Icon=/usr/share/qtikz/qtikz-128.png:Icon=qtikz:' "${pkgdir}"/usr/share/applications/qtikz.desktop
+    rm "${pkgdir}"/usr/share/qtikz/qtikz-128.png
+    cd ${pkgbase}-${pkgver}/app/icons
+    install -Dm644 qtikz.svg "${pkgdir}"/usr/share/icons/hicolor/scalable/apps/qtikz.svg
+    install -Dm644 qtikz-22.png "${pkgdir}"/usr/share/icons/hicolor/22x22/apps/qtikz.png
+    install -Dm644 qtikz-128.png "${pkgdir}"/usr/share/icons/hicolor/128x128/apps/qtikz.png
+}

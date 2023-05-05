@@ -1,0 +1,38 @@
+# Maintainer: Alexander F. Rødseth <xyproto@archlinux.org>
+# Contributor: Lukas Fleischer <lfleischer@archlinux.org>
+# Contributor: Allan McRae <allan@archlinux.org>
+# Contributor: bekks <eduard.warkentin@gmail.com>
+# Contributor: Daniel J Griffiths <ghost1227@archlinux.us>
+
+pkgname=upx
+pkgver=4.0.2
+pkgrel=1
+pkgdesc='Extendable, high-performance executable packer for several executable formats'
+arch=(loong64 x86_64)
+url='https://github.com/upx/upx'
+license=(custom GPL2)
+makedepends=(cmake git perl setconf)
+source=("git+$url#commit=d1b59f65df7b980fd91c6590126c8d3c05a78e25") # tag: v4.0.2
+b2sums=(SKIP)
+
+prepare() {
+  cd $pkgname
+  git submodule update --init --recursive
+  # upx does not believes that this is a release version if the git revision is set
+  setconf src/main.cpp 'bool warn' 'false;'
+}
+
+build() {
+  make -C $pkgname \
+    CHECK_WHITESPACE=/bin/true \
+    CXXFLAGS_WERROR="" \
+    UPX_LZMA_VERSION=0x465 \
+    UPX_LZMADIR="$srcdir"
+}
+
+package() {
+  cd $pkgname
+  install -Dm755 build/release/upx "$pkgdir/usr/bin/upx"
+  install -Dm644 doc/upx.1 "$pkgdir/usr/share/man/man1/upx.1"
+  install -Dm644 LICENSE "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
+}

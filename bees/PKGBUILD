@@ -1,0 +1,28 @@
+# Maintainer: Sven-Hendrik Haase <svenstaro@archlinux.org>
+# Contributor: Gavin Yancey <gyancey@hmc.edu>
+# Contributor: Timofey Titovets <nefelim4ag@gmail.com>
+
+pkgname=bees
+pkgver=0.9.3
+pkgrel=1
+pkgdesc="Best-Effort Extent-Same, a btrfs deduplicator daemon"
+arch=('loong64' 'x86_64')
+url="https://github.com/Zygo/bees"
+license=('GPL3')
+depends=('util-linux-libs' 'bash')
+makedepends=('btrfs-progs' 'systemd')
+source=("${pkgname}-${pkgver}.tar.gz"::"https://github.com/Zygo/bees/archive/v${pkgver}.tar.gz")
+sha256sums=('83a65f5a1ac21dc33bd6864cf8d217cbb90745fbd5d4c81d2a8416895501f99e')
+
+build() {
+  cd "${srcdir}/${pkgname}-${pkgver}"
+  make BEES_VERSION="${pkgver}"
+}
+
+package() {
+  cd "${srcdir}/${pkgname}-${pkgver}"
+
+  make install DESTDIR="${pkgdir}" BEES_VERSION="${pkgver}"
+
+  mv "${pkgdir}/usr/sbin" "${pkgdir}/usr/bin"
+}

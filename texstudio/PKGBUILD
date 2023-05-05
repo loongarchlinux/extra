@@ -1,0 +1,48 @@
+# Maintainer: Sven-Hendrik Haase <svenstaro@archlinux.org>
+# Contributor: Clément DEMOULINS <clement@archivel.fr>
+pkgname=texstudio
+pkgver=4.5.2
+pkgrel=1
+pkgdesc="Integrated writing environment for creating LaTeX documents"
+arch=('loong64' 'x86_64')
+url="http://texstudio.sourceforge.net/"
+license=('GPL')
+depends=('poppler-qt6' 'qt6-svg' 'libxkbcommon-x11' 'hicolor-icon-theme' 'hunspell' 'quazip-qt6' 'desktop-file-utils'
+         'qt6-declarative' 'qt6-5compat')
+makedepends=('qt6-tools' 'mercurial' 'imagemagick' 'librsvg' 'ninja' 'cmake')
+optdepends=('evince: pdf reader'
+            'okular: alternate pdf reader')
+replaces=('texmakerx')
+source=("$pkgname-$pkgver.tar.gz::https://github.com/texstudio-org/texstudio/archive/${pkgver}.tar.gz"
+        fs54269.patch
+        fs72345.patch)
+sha512sums=('7fb5a69bdcef4cf41d0004f07a50686bb4064ef48d1d9d1b12d57c936b1ad9469b772eefb2437c267c31d1bb8e091d020077e8477d2aa26adbf88d8a80e24c5b'
+            '247e85f668b06c8a2def4e7456f0ddc8d35c7990484c1c037f7cf43fdee91419b5df66e968ef1e0c637fe685722bbad9171bdd79fad7a10912ae329aff088b68'
+            '6975eebd43b32fb7aa04f973562e66f6a83df0fb6a0b4d8221e124c9cc6959df11ec517e4c862921619c8b1c55800257017e26001c03186b84c567fc19c98726')
+
+prepare() {
+    cd texstudio-${pkgver}/src
+    patch -Np1 -i "${srcdir}"/fs54269.patch
+    patch -Np1 -i "${srcdir}"/fs72345.patch
+}
+
+build() {
+    cmake -B build -S texstudio-${pkgver} \
+        -GNinja \
+        -DCMAKE_BUILD_TYPE=None \
+        -DCMAKE_INSTALL_PREFIX=/usr \
+        -Wno-dev
+
+    ninja -C build
+}
+
+package() {
+    DESTDIR="${pkgdir}" ninja -C build install
+
+    for res in $(/bin/ls /usr/share/icons/hicolor | grep '[0-9]\+x[0-9]\+'); do
+        mkdir -p "${pkgdir}"/usr/share/icons/hicolor/${res}/apps
+        convert +set date:create +set date:modify -background none -density 1200 -resize ${res} \
+            "${pkgdir}"/usr/share/icons/hicolor/scalable/apps/texstudio.svg \
+            "${pkgdir}"/usr/share/icons/hicolor/${res}/apps/texstudio.png
+    done
+}

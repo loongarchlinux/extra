@@ -1,0 +1,48 @@
+# Maintainer: Felix Yan <felixonmars@archlinux.org>
+# Contributor: Daichi Shinozaki <dsdseg@gmail.com>
+
+pkgname=gdnsd
+pkgver=3.8.0
+pkgrel=1
+pkgdesc="an Authoritative-only DNS server which does geographic balancing, redirection, weighting, and service-state-conscious failover at the DNS layer"
+arch=('loong64' 'x86_64')
+url="https://gdnsd.org/"
+license=('GPL3')
+depends=('libev' 'libmaxminddb' 'libsodium' 'libunwind' 'liburcu')
+makedepends=('ragel')
+checkdepends=('perl-socket6' 'perl-io-socket-inet6' 'perl-http-daemon' 'perl-libwww' 'perl-net-dns')
+source=("https://github.com/$pkgname/$pkgname/releases/download/v$pkgver/$pkgname-$pkgver.tar.xz"
+        gdnsd.sysusers)
+sha512sums=('165c5576b1142a873dcd54b42f1b58a3ecd1958b274eb5e3c09fbd918b5851f554213605b062dea966cc7502d6e91ec79e32c121aba23ea4e560db6b488106af'
+            '8f39c0bed725d298314675b97610d37fc4dee31600c7f096deb38c63dba96e1b0c12239855154ea2c34f0ac3e8f5b7f1a86d9652210859982ab2339949b66e05')
+
+prepare() {
+    cd "$pkgname-$pkgver"
+    autoreconf -vif
+}
+
+build() {
+    cd "$pkgname-$pkgver"
+    ./configure \
+       --prefix=/usr \
+      --sbindir=/usr/bin \
+      --localstatedir=/ \
+      --libexecdir=/usr/lib \
+      --sysconfdir=/etc \
+      --with-systemdsystemunitdir=/usr/lib/systemd/system
+      
+    make
+}
+
+check() {
+    cd "$pkgname-$pkgver"
+    make -k check
+}
+
+package() {
+    cd "$pkgname-$pkgver"
+    make DESTDIR="$pkgdir/" install
+    rm -rf "$pkgdir"/{lib,run}
+
+    install -Dm644 ../gdnsd.sysusers "$pkgdir/usr/lib/sysusers.d/gdnsd.conf"
+}

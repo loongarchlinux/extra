@@ -1,0 +1,46 @@
+# Maintainer: Alexander F. Rødseth <xyproto@archlinux.org>
+# Contributor: Daichi Shinozaki <dsdseg@gmail.com>
+# Contributor: Dwight Schauer <dschauer@gmail.com>
+# Contributor: Stefan Husmann <stefan-husmann@t-online.de>
+# Contributor: Christoph Zeiler <archNOSPAM_at_moonblade.dot.org>
+# Contributor: Michael 'manveru' Fellinger <m.fellinger@gmail.com>
+# Contributor: Caleb McCombs <erdrick016+aur@gmail.com>
+# Contributor: Christian Hesse <arch@eworm.de>
+
+pkgname=neko
+pkgver=2.3.0
+pkgrel=7
+pkgdesc='High-level dynamically typed programming language'
+url='https://nekovm.org/'
+license=(LGPL)
+arch=(loong64 x86_64)
+depends=(gc gtk3 mariadb-libs mbedtls sqlite)
+makedepends=(apache apr cmake git mbedtls ninja)
+optdepends=('apache: for extending Apache with mod_neko')
+options=(!strip)
+source=(2023-04-10.patch
+        "git+https://github.com/HaxeFoundation/neko#commit=ff67a696a718cba0a6bc0ec583e355272b4a5923") # tag: v2-3-0
+b2sums=('83a08288938a294dbcd2e6c91e7912989332807375173a5f6c11ec818e3e8bad59e0f4826a6743a6a3802b4faa0c85837424a20a314c7cb9a596367283aaf564'
+        'SKIP')
+
+prepare() {
+  cd $pkgname
+  sed -i '/xlocale.h/d' libs/std/sys.c
+  patch -p1 -i ../2023-04-10.patch
+}
+
+build() {
+  cmake \
+    -B build \
+    -D CMAKE_INSTALL_PREFIX=/usr \
+    -D RUN_LDCONFIG=OFF \
+    -G Ninja \
+    -S $pkgname
+  ninja -C build
+}
+
+package() {
+  DESTDIR="$pkgdir" ninja -C build install
+}
+
+# getver: nekovm.org/download

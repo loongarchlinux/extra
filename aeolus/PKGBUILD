@@ -1,0 +1,75 @@
+# Maintainer: David Runge <dvzrv@archlinux.org>
+# Contributor: speps <speps at aur dot archlinux dot org>
+# Contributor: Tom K <tomk@runbox.com>
+# Contributor: Shinlun Hsieh <yngwiexx@yahoo.com.tw>
+# Contributor: Christoph Zeiler <arch at moonblade dot org>
+# Contributor: Philipp Überbacher <murks at lavabit dot com>
+
+_stopver=0.4.0
+pkgname=aeolus
+pkgver=0.10.4
+pkgrel=2
+pkgdesc="Synthesised pipe organ emulator"
+arch=(loong64 x86_64)
+url="https://kokkinizita.linuxaudio.org/linuxaudio/aeolus/"
+license=(GPL3)
+groups=(pro-audio)
+depends=(
+  gcc-libs
+  glibc
+  libx11
+)
+makedepends=(
+  alsa-lib
+  clthreads
+  clxclient
+  jack
+  readline
+  zita-alsa-pcmi
+)
+source=(
+  https://kokkinizita.linuxaudio.org/linuxaudio/downloads/$pkgname-$pkgver.tar.bz2
+  https://kokkinizita.linuxaudio.org/linuxaudio/downloads/stops-$_stopver.tar.bz2
+  $pkgname.conf
+  $pkgname-0.10.1-makefile.patch
+)
+sha512sums=('4ef84ce7ca28c109ebc1327d3ecd18b1757617eca87313f4ed03a63a65c874de76bebf8dca780587a64e92dc881706c7fe888147475a30134648f02b570bad5a'
+            'b465d8bcb89f60727d022a0c88ece24e37e7a3f8e19723f635adbb26e48f0eda042ae956a70cd7ece22f30e583331ff8d0b33eb8b2e61bf180360af4af562a67'
+            'b04689673aec928e2594a86b595a6f6d5d70408467c99379f6282f98dd9fbc1cab42b196927193a708e26229e665a121a22edf42e8ab49bb24d68d45bde3181c'
+            '58052400e26923b0244597a4139f129c92288468cfb9c9fc3d0c78e4d4c82f24534cca1f84c1c12b2c75ea66b79833bf204f6a017d9166f377f10d5f1d077313')
+b2sums=('7a0861cacb1c8cb4c02f081883c0f61de3cfbea1da8716dba394b63cac325795d51cdf935c3f6cc242ed68d0ccc474d7c424eaf93d7084fe8e8af20fe4b16355'
+        '952568f4d5981dabc210bc3cdfd40dd8947fd6c0fb8959ff030b6dc7b2a9c6de68b28b6a3239a7c4233b1faa782a689007a723afbf1fd8cc236a8421561c3bcc'
+        '9e78a3e01bdd3a6ca0db65f37b0d17c39007752526079eac57607e7cd314fca41255c536e5a1dfb5233f81064f9e65f641c04613809749b0e7a62081c6f8a462'
+        '6fafd6f68a2b2cd919c70381a2791d6f61b47c465ae89a18f5b92020e5ecee2a278c6be5dd8c7ae27aba427efbe79fd729a00d156b224ad73c0c423e10e48b04')
+
+prepare() {
+  # strip -march=native
+  # call ldconfig in local context
+  patch -Np1 -d $pkgname-$pkgver -i ../$pkgname-0.10.1-makefile.patch
+}
+
+build() {
+  make PREFIX=/usr SUFFIX='' -C $pkgname-$pkgver/source
+}
+
+package(){
+  depends+=(
+    alsa-lib libasound.so
+    clthreads libclthreads.so
+    clxclient libclxclient.so
+    jack libjack.so
+    readline libreadline.so
+    zita-alsa-pcmi libzita-alsa-pcmi.so
+  )
+
+  make DESTDIR="$pkgdir" PREFIX=/usr SUFFIX='' install -C $pkgname-$pkgver/source
+  # docs
+  install -vDm 644 $pkgname-$pkgver/{AUTHORS,README} -t "$pkgdir/usr/share/doc/$pkgname/"
+  # system config file
+  install -vDm 644 $pkgname.conf -t "$pkgdir/etc/"
+  # stops
+  cd stops-$_stopver
+  find . -name definition -exec install -vDm 644 {} "$pkgdir/usr/share/$pkgname/stops/"{} \;
+  find . -name presets -exec install -vDm 644 {} "$pkgdir/usr/share/$pkgname/stops/"{} \;
+  find . -name '*.ae0' -exec install -vDm 644 {} -t "$pkgdir/usr/share/$pkgname/stops/" \;
+}

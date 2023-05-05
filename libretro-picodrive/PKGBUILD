@@ -1,0 +1,54 @@
+# Maintainer: Maxime Gauduin <alucryd@archlinux.org>
+
+pkgname=libretro-picodrive
+pkgver=2293
+pkgrel=1
+pkgdesc='Sega MS/MD/CD/32X core'
+arch=(loong64 x86_64)
+url=https://github.com/libretro/picodrive
+license=(BSD)
+groups=(libretro)
+depends=(
+  glibc
+  libretro-core-info
+)
+makedepends=(git)
+_commit=ff023d436f794f5e9d3cf53865af96b5eb90ea9d
+source=(
+  libretro-picodrive::git+https://github.com/libretro/picodrive.git#commit=${_commit}
+  git+https://github.com/mackron/dr_libs.git
+  git+https://github.com/digital-sound-antiques/emu2413.git
+  git+https://github.com/rtissera/libchdr.git
+)
+b2sums=(
+  SKIP
+  SKIP
+  SKIP
+  SKIP
+)
+
+prepare() {
+  cd libretro-picodrive
+  for submodule in pico/{cd/libchdr,sound/emu2413} platform/common/dr_libs; do
+    git submodule init ${submodule}
+    git config submodule.${submodule}.url ../${submodule##*/}
+    git -c protocol.file.allow=always submodule update ${submodule}
+  done
+}
+
+pkgver() {
+  cd libretro-picodrive
+  git rev-list --count HEAD
+}
+
+build() {
+  cd libretro-picodrive
+  make -f Makefile.libretro
+}
+
+package() {
+  install -Dm 644 libretro-picodrive/picodrive_libretro.so -t "${pkgdir}"/usr/lib/libretro/
+  install -Dm 644 libretro-picodrive/COPYING -t "${pkgdir}"/usr/share/licenses/libretro-picodrive/
+}
+
+# vim: ts=2 sw=2 et:

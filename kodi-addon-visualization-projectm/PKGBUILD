@@ -1,0 +1,35 @@
+# Maintainer: BlackEagle <ike.devolder@gmail.com>>
+
+pkgname=kodi-addon-visualization-projectm
+epoch=1
+pkgver=20.2.0
+_codename=Nexus
+pkgrel=5
+pkgdesc="ProjectM visualizer for Kodi"
+arch=('loong64' 'x86_64')
+url='https://github.com/xbmc/visualization.projectm'
+license=('GPL')
+groups=('kodi-addons' 'kodi-addons-visualization')
+makedepends=('cmake' 'projectm' 'kodi-dev')
+options=(!lto)
+source=("$pkgname-$pkgver.tar.gz::https://github.com/xbmc/visualization.projectm/archive/$pkgver-$_codename.tar.gz"
+)
+sha512sums=('191b611bce687ab14d9539f10671ce136bf301cf76ae745b9d418899ab43e778c0b700699e9ad50da9a13db6e912cde034637ca4a4158835926d67f785064a9b')
+
+build() {
+    cd "visualization.projectm-$pkgver-$_codename"
+    cmake \
+        -DCMAKE_INSTALL_PREFIX=/usr \
+        -DCMAKE_BUILD_TYPE=Release \
+        -DBUILD_SHARED_LIBS=1 \
+        -DUSE_LTO=1 \
+        .
+    make
+}
+
+package() {
+    depends=('kodi' 'projectm')
+    cd "visualization.projectm-$pkgver-$_codename"
+    make DESTDIR="$pkgdir/" install
+}
+

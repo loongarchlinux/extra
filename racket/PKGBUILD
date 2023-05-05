@@ -1,0 +1,68 @@
+# Maintainer: George Rawlinson <grawlinson@archlinux.org>
+# Contributor: Kyle Keen <keenerd@gmail.com>
+# Contributor: Eric Bélanger <eric@archlinux.org>
+
+pkgbase=racket
+pkgname=('racket' 'racket-minimal')
+pkgver=8.8
+pkgrel=1
+pkgdesc='A full-spectrum language with DrRacket IDE'
+arch=('loong64' 'x86_64')
+url='https://racket-lang.org/'
+license=('Apache' 'GPL3' 'LGPL3' 'custom')
+depends=('gtk3')
+makedepends=('gsfonts' 'sqlite')
+options=('!strip' '!emptydirs')
+conflicts=('racket-docs')
+replaces=('racket-docs')
+source=("https://download.racket-lang.org/installers/${pkgver}/${pkgname}-${pkgver}-src.tgz")
+sha512sums=('c7a01a1346a7d3cda12f2e0e4ade7d8ea5aa470032dbcaff99e2252bc9677de32a8ee604039a2e71acfa960114382ae3beeabb8b837d983fa07de24a6cc5f450')
+b2sums=('2a1360ba49ec79b9f55a9793f347b14cd1680b751f1ea51e6e87e890a488153f933d2fc2934df60c5297ea0d97dfa3df86aa923f9b3add8e84050d15bd237e66')
+
+prepare() {
+  cd "$pkgbase-$pkgver"
+  echo "Icon=drracket" >> share/pkgs/drracket/drracket/drracket.desktop
+}
+
+build() {
+  cd "$pkgbase-$pkgver/src"
+  [ "$CARCH" == "x86_64" ] && export CFLAGS+=" -fPIC"
+  ./configure --prefix=/usr --sysconfdir=/etc --enable-shared
+  make
+}
+
+package_racket() {
+  cd "$pkgbase-$pkgver/src"
+  make DESTDIR="$pkgdir" install
+
+  install -Dm644 -t "$pkgdir/usr/share/licenses/$pkgname/" LICENSE*.txt
+  install -Dm644 ../share/pkgs/drracket/drracket/drracket.desktop "$pkgdir/usr/share/applications/drracket.desktop"
+  install -d "$pkgdir"/usr/share/icons/hicolor/scalable/apps
+  ln -s /usr/share/racket/pkgs/icons/racket-logo.svg "$pkgdir/usr/share/icons/hicolor/scalable/apps/drracket.svg"
+}
+
+package_racket-minimal() {
+  pkgdesc='Minimal Racket installation, without DrRacket/docs'
+  depends=('libffi')
+  conflicts=('racket')
+  provides=('racket')
+  replaces=()
+
+  # The -minimal tarball uses the SAME extract path.
+  # 99% identical sources anyway, manually apply the difference.
+  # Thankfully these builds happen in the given order
+  # so we can save some time and reuse the previous build.
+  cd "$pkgbase-$pkgver"
+  echo '((root "pkgs/racket-lib"))' > share/links.rktd
+  _libhash=$(grep -oP '\("racket-lib".*?#f\)\)' share/pkgs/pkgs.rktd)
+  echo "#hash($_libhash)" > share/pkgs/pkgs.rktd
+  cd share/pkgs
+  find . -not -name '.' -not -name '*pkgs.rktd' -not -regex '.*/racket-lib.*' -delete
+  cd ../../src
+
+  make DESTDIR="${pkgdir}" install
+
+  find "$pkgdir/usr/share/doc/" -delete
+
+  install -Dm644 -t "$pkgdir/usr/share/licenses/$pkgname/" LICENSE*.txt
+}

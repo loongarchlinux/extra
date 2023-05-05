@@ -1,0 +1,69 @@
+# Maintainer: kpcyrd <kpcyrd[at]archlinux[dot]org>
+
+pkgname=psalm
+pkgver=5.9.0
+pkgrel=1
+_commit=8b9ad1eb9e8b7d3101f949291da2b9f7767cd163
+pkgdesc='A static analysis tool for finding errors in PHP applications'
+url="https://psalm.dev/"
+arch=('any')
+license=('MIT')
+depends=('php')
+makedepends=('composer' 'git')
+#source=("${pkgname}-${pkgver}.tar.gz::https://github.com/vimeo/psalm/archive/refs/tags/${pkgver}.tar.gz"
+source=("git+https://github.com/vimeo/psalm.git#commit=${_commit}"
+        "composer.lock")
+b2sums=('SKIP'
+        'a98a1568ac167f220ca55790301c3f2e6ee80144fe43223fd7da13c26f2fefcbfd51bb803071f9e1cb38455c9676f29a52156b992f06bcd68d45259f29c1ae65')
+
+prepare() {
+  cd ${pkgname}
+  cp ../composer.lock .
+  composer install
+  composer bin box install
+  php bin/improve_class_alias.php
+  php -r 'require "vendor/autoload.php"; Psalm\Internal\VersionUtils::dump();'
+}
+
+updlockfiles() {
+  cd ${pkgname}
+  rm -f composer.lock
+  composer update --no-install
+  cp composer.lock "${outdir}/"
+}
+
+build() {
+  cd ${pkgname}
+  vendor/bin/box compile
+}
+
+check() {
+  rm -rf testing/
+  mkdir -p testing/src
+  cd testing/
+
+  composer init -n --name test/test
+  composer install
+  ../${pkgname}/build/psalm.phar --init
+  ../${pkgname}/build/psalm.phar
+
+  cat > src/index.php <<EOF
+<?php echo(phpversion());
+EOF
+  ../${pkgname}/build/psalm.phar
+
+  cat > src/index.php <<EOF
+<?php echo(this_is_invalid_to_provoke_an_error());
+EOF
+  if ../${pkgname}/build/psalm.phar; then
+    echo 'did not detect invalid php as invalid'
+    exit 1
+  fi
+}
+
+package() {
+  cd ${pkgname}
+  install -Dm 755 ./build/psalm.phar "${pkgdir}/usr/bin/psalm"
+}
+
+# vim: ts=2 sw=2 et:

@@ -1,0 +1,57 @@
+# Maintainer: Felix Yan <felixonmars@archlinux.org>
+
+pkgname=ruby-protocol-hpack
+pkgver=1.4.2
+_commit=031b055eeea20f42facd65e1b57e6d8af93292f3
+pkgrel=2
+pkgdesc='A compresssor and decompressor for HTTP 2.0 HPACK'
+arch=(any)
+url='https://github.com/socketry/protocol-hpack'
+license=(MIT)
+depends=(ruby)
+makedepends=(git ruby-covered ruby-rake ruby-rspec)
+options=(!emptydirs)
+source=(git+https://github.com/socketry/protocol-hpack.git#commit=$_commit)
+sha256sums=('SKIP')
+
+prepare() {
+  cd protocol-hpack
+  sed -r -e 's|~>|>=|g' -i http-hpack.gemspec
+}
+
+build() {
+  local _gemdir="$(gem env gemdir)"
+  cd protocol-hpack
+  rake build
+  gem install \
+    --local \
+    --verbose \
+    --ignore-dependencies \
+    --no-user-install \
+    --install-dir "tmp_install/$_gemdir" \
+    --bindir "tmp_install/usr/bin" \
+    pkg/protocol-hpack-$pkgver.gem
+  find "tmp_install/$_gemdir/gems/" \
+    -type f \
+    \( \
+        -iname "*.o" -o \
+        -iname "*.c" -o \
+        -iname "*.so" -o \
+        -iname "*.time" -o \
+        -iname "gem.build_complete" -o \
+        -iname "Makefile" \
+    \) \
+    -delete
+  rm -r tmp_install/$_gemdir/cache
+}
+
+check() {
+  local _gemdir="$(gem env gemdir)"
+  cd protocol-hpack
+  GEM_HOME="tmp_install/$_gemdir" rake
+}
+
+package() {
+  cd protocol-hpack
+  cp -a tmp_install/* "$pkgdir"/
+}

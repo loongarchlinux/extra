@@ -1,0 +1,48 @@
+# Maintainer: Caleb Maclennan <caleb@alerque.com>
+# Contributor: peeweep <peeweep at 0x0 dot ee>
+
+pkgname=neovide
+pkgver=0.10.4
+pkgrel=1
+pkgdesc='No Nonsense Neovim Client in Rust'
+arch=(loong64 x86_64)
+url="https://github.com/$pkgname/$pkgname"
+license=(MIT)
+depends=(fontconfig
+         freetype2
+         libglvnd
+         neovim
+         sndio)
+makedepends=(cargo
+             cmake
+             gtk3
+             make
+             python
+             sdl2)
+optdepends=('vulkan-intel: vulkan support for intel')
+_archive=("$pkgname-$pkgver")
+source=("$url/archive/$pkgver/$_archive.tar.gz")
+sha256sums=('3c4e1b060d7adde39d2d274582f0ab754af3f19856c3a110d9d92fc7d4b7ccd2')
+
+prepare() {
+	cd "$_archive"
+	sed -i -e '/^incremental/a opt-level = 3' Cargo.toml
+	cargo fetch --locked --target "$CARCH-unknown-linux-gnu"
+}
+
+build() {
+	cd "$_archive"
+	CFLAGS+=' -ffat-lto-objects'
+	cargo build --frozen --release --all-features
+}
+
+package() {
+	cd "$_archive"
+	install -Dm0755 -t "$pkgdir/usr/bin/" "target/release/$pkgname"
+	install -Dm0644 -t "$pkgdir/usr/share/applications/" "assets/$pkgname.desktop"
+	for px in 16 32 48 256; do
+		install -Dm0644 "assets/$pkgname-${px}x${px}.png" \
+			"$pkgdir/usr/share/icons/hicolor/${px}x${px}/apps/$pkgname.png"
+	done
+	install -Dm0644 -t "$pkgdir/usr/share/licenses/$pkgname/" LICENSE
+}

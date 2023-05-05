@@ -1,0 +1,38 @@
+# Maintainer: Orhun Parmaksız <orhun@archlinux.org>
+
+pkgname=jwt-cli
+pkgver=5.0.3
+pkgrel=1
+pkgdesc="A super fast CLI tool to decode and encode JWTs"
+arch=('loong64' 'x86_64')
+url="https://github.com/mike-engel/jwt-cli"
+license=('MIT')
+depends=('gcc-libs')
+makedepends=('cargo')
+source=("$pkgname-$pkgver.tar.gz::$url/archive/$pkgver.tar.gz")
+sha512sums=('670d52a9e48a1f0e7fba3bf5b5aa32185a01c288ae40df3416e507b0737f28150a8c4059ac5aa682bc2b6ac44017fd27c1e8f4f05cf09971372f6ca4ddb7c637')
+options=('!lto')
+
+prepare() {
+  cd "$pkgname-$pkgver"
+  cargo fetch --locked --target "$CARCH-unknown-linux-gnu"
+}
+
+build() {
+  cd "$pkgname-$pkgver"
+  cargo build --release --frozen
+}
+
+check() {
+  cd "$pkgname-$pkgver"
+  cargo test --frozen
+}
+
+package() {
+  cd "$pkgname-$pkgver"
+  install -Dm 755 "target/release/jwt" -t "$pkgdir/usr/bin"
+  install -Dm 644 README.md -t "$pkgdir/usr/share/doc/$pkgname"
+  install -Dm 644 LICENSE.md -t "$pkgdir/usr/share/licenses/$pkgname"
+}
+
+# vim: ts=2 sw=2 et:

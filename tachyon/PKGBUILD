@@ -1,0 +1,46 @@
+# Maintainer: Antonio Rojas <arojas@archlinux.org>
+# Contributor: Rémy Oudompheng <remy@archlinux.org>
+
+pkgname=tachyon
+pkgver=0.99.5
+pkgrel=1
+pkgdesc='Multithreaded ray tracing software'
+arch=(loong64 x86_64)
+url='http://jedi.ks.uiuc.edu/~johns/raytracer/'
+license=(BSD)
+depends=(libjpeg-turbo libpng)
+makedepends=()
+source=(http://jedi.ks.uiuc.edu/~johns/raytracer/files/$pkgver/$pkgname-$pkgver.tar.gz
+        enable-jpeg-png.patch
+        tachyon-system-cflags.patch)
+sha256sums=('09203c102311149f5df5cc367409f96c725742666d19c24db5ba994d5a81a6f5'
+            '10d96a951c38e3a3a3b2854ad5e0da3fd24ee32446f604baae1a6b1ad6e6dad6'
+            '5d81b5487d231f46eaa05eb3c1dfcc84a961b58d71a8c36d6feee0dce713dc6d')
+_target=linux-64-thr
+
+prepare(){
+  cd $pkgname
+# enable JPEG and PNG support
+  patch -p0 -i ../enable-jpeg-png.patch
+# use system build flags
+  patch -p1 -i ../tachyon-system-cflags.patch
+  sed -e 's|${CC} ${CFLAGS}|${CC} ${CFLAGS} -ffat-lto-objects ${LDFLAGS}|g' -i unix/Makefile
+}
+
+build() {
+  cd $pkgname/unix
+  make $_target CC="gcc ${CFLAGS} -ffat-lto-objects ${LDFLAGS}"
+}
+
+package() {
+  cd $pkgname/compile/$_target
+  install -D -m 755 tachyon "$pkgdir"/usr/bin/tachyon
+  install -D -m 644 libtachyon.a "$pkgdir"/usr/lib/libtachyon.a
+
+  cd "$srcdir"/$pkgname/scenes
+  install -d "$pkgdir"/usr/share/tachyon/scenes/imaps
+  install -m 644 README *.dat *.cam *.ac "$pkgdir"/usr/share/tachyon/scenes
+
+  install -d "$pkgdir"/usr/share/licenses/tachyon
+  install "$srcdir"/$pkgname/Copyright "$pkgdir"/usr/share/licenses/tachyon
+}

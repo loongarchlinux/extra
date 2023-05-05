@@ -1,0 +1,31 @@
+# Maintainer: Felix Yan <felixonmars@archlinux.org>
+
+pkgname=danmaq
+pkgdesc="A small client side Qt program to play danmaku on any screen"
+pkgver=0.2.3.2
+pkgrel=1
+arch=("loong64" "x86_64")
+license=('GPL')
+url="https://github.com/tuna/danmaQ"
+depends=('qt5-x11extras')
+makedepends=('cmake' 'qt5-tools')
+source=("$pkgname-$pkgver.tar.gz::https://github.com/tuna/danmaQ/archive/v$pkgver.tar.gz")
+sha512sums=('69f88d26d12c65afba034c17b78993c81278334dc5ff9b0493ab6e316e50cf54cbaaae93e43725e1d04a12a67d238924884449ea52178560b2c53e58a2dd1fe7')
+
+prepare() {
+  mkdir -p build
+  sed -i '/include <X11.extensions.shape.h>/a #undef None' danmaQ-$pkgver/src/DMCanvas.cpp
+}
+
+build() {
+  cd build
+  cmake ../danmaQ-$pkgver \
+    -DCMAKE_INSTALL_PREFIX=/usr \
+    -DCMAKE_BUILD_TYPE=Release
+  make
+}
+
+package() {
+  cd build
+  make DESTDIR="$pkgdir" install
+}

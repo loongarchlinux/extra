@@ -1,0 +1,27 @@
+# Maintainer: Sergej Pupykin <pupykin.s+arch@gmail.com>
+# Maintainer: Charles Mauch <cmauch@gmail.com>
+
+pkgname=perl-graphics-colornames
+pkgver=3.5.0
+pkgrel=3
+pkgdesc="Perl/CPAN Module Graphics::ColorNames : provides RGB values for standard color names"
+arch=('any')
+url="https://search.cpan.org/~rrwo/Graphics-ColorNames/"
+license=("GPL" "PerlArtistic")
+depends=("perl")
+options=('!emptydirs')
+source=("https://cpan.metacpan.org/authors/id/R/RR/RRWO/Graphics-ColorNames-v${pkgver}.tar.gz")
+sha256sums=('b67bf61f4308698fdd7cd492be60b60bea5cc7af9bc797b7a2178151e5159135')
+
+build() {
+  cd Graphics-ColorNames-v${pkgver}
+  PERL_MM_USE_DEFAULT=1 perl Makefile.PL INSTALLDIRS=vendor
+  make
+}
+
+package() {
+  cd Graphics-ColorNames-v${pkgver}
+  make pure_install doc_install DESTDIR="$pkgdir"
+  find "$pkgdir" -name '.packlist' -delete
+  find "$pkgdir" -name '*.pod' -delete
+}

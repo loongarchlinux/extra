@@ -1,0 +1,29 @@
+# Maintainer: Sergej Pupykin <pupykin.s+arch@gmail.com>
+# Contributor: ryooichi <ryooichi+arch AT gmail DOT com>
+# Contributor: Uwe <keksvernichter AT gmail DOT com>
+
+pkgname=perl-mediawiki-api
+pkgver=0.52
+pkgrel=3
+pkgdesc="Perl interface to the MediaWiki API"
+url="https://search.cpan.org/dist/MediaWiki-API/"
+depends=('perl-json-xs' 'perl-json' 'perl-libwww')
+license=('GPL3')
+options=('!emptydirs')
+arch=('any')
+source=(https://search.cpan.org/CPAN/authors/id/E/EX/EXOBUZZ/MediaWiki-API-$pkgver.tar.gz)
+sha256sums=('2f50a9d85ebf6f12bac9e09f52bcfead2cf419802c15191b172724ee2f49d0c2')
+
+build() {
+  cd  "$srcdir"/MediaWiki-API-$pkgver
+  eval `perl -V:archname`
+  PERL_MM_USE_DEFAULT=1 perl Makefile.PL INSTALLDIRS=vendor
+  make
+}
+
+package() {
+  cd  "$srcdir"/MediaWiki-API-$pkgver
+  make DESTDIR="$pkgdir" install
+  find "$pkgdir" -name '.packlist' -delete
+  find "$pkgdir" -name '*.pod' -delete
+}

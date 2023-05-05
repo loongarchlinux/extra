@@ -1,0 +1,55 @@
+# Maintainer: David Runge <dave@sleepmap.de>
+
+pkgbase=ebumeter
+pkgname=(ebumeter ebumeter-docs)
+pkgver=0.5.1
+pkgrel=1
+pkgdesc="Loudness measurement according to EBU-R128"
+arch=(loong64 x86_64)
+url="https://kokkinizita.linuxaudio.org/linuxaudio/ebumeter-doc/quickguide.html"
+license=(GPL3)
+makedepends=(clxclient clthreads gendesk jack libsndfile zita-resampler)
+source=(https://kokkinizita.linuxaudio.org/linuxaudio/downloads/$pkgbase-$pkgver.tar.xz)
+sha512sums=('46a5277d60abeb9fcc94f53730a335fdb5c1f6f6a6aa4a4c9df0f5a34019c16cbb58ae23d4631ff24ad0cc8c514c970105e7301962b3918a82a6d994f520a555')
+b2sums=('46bb822b34003b51fe6e2f16ce78a430b5ce76522e500c35fdf33c8b8da8bcaacea97cf3c1620cc47c1e73ec5a777a79f1ab7530f51e730487cafec13b9294b5')
+
+prepare() {
+  # remove march=native
+  sed -e '/native/d' -i $pkgbase-$pkgver/source/Makefile
+  # XDG desktop file
+  gendesk -n \
+          --pkgname $pkgbase \
+          --pkgdesc "$pkgdesc" \
+          --name $pkgbase \
+          --categories "AudioVideo;Audio"
+}
+
+build() {
+  make PREFIX=/usr -C $pkgbase-$pkgver/source
+}
+
+package_ebumeter() {
+  groups=(pro-audio)
+  depends=(
+    clxclient libclxclient.so
+    clthreads libclthreads.so
+    gcc-libs
+    glibc
+    jack libjack.so
+    zita-resampler libzita-resampler.so
+  )
+  optdepends=(
+    'ebumeter-docs: for documentation'
+    'libsndfile: for ebur128'
+  )
+
+  make PREFIX=/usr DESTDIR="$pkgdir/" install -C $pkgbase-$pkgver/source
+  install -vDm 644 $pkgbase.desktop -t "$pkgdir/usr/share/applications/"
+}
+
+package_ebumeter-docs() {
+  pkgdesc+=" - documentation"
+
+  install -vDm 644 $pkgbase-$pkgver/{AUTHORS,README,doc/*.pdf} -t "$pkgdir/usr/share/doc/$pkgbase/"
+  install -vDm 644 $pkgbase-$pkgver/doc/*.{html,png} -t "$pkgdir/usr/share/doc/$pkgbase/html/"
+}

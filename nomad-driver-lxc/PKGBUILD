@@ -1,0 +1,53 @@
+# Maintainer: George Rawlinson <grawlinson@archlinux.org>
+
+pkgname=nomad-driver-lxc
+pkgver=0.3.0
+pkgrel=3
+pkgdesc='A nomad taskdriver for lxc containers'
+arch=('loong64' 'x86_64')
+url='https://github.com/hashicorp/nomad-driver-lxc'
+license=('MPL2')
+depends=('nomad' 'lxc')
+makedepends=('git' 'go')
+options=('!lto')
+_commit='790464c811025e2aa576b55440601979e2775522'
+source=("$pkgname::git+$url#commit=$_commit")
+b2sums=('SKIP')
+
+pkgver() {
+  cd "$pkgname"
+
+  git describe --tags | sed 's/^v//'
+}
+
+prepare() {
+	cd "$pkgname"
+
+  # create directory for build output
+  mkdir build
+
+  # fix version string
+  sed -i "s/.*PluginVersion.*/\t\tPluginVersion:     \"${pkgver}\",/" lxc/driver.go
+
+  # download dependencies
+  go mod download
+}
+
+build() {
+	cd "$pkgname"
+
+  go build -v \
+    -trimpath \
+    -buildmode=pie \
+    -mod=readonly \
+    -modcacherw \
+    -ldflags "-linkmode external -extldflags \"${LDFLAGS}\"" \
+    -o build \
+    .
+}
+
+package() {
+	cd "$pkgname"
+
+  install -vDm755 -t "$pkgdir/usr/lib/nomad/plugins" "build/$pkgname"
+}

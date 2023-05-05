@@ -1,0 +1,36 @@
+# Maintainer: Justin Kromlinger <hashworks@archlinux.org>
+
+pkgname=opensearch-index-management-plugin
+pkgver=2.6.0.0
+pkgrel=1
+_opensearchver=2.6.0
+_jdkver=11
+pkgdesc="OpenSearch Index Management Plugin"
+arch=('loong64' 'x86_64')
+url="https://opensearch.org/docs/latest/im-plugin"
+license=('Apache')
+depends=("opensearch=${_opensearchver}" "opensearch-notifications-plugin")
+makedepends=("java-environment=${_jdkver}" 'unzip')
+source=(
+  "${pkgname}-${pkgver}.tar.gz::https://github.com/opensearch-project/index-management/archive/${pkgver}.tar.gz"
+)
+sha256sums=('81abf78fc3d6d26fda63427c92427c002157054b2a1939804c06f2e6ab851b35')
+
+build() {
+  cd "index-management-${pkgver}"
+  export JAVA_HOME="/usr/lib/jvm/java-${_jdkver}-openjdk"
+  export PATH="/usr/lib/jvm/java-${_jdkver}-openjdk/bin:$PATH"
+  export GRADLE_OPTS="-Dbuild.snapshot=false -Dopensearch.version=${_opensearchver}"
+  # integTest (Reaper) requires JDK 14
+  ./gradlew assemble \
+    --exclude-task ":integTest" \
+    --exclude-task ":jacocoTestReport"
+}
+
+package() {
+  install -dm755 "${pkgdir}/usr/share/opensearch/plugins/opensearch-index-management"
+  cd "${pkgdir}/usr/share/opensearch/plugins/opensearch-index-management"
+  unzip "${srcdir}/index-management-${pkgver}/build/distributions/opensearch-index-management-${pkgver}.zip"
+
+  install -Dm644 "${srcdir}/index-management-${pkgver}/LICENSE" "${pkgdir}/usr/share/licenses/${pkgname}/LICENSE"
+}

@@ -1,0 +1,24 @@
+# Maintainer: Antonio Rojas <arojas@archlinux.org>
+
+pkgname=libre-graph-api
+pkgver=1.0.4
+pkgrel=1
+pkgdesc='An API for open Cloud Collaboration'
+arch=(loong64 x86_64)
+url='http://owncloud.org/'
+license=(Apache)
+depends=(qt5-base)
+makedepends=(cmake)
+source=(https://github.com/owncloud/$pkgname-cpp-qt-client/archive/v$pkgver/$pkgname-$pkgver.tar.gz)
+sha256sums=('5504024235b8474eb053dad0051d33f3fcfd9aabdbde96f506a77df181fcd84d')
+
+build() {
+  cmake -B build -S $pkgname-cpp-qt-client-$pkgver/client \
+    -DCMAKE_INSTALL_PREFIX=/usr \
+    -DCMAKE_CXX_FLAGS="$CXXFLAGS -ffat-lto-objects"
+  cmake --build build
+}
+
+package() {
+  DESTDIR="$pkgdir" cmake --install build
+}

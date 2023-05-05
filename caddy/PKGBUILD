@@ -1,0 +1,103 @@
+# Maintainer: Levente Polyak <anthraxx[at]archlinux[dot]org>
+# Maintainer: Christian Rebischke <chris.rebischke@archlinux.org>
+# Contributor: Wei Congrui < crvv.mail at gmail dot com >
+# Contributor: Carl George < arch at cgtx dot us >
+# Contributor: Eric Engeström <eric at engestrom dot ch>
+# Contributor: Andreas Linz <klingt.net at gmail dot com>
+# Contributor: Akshay S Dinesh <asdofindia at gmail dot com>
+
+pkgname=caddy
+pkgver=2.6.4
+_gitcommit=v2.6.4
+_distcommit=b1b186cc2722b7ccecb0a44dc82f81bac52470c4
+pkgrel=1
+pkgdesc='Fast web server with automatic HTTPS'
+url='https://caddyserver.com'
+arch=('loong64' 'x86_64')
+license=('Apache')
+depends=('glibc')
+makedepends=('go' 'git')
+backup=('etc/caddy/Caddyfile')
+source=("git+https://github.com/caddyserver/caddy#tag=${_gitcommit}?signed"
+        caddy-dist::"git+https://github.com/caddyserver/dist#commit=${_distcommit}"
+        caddy.service
+        caddy-api.service
+        caddy.tmpfiles
+        caddy.sysusers
+        Caddyfile
+        use-data-dir-for-autosave.patch
+        override-main-module-version.patch)
+sha512sums=('SKIP'
+            'SKIP'
+            '54e5020a000f364677f107b4d23deb6ea09b2ab51c58251365c87832d99045a82e0fc71c74a256cab0bd6a5ea19036fb63f9ab8f64b153c2d898164585d18ebc'
+            'a69f9356d19c282b63e5179c5ddad344ce1586da6cc1c502ae537c14ee847375a4ce2015a140fc4d99a958041b8b51f4749645ffff0bea8ba7e7f9f92fb6e12b'
+            '55ee8d3f8b14f9adddc7a1026addcea4f85b4bae4cd512fd4da2a5e8adaae4b6fd0f486d2e3847f75518f4710a897b4fca84e48ee15700b968bad762125c4742'
+            'c893d88fec89e37da6596030c8dce7103e7e575371e8542a24d2a0741e877358d85219f2d8ade9d6aa0f515efe1156a4badd9fef5f65f553a5b0c72330c4728f'
+            '716da3f4edeb3561243aeaf5c32b01ff7a4ac810b6deba8364fb12a1f71b6a5278c34a97b289bcfdc48784679b942bf780f1f36d416a575791168c94b0d59fe0'
+            '563d6b45e91fc584fb5a27caaa382f59c140cb0a1b28b8d8faced4f7c7cad86d8671eb6ac10056f41518a842c8f606130d7e0c71df2b731d5eb0b4c868ea5d41'
+            '0fedec714604566fb0da995cdfb2dd2cb8f3995bfa1d6c2e9a38ddd1da11634c3e37f2da381f715df4fc9ebd9653c3aa4806de47ae5094ea1fc19b7f5b795a30')
+validpgpkeys=(
+  29D0817A67156E4F25DC24782A349DD577D586A5 # Matthew Holt <mholt@users.noreply.github.com>
+)
+
+pkgver() {
+  cd ${pkgname}
+  git describe --tags --match 'v*' | sed 's/^v//;s/\([^-]*-g\)/r\1/;s/-/./g'
+}
+
+prepare() {
+  cd "${pkgname}"
+  # welcome page
+  cp ../caddy-dist/welcome/index.html .
+  sed 's|/var/www/html|/srv/http|g' -i index.html
+  # do not write in /etc
+  patch -Np1 < "${srcdir}/use-data-dir-for-autosave.patch"
+  # fix version identifier if not built from a module
+  patch -Np1 < "${srcdir}/override-main-module-version.patch"
+  sed 's|"unknown"|"v'"${pkgver}"'"|g' -i caddy.go
+}
+
+build() {
+  cd "${pkgname}/cmd/caddy/"
+  export CGO_LDFLAGS="${LDFLAGS}"
+  export CGO_CPPFLAGS="${CPPFLAGS}"
+  export CGO_CFLAGS="${CFLAGS}"
+  export CGO_CXXFLAGS="${CXXFLAGS}"
+  export GOFLAGS="-buildmode=pie -trimpath -ldflags=-linkmode=external -mod=readonly -modcacherw"
+  go build .
+
+  for i in zsh bash fish; do
+    ./caddy completion $i >caddy.$i
+  done
+}
+
+check() {
+  # Disabled for now, because of failing tests
+  cd "${pkgname}"
+  go test ./...
+  version=$(./cmd/caddy/caddy version)
+  echo "Caddy version: ${version}"
+  if [[ $version != v$pkgver ]]; then
+    exit 1
+  fi
+}
+
+package() {
+  cd "${pkgname}"
+  install -Dm 755 cmd/caddy/caddy -t "${pkgdir}/usr/bin"
+
+  install -Dm 644 "${srcdir}/caddy.service" "${srcdir}/caddy-api.service" -t "${pkgdir}/usr/lib/systemd/system"
+  install -Dm 644 "${srcdir}/caddy.tmpfiles" "${pkgdir}/usr/lib/tmpfiles.d/caddy.conf"
+  install -Dm 644 "${srcdir}/caddy.sysusers" "${pkgdir}/usr/lib/sysusers.d/caddy.conf"
+
+  install -Dm 644 "${srcdir}/Caddyfile" -t "${pkgdir}/etc/caddy"
+  install -d "${pkgdir}/etc/caddy/conf.d"
+
+  install -Dm 644 index.html "${pkgdir}/usr/share/caddy/index.html"
+
+  install -Dm 644 "${srcdir}/caddy/cmd/caddy/caddy.zsh" "${pkgdir}/usr/share/zsh/site-functions/_caddy"
+  install -Dm 644 "${srcdir}/caddy/cmd/caddy/caddy.bash" "${pkgdir}/usr/share/bash-completion/completions/caddy"
+  install -Dm 644 "${srcdir}/caddy/cmd/caddy/caddy.fish" -t "${pkgdir}/usr/share/fish/vendor_completions.d"
+}
+
+# vim: ts=2 sw=2 et:

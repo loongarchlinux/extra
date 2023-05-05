@@ -1,0 +1,40 @@
+# Maintainer: Jonathan Steel <jsteel at archlinux.org>
+# Contributor: Bartłomiej Piotrowski
+# Contributor: Laszlo Papp <djszapi2@gmail.com>
+# Contributor: Stefan Husmann <stefan-husmann@t-online.de>
+
+pkgname=pigz
+pkgver=2.7
+pkgrel=3
+pkgdesc='Parallel implementation of the gzip file compressor'
+arch=('loong64' 'x86_64')
+url='https://www.zlib.net/pigz'
+license=('custom')
+depends=('zlib')
+source=(https://www.zlib.net/$pkgname/$pkgname-$pkgver.tar.gz)
+md5sums=('2d084221ba829d29f344305845a313f3')
+sha256sums=('b4c9e60344a08d5db37ca7ad00a5b2c76ccb9556354b722d56d55ca7e8b1c707')
+
+build() {
+  cd $pkgname-$pkgver
+
+  make
+}
+
+package() {
+  cd $pkgname-$pkgver
+
+  install -Dm755 "$srcdir"/$pkgname-$pkgver/$pkgname \
+    "$pkgdir"/usr/bin/$pkgname 
+
+  pushd "$pkgdir"/usr/bin
+    ln -s pigz unpigz 
+  popd
+
+  install -Dm644 "$srcdir"/$pkgname-$pkgver/$pkgname.1 \
+    "$pkgdir"/usr/share/man/man1/$pkgname.1
+  install -Dm644 "$srcdir"/$pkgname-$pkgver/$pkgname.pdf \
+    "$pkgdir"/usr/share/doc/$pkgname/$pkgname.pdf
+  install -Dm644 "$srcdir"/$pkgname-$pkgver/README \
+    "$pkgdir"/usr/share/licenses/$pkgname/README
+}

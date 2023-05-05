@@ -1,0 +1,68 @@
+# Maintainer: George Rawlinson <grawlinson@archlinux.org>
+
+pkgname=dagger
+pkgver=0.5.0
+pkgrel=1
+pkgdesc='A portable devkit for CI/CD pipelines'
+arch=('loong64' 'x86_64')
+url='https://dagger.io'
+license=('Apache')
+depends=('glibc')
+makedepends=('git' 'go')
+options=('!lto')
+_commit='ff7653d0dd6e2bb50243f05b57a3d5d57fad1a92'
+source=("$pkgname::git+https://github.com/dagger/dagger.git#commit=$_commit")
+b2sums=('SKIP')
+
+pkgver() {
+  cd "$pkgname"
+
+  git describe --tags | sed 's/^v//'
+}
+
+prepare() {
+  cd "$pkgname"
+
+  # create directory for build output
+  mkdir build
+
+  # download dependencies
+  export GOPATH="${srcdir}"
+  go mod download
+}
+
+build() {
+  cd "$pkgname"
+
+  # set Go flags
+  export CGO_CPPFLAGS="${CPPFLAGS}"
+  export CGO_CFLAGS="${CFLAGS}"
+  export CGO_CXXFLAGS="${CXXFLAGS}"
+  export GOPATH="${srcdir}"
+
+  go build -v \
+    -buildmode=pie \
+    -mod=readonly \
+    -modcacherw \
+    -ldflags "-compressdwarf=false \
+    -linkmode external \
+    -extldflags ${LDFLAGS} \
+    -X go.dagger.io/dagger/version.Revision=$_commit \
+    -X go.dagger.io/dagger/version.Version=$pkgver" \
+    -o build \
+    ./cmd/...
+
+}
+
+# TODO tests now require docker *kicks docker*
+#check() {
+#  cd "$pkgname"
+#
+#  go test -v ./...
+#}
+
+package() {
+  cd "$pkgname"
+
+  install -vDm755 -t "$pkgdir/usr/bin" build/dagger
+}

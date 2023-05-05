@@ -1,0 +1,46 @@
+# Maintainer: Maxime Gauduin <alucryd@archlinux.org>
+# Contributor: Alireza Ayinmehr <alireza.darksun@gmail.com>
+# Contributor: Maxwell Pray a.k.a. Synthead <synthead@gmail.com>
+# Contributor: JSkier <jskier at gmail dot com>
+# Contributor: Ivan Shapovalov <intelfx@intelfx.name>
+
+pkgname=hyperscan
+pkgver=5.4.2
+pkgrel=1
+pkgdesc='High-performance regular expression matching library'
+arch=(loong64 x86_64)
+url=https://www.hyperscan.io
+license=(BSD)
+makedepends=(
+  boost
+  cmake
+  git
+  ninja
+  python
+  ragel
+)
+options=(!lto)
+_tag=bc3b191ab56055e8560c7cdc161c289c4d76e3d2
+source=(git+https://github.com/intel/hyperscan.git#tag=${_tag})
+b2sums=(SKIP)
+
+pkgver() {
+  cd hyperscan
+  git describe --tags | sed 's/^v//'
+}
+
+build() {
+  cmake -S hyperscan -B build -G Ninja \
+    -DCMAKE_INSTALL_PREFIX=/usr \
+    -DCMAKE_INSTALL_LIBDIR=lib \
+    -DBUILD_SHARED_LIBS=ON \
+    -Wno-dev
+  cmake --build build
+}
+
+package() {
+  DESTDIR="${pkgdir}" cmake --install build
+  install -Dm 644 hyperscan/COPYING -t "${pkgdir}"/usr/share/licenses/hyperscan/
+}
+
+# vim: ts=2 sw=2 et:

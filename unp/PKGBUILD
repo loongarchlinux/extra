@@ -1,0 +1,50 @@
+# Maintainer: Anatol Pomozov <anatol.pomozov@gmail.com>
+# Contributor: Michael Düll <mail@akurei.me> PGP-Key: AAAEE882
+# Contributor: TDY <tdy@gmx.com>
+# Contributor: Sergio Rubio <rubiojr.ml@gmail.com>
+# Contributor: Hannes Rist <cowider@gmail.com>
+ 
+pkgname=unp
+_ver=2.0~pre10
+pkgver="${_ver//[~]/.}"
+pkgrel=1
+pkgdesc='A script for unpacking a wide variety of archive formats'
+arch=(any)
+url="https://tracker.debian.org/pkg/unp"
+license=(GPL2)
+depends=(perl)
+optdepends=(
+  'unarj: arj support'
+  'unrar: rar support'
+  'unzip: zip support'
+  'bzip2: bzip2 support'
+  'p7zip: p7zip support'
+  'unace: ace support'
+  'cpio: cpio support'
+  'sharutils: sharutils'
+  'cabextract: cab support'
+  'rpmextract: rpm support'
+)
+source=("https://ftp.debian.org/debian/pool/main/u/unp/unp_${_ver}.tar.xz")
+sha512sums=('3f8f9f20eef88658b4b00efd37208d859fb3220178f9446696f755a864fea3c3dd301100668bd9c97ca9312ebe961aaf9ec523d8817b8aacb5a1ee6a36213666')
+b2sums=('63d8c995091a1342677b6aed5854293c582cb6d42c6748ef3d92347ca75e1d3e9e5b128309299ec0b6fc0361bc14dededcc8e290fe8721aecfe82665e07998e9')
+
+prepare() {
+  mv -v "${pkgname}-${_ver}" "${pkgname}-${pkgver}"
+}
+
+build() {
+  cd unp-$pkgver/po
+  make
+}
+
+package() {
+  cd unp-$pkgver
+  install -Dm755 unp "$pkgdir"/usr/bin/unp
+  install -Dm755 ucat "$pkgdir"/usr/bin/ucat
+  install -Dm644 debian/unp.1 "$pkgdir"/usr/share/man/man1/unp.1
+  install -Dm755 debian/unp.bash-completion "$pkgdir"/usr/share/bash-completion/completions/unp
+
+  cd po
+  make DESTDIR="$pkgdir" install
+}

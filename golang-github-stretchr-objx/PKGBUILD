@@ -1,0 +1,29 @@
+# Maintainer: Felix Yan <felixonmars@archlinux.org>
+
+pkgname=golang-github-stretchr-objx
+pkgver=0.3.0
+pkgrel=1
+pkgdesc='Go package for dealing with maps, slices, JSON and other data.'
+arch=('any')
+url="https://github.com/stretchr/objx"
+license=('MIT')
+depends=('go')
+checkdepends=('golang-github-stretchr-testify')
+source=("$pkgname-$pkgver.tar.gz::https://github.com/stretchr/objx/archive/v$pkgver.tar.gz")
+sha512sums=('bd831d8f44d7d3ef8ad32cada055c58b16ac7a87a8f142b58ce1bce4a2b2d7a45d285f4547b9b5c4cb8edf80fbf57fc61ca6d239a765a20d69e88b5cfbd62252')
+
+check() {
+  export GO111MODULE=off
+  export GOPATH="$srcdir/build:/usr/share/gocode"
+  mkdir -p "$srcdir"/build/src/github.com/stretchr
+  cp -a "$srcdir"/objx-$pkgver "$srcdir"/build/src/github.com/stretchr/objx
+  cd "$srcdir"/build/src/github.com/stretchr/objx
+  go test -v $(go list ./...)
+}
+
+package() {
+  mkdir -p "$pkgdir"/usr/share/gocode/src/github.com/stretchr
+  cp -a "$srcdir"/objx-$pkgver "$pkgdir"/usr/share/gocode/src/github.com/stretchr/objx
+
+  install -Dm644 objx-$pkgver/LICENSE "$pkgdir"/usr/share/licenses/$pkgname/LICENSE
+}

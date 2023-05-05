@@ -1,0 +1,98 @@
+# Maintainer: George Rawlinson <grawlinson@archlinux.org>
+# Contributor: Thor77 <thor77 at thor77 dot org>
+# Contributor: Clar Charr <clar@charr.xyz>
+# Contributor: somini <dev at somini dot xyz>
+
+pkgname=miniflux
+pkgver=2.0.43
+pkgrel=1
+pkgdesc='Minimalist and opinionated feed reader'
+arch=('loong64' 'x86_64')
+url='https://miniflux.app'
+license=('Apache')
+depends=('glibc')
+optdepends=(
+  'postgresql: for local PostgreSQL instance'
+)
+makedepends=('git' 'go')
+backup=('etc/miniflux.conf')
+options=('!lto')
+_commit='ab209df78f41cfd2e3b273682e29c492351575d1'
+source=(
+  "$pkgname::git+https://github.com/miniflux/v2.git#commit=$_commit"
+  'sysusers.conf'
+)
+sha512sums=('SKIP'
+            'eb026d1eb085f0638161a6a75af5e870c7ba4755012bf7f895de5c1bdd9fbdcb44a8aacbb71c482ca101c214f12f65906ddbcbb7044fad051490f44276aba8e5')
+b2sums=('SKIP'
+        '71a1cba0e015c6b33897e3492dd014efbfac240d3c6f007f86ff7bade830ce0f2809d4d0ad1d8ca1189627e2961dddc7ff6682cd445587f5145bee0eab8a7bf6')
+
+pkgver() {
+  cd "$pkgname"
+
+  git describe --tags | sed 's/^v//'
+}
+
+prepare() {
+  cd "$pkgname"
+
+  # revert unnecessary change to systemd unit file
+  git revert --no-commit 527c5f49cbe851b53b87c25dd19e8b4760aa7032
+
+  # create directory for build output
+  mkdir -p build
+
+  # download dependencies
+  export GOPATH="${srcdir}"
+  go mod download
+}
+
+build() {
+  cd "$pkgname"
+
+  # set Go flags
+  export CGO_CPPFLAGS="${CPPFLAGS}"
+  export CGO_CFLAGS="${CFLAGS}"
+  export CGO_CXXFLAGS="${CXXFLAGS}"
+  export GOPATH="${srcdir}"
+
+  # ensure build date is reproducible
+  local BUILD_DATE="$(date --utc --date="@${SOURCE_DATE_EPOCH:-$(date +%s)}" +%Y-%m-%d)"
+
+  go build -v \
+    -buildmode=pie \
+    -mod=readonly \
+    -modcacherw \
+    -ldflags "-compressdwarf=false \
+    -linkmode external \
+    -extldflags ${LDFLAGS} \
+    -X miniflux.app/version.Version=${pkgver} \
+    -X miniflux.app/version.Commit=${_commit} \
+    -X miniflux.app/version.BuildDate=${BUILD_DATE}" \
+    -o build \
+    .
+}
+
+check() {
+  cd "$pkgname"
+  go test -v -race -count=1 ./...
+}
+
+package() {
+  cd "$pkgname"
+
+  # binary
+  install -vDm755 "build/$pkgname.app" "$pkgdir/usr/bin/$pkgname"
+
+  # documentation
+  install -vDm644 -t "$pkgdir/usr/share/man/man1" "$pkgname.1"
+  install -vDm644 -t "$pkgdir/usr/share/doc/$pkgname" *.md ChangeLog
+
+  # license
+  install -vDm644 -t "$pkgdir/usr/share/licenses/$pkgname" LICENSE
+
+  # systemd integration
+  install -vDm644 -t "$pkgdir/usr/lib/systemd/system" "packaging/systemd/$pkgname.service"
+  install -vDm644 "$srcdir/sysusers.conf" "$pkgdir/usr/lib/sysusers.d/$pkgname.conf"
+  install -vDm600 -t "$pkgdir/etc" "packaging/$pkgname.conf"
+}

@@ -1,0 +1,34 @@
+# Maintainer: Justin Kromlinger <hashworks@archlinux.org>
+pkgname=libkiwix
+pkgver=12.0.0
+pkgrel=2
+pkgdesc="Library providing the Kiwix software core"
+license=('GPL3')
+arch=('loong64' 'x86_64')
+provides=('kiwix-lib')
+conflicts=('kiwix-lib')
+replaces=('kiwix-lib')
+depends=('libzim>=8.1.1' 'pugixml' 'xapian-core' 'aria2' 'libmicrohttpd' 'python' 'curl')
+makedepends=('meson' 'gtest' 'mustache')
+url='https://github.com/kiwix/libkiwix'
+source=("${pkgname}-${pkgver}.tar.gz::${url}/archive/${pkgver}.tar.gz")
+sha256sums=('8608ef73fdaa34c28144eb5ad732a74ca94dd99710d08d7a1ddb1277d1985b02')
+
+build() {
+	cd "${pkgname}-${pkgver}"
+	# We want to ignore xapian ABI version mismatches
+	# https://github.com/openzim/libzim/issues/757
+	arch-meson build -Dwerror=false -Dcpp_std=c++14
+	ninja -C build
+}
+
+check() {
+	cd "${pkgname}-${pkgver}/build"
+	meson test
+}
+
+package() {
+	install -Dm644 "${pkgname}-${pkgver}/COPYING" "$pkgdir/usr/share/licenses/$pkgname/COPYING"
+	cd "${pkgname}-${pkgver}/build"
+	DESTDIR="${pkgdir}" ninja install
+}

@@ -1,0 +1,42 @@
+# Maintainer: Christian Rebischke <chris.rebischke@archlinux.org>
+
+pkgname=ko
+pkgver=0.13.0
+pkgrel=1
+pkgdesc="Build and deploy Go applications on Kubernetes"
+arch=('loong64' 'x86_64')
+url="https://github.com/google/ko"
+license=('Apache')
+makedepends=('go' 'git')
+depends=('glibc')
+source=("${pkgname}-${pkgver}.tar.gz::https://github.com/google/ko/archive/refs/tags/v${pkgver}.tar.gz")
+sha512sums=('bb20fbdf8a8f14d76d6363b557711bdc3e4068c51bce702024af9090632d0d9ed32c6c4fd26181e68db9fbd783ed8e12dfd7de2b52eafcfee6999643feb76fc4')
+b2sums=('de770f240810c5ae9477ccb4fc03eeb61eab138d5d0b0b98fc18886818aa0096c4efdfed549432fc1bfe9b2217d8fd0f35998f5f37f2e5691542f796955fa695')
+
+build() {
+  cd "${pkgname}-${pkgver}"
+  export CGO_CPPFLAGS="${CPPFLAGS}"
+  export CGO_CFLAGS="${CFLAGS}"
+  export CGO_CXXFLAGS="${CXXFLAGS}"
+  export CGO_LDFLAGS="${LDFLAGS}"
+  export GOFLAGS="-buildmode=pie -trimpath -mod=readonly -modcacherw"
+  go build -ldflags="-w -s -linkmode=external" .
+  chmod +x ./ko
+}
+
+check() {
+  cd "${pkgname}-${pkgver}"
+  # currently disabled
+  #go test -v -x ./...
+}
+
+package() {
+  cd "${pkgname}-${pkgver}"
+  install -Dsm755 ./ko "${pkgdir}/usr/bin/ko"
+  mkdir -p "${pkgdir}/usr/share/bash-completion/completions/"
+  mkdir -p "${pkgdir}/usr/share/zsh/site-functions/"
+  mkdir -p "${pkgdir}/usr/share/fish/vendor_completions.d/"
+  ./ko completion > "${pkgdir}/usr/share/bash-completion/completions/ko"
+  ./ko completion zsh > "${pkgdir}/usr/share/zsh/site-functions/_ko"
+  ./ko completion completion fish > "${pkgdir}/usr/share/fish/vendor_completions.d/ko.fish"
+}

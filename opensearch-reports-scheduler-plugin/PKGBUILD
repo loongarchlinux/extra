@@ -1,0 +1,34 @@
+# Maintainer: Justin Kromlinger <hashworks@archlinux.org>
+
+pkgname=opensearch-reports-scheduler-plugin
+pkgver=2.6.0.0
+pkgrel=1
+_opensearchver=2.6.0
+_jdkver=11
+pkgdesc="OpenSearch Reports Scheduler Plugin"
+arch=('loong64' 'x86_64')
+url="https://opensearch.org/docs/latest/dashboards/reporting"
+license=('Apache')
+depends=("opensearch=${_opensearchver}")
+makedepends=("java-environment=${_jdkver}" 'unzip')
+source=(
+  "${pkgname}-${pkgver}.tar.gz::https://github.com/opensearch-project/reporting/archive/${pkgver}.tar.gz"
+)
+sha256sums=('8bca5c6a8a30b3b581b0b36144837e1fc0cef911077ea22f159bd912ebe95d3f')
+
+build() {
+  cd "reporting-${pkgver}"
+  export JAVA_HOME="/usr/lib/jvm/java-${_jdkver}-openjdk"
+  export PATH="/usr/lib/jvm/java-${_jdkver}-openjdk/bin:$PATH"
+  export GRADLE_OPTS="-Dbuild.snapshot=false -Dopensearch.version=${_opensearchver}"
+  ./gradlew assemble \
+    --exclude-task ":jacocoTestReport"
+}
+
+package() {
+  install -dm755 "${pkgdir}/usr/share/opensearch/plugins/opensearch-reports-scheduler"
+  cd "${pkgdir}/usr/share/opensearch/plugins/opensearch-reports-scheduler"
+  unzip "${srcdir}/reporting-${pkgver}/build/distributions/opensearch-reports-scheduler-${pkgver}.zip"
+
+  install -Dm644 "${srcdir}/reporting-${pkgver}/LICENSE" "${pkgdir}/usr/share/licenses/${pkgname}/LICENSE"
+}

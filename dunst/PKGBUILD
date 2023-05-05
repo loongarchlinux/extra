@@ -1,0 +1,35 @@
+# Maintainer: Johannes Löthberg <johannes@kyriasis.com>
+# Maintainer: Daniel M. Capella <polyzen@archlinux.org>
+# Contributor: Daniel Wallace <danielwallace at gtmanfred dot com>
+# Contributor: feuri
+
+pkgname=dunst
+pkgver=1.9.2
+pkgrel=1
+pkgdesc="Customizable and lightweight notification-daemon"
+url="https://dunst-project.org/"
+arch=('loong64' 'x86_64')
+license=('BSD')
+depends=('libxinerama' 'dbus' 'systemd' 'wayland' 'libxss' 'pango' 'gdk-pixbuf2' 'libxrandr' 'glib2')
+makedepends=('libnotify')
+optdepends=('libnotify: dunstify')
+backup=('etc/dunst/dunstrc')
+provides=('notification-daemon')
+source=("dunst-$pkgver.tar.gz::https://github.com/dunst-project/dunst/archive/v$pkgver.tar.gz")
+sha256sums=('fa6ce45c0af4bae188b0d679a5ba92f8f9b7e4301bb1bb476e82df26bce9e71a')
+
+build() {
+  cd dunst-$pkgver
+
+  make PREFIX=/usr SYSCONFDIR=/etc X11INC=/usr/include/X11 X11LIB=/usr/lib/X11 all
+}
+
+package() {
+  cd dunst-$pkgver
+
+  make DESTDIR="$pkgdir" SYSCONFDIR=/etc PREFIX=/usr install
+  install -Dm755 dunstify "$pkgdir"/usr/bin/dunstify
+  install -Dm644 LICENSE "$pkgdir"/usr/share/licenses/$pkgname/LICENSE
+}
+
+# vim:set ts=2 sw=2 et:

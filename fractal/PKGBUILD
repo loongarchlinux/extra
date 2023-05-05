@@ -1,0 +1,27 @@
+# Maintainer: Bruno Pagani <archange@archlinux.org>
+
+pkgname=fractal
+pkgver=4.4.2
+pkgrel=1
+pkgdesc="GTK+ client for Matrix written in Rust"
+arch=(loong64 x86_64)
+url="https://wiki.gnome.org/Apps/Fractal"
+license=(GPL3)
+depends=(gtk3 gst-plugins-base-libs gst-plugin-gtk gst-plugins-bad gst-editing-services gtksourceview4 gspell libhandy0)
+optdepends=('org.freedesktop.secrets: password storage')
+makedepends=(meson rust)
+_md5=991d563a6bf692c446291f3224f96a08
+source=("https://gitlab.gnome.org/GNOME/fractal/-/archive/${pkgver}/fractal-${pkgver}.tar.gz")
+sha256sums=('97bb2f355fb1a89851bf16c17aed63063c6c0a79d8adcd31ce0ab82bc4a56f5e')
+
+build() {
+    cd ${pkgname}-${pkgver}
+    CFLAGS+=' -ffat-lto-objects'
+    arch-meson . _build
+    meson compile -C _build
+}
+
+package() {
+    cd ${pkgname}-${pkgver}
+    DESTDIR="${pkgdir}" meson install -C _build
+}

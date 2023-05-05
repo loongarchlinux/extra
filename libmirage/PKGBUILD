@@ -1,0 +1,32 @@
+# Maintainer: Jan Alexander Steffens (heftig) <heftig@archlinux.org>
+# Contributor: Mateusz Herych <heniekk@gmail.com>
+# Contributor: Charles Lindsay <charles@chaoslizard.org>
+
+pkgname=libmirage
+pkgver=3.2.6
+pkgrel=1
+pkgdesc="CD-ROM image (B6T/C2D/CCD/CDI/CIF/CUE/ISO/MDS/MDX/NRG/TOC) access library"
+arch=(loong64 x86_64)
+url="https://cdemu.sourceforge.io/"
+license=(GPL)
+depends=(glib2 libsndfile libsamplerate zlib bzip2 xz shared-mime-info)
+makedepends=(gtk-doc gobject-introspection cmake intltool)
+source=(https://downloads.sourceforge.net/cdemu/$pkgname-$pkgver.tar.xz)
+sha256sums=('257f4690c9195749ea936c4b44ada3e449b352dadaa107f31a1ed10f7b6df2a6')
+
+prepare() {
+  cd $pkgname-$pkgver
+}
+
+build() {
+  cmake -S $pkgname-$pkgver -B build \
+    -DCMAKE_BUILD_TYPE=None \
+    -DCMAKE_INSTALL_PREFIX=/usr \
+    -DCMAKE_INSTALL_LIBDIR=lib \
+    -DPOST_INSTALL_HOOKS:BOOL=OFF
+  cmake --build build
+}
+
+package() {
+  DESTDIR="$pkgdir" cmake --install build
+}

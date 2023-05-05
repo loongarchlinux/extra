@@ -1,0 +1,46 @@
+# Maintainer: Filipe Laíns (FFY00) <lains@archlinux.org>
+# Contributor: Campbell Jones <arch at serebit dot com>
+
+pkgname=budgie-extras
+pkgver=1.5.0
+pkgrel=1
+pkgdesc='Additional Budgie Desktop components from the Ubuntu Budgie team'
+arch=('loong64' 'x86_64')
+license=('GPL3')
+url='https://github.com/UbuntuBudgie/budgie-extras'
+depends=('budgie-desktop' 'wmctrl' 'xdotool' 'xprintidle' 'python' 'python-gobject' 'python-cairo' 'libgee'
+         'zenity' 'vorbis-tools' 'python-psutil' 'sound-theme-freedesktop' 'imagemagick' 'python-pillow'
+         'python-svgwrite' 'python-cairosvg' 'python-pyudev' 'python-requests' 'libpeas' 'json-glib'
+         'libkeybinder3' 'python-pyperclip' 'python-xlib' 'xorg-xinput' 'granite' 'appstream'
+         'libnma' 'libhandy0' 'xorg-xprop')
+makedepends=('gobject-introspection' 'meson' 'ninja' 'vala' 'intltool' 'git')
+source=("git+$url.git#tag=v$pkgver"
+        "git+https://github.com/UbuntuBudgie/QuickChar.git"
+        "git+https://github.com/UbuntuBudgie/applications-menu.git"
+        "git+https://github.com/UbuntuBudgie/budgie-network-applet.git"
+        "git+https://github.com/UbuntuBudgie/budgie-trash-applet.git")
+sha512sums=('SKIP'
+            'SKIP'
+            'SKIP'
+            'SKIP'
+            'SKIP')
+
+prepare() {
+  cd "$pkgname"
+
+  git submodule init
+  git config submodule.budgie-quickchar/quickchar.url ../QuickChar
+  git config submodule.budgie-applications-menu/applications-menu.url ../applications-menu
+  git config submodule.budgie-network-manager/budgie-network-applet.url ../budgie-network-applet
+  git config submodule.budgie-trash/trash.url ../budgie-trash-applet
+  git -c protocol.file.allow=always submodule update
+}
+
+build() {
+  arch-meson "$pkgname" build -D b_pie=false
+  meson compile -C build
+}
+
+package() {
+  meson install -C build --destdir "$pkgdir"
+}

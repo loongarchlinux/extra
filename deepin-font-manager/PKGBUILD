@@ -1,0 +1,41 @@
+# Maintainer: Felix Yan <felixonmars@archlinux.org>
+
+pkgname=deepin-font-manager
+pkgver=5.9.14
+pkgrel=1
+pkgdesc='A font management tool for Deepin desktop'
+arch=('loong64' 'x86_64')
+url="https://github.com/linuxdeepin/deepin-font-manager"
+license=('GPL3')
+depends=('deepin-qt5integration')
+makedepends=('cmake' 'deepin-file-manager' 'gmock' 'gtest' 'ninja' 'qt5-tools')
+optdepends=('deepin-file-manager: font preview in file manager')
+groups=('deepin-extra')
+source=("https://github.com/linuxdeepin/deepin-font-manager/archive/$pkgver/$pkgname-$pkgver.tar.gz")
+sha512sums=('000a710992c0ff0dd514016a594776bf22d0a2424fa478b8bf3273e9637ffe66ea26d645d5c60dfaf2903584fba2ce005b0a9aa9654a8cdaadd201387e1db514')
+
+prepare() {
+  cd deepin-font-manager-$pkgver
+
+  # Fix linker flags
+  sed -i 's/CMAKE_EXE_LINKER_FLAGS "-pie"/CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -pie"/' deepin-font-manager/CMakeLists.txt
+
+  # Fix file manager plugin install dir
+  sed -i 's|lib/x86_64-linux-gnu/|lib/|' deepin-font-preview-plugin/CMakeLists.txt
+}
+
+build() {
+  cd deepin-font-manager-$pkgver
+  cmake -GNinja . -DPLUGIN_INSTALL_DIR=
+  ninja
+}
+
+check() {
+  cd deepin-font-manager-$pkgver
+  ninja test || :
+}
+
+package() {
+  cd deepin-font-manager-$pkgver
+  DESTDIR="$pkgdir" ninja install
+}

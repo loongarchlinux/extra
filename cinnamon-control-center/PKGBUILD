@@ -1,0 +1,38 @@
+# Maintainer: Bruno Pagani <archange@archlinux.org>
+# Contributor: Eli Schwartz <eschwartz@archlinux.org>
+# Contributor: Alexandre Filgueira <alexfilgueira@cinnarch.com>
+# Based on gnome-control-center:
+# Jan Alexander Steffens (heftig) <jan.steffens@gmail.com>
+# Jan de Groot <jgc@archlinux.org>
+
+pkgname=cinnamon-control-center
+pkgver=5.6.1
+pkgrel=1
+pkgdesc="The Control Center for Cinnamon"
+arch=(loong64 x86_64)
+url="https://github.com/linuxmint/${pkgname}"
+license=(GPL)
+depends=(cinnamon-settings-daemon cinnamon-menus colord
+         libgnomekbd libmm-glib nm-connection-editor)
+optdepends=('cinnamon-translations: i18n'
+            'gnome-color-manager: for color management tasks'
+            'gnome-online-accounts: for the online accounts module')
+makedepends=(meson samurai gnome-online-accounts)
+options=(!emptydirs)
+source=(${url}/archive/${pkgver}/${pkgname}-${pkgver}.tar.gz)
+sha256sums=('99fc64e8bd67118ebe09eca0b39b1ac159ad667bedd12717c8d9f6160b08b0d8')
+b2sums=('53344aead6c5e31eeadf70e26a2ae61db930e595b5e546ac08b57029c924e4105d126fe6a27cd3ef7d4a59b51f83e0790dfaf815d9a3addfa5c496eab82d4537')
+
+build() {
+  arch-meson build ${pkgname}-${pkgver}
+  samu -C build
+}
+
+package() {
+  DESTDIR="${pkgdir}" samu -C build install
+  # https://github.com/linuxmint/Cinnamon/pull/7382#issuecomment-374894901
+  # /usr/bin/cinnamon-control-center is not meant for users, it is a development troubleshooting tool.
+  # Just install the shell libs/headers.
+  rm "${pkgdir}"/usr/bin/cinnamon-control-center
+  rm "${pkgdir}"/usr/share/cinnamon-control-center/ui/shell.ui
+}

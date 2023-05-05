@@ -1,0 +1,33 @@
+# Maintainer: Jonathan Steel <jsteel at archlinux.org>
+# Contributor: Mantas Mikulėnas <grawity@gmail.com>
+# Contributor: Kaiting Chen <kaitocracy@gmail.com>
+# Contributor: Ryan Corder <ryanc@greengrey.org>
+
+pkgname=pam-krb5
+pkgver=4.11
+pkgrel=2
+pkgdesc="PAM module providing Kerberos v5 support"
+arch=('loong64' 'x86_64')
+url="https://www.eyrie.org/~eagle/software/pam-krb5/"
+license=('custom')
+depends=('krb5' 'pam')
+source=(https://archives.eyrie.org/software/kerberos/$pkgname-$pkgver.tar.gz{,.asc})
+sha256sums=('503cbe2cb1aff4bdfda3bcf7f93f94fb6ba52c26d708934e7039b2182fe10b20'
+            'SKIP')
+validpgpkeys=('E784364E8DDE7BB370FBD9EAD15D313882004173') # Russ Allbery <eagle@eyrie.org>
+
+build() {
+  cd $pkgname-$pkgver
+
+  ./configure --prefix=/usr --enable-reduced-depends --libdir=/usr/lib
+
+  make
+}
+
+package() {
+  cd $pkgname-$pkgver
+
+  make DESTDIR="$pkgdir" install
+
+  install -Dm644 LICENSE "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
+}

@@ -1,0 +1,54 @@
+# Maintainer: George Rawlinson <grawlinson@archlinux.org>
+# Contributor: aulonsal <aulonsal at gmail dot com>
+
+pkgname=hck
+pkgver=0.9.2
+pkgrel=1
+pkgdesc='A drop in replacement for cut that can use a regex delimiter instead of a fixed string'
+arch=('loong64' 'x86_64')
+url='https://github.com/sstadick/hck'
+license=('Unlicense' 'MIT')
+depends=('glibc' 'gcc-libs')
+makedepends=('git' 'rust' 'cmake')
+options=('!lto')
+_commit='1b82a6981b205c6f345e41bfc0166b3bdb3e3c29'
+source=("$pkgname::git+$url.git#commit=$_commit")
+md5sums=('SKIP')
+
+pkgver() {
+  cd "$pkgname"
+
+  git describe --tags | sed 's/^v//'
+}
+
+prepare() {
+  cd "$pkgname"
+
+  # download dependencies
+  cargo fetch --locked --target "$CARCH-unknown-linux-gnu"
+}
+
+build() {
+	cd "$pkgname"
+
+	cargo build --release --frozen
+}
+
+check() {
+	cd "$pkgname"
+
+	cargo test --frozen
+}
+
+package() {
+	cd "$pkgname"
+
+  # binary
+  install -vDm755 -t "$pkgdir/usr/bin" target/release/hck
+
+  # documentation
+  install -vDm644 -t "$pkgdir/usr/share/doc/$pkgname" README.md
+
+  # licenses
+	install -vDm644 -t "$pkgdir/usr/share/licenses/$pkgname" LICENSE-MIT UNLICENSE
+}

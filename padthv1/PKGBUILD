@@ -1,0 +1,119 @@
+# Maintainer: David Runge <dvzrv@archlinux.org>
+
+pkgbase=padthv1
+pkgname=(
+  padthv1
+  padthv1-lv2
+  padthv1-standalone
+)
+pkgver=0.9.30
+pkgrel=1
+pkgdesc="An old-school polyphonic additive synthesizer"
+arch=(loong64 x86_64)
+url="https://padthv1.sourceforge.io/"
+license=(GPL2)
+makedepends=(
+  alsa-lib
+  cmake
+  fftw
+  jack
+  liblo
+  lv2
+  qt6-base
+  qt6-svg
+  qt6-tools
+)
+source=(https://download.sourceforge.net/$pkgname/$pkgname-$pkgver.tar.gz)
+sha512sums=('f03bd062b47f58ea2a7aefb703c1183b399f3faebdd63ce8ff8fd364c97d2fe85e27003219e504639fc44d56c4a19539a14ff989a4998406b8c13c85b7c7beb0')
+b2sums=('04bd0cffe431e59740eaacb9b424b69ac43becd7d8ceb267e1b0cb7c859e7412df3b7ab8a729fc70920298a4b4bcf3e27d430797c459113359b80147057076b5')
+
+_pick() {
+  local p="$1" f d; shift
+  for f; do
+    d="$srcdir/$p/${f#$pkgdir/}"
+    mkdir -p "$(dirname "$d")"
+    mv "$f" "$d"
+    rmdir -p --ignore-fail-on-non-empty "$(dirname "$f")"
+  done
+}
+
+build() {
+  local cmake_options=(
+    -B build
+    -D CMAKE_BUILD_TYPE=None
+    -D CMAKE_INSTALL_PREFIX=/usr
+    -D CONFIG_QT6=ON
+    -S $pkgname-$pkgver
+    -W no-dev
+  )
+
+  cmake "${cmake_options[@]}"
+  cmake --build build --verbose
+}
+
+package_padthv1() {
+  depends=(
+    $pkgbase-{lv2,standalone}=$pkgver
+  )
+
+  DESTDIR="$pkgdir" cmake --install build
+
+  (
+    cd "$pkgdir"
+
+    # have find-libdeps resolve dependencies properly:
+    # https://gitlab.archlinux.org/archlinux/devtools/-/issues/102
+    find usr/lib -type f -iname "*.so" -exec chmod +x {} \;
+
+    _pick $pkgbase-lv2 usr/lib/lv2
+    _pick $pkgbase-standalone usr/{bin,share}
+  )
+}
+
+package_padthv1-lv2() {
+  pkgdesc+=" - LV2 plugin"
+  groups=(
+    lv2-plugins
+    pro-audio
+  )
+  depends=(
+    fftw libfftw3f.so
+    gcc-libs
+    glibc
+    lv2-host
+    qt6-base
+    qt6-svg
+  )
+  optdepends=(
+    'qt6-wayland: for native wayland support'
+  )
+
+  mv -v $pkgname/* "$pkgdir"
+  install -vDm 644 $pkgbase-$pkgver/{ChangeLog,README} -t "$pkgdir/usr/share/doc/$pkgname"
+}
+
+package_padthv1-standalone() {
+  pkgdesc+=" - standalone"
+  groups=(
+    pro-audio
+  )
+  depends=(
+    alsa-lib
+    fftw libfftw3f.so
+    gcc-libs
+    glibc
+    hicolor-icon-theme
+    jack
+    liblo
+    qt6-base
+    qt6-svg
+  )
+  optdepends=(
+    'new-session-manager: for session management using the standalone application'
+    'qt6-wayland: for native wayland support'
+  )
+
+  mv -v $pkgname/* "$pkgdir"
+  install -vDm 644 $pkgbase-$pkgver/{ChangeLog,README} -t "$pkgdir/usr/share/doc/$pkgname"
+}
+# vim:set ts=2 sw=2 et:

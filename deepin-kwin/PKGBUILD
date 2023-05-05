@@ -1,0 +1,40 @@
+# Maintainer: Felix Yan <felixonmars@archlinux.org>
+# Contributor: Josip Ponjavic <josipponjavic at gmail dot com>
+# Contributor: Xu Fasheng <fasheng.xu[AT]gmail.com>
+
+pkgname=deepin-kwin
+pkgver=5.5.11
+pkgrel=1
+pkgdesc='KWin configures on DDE'
+arch=('loong64' 'x86_64')
+url="https://github.com/linuxdeepin/dde-kwin"
+license=('GPL3')
+depends=('deepin-qt5integration' 'deepin-wallpapers' 'kwin')
+makedepends=('extra-cmake-modules' 'ninja' 'qt5-tools')
+source=("$pkgname-$pkgver-deepin.tar.gz::https://github.com/linuxdeepin/dde-kwin/archive/$pkgver-deepin.tar.gz"
+        $pkgname-tabbox-chameleon-rename.patch)
+sha512sums=('0f401842f3f20b31a3527bd480af2a62dbafc10a0d7c3fae6cf5ef088184c5470b177ab641e8496c375ad982bf1649fbaa0e10cfe19532d44a227fa87c7e4d3b'
+            '454889eaaf48f0e329d6cde870f57dd25dc1f9f88ade234fdb058249c5a9602fdd43dbfffe7c79c0d05843cec500285e719233bf1b4141c32b387bd1c86e02d7')
+
+prepare() {
+  cd dde-kwin-$pkgver-deepin
+  sed -i 's|/usr/share/backgrounds/default_background.jpg|/usr/share/backgrounds/deepin/desktop.jpg|' plugins/kwineffects/multitasking/background.cpp
+  patch -p1 -i ../$pkgname-tabbox-chameleon-rename.patch
+}
+
+build() {
+  cd dde-kwin-$pkgver-deepin
+  cmake . -GNinja -DCMAKE_INSTALL_PREFIX=/usr \
+          -DUSE_WINDOW_TOOL=OFF \
+          -DENABLE_KDECORATION=ON \
+          -DENABLE_BUILTIN_BLUR=OFF \
+          -DENABLE_BUILTIN_MULTITASKING=OFF \
+          -DENABLE_BUILTIN_BLACK_SCREEN=OFF \
+          -DUSE_DEEPIN_WAYLAND=OFF
+  ninja
+}
+
+package() {
+  cd dde-kwin-$pkgver-deepin
+  DESTDIR="$pkgdir" ninja install
+}

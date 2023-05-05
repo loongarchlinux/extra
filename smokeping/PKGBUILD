@@ -1,0 +1,51 @@
+# Maintainer: Florian Pritz <bluewind@xinu.at>
+# Contributor: Christos Nouskas nous <nous at archlinux.us>
+
+pkgname=smokeping
+pkgver=2.8.2
+pkgrel=2
+pkgdesc="A tool to keep track of your network latency"
+arch=('any')
+url="https://oss.oetiker.ch/smokeping/"
+license=('GPL2')
+depends=('perl-config-grammar' 'perl-digest-hmac' 'perl-libwww' 'rrdtool' 'perl-fcgi' 'perl-cgi-fast'
+         'perl-io-tty' 'perl-net-dns' 'perl-net-snmp' 'perl-net-telnet' 'perl-ldap' 'perl-net-openssh')
+source=("${pkgname}_release-$pkgver.tar.gz::https://github.com/oetiker/SmokePing/releases/download/$pkgver/smokeping-$pkgver.tar.gz"
+        smokeping.sysusers
+        smokeping.tmpfiles
+        service)
+sha256sums=('29e61118b455e23b969ada5f8e2ab432d3e2ef87d4afe2c86de4a03d7188b6ea'
+            'ab3b399f58118fc31fac5f627814bbb3b1d7752dd3b4fed2d6b7ee58f24fbd2e'
+            'afd3196804a120866e8e5f207f177c96fd64b36c974888d8287fba3c216b1583'
+            '0e0b418c2f1688990c390297122ade6a0b657e08eb8f7c085fea775cc038074c')
+
+build() {
+  cd "$srcdir"/smokeping-${pkgver}
+
+  ./configure --prefix=/usr --sysconfdir=/etc/smokeping --with-htdocs-dir=/srv/http/smokeping
+
+  # prevent the build system from packaging CPAN deps
+  rm -rf thirdparty/CPAN
+  mkdir thirdparty/CPAN
+  touch cpanfile "thirdparty/cpanfile-$(perl -MConfig -e 'my $v =$Config{version}; $v =~ s/.\d+$//;print $v;').snapshot"
+  touch thirdparty/touch thirdparty/CPAN/touch
+
+  make
+}
+
+package() {
+  cd "$srcdir"/smokeping-${pkgver}
+
+  # We package CPAN modules separately
+  mkdir -p thirdparty/lib/perl5/removeme
+
+  make DESTDIR="$pkgdir" install
+
+  rm -rf "$pkgdir/usr/lib/removeme"
+
+  install -Dm644 "$srcdir/service" "$pkgdir/usr/lib/systemd/system/smokeping.service"
+  install -Dm644 "$srcdir/smokeping.sysusers" "$pkgdir/usr/lib/sysusers.d/smokeping.conf"
+  install -Dm644 "$srcdir/smokeping.tmpfiles" "$pkgdir/usr/lib/tmpfiles.d/smokeping.conf"
+  chown -R 181:181 "$pkgdir"/{etc/smokeping,srv/http/smokeping}
+  chmod 700 "$pkgdir/etc/smokeping"
+}

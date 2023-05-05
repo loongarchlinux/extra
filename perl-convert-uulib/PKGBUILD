@@ -1,0 +1,51 @@
+# Maintainer: Thore Bödecker <foxxx0@archlinux.org>
+# Contributor: Yardena Cohen <yardenack at gmail dot com>
+# Contributor: Techlive Zheng <techlivezheng [at] gmail [dot] com>
+# Contributor: Filip S. Adamsen <fsa [at] fsadev [dot] com>
+# Contributor: David Zaragoza <david@zaragoza.com.ve>
+# Contributor: Piotr Beling <qwak@w8.pl>
+# Contributor: Wael Nasreddine <wael@phoenixlinux.org>
+# Contributor: Guillermo A. Amaral <me@guillermoamaral.com> (thewonka)
+# Contributor: Chih-mao Chen <pkmx.tw@gmail.com>
+
+pkgname='perl-convert-uulib'
+pkgver='1.8'
+pkgrel=1
+pkgdesc='Perl interface to the uulib library (a.k.a. uudeview/uuenview).'
+_dist=Convert-UUlib
+arch=('loong64' 'x86_64')
+url='https://metacpan.org/release/Convert-UUlib'
+license=('GPL' 'PerlArtistic')
+depends=('perl' 'perl-canary-stability' 'perl-common-sense')
+options=('!emptydirs')
+source=("https://cpan.metacpan.org/authors/id/M/ML/MLEHMANN/Convert-UUlib-${pkgver}.tar.gz")
+sha512sums=('4ea39cf36e7406c9e8a8e0c50778594f004b91a53f7aa0f90d8e127791d85bad00d8d5586bb35180b2605c5552567d0ae62f048de92fb85b9d99a8f14d9a0a40')
+
+build() {
+  cd "${srcdir}/${_dist}-${pkgver}"
+
+  unset PERL5LIB PERL_MM_OPT CPPFLAGS
+  export PERL_MM_USE_DEFAULT=1 PERL_AUTOINSTALL=--skipdeps
+
+  perl Makefile.PL
+  make
+}
+
+check() {
+  cd "${srcdir}/${_dist}-${pkgver}"
+
+  unset PERL5LIB PERL_MM_OPT
+  export PERL_MM_USE_DEFAULT=1
+
+  make test
+}
+
+package() {
+  cd "${srcdir}/${_dist}-${pkgver}"
+
+  unset PERL5LIB PERL_MM_OPT
+
+  make install INSTALLDIRS=vendor DESTDIR="${pkgdir}"
+
+  find "${pkgdir}" -name '.packlist' -o -name 'perllocal.pod' -delete
+}

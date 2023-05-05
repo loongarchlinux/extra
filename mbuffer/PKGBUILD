@@ -1,0 +1,37 @@
+# Maintainer: David Runge <dvzrv@archlinux.org>
+
+pkgname=mbuffer
+pkgver=20230301
+pkgrel=1
+pkgdesc="A tool for buffering data streams"
+arch=(loong64 x86_64)
+url="https://www.maier-komor.de/mbuffer.html"
+license=(GPL3)
+depends=(gcc-libs glibc)
+makedepends=(openssl)
+source=(https://www.maier-komor.de/software/mbuffer/mbuffer-$pkgver.tgz)
+sha512sums=('efed6e9cbd4fbb255c5f71514badd38e4fb254bf0c0f8a902636c18295f6fb640a4076d015444d1ab5e17edb3a12ecc2b3da2038f1ac1a57c44b76203bf7d66e')
+b2sums=('45794ac6920c159fe96fccafadbaffe353e4866d8336cfe83601044b53f2289171d3fd9016cb34cf955880e7dfd2c49fe0cc99ffb3e80b7ac6ef1f6bd4cf312a')
+
+prepare() {
+  cd $pkgname-$pkgver
+  autoreconf -fiv
+}
+
+build() {
+  cd $pkgname-$pkgver
+  ./configure --prefix=/usr --sysconfdir=/etc
+  make
+}
+
+check() {
+  make -k check -C $pkgname-$pkgver
+}
+
+package() {
+  depends+=(
+    openssl libcrypto.so
+  )
+
+  make DESTDIR="$pkgdir/" install -C $pkgname-$pkgver
+}

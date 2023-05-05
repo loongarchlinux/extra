@@ -1,0 +1,28 @@
+# Maintainer: Daurnimator <daurnimator@archlinux.org>
+# Contributor: Stefan Husmann <stefan-husmann@t-online.de>
+
+pkgname=indent
+pkgver=2.2.13
+pkgrel=1
+pkgdesc="C language source code formatting program"
+arch=('loong64' 'x86_64')
+url="https://www.gnu.org/software/indent/"
+license=('GPL3')
+depends=('glibc')
+makedepends=('texi2html')
+source=("https://ftp.gnu.org/gnu/$pkgname/$pkgname-$pkgver.tar.xz"{,.sig})
+validpgpkeys=(782130B4C9944247977B82FD6EA4D2311A2D268D  # andrewsh@debian.org
+              83DCD17F44B22CC83656EDA1E8446B4AC8C77261) # Andrej Shadura <andrew@shadura.me>
+sha256sums=('1b81ba4e9a006ca8e6eb5cbbe4cf4f75dfc1fc9301b459aa0d40393e85590a0b'
+            'SKIP')
+
+build() {
+  cd ${pkgname}-${pkgver}
+  ./configure --prefix=/usr
+  make
+}
+
+package() {
+  cd ${pkgname}-${pkgver}
+  make DESTDIR="${pkgdir}" docdir=/usr/share/doc/indent install
+}

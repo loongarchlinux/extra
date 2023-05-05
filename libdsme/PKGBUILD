@@ -1,0 +1,30 @@
+# Maintainer: Felix Yan <felixonmars@archlinux.org>
+
+pkgname=libdsme
+pkgver=0.66.8
+pkgrel=1
+pkgdesc="DSME dsmesock dynamic library"
+arch=('loong64' 'x86_64')
+url="https://github.com/sailfishos/libdsme"
+license=('LGPL')
+depends=('glib2')
+makedepends=('check')
+source=("https://github.com/sailfishos/libdsme/archive/$pkgver/$pkgname-$pkgver.tar.gz")
+sha512sums=('8f5245ba0d3a5e17051007017605ba8e69521b70f86376f6106a1bc12d7fef38941491b3e8dbbad732aeb557753f9c937c3494dfe6dd445bb2b3018cc71617af')
+
+build() {
+  cd $pkgname-$pkgver
+  ./verify_version
+  make
+}
+
+package() {
+  cd $pkgname-$pkgver
+  make DESTDIR="${pkgdir}" install_main install_devel
+
+  # Fix symlinks
+  for name in libdsme libdsme_dbus_if libthermalmanager_dbus_if; do
+    ln -sf $name.so.0.3.0 "$pkgdir"/usr/lib/$name.so.0
+    ln -sf $name.so.0.3.0 "$pkgdir"/usr/lib/$name.so
+  done
+}

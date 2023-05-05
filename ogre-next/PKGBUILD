@@ -1,0 +1,55 @@
+# Maintainer: Sven-Hendrik Haase <svenstaro@archlinux.org>
+pkgname=ogre-next
+pkgver=2.3.1
+pkgrel=1
+pkgdesc='Scene-oriented, flexible 3D engine written in C++'
+arch=('loong64' 'x86_64')
+url='http://www.ogre3d.org'
+license=('custom:MIT')
+depends=('freeimage' 'freetype2' 'libxaw' 'libxrandr' 'rapidjson'
+         'zziplib' 'sdl2' 'glu' 'tinyxml' 'zlib' 'openvr')
+makedepends=('cmake' 'doxygen' 'graphviz' 'ttf-dejavu' 'mesa' 'ninja' 'cppunit')
+conflicts=('ogre')
+install=ogre-next.install
+source=("$pkgname-$pkgver.tar.gz::https://github.com/OGRECave/ogre-next/archive/v${pkgver}.tar.gz")
+sha512sums=('62c721680ed77e74b6e1649ab7324bd49fc3c7c2e60ad76a62ec5f899f327d65a140462d75300eac4f41567a8903a748d07a760dc376eddcadf0aeea5a3ca5a7')
+
+build() {
+  cd ogre-next-${pkgver}
+
+  cmake \
+    -Bbuild \
+    -GNinja \
+    -DCMAKE_INSTALL_PREFIX=/usr \
+    -DOGRE_CONFIG_ENABLE_JSON=ON \
+    -DOGRE_CONFIG_THREADS=1 \
+    -DOGRE_CONFIG_THREAD_PROVIDER="std" \
+    -DOGRE_BUILD_COMPONENT_PLANAR_REFLECTIONS=ON \
+    -DOGRE_BUILD_COMPONENT_PROPERTY=ON \
+    -DOGRE_BUILD_COMPONENT_SCENE_FORMAT=ON \
+    -DOGRE_BUILD_TESTS=ON \
+    -DOGRE_INSTALL_SAMPLES_SOURCE=ON
+
+  ninja -C build
+  ninja -C build OgreDoc
+}
+
+check() {
+  cd ogre-next-${pkgver}
+
+  # Upstream pls
+  # ninja -C build test
+}
+
+package() {
+  cd ogre-next-${pkgver}
+
+  DESTDIR="${pkgdir}" ninja -C build install
+
+  mkdir -p "${pkgdir}"/opt/ogre/samples
+  mv "${pkgdir}"/usr/bin/Sample_* "${pkgdir}"/opt/ogre/samples
+  mv "${pkgdir}"/usr/bin/Test_* "${pkgdir}"/opt/ogre/samples
+  install -Dm644 Docs/License.html "${pkgdir}"/usr/share/licenses/${pkgname}/License.html
+}
+
+# vim:set ts=2 sw=2 et:

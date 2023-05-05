@@ -1,0 +1,29 @@
+# Maintainer: Sven-Hendrik Haase <svenstaro@archlinux.org>
+# Contributor: Johan Rehnberg <cleanrock@gmail.com>
+
+pkgname=naev
+pkgver=0.10.5
+pkgrel=1
+pkgdesc='2D action/rpg space game'
+arch=('loong64' 'x86_64')
+url="https://github.com/naev/naev"
+license=('GPL3')
+depends=('glu' 'openal' 'libvorbis' 'sdl2' 'sdl2_image' 'sdl2_mixer' 'libgl' 'libxml2' 'freetype2'
+         'libpng' 'libzip' 'luajit' 'glpk' 'physfs' 'libunibreak' 'suitesparse' 'cblas')
+makedepends=('freeglut' 'zip' 'meson' 'git' 'python-yaml')
+source=("https://github.com/naev/naev/releases/download/v$pkgver/naev-$pkgver-source.tar.xz")
+sha512sums=('21cd876ffe39bf09f39c65d6f744fc8e9ea1fc42f45f78e2ec9950509a37c3382ef91998ae3b0e0ced60c342c80f95e7e0c6a1301f5171d150f3cce3d76d2c00')
+
+build() {
+  cd "$pkgname-$pkgver"
+
+  meson setup -Dprefix=/usr -Dndata_path=/usr/share/naev/ndata -Dblas=cblas build .
+  cd build
+  meson compile
+}
+
+package() {
+  cd "$pkgname-$pkgver/build"
+
+  DESTDIR="$pkgdir" meson install
+}

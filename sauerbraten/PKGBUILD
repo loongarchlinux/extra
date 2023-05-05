@@ -1,0 +1,74 @@
+# Maintainer: Laurent Carlier <lordheavym@gmail.com>
+# Contributor: Jaroslaw Swierczynski <swiergot@aur.archlinux.org>
+# Contributor: Roman Kyrylych <Roman.Kyrylych@gmail.com>
+# Contributor: Christoph Siegenthaler <csi@gmx.ch>
+# Contributor: Jesse Young <jesse@eon.jlyo.org>
+
+pkgname=('sauerbraten' 'sauerbraten-data')
+pkgver=2020_12_29
+pkgrel=1
+pkgdesc="FPS that uses an improved version of the Cube engine"
+arch=('loong64' 'x86_64')
+url="http://www.sauerbraten.org/"
+license=('ZLIB')
+makedepends=('sdl2_mixer' 'sdl2_image' 'mesa-libgl' 'glu')
+backup=('etc/conf.d/sauerbraten')
+source=(https://downloads.sourceforge.net/$pkgname/${pkgname}_${pkgver}_linux.tar.bz2
+        sauerbraten-client
+        sauerbraten-server
+        sauerbraten.confd
+        sauerbraten.png
+        sauerbraten.service
+        sauerbraten.sysusers
+        sauerbraten.desktop
+        license.txt)
+sha256sums=('cdba7c4a47cefd30d0afdd6a912199a1384319cf1619923cb7189e72e468be70'
+            'b797e3ad05ea5ff53124672787219137811dad444ed842d2ae406b6aaee5d68a'
+            '881d63cfea00fdd4cfa4e45b054e7b11655e46d2c167ec29859b04dd59e89b4b'
+            '32db60cbd3d286402a77a954f77e6ebc619f8f76adc7cd8f831fddd3493ddef0'
+            '76c2008411cda4a83f6a675f916a6ade3cc08aeb6e18a704e922c19d375139d0'
+            'c1e2af1e45d08d9ede1daf238c3ab4b90c1570724ec12fbb7979ebd856d53ca7'
+            '1c658129eb118fb8c3acd0556975b8675c5c53763ce6cded426d1ecef7ceaa8f'
+            'e21a8845d0c939f61b659386b4c1027007c4a7a86a959a2ac72c97c3ec038040'
+            '4e62f17c36895d3ca4908527aaffb0ab462cbd002189850e8a1f584ac92ad6b3')
+#_exec=('sauerbraten-client %u')
+
+build() {
+  cd "$pkgname/src"
+
+  make
+}
+
+package_sauerbraten() {
+  pkgdesc="FPS that uses an improved version of the Cube engine"
+  depends=('sdl2_mixer' 'sdl2_image' 'libgl' 'sauerbraten-data')
+
+  cd "${srcdir}"/$pkgname/src
+
+  make DESTDIR="${pkgdir}" install
+
+  cd ..
+  install -D bin_unix/native_client "${pkgdir}"/opt/sauerbraten/bin/linux_client
+  install -D bin_unix/native_server "${pkgdir}"/opt/sauerbraten/bin/linux_server
+
+  install -Dm755 "${srcdir}"/sauerbraten-client "${pkgdir}"/usr/bin/sauerbraten-client
+  install -Dm755 "${srcdir}"/sauerbraten-server "${pkgdir}"/usr/bin/sauerbraten-server
+  install -Dm644 "${srcdir}"/sauerbraten.confd "${pkgdir}"/etc/conf.d/sauerbraten
+  install -Dm644 "${srcdir}"/sauerbraten.service "${pkgdir}"/usr/lib/systemd/system/sauerbraten.service
+  install -Dm644 "${srcdir}"/sauerbraten.sysusers "${pkgdir}"/usr/lib/sysusers.d/sauerbraten.conf
+  install -Dm644 "${srcdir}"/sauerbraten.desktop "${pkgdir}"/usr/share/applications/sauerbraten.desktop
+  install -Dm644 "${srcdir}"/sauerbraten.png "${pkgdir}"/usr/share/pixmaps/sauerbraten.png
+  install -Dm644 "${srcdir}"/license.txt "${pkgdir}"/usr/share/licenses/sauerbraten/license.txt
+}
+
+package_sauerbraten-data() {
+  pkgdesc="Improved version of the Cube engine - datas files"
+
+  cd "${srcdir}"/sauerbraten
+
+  install -d "${pkgdir}"/opt/sauerbraten
+  cp -r data "${pkgdir}"/opt/sauerbraten
+  cp -r packages "${pkgdir}"/opt/sauerbraten
+
+  install -Dm644 "${srcdir}"/license.txt "${pkgdir}"/usr/share/licenses/${pkgname}/license.txt
+}

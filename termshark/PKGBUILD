@@ -1,0 +1,39 @@
+# Maintainer: Levente Polyak <anthraxx[at]archlinux[dot]org>
+
+pkgname=termshark
+pkgver=2.4.0
+pkgrel=1
+pkgdesc='Terminal UI for tshark, inspired by Wireshark'
+url='https://github.com/gcla/termshark'
+arch=('loong64' 'x86_64')
+license=('MIT')
+depends=('glibc' 'wireshark-cli')
+makedepends=('go')
+source=(${url}/archive/v${pkgver}/${pkgname}-${pkgver}.tar.gz)
+sha512sums=('378bb67ff50a8dfa80f614540371f326627e73bdf63bceb183ed73afbbf9dead4e0597fb969ba49c4ee3d3de00ac7bb91166421c19c788df47ff8d9fcbc5b9fc')
+b2sums=('df232595477d62480ba8ba994e635f01bc5a5ffd09378da37c01847d899e4938a92c8304e26ea425b7a72cfd71f918686a4683e1a04883c3c92e26104b9f84be')
+
+build() {
+  cd ${pkgname}-${pkgver}
+  export GO111MODULE=on
+  export CGO_LDFLAGS="${LDFLAGS}"
+  export CGO_CPPFLAGS="${CPPFLAGS}"
+  export CGO_CFLAGS="${CFLAGS}"
+  export CGO_CXXFLAGS="${CXXFLAGS}"
+  export GOFLAGS="-buildmode=pie -trimpath -modcacherw -ldflags=-linkmode=external"
+  go build -v ./cmd/...
+}
+
+check() {
+  cd ${pkgname}-${pkgver}
+  go test -v ./...
+}
+
+package() {
+  cd ${pkgname}-${pkgver}
+  install -Dm 755 termshark -t "${pkgdir}/usr/bin"
+  install -Dm 644 CHANGELOG.md README.md docs/{FAQ.md,UserGuide.md} -t "${pkgdir}/usr/share/doc/${pkgname}"
+  install -Dm 644 LICENSE -t "${pkgdir}/usr/share/licenses/${pkgname}"
+}
+
+# vim: ts=2 sw=2 et:

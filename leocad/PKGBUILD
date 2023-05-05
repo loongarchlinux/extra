@@ -1,0 +1,50 @@
+# Maintainer: George Rawlinson <george@rawlinson.net.nz>
+# Contributor: Michael Straube <michael.straube@posteo.de>
+# Contributor: Seth Schroeder <theking@kingdomofseth.com>
+# Contributor: Sven Schneider <archlinux.sandmann@googlemail.com>
+
+pkgname=leocad
+pkgver=23.03
+_libver=23.01
+pkgrel=1
+pkgdesc='A CAD program for creating virtual LEGO models'
+arch=('loong64' 'x86_64')
+url='http://leocad.org'
+license=('GPL')
+depends=(
+  'glibc'
+  'gcc-libs'
+  'libglvnd'
+  'qt5-base'
+  'hicolor-icon-theme'
+  'zlib'
+)
+makedepends=('qt5-tools')
+source=("$pkgname-$pkgver.tar.gz::https://github.com/leozide/leocad/archive/v$pkgver.tar.gz"
+        "$pkgname-library-$_libver.zip::https://github.com/leozide/leocad/releases/download/v$pkgver/Library-$_libver.zip")
+b2sums=('98b3d8a556ad3fcc0169feafa44d10de305aa56bc6bdf2625aee6cc1c42e8465e61f7293fe7067109a0223d7683e38d43685c81366d2ed4539fafd866df78a49'
+        'a6d7286c397e82289023a5c421db94294acf1d3697bf7e0cb03b9c04ae96950941fc5dc9433585bcce3f162fbbae4a53c6f3a6c2994f7511f0d4464531a58896')
+
+build() {
+  cd "$pkgname-$pkgver"
+
+  # create Makefile with QMake
+  qmake-qt5 \
+    INSTALL_PREFIX=/usr \
+    DISABLE_UPDATE_CHECK=1 \
+    LDRAW_LIBRARY_PATH=/usr/share/leocad \
+    "$pkgname.pro"
+
+  # build package
+  make
+}
+
+package() {
+  cd "$pkgname-$pkgver"
+
+  # install to pkgdir
+  make INSTALL_ROOT="$pkgdir" install
+
+  # install parts library
+  install -Dm644 "$srcdir/library.bin" -t "$pkgdir/usr/share/leocad"
+}

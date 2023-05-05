@@ -1,0 +1,44 @@
+# Maintainer: Tim Meusel <tim@bastelfreak.de>
+
+_gemname='parslet'
+pkgname="ruby-${_gemname}"
+pkgver=2.0.0
+pkgrel=1
+pkgdesc='Parser construction library with great error reporting in Ruby'
+arch=('any')
+url='http://kschiess.github.io/parslet/'
+license=('MIT')
+makedepends=('ruby-rspec' 'ruby-rdoc')
+depends=('ruby')
+source=("https://github.com/kschiess/parslet/archive/${pkgver}/${pkgname}-${pkgver}.tar.gz")
+options=("!emptydirs")
+sha512sums=('7177e979ad973e92e0fecad58f2a626b70071e47bc3f322c030a2a72f3b01815d25e6edc4ea2d741c6ca512840ce91da822071b68f431fdd0769c5d5a863ca68')
+
+prepare() {
+  cd "${_gemname}-${pkgver}"
+}
+
+build() {
+  cd "${_gemname}-${pkgver}"
+  gem build "${_gemname}.gemspec"
+}
+
+check() {
+  cd "${_gemname}-${pkgver}"
+  # tests are disabled at the moment because ruby-ae/ruby-qed are currently missing in the repos
+  #rspec
+}
+
+package() {
+  cd "${_gemname}-${pkgver}"
+  local _gemdir="$(gem env gemdir)"
+  gem install --verbose --ignore-dependencies --no-user-install --install-dir "${pkgdir}/${_gemdir}" --bindir "${pkgdir}/usr/bin" "${_gemname}-${pkgver}.gem"
+
+  install -Dm 644 README HISTORY.txt -t "${pkgdir}/usr/share/doc/${pkgname}"
+  mv example "${pkgdir}/usr/share/doc/${pkgname}/"
+  install -Dm 644 LICENSE -t "${pkgdir}/usr/share/licenses/${pkgname}/LICENSE"
+
+  rm -rf "${pkgdir}/${_gemdir}/cache"
+}
+
+# vim: ts=2 sw=2 et:

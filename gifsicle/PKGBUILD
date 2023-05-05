@@ -1,0 +1,28 @@
+# Maintainer : Daniel Bermond <dbermond@archlinux.org>
+# Contributor: Eric Bélanger <eric@archlinux.org>
+
+pkgname=gifsicle
+pkgver=1.93
+pkgrel=2
+pkgdesc='Command-line tool for creating, editing, and getting information about GIF images and animations'
+arch=('loong64' 'x86_64')
+url='https://www.lcdf.org/gifsicle/'
+license=('GPL2')
+depends=('libx11')
+source=("https://www.lcdf.org/${pkgname}/${pkgname}-${pkgver}.tar.gz")
+sha256sums=('92f67079732bf4c1da087e6ae0905205846e5ac777ba5caa66d12a73aa943447')
+
+build() {
+    cd "${pkgname}-${pkgver}"
+    ./configure --prefix='/usr'
+    make
+}
+
+check() {
+    cd "${pkgname}-${pkgver}"
+    test/testie -p src test
+}
+
+package() {
+    make -C "${pkgname}-${pkgver}" DESTDIR="$pkgdir" install
+}

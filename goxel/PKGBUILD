@@ -1,0 +1,29 @@
+# Maintainer: Alexander F. Rødseth <xyproto@archlinux.org>
+# Contributor: Tesx <tesfabpel@gmail.com>
+
+pkgname=goxel
+pkgver=0.12.0
+pkgrel=1
+pkgdesc='3D program that lets you create voxel volumes'
+arch=(loong64 x86_64)
+url='https://goxel.xyz/'
+license=(GPL3)
+depends=(glfw gtk3)
+makedepends=(git scons)
+source=("git+https://github.com/guillaumechereau/goxel#commit=4cdf7bc49cbfd87e60692f49483ea60271729845") # tag: v0.12.0
+b2sums=('SKIP')
+
+prepare() {
+  cd $pkgname
+  sed -i 's|\${SNAP}/icon.png|goxel|;s|Name=goxel|Name=Goxel|' snap/gui/goxel.desktop
+  sed -i 's|/share/applications/goxel.desktop|/share/applications/io.github.guillaumechereau.Goxel.desktop|g' Makefile
+}
+
+build() {
+  cd $pkgname
+  scons mode=release werror=n
+}
+
+package() {
+  make -C $pkgname DESTDIR="$pkgdir" PREFIX=/usr install
+}

@@ -1,0 +1,31 @@
+# Maintainer: Felix Yan <felixonmars@archlinux.org>
+
+pkgname=deepin-turbo
+pkgver=0.0.6
+pkgrel=1
+pkgdesc='A daemon that helps to launch applications faster'
+arch=('loong64' 'x86_64')
+url="https://github.com/linuxdeepin/deepin-turbo"
+license=('GPL3')
+depends=('dtkwidget')
+makedepends=('cmake' 'ninja')
+groups=('deepin')
+source=("$pkgname-$pkgver.tar.gz::https://github.com/linuxdeepin/deepin-turbo/archive/$pkgver.tar.gz")
+sha512sums=('b35ce156a654b9368dfa63ff0cdea62f52e4f823b10366ab15af91c8a8cb853b0d2fed2aa76b30616d852bd8c4d9d5d24a073ecc07307ae37b84396d5a0af1ec')
+
+prepare() {
+  cd deepin-turbo-$pkgver
+  sed -i 's/MODULE/SHARED/' src/launcherlib/CMakeLists.txt
+  sed -i '/-ldeepin-turbo/d;/Qt5::Widgets/a\    deepin-turbo' src/booster-dtkwidget/CMakeLists.txt
+}
+
+build() {
+  cd deepin-turbo-$pkgver
+  cmake -GNinja -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_INSTALL_LIBDIR=lib -DCMAKE_BUILD_TYPE=Release .
+  ninja
+}
+
+package() {
+  cd deepin-turbo-$pkgver
+  DESTDIR="$pkgdir" ninja install
+}

@@ -1,0 +1,41 @@
+# Maintainer: Justin Kromlinger <hashworks@archlinux.org>
+
+pkgname=plantuml-server
+pkgver=1.2023.1
+pkgrel=1
+pkgdesc="PlantUML Online Server"
+arch=(any)
+url="https://plantuml.com/"
+license=('GPL')
+backup=("etc/conf.d/plantuml-server")
+depends=("java-runtime>=11" "bash")
+makedepends=("maven" "java-environment>=11")
+source=("${pkgname}-${pkgver}.tar.gz::https://github.com/plantuml/${pkgname}/archive/refs/tags/v${pkgver}.tar.gz"
+        "${pkgname}.run"
+        "${pkgname}.conf"
+        "${pkgname}.service")
+sha256sums=('fe8b33abef319f76ca8ac42cb01c60ef3aff5f0380e968fb519b1cc3bda1b769'
+            '510711e73aa9bd2d42b4f1f2144fed90dfac011187bd540a9c4d01ee5588e052'
+            '96f26a243bf6d9945b4784d3ab73d861f6c4dc613157e51d1bcbcc55db0a2763'
+            '73b75e53fff8d4de5192d7a76cef0b4382420790c561763a8a2eec38520f748d')
+optdepends=('plantuml-ascii-math: AsciiMath or JLaTeXMath notation'
+            'ditaa: ditaa notation'
+            'graphviz: Graphviz/DOT notation')
+
+build() {
+  cd "${srcdir}/${pkgname}-${pkgver}"
+  mvn package
+}
+
+package() {
+  depends+=("java-runtime")
+
+  install -m 755 -D "${pkgname}.run" "${pkgdir}/usr/bin/${pkgname}"
+  install -m 755 -D "${pkgname}.conf" "${pkgdir}/etc/conf.d/${pkgname}"
+  install -m 644 -D "${pkgname}.service" "${pkgdir}/usr/lib/systemd/system/${pkgname}.service"
+
+  cd "${srcdir}/${pkgname}-${pkgver}"
+  install -m 644 -D "COPYING" "${pkgdir}/usr/share/licenses/${pkgname}/COPYING"
+  install -m 644 -D "target/plantuml.war" "${pkgdir}/usr/share/java/${pkgname}/plantuml.war"
+  install -m 644 -D "target/dependency/jetty-runner.jar" "${pkgdir}/usr/share/java/${pkgname}/dependency/jetty-runner.jar"
+}

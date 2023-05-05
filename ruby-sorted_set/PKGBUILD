@@ -1,0 +1,54 @@
+# Maintainer: Felix Yan <felixonmars@archlinux.org>
+
+pkgname=ruby-sorted_set
+pkgver=1.0.3
+_commit=3be5eb2c1a33cb78603abbfe423d188d355a240a
+pkgrel=2
+pkgdesc='Implements a variant of Set whose elements are sorted in ascending order'
+arch=(any)
+url='https://github.com/knu/sorted_set'
+license=(BSD)
+depends=(ruby-set ruby-rbtree)
+makedepends=(git)
+checkdepends=(ruby-rake ruby-test-unit)
+options=(!emptydirs)
+source=(git+https://github.com/knu/sorted_set.git#commit=$_commit)
+sha256sums=('SKIP')
+
+build() {
+  local _gemdir="$(gem env gemdir)"
+  cd sorted_set
+  gem build sorted_set.gemspec
+  gem install \
+    --local \
+    --verbose \
+    --ignore-dependencies \
+    --no-user-install \
+    --install-dir "tmp_install/$_gemdir" \
+    --bindir "tmp_install/usr/bin" \
+    sorted_set-$pkgver.gem
+  find "tmp_install/$_gemdir/gems/" \
+    -type f \
+    \( \
+        -iname "*.o" -o \
+        -iname "*.c" -o \
+        -iname "*.so" -o \
+        -iname "*.time" -o \
+        -iname "gem.build_complete" -o \
+        -iname "Makefile" \
+    \) \
+    -delete
+  rm -r tmp_install/$_gemdir/cache
+}
+
+check() {
+  local _gemdir="$(gem env gemdir)"
+  cd sorted_set
+  GEM_HOME="tmp_install/$_gemdir" rake
+}
+
+package() {
+  cd sorted_set
+  cp -a tmp_install/* "$pkgdir"/
+  install -Dm644 LICENSE.txt -t "$pkgdir"/usr/share/licenses/$pkgname/
+}

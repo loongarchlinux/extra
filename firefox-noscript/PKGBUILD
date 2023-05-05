@@ -1,0 +1,30 @@
+# Maintainer: Sergej Pupykin <pupykin.s+arch@gmail.com>
+# Maintainer: Eli schwartz <eschwartz@archlinux.org>
+
+pkgname=firefox-noscript
+pkgver=11.4.21
+pkgrel=1
+#_file=3910951
+pkgdesc="Extension for firefox which disables javascript"
+arch=('any')
+url="https://noscript.net/"
+license=('GPL2')
+checkdepends=('jq')
+groups=('firefox-addons')
+#source=("noscript-${pkgver}.xpi::https://addons.mozilla.org/firefox/downloads/file/${_file}/")
+source=("noscript-${pkgver}.xpi::https://secure.informaction.com/download/releases/noscript-$pkgver.xpi")
+noextract=("noscript-${pkgver}.xpi")
+sha256sums=('0fd3b66a2780d03a5b3cd460216105f3df2b27c6d3a552c1769c5de48c9e2338')
+b2sums=('e0d8270f068261af1b96122e4852323433eb97b5802e5957a8825ac1a0863910cea48cf8cb851ca769c0e510ce3ef52c4bfdb399b0b763f683d6fbbe9d9af0f1')
+
+check() {
+  bsdtar xf noscript-$pkgver.xpi manifest.json
+  jq '.version' manifest.json | grep -E '^"'$pkgver'"$'
+}
+
+package() {
+  depends=('firefox')
+  _extension_id="{73a6fe31-595d-460b-a920-fcc0f8843232}"
+  _extension_dest="${pkgdir}/usr/lib/firefox/browser/extensions/${_extension_id}"
+  install -Dm644 noscript-${pkgver}.xpi "${_extension_dest}.xpi"
+}

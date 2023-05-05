@@ -1,0 +1,50 @@
+# Maintainer: Christian Rebischke <chris.rebischke@archlinux.org>
+
+pkgbase=spire
+pkgname=("spire-agent" "spire-server")
+pkgver=1.4.2
+pkgrel=1
+pkgdesc="SPIFFE Runtime Environment"
+url='https://github.com/spiffe/spire'
+arch=("loong64" "x86_64")
+license=("Apache")
+makedepends=("go")
+depends=("glibc")
+source=("${pkgbase}-${pkgver}.tar.gz::https://github.com/spiffe/spire/archive/v${pkgver}.tar.gz")
+sha512sums=('52364b7a1ace524d9780096da6d0f8e6fcb277445f665d6ec5eda8fe15ba6772687f5878c58c41dbe77f82c4549aa40bffe4fccb5e4f8334a10d57d270a5635a')
+b2sums=('514fef2edb79accedb6595fbef0c644c0c0ab2c9381fcf2154e5b3e9df4e8853c3e21237b1de91d4dac4e94f594d94152e0088a1e63434154902702daa758919')
+
+build() {
+  cd "${pkgbase}-${pkgver}"
+  export CGO_CPPFLAGS="${CPPFLAGS}"
+  export CGO_CFLAGS="${CFLAGS}"
+  export CGO_CXXFLAGS="${CXXFLAGS}"
+  export CGO_LDFLAGS="${LDFLAGS}"
+  export GOFLAGS="-buildmode=pie -ldflags=-linkmode=external -trimpath -mod=readonly -modcacherw"
+  cd cmd/spire-agent/
+  go build -o spire-agent .
+  cd ../../cmd/spire-server
+  go build -o spire-server .
+}
+
+check() {
+  cd "${pkgbase}-${pkgver}"
+  # test is blocking for some reason..
+  # go test -v ./...
+}
+
+package_spire-agent() {
+  pkgdesc="SPIFFE runtime environment (agent)"
+  provides=("spire-agent")
+  depends=("glibc")
+  cd "${pkgbase}-${pkgver}"
+  install -Dsm755 cmd/spire-agent/spire-agent "${pkgdir}/usr/bin/spire-agent"
+}
+
+package_spire-server() {
+  pkgdesc="SPIFFE runtime environment (server)"
+  provides=("spire-server")
+  depends=("glibc")
+  cd "${pkgbase}-${pkgver}"
+  install -Dsm755 cmd/spire-server/spire-server "${pkgdir}/usr/bin/spire-server"
+}

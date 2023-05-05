@@ -1,0 +1,29 @@
+# Maintainer: Filipe Laíns (FFY00) <lains@archlinux.org>
+
+pkgname=sigdigger
+_pkgname=SigDigger
+pkgver=0.3.0
+pkgrel=2
+pkgdesc='Qt-based digital signal analyzer, using Suscan core and Sigutils DSP library'
+arch=('loong64' 'x86_64')
+url='https://github.com/BatchDrake/SigDigger'
+license=('GPL3')
+depends=('qt5-base' 'sigutils' 'suscan' 'suwidgets' 'alsa-lib' 'soapysdr')
+makedepends=('qt5-tools')
+source=("$pkgname-$pkgver.tar.gz::$url/archive/v$pkgver.tar.gz")
+sha512sums=('c24e2ac600ebdc8e080840f22812c2aba774c07de06abcffa5b561e76af0bb6ff423ea1f7c528fc8803cac8fc39edd63ba1779d3b535affbeb14a3c9aba54c9c')
+
+build() {
+  mkdir $_pkgname-$pkgver/build
+  cd $_pkgname-$pkgver/build
+
+  qmake SUWIDGETS_PREFIX=/usr SIGDIGGER_PREFIX=/usr ../SigDigger.pro
+
+  make
+}
+
+package() {
+  cd $_pkgname-$pkgver/build
+
+  make INSTALL_ROOT="$pkgdir" install
+}

@@ -1,0 +1,31 @@
+# Maintainer: Felix Yan <felixonmars@archlinux.org>
+
+pkgname=golang-golang-x-crypto
+pkgver=0.0.20220830
+_commit=c86fa9a7ed909e2f2a8ab8298254fca727aba16a
+pkgrel=1
+pkgdesc='Go supplementary cryptography libraries'
+arch=('any')
+url="https://github.com/golang/crypto"
+license=('BSD')
+depends=('go' 'golang-golang-x-net' 'golang-golang-x-sys' 'golang-golang-x-term')
+checkdepends=('openssh')
+source=("$pkgname-$_commit.tar.gz::https://github.com/golang/crypto/archive/$_commit.tar.gz")
+sha512sums=('e691c60b1f9558274cb3d6edc198ae88cc3a52439e8eec0d352f8d303071ccfcdbc8cd7b2a0286c679ef4eea6387d45105da2766eafef2cdbd65856c62168543')
+
+check() {
+  export GO_BUILDER_FLAKY_NET=1
+  export GO111MODULE=off
+  export GOPATH="$srcdir/build:/usr/share/gocode"
+  mkdir -p "$srcdir"/build/src/golang.org/x
+  cp -a "$srcdir"/crypto-$_commit "$srcdir"/build/src/golang.org/x/crypto
+  cd "$srcdir"/build/src/golang.org/x/crypto
+  go test -v $(go list ./...)
+}
+
+package() {
+  mkdir -p "$pkgdir"/usr/share/gocode/src/golang.org/x
+  cp -a "$srcdir"/crypto-$_commit "$pkgdir"/usr/share/gocode/src/golang.org/x/crypto
+
+  install -Dm644 crypto-$_commit/LICENSE "$pkgdir"/usr/share/licenses/$pkgname/LICENSE
+}

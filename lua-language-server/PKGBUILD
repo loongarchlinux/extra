@@ -1,0 +1,62 @@
+# Maintainer: Daniel M. Capella <polyzen@archlinux.org>
+# Maintainer: Caleb Maclennan <caleb@alerque.com>
+# Contributor: KokaKiwi <kokakiwi+aur@kokakiwi.net>
+# Contributor: Mohammad AlSaleh <CE.Mohammad.AlSaleh at gmail dot com>
+
+pkgname=lua-language-server
+pkgver=3.6.19
+pkgrel=1
+license=('MIT')
+pkgdesc='Lua Language Server coded by Lua'
+url=https://github.com/LuaLS/lua-language-server
+arch=('loong64' 'x86_64')
+depends=('bash' 'gcc-libs')
+makedepends=('git' 'ninja')
+source=("git+$url.git#tag=$pkgver"
+        'git+https://github.com/actboy168/bee.lua.git'
+        'git+https://github.com/love2d-community/love-api.git'
+        'git+https://github.com/bjornbytes/lovr-docs.git'
+        'git+https://github.com/sqmedeiros/lpeglabel.git'
+        'git+https://github.com/actboy168/luamake.git'
+        'git+https://github.com/electron/rcedit.git'
+        'wrapper')
+b2sums=('SKIP'
+        'SKIP'
+        'SKIP'
+        'SKIP'
+        'SKIP'
+        'SKIP'
+        'SKIP'
+        '2ec98b16514c8e416af10625fd582d081448dbe7889d3d9e1fee0540c79f26220bd4b91991c0479852c0102f4c35b63059fe176a59fffbbca8e01274171c7de2')
+
+prepare() {
+  cd $pkgname
+  git submodule init
+  for i in ../{bee.lua,love-api,lpeglabel,luamake,rcedit}; do
+    git config submodule.3rd/"${i##../}".url "$i"
+  done
+  git config submodule.3rd/lovr-api.url ../lovr-docs
+  git -c protocol.file.allow=always submodule update
+  cd 3rd/luamake
+  git submodule init
+  git config submodule.3rd/bee.lua.url ../../../bee.lua
+  git -c protocol.file.allow=always submodule update
+}
+
+build() {
+  cd $pkgname
+  ninja -C 3rd/luamake -f compile/ninja/linux.ninja
+  ./3rd/luamake/luamake rebuild
+}
+
+package() {
+  install -D wrapper "$pkgdir"/usr/bin/$pkgname
+  cd $pkgname
+  install -Dt "$pkgdir"/usr/lib/$pkgname/bin bin/$pkgname
+  install -m644 -t "$pkgdir"/usr/lib/$pkgname/bin bin/main.lua
+  install -m644 -t "$pkgdir"/usr/lib/$pkgname {debugger,main}.lua
+  cp -r locale meta script "$pkgdir"/usr/lib/$pkgname
+  install -Dm644 -t "$pkgdir"/usr/share/licenses/$pkgname LICENSE
+}
+
+# vim:set ts=2 sw=2 et:

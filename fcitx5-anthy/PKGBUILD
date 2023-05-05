@@ -1,0 +1,28 @@
+# Maintainer: Felix Yan <felixonmars@archlinux.org>
+# Contributor: csslayer <wengxt AT gmail com>
+
+pkgname=fcitx5-anthy
+pkgver=5.0.14
+pkgrel=1
+pkgdesc="Anthy Wrapper for Fcitx5"
+arch=('loong64' 'x86_64')
+url="https://github.com/fcitx/fcitx5-anthy"
+license=('GPL')
+depends=('fcitx5' 'anthy')
+makedepends=('extra-cmake-modules' 'ninja')
+source=("https://download.fcitx-im.org/fcitx5/fcitx5-anthy/fcitx5-anthy-$pkgver.tar.xz"{,.sig})
+sha512sums=('ca3869f4912769991dd6b41735be9e30c1be21a04ba3193aec760c82b9bb337b98254e09722c3bb13fca44c6709e2fca6fcb73abc1da10e448e49852abea91b9'
+            'SKIP')
+validpgpkeys=('2CC8A0609AD2A479C65B6D5C8E8B898CBF2412F9') # Weng Xuetian <wengxt@gmail.com>
+
+build(){
+  cd $pkgname-$pkgver
+
+  cmake -GNinja -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_INSTALL_LIBDIR=/usr/lib .
+  ninja
+}
+
+package() {
+  cd $pkgname-$pkgver
+  DESTDIR="$pkgdir" ninja install
+}

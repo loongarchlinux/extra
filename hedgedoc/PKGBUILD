@@ -1,0 +1,136 @@
+# Maintainer: Jelle van der Waa <jelle@archlinux.org>
+
+pkgname=hedgedoc
+pkgver=1.9.7
+pkgrel=1
+pkgdesc="Platform to write and share markdown"
+arch=('any')
+url='https://github.com/hedgedoc/hedgedoc'
+license=('AGPL3')
+depends=('nodejs-lts-hydrogen')
+makedepends=('nodejs-lts-hydrogen' 'sqlite' 'python' 'node-gyp' 'git' 'yarn' 'npm')
+optdepends=('postgresql: postgresql database support'
+            'mariadb: mariadb database support'
+            'sqlite: sqlite database support')
+backup=("etc/webapps/${pkgname}"/config.json)
+source=("${pkgname}-${pkgver}.tar.gz::https://github.com/hedgedoc/${pkgname}/archive/${pkgver}.tar.gz"
+        "sysusers.conf"
+        "tmpfiles.conf"
+        "hedgedoc.service")
+options=(!emptydirs)
+sha256sums=('a48b697228077711c869dc4cd7dc42ff20c3d8545c824079b3c9b6bcf1d77b2e'
+            '44806410925bb13fddfc08bfeac94320285f3847e18a49552816eb823bec888a'
+            'afe54a4a656aa5237962fe4efa3cd47dd90c8ce821aa259bfa978384c26ba53a'
+            'd51bb443c52f759260d61e055a201398cfe1e2296208f20e3d8601a6c01aa3a4')
+
+prepare() {
+  cd "${pkgname}-${pkgver}"
+  sed -i 's/16.x/18.x/g' package.json
+  export NODE_OPTIONS=--openssl-legacy-provider
+}
+
+build() {
+  cd "${pkgname}-${pkgver}"
+  # Build steps from Dockerfile
+  yarn install --production=false
+  yarn run build
+  rm -rf node_modules
+  # Production modules
+  yarn install --production=true
+}
+
+package() {
+  cd "${pkgname}-${pkgver}"
+
+  # removing unneeded files and directories
+  find node_modules -type f \
+          \( \
+         -iname '*Makefile*' -o \
+         -iname '*armv*' -o \
+         -iname '*.cache' -o \
+         -iname '*Makefile*' -o \
+         -iname '*appveyor.yml' -o \
+         -iname '*.babelrc' -o \
+         -iname '*.bak' -o \
+         -iname '*bower.json' -o \
+         -iname '*.c' -o \
+         -iname '*.cc' -o \
+         -iname '*.cpp' -o \
+         -iname '*.md' -o \
+         -iname '*.markdown' -o \
+         -iname '*.rst' -o \
+         -iname '*.nycrc' -o \
+         -iname '*.npmignore' -o \
+         -iname '*.editorconfig' -o \
+         -iname '*.el' -o \
+         -iname '*.eslintignore' -o \
+         -iname '*.eslintrc*' -o \
+         -iname '*.fimbullinter.yaml' -o \
+         -iname '*.gitattributes' -o \
+         -iname '*.gitmodules' -o \
+         -iname '*.h' -o \
+         -iname '*.html' -o \
+         -iname '*.jshintrc' -o \
+         -iname '*.jscs.json' -o \
+         -iname '*.log' -o \
+         -iname '*logo.svg' -o \
+         -iname '*.nvmrc' -o \
+         -iname '*.o' -o \
+         -iname '*package-lock.json' -o \
+         -iname '*.travis.yml' -o \
+         -iname '*.prettierrc' -o \
+         -iname '*.sh' -o \
+         -iname '*.tags*' -o \
+         -iname '*.Dockerfile*' -o \
+         -iname '*.tm_properties' -o \
+         -iname '*.wotanrc.yaml' -o \
+         -iname '*tsconfig.json' -o \
+         -iname '*yarn.lock' \
+         \) \
+         -delete
+
+  find node_modules -type d \
+          \( \
+         -iwholename '*.github' -o \
+         -iwholename '*.tscache' -o \
+         -iwholename '*/man' -o \
+         -iwholename '*/test' -o \
+         -iwholename '*/scripts' -o \
+         -iwholename '*/git-hooks' -o \
+         -iwholename '*/linux-arm64' -o \
+         -iwholename '*/linux-armvy' -o \
+         -iwholename '*/linux-armv7' -o \
+         -iwholename '*/win32-ia32' -o \
+         -iwholename '*/win32-x64' -o \
+         -iwholename '*/darwin-x64' \
+         \) \
+         -exec rm -rvf {} +
+
+  install -m0755 -d "${pkgdir}/usr/share/webapps/${pkgname}"
+
+  # install application parts
+  cp -a bin public lib locales node_modules "${pkgdir}/usr/share/webapps/${pkgname}"  
+  install -m0644 app.js -t "${pkgdir}/usr/share/webapps/${pkgname}"
+  install -m0644 package.json -t "${pkgdir}/usr/share/webapps/${pkgname}"
+
+  # Make public/uploads a symlink to the hedgedoc  writable directory.
+  # An alternative would be to configure the uploadsPath in config.json.
+  rm "${pkgdir}/usr/share/webapps/${pkgname}/public/uploads/.gitkeep"
+  rm -d "${pkgdir}/usr/share/webapps/${pkgname}/public/uploads"
+  ln -s "/var/lib/${pkgname}/uploads" \
+          "${pkgdir}/usr/share/webapps/${pkgname}/public/uploads"
+
+
+  # Setup config files in /etc.
+  install -m0755 -d "${pkgdir}/etc/webapps/${pkgname}"
+  cp config.json.example "${pkgdir}/etc/webapps/${pkgname}/config.json"
+
+  ln -s "/etc/webapps/${pkgname}"/config.json "${pkgdir}/usr/share/webapps/${pkgname}/config.json"
+
+  # Configure hedgedoc user and some directories writable for that user.
+  install -Dm0644 ${srcdir}/sysusers.conf "${pkgdir}/usr/lib/sysusers.d/${pkgname}.conf"
+  install -Dm0644 ${srcdir}/tmpfiles.conf "${pkgdir}/usr/lib/tmpfiles.d/${pkgname}.conf"
+
+  # Install systemd service file.
+  install -Dm0644 -t "${pkgdir}/usr/lib/systemd/system/" "${srcdir}"/hedgedoc.service
+}

@@ -1,0 +1,37 @@
+# Maintainer: Levente Polyak <anthraxx[at]archlinux[dot]org>
+# Contributor: Jonathan Steel <jsteel at aur.archlinux.org>
+# Contributor: Alan Young <harleypig@gmail.com>
+
+pkgname=perl-module-find
+_cpanname=Module-Find
+pkgver=0.16
+pkgrel=1
+pkgdesc="Find and use installed perl modules in a (sub)category"
+url='https://search.cpan.org/dist/Module-Find'
+arch=('any')
+license=('PerlArtistic' 'GPL')
+depends=('perl')
+checkdepends=('perl-test-pod' 'perl-test-pod-coverage')
+options=('!emptydirs')
+source=(${pkgname}-${pkgver}.tar.gz::https://search.cpan.org/CPAN/authors/id/C/CR/CRENZ/${_cpanname}-${pkgver}.tar.gz)
+sha512sums=('a0c935fd229320ce74052180571c0da9667dc87a717e039bec27120a8ac1552988352038efd1805d62ac40fcaf7985c44b6d9c56648b379f1ca0f03727e550bd')
+
+build() {
+  cd ${_cpanname}-${pkgver}
+  PERL_MM_USE_DEFAULT=1 perl Makefile.PL INSTALLDIRS=vendor
+  make
+}
+
+check() {
+  cd ${_cpanname}-${pkgver}
+  make test
+}
+
+package() {
+  cd ${_cpanname}-${pkgver}
+  make DESTDIR="${pkgdir}" install
+  install -Dm 644 README "${pkgdir}/usr/share/doc/${pkgname}/README"
+  install -Dm 644 examples/* -t "${pkgdir}/usr/share/doc/${pkgname}/examples"
+}
+
+# vim: ts=2 sw=2 et:

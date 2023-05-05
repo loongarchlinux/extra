@@ -1,0 +1,34 @@
+# Maintainer: BlackEagle <ike.devolder@gmail.com>>
+
+pkgname=kodi-addon-screensaver-greynetic
+epoch=1
+pkgver=20.2.0
+_codename=Nexus
+pkgrel=4
+pkgdesc="Greynetic screensaver for Kodi"
+arch=('loong64' 'x86_64')
+url='https://github.com/xbmc/screensaver.greynetic'
+license=('GPL')
+groups=('kodi-addons' 'kodi-addons-screensaver')
+makedepends=('cmake' 'glm' 'kodi-dev')
+options=(!lto)
+source=("$pkgname-$pkgver.tar.gz::https://github.com/xbmc/screensaver.greynetic/archive/$pkgver-$_codename.tar.gz")
+sha512sums=('de2e5dfa3d30e66344a3deff71f734f1cf061c45050bc729fc1805a9c6f65314675af0a1d4c6f1645488d7a269958464165520bfe2a9cfbb54c256e27ef90940')
+
+build() {
+    cd "screensaver.greynetic-$pkgver-$_codename"
+    cmake \
+        -DCMAKE_INSTALL_PREFIX=/usr \
+        -DCMAKE_BUILD_TYPE=Release \
+        -DBUILD_SHARED_LIBS=1 \
+        -DUSE_LTO=1 \
+        .
+    make
+}
+
+package() {
+    depends=('kodi' 'glm')
+    cd "screensaver.greynetic-$pkgver-$_codename"
+    make DESTDIR="$pkgdir/" install
+}
+

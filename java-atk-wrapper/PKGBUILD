@@ -1,0 +1,80 @@
+# Maintainer: Levente Polyak <anthraxx[at]archlinux[dot]org>
+# Contributor: Guillaume ALAUX <guillaume@archlinux.org>
+# Contributor: Martin Wimpress <code@flexion.org>
+# Contributor: Kyle <kyle@gmx.ca>
+
+pkgbase=java-atk-wrapper
+pkgname=(java-atk-wrapper-common java-atk-wrapper-openjdk)
+pkgver=0.40.0
+pkgrel=2
+_jvmvers=(8 11 17 19)
+pkgdesc='ATK wrapper for screen reader access to Java Swing applications'
+url='https://gitlab.gnome.org/GNOME/java-atk-wrapper/'
+arch=('loong64' 'x86_64')
+license=('LGPL')
+makedepends=('gobject-introspection' 'gnome-common' 'gtk2' 'gtk3' 'xorg-xprop' 'at-spi2-atk')
+options=(!emptydirs)
+source=(https://gitlab.gnome.org/GNOME/java-atk-wrapper/-/archive/${pkgver}/${pkgname}-${pkgver}.tar.bz2)
+sha256sums=('4c64dda3f0b37dcb3230d10e78bea44af44aefd2ee3702a898e2176a6604ebea')
+sha512sums=('abbca7893b085dc034093e1de75ebd77bf6018ecb9836008efb19948f4b87eecb2e569d1f7af7aefaa61b86a83f3be2f35bb1b83e183f4f4b225f0a831243c8b')
+
+for _jvmver in "${_jvmvers[@]}"; do
+  makedepends+=("java-environment=${_jvmver}")
+done
+for _jvmver in "${_jvmvers[@]:0:${#_jvmvers[@]}-1}"; do
+  _pkgname="java-atk-wrapper-openjdk${_jvmver}"
+  pkgname+=("${_pkgname}")
+  eval "package_${_pkgname}() {
+    _package ${_jvmver}
+  }"
+done
+
+package_java-atk-wrapper-openjdk() {
+  _package "${_jvmvers[-1]}"
+}
+
+prepare() {
+  cd ${pkgbase}-${pkgver}-*
+  autoreconf -fiv
+  for _jvmver in "${_jvmvers[@]}" ${_jvmvers}; do
+    cp -r . ../${pkgbase}-${pkgver}-${_jvmver}
+  done
+}
+
+build() {
+  for _jvmver in "${_jvmvers[@]}"; do
+    cd "${srcdir}/${pkgbase}-${pkgver}-${_jvmver}"
+    export PATH="/usr/lib/jvm/java-${_jvmver}-openjdk/bin:${PATH}"
+    ./configure \
+      --prefix=/usr
+    make
+  done
+}
+
+package_java-atk-wrapper-common() {
+  pkgdesc+=' - common files'
+  depends=('xorg-xprop' 'atk' 'at-spi2-atk')
+
+  _jvmver=${_jvmvers[-1]}
+  cd ${pkgbase}-${pkgver}-${_jvmver}
+
+  make -j1 DESTDIR="${pkgdir}" install
+  install -d "${pkgdir}/etc/java-openjdk"
+  mv "${pkgdir}"/usr/lib/jvm/java-${_jvmver}-openjdk/conf/* "${pkgdir}/etc/java-openjdk"
+  rm -rf "${pkgdir}"/usr/lib/jvm
+}
+
+_package() {
+  local _jvmver=${1}
+  pkgdesc+=" - OpenJDK ${_jvmver}"
+  depends=('java-atk-wrapper-common' "java-runtime=${_jvmver}")
+  provides=("java-atk-wrapper-openjdk=${_jvmver}")
+
+  cd ${pkgbase}-${pkgver}-${_jvmver}
+  export PATH="/usr/lib/jvm/java-${_jvmver}-openjdk/bin:${PATH}"
+  make -j1 DESTDIR="${pkgdir}" install
+  rm "${pkgdir}"/usr/lib/*.so*
+  rm -f "${pkgdir}"/usr/lib/jvm/java-${_jvmver}-openjdk/conf/*
+}
+
+# vim: ts=2 sw=2 et:

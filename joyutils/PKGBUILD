@@ -1,0 +1,29 @@
+# Maintainer: Alexander F. Rødseth <xyproto@archlinux.org>
+# Contributor: loqs
+# Contributor: Arkham <arkham@archlinux.us>
+# Contributor: dirty_d <andrew2085@gmail.com>
+
+pkgname=joyutils
+pkgver=1.8.1
+pkgrel=1
+pkgdesc='jscal, jstest, and jsattach utilities for the Linux joystick driver'
+arch=(loong64 x86_64)
+license=(GPL)
+url='https://packages.debian.org/sid/joystick'
+conflicts=(linuxconsole)
+depends=(sdl2)
+source=("https://deb.debian.org/debian/pool/main/j/joystick/joystick_$pkgver.orig.tar.bz2")
+b2sums=('a0fab44762d9f4edcc1e85037efada2dac617873548579a83c3e7791e5a047e1c88243978fee562992f363102a0cb415c75d1286a3eb46a42dfe6afc7e9a0594')
+
+prepare() {
+  ln -sf "linuxconsoletools-$pkgver" $pkgname
+  sed -i 's,IR)/lib,IR)$(PREFIX)/lib,g' $pkgname/utils/Makefile
+}
+
+build() {
+  PREFIX=/usr make -C $pkgname
+}
+
+package() {
+  DESTDIR="$pkgdir" PREFIX=/usr make -C $pkgname install
+}

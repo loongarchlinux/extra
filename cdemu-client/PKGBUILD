@@ -1,0 +1,34 @@
+# Maintainer: Jan Alexander Steffens (heftig) <heftig@archlinux.org>
+# Contributor: Mateusz Herych <heniekk@gmail.com>
+# Contributor: Charles Lindsay <charles@chaoslizard.org>
+
+pkgname=cdemu-client
+pkgver=3.2.5
+pkgrel=1
+pkgdesc="Simple command-line client for controlling cdemu-daemon"
+arch=(any)
+url="https://cdemu.sourceforge.io/"
+license=(GPL)
+depends=(python-gobject cdemu-daemon)
+makedepends=(intltool cmake bash-completion)
+conflicts=('cdemu')
+source=("https://downloads.sourceforge.net/cdemu/$pkgname-$pkgver.tar.xz")
+sha256sums=('a72d85eb5bfcbced0108cd7c1827e50220f8f1d7998db30ceb0aa808366c39df')
+
+prepare() {
+  cd $pkgname-$pkgver
+}
+
+build() {
+  cmake -S $pkgname-$pkgver -B build \
+    -DCMAKE_BUILD_TYPE=Release \
+    -DCMAKE_INSTALL_PREFIX=/usr
+  cmake --build build
+}
+
+package() {
+  DESTDIR="$pkgdir" cmake --install build
+  install -Dt "$pkgdir/usr/share/doc/$pkgname" -m644 $pkgname-$pkgver/README
+}
+
+# vim:set sw=2 et:

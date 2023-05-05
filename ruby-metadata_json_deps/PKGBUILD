@@ -1,0 +1,44 @@
+# Maintainer: Tim Meusel <tim@bastelfreak.de>
+
+_gemname='metadata_json_deps'
+pkgname="ruby-${_gemname}"
+pkgver=1.0.0
+pkgrel=1
+pkgdesc='Verify all your dependencies allow the latest versions on Puppet Forge'
+arch=('any')
+url="https://github.com/ekohl/${_gemname}"
+license=('Apache')
+depends=('ruby' 'ruby-puppet_forge' 'ruby-puppet_metadata')
+checkdepends=('ruby-rspec')
+makedepends=('ruby-rdoc' 'ruby-rake')
+options=('!emptydirs')
+source=("${url}/archive/${pkgver}/${_gemname}-${pkgver}.tar.gz")
+sha512sums=('6e26192396c9a532884c6d4dd3405578dab527549aed7f4108a2ac1bac03335798cd67609ad77bbbc7900c3777ae68dd5ac22a2f006789cae027186a42feef21')
+
+prepare() {
+  cd "${srcdir}/${_gemname}-${pkgver}"
+  # allow latest dependencies
+  sed --in-place 's|~>|>=|g' "${_gemname}.gemspec"
+}
+
+build() {
+  cd "${srcdir}/${_gemname}-${pkgver}"
+  gem build "${_gemname}.gemspec"
+}
+
+check() {
+  cd "${srcdir}/${_gemname}-${pkgver}"
+  rake spec
+}
+
+package() {
+cd "${srcdir}/${_gemname}-${pkgver}"
+  local _gemdir="$(gem env gemdir)"
+  gem install --verbose --ignore-dependencies --no-user-install --install-dir "${pkgdir}/${_gemdir}" --bindir "${pkgdir}/usr/bin" "${_gemname}-${pkgver}.gem"
+
+  install -Dm 644 LICENSE -t "${pkgdir}/usr/share/licenses/${pkgname}/"
+
+  install -Dm 644 README.md -t "${pkgdir}/usr/share/doc/${pkgname}"
+
+  rm -rf "${pkgdir}/${_gemdir}/cache"
+}

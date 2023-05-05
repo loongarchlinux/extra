@@ -1,0 +1,32 @@
+# Maintainer: BlackIkeEagle <ike DOT devolder AT gmail DOT com>
+
+pkgname=kodi-addon-imagedecoder-raw
+pkgver=20.1.0
+_codename=Nexus
+pkgrel=5
+pkgdesc="Kodi raw imagedecoder addon"
+arch=('loong64' 'x86_64')
+url="https://github.com/xbmc/imagedecoder.raw"
+license=('GPL2')
+groups=('kodi-addons' 'kodi-addons-imagedecoder')
+makedepends=('cmake' 'kodi-dev' 'libraw')
+options=(!lto)
+source=("$pkgname-$pkgver.tar.gz::https://github.com/xbmc/imagedecoder.raw/archive/refs/tags/$pkgver-$_codename.tar.gz")
+sha512sums=('88701d1937a9ef6dd32b733a1ea33a462fafd8d0c37ff9ca2d8c892114db120135dc17f6fcc7dfe58dd5410cb6feee48654564b8fdf2a6b1cb241a80e4345bc5')
+
+build() {
+    cd "imagedecoder.raw-$pkgver-$_codename"
+    cmake \
+        -DCMAKE_INSTALL_PREFIX=/usr \
+        -DCMAKE_BUILD_TYPE=Release \
+        -DBUILD_SHARED_LIBS=1 \
+        -DUSE_LTO=1 \
+        .
+    make
+}
+
+package() {
+    depends=('kodi' 'libraw')
+    cd "imagedecoder.raw-$pkgver-$_codename"
+    make DESTDIR="$pkgdir/" install
+}

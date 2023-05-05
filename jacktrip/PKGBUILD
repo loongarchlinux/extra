@@ -1,0 +1,62 @@
+# Maintainer: David Runge <dvzrv@archlinux.org>
+
+pkgname=jacktrip
+pkgver=1.8.1
+pkgrel=1
+epoch=1
+pkgdesc="Multi-machine audio network performance over the Internet"
+arch=(loong64 x86_64)
+url="https://github.com/jacktrip/jacktrip"
+license=(
+  LGPL3
+  GPL3
+  MIT
+)
+groups=(pro-audio)
+depends=(
+  gcc-libs
+  glibc
+  hicolor-icon-theme
+  qt5-base
+  qt5-declarative
+  qt5-graphicaleffects
+  qt5-networkauth
+  qt5-quickcontrols2
+  qt5-svg
+  qt5-websockets
+)
+makedepends=(
+  help2man
+  meson
+  jack
+  python-jinja
+  python-yaml
+  rtaudio
+)
+source=($url/archive/v$pkgver/$pkgname-v$pkgver.tar.gz)
+sha512sums=('d381f8601adc136b00506ee59713c546e39c750c978687950c0f8ba1cb5b479c505e74d448b0f711e81f059d58bee129b138060f1a9203457845cc5fefc7cbe8')
+b2sums=('f1bc3e4be7fc62196c2f7731520b2360999836251210407db6b39fc39a9acdd93d676f2ba394b3f20651be1b51cbd5ff9c4b32a14cc72d2bed4a7fe46215f1c2')
+
+build() {
+  local meson_options=(
+    -D noupdater=true
+  )
+
+  arch-meson "${meson_options[@]}" build $pkgname-$pkgver
+  meson compile -C build
+}
+
+check() {
+  meson test -C build --print-errorlogs
+}
+
+package() {
+  depends+=(
+    jack libjack.so
+    rtaudio librtaudio.so
+  )
+
+  DESTDIR="$pkgdir" meson install -C build
+  install -vDm 644 $pkgname-$pkgver/{LICENSE.md,LICENSES/MIT.txt} -t "$pkgdir/usr/share/licenses/$pkgname"
+  install -vDm 644 $pkgname-$pkgver/README.md -t "$pkgdir/usr/share/doc/$pkgname"
+}

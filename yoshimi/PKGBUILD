@@ -1,0 +1,72 @@
+# Maintainer: David Runge <dvzrv@archlinux.org>
+# Contributor: David Adler <d dot adler aet posteo dot de>
+
+pkgname=yoshimi
+pkgver=2.2.3
+pkgrel=2
+pkgdesc="A sophisticated soft-synth originally forked from ZynAddSubFX"
+arch=(loong64 x86_64)
+url="https://yoshimi.github.io/"
+license=(GPL2)
+groups=(lv2-plugins pro-audio)
+depends=(
+  cairo
+  gcc-libs
+  glibc
+  zlib
+)
+makedepends=(
+  alsa-lib
+  cmake
+  fftw
+  fltk
+  jack
+  lv2
+  mxml
+  ncurses
+  readline
+)
+checkdepends=(kxstudio-lv2-extensions lv2lint)
+optdepends=('lv2-host: for LV2 plugin')
+# plugin exposes symbols globally if built with LTO:
+# https://github.com/Yoshimi/yoshimi/issues/164
+options=(!lto)
+source=(https://github.com/$pkgname/$pkgname/archive/$pkgver/$pkgname-$pkgver.tar.gz)
+sha512sums=('d10829bcc81999c359912c76a1cbdeba4dbc5a31dbca3c54bd31323495c6ae889d50342d8024929076976b7b6deb1dc7829fbd19f9f3618caf2517a014aeccbe')
+b2sums=('6aadaa08dafc83e7b5eaec88d53ba27fa923012b4ceaa0acd49dc82bd6aa9b255a17477c950fc9ab97ca0c08e8bf1a2f655f24aca28e1d762ea85fc92da0ca42')
+
+build() {
+  local cmake_options=(
+    -DCMAKE_INSTALL_PREFIX=/usr
+    -DCMAKE_BUILD_TYPE=None
+    -Wno-dev
+    -B build
+    -S $pkgname-$pkgver/src
+  )
+
+  cmake "${cmake_options[@]}"
+  cmake --build build --verbose
+}
+
+check() {
+  cp -v build/LV2_Plugin/${pkgname}_lv2.so $pkgname-$pkgver/src/LV2_Plugin/
+  lv2lint -Mpack -I $pkgname-$pkgver/src/LV2_Plugin/ "http://yoshimi.sourceforge.net/lv2_plugin"
+  rm -v $pkgname-$pkgver/src/LV2_Plugin/${pkgname}_lv2.so
+  ctest --test-dir build --output-on-failure
+}
+
+package() {
+  depends+=(
+    alsa-lib libasound.so
+    fftw libfftw3f.so
+    fltk libfltk.so libfltk_images.so
+    jack libjack.so
+    mxml libmxml.so
+    ncurses libncursesw.so
+    readline libreadline.so
+  )
+
+  DESTDIR="$pkgdir" cmake --install build
+  install -vDm 644 $pkgname-$pkgver/{Changelog,Dependencies,README.txt,Yoshimi_Helpers} -t "$pkgdir/usr/share/doc/$pkgname/"
+}
+# vim:set ts=2 sw=2 et:

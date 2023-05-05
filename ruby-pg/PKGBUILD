@@ -1,0 +1,84 @@
+# Maintainer: Levente Polyak <anthraxx[at]archlinux[dot]org>
+# Contributor: Niels Abspoel <aboe76 (at) Gmail.com>
+
+_gemname=pg
+pkgname=ruby-$_gemname
+pkgver=1.4.5
+pkgrel=1
+pkgdesc='Ruby interface to the PostgreSQL RDBMS'
+url='https://github.com/ged/ruby-pg'
+arch=('loong64' 'x86_64')
+license=('custom:BSDL')
+depends=('glibc' 'ruby' 'ruby-rspec-core' 'postgresql-libs')
+makedepends=('git' 'ruby-rdoc')
+options=('!emptydirs')
+_commit='5855e7c199cdb0bee764f2f75e304eb2daa3aca7'
+source=("$pkgname::git+$url.git#commit=$_commit")
+b2sums=('SKIP')
+
+pkgver() {
+  cd "$pkgname"
+
+  git describe --tags | sed 's/^v//'
+}
+
+prepare() {
+  cd "$pkgname"
+
+  sed 's|"ChangeLog".freeze, ||' -i ${_gemname}.gemspec
+  sed 's|"lib/pg/deprecated_constants.rb".freeze, ||' -i ${_gemname}.gemspec
+  sed "s|^  s.version = .*$|  s.version = '${pkgver}'|" -i ${_gemname}.gemspec
+}
+
+build() {
+  cd "$pkgname"
+
+  gem build "$_gemname.gemspec"
+}
+
+package() {
+  cd "$pkgname"
+
+  local _gemdir="$(ruby -e'puts Gem.default_dir')"
+
+  gem install \
+    --local \
+    --verbose \
+    --ignore-dependencies \
+    --no-document \
+    --no-user-install \
+    --install-dir "$pkgdir/$_gemdir" \
+    --bindir "$pkgdir/usr/bin" \
+    "$_gemname-$pkgver.gem"
+
+  # delete unnecessary files & folders
+  cd "$pkgdir/$_gemdir"
+  find . -type f \
+    -name "page-Makefile.ri" -delete \
+    -o -name 'gem_make.out' -delete \
+    -o -name 'mkmf.log' -delete
+  rm -rf cache
+  cd "gems/$_gemname-$pkgver"
+  find . -type f -name ".*" -delete
+  rm -vrf .github certs sample misc spec ext POSTGRES Manifest.txt Rakefile* Gemfile "$_gemname.gemspec"
+
+  # generate reproducible documentation
+  install -vd "$pkgdir/$_gemdir/doc/$_gemname-$pkgver"
+  cd "$pkgdir/$_gemdir/gems/$_gemname-$pkgver"
+  rdoc \
+    --format ri \
+    --output "$pkgdir$_gemdir/doc/$_gemname-$pkgver/ri" \
+    ./lib
+  # delete unnecessary rdoc metadata file
+  rm -f "$pkgdir$_gemdir/doc/$_gemname-$pkgver/ri/created.rid"
+
+  # move documentation
+  install -vd "$pkgdir/usr/share/doc/$pkgname"
+  mv *.rdoc "$pkgdir/usr/share/doc/$pkgname"
+
+  # move license
+  install -vd "$pkgdir/usr/share/licenses/$pkgname"
+  mv LICENSE BSDL "$pkgdir/usr/share/licenses/$pkgname"
+}
+
+# vim: ts=2 sw=2 et:

@@ -1,0 +1,37 @@
+# Maintainer: Levente Polyak <anthraxx[at]archlinux[dot]org>
+# Contributor: Beej Jorgensen <beej@beej.us>
+
+pkgname=wavemon
+pkgver=0.9.4
+pkgrel=1
+pkgdesc='Ncurses-based monitoring application for wireless network devices'
+url='https://github.com/uoaerg/wavemon'
+arch=('loong64' 'x86_64')
+license=('GPL3')
+depends=('glibc' 'ncurses' 'libncursesw.so' 'libcap' 'libcap.so' 'libnl')
+source=(https://github.com/uoaerg/${pkgname}/archive/v${pkgver}/${pkgname}-${pkgver}.tar.gz)
+sha512sums=('5121c6216d6697cc20ef55b2e365098e327a4966758af27a5a58cc13fe84d6e0828336031d9dcfe141210821f72fc3eaefc41fa3ab8a2e572a3b92c168c1ceb1')
+b2sums=('e07feb16dba86b1a91dc9b7d7df51da1b4498d8ea1a6ca36f6ae1e30e0e0bb09971330a470cde3425e7ae785bbd2819460ac2f1ddc2bc8da3aae29de3356bdbb')
+
+prepare() {
+  cd ${pkgname}-${pkgver}
+  sed -e '/^CFLAGS=/d' -i configure.ac
+  sed -r 's|(/share)|\1/doc|g' -i Makefile.in
+  sed -r 's|\?=|=|g' -i Makefile.in
+  autoreconf -fiv
+}
+
+build() {
+  cd ${pkgname}-${pkgver}
+  ./configure \
+    --prefix=/usr \
+    --mandir=/usr/share/man
+  make
+}
+
+package() {
+  cd ${pkgname}-${pkgver}
+  make DESTDIR="${pkgdir}" install
+}
+
+# vim:set ts=2 sw=2 et:

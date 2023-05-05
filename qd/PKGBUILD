@@ -1,0 +1,36 @@
+# Maintainer: Antonio Rojas <arojas@archlinux.org>
+# Contributor: eolianoe <eolianoe At GoogleMAIL DoT CoM>
+# Contributor: Xyne <ca dot archlinux at xyne, backwards>
+
+pkgname=qd
+pkgver=2.3.23
+pkgrel=1
+pkgdesc='C++/Fortran-90 double-double and quad-double library'
+arch=(loong64 x86_64)
+url='https://crd-legacy.lbl.gov/~dhbailey/mpdist'
+license=(BSD)
+makedepends=(gcc-fortran)
+source=(https://crd-legacy.lbl.gov/~dhbailey/mpdist/$pkgname-$pkgver.tar.gz)
+sha256sums=('b3eaf41ce413ec08f348ee73e606bd3ff9203e411c377c3c0467f89acf69ee26')
+
+build() {
+  cd $pkgname-$pkgver
+
+  export FC=gfortran
+  ./configure --prefix=/usr --enable-shared
+  sed -i -e 's/ -shared / -Wl,-O1,--as-needed\0/g' libtool
+  make
+}
+
+check() {
+  cd $pkgname-$pkgver
+
+  make check
+}
+
+package() {
+  cd $pkgname-$pkgver
+
+  make DESTDIR="$pkgdir" install
+  install -Dm644 COPYING "$pkgdir"/usr/share/licenses/$pkgname/COPYING
+}

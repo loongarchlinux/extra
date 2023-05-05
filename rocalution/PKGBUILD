@@ -1,0 +1,55 @@
+# Maintainer: Torsten Keßler <tpkessler at archlinux dot org>
+# Contributor: Markus Näther <naetherm@informatik.uni-freiburg.de>
+pkgname=rocalution
+pkgver=5.4.3
+pkgrel=1
+pkgdesc='Next generation library for iterative sparse solvers for ROCm platform'
+arch=('loong64' 'x86_64')
+url='https://rocalution.readthedocs.io/en/master'
+license=('MIT')
+depends=('hip' 'rocsparse' 'rocblas' 'rocsolver' 'rocprim' 'rocrand' 'openmp')
+makedepends=('rocm-cmake')
+_git='https://github.com/ROCmSoftwarePlatform/rocALUTION'
+source=("$pkgname-$pkgver.tar.gz::$_git/archive/rocm-$pkgver.tar.gz"
+        "$pkgname-remove-git.patch")
+sha256sums=('39d00951a9b3cbdc4205a7e3ce75c026d9428c71c784815288c445f84a7f8a0e'
+            '9daafee87896ef043b655542f36e078b9a3f3a4a106b69849cfd8add25637cca')
+options=(!lto)
+_dirname="$(basename "$_git")-$(basename "${source[0]}" ".tar.gz")"
+
+prepare() {
+    cd "$_dirname"
+    patch -Np1 -i "$srcdir/$pkgname-remove-git.patch"
+}
+
+build() {
+  # Compile source code for supported GPU archs in parallel
+  export HIPCC_COMPILE_FLAGS_APPEND="-parallel-jobs=$(nproc)"
+  export HIPCC_LINK_FLAGS_APPEND="-parallel-jobs=$(nproc)"
+  # -fcf-protection is not supported by HIP, see
+  # https://docs.amd.com/bundle/ROCm-Compiler-Reference-Guide-v5.4/page/Appendix_A.html
+  CXXFLAGS="${CXXFLAGS} -fcf-protection=none" \
+  cmake \
+    -Wno-dev \
+    -B build \
+    -S "$_dirname" \
+    -DCMAKE_BUILD_TYPE=None \
+    -DCMAKE_CXX_COMPILER=/opt/rocm/bin/hipcc \
+    -DCMAKE_INSTALL_PREFIX=/opt/rocm \
+    -DROCM_PATH=/opt/rocm \
+    -DHIP_ROOT_DIR=/opt/rocm/hip \
+    -DSUPPORT_HIP=ON \
+    -DSUPPORT_OMP=ON \
+    -DSUPPORT_MPI=OFF \
+    -DBUILD_SHARED_LIBS=ON
+  cmake --build build
+}
+
+package() {
+  DESTDIR="$pkgdir" cmake --install build
+
+  echo "/opt/rocm/$pkgname/lib" > "$pkgname.conf"
+  install -Dm644 "$pkgname.conf" "$pkgdir/etc/ld.so.conf.d/$pkgname.conf"
+
+  install -Dm644 "$_dirname/LICENSE.md" "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
+}

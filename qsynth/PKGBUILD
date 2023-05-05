@@ -1,0 +1,53 @@
+# Maintainer: David Runge <dvzrv@archlinux.org>
+# Contributor: Ray Rashif <schiv@archlinux.org>
+# Contributor: damir <damir@archlinux.org>
+
+pkgname=qsynth
+pkgver=0.9.10
+pkgrel=1
+pkgdesc="Qt GUI for FluidSynth"
+arch=(loong64 x86_64)
+url="https://qsynth.sourceforge.io/"
+license=(GPL)
+groups=(pro-audio)
+depends=(
+  gcc-libs
+  glibc
+  hicolor-icon-theme
+  qt6-base
+  qt6-svg
+)
+makedepends=(
+  cmake
+  fluidsynth
+  qt6-tools
+)
+optdepends=(
+  'qt6-wayland: for native wayland support'
+)
+source=(https://downloads.sourceforge.net/$pkgname/$pkgname-$pkgver.tar.gz)
+sha512sums=('82e04ccfe3193d570e28c4e5da3e9ea8afbc2b1f2e43f54459449b31ee5448a6232a5fe13631eed80a5cf75f4176e5a419ec6467bf3d7d5e30d34083d4d8f7aa')
+b2sums=('87ca02e1f15a7b28f5af462d1ef52e9609fc0abc3d15d545493f448da61d85d8d264f5ab908816607de3291424b979348f330205fc6e727edb7287fd28e9067d')
+
+build() {
+  local cmake_options=(
+    -B build
+    -D CMAKE_BUILD_TYPE=None
+    -D CMAKE_INSTALL_PREFIX=/usr
+    -D CONFIG_QT6=ON
+    -S $pkgname-$pkgver
+    -W no-dev
+  )
+
+  cmake "${cmake_options[@]}"
+  cmake --build build --verbose
+}
+
+package() {
+  depends+=(
+    fluidsynth libfluidsynth.so
+  )
+
+  DESTDIR="$pkgdir" cmake --install build
+  install -vDm 644 $pkgname-$pkgver/{ChangeLog,README,TRANSLATORS} -t "$pkgdir/usr/share/doc/$pkgname"
+}

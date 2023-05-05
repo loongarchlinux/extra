@@ -1,0 +1,42 @@
+# Maintainer: Levente Polyak <anthraxx[at]archlinux[dot]org>
+# Contributor: David Birks <david@birks.dev>
+# Contributor: Mike Williamson <mike at korora dot ca>
+
+pkgname=eksctl
+pkgver=0.131.0
+pkgrel=1
+pkgdesc='Command line tool for creating clusters on Amazon EKS'
+url='https://github.com/weaveworks/eksctl'
+arch=('loong64' 'x86_64')
+license=('Apache')
+depends=('kubectl' 'glibc')
+makedepends=('go')
+source=("${url}/archive/${pkgver}/${pkgname}-${pkgver}.tar.gz")
+sha256sums=('51ebd3bf4089901b68ebbef86d30b027fda1f74de891ef50521bebec91fbe9eb')
+b2sums=('42985922923f3fd3049a636d28bcd23e1d25102172280ed0ff2fdcd3719b3303d7ee3e163496bf59e7e90f3e5674d6fb157ef2ef9129199fc21445def898c967')
+
+build() {
+  cd ${pkgname}-${pkgver}
+  export CGO_CFLAGS="${CFLAGS}"
+  export CGO_CXXFLAGS="${CXXFLAGS}"
+  export CGO_CPPFLAGS="${CPPFLAGS}"
+  export CGO_LDFLAGS="${LDFLAGS}"
+  export GOFLAGS="-buildmode=pie -ldflags=-linkmode=external -trimpath -mod=readonly -modcacherw"
+  go build -v \
+    -ldflags "-linkmode=external -extldflags '${LDFLAGS}' -X github.com/weaveworks/eksctl/pkg/version.gitTag=${pkgver}" \
+    ./cmd/eksctl
+}
+
+package() {
+  cd ${pkgname}-${pkgver}
+  install -Dm 755 ${pkgname} -t "$pkgdir/usr/bin"
+
+  install -Dm 644 README.md -t "${pkgdir}/usr/share/doc/${pkgname}"
+
+  # completions
+  "${pkgdir}/usr/bin/${pkgname}" completion bash | install -Dm 644 /dev/stdin "${pkgdir}/usr/share/bash-completion/completions/${pkgname}"
+  "${pkgdir}/usr/bin/${pkgname}" completion zsh | install -Dm 644 /dev/stdin "${pkgdir}/usr/share/zsh/site-functions/_${pkgname}"
+  "${pkgdir}/usr/bin/${pkgname}" completion fish | install -Dm 644 /dev/stdin "${pkgdir}/usr/share/fish/completions/${pkgname}.fish"
+}
+
+# vim: ts=2 sw=2 et:

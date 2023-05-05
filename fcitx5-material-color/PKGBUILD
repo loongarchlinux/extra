@@ -1,0 +1,24 @@
+# Maintainer: Felix Yan <felixonmars@archlinux.org>
+
+pkgname=fcitx5-material-color
+pkgver=0.2.1
+pkgrel=1
+pkgdesc="Material color theme for fcitx5"
+arch=('any')
+url="https://github.com/hosxy/Fcitx5-Material-Color"
+license=('Apache')
+source=("https://github.com/hosxy/Fcitx5-Material-Color/archive/$pkgver/$pkgname-$pkgver.tar.gz")
+sha512sums=('563ce6c910c737fa9b5fa6c4ec47d4483659d24bc6d6926bd9fecb9ac2328138eafa798cba6a3396618ebdd094828e6ecb847bba63d6b02b915ef9ae7d8b145c')
+
+package() {
+  cd Fcitx5-Material-Color-$pkgver
+  install -Dm644 arrow.png radio.png -t "$pkgdir"/usr/share/$pkgname/
+  for _variant in black blue brown deepPurple indigo orange pink red sakuraPink teal; do
+    _variant_name=Material-Color-${_variant^}
+    install -dm755 "$pkgdir"/usr/share/fcitx5/themes/$_variant_name/
+    ln -s ../../../$pkgname/arrow.png "$pkgdir"/usr/share/fcitx5/themes/$_variant_name/
+    ln -s ../../../$pkgname/radio.png "$pkgdir"/usr/share/fcitx5/themes/$_variant_name/
+    install -Dm644 theme-$_variant.conf "$pkgdir"/usr/share/fcitx5/themes/$_variant_name/theme.conf
+    sed -i "s/^Name=.*/Name=$_variant_name/" "$pkgdir"/usr/share/fcitx5/themes/$_variant_name/theme.conf
+  done
+}

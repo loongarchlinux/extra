@@ -1,0 +1,27 @@
+# Maintainer: Antonio Rojas <arojas@archlinux.org>
+
+pkgname=readstat
+pkgver=1.1.9
+pkgrel=1
+pkgdesc='Command-line tool (+ C library) for converting SAS, Stata, and SPSS files'
+arch=(loong64 x86_64)
+license=(MIT)
+url='https://github.com/WizardMac/ReadStat'
+depends=(zlib)
+source=(https://github.com/WizardMac/ReadStat/releases/download/v$pkgver/$pkgname-$pkgver.tar.gz
+        readstat-LICENSE::https://raw.githubusercontent.com/WizardMac/ReadStat/v$pkgver/LICENSE)
+sha256sums=('3a232b9e852d10173e2f25da9155afe2e129a30d1fc6c9aac142cdc5cbfe527e'
+            '416b611ef9448b3c7c71f584b1ebf78baff8f553b4b5368f2af732255ca19a3e')
+
+build() {
+  cd $pkgname-$pkgver
+  ./configure \
+    --prefix=/usr
+  make
+}
+
+package() {
+  cd $pkgname-$pkgver
+  make DESTDIR="$pkgdir" install
+  install -Dm644 ../readstat-LICENSE "$pkgdir"/usr/share/licenses/$pkgname/LICENSE
+}

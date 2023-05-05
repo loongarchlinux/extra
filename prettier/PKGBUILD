@@ -1,0 +1,40 @@
+# Maintainer: Jerome Leclanche <jerome@leclan.ch>
+# Maintainer: Maxim Baz <$pkgname at maximbaz dot com>
+# Maintainer: Daniel M. Capella <polyzen@archlinux.org>
+
+pkgname=prettier
+pkgver=2.8.7
+pkgrel=1
+pkgdesc="An opinionated code formatter for JS, JSON, CSS, YAML and much more"
+arch=("any")
+url="https://prettier.io/"
+license=("MIT")
+depends=("nodejs")
+makedepends=("yarn")
+checkdepends=("npm")
+source=("https://github.com/$pkgname/$pkgname/archive/$pkgver/$pkgname-$pkgver.tar.gz")
+sha256sums=('c51f13e53a6bae75676dc79dfcb1776b81c2e82d195a8c1f6d0c5eb5200a666c')
+
+prepare() {
+    cd "$pkgname-$pkgver"
+    yarn --frozen-lockfile
+}
+
+build() {
+    cd "$pkgname-$pkgver"
+    yarn build
+}
+
+check() {
+    cd "$pkgname-$pkgver"
+    # https://github.com/prettier/prettier/pull/13682#issuecomment-1283981785
+    yarn test:dist --testPathIgnorePatterns tests/integration/__tests__/third-party.js
+}
+
+package() {
+    cd "$pkgname-$pkgver"
+    install -d "$pkgdir/usr/"{bin,"lib/$pkgname","share/licenses/$pkgname"}
+    cp -a dist/* "$pkgdir/usr/lib/$pkgname"
+    ln -s "/usr/lib/$pkgname/bin-$pkgname.js" "$pkgdir/usr/bin/$pkgname"
+    ln -s "/usr/lib/$pkgname/LICENSE" "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
+}

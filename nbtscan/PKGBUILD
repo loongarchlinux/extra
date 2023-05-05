@@ -1,0 +1,39 @@
+# Maintainer: Levente Polyak <anthraxx[at]archlinux[dot]org>
+# Contributor: Sergio Rubio <rubiojr@biondofu.net>
+
+pkgname=nbtscan
+pkgver=1.7.2
+pkgrel=1
+pkgdesc='Scan networks searching for NetBIOS information'
+url='https://github.com/resurrecting-open-source-projects/nbtscan'
+arch=('loong64' 'x86_64')
+license=('GPL2')
+depends=('glibc')
+makedepends=('git')
+_commit='e339c81e996e4bda2c9eb5be62ececb9d65c3672'
+source=("$pkgname::git+$url.git#commit=$_commit")
+b2sums=('SKIP')
+
+pkgver() {
+  cd "$pkgname"
+  git describe --tags | sed 's/^v//'
+}
+
+prepare() {
+  cd "$pkgname"
+  autoreconf -fiv
+}
+
+build() {
+  cd "$pkgname"
+  ./configure --prefix=/usr
+  make
+}
+
+package() {
+  cd "$pkgname"
+  make DESTDIR="$pkgdir" install
+  install -Dm 644 README.md ChangeLog -t "${pkgdir}/usr/share/doc/${pkgname}"
+}
+
+# vim: ts=2 sw=2 et:

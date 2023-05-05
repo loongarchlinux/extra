@@ -1,0 +1,58 @@
+# Maintainer: George Rawlinson <grawlinson@archlinux.org>
+
+pkgname=nomad-driver-nspawn
+pkgver=0.9.1
+pkgrel=1
+pkgdesc='A nomad taskdriver for systemd-nspawn'
+arch=('loong64' 'x86_64')
+url='https://github.com/JanMa/nomad-driver-nspawn'
+license=('MIT')
+depends=('glibc' 'nomad' 'systemd')
+makedepends=('git' 'go')
+options=('!lto')
+_commit='4a438f9c20e10930acb273afc09ecb2824093b9a'
+source=("$pkgname::git+$url#commit=$_commit")
+b2sums=('SKIP')
+
+pkgver() {
+  cd "$pkgname"
+
+  git describe --tags | sed 's/^v//'
+}
+
+prepare() {
+	cd "$pkgname"
+
+  # create directory for build output
+  mkdir build
+
+  # verify modules
+  go mod verify
+}
+
+build() {
+	cd "$pkgname"
+
+  go build -v \
+    -trimpath \
+    -buildmode=pie \
+    -mod=vendor \
+    -modcacherw \
+    -ldflags "-extldflags $LDFLAGS -X "github.com/JanMa/nomad-driver-nspawn/nspawn.pluginVersion=${pkgver}"" \
+    -o build \
+    .
+}
+
+package() {
+	cd "$pkgname"
+
+  # documentation
+  install -vDm644 -t "$pkgdir/usr/share/doc/$pkgname" README.md
+  cp -r example "$pkgdir/usr/share/doc/$pkgname"
+
+  # plugin
+  install -vDm755 -t "$pkgdir/usr/lib/nomad/plugins" "build/$pkgname"
+
+  # license
+  install -vDm644 -t "$pkgdir/usr/share/licenses/$pkgname" LICENSE
+}

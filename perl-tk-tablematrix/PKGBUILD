@@ -1,0 +1,29 @@
+# Maintainer: Sergej Pupykin <pupykin.s+arch@gmail.com>
+# Maintainer: Charles Mauch <cmauch@gmail.com>
+
+pkgname=perl-tk-tablematrix
+pkgver=1.26
+pkgrel=1
+pkgdesc="Display data in TableSpreadsheet format"
+arch=("loong64" "x86_64")
+url="https://search.cpan.org/dist/Tk-TableMatrix"
+license=("GPL" "PerlArtistic")
+depends=('perl-tk')
+options=('!emptydirs')
+source=("https://www.cpan.org/authors/id/A/AS/ASB/Tk-TableMatrix-${pkgver}.tar.gz")
+sha256sums=('cf1e4dbe3399c375ab5f3861823d3a578c735db126416b2afd8e0632ed92abc7')
+
+build() {
+  cd Tk-TableMatrix-${pkgver}
+  PERL_MM_USE_DEFAULT=1 perl Makefile.PL INSTALLDIRS=vendor
+  make
+}
+
+package() {
+  cd Tk-TableMatrix-${pkgver}
+  make install DESTDIR="$pkgdir"
+
+  find "$pkgdir" -name '.packlist' -delete
+  find "$pkgdir" -name '*.pod' -delete
+  find "$pkgdir" -name 'extralibs.ld' -delete
+}

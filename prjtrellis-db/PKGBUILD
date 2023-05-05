@@ -1,0 +1,31 @@
+# Maintainer: Filipe Laíns (FFY00) <lains@archlinux.org>
+
+_prj=trellis
+_targets=ECP5
+_commit=f7f8375101dfa7f7d5ccb654ff8fcae73356ce48
+pkgname=prj$_prj-db
+pkgver=r262.f7f8375
+pkgrel=2
+pkgdesc='Project Trellis (Lattice ECP5 bit-stream format) database'
+arch=('loong64' 'x86_64')
+url="https://github.com/YosysHQ/$pkgname"
+license=('custom:CC0')
+makedepends=('git')
+source=("git+$url.git#commit=$_commit")
+sha512sums=('SKIP')
+
+pkgver() {
+  cd $pkgname
+
+  printf 'r%s.%s' "$(git rev-list --count HEAD)" "$(git rev-parse --short HEAD)"
+}
+
+package() {
+  cd $pkgname
+
+  install -dm 755 "$pkgdir"/usr/share/$_prj/database
+  cp -r --no-preserve=ownership devices.json $_targets "$pkgdir"/usr/share/$_prj/database/
+
+  install -Dm 644 COPYING "$pkgdir"/usr/share/licenses/$pkgname/COPYING
+}
+

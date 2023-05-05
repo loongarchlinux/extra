@@ -1,0 +1,32 @@
+# Maintainer: Sergej Pupykin <pupykin.s+arch@gmail.com>
+# Contributor: Christoph Zeiler <archNOSPAM_at_moonblade.dot.org>
+# Maintainer: M Rawash <mrawash@gmail.com>
+
+pkgname=viewnior
+pkgver=1.8
+pkgrel=4
+pkgdesc="A simple, fast and elegant image viewer program"
+arch=('loong64' 'x86_64')
+url="https://siyanpanayotov.com/project/viewnior"
+license=('GPL3')
+depends=('gtk2' 'exiv2')
+makedepends=('meson')
+optdepends=('webp-pixbuf-loader')
+source=(https://github.com/hellosiyan/Viewnior/archive/viewnior-$pkgver.tar.gz)
+sha256sums=('b9319171ebca23929e6ea8039c194b1595d92e764db5e3890836fb5c36e233b0')
+
+build() {
+  cd Viewnior-viewnior-$pkgver
+  arch-meson build
+  ninja -C build
+}
+
+check() {
+  cd Viewnior-viewnior-$pkgver
+  meson test -C build
+}
+
+package() {
+  cd Viewnior-viewnior-$pkgver
+  DESTDIR="$pkgdir" meson install -C build
+}

@@ -1,0 +1,121 @@
+# Maintainer: Felix Yan <felixonmars@archlinux.org>
+# Contributor: Josip Ponjavic <josipponjavic at gmail dot com>
+# Contributor: Xu Fasheng <fasheng.xu[AT]gmail.com>
+
+pkgname=deepin-daemon
+pkgver=5.14.118
+_commit=24f095570e5f864c11d2ed7a6560cc69a3ce31c5
+pkgrel=1
+pkgdesc='Daemon handling the DDE session settings'
+arch=('loong64' 'x86_64')
+url="https://github.com/linuxdeepin/dde-daemon"
+license=('GPL3')
+depends=('deepin-desktop-schemas' 'deepin-api' 'deepin-app-services'
+         # TODO:
+         'iso-codes'
+         # accounts
+         'accountsservice'
+         # accounts/grub
+         'deepin-polkit-agent' 'deepin-polkit-agent-ext-gnomekeyring'
+         # accounts/keybinding/systeminfo
+         'deepin-desktop-base'
+         # appearance
+         'fontconfig' 'noto-fonts'
+         # audio/session
+         'pulseaudio'
+         # bin/backlight_helper
+         'ddcutil'
+         'pkgconf'
+         # clipboard
+         'libxfixes'
+         # dock
+         'bamf'
+         # image_effect
+         'deepin-session-ui' 'sudo'
+         # inputdevices
+         'imwheel' 'libxkbfile' 'procps-ng' 'psmisc'
+         # iw
+         'libnl'
+         # keybinding
+         'gvfs'
+         # misc
+         'librsvg'
+         # network
+         'mobile-broadband-provider-info' 'org.freedesktop.secrets' 'xdg-utils'
+         # network/system
+         'systemd'
+         # system
+         'dmidecode' 'libinput' 'lshw' 'upower'
+         # systeminfo
+         'lsb-release' 'udisks2' 'util-linux')
+makedepends=('golang-github-linuxdeepin-go-dbus-factory' 'golang-deepin-gir' 'golang-deepin-lib'
+             'golang-deepin-dde-api' 'golang-github-nfnt-resize' 'golang-gopkg-yaml.v3' 'sqlite'
+             'deepin-gettext-tools' 'golang-github-fsnotify-fsnotify' 'golang-github-stretchr-testify'
+             'git' 'mercurial' 'python-gobject' 'networkmanager' 'bluez' 'go')
+optdepends=('networkmanager: for network management support'
+            'bluez: for bluetooth support'
+            'iw: for miracast module'
+            'proxychains-ng: for proxy configuration module')
+conflicts=('dde-daemon')
+replaces=('dde-daemon')
+groups=('deepin')
+install="$pkgname.install"
+source=("git+https://github.com/linuxdeepin/dde-daemon.git#commit=$_commit"
+        $pkgname-dpkg-architecture.patch::https://github.com/linuxdeepin/dde-daemon/commit/56b7a2010ab43fe73ee7456527d0792bb7220a35.patch
+        $pkgname-fix-vanilla-libinput.patch
+        'deepin-daemon.sysusers')
+sha512sums=('SKIP'
+            '87b7acca26338899316219daa300a83c6a2e94bd0f2bea372dfea50218187f81d010da7cd4b2049e1403357868e3394634358a5a7c8c3a7be6d5aa4f84bf8d65'
+            '944b0ae6cf7f613fd00884593c5e5f43aaf0efe4ea7aaa546a06b4367b8da4f2bc486dca640f77743bd1b7b9e4aacf741afe5c5e3ee219c2fdd4cc891ab3d367'
+            '808c02d4fec4cbbb01119bbb10499090199e738b7dd72c28a57dde098eef6132723f3434c151f79e21d9f788c7f7bae8046573ac93ba917afe0e803fbffa6d5a')
+
+export GO111MODULE=off
+
+prepare() {
+  cd dde-daemon
+  patch -p1 -i ../$pkgname-fix-vanilla-libinput.patch
+
+  # Revert commit to use dpkg-architecture instead of pkg-config
+  patch -Rp1 -i ../$pkgname-dpkg-architecture.patch
+
+  export GOPATH="$srcdir/build:/usr/share/gocode"
+
+  go get github.com/cryptix/wav github.com/axgle/mahonia github.com/msteinert/pam github.com/gosexy/gettext github.com/rickb777/date \
+         github.com/jinzhu/gorm github.com/kelvins/sunrisesunset github.com/mozillazg/go-pinyin github.com/teambition/rrule-go \
+         golang.org/x/xerrors github.com/mattn/go-sqlite3 github.com/godbus/dbus google.golang.org/protobuf/proto \
+         github.com/Lofanmi/pinyin-golang/pinyin github.com/youpy/go-wav github.com/mdlayher/netlink
+
+  sed -i 's#/usr/share/backgrounds/default_background.jpg#/usr/share/backgrounds/deepin/desktop.jpg#' accounts/user.go
+
+  # https://github.com/linuxdeepin/developer-center/discussions/3327
+  sed -i 's#/usr/libexec#/usr/lib#' keybinding/shortcuts/system_shortcut.go
+  sed -i 's#${PREFIX}/libexec/#${PREFIX}/lib/#' Makefile
+
+  sed -i 's|"gopkg.in/yaml.v2"|"gopkg.in/yaml.v3"|' network/nm_generator/utils.go
+
+  sed -i 's|/etc/os-version|/etc/uos-version|' keybinding/shortcuts/shortcut_manager.go
+}
+
+build() {
+  export CGO_CPPFLAGS="${CPPFLAGS}"
+  export CGO_CFLAGS="${CFLAGS}"
+  export CGO_CXXFLAGS="${CXXFLAGS}"
+  export CGO_LDFLAGS="${LDFLAGS}"
+  export GOFLAGS="-buildmode=pie -trimpath -mod=readonly -modcacherw"
+
+  cd dde-daemon
+  
+  make -C network/nm_generator gen-nm-code
+  make
+}
+
+package() {
+  cd dde-daemon
+  make DESTDIR="$pkgdir" PAM_MODULE_DIR=usr/lib/security install
+
+  mv "$pkgdir"{,/usr}/lib/systemd
+  mv "$pkgdir"{,/usr}/lib/udev
+  rmdir "$pkgdir"/lib
+
+  install -Dm644 ../deepin-daemon.sysusers "$pkgdir/usr/lib/sysusers.d/deepin-daemon.conf"
+}

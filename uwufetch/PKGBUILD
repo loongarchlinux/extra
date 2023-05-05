@@ -1,0 +1,36 @@
+# Maintainer: Felix Yan <felixonmars@archlinux.org>
+# Contributor: Darkpelz <lukeh@outlook.my>
+# Contributor: TheDarkBug <adrianoliviero23@gmail.com>
+
+pkgname=uwufetch
+pkgver=2.1
+pkgrel=1
+pkgdesc="A meme system info tool for Linux, based on nyan/uwu trend on r/linuxmasterrace."
+arch=('loong64' 'x86_64')
+url="https://github.com/TheDarkBug/$pkgname"
+license=('GPL3')
+depends=('glibc')
+optdepends=("viu: Display distro logos as images"
+            "lshw: Better GPU detection")
+source=("$pkgname-$pkgver.tar.gz::https://github.com/TheDarkBug/uwufetch/archive/$pkgver.tar.gz")
+sha256sums=('1153c826a2e332874c9ac2ee0c84ed121271445706190e444a3f585ec95d4bfc')
+
+prepare() {
+    cd $pkgname-$pkgver
+    # 2.0 breaks Makefile badly. Let's try to patch it.
+    sed -e "s/^UWUFETCH_VERSION =.*/UWUFETCH_VERSION = $pkgver/" \
+        -e "s/install: build/install:/" \
+        -e "s/lib\$(LIB_FILES:.c=.a)$/-L. -lfetch/" \
+        -i Makefile
+}
+
+build() {
+    cd $pkgname-$pkgver
+    make CC="cc $CFLAGS $LDFLAGS" build
+}
+
+package() {
+    cd $pkgname-$pkgver
+    install -dm755 "$pkgdir"/usr/include
+    make DESTDIR="$pkgdir"/usr ETC_DIR="pkgdir"/etc install
+}

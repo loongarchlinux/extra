@@ -1,0 +1,44 @@
+diff --git a/vpr/src/base/vpr_api.cpp b/vpr/src/base/vpr_api.cpp
+index d08a57644..a1aad588e 100644
+--- a/vpr/src/base/vpr_api.cpp
++++ b/vpr/src/base/vpr_api.cpp
+@@ -80,11 +80,11 @@ using namespace std;
+ #include "log.h"
+ 
+ #ifdef VPR_USE_TBB
+-#    include <tbb/task_scheduler_init.h>
++#include <tbb/global_control.h>
+ 
+ //We need to store the scheduler object so any concurrency
+ //setting is persistent
+-std::unique_ptr<tbb::task_scheduler_init> tbb_scheduler;
++std::unique_ptr<tbb::global_control> tbb_scheduler;
+ #endif
+ 
+ /* Local subroutines */
+@@ -187,11 +187,11 @@ void vpr_init(const int argc, const char** argv, t_options* options, t_vpr_setup
+     //Using Thread Building Blocks
+     if (num_workers == 0) {
+         //Use default concurrency (i.e. maximum conccurency)
+-        num_workers = tbb::task_scheduler_init::default_num_threads();
++        num_workers = tbb::info::default_concurrency();
+     }
+ 
+     VTR_LOG("Using up to %zu parallel worker(s)\n", num_workers);
+-    tbb_scheduler = std::make_unique<tbb::task_scheduler_init>(num_workers);
++    tbb_scheduler = std::make_unique<tbb::global_control>(tbb::global_control::max_allowed_parallelism, num_workers);
+ #else
+     //No parallel execution support
+     if (num_workers != 1) {
+@@ -1148,9 +1148,9 @@ void vpr_analysis(t_vpr_setup& vpr_setup, const t_arch& Arch, const RouteStatus&
+ }
+ 
+ /* This function performs power estimation. It relies on the
+- * placement/routing results, as well as the critical path. 
++ * placement/routing results, as well as the critical path.
+  * Power estimation can be performed as part of a full or
+- * partial flow. More information on the power estimation functions of 
++ * partial flow. More information on the power estimation functions of
+  * VPR can be found here:
+  *   http://docs.verilogtorouting.org/en/latest/vtr/power_estimation/
+  */

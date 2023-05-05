@@ -1,0 +1,51 @@
+# Maintainer: Levente Polyak <anthraxx[at]archlinux[dot]org>
+# Contributor: Xeonacid <h.dwwwwww at gmail dot com>
+
+_pyname=cle
+pkgname=python-${_pyname}
+pkgver=9.2.49
+_testbinaries_ver=9.2.49
+pkgrel=1
+pkgdesc='Loads binaries and their libraries, resolves imports and provides an abstraction of process memory'
+url='https://github.com/angr/cle'
+arch=('any')
+license=('custom:BSD')
+depends=('python' 'python-pyelftools' 'python-cffi' 'python-pyvex' 'python-pefile' 'python-sortedcontainers')
+optdepends=(
+  'python-claripy: symbolic constraints'
+  'python-minidump: minidump'
+  'python-pyxbe: xbe'
+  'python-arpy: ar'
+  'python-pyaxmlparser: apk'
+)
+makedepends=('python-build' 'python-installer' 'python-wheel' 'python-setuptools')
+checkdepends=('python-pytest' 'python-minidump' 'python-pyxbe' 'python-arpy' 'python-claripy' 'python-pyaxmlparser')
+source=("${url}/archive/v${pkgver}/${pkgname}-${pkgver}.tar.gz"
+        "https://github.com/angr/binaries/archive/v${_testbinaries_ver}/angr-binaries-${_testbinaries_ver}.tar.gz")
+sha512sums=('df8cad28eb9376559345113a1a0c1068903560a836984edf3c500970ba3163c9e5883a62e3d9fe6349ad2cf279ad25295622c8b331870659b50c62ac69d81a01'
+            '6925242780a321ed08795823fc9094a40fb441fce9e86a9f4c35760cff45c4c7475da1894ba35a57c37c4c9d8bdc698bd38d35288b47642ce59d10503d83bb53')
+b2sums=('af4528d8fde6d59d8e31f6540c927d4b4aa79aebdb281fb24c6fd38dfe44ea3129b56d4b8592339b1e73c34adaca6dffbe8edddf13bad54af15c99d6b333083e'
+        'd822531685e93105b31e1880d8156922c7d2c9d447d8356206a5683bc28c6c09faa82b14abc7c5cba2143cb9f58a26d17da90704f8b5312e2292e223103acd0b')
+
+prepare() {
+  ln -s binaries-${_testbinaries_ver} binaries
+}
+
+build() {
+  cd ${_pyname}-${pkgver}
+  python -m build --wheel --no-isolation
+}
+
+check() {
+  cd ${_pyname}-${pkgver}
+  PYTHONPATH=build/lib pytest
+}
+
+package() {
+  cd ${_pyname}-${pkgver}
+  python -m installer --destdir="$pkgdir" dist/*.whl
+  install -Dm 644 LICENSE -t "${pkgdir}/usr/share/licenses/${pkgname}"
+  install -Dm 644 README.md -t "${pkgdir}/usr/share/doc/${pkgname}"
+}
+
+# vim: ts=2 sw=2 et:

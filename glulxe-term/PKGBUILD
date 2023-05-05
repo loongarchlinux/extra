@@ -1,0 +1,34 @@
+# Maintainer: Alexander Epaneshnikov <alex19ep@archlinux.org>
+# Contributor: Dino Morelli < dino@ui3.info >
+
+pkgname=glulxe-term
+pkgver=0.6.0
+pkgrel=1
+epoch=1
+pkgdesc='The Glulx VM reference interpreter'
+arch=('loong64' 'x86_64')
+url='http://www.eblong.com/zarf/glulx/'
+license=('MIT')
+depends=('libglkterm')
+source=(${pkgname}-$pkgver}.tar.gz::"https://github.com/erkyrath/glulxe/archive/refs/tags/${pkgname%-term}-${pkgver}.tar.gz"
+        "${pkgname}-flags.patch")
+sha512sums=('5847f8666d8a289293f6df511fb7fec9ceb0084010eba3ce7879bf009e09b89a0f2e83eb6df5011fa43fa448639f7738440a88563179593048d1a1fd6ab77754'
+            '2a65cd455fcbf90520223ea5820ebbf41172a3d456d56534358e34858c37db954eed4400ee3b8a146a37b9b2c8c314e00f3754c314b737e86ca621130a0617c6')
+b2sums=('8059f561683e247b410936c5754ed169d01be81e4cb950c49b940cdec4338d0f308bd9a92c6fb9a398eca3bb47b811f3c390163b383363e4157c41a40acb12ef'
+        '527553355e99ffdde5db8ded82a57d1824dd89732029799c41678423894a7bd2361b5781c29063cfcf32ce3e2b13c10d86c56d697ab16f87ca04946edefd9094')
+
+prepare() {
+	cd glulxe-glulxe-${pkgver}
+	patch -N -i ../${pkgname}-flags.patch
+}
+
+build() {
+	cd glulxe-glulxe-${pkgver}
+	make GLKINCLUDEDIR=/usr/include GLKLIBDIR=/usr/lib GLKMAKEFILE=Make.glkterm
+}
+
+package() {
+	cd glulxe-glulxe-${pkgver}
+	install -vDm755 glulxe "$pkgdir/usr/bin/glulxe-term"
+	install -vDm644 LICENSE -t "${pkgdir}/usr/share/licenses/${pkgname}"
+}

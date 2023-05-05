@@ -1,0 +1,49 @@
+# Maintainer: Orhun Parmaksız <orhun@archlinux.org>
+# Contributor: kleintux <reg-archlinux AT klein DOT tuxli DOT ch>
+
+pkgname=jumpy
+pkgver=0.6.1
+pkgrel=1
+pkgdesc="Tactical 2D shooter in fishy pixels style"
+arch=('loong64' 'x86_64')
+url="https://fishfight.org"
+license=('MIT' 'Apache')
+depends=('pkg-config' 'mesa-libgl' 'alsa-lib' 'systemd-libs' 'libudev.so')
+makedepends=('cargo' 'systemd')
+replaces=('fishfight')
+source=("$pkgname-$pkgver.tar.gz::https://github.com/fishfight/jumpy/archive/v$pkgver.tar.gz")
+sha512sums=('9aff95fe19bef4abb78622a102b96c41ae4918b00137d725163466124ec2329a484c85dfd32148f6092b8040b4eaa384ad9fab09bcb760ddebd9334f070b72ed')
+options=('!lto')
+
+prepare() {
+  cd "$pkgname-$pkgver"
+  cargo fetch --locked --target "$CARCH-unknown-linux-gnu"
+}
+
+build() {
+  cd "$pkgname-$pkgver"
+  cargo build --frozen --release
+}
+
+check() {
+  cd "$pkgname-$pkgver"
+  cargo test --frozen
+}
+
+package() {
+  cd "$pkgname-$pkgver"
+  mkdir -p "$pkgdir/opt/$pkgname"
+  install -Dm 755 "target/release/$pkgname" -t "$pkgdir/opt/$pkgname"
+  mkdir -p "$pkgdir/usr/bin"
+  ln -s "/opt/$pkgname/$pkgname" "$pkgdir/usr/bin/$pkgname"
+
+  cp -r "assets" "$pkgdir/opt/$pkgname/"
+  find "$pkgdir/opt/$pkgname/assets/music/" -type f -exec chmod 444 {} \;
+  find "$pkgdir/opt/$pkgname/assets/player/sounds/" -type f -exec chmod 444 {} \;
+
+  install -Dm 644 README.md -t "$pkgdir/usr/share/doc/$pkgname"
+  install -Dm 644 LICENSE -t "$pkgdir/usr/share/licenses/$pkgname"
+  install -Dm 644 licenses/LICENSE-MIT -t "$pkgdir/usr/share/licenses/$pkgname"
+}
+
+# vim: ts=2 sw=2 et:

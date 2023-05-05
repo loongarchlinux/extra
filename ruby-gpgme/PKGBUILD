@@ -1,0 +1,92 @@
+# Maintainer: Levente Polyak <anthraxx[at]archlinux[dot]org>
+# Maintainer: Andreas 'Segaja' Schleifer <segaja at archlinux dot org>
+
+_gemname='gpgme'
+pkgname="ruby-${_gemname}"
+pkgver=2.0.22
+pkgrel=1
+pkgdesc='Ruby interface to GnuPG Made Easy (GPGME)'
+url='https://github.com/ueno/ruby-gpgme'
+arch=('loong64' 'x86_64')
+license=('GPL2')
+depends=('ruby' 'ruby-mini_portile2' 'gpgme' 'libgpg-error' 'libassuan')
+makedepends=('ruby-rdoc' 'ruby-rake' 'ruby-bundler' 'ruby-yard')
+#checkdepends=('ruby-mocha')
+options=('!emptydirs')
+source=("https://github.com/ueno/ruby-gpgme/archive/v${pkgver}/${pkgname}-${pkgver}.tar.gz")
+sha512sums=('644d9640ac2bf6ce1c02747a0fbd0321337c1f3af639d650b8a669c4f835d1c03380644da2d4717a9268df434ebf41fd98388b80c63e8df97b7a23c3c260741e')
+b2sums=('1aabd312f588093bff2bb3a308aaac041ebc8f989bab4aa475f74fc0675c6c4fcac474663a8f5b097b8be223b0f01e27f9e49fc014efb650df9742ddcf3fd4df')
+
+prepare() {
+  cd "${pkgname}-${pkgver}"
+
+  # update gemspec/Gemfile to allow newer version of the dependencies
+  sed --in-place --regexp-extended 's|~>|>=|g' "${_gemname}.gemspec"
+}
+
+build() {
+  cd "${pkgname}-${pkgver}"
+
+  export RUBY_GPGME_USE_SYSTEM_LIBRARIES=1
+
+  rake compile
+  rake build
+}
+
+# https://github.com/ueno/ruby-gpgme/issues/162
+#check() {
+#  cd "${pkgname}-${pkgver}"
+#
+#  sed --in-place '/byebug/Id' "${_gemname}.gemspec" test/test_helper.rb
+#  sed --in-place '/coveralls/Id' "${_gemname}.gemspec" test/test_helper.rb
+#
+#  rake test
+#}
+
+package() {
+  cd "${pkgname}-${pkgver}"
+
+  local _gemdir="$(gem env gemdir)"
+
+  gem install \
+    --local \
+    --verbose \
+    --ignore-dependencies \
+    --no-user-install \
+    --install-dir "${pkgdir}${_gemdir}" \
+    --bindir "${pkgdir}/usr/bin" \
+    "pkg/${_gemname}-${pkgver}.gem" \
+    -- \
+    --use-system-libraries
+
+  # remove unrepreducible files
+  rm --force --recursive --verbose \
+    "${pkgdir}/${_gemdir}/cache/" \
+    "${pkgdir}/${_gemdir}/gems/${_gemname}-${pkgver}/vendor/" \
+    "${pkgdir}/${_gemdir}/doc/${_gemname}-${pkgver}/ri/ext/"
+
+  find "${pkgdir}/${_gemdir}/gems/" \
+    -type f \
+    \( \
+      -iname "*.o" -o \
+      -iname "*.c" -o \
+      -iname "*.so" -o \
+      -iname "*.time" -o \
+      -iname "gem.build_complete" -o \
+      -iname "Makefile" \
+    \) \
+    -delete
+
+  find "${pkgdir}/${_gemdir}/extensions/" \
+    -type f \
+    \( \
+      -iname "mkmf.log" -o \
+      -iname "gem_make.out" \
+    \) \
+    -delete
+
+  install --verbose -D --mode=0644 README.rdoc NEWS --target-directory "${pkgdir}/usr/share/doc/${pkgname}"
+  install --verbose -D --mode=0644 examples/* --target-directory "${pkgdir}/usr/share/doc/${pkgname}/examples"
+}
+
+# vim: ts=2 sw=2 et:

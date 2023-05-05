@@ -1,0 +1,35 @@
+# Maintainer: Levente Polyak <anthraxx[at]archlinux[dot]org>
+
+_gemname=net-dns
+pkgname=ruby-${_gemname}
+pkgver=0.9.0
+pkgrel=2
+pkgdesc='Pure Ruby DNS library, with a clean OO interface and an extensible API'
+url='https://github.com/bluemonk/net-dns'
+arch=('any')
+license=('BSDL')
+depends=('ruby')
+makedepends=('ruby-rdoc')
+options=('!emptydirs')
+source=(${pkgname}-${pkgver}.tar.gz::https://github.com/bluemonk/net-dns/archive/v${pkgver}.tar.gz)
+sha512sums=('bda49fd5d93aa387bcf700e1b9ace72aff0c44f5ee6347e4d0e2d25aef0401c8aacabea89f5757608263736211c53d7f439e9b7a34379b125114a81806a47e94')
+
+prepare() {
+  cd ${_gemname}-${pkgver}
+  sed 's|git ls-files|find -type f|' -i ${_gemname}.gemspec
+}
+
+build() {
+  cd ${_gemname}-${pkgver}
+  gem build ${_gemname}.gemspec
+}
+
+package() {
+  cd ${_gemname}-${pkgver}
+  local _gemdir="$(gem env gemdir)"
+  gem install --ignore-dependencies --no-user-install -i "${pkgdir}${_gemdir}" -n "${pkgdir}/usr/bin" ${_gemname}-${pkgver}.gem
+  install -Dm 644 CHANGELOG.md README.md -t "${pkgdir}/usr/share/doc/${pkgname}"
+  rm "${pkgdir}/${_gemdir}/cache/${_gemname}-${pkgver}.gem"
+}
+
+# vim: ts=2 sw=2 et:

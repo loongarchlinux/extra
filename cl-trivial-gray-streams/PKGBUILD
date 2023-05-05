@@ -1,0 +1,59 @@
+# Maintainer: George Rawlinson <grawlinson@archlinux.org>
+
+pkgname=cl-trivial-gray-streams
+_pkgname="${pkgname#cl-}"
+pkgver=2.0.0.r47.g2b3823e
+pkgrel=1
+pkgdesc='Compatibility layer for Gray Streams'
+arch=('any')
+url='https://trivial-gray-streams.common-lisp.dev'
+license=('MIT')
+depends=('common-lisp' 'cl-asdf')
+makedepends=('git')
+checkdepends=('sbcl')
+_commit='2b3823edbc78a450db4891fd2b566ca0316a7876'
+source=(
+  "$pkgname::git+https://github.com/trivial-gray-streams/trivial-gray-streams#commit=$_commit"
+  'run-tests.lisp'
+)
+b2sums=('SKIP'
+        '7af6a2946854fcaa07f5ca24d3c1738b8a9eb6762c4fb8f900a3abc3b22913b50d90b29c9676837153ffc2cc8f14833718dd5e40cf8b72b47ff37e999a89efba')
+
+pkgver() {
+  cd "$pkgname"
+
+  # first known commit to receive latest version
+  local _pkgcommit='99f579bd352156ad6dadcf347696a0a34a9e0f82'
+  local _pkgver='2.0.0'
+  git tag "$_pkgver" "$_pkgcommit"
+
+  git describe --tags | sed -e 's/^v//' -e 's/-/.r/' -e 's/-/./g'
+}
+
+check() {
+  cd "$pkgname"
+
+  sbcl --script ../run-tests.lisp
+}
+
+package() {
+  cd "$pkgname"
+
+  # create directories
+  install -vd \
+    "$pkgdir/usr/share/common-lisp/source/$_pkgname" \
+    "$pkgdir/usr/share/common-lisp/systems"
+
+  # library
+  cp -vr test ./*.{lisp,asd} "$pkgdir/usr/share/common-lisp/source/$_pkgname"
+  pushd "$pkgdir/usr/share/common-lisp/systems"
+  ln -s "../source/$_pkgname/$_pkgname.asd" .
+  ln -s "../source/$_pkgname/$_pkgname-test.asd" .
+  popd
+
+  # documentation
+  install -vDm644 -t "$pkgdir/usr/share/doc/$pkgname" README
+
+  # license
+  install -vDm644 -t "$pkgdir/usr/share/licenses/$pkgname" COPYING
+}

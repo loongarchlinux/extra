@@ -1,0 +1,85 @@
+# Maintainer: George Rawlinson <grawlinson@archlinux.org>
+# Contributor: schuay <jakob.gruber@gmail.com>
+# Contributor: Alexander F. Rødseth <xyproto@archlinux.org>
+# Contributor: Tom Newsom <Jeepster@gmx.co.uk>
+# Contributor: Jeff Mickey <jeff@archlinux.org>
+# Contributor: Thayer Williams <thayer@archlinux.org>
+
+pkgname=dopewars
+pkgver=1.6.2
+pkgrel=2
+pkgdesc='Turn based strategy game based on "Drug Wars" from 1984'
+url='https://dopewars.sourceforge.io/'
+license=('GPL')
+arch=('loong64' 'x86_64')
+backup=('srv/dopewars/dopewars.sco')
+makedepends=(
+  'git'
+  'alsa-lib'
+  'audiofile'
+  'gendesk'
+  'gtk3'
+  'sdl2'
+  'sdl2_mixer'
+)
+optdepends=(
+  'sdl2: for the graphical interface'
+  'gtk3: for the graphical interface'
+  'alsa-lib: for audio'
+  'audiofile: for audio'
+  'sdl2_mixer: for audio'
+)
+_commit='86c3e8a841454440966693d571899fe4f738a4ae'
+source=(
+  "git+https://github.com/benmwebb/dopewars#commit=$_commit"
+  'dopewars.service'
+  'dopewars.socket'
+)
+b2sums=('SKIP'
+        '094e4c569fb399ee8701855583db0acde19d13a1cec4c90e3ac21feee946c4f302563880d6be67433a57b30f9dc540b6d26d06121ecc88799c5c37d934a45ccd'
+        '438f7a315eb0af93051c2498b3d81823ce74a121c90a04e16f8d0c8f15d6aa4ddc569203100a38732a3c83a3b8a08c8880b7b9e4a2d23cdcac070e5567767d73')
+
+pkgver() {
+  cd "$pkgname"
+
+  git describe --tags | sed 's/^v//'
+}
+
+prepare() {
+  gendesk -f -n \
+    --icon="$pkgname-pill" \
+    --pkgname "$pkgname" \
+    --pkgdesc "$pkgdesc"
+}
+
+build() {
+  cd "$pkgname"
+
+  autoreconf -vfi
+
+  ./configure \
+    --localstatedir=/srv/dopewars \
+    --mandir=/usr/share/man \
+    --prefix=/usr
+
+  make
+}
+
+package() {
+  make -C $pkgname \
+    DESKTOPDIR="$pkgdir/usr/share/applications" \
+    DESTDIR="$pkgdir" \
+    install
+
+  install -vDm644 -t "$pkgdir/usr/share/applications" dopewars.desktop
+
+  # systemd integration
+  install -vDm644 -t "$pkgdir/usr/lib/systemd/system" dopewars.{service,socket}
+
+  # Fix permissions
+  chmod 2755 "$pkgdir/usr/bin/dopewars"
+  chown root:games "$pkgdir/usr/bin/dopewars"
+  chown -R root:games "$pkgdir/srv/dopewars"
+  chmod 0775 "$pkgdir/srv/dopewars"
+  chmod 0664 "$pkgdir/srv/dopewars/dopewars.sco"
+}

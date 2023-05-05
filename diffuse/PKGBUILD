@@ -1,0 +1,30 @@
+# Maintainer: Alexander F. Rødseth <xyproto@archlinux.org>
+# Contributor: Lukas Jirkovsky <l.jirkovsky@gmail.com>
+# Contributor: TDY <tdy@gmx.com>
+# Contributor: zhuqin <zhuqin83@gmail.com>
+
+pkgname=diffuse
+pkgver=0.8.2
+pkgrel=1
+pkgdesc='Graphical tool for merging and comparing text files'
+arch=(any)
+url='https://github.com/MightyCreak/diffuse'
+license=(GPL)
+depends=(python-cairo python-gobject)
+makedepends=(git meson ninja)
+source=("git+$url#commit=c0cefac1c4ab99a309b65002e820f5c815e368e1") # tag: v0.8.2
+b2sums=('SKIP')
+
+build() {
+  mkdir -p build
+  arch-meson build $pkgname -D b_ndebug=true
+  ninja -C build
+}
+
+check() {
+  ninja -C build test
+}
+
+package() {
+  DESTDIR="$pkgdir" ninja -C build install
+}

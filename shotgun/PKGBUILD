@@ -1,0 +1,31 @@
+# Maintainer: Daniel M. Capella <polyzen@archlinux.org>
+# Contributor: Streetwalrus <streetwalrus@codewalr.us>
+
+pkgname=shotgun
+pkgver=2.3.1
+pkgrel=1
+pkgdesc='Minimal X screenshot utility'
+arch=('loong64' 'x86_64')
+url=https://github.com/neXromancers/shotgun
+license=('MPL2')
+depends=('gcc-libs' 'libxrandr')
+makedepends=('git' 'rust')
+optdepends=('hacksaw: for area/window selection'
+            'slop: for area/window selection')
+source=("shotgun-$pkgver.tar.gz::https://static.crates.io/crates/shotgun/shotgun-$pkgver.crate")
+b2sums=('ee444c505f239af15e11559ae0ad1ea886e4ae16d79c45b922009ade9a9d32299b1ee4ae809c6019d54e002966a16d625cc8965171bc4f701db8ac2a746f6da8')
+
+prepare() {
+  cd shotgun-$pkgver
+  cargo fetch --locked --target "$CARCH-unknown-linux-gnu"
+}
+
+build() {
+  cd shotgun-$pkgver
+  cargo build --release --locked --offline
+}
+
+package() {
+  cd shotgun-$pkgver
+  install -Dt "$pkgdir"/usr/bin target/release/shotgun
+}

@@ -1,0 +1,44 @@
+# Maintainer: Levente Polyak <anthraxx[at]archlinux[dot]org>
+
+_gemname=daemons
+pkgname=ruby-${_gemname}
+pkgver=1.4.1
+pkgrel=1
+pkgdesc='Easy way to wrap existing ruby scripts to be run as a daemon'
+url='https://github.com/thuehlinger/daemons'
+arch=('any')
+license=('MIT')
+depends=('ruby')
+makedepends=('ruby-rdoc')
+options=('!emptydirs')
+source=(https://github.com/thuehlinger/daemons/archive/v${pkgver}/${pkgname}-${pkgver}.tar.gz)
+sha512sums=('5b55f644a53efe93a6bb80ca534207c7a847a7c21df127d17ba6f09e2c2d8c665d87e6355382d2d51c3c9f50741fa9a31f5bfd228d9bb45ba8d5d099b7b5d026')
+b2sums=('4f376f0a1a9322d95b32b74862beae93ae5d8636c0d321b059c335053760077b6ba78780cc4c22d5e98fbb95e2dffb85fd5ccfb1dc5152653698c29a0ac86577')
+
+prepare() {
+  cd ${_gemname}-${pkgver}
+  sed -r 's|~>|>=|g' -i ${_gemname}.gemspec
+  sed 's|README.md LICENSE Releases ||' -i ${_gemname}.gemspec
+  sed -r 's|`git ls-files (.+)`|`find \1 -type f`|' -i ${_gemname}.gemspec
+}
+
+build() {
+  cd ${_gemname}-${pkgver}
+  gem build ${_gemname}.gemspec
+}
+
+package() {
+  cd ${_gemname}-${pkgver}
+  local _gemdir="$(gem env gemdir)"
+  gem install --ignore-dependencies --no-user-install -i "${pkgdir}${_gemdir}" \
+    -n "${pkgdir}/usr/bin" ${_gemname}-${pkgver}.gem -- --use-system-libraries
+  install -Dm 644 README.md Releases -t "${pkgdir}/usr/share/doc/${pkgname}"
+  cp -a examples "${pkgdir}/usr/share/doc/${pkgname}"
+  install -Dm 644 LICENSE -t "${pkgdir}/usr/share/licenses/${pkgname}"
+
+  cd "${pkgdir}/${_gemdir}"
+  rm -rf cache gems/${_gemname}-${pkgver}/{ext,lib/*/*.so} \
+    extensions/*/*/${_gemname}-${pkgver}/{mkmf.log,gem_make.out}
+}
+
+# vim: ts=2 sw=2 et:

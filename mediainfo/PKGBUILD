@@ -1,0 +1,57 @@
+# Maintainer: Johannes Löthberg <johannes@kyriasis.com>
+# Maintainer: George Rawlinson <grawlinson@archlinux.org>
+# Contributor: Sergej Pupykin <pupykin.s+arch@gmail.com>
+# Contributor: hydro <hydro@freenet.de>
+
+pkgbase=mediainfo
+pkgname=(mediainfo mediainfo-gui)
+pkgver=23.04
+pkgrel=1
+pkgdesc='Supplies technical and tag information about media files'
+arch=('loong64' 'x86_64')
+url='https://mediaarea.net'
+license=('BSD')
+depends=('libmediainfo')
+makedepends=('wxwidgets-gtk3')
+source=("$pkgname-$pkgver.tar.gz::https://github.com/MediaArea/MediaInfo/archive/v$pkgver.tar.gz")
+sha512sums=('ab88dd5179ec11ea96d2dde4dc0cbefb05eebbe29da7161155c11d231e78f99892b4c8bf3dc4ed1cb881f78065a1e19670689b1ab00333460eaa26bd2b1662ea')
+b2sums=('7a0e0249fc33aa1e7200b89fa3206605fa9b6d40902834c39acdab1f6af7c8a13a75155f9d435ed2ddc27776f34ac202da7bec06c6ee63f0204eb10559da8d9f')
+
+build() {
+  cd "MediaInfo-$pkgver"
+
+  pushd Project/GNU/CLI
+  ./autogen.sh
+  ./configure --prefix=/usr
+  make
+  popd
+
+  pushd Project/GNU/GUI
+  ./autogen.sh
+  ./configure --prefix=/usr
+  make
+  popd
+}
+
+package_mediainfo() {
+  pkgdesc+=" (CLI interface)"
+
+  cd "MediaInfo-$pkgver/Project/GNU/CLI"
+
+  make DESTDIR="$pkgdir" install
+
+  # license
+  install -vDm644 -t "$pkgdir/usr/share/licenses/$pkgname" "$srcdir/MediaInfo-$pkgver/LICENSE"
+}
+
+package_mediainfo-gui() {
+  pkgdesc+=" (GUI interface)"
+  depends+=('wxwidgets-gtk3' 'hicolor-icon-theme')
+
+  cd "MediaInfo-$pkgver/Project/GNU/GUI"
+
+  make DESTDIR="$pkgdir" install
+
+  # license
+  install -vDm644 -t "$pkgdir/usr/share/licenses/$pkgname" "$srcdir/MediaInfo-$pkgver/LICENSE"
+}

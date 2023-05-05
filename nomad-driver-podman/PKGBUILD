@@ -1,0 +1,57 @@
+# Maintainer: George Rawlinson <grawlinson@archlinux.org>
+
+pkgname=nomad-driver-podman
+pkgver=0.4.2
+pkgrel=1
+pkgdesc='A nomad taskdriver for podman containers'
+arch=('loong64' 'x86_64')
+url='https://github.com/hashicorp/nomad-driver-podman'
+license=('MPL2')
+depends=('nomad' 'podman')
+makedepends=('git' 'go')
+options=('!lto')
+_commit=fa9030e05b0eff8a7bf488c58b37401c749aede6	#refs/tags/v0.4.2
+source=("$pkgname::git+$url#commit=$_commit")
+b2sums=('SKIP')
+
+pkgver() {
+  cd "$pkgname"
+
+  git describe --tags | sed 's/^v//'
+}
+
+prepare() {
+	cd "$pkgname"
+
+  # create directory for build output
+  mkdir build
+
+  # download dependencies
+  go mod download
+}
+
+build() {
+	cd "$pkgname"
+
+  go build -v \
+    -trimpath \
+    -buildmode=pie \
+    -mod=readonly \
+    -modcacherw \
+    -ldflags "-linkmode external -extldflags ${LDFLAGS}" \
+    -o build \
+    .
+}
+
+package() {
+	cd "$pkgname"
+
+  # binary
+  install -vDm755 -t "$pkgdir/usr/lib/nomad/plugins" "build/$pkgname"
+
+  # documentation
+  install -vDm644 -t "$pkgdir/usr/share/doc/$pkgname" README.md
+  cp -vr examples "$pkgdir/usr/share/doc/$pkgname"
+  # note: examples/plugins is an empty folder
+  rm -rf "$pkgdir/usr/share/doc/$pkgname/examples/plugins"
+}

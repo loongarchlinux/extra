@@ -1,0 +1,48 @@
+# Maintainer: Maxime Gauduin <alucryd@archlinux.org>
+
+pkgname=libretro-duckstation
+pkgver=2105
+pkgrel=2
+pkgdesc='Sony PlayStation core'
+arch=(loong64 x86_64)
+url=https://github.com/stenzek/duckstation
+license=(GPL3)
+groups=(libretro)
+depends=(
+  gcc-libs
+  glibc
+  libretro-core-info
+)
+makedepends=(
+  cmake
+  git
+)
+_commit=79aaf908a602e03a16698976791c82baafa794d0
+source=(git+https://github.com/stenzek/duckstation.git#commit=${_commit}
+        glibc-2.34.patch)
+sha256sums=('SKIP'
+            'fef29c81a9a42451a64a1cc32c6489b67bd9464ed5eedca4c03bc7853b8f2a11')
+
+pkgver() {
+  cd duckstation
+
+  git rev-list --count HEAD
+}
+
+prepare() {
+  patch -d duckstation -p1 < glibc-2.34.patch # Fix build with glibc 2.34
+}
+
+build() {
+  cmake -S duckstation -B build \
+    -DCMAKE_BUILD_TYPE=None \
+    -DCMAKE_INSTALL_PREFIX=/usr \
+    -DBUILD_LIBRETRO_CORE=ON
+  make -C build
+}
+
+package() {
+  install -Dm 644 build/duckstation_libretro.so -t "${pkgdir}"/usr/lib/libretro/
+}
+
+# vim: ts=2 sw=2 et:

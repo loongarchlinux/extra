@@ -1,0 +1,35 @@
+# Maintainer: Sven-Hendrik Haase <svenstaro@gmail.com>
+pkgname=forge
+pkgdesc="High Performance Visualizations"
+url='https://github.com/arrayfire/forge'
+pkgver=1.0.8
+arch=('loong64' 'x86_64')
+pkgrel=1
+epoch=2
+license=('BSD')
+depends=('glfw' 'freetype2' 'fontconfig' 'freeimage' 'glbinding')
+makedepends=('cmake' 'graphviz' 'git' 'python' 'glm' 'boost' 'ninja')
+source=($pkgname-$pkgver.tar.gz::https://github.com/arrayfire/forge/archive/v${pkgver}.tar.gz)
+sha512sums=('08e5eb89d80f7fa3310f0eb37481492b5c1dfff00b33c308169862d8b25cf93ad1d9c0db78667c0207a7f6f8ca4046c196bd3a987af839ea1864b49c738ee8e3')
+options=('!buildflags')
+
+build() {
+  cd forge-${pkgver}
+
+  cmake . \
+      -GNinja \
+      -Bbuild \
+      -DCMAKE_INSTALL_PREFIX=/usr \
+      -DFG_BUILD_EXAMPLES=ON \
+      -DFG_BUILD_DOCS=OFF
+
+  ninja -C build
+}
+
+package() {
+  cd forge-${pkgver}
+
+  install -Dm644 .github/LICENSE ${pkgdir}/usr/share/licenses/${pkgname}/LICENSE
+
+  DESTDIR="${pkgdir}/" ninja -C build install
+}

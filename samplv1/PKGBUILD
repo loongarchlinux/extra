@@ -1,0 +1,121 @@
+# Maintainer: David Runge <dvzrv@archlinux.org>
+# Contributor: speps <speps at aur dot archlinux dot org>
+
+pkgbase=samplv1
+pkgname=(
+  samplv1
+  samplv1-lv2
+  samplv1-standalone
+)
+pkgver=0.9.30
+pkgrel=1
+pkgdesc="Polyphonic sampler synthesizer with stereo fx"
+arch=(loong64 x86_64)
+url="https://samplv1.sourceforge.io/"
+license=(GPL2)
+makedepends=(
+  alsa-lib
+  cmake
+  hicolor-icon-theme
+  jack
+  liblo
+  libsndfile
+  lv2
+  qt6-base
+  qt6-svg
+  qt6-tools
+)
+source=(https://download.sourceforge.net/$pkgname/$pkgname-$pkgver.tar.gz)
+sha512sums=('948f4c40811163afd3720e3544c7933430879da8b23806b813417129fc25b7a20ef0cbb0a177a111871b6ae270aa83c7fa8c5f240f22af8e45b23280e4271288')
+b2sums=('168ecdf2d665c16863b233804e336601529d2cb690cfb381587b3720fba097a76bae99b816c7d46c88055fdf8c696071d8d3b7e293d3e8064ec8773692cc7110')
+
+_pick() {
+  local p="$1" f d; shift
+  for f; do
+    d="$srcdir/$p/${f#$pkgdir/}"
+    mkdir -p "$(dirname "$d")"
+    mv "$f" "$d"
+    rmdir -p --ignore-fail-on-non-empty "$(dirname "$f")"
+  done
+}
+
+build() {
+  local cmake_options=(
+    -B build
+    -D CMAKE_BUILD_TYPE=None
+    -D CMAKE_INSTALL_PREFIX=/usr
+    -D CONFIG_QT6=ON
+    -S $pkgname-$pkgver
+    -W no-dev
+  )
+
+  cmake "${cmake_options[@]}"
+  cmake --build build --verbose
+}
+
+package_samplv1() {
+  depends=(
+    $pkgbase-{lv2,standalone}=$pkgver
+  )
+
+  DESTDIR="$pkgdir" cmake --install build
+
+  (
+    cd "$pkgdir"
+
+    # have find-libdeps resolve dependencies properly:
+    # https://gitlab.archlinux.org/archlinux/devtools/-/issues/102
+    find usr/lib -type f -iname "*.so" -exec chmod +x {} \;
+
+    _pick $pkgbase-lv2 usr/lib/lv2
+    _pick $pkgbase-standalone usr/{bin,share}
+  )
+}
+
+package_samplv1-lv2() {
+  pkgdesc+=" - LV2 plugin"
+  groups=(
+    lv2-plugins
+    pro-audio
+  )
+  depends=(
+    gcc-libs
+    glibc
+    libsndfile libsndfile.so
+    lv2-host
+    qt6-base
+    qt6-svg
+  )
+  optdepends=(
+    'qt6-wayland: for native wayland support'
+  )
+
+  mv -v $pkgname/* "$pkgdir"
+  install -vDm 644 $pkgbase-$pkgver/{ChangeLog,README} -t "$pkgdir/usr/share/doc/$pkgname/"
+}
+
+package_samplv1-standalone() {
+  pkgdesc+=" - standalone"
+  groups=(
+    pro-audio
+  )
+  depends=(
+    alsa-lib
+    gcc-libs
+    glibc
+    hicolor-icon-theme
+    jack
+    liblo
+    libsndfile libsndfile.so
+    qt6-base
+    qt6-svg
+  )
+  optdepends=(
+    'new-session-manager: for session management using the standalone application'
+    'qt6-wayland: for native wayland support'
+  )
+
+  mv -v $pkgname/* "$pkgdir"
+  install -vDm 644 $pkgbase-$pkgver/{ChangeLog,README} -t "$pkgdir/usr/share/doc/$pkgname/"
+}
+# vim:set ts=2 sw=2 et:

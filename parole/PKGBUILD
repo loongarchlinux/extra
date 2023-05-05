@@ -1,0 +1,31 @@
+# Maintainer: Balló György <ballogyor+arch at gmail dot com>
+# Contributor: Sergej Pupykin <pupykin.s+arch@gmail.com>
+# Contributor: TDY <tdy@gmx.com>
+
+pkgname=parole
+pkgver=4.18.0
+pkgrel=1
+pkgdesc='Modern media player based on the GStreamer framework'
+arch=('loong64' 'x86_64')
+url='https://docs.xfce.org/apps/parole/start'
+license=('GPL')
+groups=('xfce4-goodies')
+depends=('dbus-glib' 'gst-plugins-base' 'gst-plugins-good' 'libnotify' 'libxfce4ui')
+makedepends=('intltool' 'python')
+optdepends=('gst-libav: Extra media codecs'
+	    'gst-plugins-bad: Extra media codecs'
+	    'gst-plugins-ugly: Extra media codecs')
+source=("https://archive.xfce.org/src/apps/$pkgname/${pkgver%.*}/$pkgname-$pkgver.tar.bz2")
+sha256sums=('bbe52fbc4d3abe30f6c79fc7ac57bd9de9cf74ce1a79b508a1d7de83dc4f3771')
+
+build() {
+  cd $pkgname-$pkgver
+  ./configure --prefix=/usr
+  sed -i -e 's/ -shared / -Wl,-O1,--as-needed\0/g' libtool
+  make
+}
+
+package() {
+  cd $pkgname-$pkgver
+  make DESTDIR="$pkgdir" install
+}

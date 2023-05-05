@@ -1,0 +1,35 @@
+# Maintainer: Felix Yan <felixonmars@archlinux.org>
+# Contributor: goetzc
+# Contributor: Jonathan Squirawski <sky@sky-co.de>
+
+pkgname=libeatmydata
+pkgver=130
+pkgrel=1
+pkgdesc='Library and utilities designed to disable fsync and friends.'
+arch=('loong64' 'x86_64')
+url='https://github.com/stewartsmith/libeatmydata'
+license=('GPL3')
+depends=('bash')
+source=("https://github.com/stewartsmith/libeatmydata/archive/v$pkgver/$pkgname-$pkgver.tar.gz")
+md5sums=('560c0704ae4e8533e79a363ccf46f632')
+
+prepare() {
+  cd libeatmydata-$pkgver
+  autoreconf -i
+}
+
+build() {
+  cd libeatmydata-$pkgver
+  ./configure --prefix=/usr --libexecdir=/usr/lib/libeatmydata
+  make
+}
+
+check() {
+  cd libeatmydata-$pkgver
+  make check || echo "Tests need strace permission to run"
+}
+
+package() {
+  cd libeatmydata-$pkgver
+  make DESTDIR="$pkgdir" install
+}

@@ -1,0 +1,35 @@
+# Maintainer:  Christian Rebischke <chris.rebischke@archlinux.org>
+# Maintainer:  Andreas 'Segaja' Schleifer <segaja at archlinux dot org>
+# Contributor: Stefan Tatschner <rumpelsepp@sevenbyte.org>
+# Contributor: Nick Østergaard <oe.nick at gmail dot com>
+# Contributor: Nicolas Bigaouette <nbigaouette@chemcomp.com>
+
+pkgname='asciidoctor'
+pkgver=2.0.18
+pkgrel=1
+pkgdesc='An implementation of AsciiDoc in Ruby'
+arch=('any')
+url='https://asciidoctor.org'
+license=('MIT')
+makedepends=('ruby-rdoc')
+depends=('ruby')
+options=('!emptydirs')
+source=("https://rubygems.org/downloads/${pkgname}-${pkgver}.gem")
+noextract=("$pkgname-$pkgver.gem")
+sha512sums=('522c0a587a95c7a5c5618f88832c11a547448d12b883ee9a7d9f6e8509b44e2c5c027cf23335790cbc5cd74dc297010141ac535c0ba45622e49eac8d70fe6127')
+
+package() {
+    local _gemdir="$(ruby -e 'puts Gem.default_dir')"
+
+    gem install --ignore-dependencies --no-user-install --verbose \
+        -i "$pkgdir/$_gemdir" -n "$pkgdir/usr/bin" \
+        "$pkgname-$pkgver.gem"
+
+    install -Dm644 "$pkgdir/$_gemdir/gems/$pkgname-$pkgver/LICENSE" \
+        "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
+    install -Dm644 "$pkgdir/$_gemdir/gems/$pkgname-$pkgver/man/asciidoctor.1" \
+        "$pkgdir/usr/share/man/man1/asciidoctor.1"
+
+    rm "$pkgdir/$_gemdir/cache/$pkgname-$pkgver.gem"
+    rm -rf "$pkgdir/$_gemdir/gems/$pkgname-$pkgver/man"
+}

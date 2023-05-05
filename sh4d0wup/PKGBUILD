@@ -1,0 +1,47 @@
+# Maintainer: kpcyrd <kpcyrd[at]archlinux[dot]org>
+
+pkgname=sh4d0wup
+pkgver=0.8.0
+pkgrel=1
+pkgdesc="Signing-key abuse and update exploitation framework"
+url='https://github.com/kpcyrd/sh4d0wup'
+arch=('loong64' 'x86_64')
+license=('GPL-3.0-or-later')
+depends=('gcc' 'pcsclite' 'podman' 'openssl' 'shared-mime-info' 'xz' 'libzstd.so')
+checkdepends=('sequoia-sq')
+makedepends=('cargo' 'clang')
+options=(!lto)
+source=(https://github.com/kpcyrd/${pkgname}/archive/v${pkgver}/${pkgname}-${pkgver}.tar.gz)
+sha256sums=('0ffb632129f600ab8f6584ba291e308e0c4adc5e61625d035d9abc6dae46a8bd')
+b2sums=('40d2aaccbac02f37c107ac2a2b1f33cccdb9a4e80f03bb8f5f023a1748a3835ffbcf0a6b69bfcfaa8a788e156599e7b252b46ddb642ab548b672983b65780884')
+
+prepare() {
+  cd "${pkgname}-${pkgver}"
+  cargo fetch --locked --target "$CARCH-unknown-linux-gnu"
+}
+
+build() {
+  cd ${pkgname}-${pkgver}
+  cargo build --frozen --release
+}
+
+check() {
+  cd ${pkgname}-${pkgver}
+  cargo test --frozen
+}
+
+package() {
+  cd ${pkgname}-${pkgver}
+  install -Dm 755 -t "${pkgdir}/usr/bin" \
+    target/release/sh4d0wup
+
+  # install completions
+  install -d "${pkgdir}/usr/share/bash-completion/completions" \
+             "${pkgdir}/usr/share/zsh/site-functions" \
+             "${pkgdir}/usr/share/fish/vendor_completions.d"
+  "${pkgdir}/usr/bin/${pkgname}" completions bash > "${pkgdir}/usr/share/bash-completion/completions/${pkgname}"
+  "${pkgdir}/usr/bin/${pkgname}" completions zsh > "${pkgdir}/usr/share/zsh/site-functions/_${pkgname}"
+  "${pkgdir}/usr/bin/${pkgname}" completions fish > "${pkgdir}/usr/share/fish/vendor_completions.d/${pkgname}.fish"
+}
+
+# vim: ts=2 sw=2 et:

@@ -1,0 +1,34 @@
+# Maintainer: Christian Rebischke <chris.rebischke@archlinux.org>
+# Contributor: Sergej Pupykin <pupykin.s+arch@gmail.com>
+# Contributor: Stefano Facchini <stefano.facchini@gmail.com>
+
+pkgname=libvirt-glib
+pkgver=4.0.0
+pkgrel=2
+pkgdesc="GLib bindings for libvirt"
+arch=('loong64' 'x86_64')
+url="https://libvirt.org"
+license=('LGPL2.1')
+depends=('libvirt' 'libcap-ng')
+makedepends=('meson' 'intltool' 'gobject-introspection' 'vala' 'python')
+optdepends=('python: support for python')
+source=("https://libvirt.org/sources/glib/$pkgname-$pkgver.tar.xz"{,'.asc'})
+sha512sums=('e1b99e80aa671fa5a4d7f7f7a4ea70ce7c5fdaf97574407f79aa11a75dd177e1e3f92027728a83ded62e305852bbda76eb90326aaa1f5f19b77272b008351810'
+            'SKIP')
+validpgpkeys=('DAF3A6FDB26B62912D0E8E3FBE86EBB415104FDF') # Daniel P. Berrange <dan@berrange.com>
+
+build() {
+  cd "$srcdir/$pkgname-$pkgver"
+
+  mkdir build
+  meson setup build --prefix=/usr --buildtype=plain
+  ninja -C build
+}
+
+package() {
+  cd "$srcdir/$pkgname-$pkgver/build"
+
+  DESTDIR="$pkgdir/" meson install
+}
+
+# vim:set ts=2 sw=2 et:

@@ -1,0 +1,31 @@
+# Maintainer: Antonio Rojas <arojas@archlinux.org>
+# Contributor: Geoffroy Carrier <geoffroy.carrier@koon.fr>
+# Contributor: Daniel J Griffiths <ghost1227@archlinux.us>
+# Contributor: schuay <jakob.gruber@gmail.com>
+
+pkgname=puzzles
+pkgver=20230110
+pkgrel=1
+_commit=e66d027
+pkgdesc="Simon Tatham's Portable Puzzle Collection"
+arch=(loong64 x86_64)
+url='https://www.chiark.greenend.org.uk/~sgtatham/puzzles/'
+license=(MIT)
+depends=(gtk3)
+makedepends=(cmake imagemagick)
+source=(https://www.chiark.greenend.org.uk/~sgtatham/puzzles/puzzles-$pkgver.$_commit.tar.gz)
+sha256sums=('7fbd9b22b05c34955f28d840b980cfd9c58c158b03020a2fdaf74fc928edb768')
+
+build() {
+  cmake -B build -S puzzles-$pkgver.$_commit \
+   -DCMAKE_INSTALL_PREFIX=/usr \
+   -DNAME_PREFIX=puzzles-
+  cmake --build build
+}
+
+package() {
+  DESTDIR="$pkgdir" cmake --install build
+
+  install -Dm644 puzzles-$pkgver.$_commit/LICENCE "$pkgdir"/usr/share/licenses/$pkgname/LICENSE
+  install -Dm644 puzzles-$pkgver.$_commit/html/*.html -t "$pkgdir"/usr/share/doc/$pkgname
+}

@@ -1,0 +1,31 @@
+# Maintainer: Alexander F. Rødseth <xyproto@archlinux.org>
+# Contributor: loqs
+# Contributor: Paulo Matos <paulo@matos-sorge.com>
+# Contributor: b4283 <unknown@unknowndomain.com>
+
+pkgname=spike
+pkgver=1.1.0
+pkgrel=4
+pkgdesc='Spike, a RISC-V ISA Simulator'
+arch=(loong64 x86_64)
+url='https://github.com/riscv/riscv-isa-sim'
+license=(BSD)
+groups=(risc-v)
+depends=(dtc)
+replaces=(fesvr)
+conflicts=(fesvr)
+makedepends=(git)
+source=("git+https://github.com/riscv/riscv-isa-sim#commit=530af85d83781a3dae31a4ace84a573ec255fefa") # tag: v1.1.0
+b2sums=(SKIP)
+
+build() {
+  cd riscv-isa-sim
+  ./configure --prefix=/usr
+  make LDFLAGS="$LDFLAGS -s -w" CFLAGS="$CFLAGS -ffat-lto-objects" CXXFLAGS="$CXXFLAGS -ffat-lto-objects"
+}
+
+package() {
+  cd riscv-isa-sim
+  make DESTDIR="$pkgdir" install
+  install -Dm644 LICENSE "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
+}

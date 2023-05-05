@@ -1,0 +1,35 @@
+# Maintainer: Alexander F. Rødseth <xyproto@archlinux.org>
+# Contributor: Mort Yao <soi@mort.ninja>
+# Contributor: Alex Merry <dev@randomguy3.me.uk>
+
+pkgname=polyml
+pkgver=5.9
+pkgrel=3
+pkgdesc='Standard ML compiler originally written in Poly'
+arch=(loong64 x86_64)
+url='https://polyml.org/'
+license=(LGPL)
+conflicts=(mesa-demos)
+options=(!libtool)
+depends=(gmp libffi)
+source=("$pkgname-$pkgver.tar.gz::https://github.com/$pkgname/$pkgname/archive/v$pkgver.tar.gz")
+b2sums=('ae0ca0dcac2c1b5b54e4e4c4c7362a9ba99846ff7a1358a2332a8b887eb9c21e83851c9ecde44df3bebeef5cdfe3d4b73c09776a08cfc2db6ec70024ffedc50d')
+
+build() {
+  cd $pkgname-$pkgver
+  CFLAGS+=" -ffat-lto-objects" \
+  ./configure \
+    --enable-shared \
+    --prefix=/usr \
+    --with-gmp \
+    --with-system-libffi
+  make
+}
+
+check() {
+  make -C $pkgname-$pkgver -k check
+}
+
+package() {
+  make -C $pkgname-$pkgver DESTDIR="$pkgdir" install
+}

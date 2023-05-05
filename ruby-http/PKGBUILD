@@ -1,0 +1,60 @@
+# Maintainer: Felix Yan <felixonmars@archlinux.org>
+
+pkgname=ruby-http
+pkgver=5.1.1
+_commit=1d3ab3771cd9b913964c4875909bd53f81b28acc
+pkgrel=3
+pkgdesc='A fast Ruby HTTP client with a chainable API, streaming support, and timeouts'
+arch=(any)
+url='https://github.com/httprb/http'
+license=(MIT)
+depends=(ruby-addressable ruby-http-cookie ruby-http-form_data ruby-llhttp-ffi)
+makedepends=(git ruby-rake ruby-rspec)
+checkdepends=(ruby-certificate_authority ruby-rspec-its ruby-simplecov ruby-webrick)
+options=(!emptydirs)
+source=(git+https://github.com/httprb/http.git#commit=$_commit)
+sha256sums=('SKIP')
+
+prepare() {
+  cd http
+  sed -i 's|~>|>=|' http.gemspec
+  sed -i '/fuubar/d' spec/spec_helper.rb
+}
+
+build() {
+  local _gemdir="$(gem env gemdir)"
+  cd http
+  gem build http.gemspec
+  gem install \
+    --local \
+    --verbose \
+    --ignore-dependencies \
+    --no-user-install \
+    --install-dir "tmp_install/$_gemdir" \
+    --bindir "tmp_install/usr/bin" \
+    http-$pkgver.gem
+  find "tmp_install/$_gemdir/gems/" \
+    -type f \
+    \( \
+        -iname "*.o" -o \
+        -iname "*.c" -o \
+        -iname "*.so" -o \
+        -iname "*.time" -o \
+        -iname "gem.build_complete" -o \
+        -iname "Makefile" \
+    \) \
+    -delete
+  rm -r tmp_install/$_gemdir/cache
+}
+
+check() {
+  local _gemdir="$(gem env gemdir)"
+  cd http
+  GEM_HOME="tmp_install/$_gemdir" rspec
+}
+
+package() {
+  cd http
+  cp -a tmp_install/* "$pkgdir"/
+  install -Dm644 LICENSE.txt -t "$pkgdir"/usr/share/licenses/$pkgname/
+}

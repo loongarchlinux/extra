@@ -1,0 +1,52 @@
+diff --git a/Gemfile b/Gemfile
+index e066639..3270b20 100644
+--- a/Gemfile
++++ b/Gemfile
+@@ -2,15 +2,7 @@ source 'https://rubygems.org'
+ 
+ gemspec
+ 
+-# rubocop:disable Bundler/DuplicatedGem
+-if RUBY_VERSION < '2'
+-  gem 'rake', '~> 12.2.1'
+-elsif RUBY_VERSION < '2.2'
+-  gem 'rake', '~> 12.3.3'
+-else
+-  gem 'rake'
+-end
+-# rubocop:enable Bundler/DuplicatedGem
++gem 'rake'
+ 
+ gem 'introspection', '~> 0.0.1'
+ 
+@@ -23,10 +15,3 @@ if RUBY_VERSION >= '2.2.0'
+   # No test libraries in standard library
+   gem 'minitest'
+ end
+-if RUBY_VERSION >= '2.2.0'
+-  gem 'rubocop', '<= 0.58.2'
+-end
+-if ENV['MOCHA_GENERATE_DOCS']
+-  gem 'redcarpet'
+-  gem 'yard'
+-end
+diff --git a/Rakefile b/Rakefile
+index 2a57d96..51f60b9 100644
+--- a/Rakefile
++++ b/Rakefile
+@@ -76,15 +76,6 @@ namespace 'test' do # rubocop:disable Metrics/BlockLength
+   end
+ end
+ 
+-begin
+-  require 'rubocop/rake_task'
+-  if RUBY_VERSION >= '2.2.0' && (defined?(RUBY_ENGINE) && RUBY_ENGINE == 'ruby') && ENV['MOCHA_RUN_INTEGRATION_TESTS'].nil?
+-    RuboCop::RakeTask.new
+-    task 'test' => 'rubocop'
+-  end
+-rescue LoadError # rubocop:disable Lint/HandleExceptions
+-end
+-
+ # rubocop:disable Metrics/CyclomaticComplexity,Metrics/PerceivedComplexity
+ def benchmark_test_case(klass, iterations)
+   require 'benchmark'

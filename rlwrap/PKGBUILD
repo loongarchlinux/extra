@@ -1,0 +1,53 @@
+# Maintainer: Kyle Keen <keenerd@gmail.com>
+# Maintainer: George Rawlinson <grawlinson@archlinux.org>
+# Contributor: wizzomafizzo <wizzomafizzo@gmail.com>
+# Contributor: Mateusz Herych <heniekk@gmail.com>
+# Contributor: Benjamin Andresen <benny AT klapmuetz DOT org>
+# Contributor: Douglas Thrift <douglas@douglasthrift.net>
+
+pkgname=rlwrap
+pkgver=0.46.1
+pkgrel=1
+pkgdesc='Adds readline-style editing and history to programs'
+arch=('loong64' 'x86_64')
+url='https://github.com/hanslub42/rlwrap'
+license=('GPL')
+depends=('glibc' 'readline' 'ncurses' 'perl')
+makedepends=('git')
+optdepends=('python: filters')
+options=('debug')
+_commit='8c7086dd2385bb307cdadb893f2566b4e8da8ad9'
+source=("$pkgname::git+$url#commit=$_commit")
+b2sums=('SKIP')
+
+pkgver() {
+  cd "$pkgname"
+
+  git describe --tags | sed 's/^v//'
+}
+
+prepare() {
+  cd "$pkgname"
+
+  autoreconf -vi
+}
+
+build() {
+  cd "$pkgname"
+
+  ./configure --prefix=/usr
+
+  make
+}
+
+check() {
+  cd "$pkgname"
+
+  make check
+}
+
+package() {
+  cd "$pkgname"
+
+  make DESTDIR="$pkgdir" install
+}

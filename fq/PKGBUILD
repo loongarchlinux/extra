@@ -1,0 +1,46 @@
+# Maintainer: Orhun Parmaksız <orhun@archlinux.org>
+# Contributor: Daniel Milde <daniel at milde dot cz>
+
+pkgname=fq
+pkgver=0.5.0
+pkgrel=1
+pkgdesc="Tool, language and decoders for inspecting binary data"
+arch=('loong64' 'x86_64')
+url="https://github.com/wader/fq"
+license=('MIT')
+depends=('glibc')
+checkdepends=('expect')
+makedepends=('go' 'git')
+source=(${pkgname}-${pkgver}.tar.gz::"${url}/archive/v${pkgver}.tar.gz")
+sha256sums=('ce4c4dfc7680a96d2248d7a4839d2bb91ea82e50c5895982200bdaf70acfed60')
+
+prepare() {
+  cd "${pkgname}-${pkgver}"
+  mkdir -p dist/
+}
+
+build() {
+  cd "${pkgname}-${pkgver}"
+  go build \
+    -trimpath \
+    -buildmode=pie \
+    -mod=readonly \
+    -modcacherw \
+    -ldflags "-linkmode external -extldflags \"${LDFLAGS}\" ${_BUILDINFO}" \
+    -o dist/fq \
+    .
+}
+
+check() {
+  cd "${pkgname}-${pkgver}"
+  make test
+}
+
+package() {
+  cd "${pkgname}-${pkgver}"
+  install -Dm 755 "dist/${pkgname}" -t "${pkgdir}/usr/bin"
+  install -Dm 644 LICENSE  -t "${pkgdir}/usr/share/licenses/${pkgname}"
+  install -Dm 644 README.md -t "${pkgdir}/usr/share/doc/${pkgname}"
+}
+
+# vim:set ts=2 sw=2 et:

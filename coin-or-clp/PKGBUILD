@@ -1,0 +1,36 @@
+# Maintainer: Antonio Rojas <arojas@archlinux.org>
+# Contributor: spider-mario <spidermario@free.fr>
+# Contributor: Daniel Ehlers <danielehlers@mindeye.net>
+
+pkgname=coin-or-clp
+pkgver=1.17.8
+pkgrel=1
+pkgdesc='COIN-OR linear programming solver'
+arch=(loong64 x86_64)
+url='https://github.com/coin-or/Clp'
+license=(EPL)
+groups=(coin-or)
+depends=(coin-or-osi coin-or-asl suitesparse)
+source=($pkgname-$pkgver.tar.gz::https://github.com/coin-or/Clp/archive/refs/tags/releases/$pkgver.tar.gz)
+sha256sums=('f9931b5ba44f0daf445c6b48fc2c250dc12e667e59ace8ea7b025f158fe31556')
+
+build() {
+  cd Clp-releases-$pkgver
+  ./configure --prefix=/usr \
+              --with-cholmod-lib='-lcholmod' \
+              --with-cholmod-incdir=/usr/include \
+              --with-amd-lib='-lamd' \
+              --with-amd-incdir=/usr/include
+  sed -i -e 's/ -shared / -Wl,-O1,--as-needed\0/g' libtool # Fix overlinking
+  make
+}
+
+check() {
+  cd Clp-releases-$pkgver
+  make test
+}
+
+package() {
+  cd Clp-releases-$pkgver
+  make DESTDIR="$pkgdir" install
+}

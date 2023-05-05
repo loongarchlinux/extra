@@ -1,0 +1,56 @@
+# Maintainer: Maxime Gauduin <alucryd@archlinux.org>
+# Contributor: Ner0 <darkelfdarkelf666@yahoo.co.uk>
+
+pkgname=pantheon-videos
+pkgver=2.9.0
+pkgrel=1
+pkgdesc='The Pantheon Video Player'
+arch=(loong64 x86_64)
+url='https://github.com/elementary/videos'
+license=(GPL3)
+groups=(pantheon)
+depends=(
+  clutter
+  clutter-gst
+  clutter-gtk
+  gdk-pixbuf2
+  glib2
+  gst-plugins-base-libs
+  gstreamer
+  gtk3
+  libgee
+  libgranite.so
+  libhandy-1.so
+  libx11
+)
+makedepends=(
+  git
+  intltool
+  meson
+  vala
+)
+optdepends=(
+  'gst-plugins-base: "Base" plugin libraries'
+  'gst-plugins-good: "Good" plugin libraries'
+  'gst-plugins-bad: "Bad" plugin libraries'
+  'gst-plugins-ugly: "Ugly" plugin libraries'
+)
+_tag=1689be73dc765b8df41c86d992ca566a7014abc1
+source=(pantheon-videos::git+https://github.com/elementary/videos.git#tag=${_tag})
+sha256sums=(SKIP)
+
+pkgver() {
+  cd pantheon-videos
+  git describe --tags
+}
+
+build() {
+  arch-meson pantheon-videos build
+  ninja -C build
+}
+
+package() {
+  DESTDIR="${pkgdir}" ninja -C build install
+}
+
+# vim: ts=2 sw=2 et:

@@ -1,0 +1,58 @@
+# Maintainer: David Runge <dvzrv@archlinux.org>
+
+_name=Fabla
+pkgname=fabla
+pkgver=1.4
+pkgrel=1
+pkgdesc="An open-source LV2 drum sampler plugin instrument"
+arch=(loong64 x86_64)
+url="http://openavproductions.com/fabla/"
+license=(GPL2)
+groups=(
+  lv2-plugins
+  pro-audio
+)
+depends=(
+  cairo
+  gcc-libs
+  glibc
+)
+makedepends=(
+  cmake
+  libglvnd
+  libsndfile
+  lv2
+  ntk
+)
+checkdepends=(lv2lint)
+source=(https://github.com/openAVproductions/openAV-$_name/archive/release-$pkgver/openAV-$_name-$pkgname-release-$pkgver.tar.gz)
+sha512sums=('134d7c0f33e5f5b5769e56285122357349d7203debba222c4e33956b15f6c6115019fb5a552309465a5ec7fc0d1d9ceec9338d3abb6c611eceee8badafd76767')
+b2sums=('4595320711d3a9aef4aa1eefe1a0aedaab2db172a8f6f82495cc430f48c2eb0c57b9e20877ead6f3e1552920a8383359d42cb6ccee7f9be0e2b925e6c593d2f5')
+
+build() {
+  local cmake_options=(
+    -B build
+    -D CMAKE_BUILD_TYPE=None
+    -D CMAKE_INSTALL_PREFIX=/usr
+    -S openAV-$_name-release-$pkgver
+    -W no-dev
+  )
+
+  cmake "${cmake_options[@]}"
+  cmake --build build --verbose
+}
+
+check() {
+  cp -v build/$pkgname.so openAV-$_name-release-$pkgver/dsp/
+  lv2lint -Mpack -I openAV-$_name-release-$pkgver/dsp/ "http://www.openavproductions.com/fabla"
+}
+
+package() {
+  depends+=(
+    ntk libntk.so
+    libsndfile libsndfile.so
+  )
+
+  DESTDIR="$pkgdir" cmake --install build
+  install -vDm 644 openAV-$_name-release-$pkgver/{CHANGELOG,README.md} -t "$pkgdir/usr/share/doc/$pkgname/"
+}

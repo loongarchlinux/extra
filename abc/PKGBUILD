@@ -1,0 +1,34 @@
+# Maintainer: Felix Yan <felixonmars@archlinux.org>
+
+pkgname=abc
+pkgver=0.0.0.20221019
+_commit=70cb339f869e485802159d7f2b886130793556c4
+pkgrel=1
+pkgdesc="System for Sequential Logic Synthesis and Formal Verification"
+arch=("loong64" "x86_64")
+license=("MIT")
+url="https://github.com/berkeley-abc/abc"
+depends=('readline')
+source=(https://github.com/berkeley-abc/abc/archive/$_commit/abc-$_commit.tar.gz)
+sha512sums=('8a73b5d66c8f4098288ca7923dd34be3bc81b62c47cdd020f5ed8206a8909a3e7952e8eae56c168cebecac2620b2cdd8731df329677d2e49da79e85076336895')
+
+prepare() {
+  cd $pkgname-$_commit
+  # - Make abc link to libabc, so the result is 50% smaller
+  # - Fix LDFLAGS for shared library
+  sed -i -e 's|-o \$@ \$\^ \$(LDFLAGS)|-o $@ src/base/main/main.o $(LDFLAGS) -L. -labc|;s|\$(PROG):|$(PROG): lib$(PROG).so|' \
+         -e 's|-o \$@ \$\^ $(LIBS)|-o $@ $^ $(LIBS) $(LDFLAGS)|' \
+            Makefile
+}
+
+build() {
+  cd $pkgname-$_commit
+  make ABC_USE_PIC=1 LDFLAGS="$LDFLAGS" libabc.so abc
+}
+
+package() {
+  cd $pkgname-$_commit
+  install -Dm755 libabc.so -t "$pkgdir"/usr/lib/
+  install -Dm755 abc -t "$pkgdir"/usr/bin/
+  install -Dm644 copyright.txt -t "$pkgdir"/usr/share/licenses/$pkgname/
+}

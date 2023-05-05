@@ -1,0 +1,28 @@
+# Maintainer: Maxime Gauduin <alucryd@gmail.com>
+# Contributor: Emiliano Vavassori <syntaxerrormmm@gmail.com>
+# Contributor: Alexsandr Pavlov <kidoz@mail.ru>
+
+pkgname=ruby-mail
+pkgver=2.8.1
+pkgrel=1
+pkgdesc='A really Ruby Mail handler'
+arch=('any')
+url='https://github.com/mikel/mail'
+license=('MIT')
+depends=('ruby-mini_mime')
+options=('!emptydirs')
+source=("https://rubygems.org/downloads/${pkgname#*-}-${pkgver}.gem")
+noextract=("${pkgname#*-}-${pkgver}.gem")
+sha256sums=('ec3b9fadcf2b3755c78785cb17bc9a0ca9ee9857108a64b6f5cfc9c0b5bfc9ad')
+
+package() {
+  local _gemdir="$(ruby -e'puts Gem.default_dir')"
+
+  gem install --ignore-dependencies --no-user-install -N -i "${pkgdir}"/${_gemdir} ${pkgname#*-}-${pkgver}.gem
+  find "${pkgdir}" -type f -name *.gem -delete
+
+  install -dm 755 "${pkgdir}"/usr/share/licenses/${pkgname}
+  ln -s ${_gemdir}/gems/${pkgname#*-}-${pkgver}/MIT-LICENSE "${pkgdir}"/usr/share/licenses/${pkgname}/
+}
+
+# vim: ts=2 sw=2 et:

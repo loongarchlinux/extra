@@ -1,0 +1,224 @@
+# Maintainer: David Runge <dvzrv@archlinux.org>
+
+pkgbase=distrho-ports
+pkgname=(distrho-ports{,-{lv2,vst,vst3}})
+pkgver=2021.03.15
+pkgrel=3
+pkgdesc="Linux audio plugins and LV2 ports"
+arch=(loong64 x86_64)
+url="https://github.com/distrho/distrho-ports"
+license=(GPL2 LGPL3)
+makedepends=(
+  alsa-lib
+  fftw
+  freetype2
+  git
+  libglvnd
+  libx11
+  libxcursor
+  libxext
+  lv2
+  meson
+)
+checkdepends=(
+  kxstudio-lv2-extensions
+  lv2lint
+  xorg-server-xvfb
+)
+source=(git+$url#tag=${pkgver//./-}?signed)
+b2sums=('SKIP')
+validpgpkeys=('62B11043D2F6EB6672D93103CDBAA37ABC74FBA0') # falkTX <falktx@falktx.com>
+
+_pick() {
+  local p="$1" f d; shift
+  for f; do
+    d="$srcdir/$p/${f#$pkgdir/}"
+    mkdir -p "$(dirname "$d")"
+    mv "$f" "$d"
+    rmdir -p --ignore-fail-on-non-empty "$(dirname "$f")"
+  done
+}
+
+build() {
+  arch-meson build $pkgname
+  ninja -C build
+}
+
+check() {
+  local _legacy_plugin _legacy_plugins _legacy_urls _plugins _urls _plugin
+  _plugins=(
+    SwankyAmp
+    vitalium
+  )
+  declare -A _urls=(
+    ["SwankyAmp"]="urn:distrho:SwankyAmp"
+    ["vitalium"]="urn:distrho:vitalium"
+  )
+  _legacy_plugins=(
+    Dexed
+    EasySSP
+    HiReSam
+    JuceOPL
+    KlangFalter
+    LUFSMeter
+    LUFSMeterMulti
+    Luftikus
+    Obxd
+    PitchedDelay
+    ReFine
+    StereoSourceSeparation
+    TAL-Dub-3
+    TAL-Filter-2
+    TAL-Filter
+    TAL-NoiseMaker
+    TAL-Reverb-2
+    TAL-Reverb-3
+    TAL-Reverb
+    TAL-Vocoder-2
+    Temper
+    TheFunction
+    ThePilgrim
+    Wolpertinger
+    drowaudio-distortion
+    drowaudio-distortionshaper
+    drowaudio-flanger
+    drowaudio-reverb
+    drowaudio-tremolo
+    drumsynth
+    eqinox
+    vex
+  )
+  declare -A _legacy_urls=(
+    ["Dexed"]="https://github.com/asb2m10/dexed"
+    ["EasySSP"]="http://au.tomatl.org/essp"
+    ["HiReSam"]="https://github.com/klangfreund/SpectrumAnalyser"
+    ["JuceOPL"]="https://bsutherland.github.io/JuceOPLVSTi/"
+    ["KlangFalter"]="https://github.com/HiFi-LoFi/KlangFalter"
+    ["LUFSMeter"]="http://www.klangfreund.com/lufsmeter"
+    ["LUFSMeterMulti"]="http://www.klangfreund.com/lufsmetermultichannel"
+    ["Luftikus"]="https://code.google.com/p/lkjb-plugins/luftikus"
+    ["Obxd"]="https://obxd.wordpress.com"
+    ["PitchedDelay"]="http://code.google.com/p/lkjb-dc12/"
+    ["ReFine"]="https://github.com/lkjbdsp/lkjb-plugins#ReFine"
+    ["StereoSourceSeparation"]="https://github.com/laixinyuan/StereoSourceSepartion"
+    ["TAL-Dub-3"]="urn:juce:TalDub3"
+    ["TAL-Filter-2"]="urn:juce:TalFilter2"
+    ["TAL-Filter"]="urn:juce:TalFilter"
+    ["TAL-NoiseMaker"]="http://kunz.corrupt.ch/products/tal-noisemaker"
+    ["TAL-Reverb-2"]="urn:juce:TalReverb2"
+    ["TAL-Reverb-3"]="urn:juce:TalReverb3"
+    ["TAL-Reverb"]="urn:juce:TalReverb"
+    ["TAL-Vocoder"]="http://kunz.corrupt.ch/products/tal-vocoder"
+    ["Temper"]="https://github.com/creativeintent/temper"
+    ["TheFunction"]="http://arcticanaudio.com/plugins/thefunction"
+    ["ThePilgrim"]="http://arcticanaudio.com/plugins/thepilgrim"
+    ["Wolpertinger"]="http://tumbetoene.tuxfamily.org"
+    ["drowaudio-distortion"]="http://www.drowaudio.co.uk/audio/audio_plugins/distortion"
+    ["drowaudio-distortionshaper"]="http://www.drowaudio.co.uk/audio/audio_plugins/distortion_shaper"
+    ["drowaudio-flanger"]="http://www.drowaudio.co.uk/audio/audio_plugins/flanger"
+    ["drowaudio-reverb"]="http://www.drowaudio.co.uk/audio/audio_plugins/reverb"
+    ["drowaudio-tremolo"]="http://www.drowaudio.co.uk/audio/audio_plugins/tremolo"
+    ["drumsynth"]="urn:juced:DrumSynth"
+    ["eqinox"]="urn:juced:EQinox"
+    ["vex"]="urn:juce:Vex"
+  )
+
+  (
+    echo "Linting plugins: ${_legacy_plugins[*]}"
+    for _legacy_plugin in "${_legacy_plugins[@]}"; do
+      echo "Linting ${_plugin}: ${_legacy_urls[${_legacy_plugin}]}"
+      if [ -n "${_legacy_urls[${_legacy_plugin}]}" ]; then
+        # ignore lv2_generate_ttl symbol as it can not be removed easily:
+        # https://github.com/DISTRHO/DISTRHO-Ports/issues/58
+        lv2lint -Mpack -s lv2_generate_ttl -I "build/ports-legacy/${_legacy_plugin}.lv2/" "${_legacy_urls[${_legacy_plugin}]}"
+      fi
+    done
+    for _plugin in "${_plugins[@]}"; do
+      echo "Linting $_plugin: ${_urls[${_plugin}]}"
+      if [ -n "${_urls[${_plugin}]}" ]; then
+        # ignore lv2_generate_ttl symbol as it can not be removed easily:
+        # https://github.com/DISTRHO/DISTRHO-Ports/issues/58
+        xvfb-run lv2lint -Mpack -s lv2_generate_ttl -I "build/ports/$_plugin.lv2/" "${_urls[${_plugin}]}" || echo "xvfb-run is too dumb to kill itself"
+      fi
+    done
+  )
+
+  ninja test -C build
+}
+
+package_distrho-ports() {
+  depends=(
+    $pkgbase-{lv2,vst,vst3}
+  )
+
+  DESTDIR="$pkgdir" meson install -C build
+
+  (
+    cd "$pkgdir"
+    # have find-libdeps resolve dependencies properly:
+    # https://gitlab.archlinux.org/archlinux/devtools/-/issues/102
+    find usr/lib -type f -iname "*.so" -exec chmod +x {} \;
+
+    _pick $pkgbase-lv2 usr/lib/lv2
+    _pick $pkgbase-vst usr/lib/vst
+    _pick $pkgbase-vst3 usr/lib/vst3
+  )
+}
+
+package_distrho-ports-lv2() {
+  pkgdesc+=" - LV2 plugins"
+  depends=(
+    alsa-lib
+    freetype2
+    gcc-libs
+    glibc
+    libglvnd
+    libx11
+    libxext
+    lv2-host
+  )
+
+  groups=(
+    lv2-plugins
+    pro-audio
+  )
+
+  mv -v $pkgname/* "$pkgdir"
+}
+
+package_distrho-ports-vst() {
+  pkgdesc+=" - VST plugins"
+  depends=(
+    alsa-lib
+    freetype2
+    gcc-libs
+    glibc
+    libglvnd
+    libx11
+    libxext
+    vst-host
+  )
+  groups=(
+    pro-audio
+    vst-plugins
+  )
+
+  mv -v $pkgname/* "$pkgdir"
+}
+
+package_distrho-ports-vst3() {
+  pkgdesc+=" - VST3 plugins"
+  depends=(
+    freetype2
+    gcc-libs
+    glibc
+    libglvnd
+    vst3-host
+  )
+  groups=(
+    pro-audio
+    vst3-plugins
+  )
+
+  mv -v $pkgname/* "$pkgdir"
+}

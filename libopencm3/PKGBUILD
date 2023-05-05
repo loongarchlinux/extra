@@ -1,0 +1,42 @@
+# Maintainer: Filipe Laíns (FFY00) <lains@archlinux.org>
+
+pkgname=libopencm3
+_commit=8bc483746bd78f2a398f2949420a4128eed5272c
+pkgver=r2848.8bc48374
+pkgrel=1
+pkgdesc='Open Source firmware library for various ARM Cortex microcontrollers'
+arch=('any')
+url='https://www.libopencm3.org'
+license=('GPL')
+depends=('arm-none-eabi-newlib')
+makedepends=('git' 'arm-none-eabi-gcc' 'python-yaml')
+options=(!strip staticlibs !buildflags)
+source=("git+https://github.com/libopencm3/libopencm3.git#commit=$_commit"
+        '0001-Revert-Drop-install-target-and-documentation.patch')
+sha512sums=('SKIP'
+            '743ea321311d391473581c9a8d8120c50132de05f2055b3addb014244584711ef289521409898f8f5832c36f30f1fc3721703971ffc6dc2343af5abb3c9f71e4')
+
+pkgver() {
+  cd $pkgname
+
+  printf 'r%s.%s' $(git rev-list --count HEAD) $(git rev-parse --short HEAD)
+}
+
+prepare() {
+  cd $pkgname
+
+  patch -p1 < ../0001-Revert-Drop-install-target-and-documentation.patch
+}
+
+build() {
+  cd $pkgname
+
+  make
+}
+
+package() {
+  cd $pkgname
+
+  make DESTDIR="$pkgdir" PREFIX=/usr/arm-none-eabi install
+}
+

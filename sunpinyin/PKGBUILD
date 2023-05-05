@@ -1,0 +1,28 @@
+# Maintainer: Felix Yan <felixonmars@archlinux.org>
+# Contributor: Thomas Dziedzic < gostrc at gmail >
+
+pkgname=sunpinyin
+pkgver=3.0.0rc2
+_tag=3.0.0-rc2
+pkgrel=2
+arch=(loong64 x86_64)
+pkgdesc="Statistical Language Model based pinyin IME by Sun"
+license=(LGPL)
+url="https://github.com/sunpinyin/sunpinyin"
+depends=(sqlite make gcc-libs)
+makedepends=(git scons intltool python)
+optdepends=('sunpinyin-data: Statistical language model data from open-gram project for sunpinyin')
+source=("https://github.com/sunpinyin/sunpinyin/archive/v$_tag/sunpinyin-$_tag.tar.gz")
+sha512sums=('a2f189100c0070c82613fc8bb0d8bb7e7def25ea62075074f181b786e7bf8c7527fccaae879db7c9c73c29657b45da1b6f9d2cd2630088b17448eabad545c3d8')
+
+build() {
+  cd $pkgname-$_tag
+  scons --prefix=/usr
+}
+
+package() {
+  cd $pkgname-$_tag
+  scons --prefix=/usr \
+        --install-sandbox="$pkgdir" \
+        install
+}

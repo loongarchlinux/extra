@@ -1,0 +1,80 @@
+# Maintainer: David Runge <dvzrv@archlinux.org>
+# Contributor: speps <speps at aur dot archlinux dot org>
+# Contributor: Orivej Desh <masecretaire@gmx.fr>
+
+pkgname=sonic-visualiser
+pkgver=4.5.2
+pkgrel=1
+pkgdesc="A viewer and analyser of music audio files."
+arch=(loong64 x86_64)
+url="https://www.sonicvisualiser.org/"
+license=(GPL2)
+groups=(pro-audio)
+depends=(
+  gcc-libs
+  glibc
+  hicolor-icon-theme
+  libmad
+  opusfile
+  qt5-base
+  qt5-svg
+  vamp-plugin-sdk
+)
+makedepends=(
+  alsa-lib
+  bzip2
+  capnproto
+  fftw
+  libfishsound
+  libid3tag
+  liblo
+  liblrdf
+  liboggz
+  libpulse
+  libsamplerate
+  libsndfile
+  meson
+  portaudio
+  rubberband
+  serd
+  sord
+)
+provides=(vamp-host)
+source=(https://github.com/$pkgname/$pkgname/releases/download/sv_v$pkgver/$pkgname-$pkgver.tar.gz)
+sha512sums=('6cfdf2c056bdad554aee7da0c46c4f4ab799c781431c3c2684f0bd8d567038b22c0a98d7f2ba8a7a1e50ae3750563c318f3fbfecfdab18f749947b3e58b12c61')
+b2sums=('3d3e3e4ba96d73b0ca2fbbdfaa554b142954dc216fd9daae38cfc80d1a63bbb665d7c41d1c88c5c73855a6292a6ffdbcaa24dcd0c3412ff71db33a93e5b2067f')
+
+build() {
+  arch-meson build $pkgname-$pkgver
+  meson compile -C build
+}
+
+check() {
+  meson test -C build --print-errorlogs
+}
+
+package() {
+  depends+=(
+    alsa-lib libasound.so
+    bzip2 libbz2.so
+    capnproto libcapnp.so libkj.so
+    fftw libfftw3.so
+    libfishsound libfishsound.so
+    libid3tag libid3tag.so
+    liblo liblo.so
+    liblrdf liblrdf.so
+    liboggz liboggz.so
+    libpulse libpulse.so
+    libsamplerate libsamplerate.so
+    libsndfile libsndfile.so
+    portaudio libportaudio.so
+    rubberband librubberband.so
+    serd libserd-0.so
+    sord libsord-0.so
+  )
+
+  DESTDIR="$pkgdir" meson install -C build
+  install -vDm 644 $pkgname-$pkgver/samples/* -t "$pkgdir/usr/share/$pkgname/samples"
+  install -vDm 644 $pkgname-$pkgver/templates/* -t "$pkgdir/usr/share/$pkgname/templates"
+  install -vDm 644 $pkgname-$pkgver/{CHANGELOG,CITATION,README{,_OSC}.md} -t "$pkgdir/usr/share/doc/$pkgname"
+}

@@ -1,0 +1,38 @@
+# Maintainer: kpcyrd <kpcyrd[at]archlinux[dot]org>
+
+pkgname=repro-get
+pkgver=0.3.0
+pkgrel=1
+pkgdesc="Reproducible apt/dnf/apk/pacman, with content-addressing "
+url='https://github.com/reproducible-containers/repro-get'
+arch=('loong64' 'x86_64')
+license=('Apache')
+optdepends=('kubo: for ipfs support')
+makedepends=('go')
+source=(https://github.com/reproducible-containers/${pkgname}/archive/v${pkgver}/${pkgname}-${pkgver}.tar.gz)
+b2sums=('ee11cef5eaa228c0cc0b9bf49487a3e08ed995f1da350e3f16759043112176ad458bcdd3fef47842232e9651c963eabe98444146f47c299de95669d258e16c21')
+
+build() {
+  cd ${pkgname}-${pkgver}
+  go build \
+    -trimpath \
+    -buildmode=pie \
+    -mod=readonly \
+    -ldflags "-linkmode external -extldflags \"${LDFLAGS}\" -X github.com/reproducible-containers/repro-get/pkg/version.Version=${pkgver}" \
+    ./cmd/repro-get
+}
+
+package() {
+  cd ${pkgname}-${pkgver}
+  install -Dm 755 "${pkgname}" -t "${pkgdir}/usr/bin"
+
+  # setup completions
+  install -dm 755 "${pkgdir}/usr/share/bash-completion/completions" \
+                  "${pkgdir}/usr/share/zsh/site-functions" \
+                 "${pkgdir}/usr/share/fish/vendor_completions.d"
+  "${pkgdir}/usr/bin/${pkgname}" completion bash > "${pkgdir}/usr/share/bash-completion/completions/${pkgname}"
+  "${pkgdir}/usr/bin/${pkgname}" completion zsh > "${pkgdir}/usr/share/zsh/site-functions/_${pkgname}"
+  "${pkgdir}/usr/bin/${pkgname}" completion fish > "${pkgdir}/usr/share/fish/vendor_completions.d/${pkgname}.fish"
+}
+
+# vim: ts=2 sw=2 et:

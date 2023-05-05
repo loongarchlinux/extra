@@ -1,0 +1,59 @@
+# Maintainer: Felix Yan <felixonmars@archlinux.org>
+
+pkgname=ruby-protocol-http
+pkgver=0.24.1
+_commit=4d65d4bcd6f2482f241224630250d9fd26dbf85a
+pkgrel=1
+pkgdesc='Provides abstractions to handle HTTP protocols'
+arch=(any)
+url='https://github.com/socketry/protocol-http'
+license=(MIT)
+depends=(ruby)
+makedepends=(git)
+checkdepends=(ruby-bake-modernize ruby-bake-test ruby-bake-test-external ruby-covered ruby-sus)
+options=(!emptydirs)
+source=(git+https://github.com/socketry/protocol-http.git#commit=$_commit)
+sha256sums=('SKIP')
+
+prepare() {
+  cd protocol-http
+  sed -r -e 's|~>|>=|g' -e '/signing_key/d' -i protocol-http.gemspec
+  sed -i '/bake-gem/d;/utopia-project/d' gems.rb
+}
+
+build() {
+  local _gemdir="$(gem env gemdir)"
+  cd protocol-http
+  gem build protocol-http.gemspec
+  gem install \
+    --local \
+    --verbose \
+    --ignore-dependencies \
+    --no-user-install \
+    --install-dir "tmp_install/$_gemdir" \
+    --bindir "tmp_install/usr/bin" \
+    protocol-http-$pkgver.gem
+  find "tmp_install/$_gemdir/gems/" \
+    -type f \
+    \( \
+        -iname "*.o" -o \
+        -iname "*.c" -o \
+        -iname "*.so" -o \
+        -iname "*.time" -o \
+        -iname "gem.build_complete" -o \
+        -iname "Makefile" \
+    \) \
+    -delete
+  rm -r tmp_install/$_gemdir/cache
+}
+
+check() {
+  local _gemdir="$(gem env gemdir)"
+  cd protocol-http
+  GEM_HOME="tmp_install/$_gemdir" bake test
+}
+
+package() {
+  cd protocol-http
+  cp -a tmp_install/* "$pkgdir"/
+}

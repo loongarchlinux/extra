@@ -1,0 +1,34 @@
+# Maintainer: David Runge <dvzrv@archlinux.org>
+# Contributor: eolianoe <eolianoe At GoogleMAIL DoT com>
+# Contributor: Feng Wang <wanng.fenng AT gmail DOT com>
+
+pkgname=gmm
+pkgver=5.4.2
+pkgrel=2
+pkgdesc="Generic C++ finite element library"
+arch=(any)
+url="http://getfem.org/"
+license=(LGPL3)
+source=(https://download.savannah.nongnu.org/releases/getfem/stable/$pkgname-$pkgver.tar.gz)
+sha512sums=('525eead2c9b4dbedbf4d5c315a7f7efa584aa4a2582c260bd304a3b7cc762f8161b4bc825b4853f53e5a766e56eed538d2005c8b1965bdc7efc77a5a0795e934')
+b2sums=('971656610e458f589de4e1d7d28947f501e23a25a018fa15b854047e4e34d11ac7f0729928250a80537859dfc888582285217a595e6168606ca7b54c4045e3ec')
+
+prepare() {
+  cd $pkgname-$pkgver
+  autoreconf -fiv
+}
+
+build() {
+  cd $pkgname-$pkgver
+  ./configure --prefix=/usr
+  make
+}
+
+check(){
+  make check -C $pkgname-$pkgver
+}
+
+package(){
+  make DESTDIR="$pkgdir" install -C $pkgname-$pkgver
+  install -vDm 644 $pkgname-$pkgver/{AUTHORS,ChangeLog,README} -t "$pkgdir/usr/share/doc/$pkgname/"
+}

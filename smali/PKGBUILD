@@ -1,0 +1,50 @@
+# Maintainer: Levente Polyak <anthraxx[at]archlinux[dot]org>
+# Contributor: Firef0x <Firefgx (at) gmail (dot) com>
+# Contributor: sh0 <mee@sh0.org>
+# Contributor: Lekensteyn <lekensteyn@gmail.com>
+
+pkgname=smali
+pkgver=2.5.2
+pkgrel=1
+pkgdesc="Assembler/disassembler for Android's dex format"
+url='https://github.com/JesusFreke/smali'
+arch=('any')
+license=('BSD')
+depends=('java-runtime=11' 'bash')
+makedepends=('java-environment=11' 'gradle')
+source=(https://github.com/JesusFreke/${pkgname}/archive/v${pkgver}/${pkgname}-v${pkgver}.tar.gz)
+sha512sums=('33628637b096adeb5bf67f5f03efff7c0e0c988fe2f6ed41614e836a66b270a4ef7e7c544f23c91ff8a416ff06034ba64d23aa2bd49a5af3070191021c0b9258')
+b2sums=('6aa7d3b5a9be07fec3f43d7bef46f78df54ee205df6816c540b3d9b3430baa416c4967d86948eaef11edff760833bd699819f27894a70eadd2d645dd8566b1cd')
+
+prepare() {
+  cd ${pkgname}-${pkgver}
+  for file in baksmali smali; do
+    # prevent from printing path on launch
+    sed '/echo ${newProg}/d' -i scripts/${file}
+    # fix ls path
+    sed 's|/bin/ls|/usr/bin/ls|' -i scripts/${file}
+  done
+}
+
+build() {
+  cd ${pkgname}-${pkgver}
+  gradle build
+}
+
+check() {
+  cd ${pkgname}-${pkgver}
+  gradle test
+}
+
+package() {
+  cd ${pkgname}-${pkgver}
+  install -d "${pkgdir}/usr/bin"
+  for file in baksmali smali; do
+    install -Dm 644 "${file}/build/libs/${file}.jar" "${pkgdir}/usr/share/java/${pkgname}/${file}.jar"
+    install -Dm 755 scripts/${file} "${pkgdir}/usr/share/java/${pkgname}/${file}"
+    ln -s "/usr/share/java/${pkgname}/${file}" "${pkgdir}/usr/bin/${file}"
+  done
+  install -Dm 644 NOTICE -t "${pkgdir}/usr/share/licenses/${pkgname}"
+}
+
+# vim: ts=2 sw=2 et:

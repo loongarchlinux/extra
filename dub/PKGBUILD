@@ -1,0 +1,43 @@
+# Maintainer: Dan Printzell <wild@archlinux.org>
+# Maintainer: Filipe Laíns (FFY00) <lains@archlinux.org>
+# Contributor: Mihails Strasuns <public@dicebot.lv>
+# Contributor: Moritz Maxeiner <moritz@ucworks.org>
+
+pkgname=dub
+pkgver=1.32.0
+pkgrel=1
+pkgdesc="Developer package manager for D programming language"
+arch=('loong64' 'x86_64')
+url="https://github.com/dlang/dub"
+license=('MIT')
+groups=('dlang')
+makedepends=('ldc')
+depends=('curl')
+source=("$pkgname-$pkgver.tar.gz::https://github.com/dlang/dub/archive/v$pkgver.tar.gz")
+sha512sums=('4a1f8f3d5dc2d99d16143a5ac060cb880a4e0c6bbd107a0823fcb59679d72b66ed4529ae228dfd56b467fd80dbc14197aee6937b2f494729e4922b6940d568f5')
+
+build() {
+	cd "$pkgname-$pkgver"
+
+	GITVER=$pkgver DMD=ldmd2 ldmd2 -run build.d -release -O3 -linker=gold --flto=thin -link-defaultlib-shared=false -L--build-id
+
+	# Build man pages
+	bin/dub --single scripts/man/gen_man.d
+}
+
+package() {
+	# binaries
+	install -Dm755 "$pkgname-$pkgver/bin/dub" "$pkgdir/usr/bin/dub"
+
+	# license
+	install -Dm644 "$pkgname-$pkgver/LICENSE" "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
+
+	# bash, fish and zsh completion
+	install -Dm644 "$pkgname-$pkgver/scripts/bash-completion/dub.bash" "$pkgdir/usr/share/bash-completion/completions/dub"
+	install -Dm644 "$pkgname-$pkgver/scripts/fish-completion/dub.fish" "$pkgdir/usr/share/fish/vendor_completions.d/dub.fish"
+	install -Dm644 "$pkgname-$pkgver/scripts/zsh-completion/_dub" "$pkgdir/usr/share/zsh/site-functions/_dub"
+
+	# man pages
+	mkdir -p "$pkgdir"/usr/share/man/man1
+	cp "$pkgname-$pkgver"/scripts/man/*.1 "$pkgdir"/usr/share/man/man1/
+}

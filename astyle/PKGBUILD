@@ -1,0 +1,47 @@
+# Maintainer: George Rawlinson <grawlinson@archlinux.org>
+# Contributor: Lukas Fleischer <lfleischer@archlinux.org>
+# Contributor: Mateusz Herych <heniekk@gmail.com>
+# Contributor: Thomas Mader <thezema@gmail.com>
+# Contributor: Vinay S Shastry <vinayshastry@gmail.com>
+# Contributor: tardo <tardo@nagi-fanboi.net>
+
+pkgname=astyle
+pkgver=3.2.1
+pkgrel=1
+pkgdesc='A free, fast and small automatic formatter for C, C++, C#, and Java source code.'
+arch=('loong64' 'x86_64')
+url='http://astyle.sourceforge.net/'
+license=('LGPL')
+depends=('glibc' 'gcc-libs')
+makedepends=('git' 'jdk8-openjdk')
+optdepends=('java-environment-openjdk')
+_commit='a865024320886da06f38ac090f0fb1325b39f1ab'
+source=(
+  "$pkgname::git+https://gitlab.com/saalen/astyle.git#commit=$_commit"
+  'simplify-makefile.patch'
+)
+b2sums=('SKIP'
+        '155dca3520e1669713efbf42431e4ba2c9c05006dcd2a14f58252d9e6913aab799af7b64c9040201e99ff8d12f953918124c83845fcf64ec025fc131e7acdf1f')
+
+pkgver() {
+  cd "$pkgname"
+
+  git describe --tags | sed 's/^v//'
+}
+
+prepare() {
+  cd "$pkgname"
+
+  patch -p1 -i "$srcdir/simplify-makefile.patch"
+}
+build() {
+  cd "$pkgname/AStyle/build/gcc"
+
+  JAVA_HOME=/usr/lib/jvm/java-8-openjdk make shared release java
+}
+
+package() {
+  cd "$pkgname/AStyle/build/gcc"
+
+  DESTDIR="$pkgdir" make install
+}

@@ -1,0 +1,52 @@
+# Maintainer: Daniel M. Capella <polyzen@archlinux.org>
+# Maintainer: Caleb Maclennan <caleb@alerque.com>
+# Contributor: Mario Finelli <mario at finel dot li>
+
+pkgname=go-yq
+pkgver=4.33.3
+pkgrel=1
+pkgdesc='Portable command-line YAML processor'
+arch=('loong64' 'x86_64')
+url=https://github.com/mikefarah/yq
+license=('MIT')
+depends=('glibc')
+makedepends=('go')
+conflicts=('yq')
+source=("$url/archive/v$pkgver/yq-$pkgver.tar.gz")
+b2sums=('ece2f445d5d92660a44a7089a601db9bbd4a5b283ce40684bdab6d2ad54cb67e7c7c351c66d273df7c6ab7ce14bfa8955f7282f64f1f7f7ae10f03c6d7a7fa94')
+
+prepare() {
+  cd yq-$pkgver
+  go mod vendor
+}
+
+build() {
+  cd yq-$pkgver
+  export CGO_CPPFLAGS="$CPPFLAGS"
+  export CGO_CFLAGS="$CFLAGS"
+  export CGO_CXXFLAGS="$CXXFLAGS"
+  export CGO_LDFLAGS="$LDFLAGS"
+  export GOFLAGS="-buildmode=pie -trimpath -ldflags=-linkmode=external -modcacherw"
+  go build .
+}
+
+check() {
+  cd yq-$pkgver
+  go test ./...
+}
+
+package() {
+  cd yq-$pkgver
+  install -Dt "$pkgdir"/usr/bin yq
+  install -Dm644 -t "$pkgdir"/usr/share/licenses/$pkgname LICENSE
+  install -Dm644 -t "$pkgdir"/usr/share/doc/$pkgname README.md
+
+  ./yq shell-completion bash | install -Dm644 /dev/stdin \
+    "$pkgdir"/usr/share/bash-completion/completions/yq
+  ./yq shell-completion zsh | install -Dm644 /dev/stdin \
+    "$pkgdir"/usr/share/zsh/site-functions/_yq
+  ./yq shell-completion fish | install -Dm644 /dev/stdin \
+    "$pkgdir"/usr/share/fish/vendor_completions.d/yq.fish
+}
+
+# vim:set ts=2 sw=2 et:

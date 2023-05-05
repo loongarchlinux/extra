@@ -1,0 +1,41 @@
+# Maintainer: Leonidas Spyropoulos <artafinde@archlinux.org>
+
+pkgname=trompeloeil
+pkgver=44
+pkgrel=1
+pkgdesc="Thread-safe header-only mocking framework for C++11/14"
+arch=('loong64' 'x86_64')
+url="https://github.com/rollbear/trompeloeil"
+license=('Boost')
+makedepends=(cmake ninja)
+checkdepends=(catch2)
+source=("$pkgname-$pkgver.tar.gz::https://github.com/rollbear/trompeloeil/archive/v${pkgver}.tar.gz")
+sha256sums=('004877db6ba22f24c7867e112e081eeb68858122f55ebe7c7dd9d8d9e3b46c88')
+b2sums=('07a65182c69890a089b6d612db3d9c79ecff427c9ff70342e57807ee2d4631be885435bc90af7717c8a63f8b038699ca2606e055e9a01c180b15048413f0f348')
+
+build() {
+  cmake \
+    -Bbuild \
+    -GNinja \
+    -S "$pkgname-$pkgver" \
+    -DCMAKE_BUILD_TYPE='Debug' \
+    -DCMAKE_INSTALL_PREFIX='/usr' \
+    -DTROMPELOEIL_INSTALL_TARGETS=ON \
+    -DTROMPELOEIL_INSTALL_DOCS=OFF \
+    -Wno-dev
+  cmake --build build --verbose --target self_test thread_terror custom_recursive_mutex
+}
+
+check() {
+  ./build/test/self_test || exit -1
+  ./build/test/thread_terror || exit -1
+  ./build/test/custom_recursive_mutex || exit -1
+}
+
+
+package() {
+  DESTDIR="${pkgdir}" cmake --install build
+  install -Dm644 "${srcdir}/${pkgname}-${pkgver}/LICENSE_1_0.txt" "${pkgdir}/usr/share/licenses/${pkgname}/LICENSE"
+}
+
+# vim:set ts=2 sw=2 et:

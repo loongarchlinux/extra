@@ -1,0 +1,45 @@
+# Maintainer: Caleb Maclennan <caleb@alerque.com>
+# Contributor: AUR[ogarcia]
+
+pkgname=git-sizer
+pkgver=1.5.0
+pkgrel=2
+pkgdesc='Compute various size metrics for a Git repository'
+arch=(loong64 x86_64 i686 armv6h armv7h aarch64)
+url="https://github.com/github/$pkgname"
+license=(MIT)
+depends=(git)
+makedepends=(go)
+_archive="$pkgname-$pkgver"
+source=("$_archive.tar.gz::$url/archive/v$pkgver.tar.gz")
+sha256sums=('07a5ac5f30401a17d164a6be8d52d3d474ee9c3fb7f60fd83a617af9f7e902bb')
+
+build() {
+	cd "$_archive"
+	export CGO_CPPFLAGS="$CPPFLAGS"
+	export CGO_CFLAGS="$CFLAGS"
+	export CGO_CXXFLAGS="$CXXFLAGS"
+	export CGO_LDFLAGS="$LDFLAGS"
+	go build \
+		-trimpath \
+		-buildmode=pie \
+		-mod=readonly \
+		-modcacherw \
+		-ldflags="-X main.BuildVersion=$pkgver -linkmode external" \
+		-o . ./...
+}
+
+# Note: Upstream tests seem to do goofy things like assume a terminal, if
+# anybody knows how to run these so they work in a chroot build properly I'm
+# open to contributions.
+check() {
+	cd "$_archive"
+	# go test ./...
+}
+
+package() {
+	cd "$_archive"
+	install -Dm0755 -t "$pkgdir/usr/bin/" git-sizer
+	install -Dm0644 -t "$pkgdir/usr/share/doc/$pkgname/" README.md
+	install -Dm0644 -t "$pkgdir/usr/share/licenses/$pkgname/" LICENSE.md
+}

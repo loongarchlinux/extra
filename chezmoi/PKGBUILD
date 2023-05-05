@@ -1,27 +1,52 @@
 # Maintainer: Daurnimator <daurnimator@archlinux.org>
+# Maintainer: Caleb Maclennan <caleb@alerque.com>
 # Contributor: Tom Payne <twpayne@gmail.com>
 # Contributor:  <godeater@gmail.com>
 
 pkgname=chezmoi
-pkgver=1.6.1
-pkgrel=2
-pkgdesc="Multi-machine dotfile management system"
+pkgver=2.33.4
+pkgrel=1
+pkgdesc="Manage your dotfiles across multiple machines"
 arch=('loong64' 'x86_64')
-url='https://github.com/twpayne/chezmoi'
+url='https://www.chezmoi.io/'
 license=('MIT')
-makedepends=('go-pie' 'git')
+makedepends=('go' 'git')
 depends=('glibc')
+checkdepends=('zip')
+options=('!lto')
 source=("${pkgname}-${pkgver}.tar.gz::https://github.com/twpayne/chezmoi/archive/v${pkgver}.tar.gz")
-sha256sums=('ab315e88cc1740468adac51d0e8e57b6b9553b0668e178b44ef32074b791c8e8')
+sha512sums=('f9e2fe3570fddf170587df5856619e6d446c865d4b97ca31632db22d188cd1058ae031866a6c590be06d9085630d7321b4a8233ea077268899ee7a015f5e5bf9')
+
+prepare() {
+  cd "$pkgname-$pkgver"
+
+  go mod download
+}
 
 build() {
   cd "$pkgname-$pkgver"
 
+  export CGO_LDFLAGS="${LDFLAGS}"
+  export CGO_CFLAGS="${CFLAGS}"
+  export CGO_CPPFLAGS="${CPPFLAGS}"
+  export CGO_CXXFLAGS="${CXXFLAGS}"
+  export GOPROXY=off
   go build \
-    -gcflags "all=-trimpath=${PWD}" \
-    -asmflags "all=-trimpath=${PWD}" \
-    -ldflags "-extldflags ${LDFLAGS}" \
+    -buildmode=pie \
+    -mod=readonly \
+    -tags noupgrade \
+    -ldflags "-compressdwarf=false \
+              -X github.com/twpayne/chezmoi/cmd.DocsDir=/usr/share/doc/$pkgname \
+              -X main.version=$pkgver \
+              -X main.date=$(date -u +'%Y-%m-%dT%H:%M:%SZ' --date=@${SOURCE_DATE_EPOCH}) \
+              -extldflags ${LDFLAGS}" \
     .
+}
+
+check() {
+  cd "$pkgname-$pkgver"
+
+  go test -v ./...
 }
 
 package() {

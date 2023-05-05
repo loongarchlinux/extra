@@ -1,0 +1,55 @@
+# Maintainer: George Rawlinson <grawlinson@archlinux.org>
+# Contributor: Jesse Luehrs <archlinux@tozt.net>
+
+pkgname=rbw
+pkgver=1.7.1
+pkgrel=1
+pkgdesc='Unofficial Bitwarden CLI'
+arch=('loong64' 'x86_64')
+url='https://git.tozt.net/rbw'
+license=('MIT')
+depends=('pinentry')
+makedepends=('rust')
+options=('!lto')
+source=("$url/snapshot/${pkgname}-${pkgver}.tar.gz")
+sha512sums=('19b18fdf8bc6b20983356c5eedb811861c36ae38ee02c7ab8c438c16e28e9237adbb4382042ccfe7264273ffeee92afea21cc579bb5254c65c9a4c4d0b90bf00')
+b2sums=('5b3f5e2eded5c07e51aef5f565b4b22974bc13ba5a0a0efd24b30c7ad31377409bb8c284c6b3e7c59d92375bf027ed3e8a1f6f1cf395a2fc789a46c67fec4e01')
+
+prepare() {
+  cd "$pkgname-$pkgver"
+  cargo fetch --locked --target "$CARCH-unknown-linux-gnu"
+}
+
+build() {
+  cd "$pkgname-$pkgver"
+  cargo build --frozen --release --all-features
+
+  # generate shell auto-completions
+  for completion in bash fish zsh; do
+    cargo run --frozen --release --bin rbw -- \
+      gen-completions "$completion" > "$completion-completions"
+  done
+}
+
+check() {
+  cd "$pkgname-$pkgver"
+  cargo test --frozen --all-features
+}
+
+package() {
+  cd "$pkgname-$pkgver"
+
+  # binaries
+  install -vDm755 -t "$pkgdir/usr/bin" target/release/rbw{,-agent}
+
+  # license
+  install -vDm644 -t "$pkgdir/usr/share/licenses/$pkgname" LICENSE
+
+  # documentation
+  install -vDm644 -t "$pkgdir/usr/share/doc/$pkgname" README.md CHANGELOG.md
+
+  # shell auto-completions
+  install -vDm644 bash-completions "$pkgdir/usr/share/bash-completion/completions/rbw"
+  install -vDm644 fish-completions "$pkgdir/usr/share/fish/vendor_completions.d/rbw.fish"
+  install -vDm644 zsh-completions "$pkgdir/usr/share/zsh/site-functions/_rbw"
+}

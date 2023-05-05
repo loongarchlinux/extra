@@ -1,0 +1,60 @@
+# Maintainer: Felix Yan <felixonmars@archlinux.org>
+
+pkgname=ruby-maxitest
+pkgver=4.4.1
+_commit=0e7f0b151763edd16fc25653f15b910c4bd61c2d
+pkgrel=1
+pkgdesc='Minitest + all the features you always wanted'
+arch=(any)
+url='https://github.com/grosser/maxitest'
+license=(MIT)
+depends=(ruby-minitest)
+makedepends=(git ruby-rake ruby-rspec)
+checkdepends=(procps-ng ruby-bump ruby-byebug)
+options=(!emptydirs)
+source=(git+https://github.com/grosser/maxitest.git#commit=$_commit)
+sha256sums=('SKIP')
+
+prepare() {
+  cd maxitest
+  sed -e 's/, "< 5.18.0"//' -i maxitest.gemspec
+  git rm Gemfile.lock
+}
+
+build() {
+  local _gemdir="$(gem env gemdir)"
+  cd maxitest
+  gem build maxitest.gemspec
+  gem install \
+    --local \
+    --verbose \
+    --ignore-dependencies \
+    --no-user-install \
+    --install-dir "tmp_install/$_gemdir" \
+    --bindir "tmp_install/usr/bin" \
+    maxitest-$pkgver.gem
+  find "tmp_install/$_gemdir/gems/" \
+    -type f \
+    \( \
+        -iname "*.o" -o \
+        -iname "*.c" -o \
+        -iname "*.so" -o \
+        -iname "*.time" -o \
+        -iname "gem.build_complete" -o \
+        -iname "Makefile" \
+    \) \
+    -delete
+  rm -r tmp_install/$_gemdir/cache
+}
+
+check() {
+  local _gemdir="$(gem env gemdir)"
+  cd maxitest
+  PATH="tmp_install/usr/bin:$PATH" GEM_HOME="tmp_install/$_gemdir" rake
+}
+
+package() {
+  cd maxitest
+  cp -a tmp_install/* "$pkgdir"/
+  install -Dm644 MIT-LICENSE -t "$pkgdir"/usr/share/licenses/$pkgname/
+}
