@@ -3,8 +3,8 @@
 # Contributor: Jakub Schmidtke <sjakub@gmail.com>
 
 pkgname=firefox
-pkgver=112.0.2
-pkgrel=2
+pkgver=113.0.2
+pkgrel=1
 pkgdesc="Standalone web browser from mozilla.org"
 url="https://www.mozilla.org/firefox/"
 arch=(loong64 x86_64)
@@ -27,22 +27,15 @@ makedepends=(
   cbindgen
   clang
   diffutils
-  dump_syms
   imake
   inetutils
   jack
-  lld
   llvm
   mesa
   nasm
   nodejs
   python
-  rust
   unzip
-  wasi-compiler-rt
-  wasi-libc
-  wasi-libc++
-  wasi-libc++abi
   xorg-server-xvfb
   yasm
   zip
@@ -66,21 +59,27 @@ source=(
   https://archive.mozilla.org/pub/firefox/releases/$pkgver/source/firefox-$pkgver.source.tar.xz{,.asc}
   $pkgname.desktop
   identity-icons-brand.svg
-  0001-Bug-1803016-Wayland-Don-t-commit-wl_buffer-if-buffer.patch
+  rustup-init::http://public.loongarch.dev/sources/rust/rustup-init/76186f6b42409f14cfbbeeca20bcf928/rustup-init
+  Add-support-for-LoongArch.patch
+  Patch-bindgen-to-work-around-issues-with-some-unsoun.patch
 )
 validpgpkeys=(
   '14F26682D0916CDD81E37B6D61B7B526D98F0353'  # Mozilla Software Releases <release@mozilla.com>
 )
-sha256sums=('e6a4819a3b82b1ca6c45296e50e6c9ab653306eeb540e50ba8683e339565992e'
+sha256sums=('f132b702836311b6cc40873b69df3ce208d035dbc8ce390c390eebd63d27c7a3'
             'SKIP'
             '298eae9de76ec53182f38d5c549d0379569916eebf62149f9d7f4a7edef36abf'
             'a9b8b4a0a1f4a7b4af77d5fc70c2686d624038909263c795ecc81e0aec7711e9'
-            'bfe15651a99ac6d0037867c9db00a0d4340353cdc0ac4a39e43ad61cc2589ed6')
-b2sums=('44f2fae6c7260a1a6cad24ee31bbd52bc7efad15ac5b9f64f4bceabda7a371f20a490512cee324e53373b9a96fd218572c1478b76e5931383dbef00cc25743aa'
+            'dd1812464cc932e5d5fe47712924e2735b4082ba2e1026faf02955f4fc70306e'
+            'c610efe044269ab68493df1574bb044bef62e8435025ea6f0c9f7d2d04ac04fb'
+            '91f353257e16d05a7e636123e8278c64bd11b008a75f6aa1f8ce385cd6ec4402')
+b2sums=('29be5865db0fd5de0d74d8f906301277eb3eeb0ef53db0a27398a0410fd2b8f973074cf58e00c718b5c7ef2b71295513adc1a905444e8b74f5b9be3a701d9b6d'
         'SKIP'
         'e18f2c22e394ca3b6758bc130245b254947e4d15921be3da443d6d7c3c4b0d22ead1b39fbc10a4f896edd19e2a1dffbd1cbb34dc4beb0621a6ddb70ccc53b3a7'
         '63a8dd9d8910f9efb353bed452d8b4b2a2da435857ccee083fc0c557f8c4c1339ca593b463db320f70387a1b63f1a79e709e9d12c69520993e26d85a3d742e34'
-        'ab11b185f32da7a10c22a075d2bf16adadfcfc2d197fc88bd61a03d1873d5cd914cd96edf8af9f054a3cab12629f3f5c29d70d0dce0f0f4bef85f1cfc5a219ee')
+        '51f4a6f43b427e50e815b2a39ff54e13b11acff8431d2ae6267a1c41c989048f16b4008573664ca18e0c48c88a0e580e6db55e02cde4ed9ce5016b90f275e6bf'
+        '244bde1a249ef50e8013164a4477812130f0bb3507e93686cb7ebecdec122335d2f377d5e07d37bfbac6608211f6111f0dc5e57efe991937fde8b50f15638bcb'
+        '85293f2d40c56df025ee4312669d6b16123c213e5349aeaeddccd7fe6d34179e8ebb93cd79344fa30166699cba7c75ce4f116b01ff326400f8bad6165021da4b')
 
 # Google API keys (see http://www.chromium.org/developers/how-tos/api-keys)
 # Note: These are for Arch Linux use ONLY. For your own distribution, please
@@ -95,15 +94,19 @@ _google_api_key=AIzaSyDwr302FpOSkGRpLlUpPThNTDPbXcIn_FM
 _mozilla_api_key=e05d56db0a694edc8b5aaebda3f2db6a
 
 prepare() {
+  # Install rust toolchain from upstream
+  ./rustup-init --no-modify-path --default-toolchain=none --profile=minimal -y
+  . $HOME/.cargo/env
+  rustup toolchain install --profile=default nightly
+
   mkdir mozbuild
   cd firefox-$pkgver
 
-  # https://bugzilla.mozilla.org/show_bug.cgi?id=1803016
-  patch -Np1 -i ../0001-Bug-1803016-Wayland-Don-t-commit-wl_buffer-if-buffer.patch
+  patch -Np1 -i ../Add-support-for-LoongArch.patch
+  patch -Np1 -i ../Patch-bindgen-to-work-around-issues-with-some-unsoun.patch
 
   echo -n "$_google_api_key" >google-api-key
   echo -n "$_mozilla_api_key" >mozilla-api-key
-  patch -p1 -i $srcdir/firefox-100.0.2-add-loongarch-support-all.patch
 
   cat >../mozconfig <<END
 ac_add_options --enable-application=browser
@@ -113,11 +116,8 @@ ac_add_options --prefix=/usr
 ac_add_options --enable-release
 ac_add_options --enable-hardening
 ac_add_options --enable-optimize
-ac_add_options --enable-rust-simd
-ac_add_options --enable-linker=lld
-ac_add_options --disable-elf-hack
 ac_add_options --disable-bootstrap
-ac_add_options --with-wasi-sysroot=/usr/share/wasi-sysroot
+ac_add_options --without-wasm-sandboxed-libraries
 
 # Branding
 ac_add_options --enable-official-branding
@@ -140,7 +140,7 @@ ac_add_options --with-system-nss
 # Features
 ac_add_options --enable-alsa
 ac_add_options --enable-jack
-ac_add_options --enable-crashreporter
+ac_add_options --disable-crashreporter
 ac_add_options --disable-updater
 ac_add_options --disable-tests
 END
@@ -157,36 +157,8 @@ build() {
   # LTO needs more open files
   ulimit -n 4096
 
-  # Do 3-tier PGO
-  echo "Building instrumented browser..."
-  cat >.mozconfig ../mozconfig - <<END
-ac_add_options --enable-profile-generate=cross
-END
-  ./mach build
-
-  echo "Profiling instrumented browser..."
-  ./mach package
-  LLVM_PROFDATA=llvm-profdata \
-    JARLOG_FILE="$PWD/jarlog" \
-    xvfb-run -s "-screen 0 1920x1080x24 -nolisten local" \
-    ./mach python build/pgo/profileserver.py
-
-  stat -c "Profile data found (%s bytes)" merged.profdata
-  test -s merged.profdata
-
-  stat -c "Jar log found (%s bytes)" jarlog
-  test -s jarlog
-
-  echo "Removing instrumented browser..."
-  ./mach clobber
-
-  echo "Building optimized browser..."
-  cat >.mozconfig ../mozconfig - <<END
-ac_add_options --enable-lto=cross
-ac_add_options --enable-profile-use=cross
-ac_add_options --with-pgo-profile-path=${PWD@Q}/merged.profdata
-ac_add_options --with-pgo-jarlog=${PWD@Q}/jarlog
-END
+  echo "Building browser..."
+  cp ../mozconfig .mozconfig
   ./mach build
 
   echo "Building symbol archive..."
@@ -256,13 +228,6 @@ END
   local nssckbi="$pkgdir/usr/lib/$pkgname/libnssckbi.so"
   if [[ -e $nssckbi ]]; then
     ln -srfv "$pkgdir/usr/lib/libnssckbi.so" "$nssckbi"
-  fi
-
-  export SOCORRO_SYMBOL_UPLOAD_TOKEN_FILE="$startdir/.crash-stats-api.token"
-  if [[ -f $SOCORRO_SYMBOL_UPLOAD_TOKEN_FILE ]]; then
-    make -C obj uploadsymbols
-  else
-    cp -fvt "$startdir" obj/dist/*crashreporter-symbols-full.tar.zst
   fi
 }
 
