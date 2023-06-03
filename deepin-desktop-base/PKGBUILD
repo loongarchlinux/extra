@@ -12,9 +12,16 @@ url="https://github.com/linuxdeepin/deepin-desktop-base"
 license=('GPL3')
 groups=('deepin')
 source=("$pkgname-$pkgver.tar.gz::https://github.com/linuxdeepin/deepin-desktop-base/archive/$pkgver.tar.gz"
-        distribution.info)
+        distribution.info
+        deepin-deskto-base-la64.patch)
 sha512sums=('ed9f3152e19f7c1de12b734f3db1698f7730d18663cdd6a91096d3b9d7fe17932f4efa163665468544db31de92e8757552b053b33e8f969c72e1e1192dfe2ee2'
-            '27625e6d0786b8adacdb7c52806d4faa28d2ab6b319a593b3ea9bcb69f0cc18ea19b258d629e3a0069ef9a69503589b0285289caef39a1e85bbd99e915c7cd7d')
+            '27625e6d0786b8adacdb7c52806d4faa28d2ab6b319a593b3ea9bcb69f0cc18ea19b258d629e3a0069ef9a69503589b0285289caef39a1e85bbd99e915c7cd7d'
+            'f79f5377f13e76ea812c822d9d6c41aa0faac16de1a0ddaa95b05673022fc5fe8f332f3bba6a99f6dfff4ffac6aa32d4bdd2ec44104fe1503de25cefa2709efe')
+
+prepare() {
+  cd "$pkgname-$pkgver"
+  patch -p1 -i "$srcdir/deepin-deskto-base-la64.patch"
+}
 
 build() {
   cd $pkgname-$pkgver
@@ -37,6 +44,7 @@ package() {
   ln -s ../usr/lib/deepin/desktop-version "$pkgdir"/etc/deepin-version
 
   # Install os-version and rename to uos-version
+  cp files/os-version-amd files/os-version
   install -Dm644 files/os-version "$pkgdir"/etc/uos-version
 
   # Remove apt-specific templates

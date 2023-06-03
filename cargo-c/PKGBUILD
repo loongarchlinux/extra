@@ -15,15 +15,22 @@ sha256sums=('c2633ff22e52da9985394f30c8ef5e9abbac4d14c9b79e3690c8e95cf500ab97'
             '7dc8d68efcda151e0b284654c9ca0a17af4cc8bbf4db88342297b016361ef0d3')
 
 prepare() {
-    ln -sf "../${pkgname}-${pkgver}.Cargo.lock" "${pkgname}-${pkgver}/Cargo.lock"
-    cargo fetch --locked --target "${CARCH}-unknown-linux-gnu" --manifest-path="${pkgname}-${pkgver}/Cargo.toml"
+    #ln -sf "../${pkgname}-${pkgver}.Cargo.lock" "${pkgname}-${pkgver}/Cargo.lock"
+    find -name Cargo.lock -exec rm -f {} \;
+    mkdir .cargo
+    cat > .cargo/config.toml <<EOF
+[source.crates-io]
+registry = "https://gitee.com/yetist/crates.io-index"
+EOF
+    rm ${pkgname}-${pkgver}.Cargo.lock
+    cargo fetch --manifest-path="${pkgname}-${pkgver}/Cargo.toml"
 }
 
 build() {
     export CFLAGS+=' -ffat-lto-objects'
     export RUSTUP_TOOLCHAIN='stable'
     export CARGO_TARGET_DIR="${pkgname}-${pkgver}/target"
-    cargo build --release --frozen --manifest-path="${pkgname}-${pkgver}/Cargo.toml"
+    cargo build --release --manifest-path="${pkgname}-${pkgver}/Cargo.toml"
 }
 
 check() {

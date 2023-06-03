@@ -14,8 +14,22 @@ depends=('0ad-data' 'binutils' 'boost-libs' 'curl' 'enet' 'libogg' 'libpng' 'lib
          'gloox' 'miniupnpc' 'libminiupnpc.so' 'icu' 'nspr' 'libsodium' 'which')
 makedepends=('boost' 'cmake' 'mesa' 'zip' 'libsm' 'rust' 'python' 'clang')
 options=('!lto') # breaks spidermonkey linking (https://bugs.gentoo.org/746947)
-source=("https://releases.wildfiregames.com/$pkgname-$_pkgver-unix-build.tar.xz")
-sha512sums=('aaf647d5d8454c244015d2a198beeaaebc571a5bc96446f3acff8dbd05f9843029c500bf4162651a5e1fcdb42bd5fb5b4f5c512c78372479fbd8565dd093f272')
+source=("https://releases.wildfiregames.com/$pkgname-$_pkgver-unix-build.tar.xz"
+    0ad-fix-build.patch
+    0ad-la64.patch)
+sha512sums=('aaf647d5d8454c244015d2a198beeaaebc571a5bc96446f3acff8dbd05f9843029c500bf4162651a5e1fcdb42bd5fb5b4f5c512c78372479fbd8565dd093f272'
+            '956effc37bbad8ca44a5e82a8750ca82c1c2347152dd684ebc2921953d4fa81ef9291b5bb5de05559b2b4ef79c336b837216892f0bcf806e50aac8c4ea42edde'
+            'c01e52a4241736eda82f6002c3627d9c4b5b505109969fc608d95dd71db8681df8f3de6a372bca8fe977bee14f5180f4c27681e40d26b0a06ddc556122886d04')
+
+prepare() {
+  cd "$pkgname-$_pkgver"
+  patch -d libraries/source/spidermonkey -p1 -i $srcdir/0ad-fix-build.patch
+
+  cp $srcdir/0ad-la64.patch libraries/source/spidermonkey/0ad-la64.patch
+  echo "patch -p5 < ../0ad-la64.patch" >> libraries/source/spidermonkey/patch.sh
+
+  echo "cp /usr/share/automake-1.16/config.* build/autoconf/" >> libraries/source/spidermonkey/patch.sh
+}
 
 build() {
   cd "$pkgname-$_pkgver/build/workspaces"

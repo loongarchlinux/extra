@@ -26,11 +26,13 @@ _tag=2b5f49c6f40731b00023c39d6efcfade37db56b1 # git rev-parse v${pkgver}
 source=(git+https://github.com/go-gitea/gitea.git#tag=${_tag}?signed
         gitea.tmpfiles
         gitea.service
-        gitea.sysusers)
+        gitea.sysusers
+        gitea-loong64.patch)
 sha256sums=('SKIP'
             '9f63a517e8da6865fa6d9e87f6b08fe25ea56285304115e052809663c48dc3d7'
             'b16d02a9f32a17cc14dfa46a980bad795a4ed744627e6342248f60236dc2be43'
-            '7e7b798b8ce035c1fb55993ece41c5efb6cad5922708866804fa50ada0cf9fa5')
+            '7e7b798b8ce035c1fb55993ece41c5efb6cad5922708866804fa50ada0cf9fa5'
+            'c0cc614ad1f9afc6124174365df000fe09e3774cc38a4690c9ddc696ebef21d8')
 validpgpkeys=(
   B56E3C7437A49E136862F5DE9D8A57ADAA232E95  # Matti Ranta <matti@mdranta.net>, retrieved from https://github.com/techknowlogick.gpg
   D8F9672D77C0BB60A024C23EDFDE60A0093EB926  # Lauris Bukšis-Haberkorns <lauris@nix.lv>, retrieved from https://github.com/lafriks.gpg
@@ -47,7 +49,16 @@ pkgver() {
 
 prepare() {
   cd ${pkgname}
-  make deps
+  export GOPROXY=https://goproxy.cn
+#  patch -p1 -i $srcdir/gitea-loong64.patch
+#  make deps
+  go mod edit -replace=golang.org/x/sys=github.com/golang/sys@v0.0.0-20220622161953-175b2fd9d664
+#  go mod edit -replace=github.com/creack/pty=github.com/creack/pty@v1.1.18
+  go mod tidy
+  make tidy
+  make clean-all
+#  npx --yes update-browserslist-db@latest
+#  npm install caniuse-lite
 }
 
 build() {
@@ -59,6 +70,11 @@ build() {
   export EXTRA_GOFLAGS="-buildmode=pie -mod=readonly -modcacherw"
   export LDFLAGS="-linkmode=external -compressdwarf=false -X 'code.gitea.io/gitea/modules/setting.AppWorkPath=/var/lib/gitea/' -X 'code.gitea.io/gitea/modules/setting.CustomConf=/etc/gitea/app.ini'"
   export TAGS="bindata sqlite sqlite_unlock_notify pam"
+  export GOPROXY=https://goproxy.cn
+#  go mod edit -replace=golang.org/x/sys=github.com/golang/sys@v0.0.0-20220622161953-175b2fd9d664
+#  go mod edit -replace=github.com/creack/pty=github.com/creack/pty@v1.1.18
+#  go mod tidy
+  make tidy
   make -j1
 }
 
@@ -75,3 +91,8 @@ package() {
   install -Dm644 ${pkgname}.sysusers "${pkgdir}"/usr/lib/sysusers.d/${pkgname}.conf
   install -D ${pkgname}/custom/conf/app.example.ini -t "${pkgdir}"/etc/gitea/
 }
+sha256sums=('SKIP'
+            '9f63a517e8da6865fa6d9e87f6b08fe25ea56285304115e052809663c48dc3d7'
+            'b16d02a9f32a17cc14dfa46a980bad795a4ed744627e6342248f60236dc2be43'
+            '7e7b798b8ce035c1fb55993ece41c5efb6cad5922708866804fa50ada0cf9fa5'
+            'c0cc614ad1f9afc6124174365df000fe09e3774cc38a4690c9ddc696ebef21d8')

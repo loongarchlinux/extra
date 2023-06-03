@@ -4,7 +4,7 @@ pkgbase=vst3sdk
 pkgname=(vst3sdk vst3sdk-docs)
 pkgver=3.7.6_build_18
 _commit=05c4a9763f311a58fe3f34b68a199e5eea92e2b4  # 3.7.6_build_18
-pkgrel=2
+pkgrel=3
 pkgdesc="VST 3 Plug-In SDK"
 arch=(any)
 url="https://github.com/steinbergmedia/vst3sdk"
@@ -21,6 +21,7 @@ source=(
   git+https://github.com/steinbergmedia/vst3_public_sdk
   git+https://github.com/steinbergmedia/vstgui
   $pkgname.pc
+  vst3sdk-cstdint.patch
 )
 sha512sums=('SKIP'
             'SKIP'
@@ -29,7 +30,8 @@ sha512sums=('SKIP'
             'SKIP'
             'SKIP'
             'SKIP'
-            'ac97d8b8de5d18d3d0bf955358708ca9a36847b9e5350b6089037547d7404fccb91efbc74a9e0ee12c7159861539ecfbed08b79f531abd392e9321d957e26bd6')
+            'ac97d8b8de5d18d3d0bf955358708ca9a36847b9e5350b6089037547d7404fccb91efbc74a9e0ee12c7159861539ecfbed08b79f531abd392e9321d957e26bd6'
+            'b8f145d587aad0ae1eedffed4cfa7823cb500b6ddc48494ad6c36c3ff41790b295fb98a3ae01815df14eb6466c4b6e1db0f0d82e570cc58c413de7f0ce75200b')
 b2sums=('SKIP'
         'SKIP'
         'SKIP'
@@ -37,7 +39,8 @@ b2sums=('SKIP'
         'SKIP'
         'SKIP'
         'SKIP'
-        'b055a1a8031eb0c3624177a97853c3b7beeac7384d785261861cfaf92672d934293e4149e86844ba10389726c0def451693e1b53c35a0197286df7ff8e612760')
+        'b055a1a8031eb0c3624177a97853c3b7beeac7384d785261861cfaf92672d934293e4149e86844ba10389726c0def451693e1b53c35a0197286df7ff8e612760'
+        'fdf2ba5b3939873bce137502171c639f176aa97cef3af0c8e204a009fbb24f6ada7c70b6a1dfa7f5e451fe4df151e4aabaa0ba06eeecfa892f40216cc132a486')
 
 prepare() {
   # upstream does not provide a pkg-config integration:
@@ -52,7 +55,8 @@ prepare() {
   git config submodule.pluginterfaces.url ../vst3_pluginterfaces
   git config submodule.public.sdk.url ../vst3_public_sdk
   git config submodule.vstgui4.url ../vstgui
-  git submodule update
+  git -c protocol.file.allow=always submodule update
+  patch -p1 -i $srcdir/vst3sdk-cstdint.patch
 }
 
 package_vst3sdk() {

@@ -1,0 +1,37 @@
+From 34ab39614b4dd46c5c97dcc6222b206450964a1d Mon Sep 17 00:00:00 2001
+From: Jiaxun Yang <jiaxun.yang@flygoat.com>
+Date: Thu, 30 Jul 2020 20:55:01 +0800
+Subject: [PATCH 2/3] Speed up????
+
+Change-Id: I3294d55eab38632b1bfcaeed9008c2eedce19e45
+Signed-off-by: Jiaxun Yang <jiaxun.yang@flygoat.com>
+---
+ loongson3_spi.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/loongson3_spi.c b/loongson3_spi.c
+index be619af..54fc814 100644
+--- a/loongson3_spi.c
++++ b/loongson3_spi.c
+@@ -155,7 +155,9 @@ int loongson3_spi_init(void)
+ 	/* Enable SPI Controller */
+ 	reg = mmio_readb(spictrl_base + SPICTRL_SPCR);
+ 	reg |= SPCR_MSTR | SPCR_SPE;
++	reg &= ~0x2;
+ 	mmio_writeb(reg, spictrl_base + SPICTRL_SPCR);
++	mmio_writeb(0x0, spictrl_base + 0x3);
+ 
+ 	/* Disable read engine for software control */
+ 	reg = mmio_readb(spictrl_base + SPICTRL_SFCP);
+@@ -209,7 +211,7 @@ static int loongson3_spi_send_command(const struct flashctx *flash, unsigned int
+ 	}
+ 
+ 	for (i = 0; i < readcnt; i++) {
+-		mmio_writeb(writearr[i], spictrl_base + SPICTRL_FIFO);
++		mmio_writeb(0, spictrl_base + SPICTRL_FIFO);
+ 
+ 		/* Wait until Read FIFO not empty */
+ 		while (mmio_readb(spictrl_base + SPICTRL_SPSR) & SPSR_RFEMPTY);
+-- 
+2.35.1
+

@@ -1,0 +1,165 @@
+From b5243e203f018920f33bda5f6481b44618c04c67 Mon Sep 17 00:00:00 2001
+From: Xiaotian Wu <wuxiaotian@loongson.cn>
+Date: Mon, 9 May 2022 12:22:52 +0800
+Subject: [PATCH] add support for loongarch64
+
+---
+ efi/generate_binary.py          |   2 +-
+ efi/lds/elf_loongarch64_efi.lds | 103 ++++++++++++++++++++++++++++++++
+ efi/meson.build                 |   2 +-
+ meson.build                     |   3 +
+ 4 files changed, 108 insertions(+), 2 deletions(-)
+ create mode 100644 efi/lds/elf_loongarch64_efi.lds
+
+diff --git a/efi/generate_binary.py b/efi/generate_binary.py
+index 248a769..162dede 100755
+--- a/efi/generate_binary.py
++++ b/efi/generate_binary.py
+@@ -36,7 +36,7 @@ def _run_objcopy(args):
+ 
+     # aarch64 and arm32 don't have an EFI capable objcopy
+     # Use 'binary' instead, and add required symbols manually
+-    if args.arch in ["aarch64", "arm"]:
++    if args.arch in ["aarch64", "arm", "loongarch64"]:
+         argv.extend(["-O", "binary"])
+     elif args.os == "freebsd":
+         # `--target` option is missing and --input-target doesn't recognize
+diff --git a/efi/lds/elf_loongarch64_efi.lds b/efi/lds/elf_loongarch64_efi.lds
+new file mode 100644
+index 0000000..899e352
+--- /dev/null
++++ b/efi/lds/elf_loongarch64_efi.lds
+@@ -0,0 +1,103 @@
++OUTPUT_FORMAT("elf64-loongarch", "elf64-loongarch", "elf64-loongarch")
++OUTPUT_ARCH(loongarch)
++ENTRY(_start)
++SECTIONS
++{
++  .text 0x0 : {
++    _text = .;
++    *(.text.head)
++    *(.text)
++    *(.text.*)
++    *(.gnu.linkonce.t.*)
++    _evtext = .;
++    . = ALIGN(4096);
++  }
++  _etext = .;
++  _text_size = . - _text;
++  _text_vsize = _evtext - _text;
++
++  . = ALIGN(4096);
++  .data :
++  {
++   _data = .;
++   *(.sdata)
++   *(.data)
++   *(.data1)
++   *(.data.*)
++   *(.got.plt)
++   *(.got)
++
++   *(.dynamic)
++
++   /* the EFI loader doesn't seem to like a .bss section, so we stick
++      it all into .data: */
++   . = ALIGN(16);
++   _bss = .;
++   *(.sbss)
++   *(.scommon)
++   *(.dynbss)
++   *(.bss)
++   *(COMMON)
++   _evdata = .;
++   . = ALIGN(4096);
++   _bss_end = .;
++  }
++  _edata = .;
++  _data_vsize = _evdata - _data;
++  _data_size = . - _data;
++
++  /*
++   * Note that _sbat must be the beginning of the data, and _esbat must be the
++   * end and must be before any section padding.  The sbat self-check uses
++   * _esbat to find the bounds of the data, and if the padding is included, the
++   * CSV parser (correctly) rejects the data as having NUL values in one of the
++   * required columns.
++   */
++  . = ALIGN(4096);
++  .sbat :
++  {
++    _sbat = .;
++    *(.sbat)
++    *(.sbat.*)
++    _esbat = .;
++    . = ALIGN(4096);
++    _epsbat = .;
++  }
++  _sbat_size = _epsbat - _sbat;
++  _sbat_vsize = _esbat - _sbat;
++
++  . = ALIGN(4096);
++  .rodata :
++  {
++    _rodata = .;
++    *(.rela.dyn)
++    *(.rela.plt)
++    *(.rela.got)
++    *(.rela.data)
++    *(.rela.data*)
++
++    *(.rodata*)
++    *(.srodata)
++    *(.dynsym)
++    *(.dynstr)
++    . = ALIGN(16);
++    *(.note.gnu.build-id)
++    . = ALIGN(4096);
++    *(.vendor_cert)
++    *(.data.ident)
++    _evrodata = .;
++    . = ALIGN(4096);
++  }
++  _erodata = .;
++  _rodata_size = . - _rodata;
++  _rodata_vsize = _evrodata - _rodata;
++  _alldata_size = . - _data;
++
++  /DISCARD/ :
++  {
++    *(.rel.reloc)
++    *(.eh_frame)
++    *(.note.GNU-stack)
++  }
++  .comment 0 : { *(.comment) }
++}
+diff --git a/efi/meson.build b/efi/meson.build
+index 7414bc2..2f1eaa0 100644
+--- a/efi/meson.build
++++ b/efi/meson.build
+@@ -149,7 +149,7 @@ efi_ldflags = ['-T',
+                '-L', efi_crtdir,
+                '-L', efi_libdir,
+                join_paths(efi_crtdir, arch_crt)]
+-if host_cpu == 'aarch64' or host_cpu == 'arm'
++if host_cpu == 'aarch64' or host_cpu == 'arm' or host_cpu == 'loongarch64'
+   # Aarch64 and ARM32 don't have an EFI capable objcopy. Use 'binary'
+   # instead, and add required symbols manually.
+   efi_ldflags += ['--defsym=EFI_SUBSYSTEM=0xa']
+diff --git a/meson.build b/meson.build
+index 1c2c38f..cf3fea6 100644
+--- a/meson.build
++++ b/meson.build
+@@ -28,6 +28,9 @@ elif host_cpu == 'arm'
+ elif host_cpu == 'aarch64'
+         EFI_MACHINE_TYPE_NAME = 'aa64'
+         gnu_efi_arch = 'aarch64'
++elif host_cpu == 'loongarch64'
++        EFI_MACHINE_TYPE_NAME = 'loongarch64'
++        gnu_efi_arch = 'loongarch64'
+ else
+         error('Unknown host_cpu ' + host_cpu)
+ endif
+-- 
+2.20.1
+

@@ -22,16 +22,22 @@ pkgver() {
 
 prepare() {
   cd "$pkgbase"
+  find -name Cargo.lock -exec rm -f {} \;
+  mkdir -p .cargo
+  cat > .cargo/config.toml <<EOF
+[source.crates-io]
+registry = "https://gitee.com/yetist/crates.io-index"
+EOF
 
   # download dependencies
-  cargo fetch --locked --target "$CARCH-unknown-linux-gnu"
+  cargo fetch --target "`uname -m`-unknown-linux-gnu"
 }
 
 build() {
   cd "$pkgbase"
 
   # binary
-  cargo build --frozen --release --all-features
+  cargo build --release --all-features
 
   # documentation
   mdbook build docs

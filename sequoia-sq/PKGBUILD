@@ -42,9 +42,16 @@ prepare() {
 build() {
   cd $pkgname
   export CARGO_TARGET_DIR=../target
+  CARGO_REGISTRIES_MY_REGISTRY_INDEX="https://gitee.com/yetist/crates.io-index"
+  rm -f $srcdir/sequoia/Cargo.lock
+  mkdir -p .cargo
+  cat > .cargo/config.toml <<EOF
+[source.crates-io]
+registry = "https://gitee.com/yetist/crates.io-index"
+EOF
   export RUSTUP_TOOLCHAIN=stable
   # NOTE: we select specific (default) features, as there are multiple crypto backends
-  cargo build --release --frozen --features 'default'
+  cargo build --release --features 'default'
 
 }
 

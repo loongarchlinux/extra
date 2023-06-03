@@ -24,14 +24,23 @@ makedepends=(git go)
 replaces=(go-pie)
 provides=(go-pie)
 options=(!strip staticlibs)
-source=(https://go.dev/dl/go${pkgver}.src.tar.gz{,.asc})
+source=(https://go.dev/dl/go${pkgver}.src.tar.gz{,.asc}
+http://public.loongarch.dev/sources/go/go1.20.2-patch.tar.xz/d4b24dae3bec3850a948d9c6703f1a42/go1.20.2-patch.tar.xz)
 validpgpkeys=('EB4C1BFD4F042F6DDDCCEC917721F63BD38B4796')
 sha256sums=('9f34ace128764b7a3a4b238b805856cc1b2184304df9e5690825b0710f4202d6'
-            'SKIP')
+            'SKIP'
+            '89f3e810dd6945fe6f9392f89be0778e829b41ce02f8e5971d89f2955cf315ba')
+
+prepare() {
+  cd "$pkgname"
+  for i in $srcdir/go1.20.2-patch/*.patch;
+  do
+    patch -p1 -i $i
+  done
+}
 
 build() {
-  export GOARCH=amd64
-  export GOAMD64=v1 # make sure we're building for the right x86-64 version
+  export GOARCH=loong64
   export GOROOT_FINAL=/usr/lib/go
   export GOROOT_BOOTSTRAP=/usr/lib/go
 
@@ -50,7 +59,7 @@ package() {
   cd "$pkgname"
 
   install -d "$pkgdir/usr/bin" "$pkgdir/usr/lib/go" "$pkgdir/usr/share/doc/go" \
-    "$pkgdir/usr/lib/go/pkg/linux_amd64_"{dynlink,race}
+    "$pkgdir/usr/lib/go/pkg/linux_loong64_"{dynlink,race}
 
   cp -a bin pkg src lib misc api test "$pkgdir/usr/lib/go"
   # We can't strip all binaries and libraries,
