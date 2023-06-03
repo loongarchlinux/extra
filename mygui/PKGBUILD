@@ -1,34 +1,30 @@
-# Maintainer: Sven-Hendrik Haase <svenstaro@gmail.com>
+# Maintainer: Sven-Hendrik Haase <svenstaro@archlinux.org>
 # Contributor: Andrew Belitsky <belitsky.a@gmail.com>
 pkgname=mygui
 replaces=('mygui-docs')
-pkgver=3.4.1
+pkgver=3.4.2
 pkgrel=1
 pkgdesc="A multilayer and overlappable GUI System"
 arch=('loong64' 'x86_64')
 url="http://mygui.info/"
 license=('LGPL')
 depends=('sdl2' 'sdl2_image' 'glu')
-makedepends=('cmake' 'doxygen' 'graphviz' 'ttf-dejavu')
+makedepends=('cmake' 'doxygen' 'graphviz' 'ttf-dejavu' 'ninja')
 install=mygui.install
 source=("https://github.com/MyGUI/mygui/archive/MyGUI${pkgver}.tar.gz")
-sha512sums=('9d36272345b1a755db88848c8a0919feb6f8ae09d048efa3b8ed833bb5ddb9c65e1e7e0d26ad39eecd2a4de53fb654f4099c555e9ebd21ce9541a1a74580ef05')
-
-prepare() {
-  mkdir -p mygui-MyGUI${pkgver}/build
-}
+sha512sums=('202f3df35f0767778b5a91b71dbd1ad3409d0a1977d5fbe3f0d48db430276c71b84edc5a28dd1fdb8e60245b56f2bda99872a4d860b83585f08406b28fb850fe')
 
 build() {
-  cd mygui-MyGUI${pkgver}/build
+  cd mygui-MyGUI${pkgver}
 
   # change CMake config so demos install to /opt
-  sed -i 's:"bin:"../opt/MYGUI:' ../CMake/Utils/MyGUIConfigTargets.cmake
-  sed -i -e 's:../share:/usr/share:' \
-         -e 's:"bin":"../opt/MYGUI":' \
-         ../CMake/InstallResources.cmake
+  sed -i 's:"bin:"../opt/MYGUI:' CMake/Utils/MyGUIConfigTargets.cmake
+  sed -i -e 's:../share:/usr/share:' -e 's:"bin":"../opt/MYGUI":' CMake/InstallResources.cmake
 
   # generate CMake Makefile
-  cmake .. \
+  cmake \
+    -Bbuild \
+    -GNinja \
     -DCMAKE_INSTALL_PREFIX=/usr \
     -DMYGUI_INSTALL_SAMPLES=TRUE \
     -DMYGUI_INSTALL_TOOLS=TRUE \
@@ -40,14 +36,14 @@ build() {
     -DMYGUI_RENDERSYSTEM=7 \
     -DBUILD_SHARED_LIBS=TRUE
 
-  make
-  make api-docs
+  ninja -C build
+  ninja -C build api-docs
 }
 
 package() {
-  cd mygui-MyGUI${pkgver}/build
+  cd mygui-MyGUI${pkgver}
 
-  make DESTDIR="$pkgdir" install
+  DESTDIR="$pkgdir" ninja -C build install
 
   # make demos work
   # install -Dm775 lib/libCommon.so ${pkgdir}/usr/lib/libCommon.so
@@ -56,7 +52,7 @@ package() {
 
   # install docs
   install -d "${pkgdir}"/usr/share/doc/
-  cp -r Docs/html "${pkgdir}"/usr/share/doc/MYGUI
+  cp -r build/Docs/html "${pkgdir}"/usr/share/doc/MYGUI
 }
 
 # vim:set ts=2 sw=2 et:

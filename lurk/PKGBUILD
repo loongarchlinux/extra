@@ -1,0 +1,41 @@
+# Maintainer: Orhun Parmaksız <orhun@archlinux.org>
+# Contributor: Kyle Manna <kyle [at] kylemanna [dot] com>
+
+pkgname=lurk
+pkgver=0.3.3
+pkgrel=1
+pkgdesc="A pretty (simple) alternative to strace"
+arch=('loong64' 'x86_64')
+url="https://github.com/JakWai01/lurk"
+license=('MIT' 'Apache')
+depends=('gcc-libs')
+makedepends=('cargo')
+source=("$pkgname-$pkgver.tar.gz::$url/archive/v$pkgver.tar.gz"
+        "$pkgname-$pkgver-fix-tests.patch::$url/commit/87eb4aa8bf9a551b24cec2146699cb2c22d62019.patch")
+sha512sums=('0f19b2a529e65e5f25c84cc30380dc3c83e56faf58e469a669ae8e904b6b0abd9507132ebbce4d3841870a8bdb3225dd402681848b46a3411a2b0065663d6d60'
+            '48861e66cfa466def8543b4edc8bb6e1b6e5ace5ae430129ca0602c231f2772fd4a8a6f041f31c5f60ea9ceac6ff731b22d3f6179c932f6a1f9c7e6ac34f8db7')
+
+prepare() {
+  cd "$pkgname-$pkgver"
+  cargo fetch --locked --target "$CARCH-unknown-linux-gnu"
+  patch -Np1 -i "../$pkgname-$pkgver-fix-tests.patch"
+}
+
+build() {
+  cd "$pkgname-$pkgver"
+  cargo build --release --frozen
+}
+
+check() {
+  cd "$pkgname-$pkgver"
+  cargo test --frozen
+}
+
+package() {
+  cd "$pkgname-$pkgver"
+  install -Dm 755 "target/release/$pkgname" -t "$pkgdir/usr/bin"
+  install -Dm 644 README.md -t "$pkgdir/usr/share/doc/$pkgname"
+  install -Dm 644 LICENSE-MIT -t "$pkgdir/usr/share/licenses/$pkgname"
+}
+
+# vim: ts=2 sw=2 et:
