@@ -3,7 +3,7 @@
 
 pkgname=networkmanager-openvpn
 pkgver=1.10.2
-pkgrel=1
+pkgrel=2
 pkgdesc="NetworkManager VPN plugin for OpenVPN"
 url="https://wiki.gnome.org/Projects/NetworkManager"
 arch=(loong64 x86_64)
@@ -12,7 +12,6 @@ depends=(libnm libsecret openvpn)
 makedepends=(libnma libnma-gtk4 python git)
 optdepends=('libnma: GUI support (GTK 3)'
             'libnma-gtk4: GUI support (GTK 4)')
-options=(debug)
 _commit=ae9575dd07cc2d2d51ec8d0297823e07017cb6e6  # tags/1.10.2^0
 source=("git+https://gitlab.gnome.org/GNOME/NetworkManager-openvpn.git#commit=$_commit")
 sha256sums=('SKIP')
@@ -24,6 +23,11 @@ pkgver() {
 
 prepare() {
   cd NetworkManager-openvpn
+
+  # Fix data-ciphers
+  # https://gitlab.gnome.org/GNOME/NetworkManager-openvpn/-/issues/112
+  git cherry-pick -n a790374f4c2e9e1657cbb8470357d72d4bd87916
+
   autoreconf -fvi
 }
 

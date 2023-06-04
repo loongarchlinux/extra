@@ -6,8 +6,8 @@
 
 pkgbase=godot
 pkgname=(godot)
-pkgver=4.0.2
-pkgrel=4
+pkgver=4.0.3
+pkgrel=1
 pkgdesc='Advanced cross-platform 2D and 3D game engine'
 url='https://godotengine.org/'
 license=(MIT)
@@ -15,11 +15,11 @@ arch=(loong64 x86_64)
 makedepends=(alsa-lib pulseaudio scons yasm)
 depends=(embree3 freetype2 graphite harfbuzz harfbuzz-icu libglvnd libspeechd
          libsquish libtheora libvorbis libwebp libwslay libxcursor libxi
-         libxinerama libxrandr mbedtls miniupnpc pcre2)
+         libxinerama libxrandr mbedtls2 miniupnpc pcre2)
 optdepends=(pipewire-alsa pipewire-pulse)
 source=("$pkgbase-$pkgver.tar.gz::https://github.com/godotengine/godot/archive/$pkgver-stable.tar.gz")
-b2sums=('56069525ee31d6750c6c0107a58e8cb90ad0d06d5a521c127dbe5ba102577a1a8a906ac2c2eeb250156ad3ffbd5c3c3d2c3a590cfd2240ddc2b004b8e8dff208')
-sha256sums=('d978282597c5e3a398ad3ade8b5a68d351178c82b197fa6a64045f4abc37e5a6')
+sha256sums=('8d629aa4910bd0b13354a3b96c253fb62df130ff8acb510c81e23cd100bfdc9f')
+b2sums=('e531bf922c2b7b514f3b6d52119e91ac80746f2705943ffed951e2646d9cd87e296e6a6fc622fef9ce867724c0927a0348bd310c642b91594ea3223dd7daa5c7')
 
 prepare() {
   # Update the MIME info, ref FS#77810
@@ -35,9 +35,9 @@ build() {
   #  AUR: libwebm, rvo2
   #  recastnavigation, xatlas
   scons -j$(nproc --all) \
-    CFLAGS="$CFLAGS -fPIC -Wl,-z,relro,-z,now -w" \
-    CXXFLAGS="$CXXFLAGS -fPIC -Wl,-z,relro,-z,now -w" \
-    LINKFLAGS="$LDFLAGS" \
+    CFLAGS="$CFLAGS -fPIC -Wl,-z,relro,-z,now -w -I/usr/include/mbedtls2" \
+    CXXFLAGS="$CXXFLAGS -fPIC -Wl,-z,relro,-z,now -w -I/usr/include/mbedtls2" \
+    LINKFLAGS="$LDFLAGS -L/usr/lib/mbedtls2" \
     arch=$CARCH \
     builtin_embree=no \
     builtin_enet=yes \

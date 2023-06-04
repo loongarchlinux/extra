@@ -1,0 +1,42 @@
+# Maintainer: Maxime Gauduin <alucryd@archlinux.org>
+# Contributor: Jordan Cook <JCook83@gmail.com>
+# Contributor: Carlos Aznarán <caznaranl@uni.pe>
+
+pkgname=python-pyrate-limiter
+pkgdesc="Python Rate-Limiter using Leaky-Bucket Algorithm"
+pkgver=2.10.0
+pkgrel=1
+arch=(any)
+url=https://github.com/vutran1710/PyrateLimiter
+license=(MIT)
+depends=(python)
+makedepends=(
+  git
+  python-build
+  python-installer
+  python-poetry-core
+)
+optdepends=(
+  'python-filelock: concurrent sqlite backend'
+  'python-redis: redis backend'
+)
+_tag=c4a56878e5e91775856ed3280edf04478bd276e8
+source=(git+https://github.com/vutran1710/PyrateLimiter.git#tag=${_tag})
+b2sums=(SKIP)
+
+pkgver() {
+  cd PyrateLimiter
+  git describe --tags | sed 's/^v//'
+}
+
+build() {
+  cd PyrateLimiter
+  python -m build --wheel --no-isolation
+}
+
+package() {
+  python -m installer --destdir="${pkgdir}" PyrateLimiter/dist/*.whl
+  install -Dm 644 PyrateLimiter/LICENSE -t "${pkgdir}"/usr/share/licenses/python-pyrate-limiter/
+}
+
+# vim: ts=2 sw=2 et:

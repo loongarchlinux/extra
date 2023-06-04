@@ -7,7 +7,7 @@ pkgname=(
   tracker3
   tracker3-docs
 )
-pkgver=3.5.2
+pkgver=3.5.3
 pkgrel=1
 pkgdesc="Desktop-neutral user information store, search tool and indexer"
 url="https://wiki.gnome.org/Projects/Tracker"
@@ -37,13 +37,15 @@ makedepends=(
   systemd
   vala
 )
-_commit=11d90648022edb45fbabf43f0f64809ed53aeeab  # tags/3.5.2^0
+_commit=d56637112f027aec9fcf069e1ce9218460f64e99  # tags/3.5.3^0
 source=(
   "git+https://gitlab.gnome.org/GNOME/tracker.git#commit=$_commit"
   "git+https://gitlab.gnome.org/GNOME/gvdb.git"
+  0001-tests-Adapt-FTS-snippet-tests-to-run-before-after-SQ.patch
 )
 b2sums=('SKIP'
-        'SKIP')
+        'SKIP'
+        '8c44e537e3e29e68ddb28fa125e8321255c10122cab080b2ba63bea3c6af07e699e9b9b4085b8fb5939e832e64931f4fad9e1eebf79f0beb29d652f872811f67')
 
 pkgver() {
   cd tracker
@@ -52,6 +54,10 @@ pkgver() {
 
 prepare() {
   cd tracker
+
+  # Fix tests with SQLite 3.42
+  # https://gitlab.gnome.org/GNOME/tracker/-/merge_requests/600
+  git apply -3 ../0001-tests-Adapt-FTS-snippet-tests-to-run-before-after-SQ.patch
 
   git submodule init
   git submodule set-url subprojects/gvdb "$srcdir/gvdb"

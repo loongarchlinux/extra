@@ -4,18 +4,28 @@
 
 pkgname=gmime3
 pkgver=3.2.13
-pkgrel=1
+pkgrel=2
 pkgdesc="A C/C++ MIME creation and parser library with support for S/MIME, PGP, and Unix mbox spools"
 url="https://github.com/jstedfast/gmime"
 arch=(loong64 x86_64)
 license=(GPL)
-depends=(glib2 gpgme zlib libidn2)
-makedepends=(gobject-introspection gtk-doc git vala docbook-utils)
+depends=(
+  glib2
+  gpgme
+  libidn2
+  zlib
+)
+makedepends=(
+  docbook-utils
+  git
+  gobject-introspection
+  gtk-doc
+  vala
+)
 provides=(libgmime-3.0.so)
-options=(debug)
 _commit=da1b041a2ce7e5e5c9d2c3e9499fe71b7a84d222  # tags/3.2.13^0
 source=("git+https://github.com/jstedfast/gmime#commit=$_commit")
-sha256sums=('SKIP')
+b2sums=('SKIP')
 
 pkgver() {
   cd gmime
@@ -28,14 +38,17 @@ prepare() {
 }
 
 build() {
-  cd gmime
-  ./configure \
-    --prefix=/usr \
-    --sysconfdir=/etc \
-    --localstatedir=/var \
-    --enable-gtk-doc \
-    --enable-smime \
+  local configure_options=(
+    --prefix=/usr
+    --sysconfdir=/etc
+    --localstatedir=/var
+    --enable-crypto
+    --enable-gtk-doc
     --disable-static
+  )
+
+  cd gmime
+  ./configure "${configure_options[@]}"
   sed -i -e 's/ -shared / -Wl,-O1,--as-needed\0/g' libtool
   make
 }
@@ -49,3 +62,5 @@ package() {
   cd gmime
   make DESTDIR="$pkgdir" install
 }
+
+# vim:set sw=2 sts=-1 et

@@ -1,32 +1,34 @@
-# Maintainer: Jan de Groot <jgc@archlinux.org>
+# Maintainer: Balló György <ballogyor+arch at gmail dot com>
+# Contributor: Jan de Groot <jgc@archlinux.org>
 # Contributor: tardo <tardo@nagi-fanboi.net>
 # Contributor: William Rea <sillywilly@gmail.com>
 
 pkgname=mod_dnssd
 pkgver=0.6
-pkgrel=8
-pkgdesc="Zeroconf module for Apache2"
+pkgrel=9
+pkgdesc='Zeroconf module for Apache'
 arch=('loong64' 'x86_64')
-url="http://0pointer.de/lennart/projects/mod_dnssd"
-license=('APACHE')
-depends=('avahi' 'apache')
-source=(http://0pointer.de/lennart/projects/$pkgname/${pkgname}-${pkgver}.tar.gz
-        fix_undefined_reference.patch) # from upstream be2fb9f6158f80068
-sha512sums=('c3eacd2065f996ace76496b828a5be4b735225782c88ed0fba00c37ffed91af7c81cef755556968880e11e05fbaf65a4326728cb82abcad03ccaf925be1f29d3'
-            '3a7742d7c31b6fd9bbc3a67b72408b1149b86774cd5204effa0bd9c8cd15c6e0e7a045c72cd7eb3f9ea0b946282891a8a032b5b1c7713435c4eaccbef7c55535')
+url='https://0pointer.de/lennart/projects/mod_dnssd/'
+license=('Apache')
+depends=('apache' 'apr' 'avahi' 'glibc')
+source=("http://0pointer.de/lennart/projects/$pkgname/$pkgname-$pkgver.tar.gz"
+        'fix_undefined_reference.patch')
+sha256sums=('2cd171d76eba398f03c1d5bcc468a1756f4801cd8ed5bd065086e4374997c5aa'
+            'fc7db6067cb8bb9feb0a3f17f291a1e245fce0a45beac2b7ba5e280020f9b43d')
 
 prepare() {
-  cd ${pkgname}-${pkgver}
-  patch -p1 < "${srcdir}/fix_undefined_reference.patch"
+  cd $pkgname-$pkgver
+  # http://git.0pointer.net/mod_dnssd.git/commit/?id=be2fb9f6158f800685de7a1bc01c39b6cf1fa12c
+  patch -Np1 -i ../fix_undefined_reference.patch
 }
 
 build() {
-  cd ${pkgname}-${pkgver}
+  cd $pkgname-$pkgver
   ./configure --prefix=/usr --disable-lynx
   make
 }
 
 package() {
-  cd ${pkgname}-${pkgver}
-  install -D -m755 src/.libs/mod_dnssd.so "${pkgdir}/usr/lib/httpd/modules/mod_dnssd.so"
+  cd $pkgname-$pkgver
+  install -Dm755 src/.libs/mod_dnssd.so "$pkgdir/usr/lib/httpd/modules/mod_dnssd.so"
 }

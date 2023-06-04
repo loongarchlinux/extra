@@ -3,8 +3,8 @@
 # Contributor: Frederik “Freso” S. Olesen <freso.dk@gmail.com>
 
 pkgname=lutris
-pkgver=0.5.12
-pkgrel=3
+pkgver=0.5.13
+pkgrel=4
 pkgdesc='Open Gaming Platform'
 arch=('any')
 url='https://lutris.net'
@@ -18,17 +18,20 @@ depends=(
   'mesa-utils'
   'p7zip'
   'psmisc'
+  'python-cairo'
   'python-certifi'
   'python-dbus'
   'python-distro'
   'python-evdev'
   'python-gobject'
   'python-lxml'
+  'python-moddb'
   'python-pillow'
   'python-requests'
   'python-yaml'
   'unzip'
   'webkit2gtk'
+  'xdg-desktop-portal-impl'
   'xorg-xrandr'
 )
 makedepends=(
@@ -48,14 +51,15 @@ optdepends=(
   'gvfs: GVFS backend'
   'innoextract: Extract Inno Setup installers'
   'lib32-gamemode: Allows games to request a temporary set of optimisations'
-  'lib32-vkd3d: Vulkan 3D support'
+  'lib32-vkd3d: DirectX 12 support'
   'lib32-vulkan-icd-loader: Vulkan support'
-  'vkd3d: Vulkan 3D support'
+  'vkd3d: DirectX 12 support'
   'vulkan-icd-loader: Vulkan support'
+  'vulkan-tools: Vulkan support'
   'wine: Windows support'
   'xorg-xgamma: Restore gamma on game exit'
 )
-_tag=10933ba9203a3f008646010005cdf19a6d97552c
+_tag=8241e2c3a71a7decb9670031ee6ceedd0d33e7ac
 source=("git+https://github.com/lutris/lutris.git#tag=${_tag}")
 b2sums=('SKIP')
 
@@ -69,10 +73,10 @@ build() {
   ninja -C build
 }
 
-#check() {
-#  cd $pkgname-$pkgver
-#  xvfb-run nosetests --cover-erase --with-xunit --xunit-file=nosetests.xml --with-coverage --cover-package=lutris --cover-xml-file=coverage.xml
-#}
+check() {
+  cd lutris
+  xvfb-run nosetests --cover-erase --with-xunit --xunit-file=nosetests.xml --with-coverage --cover-package=lutris --cover-xml-file=coverage.xml
+}
 
 package() {
   DESTDIR="${pkgdir}" meson install -C build

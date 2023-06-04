@@ -1,9 +1,9 @@
 # Maintainer: Felix Yan <felixonmars@archlinux.org>
 
 pkgname=python-validate-pyproject
-pkgver=0.12.2
-_commit=2940279970c3de0992b3c44aff7dc19e6bb1043e
-pkgrel=4
+pkgver=0.13
+_commit=b752273289ecf6d81dbbe6fc8284f2689ef8514d
+pkgrel=1
 pkgdesc="Validation library and CLI tool for checking on 'pyproject.toml' files using JSON Schema"
 url="https://github.com/abravalheri/validate-pyproject"
 license=('MPL')

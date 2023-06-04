@@ -6,15 +6,15 @@
 # Contributor: Stefan Husmann <stefan-husmann at t-online dot de>
 
 pkgname=sagemath
-pkgver=9.8
-pkgrel=4
+pkgver=10.0
+pkgrel=2
 pkgdesc='Open Source Mathematics Software, free alternative to Magma, Maple, Mathematica, and Matlab'
 arch=(loong64 x86_64)
 url='http://www.sagemath.org'
 license=(GPL)
 depends=(palp brial cliquer maxima-fas gfan sympow nauty python-rpy2 python-fpylll python-cypari2
   python-matplotlib python-scipy python-sympy python-networkx python-pplpy python-sphinx python-ipywidgets python-memory-allocator
-  gap flintqs lcalc lrcalc arb eclib gd python-cvxopt singular linbox m4rie pari-galdata pari-seadata-small planarity rankwidth tachyon
+  gap lcalc lrcalc arb eclib gd python-cvxopt singular linbox m4rie pari-galdata pari-seadata-small planarity rankwidth tachyon
   sage-data-combinatorial_designs sage-data-elliptic_curves sage-data-graphs sage-data-polytopes_db sage-data-conway_polynomials
   iml giac libhomfly libbraiding symmetrica threejs-sage python-primecountpy)
 optdepends=('cython: to compile cython code'
@@ -24,7 +24,7 @@ optdepends=('cython: to compile cython code'
   'sagemath-doc: HTML documentation'
   'python-igraph: igraph backend for graph theory'
   'bliss: bliss backend for graph theory'
-  'sage-numerical-backends-coin: COIN mixed integer linear programming backend'
+  'python-cvxpy: interface for several convex optimization backends'
   'python-pyscipopt: SCIP mixed integer linear programming backend'
   'coin-or-csdp: for computing Lovász theta-function of graphs'
   'buckygen: for generating fullerene graphs'
@@ -60,22 +60,16 @@ source=(https://github.com/sagemath/sage/archive/$pkgver/$pkgname-$pkgver.tar.gz
         test-optional.patch
         sagemath-linbox-1.7.patch
         sagemath-bliss-0.77.patch
-        sagemath-tachyon-0.99.patch
-        sagemath-gap-4.12.patch
         sagemath-tdlib-0.9.patch
-        sagemath-singular-4.3.1.p3.patch
-        sagemath-numpy-1.24.patch)
-sha256sums=('2aff28bd1d18c2d526581f5298acb8336f5b92db5675a7403dec8eaf9a86bc4c'
+        sagemath-maxima-5.47.patch)
+sha256sums=('60858efd0d1f2526486740962bf72c99f9141a56caf8395f3291fded276faf55'
             '8a5b935d2fd8815489713db6497e9d44aefd61e8553e8cd4acc2cb1adf625ccc'
-            'bd188af45ce31579b82407adee8e9bf6033a996f7ea6e328fabca526f31c08ba'
-            '4484bd38b273e7fcc3d54bcd38e1ed3cdade12f3e9dc79235b011ef69e17c10c'
+            '5cd2f88965d7ebab9dfab6f5c2040d363a4a5ae41230219cc7070b907381da5a'
+            'dab5b12d85ddc023f7aff9d886cff8c4bbde903034aeb47aba21caa46352a91d'
             'fbc87b62c73d20aa12fced28f5d68dc2b3ec7cc9123be424226321195bf2b3b4'
             '1a578528bab7be3970954fdfa033afa69fe753da1bab3f41693b0e05e3c849cd'
-            'dfdc071e96dcd12b7e7e05953039f3d67aebb757f459c5e29a413ffac6354a9e'
-            '43dda8c7a8f9331155bdb831cdeb419953ddcb9b72d71d7c1f84f22530e753da'
             '56a83abecf2ff5a500442adc7a50abbb70006037dd39c39dcdb04b3ca9fb51e2'
-            '4d0d59361e6002157cb7dd87807bb902b70756321d1805efb22556f607c3a62a'
-            '800b2704c73b7d48602b69edb9f128a20ef5e1ad6860779bd3ef25583464e6f9')
+            '8127a3f6fd46f0320fff8c0ae764cba419a8c3b262907030d9cc4a95bcc1e744')
 
 prepare(){
   cd sage-$pkgver
@@ -83,14 +77,10 @@ prepare(){
 # Upstream patches
 # Fix build with linbox 1.7 https://trac.sagemath.org/ticket/32959
   patch -p1 -i ../sagemath-linbox-1.7.patch
-# Fix build with bliss 0.77 https://trac.sagemath.org/ticket/33010
+# Fix build with bliss 0.77 https://github.com/sagemath/sage/pull/35344
   patch -p1 -i ../sagemath-bliss-0.77.patch
-# Fix tests with tachyon 0.99 https://trac.sagemath.org/ticket/23712
-  patch -p1 -i ../sagemath-tachyon-0.99.patch
-# Port to GAP 4.12 https://trac.sagemath.org/ticket/34391
-  patch -p1 -i ../sagemath-gap-4.12.patch
-# Fix tests with numpy 1.24 https://trac.sagemath.org/ticket/34816
-  patch -p1 -i ../sagemath-numpy-1.24.patch
+# Fixes for maxima 5.47 https://github.com/sagemath/sage/pull/35707
+  patch -p1 -i ../sagemath-maxima-5.47.patch
 
 # Arch-specific patches
 # assume all optional packages are installed
@@ -101,8 +91,6 @@ prepare(){
   patch -p1 -i ../latte-count.patch
 # update to tdlib 0.9 (Fedora)
   patch -p1 -i ../sagemath-tdlib-0.9.patch
-# fix build with singular 4.3.1.p3
-  patch -p1 -i ../sagemath-singular-4.3.1.p3.patch
 
   cd build/pkgs/sagelib
   ./bootstrap

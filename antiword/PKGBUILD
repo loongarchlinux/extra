@@ -1,37 +1,40 @@
-# Maintainer: Lukas Fleischer <lfleischer@archlinux.org>
+# Maintainer: Caleb Maclennan <caleb@alerque.com>
+# Contributor: Lukas Fleischer <lfleischer@archlinux.org>
 # Contributor: Aaron, phrakture, Griffin <aaron@archlinux.org>
 # Contributor: Gustav Munkby <grddev@gmx.net>
 
+# Upstream site went offline in 2023. Last release was in 2005 so this may be
+# the beginning of the end for this project, but to keep it servicable for now
+# we're getting it from the internet archive.
+_wayback=https://web.archive.org/web/20221207132720
+
 pkgname=antiword
 pkgver=0.37
-pkgrel=9
-pkgdesc="A free MS Word reader for Linux and RISC OS"
-arch=('loong64' 'x86_64')
-url="http://www.winfield.demon.nl/"
-license=('GPL')
+pkgrel=10
+pkgdesc='A free MS Word reader for Linux and RISC OS'
+arch=(loong64 x86_64)
+url="$_wayback/http://www.winfield.demon.nl"
+license=(GPL)
 depends=('bash')
-source=("http://www.winfield.demon.nl/linux/$pkgname-$pkgver.tar.gz"
-        '10_fix_buffer_overflow_wordole_c.patch')
-md5sums=('f868e2a269edcbc06bf77e89a55898d1'
-         '3eb02e9d913b355d64d9a30b08fc390f')
+_archive="$pkgname-$pkgver"
+source=("$url/linux/$_archive.tar.gz"
+        10_fix_buffer_overflow_wordole_c.patch)
 sha256sums=('8e2c000fcbc6d641b0e6ff95e13c846da3ff31097801e86702124a206888f5ac'
             '9ffa1a21be3fd639fb5a779f2155735574dea75cee8d67228669cf18508235e1')
 
 prepare() {
-  cd "$srcdir/$pkgname-$pkgver"
-  patch -p1 -i ../10_fix_buffer_overflow_wordole_c.patch
+	cd "$_archive"
+	patch -p1 -i ../${source[1]}
 }
 
 build() {
-  cd "$srcdir/$pkgname-$pkgver"
-
-  sed -i "s|GLOBAL_INSTALL_DIR =.*|GLOBAL_INSTALL_DIR = /usr/bin|g" Makefile.Linux
-  make OPT="$CFLAGS -DNDEBUG" LDFLAGS="$LDFLAGS"
+	cd "$_archive"
+	sed -i "s|GLOBAL_INSTALL_DIR =.*|GLOBAL_INSTALL_DIR = /usr/bin|g" Makefile.Linux
+	make OPT="$CFLAGS -DNDEBUG" LDFLAGS="$LDFLAGS"
 }
 
 package() {
-  cd "$srcdir/$pkgname-$pkgver"
-
-  make DESTDIR="$pkgdir" global_install
-  install -Dm644 Docs/antiword.1 "$pkgdir/usr/share/man/man1/antiword.1"
+	cd "$_archive"
+	make DESTDIR="$pkgdir" global_install
+	install -Dm0644 -t "$pkgdir/usr/share/man/man1/" Docs/antiword.1
 }

@@ -1,31 +1,21 @@
-# Maintainer: Jan Alexander Steffens (heftig) <jan.steffens@gmail.com>
+# Maintainer: Balló György <ballogyor+arch at gmail dot com>
+# Contributor: Jan Alexander Steffens (heftig) <jan.steffens@gmail.com>
 
 pkgname=gom
 pkgver=0.4
-pkgrel=6
-pkgdesc="A GObject to SQLite object mapper"
-arch=(loong64 x86_64)
-url="https://wiki.gnome.org/Projects/Gom"
-license=(LGPL2.1)
-depends=(glib2 sqlite)
-makedepends=(gtk-doc gobject-introspection gdk-pixbuf2 git meson python-gobject)
-provides=(libgom-1.0.so)
-_commit=26816b74a29b9d2d8dc169ed2f9649a4a159bc7c  # tags/0.4^0
-source=("git+https://gitlab.gnome.org/GNOME/gom.git#commit=$_commit")
-sha256sums=('SKIP')
+pkgrel=7
+pkgdesc='GObject to SQLite object mapper library'
+arch=('loong64' 'x86_64')
+url='https://wiki.gnome.org/Projects/Gom'
+license=('LGPL')
+depends=('glib2' 'glibc' 'sqlite')
+makedepends=('gdk-pixbuf2' 'gobject-introspection' 'gtk-doc' 'meson' 'python-gobject')
+source=("https://download.gnome.org/sources/$pkgname/$pkgver/$pkgname-$pkgver.tar.xz")
+sha256sums=('68d08006aaa3b58169ce7cf1839498f45686fba8115f09acecb89d77e1018a9d')
  
-pkgver() {
-  cd $pkgname
-  git describe --tags | sed 's/-/+/g'
-}
-
-prepare() {
-  cd $pkgname
-}
-
 build() {
-  arch-meson $pkgname build -D enable-gtk-doc=true
-  ninja -C build
+  arch-meson $pkgname-$pkgver build -D enable-gtk-doc=true
+  meson compile -C build
 }
 
 check() {
@@ -33,7 +23,5 @@ check() {
 }
 
 package() {
-  DESTDIR="$pkgdir" meson install -C build
+  meson install -C build --destdir "$pkgdir"
 }
-
-# vim:set ts=2 sw=2 et:

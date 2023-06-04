@@ -1,46 +1,56 @@
 # Maintainer: David Runge <dvzrv@archlinux.org>
 
 _name=xapian-haystack
-_django_name=django-haystack
-_django_haystack_pkgver=3.1.1
+_haystack_name=django-haystack
+_django_haystack_pkgver=3.2.1
 pkgname=python-xapian-haystack
-pkgver=3.0.1
-pkgrel=3
+pkgver=3.1.0
+pkgrel=1
 pkgdesc="Xapian backend for Django-Haystack"
 arch=(any)
 url="https://github.com/notanumber/xapian-haystack"
 license=(GPL2)
-depends=(python-django python-django-haystack python-six python-xapian)
-makedepends=(python-setuptools)
+depends=(
+  python
+  python-django
+  python-django-haystack
+  python-filelock
+  python-xapian
+)
+makedepends=(
+  python-build
+  python-installer
+  python-setuptools
+  python-wheel
+)
 checkdepends=(python-pytest)
 source=(
-  "https://files.pythonhosted.org/packages/source/${_name::1}/${_name}/${_name}-${pkgver}.tar.gz"
-  "https://files.pythonhosted.org/packages/source/${_django_name::1}/${_django_name}/${_django_name}-${_django_haystack_pkgver}.tar.gz"
+  https://files.pythonhosted.org/packages/source/${_name::1}/$_name/$_name-$pkgver.tar.gz
+  https://files.pythonhosted.org/packages/source/${_haystack_name::1}/$_haystack_name/$_haystack_name-$_django_haystack_pkgver.tar.gz
 )
-sha512sums=('f486c26f5c7e8db2fa551040dc436744edb4fc9613a06197b4866d5f687ad755eb6327f4940ef3a4d482039dc390cf922cebff5037eb0de12d2ec7d899e1d260'
-            '509c2c922b6c6c5a2961b2d10b640cf82e8bc2536203c865c2c7a6fdebd2c7173616ce22d620bfd5ef14b61e11a9c88f64cc941195ff2adc2d62604d2c13717c')
-b2sums=('f1ae6c84bc3f5e06dbf94f7298590ad7aa57e1d812ef159f49baecaf1528c2fae95c386483865972b150d5d7cb2ffad618cf355789a7094b6eb8702c83fd85fc'
-        '2e30f428de9e3c8eea4160821e5e409d53226523e6849c1f4412e895176c136f3332d93644e0c0397c0c67bef2779dd394082ae2bd89626b19ebb1e95174a290')
+sha512sums=('6ab09e683587699900c7cd00069e37f36bc62ea40bc92acb5b821f32e9d358068502fe690394c37090108e741a434d86ed4d84bc0dfe96e9456171443269c2d6'
+            '60ce7297243ab5a43780b0aed6f25970ef0438aaadf8f7c92f89970e58c045d3f6ba7a5a635a275e21dc73b116fb33cad32a41991a677bd0a9c66aef4b7ff0c2')
+b2sums=('008d1c98ab028f55e3edb863822c3a76df0fdb006a0d9739f1f6ed140945922dd19f605fc36b31c78806c31e2070da932bfc5dc420a0903cadbfc5c9f5232857'
+        '6071ae9502a3bad885e95b79a1969b6ca6dd044a6d113726045d722168aa05d88b12047b0fbf7d7710936bd32158f2f9c27a6f29868e70e00f88ded1bc3b740a')
 
 build() {
-  cd "$_name-${pkgver}"
-  python setup.py build
+  cd $_name-$pkgver
+  python -m build --wheel --no-isolation
 }
 
 check() {
-  cd "$_name-${pkgver}"
+  cd $_name-$pkgver
   # inserting xapian-haystack tests into django-haystack (because... pain)
-  ln -sv "${PWD}/build/lib/xapian_backend.py" ../${_django_name}-${_django_haystack_pkgver}/haystack/backends/
-  cp -rv "${PWD}/tests/"* ../${_django_name}-${_django_haystack_pkgver}/test_haystack/
-  ln -svf "${PWD}/tests/xapian_tests/__init__.py" ../${_django_name}-${_django_haystack_pkgver}/test_haystack/
+  ln -sv "$PWD/build/lib/xapian_backend.py" ../$_haystack_name-$_django_haystack_pkgver/haystack/backends/
+  cp -rv "$PWD/tests/"* ../$_haystack_name-$_django_haystack_pkgver/test_haystack/
+  ln -svf "$PWD/tests/xapian_tests/__init__.py" ../$_haystack_name-$_django_haystack_pkgver/test_haystack/
 
-  cd "../${_django_name}-${_django_haystack_pkgver}"
-  PYTHONPATH="${PWD}:${PYTHONPATH}" django-admin test test_haystack.xapian_tests --settings=test_haystack.xapian_settings \
-    || echo "Known issues: https://github.com/notanumber/xapian-haystack/issues/215"
+  cd ../$_haystack_name-$_django_haystack_pkgver
+  PYTHONPATH="$PWD:$PYTHONPATH" django-admin test test_haystack.xapian_tests --settings=test_haystack.xapian_settings
 }
 
 package() {
-  cd "$_name-${pkgver}"
-  python setup.py install --optimize=1 --root="${pkgdir}"
-  install -vDm 644 {AUTHORS,README.rst} -t "${pkgdir}/usr/share/doc/${pkgname}"
+  cd $_name-$pkgver
+  python -m installer --destdir="$pkgdir" dist/*.whl
+  install -vDm 644 {AUTHORS,README.rst} -t "$pkgdir/usr/share/doc/$pkgname/"
 }

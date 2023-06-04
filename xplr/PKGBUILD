@@ -2,8 +2,8 @@
 # Maintainer: Maxim Baz <$pkgname at maximbaz dot com>
 
 pkgname=xplr
-pkgver=0.21.1
-pkgrel=2
+pkgver=0.21.2
+pkgrel=1
 pkgdesc="A hackable, minimal, fast TUI file explorer"
 arch=('loong64' 'x86_64')
 url="https://github.com/sayanarijit/xplr"
@@ -11,17 +11,15 @@ license=('MIT')
 depends=('gcc-libs' 'hicolor-icon-theme' 'luajit')
 makedepends=('cargo')
 source=("$pkgname-$pkgver.tar.gz::$url/archive/v$pkgver.tar.gz"
-        "$pkgname-$pkgver.tar.gz.asc::$url/releases/download/v${pkgver}/source.tar.gz.asc"
-        use-system-luajit.patch)
-sha512sums=('75cb1781106516ba53b937577e6c05de46eb3f770505808c72e4aae7ed68fb53a1c4079d4f42724ad9765c8ba11eb149c53c9785c9144d19816891f4762aa883'
-            'SKIP'
-            '9c2154f3023da17ce1edab91913308f06fd0d6e618dc477a2f1b2742cc4ffb78459263df7df3cf6217967e2b2bbbb5334e725c4778fdd91d8415039dd067860e')
+        "$pkgname-$pkgver.tar.gz.asc::$url/releases/download/v${pkgver}/source.tar.gz.asc")
+sha512sums=('7548d21d1287fb76a8d688d4a3a1f9276ca7d8bb3cf4d623fe434c830cd625ef778b0c24bdadf69f8d641e65b47967f9a2d60f66fbdd1b09466c288b61acfbc8'
+            'SKIP')
 validpgpkeys=('D59CA14710C17C6B24717AF90F8EF5258DC38077') # Arijit Basu (June 3, 2021)
 options=('!lto')
 
 prepare() {
   cd "$pkgname-$pkgver"
-  patch -p0 -i ../use-system-luajit.patch
+  sed -i "s/features = \['luajit', 'vendored', 'serialize', 'send'\]/features = \['luajit', 'serialize', 'send'\]/g" Cargo.toml
   cargo update -p mlua
 }
 

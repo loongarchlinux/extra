@@ -7,12 +7,12 @@ _electron=electron22
 pkgbase=element.io
 pkgname=(element-web element-desktop)
 pkgver=1.11.31
-pkgrel=2
+pkgrel=3
 pkgdesc="Glossy Matrix collaboration client — "
 arch=(loong64 x86_64)
 url="https://element.io"
 license=(Apache)
-makedepends=(npm git yarn python rust tcl ${_electron} nodejs-lts-gallium libxcrypt-compat sqlcipher)
+makedepends=(npm git yarn python rust tcl ${_electron} nodejs-lts-gallium libxcrypt-compat)
 _url="https://github.com/vector-im/element"
 source=(element-web-${pkgver}.tar.gz::${_url}-web/archive/v${pkgver}.tar.gz
         element-web-${pkgver}.tar.gz.asc::${_url}-web/releases/download/v${pkgver}/v${pkgver}-src.tar.gz.asc
@@ -50,7 +50,8 @@ build() {
   VERSION=${pkgver} yarn build --offline
 
   cd ../element-desktop-${pkgver}
-  export SQLCIPHER_STATIC=1
+  export SQLCIPHER_BUNDLED=1
+  export CFLAGS+=" -ffat-lto-objects"
   yarn run build:native
   yarn run build
 }
@@ -72,7 +73,7 @@ package_element-web() {
 package_element-desktop() {
   pkgdesc+="desktop version."
   replaces=(riot-desktop)
-  depends=("element-web=${pkgver}" ${_electron} libsecret sqlcipher)
+  depends=("element-web=${pkgver}" ${_electron} libsecret)
   backup=('etc/element/config.json')
 
   cd element-desktop-${pkgver}

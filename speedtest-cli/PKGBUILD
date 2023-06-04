@@ -1,18 +1,28 @@
 # Maintainer: Levente Polyak <anthraxx[at]archlinux[dot]org>
+# Maintainer: T.J. Townsend <blakkheim@archlinux.org>
 # Contributor: William Grieshaber <me@zee.li>
 # Contributor: Victor Aurélio <victoraur dot santos at gmail dot com>
 
 pkgname=speedtest-cli
 pkgver=2.1.3
-pkgrel=6
+pkgrel=7
 pkgdesc='Command line interface for testing internet bandwidth using speedtest.net'
 url='https://github.com/sivel/speedtest-cli'
 arch=('any')
 license=('Apache')
 depends=('python')
 makedepends=('python-setuptools')
-source=(https://github.com/sivel/speedtest-cli/archive/v${pkgver}/${pkgname}-${pkgver}.tar.gz)
-sha512sums=('e2ecd9b4eea95e3641045c3da217ec5a39846b26c1f773fdd31c6ffe3cb5e35341320fc1992f865af48afd1a704c4d4224f9ec4048abb69131ee2f32385ae94c')
+source=(https://github.com/sivel/speedtest-cli/archive/v${pkgver}/${pkgname}-${pkgver}.tar.gz
+        serverlist.patch)
+sha512sums=('e2ecd9b4eea95e3641045c3da217ec5a39846b26c1f773fdd31c6ffe3cb5e35341320fc1992f865af48afd1a704c4d4224f9ec4048abb69131ee2f32385ae94c'
+            'b8026642d76494be8af608f16e6b3c8470a11309813f989cb07e71574ea2ec7a700c5f112d8dcaff284ebcd086ec93be0eacef2eaf2caaa81847662c329337ea')
+
+prepare() {
+  # FS#75206
+  # https://github.com/sivel/speedtest-cli/pull/765
+  cd ${pkgname}-${pkgver}
+  patch -Np1 -i ../serverlist.patch
+}
 
 build() {
   cd ${pkgname}-${pkgver}

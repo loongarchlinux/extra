@@ -1,41 +1,24 @@
-# Maintainer: Jan Alexander Steffens (heftig) <heftig@archlinux.org>
+# Maintainer: Balló György <ballogyor+arch at gmail dot com>
+# Contributor: Jan Alexander Steffens (heftig) <heftig@archlinux.org>
 # Contributor: Jan de Groot <jgc@archlinux.org>
 
 pkgname=gsound
 pkgver=1.0.3
-pkgrel=2
-pkgdesc="Small library for playing system sounds"
-url="https://wiki.gnome.org/Projects/GSound"
-license=(LGPL)
-arch=(loong64 x86_64)
-depends=(glib2 libcanberra)
-makedepends=(gobject-introspection vala git gtk-doc meson)
-options=(debug)
-_commit=95d36d60cf53e0e7c5d5325e0f1f4fc765a611ae  # tags/1.0.3^0
-source=("git+https://gitlab.gnome.org/GNOME/gsound.git#commit=$_commit")
-sha256sums=('SKIP')
-
-pkgver() {
-  cd gsound
-  git describe --tags | sed 's/[^-]*-g/r&/;s/-/+/g'
-}
-
-prepare() {
-  cd gsound
-}
+pkgrel=3
+pkgdesc='Small library for playing system sounds'
+arch=('loong64' 'x86_64')
+url='https://wiki.gnome.org/Projects/GSound'
+license=('LGPL')
+depends=('glib2' 'glibc' 'libcanberra')
+makedepends=('gobject-introspection' 'meson' 'vala')
+source=("https://download.gnome.org/sources/$pkgname/${pkgver%.*}/$pkgname-$pkgver.tar.xz")
+sha256sums=('ca2d039e1ebd148647017a7f548862350bc9af01986d39f10cfdc8e95f07881a')
 
 build() {
-  arch-meson gsound build -D gtk_doc=true
+  arch-meson $pkgname-$pkgver build -D gtk_doc=true
   meson compile -C build
 }
 
-check() {
-  meson test -C build --print-errorlogs
-}
-
 package() {
-  depends+=(libg{lib,object,io}-2.0.so libcanberra.so)
-  provides+=(libgsound.so)
-
   meson install -C build --destdir "$pkgdir"
 }

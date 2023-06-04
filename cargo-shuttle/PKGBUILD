@@ -2,9 +2,9 @@
 # Contributor: Stijn Seghers <stijnseghers at gmail dot com>
 
 pkgname=cargo-shuttle
-_commit=62a21c17d035fb62586ca2d0c786ccdca0d5d12c
-pkgver=0.16.0
-pkgrel=2
+_commit=5b9885ce5dfdf29b1bc60ad26c63aa3abc58eb99
+pkgver=0.17.0
+pkgrel=1
 pkgdesc='Cargo command for the shuttle platform'
 arch=('loong64' 'x86_64')
 url="https://github.com/shuttle-hq/shuttle"
@@ -12,13 +12,16 @@ license=('Apache')
 depends=('gcc-libs' 'openssl' 'zlib' 'curl')
 makedepends=('cargo' 'git')
 source=("$pkgname::git+$url.git#commit=$_commit"
+        "$pkgname-$pkgver-lockfile.patch::$url/commit/8adf67b4ebfde1d9cfb52f98ffa53f5e6e764a14.patch"
         "$pkgname-examples::git+https://github.com/shuttle-hq/examples.git")
 sha512sums=('SKIP'
+            'ae1aec1df493d3800567eabd152885d44b23264edfb40d74694c3664a563ec718eb8dd2a255f6ed1da31cf8a5a36c8ffb5709a7bc073c4fc7894a9269100863e'
             'SKIP')
 options=('!lto')
 
 prepare() {
   cd "$pkgname"
+  patch -Np1 -i "../$pkgname-$pkgver-lockfile.patch"
   git submodule init
   git config submodule."examples".url "${srcdir}/${pkgname}"-examples
   git -c protocol.file.allow=always submodule update --init --recursive

@@ -7,7 +7,7 @@
 
 pkgname=ufw
 pkgver=0.36.2
-pkgrel=1
+pkgrel=2
 pkgdesc="Uncomplicated and easy to use CLI tool for managing a netfilter firewall"
 arch=('any')
 url="https://launchpad.net/ufw"
@@ -22,9 +22,8 @@ backup=('etc/ufw/before.rules'
         'etc/ufw/sysctl.conf'
         'etc/default/ufw'
         'etc/ufw/user6.rules')
-source=("https://launchpad.net/$pkgname/${pkgver%.*}/$pkgver/+download/$pkgname-$pkgver.tar.gz"
-        "https://launchpad.net/$pkgname/${pkgver%.*}/$pkgver/+download/$pkgname-$pkgver.tar.gz.asc"
-        service)
+source=("${url}/${pkgver%.*}/${pkgver}/+download/${pkgname}-${pkgver}.tar.gz"{,.asc}
+        "service")
 sha256sums=('2a57a99eecef6b44db3537ed2520b30bae3759f8465456e22e404cd643838bf5'
             'SKIP'
             'fdface6f4690e4748fbbd5661c02e1967a8750fdb23581d35516174017a3fe39')
@@ -39,6 +38,9 @@ prepare() {
   # FS#35458, FS#54110 - correct iptables location
   sed -i -e 's|sbin|bin|g' setup.py
   sed -i -e 's|sbin|bin|g' src/util.py
+
+  # don't force-enable tcp selective acks
+  sed -i -e '/net\/ipv4\/tcp_sack/s/^/#/g' conf/sysctl.conf
 }
 
 package() {

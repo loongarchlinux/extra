@@ -5,7 +5,7 @@
 # Contributor: Erik Mank <erik@braindisorder.org>
 
 pkgname=tt-rss
-pkgver=r11482.269c0f53b
+pkgver=r11545.718af52a1
 pkgrel=1
 epoch=2
 pkgdesc='Web-based news feed (RSS/Atom) aggregator'
@@ -19,12 +19,14 @@ optdepends=('mysql'
             'postgresql'
             'php-gd-interpreter: for coloured feed badges')
 makedepends=('git')
-_commit=269c0f53b890fc196775bb66e73db7c3a00bfd06
-# periodic releases are over https://tt-rss.org/forum/viewtopic.php?f=10&t=3262
-source=(git+https://git.tt-rss.org/fox/tt-rss.git#commit=$_commit
+_commit=718af52a1b1c3a1d890e7faee0d97af8617c337b
+# periodic releases are over https://srv.tt-rss.org/oldforum/viewtopic.php@f=10&t=3262.html
+source=(git+https://gitlab.tt-rss.org/tt-rss/tt-rss.git#commit=$_commit
        tt-rss.service)
 sha1sums=('SKIP'
           'd764e22065f8e0104b4f1d5dcf41cce01cd7bec5')
+sha512sums=('SKIP'
+            'ffc4316d8f332b75932b36e9e0a18fb346a62a8f83094d3ca510b06b0d9ae0478bdc05e23bca4fe5e6dfcfc8a8c57ab1654b7c6d16a007f151afbcad31e359a5')
 
 pkgver() {
   cd tt-rss
@@ -35,7 +37,7 @@ build() {
   cd tt-rss
 
   # Generate version string following the logic of get_version_from_git()
-  # https://dev.tt-rss.org/tt-rss/tt-rss/src/commit/c30b24d09f4096e612965af658540595262f6848/classes/config.php#L346
+  # https://gitlab.tt-rss.org/tt-rss/tt-rss/-/blob/3468317bd34f63ba3c65904a8856cc41afa28102/classes/config.php#L324
   commiter_timestamp=$(git --no-pager log --pretty=%ct -n1 HEAD)
   abbrev_hash=$(git --no-pager log --pretty=%h -n1 HEAD)
   echo $(date --date=@$commiter_timestamp --utc +%y.%m)-$abbrev_hash > version_static.txt
@@ -46,7 +48,7 @@ build() {
 
 check() {
   cd tt-rss
-  # See https://dev.tt-rss.org/tt-rss/tt-rss/src/branch/master/Jenkinsfile
+  # See https://gitlab.tt-rss.org/ci/ci-templates/-/blob/master/.ci-lint-common.yml
   php ./vendor/bin/phpunit
   php -d memory_limit=-1 ./vendor/bin/phpstan --memory-limit=2G
 }

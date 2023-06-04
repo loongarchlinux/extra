@@ -7,8 +7,8 @@
 # Contributor: Sparadox <etienne.lafarge at gmail.com>
 
 pkgname=cloud-init
-pkgver=23.1.2
-pkgrel=2
+pkgver=23.2
+pkgrel=1
 pkgdesc="Cloud instance initialization"
 arch=(any)
 url="https://cloud-init.io"
@@ -46,6 +46,7 @@ checkdepends=(
 optdepends=(
   'cloud-guest-utils: for growpart'
   'netplan: for configuring network using netplan'
+  'python-urllib3: for LXD and Scaleway data sources'
 )
 backup=(
   etc/cloud/cloud.cfg
@@ -55,9 +56,9 @@ source=(
   https://github.com/canonical/cloud-init/archive/$pkgver/$pkgname-$pkgver.tar.gz
   $pkgname-22.1-lib_dir.patch
 )
-sha512sums=('04e3cfb8b65d1014c385b5f66e273b2092a61f363d7c93835d05cff5e967e6ef665cb85e456ff6c8f53148072b82b19331c407c3ea8d9c676fcf3b50feecf0dc'
+sha512sums=('b7fa75db1ced13c02d3ae36635cbf43a1e939d9c8a0a8d2430d1f2bb58d111a6f1e8eb83af85b64fe587efb163238c9b4af2055436126378a81b097f24aa5d55'
             '32b7521f0ae4d61a4d86f2f840fb0670e2cdc7bab708fc7b7676b5178b6d660beb3a46b803f5bcd7e0f18c6d6339fc96e20a951dfafadbb0312e4a0cafce325f')
-b2sums=('053e6e08ab0bcf972e3bc57161ca7c5a62f1e45b6c156c2103a818823e57574f6a2036fcdde405c05c4bd08c366da85e18ad58487faaa5a64533c6976b123aa1'
+b2sums=('bcbb86ce8048c4b6884ae1b99a2e37f388759af7705dd7c676939baabc6230aaf53b0d58e34f9da460abfe86043edf347d57a434c707f0e345148c0cfe49b624'
         '4e03bd647ca9e1bc3d9c507824d43e4013a20d5bbcb7215755b427d0c7ded9ee48dbfb9faaae703ab2d519aee7c48a40277603c8f874347b574b7ac2b1e1a9fd')
 
 prepare() {
@@ -92,11 +93,10 @@ package() {
   rm -frv "$pkgdir/$site_packages/"{usr,etc}
 
   # configuration and hooks
+  install -vDm 644 config/clean.d/* -t "$pkgdir/etc/cloud/clean.d/"
   install -vDm 644 config/cloud.cfg.d/* -t "$pkgdir/etc/cloud/cloud.cfg.d/"
   ./tools/render-cloudcfg --variant arch ./config/cloud.cfg.tmpl "$pkgdir/etc/cloud/cloud.cfg"
   install -vDm 644 templates/*.tmpl -t "$pkgdir/etc/cloud/templates/"
-  install -vDm 755 tools/hook-network-manager -t "$pkgdir/etc/NetworkManager/dispatcher.d/"
-  install -vDm 755 tools/hook-dhclient -t "$pkgdir/etc/dhcp/dhclient-exit-hooks.d/"
   install -vDm 755 tools/{ds-identify,hook-hotplug,uncloud-init,write-ssh-key-fingerprints} -t "$pkgdir/usr/lib/$pkgname/"
   # documentation, man pages and shell completion
   install -vDm 644 doc/*.txt -t "$pkgdir/usr/share/doc/$pkgname/"

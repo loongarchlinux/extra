@@ -3,7 +3,7 @@
 # Contributor: Hugo Osvaldo Barrera <hugo@barrera.io>
 
 pkgname=rootlesskit
-pkgver=1.1.0
+pkgver=1.1.1
 pkgrel=1
 pkgdesc='Native "fake root" for implementing rootless containers'
 arch=('loong64' 'x86_64')
@@ -13,7 +13,7 @@ depends=('glibc' 'shadow')
 makedepends=('git' 'go')
 checkdepends=('openbsd-netcat')
 options=('!lto')
-_commit='6222b477d4c3ce6eea2bcff0586e43c95d1c0bb7'
+_commit='a2c596ff9b3fddc0c2becb38f2ef4004f15765b5'
 source=("$pkgname::git+https://github.com/rootless-containers/rootlesskit.git#commit=$_commit")
 b2sums=('SKIP')
 
@@ -30,6 +30,7 @@ prepare(){
   mkdir build
 
   # download dependencies
+  export GOPATH="${srcdir}"
   go mod download
 }
 
@@ -40,13 +41,15 @@ build() {
   export CGO_CPPFLAGS="${CPPFLAGS}"
   export CGO_CFLAGS="${CFLAGS}"
   export CGO_CXXFLAGS="${CXXFLAGS}"
+  export GOPATH="${srcdir}"
 
   go build -v \
-    -trimpath \
     -buildmode=pie \
     -mod=readonly \
     -modcacherw \
-    -ldflags "-linkmode external -extldflags \"${LDFLAGS}\"" \
+    -ldflags "-compressdwarf=false \
+    -linkmode external \
+    -extldflags ${LDFLAGS}" \
     -o build \
     ./cmd/...
 }

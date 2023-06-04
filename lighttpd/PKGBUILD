@@ -1,14 +1,14 @@
 # Maintainer: Pierre Schmitz <pierre@archlinux.de>
 
 pkgname=lighttpd
-pkgver=1.4.69
+pkgver=1.4.71
 pkgrel=1
 pkgdesc='A secure, fast, compliant and very flexible web-server'
 license=('custom')
 arch=('loong64' 'x86_64')
 url="https://www.lighttpd.net/"
-depends=('pcre2' 'util-linux' 'systemd')
-makedepends=('mariadb-libs' 'lua' 'libxml2' 'e2fsprogs' 'sqlite' 'gdbm' 'pkgconfig')
+depends=('pcre2' 'systemd' 'brotli')
+makedepends=('mariadb-libs' 'lua' 'libxml2' 'e2fsprogs' 'sqlite' 'pkgconfig')
 optdepends=('libxml2: mod_webdav'
             'lua: mod_cml/mod_magnet'
             'mariadb-libs: mod_mysql_vhost/mod_authn_mysql'
@@ -17,7 +17,7 @@ backup=('etc/lighttpd/lighttpd.conf' 'etc/logrotate.d/lighttpd')
 options=('emptydirs')
 source=("https://download.lighttpd.net/lighttpd/releases-1.4.x/lighttpd-${pkgver}.tar.xz"{,.asc}
         'lighttpd.logrotate.d' 'lighttpd.conf' 'lighttpd.tmpfiles' 'lighttpd.service')
-sha256sums=('16ac8db95e719629ba61949b99f8a26feba946a81d185215b28379bb4116b0b4'
+sha256sums=('b8b6915da20396fdc354df3324d5e440169b2e5ea7859e3a775213841325afac'
             'SKIP'
             '41f6c0042bb61021553779f861910e335834f6c15e4411756cdc6233b31076fe'
             'fece4581bebf39768571962dedce176b2b5f487c0abb5c1cfb35395de216c01f'
@@ -40,9 +40,9 @@ build() {
 		--with-openssl \
 		--with-webdav-props \
 		--with-webdav-locks \
-		--with-gdbm \
 		--with-lua \
-		--with-pcre2
+		--with-pcre2 \
+		--with-brotli
 	sed -i -e 's/ -shared / -Wl,-O1,--as-needed\0/g' libtool
 	make
 }

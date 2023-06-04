@@ -4,25 +4,25 @@
 
 _pipname=flask-babel
 pkgname=python-flask-babel
-pkgver=3.0.1
-pkgrel=2
+pkgver=3.1.0
+pkgrel=1
 pkgdesc="Adds i18n/l10n support to Flask applications with the help of the Babel library."
 arch=(any)
 url="https://pypi.python.org/pypi/flask-babel"
 license=(BSD)
 depends=(python-flask python-babel python-pytz python-speaklater python-jinja)
-makedepends=(python-setuptools)
+makedepends=('python-build' 'python-installer' 'python-wheel' 'python-setuptools' 'python-poetry-core')
 source=("https://pypi.io/packages/source/${_pipname:0:1}/$_pipname/${_pipname/-/_}-$pkgver.tar.gz")
-sha256sums=('d408cace25514bea8b92e898fd7e55877fbac79b71bc230e266ff515408eba38')
+sha256sums=('be015772c5d7f046f3b99c508dcf618636eb93d21b713b356db79f3e79f69f39')
 
 build() {
   cd ${_pipname/-/_}-$pkgver 
-  python setup.py build
+  python -m build --wheel --no-isolation
 }
 
 package() {
   cd ${_pipname/-/_}-$pkgver 
-  python setup.py install --root="$pkgdir/" --optimize=1 --skip-build
+  python -m installer --destdir="$pkgdir" dist/*.whl
 
   mkdir -p "$pkgdir"/usr/share/licenses/$pkgname
   install -m644 LICENSE "$pkgdir"/usr/share/licenses/$pkgname

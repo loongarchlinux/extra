@@ -6,30 +6,33 @@
 pkgname=python-unicodedata2
 _pyname=${pkgname#python-}
 pkgver=15.0.0
-pkgrel=2
+pkgrel=3
 pkgdesc="unicodedata backport/updates to Python 3"
 arch=('loong64' 'x86_64')
 url="https://github.com/fonttools/$_pyname"
 license=('Apache')
 depends=('python')
-makedepends=('python-setuptools')
-checkdepends=('python-pytest'
-              'python-pytest-xdist'
-              'python-pytest-randomly')
-source=("$url/archive/$pkgver/$_pyname-$pkgver.tar.gz")
+makedepends=(python-{build,installer,wheel}
+             python-setuptools)
+checkdepends=(python-pytest
+              python-pytest-xdist
+              python-pytest-randomly)
+_archive="$_pyname-$pkgver"
+source=("$url/archive/$pkgver/$_archive.tar.gz")
 sha256sums=('3793953ec7321eb9a01e398cac230aed557b9c7706e6b569b34ae6c442b8a2aa')
 
 build() {
-	cd "$_pyname-$pkgver"
-	python setup.py build
+	cd "$_archive"
+	python -m build -wn
 }
 
 check() {
-	cd "$_pyname-$pkgver"
-	python setup.py test
+	cd "$_archive"
+	local _pyver=$(python -c 'import sys; print("".join(map(str, sys.version_info[:2])))')
+	PYTHONPATH="$PWD/build/lib.linux-$CARCH-cpython-$_pyver" pytest
 }
 
 package() {
-	cd "$_pyname-$pkgver"
-	python setup.py install --root="$pkgdir" --optimize=1 --skip-build
+	cd "$_archive"
+	python -m installer -d "$pkgdir" dist/*.whl
 }

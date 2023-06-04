@@ -1,7 +1,7 @@
 # Maintainer: Jelle van der Waa <jelle@archlinux.org>
 
 pkgname=rebuilderd-website
-pkgver=0.5.5
+pkgver=0.6.0
 pkgrel=1
 pkgdesc="Arch Linux Rebuilderd website reproducible.archlinux.org"
 license=('MIT')
@@ -14,6 +14,13 @@ source=("git+https://gitlab.archlinux.org/archlinux/rebuilderd-website.git#tag=v
         "git+https://gitlab.archlinux.org/archlinux/archlinux-common-style.git")
 sha512sums=('SKIP'
             'SKIP')
+
+prepare() {
+  cd ${pkgname}
+  git submodule init
+  git config submodule..external/archlinux-common-style.url "$srcdir/archlinux-common-style"
+  git -c protocol.file.allow=always submodule update
+}
 
 build() {
   cd ${pkgname}

@@ -5,7 +5,7 @@
 
 pkgname=dolphin
 pkgver=23.04.1
-pkgrel=1
+pkgrel=2
 pkgdesc='KDE File Manager'
 arch=(loong64 x86_64)
 url='https://apps.kde.org/dolphin/'
@@ -16,12 +16,18 @@ optdepends=('kde-cli-tools: for editing file type options' 'ffmpegthumbs: video 
             'konsole: terminal panel' 'purpose: share context menu'
             'kio-admin: for managing files as administrator')
 groups=(kde-applications kde-system)
-source=(https://download.kde.org/stable/release-service/$pkgver/src/$pkgname-$pkgver.tar.xz{,.sig})
+source=(https://download.kde.org/stable/release-service/$pkgver/src/$pkgname-$pkgver.tar.xz{,.sig}
+        https://invent.kde.org/system/dolphin/-/commit/70d0154a.patch)
 sha256sums=('3813d0fb06d62dfa049e716654ca361f83a689dd1434b4ba335f5d271d3605dd'
-            'SKIP')
+            'SKIP'
+            'fe82ce2eea8914fbf7d075637da002fbb56ee96a2366cfc03b0da6d3371c19c9')
 validpgpkeys=(CA262C6C83DE4D2FB28A332A3A6A4DB839EAA6D7  # Albert Astals Cid <aacid@kde.org>
               F23275E4BF10AFC1DF6914A6DBD2CE893E2D1C87  # Christoph Feck <cfeck@kde.org>
               D81C0CB38EB725EF6691C385BB463350D6EF31EF) # Heiko Becker <heiko.becker@kde.org>
+
+prepare() {
+  patch -d $pkgname-$pkgver -p1 < 70d0154a.patch # Fix restoring tabs on startup
+}
 
 build() {
   cmake -B build -S $pkgname-$pkgver \

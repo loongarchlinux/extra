@@ -1,36 +1,46 @@
 # Maintainer: David Runge <dvzrv@archlinux.org>
 
 _name=IEMPluginSuite
-pkgname=iempluginsuite
-pkgver=1.13.0
+pkgbase=iempluginsuite
+pkgname=(
+  iempluginsuite
+  iempluginsuite-{standalone,vst3}
+)
+pkgver=1.14.1
 pkgrel=1
 pkgdesc="Plug-in suite including Ambisonic plug-ins up to 7th order"
 arch=(loong64 x86_64)
 url="https://plugins.iem.at"
 license=(GPL3)
-groups=(pro-audio vst3-plugins)
-depends=(gcc-libs glibc libglvnd libpng libx11 libxcursor libxext libxinerama
-libxrandr zlib)
-makedepends=(alsa-lib cmake curl fftw freetype2 gendesk jack juce libjpeg-turbo
-xorg-server-xvfb)
-source=(
-  $pkgname-$pkgver.tar.gz::https://git.iem.at/audioplugins/$_name/-/archive/v$pkgver/$_name-v$pkgver.tar.gz
-  $pkgname-1.13.0-remove_deps.patch::https://gitlab.com/iem.at/IEMPluginSuite/-/commit/77a12032e41aeda4378180ff84eb11149a732f8f.patch
-  $pkgname-1.13.0-juce7.patch::https://gitlab.com/dvzrv/IEMPluginSuite/-/commit/439670832afddaedb4d05ea03b0138af847e1249.diff
-  $pkgname-1.13.0-system_juce.patch::https://gitlab.com/iem.at/IEMPluginSuite/-/commit/f6bfeb08a626b8d7b6a20936145cf69f281e7ab4.patch
-  $pkgname.directory
-  $pkgname.menu
+makedepends=(
+  alsa-lib
+  cmake
+  fftw
+  freetype2
+  gcc-libs
+  gendesk
+  glibc
+  jack
+  juce
+  libglvnd
+  libjpeg-turbo
+  libpng
+  libx11
+  libxcursor
+  libxext
+  libxinerama
+  libxrandr
+  zlib
 )
-sha512sums=('9138596e510acb569ab38c30e4d17cc1029c0d0db2a1e02b85126825634d49a2d5915299995227dab04c62dec8b5d5767b5b6209fac777d7045fb5891a9bb718'
-            '0e7f288f8628f880620aa232dd64b0fe41e06ecffd446c03f1a03b47048a0468316b385a4f94f58fb37906e8c6a1be7c2d2ceae5eb88d5ffcce44c8fe95a8594'
-            'd30b5935695af09cef33c57881e1fa8bab04cec875e6256887b2595c361adcd883279bea84e2aca66b4535a1ddfac490405fd92a33dd8bbdf325008cecde9992'
-            '9cc9ceab59bbceb77525be626115eca7ae7d05793def276097a4af2a580592c2c806b69eb1cb0d630990fcfccd01c24bf55081c8b35c76083934ef4adc2ed10c'
+source=(
+  $pkgbase-$pkgver.tar.gz::https://git.iem.at/audioplugins/$_name/-/archive/v$pkgver/$_name-v$pkgver.tar.gz
+  $pkgbase.directory
+  $pkgbase.menu
+)
+sha512sums=('4eafbdb22470b9bd1d15bf9da799801c9a18e6a06a3b8b50c4a4f2c8410099851e25bd819eb5fdecfa22ac1617c3448b6641fdf9d66a582a78265fa09d93c829'
             '412ac2581089babfe57b10c06dca86c19a8b708b76af70283d3b35dd1deffc8f7c654d9e7d182da8b0fa2f40cafe46fc855890e0aed7d11530de3c0d56bf17dd'
             '2d290b5b8c9320013abb97e0a9051c6687a92700433454c88d4c89fe122c9b1537e128faf7060715c63eb28e93ad9f3f1a98765a7a5934e4f8bd0a8c20254ab3')
-b2sums=('483989ab947cdfc01f7030951ab568790d0ca72ab602348aef31d07607ae2a3f25d3ff000ac3bba5f8567ba07c1c2dd4267c8a09df5e126027a907834c5d731b'
-        '36af4af4923df1bc513251aead09fea9aaa6b9cd64478129a228dba8b23aa490f7597520c0b4c483a68ed1bb65080599cdd19e36498ff0d6ba95c2c0e0bf73ea'
-        '1f6d9ddf899a07126f20073457f6dec1f7f32e7785d5f9593169d2bda9674d2e2e385692df6c17b9d34038772d02cf0fed972bd6d3098447433324011fbe2acf'
-        '8387a8189f53567f7a1541a7600f4d998d111721aba7ba6a1117afcaf0e7c33e6d07a1d899bf1b7120a61ea63c1fa30af42c57189d895a036ea3592496f98e32'
+b2sums=('29fb3570087a68a63e19df5381a8782b1385b04b3b716e9d81864d6d37cf34a7ad88440a2d2d6c68bc49ee3fdb294e163b628bc9edc4962deb7442e9ff311034'
         'fa85f3ced5143524fac1d6403179052a520307e880902bddd0d239e580c6c2fe1368f6f78bad2950e2e06217e1fd318a52ef810b65e0870636006d87615c7e99'
         '1ea251abb358de7675012b9c9bc6a7187c4c171267f4466437e1d324c1a19ed6e8f5b2eeb625093cfa0303ea534f9d4cd900966338b18126a09a41b6a3939dfc')
 _names=(
@@ -103,50 +113,96 @@ prepare() {
     ['StereoEncoder']="Ambisonic Encoder"
     ['ToolBox']="Ambisonic Transformation"
   )
+
   for name in "${_names[@]}"; do
     gendesk -n \
             --pkgname at.iem.plugins.$name \
             --name $name \
             --exec $name \
-            --icon $pkgname \
+            --icon $pkgbase \
             --pkgdesc "${comments[$name]}" \
             --genericname "${generic[$name]}" \
-            --categories $pkgname
+            --categories $pkgbase
   done
-
-  # fix for juce >= 7.0.2 compatibility: https://gitlab.com/iem.at/IEMPluginSuite/-/merge_requests/2
-  patch -Np1 -d $_name-v$pkgver -i ../$pkgname-1.13.0-juce7.patch
-  # build against system juce: https://gitlab.com/iem.at/IEMPluginSuite/-/merge_requests/1
-  patch -Np1 -d $_name-v$pkgver -i ../$pkgname-1.13.0-system_juce.patch
-  # remove unnecessary dependencies
-  patch -Np1 -d $_name-v$pkgver -i ../$pkgname-1.13.0-remove_deps.patch
 }
 
 build() {
-  cmake \
-    -B build \
-    -S $_name-v$pkgver \
-    -DCMAKE_BUILD_TYPE=None \
-    -DCMAKE_INSTALL_PREFIX=/usr \
-    -DIEM_BUILD_STANDALONE=ON \
-    -DIEM_USE_SYSTEM_JUCE=ON \
-    -Wno-dev
-  cmake --build build
+  local cmake_options=(
+    -B build
+    -D CMAKE_BUILD_TYPE=None
+    -D CMAKE_INSTALL_PREFIX=/usr
+    -D IEM_BUILD_STANDALONE=ON
+    -D IEM_BUILD_VST3=ON
+    -D IEM_USE_SYSTEM_JUCE=ON
+    -S $_name-v$pkgver
+    -W no-dev
+  )
+
+  cmake "${cmake_options[@]}"
+  cmake --build build --verbose
 }
 
-package() {
+package_iempluginsuite() {
+  depends=(
+    $pkgbase-{standalone,vst3}
+  )
+
+  install -vDm 644 $_name-v$pkgver/{ChangeLog,README}.md -t "$pkgdir/usr/share/doc/$pkgbase/"
+}
+
+package_iempluginsuite-standalone() {
+  pkgdesc+=" - standalone"
+  groups=(
+    pro-audio
+  )
+
   local name
 
-  depends+=(libasound.so libcurl.so libfftw3f.so libfreetype.so libjack.so
-  libjpeg.so)
+  depends+=(
+    alsa-lib
+    fftw
+    freetype2
+    gcc-libs
+    glibc
+    jack  # likely dlopen'ed :(
+    libglvnd
+    libpng
+    libjpeg-turbo
+    zlib
+  )
 
   for name in "${_names[@]}"; do
     install -vDm 755 build/$name/${name}_artefacts/None/Standalone/$name -t "$pkgdir/usr/bin/"
-    install -vDm 755 build/$name/${name}_artefacts/None/VST3/$name.vst3/Contents/$CARCH-linux/$name.so -t "$pkgdir/usr/lib/vst3/$name.vst3/Contents/$CARCH-linux/"
   done
 
-  install -vDm 644 *.desktop -t "$pkgdir/usr/share/applications/"
-  install -vDm 644 $pkgname.menu -t "$pkgdir/etc/xdg/menus/applications-merged/"
-  install -vDm 644 $pkgname.directory -t "$pkgdir/usr/share/desktop-directories/"
-  install -vDm 644 $_name-v$pkgver/{ChangeLog,README}.md -t "$pkgdir/usr/share/doc/$pkgname/"
+  install -vDm 644 ./*.desktop -t "$pkgdir/usr/share/applications/"
+  install -vDm 644 $pkgbase.menu -t "$pkgdir/etc/xdg/menus/applications-merged/"
+  install -vDm 644 $pkgbase.directory -t "$pkgdir/usr/share/desktop-directories/"
+}
+
+package_iempluginsuite-vst3() {
+  pkgdesc+=" - VST3 plugins"
+  groups=(
+    pro-audio
+    vst3-plugins
+  )
+
+  local name
+
+  depends+=(
+    alsa-lib
+    fftw
+    freetype2
+    gcc-libs
+    glibc
+    libglvnd
+    libpng
+    libjpeg-turbo
+    vst3-host
+    zlib
+  )
+
+  for name in "${_names[@]}"; do
+    install -vDm 755 build/$name/${name}_artefacts/None/VST3/$name.vst3/Contents/$CARCH-linux/$name.so -t "$pkgdir/usr/lib/vst3/$name.vst3/Contents/$CARCH-linux/"
+  done
 }

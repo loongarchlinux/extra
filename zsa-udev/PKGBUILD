@@ -1,0 +1,23 @@
+# Maintainer: David Runge <dvzrv@archlinux.org>
+
+pkgname=zsa-udev
+_commit=7ce7ff3631fc73b6e50052944116413aa05079c6
+pkgver=2.1.3.r12.g7ce7ff3
+pkgrel=1
+pkgdesc="Udev rules for ZSA keyboards"
+arch=(any)
+url="https://github.com/zsa/wally/"
+license=(MIT)
+makedepends=(git)
+source=("$pkgname::git+$url#commit=$_commit")
+sha256sums=('SKIP')
+
+pkgver() {
+  cd $pkgname
+  git describe --match '*-linux' --long --tags --abbrev=7 | sed 's/-linux//;s/\([^-]*-g\)/r\1/;s/-/./g'
+}
+
+package() {
+  install -vDm 644 $pkgname/dist/linux64/*.rules -t "$pkgdir/usr/lib/udev/rules.d/"
+  install -vDm 644 $pkgname/license.md -t "$pkgdir/usr/share/licenses/$pkgname/"
+}

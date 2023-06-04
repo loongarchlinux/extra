@@ -1,0 +1,47 @@
+From d0c02c456f22a6bb1f42b8196b1b287daafbd435 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Ball=C3=B3=20Gy=C3=B6rgy?= <ballogyor@gmail.com>
+Date: Thu, 1 Jun 2023 16:56:30 +0000
+Subject: [PATCH] Makefile: support system-wide installation
+
+System-wide installation should install locale/ and gsettings schema in
+system directory. This enables override supports, locale stripping and
+not shipping pre-compiled schema file.
+---
+ Makefile | 12 +++++++++++-
+ 1 file changed, 11 insertions(+), 1 deletion(-)
+
+diff --git a/Makefile b/Makefile
+index 20de21f..b1a1200 100644
+--- a/Makefile
++++ b/Makefile
+@@ -10,9 +10,12 @@ EXTRA_DIRECTORIES = gnome43 icons menulayouts searchProviders settings
+ 
+ MSGSRC = $(wildcard po/*.po)
+ ifeq ($(strip $(DESTDIR)),)
++	INSTALLTYPE = local
+ 	INSTALLBASE = $(HOME)/.local/share/gnome-shell/extensions
+ else
+-	INSTALLBASE = $(DESTDIR)/usr/share/gnome-shell/extensions
++	INSTALLTYPE = system
++	SHARE_PREFIX = $(DESTDIR)/usr/share
++	INSTALLBASE = $(SHARE_PREFIX)/gnome-shell/extensions
+ endif
+ INSTALLNAME = arcmenu@arcmenu.com
+ 
+@@ -58,6 +61,13 @@ install-local: _build
+ 	rm -rf $(INSTALLBASE)/$(INSTALLNAME)
+ 	mkdir -p $(INSTALLBASE)/$(INSTALLNAME)
+ 	cp -r ./_build/* $(INSTALLBASE)/$(INSTALLNAME)/
++ifeq ($(INSTALLTYPE),system)
++	# system-wide settings and locale files
++	rm -r $(INSTALLBASE)/$(INSTALLNAME)/schemas $(INSTALLBASE)/$(INSTALLNAME)/locale
++	mkdir -p $(SHARE_PREFIX)/glib-2.0/schemas $(SHARE_PREFIX)/locale
++	cp -r ./schemas/*gschema.* $(SHARE_PREFIX)/glib-2.0/schemas
++	cp -r ./_build/locale/* $(SHARE_PREFIX)/locale
++endif
+ 	-rm -fR _build
+ 	echo done
+ 
+-- 
+GitLab
+

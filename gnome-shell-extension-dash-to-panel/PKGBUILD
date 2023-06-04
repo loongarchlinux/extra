@@ -1,0 +1,33 @@
+# Maintainer: Balló György <ballogyor+arch at gmail dot com>
+# Contributor: Benoit Brummer < trougnouf at gmail dot com >
+# Contributor: Carl George < arch at cgtx dot us >
+
+pkgname=gnome-shell-extension-dash-to-panel
+_pkgname=dash-to-panel
+pkgver=56
+pkgrel=3
+pkgdesc='Extension for GNOME Shell to combine the dash and main panel'
+arch=('any')
+url='https://github.com/home-sweet-gnome/dash-to-panel'
+license=('GPL2')
+depends=('gnome-shell')
+source=("https://github.com/home-sweet-gnome/$_pkgname/archive/v$pkgver/$_pkgname-$pkgver.tar.gz"
+        'gnome-shell-extension-dash-to-panel-system-install-paths.patch')
+sha256sums=('b04c01f7bbb0e140febd569574905dba880dba011968725a9a96a5bf23560ffe'
+            'b9c247fc8ab7f1ee18ce2c98f8312f86da0340622d4c5daadd3a4579f4213fc5')
+
+prepare() {
+  cd $_pkgname-$pkgver
+  # https://github.com/home-sweet-gnome/dash-to-panel/pull/1860
+  patch -Np1 -i ../gnome-shell-extension-dash-to-panel-system-install-paths.patch
+}
+
+build() {
+  cd $_pkgname-$pkgver
+  make
+}
+
+package() {
+  cd $_pkgname-$pkgver
+  make VERSION="$pkgver" DESTDIR="$pkgdir" install
+}

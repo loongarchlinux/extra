@@ -2,7 +2,7 @@
 
 pkgname=python-pydle
 pkgver=1.0.0
-pkgrel=2
+pkgrel=3
 pkgdesc="A compact, flexible and standards-abiding IRC library"
 url="https://github.com/Shizmob/pydle"
 license=('BSD')
@@ -12,16 +12,19 @@ makedepends=('python-build' 'python-installer' 'python-poetry-core')
 optdepends=('python-pure-sasl: for SASL support')
 checkdepends=('python-pytest-asyncio' 'python-pure-sasl')
 source=("https://github.com/Shizmob/pydle/archive/v$pkgver/$pkgname-$pkgver.tar.gz"
-	"fix-python-dependencies.patch")
+        "fix-python-dependencies.patch"
+        $pkgname-remove-coroutine.patch::https://github.com/Shizmob/pydle/commit/21dedc6679a5fcaab5c7fda9fc63d93676d89b04.patch)
 sha512sums=('0d9e2e04b5043a514651211a57d7078f220c01a39719ee5b00117006176576900cc689e21ea1440498a879e7b336d6d76a302265e2eccd98517e1b82dd536b31'
-            'c9523de9ded3051eee2272f8fccf858d24ae77a28d0fc2a648b086eab59179dd0318de49f6f39c72da28f9ee50d8a80c3c4690cee9fa2e9efbd325ff9e4ece96')
+            'c9523de9ded3051eee2272f8fccf858d24ae77a28d0fc2a648b086eab59179dd0318de49f6f39c72da28f9ee50d8a80c3c4690cee9fa2e9efbd325ff9e4ece96'
+            '3622f7c223d3087bde6dedd953d25077a4a4d415852ba40eaf98b40a7ce20ff39a52332e55e1153cc49f2638ab00b6545a3670eeda14b8c84479b1949e492d2c')
 
 prepare() {
   cd pydle-$pkgver
   # https://github.com/Shizmob/pydle/issues/162
   sed -i '/loop=self.eventloop/d' pydle/connection.py
 
-  patch -Np1 -i ${srcdir}/fix-python-dependencies.patch
+  patch -Np1 -i ../fix-python-dependencies.patch
+  patch -Np1 -i ../$pkgname-remove-coroutine.patch
 }
 
 build() {
@@ -31,8 +34,7 @@ build() {
 
 check() {
   cd pydle-$pkgver
-  # https://github.com/Shizmob/pydle/issues/78
-  pytest || echo "Tests failed"
+  pytest
 }
 
 package() {

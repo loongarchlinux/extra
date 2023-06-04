@@ -2,10 +2,10 @@
 # Contributor: Ionut Biru <ibiru@archlinux.org>
 
 pkgbase=pygobject
-pkgname=(python-gobject)
+pkgname=(python-gobject python-gobject-docs)
 pkgver=3.44.1
-pkgrel=3
-pkgdesc="Python Bindings for GLib/GObject/GIO/GTK+"
+pkgrel=4
+pkgdesc="Python bindings for GLib/GObject/GIO/GTK"
 url="https://wiki.gnome.org/Projects/PyGObject"
 arch=(loong64 x86_64)
 license=(LGPL)
@@ -18,6 +18,8 @@ makedepends=(
   gobject-introspection
   meson
   python-cairo
+  python-sphinx
+  python-sphinx_rtd_theme
 )
 checkdepends=(
   gtk3
@@ -25,9 +27,6 @@ checkdepends=(
   xorg-server-xvfb
 )
 optdepends=('cairo: Cairo bindings')
-provides=("pygobject-devel=$pkgver")
-conflicts=(pygobject-devel)
-replaces=('pygobject-devel<=3.36.1-1')
 _commit=1a2544c898ca2aafcab0c9e472be22657f310cf3  # tags/3.44.1^0
 source=(
   "git+https://gitlab.gnome.org/GNOME/pygobject.git#commit=$_commit"
@@ -41,6 +40,8 @@ pkgver() {
 
 prepare() {
   cd pygobject
+  # https://gitlab.gnome.org/GNOME/pygobject/-/merge_requests/244
+  git cherry-pick -n ce5b0a622e376d8ac77ba5e8c3c000a2ebbad073
 }
 
 build() {
@@ -55,9 +56,23 @@ check() {
 }
 
 package_python-gobject() {
+  provides=("pygobject-devel=$pkgver")
+  conflicts=(pygobject-devel)
+  replaces=('pygobject-devel<=3.36.1-1')
+
   meson install -C build --destdir "$pkgdir"
   python -m compileall -d /usr/lib "$pkgdir/usr/lib"
   python -O -m compileall -d /usr/lib "$pkgdir/usr/lib"
 }
+
+package_python-gobject-docs() {
+  pkgdesc="Developer documentation for PyGObject"
+  depends=()
+  optdepends=()
+
+  python -m sphinx -b html pygobject/docs "$pkgdir/usr/share/doc/pygobject/html"
+  rm -r "$pkgdir/usr/share/doc/pygobject/html/.doctrees"
+}
+
 
 # vim:set sw=2 sts=-1 et:

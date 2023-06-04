@@ -2,7 +2,7 @@
 # Contributor: Nogweii <me@nogweii.net>
 
 pkgname=zk
-pkgver=0.13.0
+pkgver=0.14.0
 pkgrel=1
 pkgdesc='A command-line tool helping you to maintain a Zettelkasten or personal wiki'
 arch=('loong64' 'x86_64')
@@ -11,9 +11,15 @@ license=('GPL3')
 depends=('glibc')
 makedepends=('git' 'go')
 options=('!lto')
-_commit='ea4457ad671aa85a6b15747460c6f2c9ad61bf73'
-source=("$pkgname::git+$url.git#commit=$_commit")
-md5sums=('SKIP')
+_commit='b71a74eabcfc97df7b31e51edfb8e1b749061a76'
+source=(
+  "$pkgname::git+$url.git#commit=$_commit"
+  'skip-failing-test.patch'
+)
+sha512sums=('SKIP'
+            '2d05dc79cadc3cb6dee71d09de10ec99690e75aaf7cc6622489d88525808c4f84ddd381b5875901d7b87eac1e24c27df19d7789b7ad0f001032504cff8a48dfd')
+b2sums=('SKIP'
+        'fed9d45b9b81b874f0d2fc7beb59badde7a5495b3aa07562fd572679c40275cbfcfe8cbfb5f2cd24735948c34d3f157b97b50704a87ec46f72b927f211469ada')
 
 pkgver() {
   cd "$pkgname"
@@ -30,6 +36,10 @@ prepare() {
   # download dependencies
   export GOPATH="${srcdir}"
   go mod download
+
+  # skip failing test
+  # https://github.com/mickael-menu/zk/issues/323
+  patch -p1 -i "$srcdir/skip-failing-test.patch"
 }
 
 build() {

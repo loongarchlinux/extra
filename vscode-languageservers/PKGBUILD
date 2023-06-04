@@ -1,9 +1,10 @@
 # Maintainer: Daniel M. Capella <polyzen@archlinux.org>
 # Contributor: Ilango Rajagopal <ilangokul@gmail.com>
+# Contributor: Ricardo Vrech <ricardo.vrech@gmail.com>
 
-pkgname=('vscode-css-languageserver' 'vscode-html-languageserver' 'vscode-json-languageserver')
+pkgname=('vscode-css-languageserver' 'vscode-html-languageserver' 'vscode-json-languageserver' 'vscode-markdown-languageserver')
 pkgbase=vscode-languageservers
-pkgver=1.77.0
+pkgver=1.78.2
 pkgrel=1
 pkgdesc='VS Code language servers'
 arch=('any')
@@ -15,7 +16,7 @@ source=("git+$url.git#tag=$pkgver")
 b2sums=('SKIP')
 
 prepare() {
-  for i in 'css' 'html' 'json'; do
+  for i in 'css' 'html' 'json' 'markdown'; do
     pushd vscode/extensions/$i-language-features/server
     yarn --frozen-lockfile
     popd
@@ -23,7 +24,7 @@ prepare() {
 }
 
 build() {
-  for i in 'css' 'html' 'json'; do
+  for i in 'css' 'html' 'json' 'markdown'; do
     pushd vscode/extensions/$i-language-features/server
     tsc || true
     popd
@@ -58,6 +59,13 @@ _package() {
       printf '%s\n' '#!/usr/bin/env node' "require('/usr/lib/node_modules/$1/out/node/jsonServerMain');" >"$pkgdir"/usr/bin/"$1"
       ln -s "$1" "$pkgdir"/usr/bin/vscode-json-language-server
       cd json-language-features/server
+      ;;
+    vscode-markdown-languageserver)
+      pkgdesc='Markdown language server'
+
+      printf '%s\n' '#!/usr/bin/env node' "require('/usr/lib/node_modules/$1/out/node/main');" >"$pkgdir"/usr/bin/"$1"
+      ln -s "$1" "$pkgdir"/usr/bin/vscode-markdown-language-server
+      cd markdown-language-features/server
       ;;
   esac
 

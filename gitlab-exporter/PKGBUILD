@@ -1,27 +1,30 @@
 # Maintainer: Leonidas Spyropoulos <artafinde@archlinux.org>
 
 pkgname=gitlab-exporter
-pkgver=0.3.0
-pkgrel=2
+pkgver=0.4.0
+pkgrel=1
 pkgdesc='A Gitlab prometheus metric exporter'
 arch=('loong64' 'x86_64')
 url='https://gitlab.archlinux.org/artafinde/gitlab-exporter'
 license=('MIT')
 depends=('gcc-libs' 'openssl')
-makedepends=('cargo' 'git')
-source=("git+$url.git?signed#tag=v$pkgver")
-b2sums=('SKIP')
+makedepends=('cargo')
+source=("https://gitlab.archlinux.org/archlinux/${pkgname}/-/releases/v${pkgver}/downloads/${pkgname}-${pkgver}.tar".gz{,.sig})
+sha256sums=('cc5fe9bbd377c2c2356522bf702979650cad359527638cb9fe2182e242266231'
+            'SKIP')
+b2sums=('8f3594d8a3129c8a301cf3a4a0b50219780de6ecee285dfcf061ecc0188ec5b969c2b10ec1bf76315f9a2fc4dcb3658d8cd65a4e152770ce8bd207d2a137c16c'
+        'SKIP')
 validpgpkeys=(
   'B4B759625D4633430B74877059E43E106B247368' # Leonidas Spyropoulos <artafinde@archlinux.org>
-  ) 
+) 
 
 prepare() {
-  cd "${pkgname}"
+  cd "${pkgname}-${pkgver}"
   cargo fetch --locked --target "$CARCH-unknown-linux-gnu"
 }
 
 build() {
-  cd "${pkgname}"
+  cd "${pkgname}-${pkgver}"
   export RUSTUP_TOOLCHAIN=stable
   export CARGO_TARGET_DIR=target
   CFLAGS+=' -ffat-lto-objects'
@@ -29,14 +32,14 @@ build() {
 }
 
 check() {
-  cd "${pkgname}"
+  cd "${pkgname}-${pkgver}"
   export RUSTUP_TOOLCHAIN=stable
   CFLAGS+=' -ffat-lto-objects'
   cargo test --frozen -- --test-threads 1
 }
 
 package() {
-  cd "${pkgname}"
+  cd "${pkgname}-${pkgver}"
   install -Dm755 target/release/${pkgname} -t "${pkgdir}"/usr/bin
   install -Dm644 README.md -t "${pkgdir}"/usr/share/doc/${pkgname}
   install -Dm644 LICENSE -t "${pkgdir}"/usr/share/licenses/${pkgname}

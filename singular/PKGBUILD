@@ -3,23 +3,26 @@
 
 pkgname=singular
 _majver=4-3-2
-_patchver=3
-#pkgver=${_majver//-/.}.p${_patchver}
-pkgver=${_majver//-/.}
-pkgrel=2
+_patchver=p1
+_pkgver=${_majver}${_patchver}
+pkgver=${_majver//-/.}${_patchver/p/.p}
+pkgrel=3
 pkgdesc='Computer Algebra System for polynomial computations'
 arch=(loong64 x86_64)
 url='https://www.singular.uni-kl.de/'
 license=(GPL)
 depends=(flint cddlib)
-makedepends=(doxygen)
+makedepends=(doxygen texlive-core texlive-pictures sharutils)
 provides=(singular-factory)
-#source=(ftp://jim.mathematik.uni-kl.de/pub/Math/Singular/SOURCES/$_majver/singular-${_majver//-/.}p${_patchver}.tar.gz
-source=(ftp://jim.mathematik.uni-kl.de/pub/Math/Singular/SOURCES/$_majver/singular-${_majver//-/.}.tar.gz
-         doc-$_majver.tbz2::ftp://jim.mathematik.uni-kl.de/pub/Math/Singular/SOURCES/$_majver/doc.tbz2)
-sha256sums=('3fd565d1bd4265fa8ba7cc189137a36d9daf9939b5bb411466c2028d9191f6db'
-            '10334afd99fe3a3e91669185ef5c104a25c97f0fd0dd6c53d98b47d5243df939')
+source=(ftp://jim.mathematik.uni-kl.de/pub/Math/Singular/SOURCES/$_majver/singular-${_pkgver//-/.}.tar.gz)
+#source=(https://github.com/Singular/Singular/archive/Release-$_pkgver/$pkgname-$_pkgver.tar.gz)
+sha256sums=('87b8fcbcb19a849ab767db999409c03bab7e408e5a00d05e981988fd9ea279db')
 options=(!zipman)
+
+prepare() {
+  cd singular-${_majver//-/.}
+  ./autogen.sh
+}
 
 build() {
   cd singular-${_majver//-/.}
@@ -31,7 +34,8 @@ build() {
     --enable-Order-module \
     --enable-python-module \
     --enable-gfanlib-module \
-    --enable-polymake-module
+    --enable-polymake-module \
+    --enable-doc-build
 # https://bugzilla.gnome.org/show_bug.cgi?id=655517
   sed -i -e 's/ -shared / -Wl,-O1,--as-needed\0/g' libtool
   make
@@ -45,4 +49,9 @@ check() {
 package() {
   cd singular-${_majver//-/.}
   make DESTDIR="$pkgdir" install
+
+# Install docs
+  install -Dm644 doc/html/* -t "$pkgdir"/usr/share/doc/singular
+  install -Dm644 doc/singular.info -t "$pkgdir"/usr/share/info
+  install -Dm644 doc/singular.idx -t "$pkgdir"/usr/share/singular
 }

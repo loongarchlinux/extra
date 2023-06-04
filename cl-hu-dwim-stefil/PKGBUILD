@@ -34,9 +34,17 @@ check() {
 package() {
   cd "$pkgname"
 
+  # create directories
+  install -vd \
+    "$pkgdir/usr/share/common-lisp/source/$_pkgname" \
+    "$pkgdir/usr/share/common-lisp/systems"
+
   # library
-  install -vd "$pkgdir/usr/share/common-lisp/source/$_pkgname"
   cp -vr integration source test ./*.asd "$pkgdir/usr/share/common-lisp/source/$_pkgname"
+
+  pushd "$pkgdir/usr/share/common-lisp/systems"
+  ln -s "../source/$_pkgname"/*.asd .
+  popd
 
   # documentation
   install -vDm644 -t "$pkgdir/usr/share/doc/$pkgname" README

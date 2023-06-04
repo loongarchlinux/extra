@@ -1,0 +1,37 @@
+# Maintainer: Jelle van der Waa <jelle@archlinux.org>
+
+_commit=be1732981d8be2fde3d82e608039952715e5e026
+pkgname=marksman
+pkgver=20230412
+pkgrel=1
+pkgdesc="Write Markdown with code assist and intelligence in the comfort of your favourite editor."
+arch=('any')
+url="https://github.com/artempyanykh/marksman"
+license=('GPL')
+makedepends=('dotnet-sdk-7.0' 'git')
+depends=('dotnet-runtime-7.0')
+options=('!strip')
+source=($pkgname::git+https://github.com/artempyanykh/marksman.git#commit=$_commit)
+b2sums=('SKIP')
+
+build() {
+  cd "${srcdir}/marksman"
+  git init
+
+  # Disable dotnet telemetry
+  export DOTNET_CLI_TELEMETRY_OPTOUT=1
+
+  # Force dotnet to use 6.x when multiple SDKs are installed
+  dotnet new globaljson --sdk-version 7.0.0 --roll-forward latestMinor --force
+
+  dotnet build --configuration Release Marksman.sln
+  dotnet publish --configuration Release Marksman.sln --output "$PWD"/publish
+}
+
+package() {
+  mkdir -p "$pkgdir"/usr/lib
+  mkdir -p "$pkgdir"/usr/bin
+  cp -dr --no-preserve='ownership' marksman/publish "$pkgdir"/usr/lib/marksman
+
+  ln -s /usr/lib/marksman/marksman "$pkgdir"/usr/bin/marksman
+}

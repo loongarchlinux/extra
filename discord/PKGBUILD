@@ -5,7 +5,7 @@
 pkgname=discord
 _pkgname=Discord
 pkgver=0.0.27
-pkgrel=1
+pkgrel=2
 pkgdesc="All-in-one voice and text chat for gamers"
 arch=('loong64' 'x86_64')
 url='https://discord.com'
@@ -19,8 +19,8 @@ source=("https://dl.discordapp.net/apps/linux/$pkgver/$pkgname-$pkgver.tar.gz"
         "LICENSE-$pkgver.html::https://discordapp.com/terms"
         "OSS-LICENSES-$pkgver.html::https://discordapp.com/licenses")
 sha512sums=('285a0119b4740402a3fa94d3679a52bc8d883413ee32187e90087960a4d34aaf316788d2708bbccafe3f995c2b99767b45bc4b7c731704ef887a8de1b3d3926f'
-            'afe3167479dfba984d43642e7eb42e9437d6e0caa512118b2604cb54dbcc833370ccfaf07fc0e8077ad59fc5053a4380c2234628e6aaa519bc0dd04fa3ec0f27'
-            'a8ef6434be9ffd3f53194047610856804418c204ddeab937a8fa75511c0db1c2556b89e94e899760494a275a9b3805876f99319a5c8c018196002ba8695e873d')
+            '1f6e773b9c971aebd5391c22c5e2deea7aa222e0fda240aefbe91c4eb526305972d17302d1f5eb806a9d308c7f029ae8a0549f61d8c2adb53e4fe4ba9cd60a61'
+            '2adc1404b49930a419eb6c5fbb0c64ebd0a5d797e54357539a093cc99355b10e9c002750dd6d8ab84156593b7cbc8884c1b7e396ac0c2c2b59fcbda2368ebd1a')
 
 prepare() {
   cd $_pkgname
@@ -35,10 +35,14 @@ package() {
 
   rm "$pkgdir"/opt/$pkgname/postinst.sh
 
-  install -d "$pkgdir"/usr/{bin,share/{pixmaps,applications}}
+  install -d "$pkgdir"/usr/bin
   ln -s /opt/$pkgname/$_pkgname "$pkgdir"/usr/bin/$pkgname
-  ln -s /opt/$pkgname/discord.png "$pkgdir"/usr/share/pixmaps/$pkgname.png
+
+  install -d "$pkgdir"/usr/share/applications
   ln -s /opt/$pkgname/$pkgname.desktop "$pkgdir"/usr/share/applications/$pkgname.desktop
+
+  install -d "$pkgdir"/usr/share/icons/hicolor/256x256/apps
+  ln -s /opt/$pkgname/discord.png "$pkgdir"/usr/share/icons/hicolor/256x256/apps/$pkgname.png
 
   # setuid on chrome-sandbox
   chmod u+s "$pkgdir"/opt/$pkgname/chrome-sandbox

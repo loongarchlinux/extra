@@ -1,40 +1,28 @@
+# Maintainer: Balló György <ballogyor+arch at gmail dot com>
+# Contributor: Andreas Radke <andyrtr@archlinux.org>
 # Contributor: Sarah Hay <sarah@archlinux.org>
-# Maintainer: Andreas Radke <andyrtr@archlinux.org>
 
 pkgname=libmpeg2
 pkgver=0.5.1
-pkgrel=7
-pkgdesc="Library for decoding MPEG-1 and MPEG-2 video streams."
+pkgrel=8
+pkgdesc='Library for decoding MPEG-1 and MPEG-2 video streams'
 arch=('loong64' 'x86_64')
-url="http://libmpeg2.sourceforge.net/"
-depends=('glibc')
-makedepends=('sdl' 'libxv')
-optdepends=('sdl: required for mpeg2dec'
-            'libxv: required for mpeg2dec')
-source=(http://libmpeg2.sourceforge.net/files/${pkgname}-${pkgver}.tar.gz
-        libmpeg2-0.5.1-gcc4.6.patch)
+url='https://libmpeg2.sourceforge.io/'
 license=('GPL2')
-provides=('mpeg2dec')
-sha256sums=('dee22e893cb5fc2b2b6ebd60b88478ab8556cb3b93f9a0d7ce8f3b61851871d4'
-            '763e188eea36ee3cdfb31e7877bbead00676b5766c25175ec6a7eb20884926d1')
-
-prepare() {
-  cd "${srcdir}/${pkgname}-${pkgver}"
-  patch -Np1 -i "${srcdir}/libmpeg2-0.5.1-gcc4.6.patch"
-
-  sed '/AC_PATH_XTRA/d' -i configure.ac
-  autoreconf --force --install
-}
+depends=('glibc')
+makedepends=('libxv' 'sdl')
+optdepends=('libxv: mpeg2dec command'
+            'sdl: mpeg2dec command')
+source=("https://libmpeg2.sourceforge.io/files/$pkgname-$pkgver.tar.gz")
+sha256sums=('dee22e893cb5fc2b2b6ebd60b88478ab8556cb3b93f9a0d7ce8f3b61851871d4')
 
 build() {
-  cd "${srcdir}/${pkgname}-${pkgver}"
-  ./configure --prefix=/usr --enable-shared --disable-static
-  make	OPT_CFLAGS="${CFLAGS}" \
-	MPEG2DEC_CFLAGS="${CFLAGS}" \
-	LIBMPEG2_CFLAGS=""
+  cd $pkgname-$pkgver
+  ./configure --prefix=/usr
+  make
 }
 
 package() {
-  cd "${srcdir}/${pkgname}-${pkgver}"
-  make DESTDIR="${pkgdir}" install
+  cd $pkgname-$pkgver
+  make DESTDIR="$pkgdir" install
 }

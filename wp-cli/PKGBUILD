@@ -1,0 +1,35 @@
+# Maintainer: Caleb Maclennan <caleb@alerque.com>
+# Contributor: Matt Fields (0x6d617474) <aur at 0x6d617474 dot net>
+
+pkgname=wp-cli
+_pkgname=$pkgname-bundle
+pkgver=2.8.0
+pkgrel=1
+pkgdesc='A command-line tool for managing WordPress'
+url='http://wp-cli.org'
+arch=(any)
+license=(MIT)
+depends=(php)
+makedepends=(composer)
+_archive="$_pkgname-$pkgver"
+source=("https://github.com/wp-cli/wp-cli-bundle/archive/v$pkgver/$_archive.tar.gz")
+sha256sums=('eb56203dd1e787ccf4659a88a43324d542d491d375f282dcc827a7b08b4123d7')
+
+build() {
+	cd "$_archive"
+	composer install --no-interaction --prefer-dist --no-scripts
+	php -dphar.readonly=0 utils/make-phar.php wp-cli.phar
+}
+
+check() {
+	cd "$_archive"
+	composer phpunit
+	php ./wp-cli.phar --version
+}
+
+package() {
+	cd "$_archive"
+	install -Dm0755 wp-cli.phar "$pkgdir/usr/bin/wp"
+	install -Dm0644 -t "$pkgdir/usr/share/licenses/$pkgname/" LICENSE
+	install -Dm0644 vendor/wp-cli/wp-cli/utils/wp-completion.bash "$pkgdir/usr/share/bash-completion/completions/wp"
+}

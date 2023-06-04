@@ -1,0 +1,38 @@
+# Maintainer: Maxime Gauduin <alucryd@archlinux.org>
+# Contributor: Darvin Delgado <dnmodder@gmail.com>
+
+pkgname=zarchive
+pkgver=0.1.2
+pkgrel=2
+pkgdesc='Library for creating and reading zstd-compressed file archives (.zar)'
+arch=(loong64 x86_64)
+url=https://github.com/Exzap/ZArchive
+license=(MIT)
+depends=(
+  gcc-libs
+  glibc
+  libzstd.so
+)
+makedepends=(
+  cmake
+  git
+  ninja
+)
+_tag=d2c717730092c7bf8cbb033b12fd4001b7c4d932
+source=(git+https://github.com/Exzap/ZArchive.git#tag=${_tag})
+b2sums=(SKIP)
+
+build() {
+  cmake -S ZArchive -B build -G Ninja \
+    -DCMAKE_BUILD_TYPE=None \
+    -DCMAKE_INSTALL_PREFIX=/usr \
+    -Wno-dev
+  cmake --build build
+}
+
+package() {
+  DESTDIR="${pkgdir}" cmake --install build
+  install -Dm 664 ZArchive/LICENSE -t "${pkgdir}"/usr/share/licenses/zarchive/
+}
+
+#vim: ts=2 sw=2 et:

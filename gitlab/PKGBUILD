@@ -1,14 +1,15 @@
 # Maintainer: Anatol Pomozov <anatol.pomozov@gmail.com>
+# Maintainer: Caleb Maclennan <caleb@alerque.com>
 # Contributor: Sven-Hendrik Haase <svenstaro@gmail.com>
 # Contributor: Pavol (Lopo) Hluchy <lopo AT losys DOT eu>
 # Contributor: Jonas Heinrich <onny@project-insanity.org>
 # Contributor: Massimiliano Torromeo <massimiliano.torromeo@gmail.com>
 # Contributor: Tobias Hunger <tobias DOT hunger AT gmail DOT com>
 # Contributor: Stefan Tatschner <stefan@sevenbyte.org>
-# Contributor: Caleb Maclennan <caleb@alerque.com>
+# Contributor: loqs <bugs-archlinux@entropy-collector.net>
 
 pkgname=gitlab
-pkgver=15.11.0
+pkgver=15.11.6
 pkgrel=1
 pkgdesc="Project management and code hosting application"
 arch=('loong64' 'x86_64')
@@ -27,6 +28,7 @@ backup=("etc/webapps/gitlab/database.yml"
         "etc/webapps/gitlab/smtp_settings.rb"
         "etc/logrotate.d/gitlab")
 source=(git+https://gitlab.com/gitlab-org/gitlab-foss.git#tag=v$pkgver
+        https://gitlab.com/gitlab-org/gitlab/-/commit/c971125953ed43e6014fafe05bbade6faa7a2b6d.patch
         configs.patch
         fixes.patch
         environment
@@ -44,6 +46,7 @@ conflicts=('gitlab-workhorse')
 replaces=('gitlab-workhorse')
 install='gitlab.install'
 sha512sums=('SKIP'
+            '1b42e414bcfd93a103db4e3fd14e792ff0704d5d73f206fa11612ef91ac68df64cdfed498aa819e15820cdcc967a3ffe0d9b55fb92da846ccf55c3c59e7c6d60'
             '504ab3130f8465521e0eeca8a9885ad04bec01933f71637cd439faaa5b0be783a3e8f48f0337d41e36f2de40d94b3771747684bb3eada63a073f5f9c1d38ad22'
             '7384a7cb995832be3643e1f8b16f9454c6ef04ff1e0dc1a3aed3ad849d11d0be7f573c024c4d867d69e726fceccea1a58c9c3074ef166291b8357b3fc30922a8'
             '5b1ca2958f03a5baf1c5576a1568072e8ed749e2d15745ecbcc4860d2dbd543f2f3ed077e8d87afac2670c9436b19fe498217b49916d56a4e31fb9811aeb9067'
@@ -68,6 +71,8 @@ prepare() {
 
   # GitLab tries to read its revision information from a file.
   git rev-parse --short HEAD > REVISION
+
+  patch -p1 < ../c971125953ed43e6014fafe05bbade6faa7a2b6d.patch
 
   patch -p1 < ../fixes.patch
   patch -p1 < ../configs.patch

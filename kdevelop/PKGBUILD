@@ -5,7 +5,7 @@
 pkgname=kdevelop
 pkgver=23.04.1
 _clangver=15.0.7
-pkgrel=1
+pkgrel=2
 pkgdesc='C++ IDE using KDE technologies'
 arch=(loong64 x86_64)
 url='http://www.kdevelop.org/'
@@ -30,12 +30,18 @@ optdepends=('konsole: embedded terminal'
 conflicts=(kdevelop-qmljs kdevplatform)
 replaces=(kdevelop-qmljs kdevplatform kdevelop-clang-tidy)
 groups=(kde-applications kdevelop)
-source=(https://download.kde.org/stable/release-service/$pkgver/src/$pkgname-$pkgver.tar.xz{,.sig})
+source=(https://download.kde.org/stable/release-service/$pkgver/src/$pkgname-$pkgver.tar.xz{,.sig}
+        https://invent.kde.org/kdevelop/kdevelop/-/commit/8ca40a64.patch)
 sha256sums=('63d3d9b0264fda443ddc93b5b1fbfa68d05c84df8cfabf90a601feefd3653297'
-            'SKIP')
+            'SKIP'
+            '7c84229c8787736a96cbe624f78fd2d0bdf20fb714832885725f7673ab614d44')
 validpgpkeys=(CA262C6C83DE4D2FB28A332A3A6A4DB839EAA6D7  # Albert Astals Cid <aacid@kde.org>
               F23275E4BF10AFC1DF6914A6DBD2CE893E2D1C87  # Christoph Feck <cfeck@kde.org>
               D81C0CB38EB725EF6691C385BB463350D6EF31EF) # Heiko Becker <heiko.becker@kde.org>
+
+prepare() {
+  patch -d $pkgname-$pkgver -p1 < 8ca40a64.patch # Fix build with astyle 3.3
+}
 
 build() {
   cmake -B build -S $pkgname-$pkgver \

@@ -1,7 +1,7 @@
 # Maintainer: George Rawlinson <grawlinson@archlinux.org>
 
 pkgname=soju
-pkgver=0.6.1
+pkgver=0.6.2
 pkgrel=1
 pkgdesc='A user-friendly IRC bouncer'
 arch=('loong64' 'x86_64')
@@ -9,6 +9,7 @@ url='https://soju.im'
 license=('AGPL3')
 depends=('glibc')
 makedepends=(
+  'git'
   'go'
   'scdoc'
   'sqlite'
@@ -19,26 +20,30 @@ optdepends=(
 )
 backup=('etc/soju/config')
 options=('!lto')
+_commit='fa94179363613538a4e56a5ef5bc90d070763e8d'
 source=(
-  "https://git.sr.ht/~emersion/soju/refs/download/v$pkgver/$pkgname-$pkgver.tar.gz"{,.sig}
+  "$pkgname::git+https://git.sr.ht/~emersion/soju#commit=$_commit"
   'systemd.service'
   'sysusers.conf'
   'tmpfiles.conf'
 )
-sha512sums=('12c939a050bf7276ee9e8fec05285533907a2787530ebe113a6be012cbfbcaac3c5cb5c42c3791618136cd45df6c9fb5739bcbec068650bf0d7ea2995443c0bf'
-            'SKIP'
+sha512sums=('SKIP'
             'f1cbf40994dabe6c27288f1d3e5a78ed89a529a834ab178ddd64c093646d85ecc23ecabb5f9a20e99b805f46bb49fe321188b000fb1a3d59a64b77d8fde043c3'
             '7b4069043d204581b0eda376956f8996365631e83ca78e002d6ea0caec931605bb5e99cf4f42a75b6de958267b982ee8ed7f31046c6b97d8f2442430678f3c07'
             '378dd64a8c3fa4fd1b28c055bbeb7c46eb05ec79a925d5b138af5d373970e82bafba62ff29269f63e67c67f34fb961570d448a02fa08f7f6cf4e8d844a3c12a0')
-b2sums=('3e61f13a2f711c9a1a280c158113fd75da53525c32cf8d04cf5459f25e55286e090fbf64c844e19bdf60780a9db37ee45976714500b12e92023330a426706c23'
-        'SKIP'
+b2sums=('SKIP'
         'fe0819958384f58bd04cb7022bd496538a9e70e532256bdbe92832b0e786c003dd2eac6199f2a343764ac50893dda1d85b0977a110aa67489fd7e3a20d4e4bdf'
         '14e951b98e80d0dddf08aa0c2b03c57a86bda5ea1fd62d332e56edaf42f478ff86e9367699ab83b1ce0b968068e31048573b703bca6f4900cea901ad518a94b7'
         '9d164e694980e40955b1e8cedf1875214299840a8fce09b20069d594e74265c4335c0693e4bdd7c073c062a1de66cca859657f7581a27baffbfab741f45d0acc')
-validpgpkeys=('34FF9526CFEF0E97A340E2E40FDE7BE0E88F5E48')
+
+pkgver() {
+  cd "$pkgname"
+
+  git describe --tags | sed 's/^v//'
+}
 
 prepare() {
-  cd "$pkgname-$pkgver"
+  cd "$pkgname"
 
   # create directory for build output
   mkdir build
@@ -49,7 +54,7 @@ prepare() {
 }
 
 build() {
-  cd "$pkgname-$pkgver"
+  cd "$pkgname"
 
   # set Go flags
   export CGO_CPPFLAGS="${CPPFLAGS}"
@@ -75,10 +80,18 @@ build() {
 
   # man page
   scdoc < doc/soju.1.scd > build/soju.1
+
+  # ensure reproducibility of man page
+  # i'm not 100% sure where the man sub-command gets the date from, i assume
+  # it uses $TODAYS_DATE, so this should make the man page reproducible
+  local _commit_date=$(git show --no-patch --format=%cd --date=format:%Y-%m-%d)
+  sed \
+    -i build/soju.1 \
+    -e "s/\"[0-9]\{4\}-[0-9]\{2\}-[0-9]\{2\}\"/\"$_commit_date\"/"
 }
 
 check() {
-  cd "$pkgname-$pkgver"
+  cd "$pkgname"
 
   go test -v ./...
 }
@@ -89,7 +102,7 @@ package() {
   install -vDm644 sysusers.conf "$pkgdir/usr/lib/sysusers.d/$pkgname.conf"
   install -vDm644 tmpfiles.conf "$pkgdir/usr/lib/tmpfiles.d/$pkgname.conf"
 
-  cd "$pkgname-$pkgver"
+  cd "$pkgname"
 
   # binaries
   install -vDm755 -t "$pkgdir/usr/bin" build/soju{,ctl,-migrate-db,-znc-import}

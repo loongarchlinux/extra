@@ -1,13 +1,14 @@
 # Maintainer: Torsten Keßler <tpkessler at archlinux dot org>
 
 pkgname=intel-oneapi-basekit
-pkgver=2023.1.0.46401
+_pkgver=2023.1.0
+pkgver=$_pkgver.46401
 _urlver=7deeaac4-f605-4bcf-a81b-ea7531577c61
-pkgrel=1
+pkgrel=2
 pkgdesc="Intel oneAPI Base Toolkit for Linux"
 arch=('loong64' 'x86_64')
 url='https://software.intel.com/content/www/us/en/develop/tools/oneapi.html'
-license=("custom")
+license=('custom:EULA')
 source=("https://registrationcenter-download.intel.com/akdlm/IRC_NAS/${_urlver}/l_BaseKit_p_${pkgver}_offline.sh")
 b2sums=('8630de834ed076a92e849a5fe1e3178c0abb071eb46902e1dc647ce01c7804ebe21d11ccba7c7a8628d3c1d01ae5adb270241784ec0f16694271169912b3631a')
 depends=(level-zero-loader)
@@ -58,4 +59,8 @@ package() {
   echo "${_lib_path}/latest/linux/lib" >> "${_ldso_conf}/${pkgname}.conf"
   echo "${_lib_path}/latest/linux/lib/x64" >> "${_ldso_conf}/${pkgname}.conf"
   echo "${_lib_path}/latest/linux/compiler/lib/intel64" >> "${_ldso_conf}/${pkgname}.conf"
+
+  # Collection of licenses used in OneAPI with pointers for all toolkits
+  install -Dm644 "${pkgdir}/opt/intel/oneapi/licensing/${_pkgver}/license.htm" \
+                 "${pkgdir}/usr/share/licenses/${pkgname}/license.htm"
 }
