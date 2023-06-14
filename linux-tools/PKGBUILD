@@ -15,9 +15,9 @@ pkgname=(
   'usbip'
 #  'x86_energy_perf_policy'
 )
-pkgver=6.2
-pkgrel=1
-_rdate=20221122
+pkgver=6.3
+_rdate=20230428
+pkgrel=2
 license=('GPL2')
 arch=('loong64' 'x86_64')
 url='https://www.kernel.org'
@@ -27,7 +27,8 @@ makedepends=('git')
 # kernel source deps
 makedepends+=('asciidoc' 'xmlto')
 # perf deps
-makedepends+=('perl' 'python' 'python-setuptools' 'slang' 'elfutils' 'libunwind' 'numactl' 'audit' 'zstd' 'libcap')
+makedepends+=('perl' 'python' 'python-setuptools' 'slang' 'elfutils' 'libunwind'
+  'numactl' 'audit' 'zstd' 'libcap' 'libtraceevent' 'openssl' 'clang')
 # cpupower deps
 makedepends+=('pciutils')
 # usbip deps
@@ -41,7 +42,7 @@ makedepends+=('libcap')
 # bpftool
 makedepends+=('llvm' 'clang')
 groups=("$pkgbase")
-source=("https://github.com/yetist/linux/releases/download/v${_rdate}/linux-${pkgver}-${_rdate}.tar.xz"
+source=(https://github.com/loongarchlinux/linux/releases/download/v${_rdate}/linux-${pkgver}-${_rdate}.tar.xz
         'cpupower.default'
         'cpupower.systemd'
         'cpupower.service'
@@ -53,7 +54,7 @@ validpgpkeys=(
   'ABAF11C65A2970B130ABE3C479BE3E4300411886'  # Linus Torvalds
   '647F28654894E3BD457199BE38DBBDC86092693E'  # Greg Kroah-Hartman
 )
-sha256sums=('SKIP'
+sha256sums=('a4790bb9dde080e7d807ce2b84688bb4919f4c042116db2bf2257faee55a04c5'
             '4fa509949d6863d001075fa3e8671eff2599c046d20c98bb4a70778595cd1c3f'
             'b692f4859ed3fd9831a058a450a84d8c409bf7e3e45aac1c2896a14bb83f3d7a'
             '42d2ec9f1d9cc255ee7945a27301478364ef482f5a6ddfc960189f03725ccec2'
@@ -76,6 +77,11 @@ prepare() {
     echo ":: Applying patch $src"
     patch -p1 -N -i "$srcdir/$src"
   done
+  # force our perf version
+  cat > tools/perf/util/PERF-VERSION-GEN << EOF
+#!/bin/sh
+echo '#define PERF_VERSION "$pkgver-$pkgrel"' > "\${1:-.}"/PERF-VERSION-FILE
+EOF
 }
 
 build() {
@@ -89,7 +95,6 @@ build() {
     NO_SDT=1 \
     PYTHON=python \
     PYTHON_CONFIG=python-config \
-    PERF_VERSION=$pkgver-$pkgrel \
     DESTDIR="$pkgdir"
   popd
 
@@ -157,7 +162,6 @@ package_linux-tools-meta() {
     'cpupower'
     'hyperv'
     'perf'
-#    'python-perf'
     'tmon'
     'turbostat'
     'usbip'
@@ -172,7 +176,7 @@ package_perf() {
   pkgdesc='Linux kernel performance auditing tool'
   depends=('glibc' 'perl' 'python' 'slang' 'elfutils' 'libunwind' 'binutils'
            'numactl' 'audit' 'coreutils' 'glib2' 'xz' 'zlib' 'libelf' 'bash'
-           'zstd' 'libcap')
+           'zstd' 'libcap' 'libtraceevent' 'openssl')
 
   cd linux/tools/perf
   make -f Makefile.perf \
@@ -183,9 +187,8 @@ package_perf() {
     NO_SDT=1 \
     PYTHON=python \
     PYTHON_CONFIG=python-config \
-    PERF_VERSION=$pkgver-$pkgrel \
     DESTDIR="$pkgdir" \
-    install
+    install install-python_ext
   cd "$pkgdir"
   # add linker search path
   mkdir "$pkgdir/etc/ld.so.conf.d"
@@ -196,16 +199,6 @@ package_perf() {
   # no exec on usr/share
   find usr/share -type f -exec chmod a-x {} \;
 }
-
-#package_python-perf(){
-#  pkgdesc='Linux kernel performance auditing tool (python bindings)'
-#  depends=('python')
-#
-#  cd linux/tools/perf
-#
-#  make install-python_ext PYTHON=python DESTDIR="$pkgdir"
-#}
-
 
 package_cpupower() {
   pkgdesc='Linux kernel tool to examine and tune power saving related features of your processor'
@@ -291,7 +284,7 @@ package_hyperv() {
 
 package_bpf() {
   pkgdesc='BPF tools'
-  depends=('glibc' 'readline' 'zlib' 'libelf' 'libcap')
+  depends=('glibc' 'readline' 'zlib' 'libelf' 'libcap' 'zstd' 'llvm-libs' 'binutils')
 
   cd linux/tools/bpf
   # skip runsqlower until disabled in build
