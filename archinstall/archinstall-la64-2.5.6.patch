@@ -1,23 +1,3 @@
-diff --git a/archinstall/lib/disk/partition.py b/archinstall/lib/disk/partition.py
-index 87eaa6a7..b5fe0f75 100644
---- a/archinstall/lib/disk/partition.py
-+++ b/archinstall/lib/disk/partition.py
-@@ -204,7 +204,14 @@ class Partition:
- 		output = SysCommand(f"sfdisk --json {self.block_device.path}").decode('UTF-8')
- 
- 		if output:
--			sfdisk_info = json.loads(output)
-+			try:
-+				sfdisk_info = json.loads(output)
-+			except:
-+				lines = output.splitlines()
-+				for i in range(len(lines)):
-+					if lines[i] == '{':
-+						break
-+				sfdisk_info = json.loads("\n".join(output.splitlines()[i:]))
- 			partitions = sfdisk_info.get('partitiontable', {}).get('partitions', [])
- 			node = list(filter(lambda x: x['node'] == self._path, partitions))
- 
 diff --git a/archinstall/lib/hardware.py b/archinstall/lib/hardware.py
 index 9660ea95..7d60b780 100644
 --- a/archinstall/lib/hardware.py
@@ -47,10 +27,10 @@ index 9660ea95..7d60b780 100644
  		"vulkan-radeon",
  	],
 diff --git a/archinstall/lib/installer.py b/archinstall/lib/installer.py
-index 15cb5ff0..b6d61ee3 100644
+index baf90c9d..6e9250a8 100644
 --- a/archinstall/lib/installer.py
 +++ b/archinstall/lib/installer.py
-@@ -954,10 +954,10 @@ class Installer:
+@@ -947,10 +947,10 @@ class Installer:
  		if has_uefi():
  			self.pacstrap('efibootmgr') # TODO: Do we need? Yes, but remove from minimal_installation() instead?
  			try:
@@ -100,35 +80,42 @@ index d659d709..ec52b4bb 100644
  			current = str(_('set: {}').format(current))
  		else:
  			description = self._description
+diff --git a/archinstall/lib/menu/global_menu.py b/archinstall/lib/menu/global_menu.py
+index 7c5b153e..94f4c4d6 100644
+--- a/archinstall/lib/menu/global_menu.py
++++ b/archinstall/lib/menu/global_menu.py
+@@ -51,7 +51,8 @@ class GlobalMenu(AbstractMenu):
+ 				_('Archinstall language'),
+ 				lambda x: self._select_archinstall_language(x),
+ 				display_func=lambda x: x.display_name,
+-				default=self.translation_handler.get_language_by_abbr('en'))
++				default=self.translation_handler.get_language_by_abbr('zh-CN'))
++		self.translation_handler.activate(self.translation_handler.get_language_by_abbr('zh-CN'))
+ 		self._menu_options['keyboard-layout'] = \
+ 			Selector(
+ 				_('Keyboard layout'),
 diff --git a/archinstall/lib/mirrors.py b/archinstall/lib/mirrors.py
-index d76e0473..2c5d24d9 100644
+index d76e0473..597d229d 100644
 --- a/archinstall/lib/mirrors.py
 +++ b/archinstall/lib/mirrors.py
-@@ -66,9 +66,10 @@ def filter_mirrors_by_region(regions :str,
- 	:param regions: A series of country codes separated by `,`. For instance `SE,US` for sweden and United States.
+@@ -67,7 +67,7 @@ def filter_mirrors_by_region(regions :str,
  	:type regions: str
  	"""
--	region_list = [f'country={region}' for region in regions.split(',')]
+ 	region_list = [f'country={region}' for region in regions.split(',')]
 -	response = urllib.request.urlopen(urllib.request.Request(f"https://archlinux.org/mirrorlist/?{'&'.join(region_list)}&protocol=https&protocol=http&ip_version=4&ip_version=6&use_mirror_status=on'", headers={'User-Agent': 'ArchInstall'}))
--	new_list = response.read().replace(b"#Server", b"Server")
-+	#region_list = [f'country={region}' for region in regions.split(',')]
-+	#response = urllib.request.urlopen(urllib.request.Request(f"https://archlinux.org/mirrorlist/?{'&'.join(region_list)}&protocol=https&protocol=http&ip_version=4&ip_version=6&use_mirror_status=on'", headers={'User-Agent': 'ArchInstall'}))
-+	#new_list = response.read().replace(b"#Server", b"Server")
-+	new_list = open(destination).read()
++	response = urllib.request.urlopen(urllib.request.Request(f"https://archapi.zhcn.cc/api/v1/mirrorlist/?{'&'.join(region_list)}&protocol=https&protocol=http&ip_version=4&ip_version=6&use_mirror_status=on'", headers={'User-Agent': 'ArchInstall'}))
+ 	new_list = response.read().replace(b"#Server", b"Server")
  
  	if sort_order:
- 		new_list = sort_mirrorlist(new_list, sort_order=sort_order)
-@@ -147,6 +148,10 @@ def re_rank_mirrors(
- 
- def list_mirrors(sort_order :List[str] = ["https", "http"]) -> Dict[str, Any]:
- 	regions = {}
-+	regions = {
-+            "China": "https://mirrors.wsyu.edu.cn/loongarch/archlinux/$repo/os/$arch"
-+            }
-+	return regions
- 
- 	if storage['arguments']['offline']:
+@@ -152,7 +152,7 @@ def list_mirrors(sort_order :List[str] = ["https", "http"]) -> Dict[str, Any]:
  		with pathlib.Path('/etc/pacman.d/mirrorlist').open('rb') as fh:
+ 			mirrorlist = fh.read()
+ 	else:
+-		url = "https://archlinux.org/mirrorlist/?protocol=https&protocol=http&ip_version=4&ip_version=6&use_mirror_status=on"
++		url = "https://archapi.zhcn.cc/api/v1/mirrorlist/?protocol=https&protocol=http&ip_version=4&ip_version=6&use_mirror_status=on"
+ 
+ 		try:
+ 			response = urllib.request.urlopen(url)
 diff --git a/archinstall/lib/translationhandler.py b/archinstall/lib/translationhandler.py
 index 0d74f974..9895ce64 100644
 --- a/archinstall/lib/translationhandler.py
@@ -154,36 +141,13 @@ index 92efac49..59f4afc0 100644
 + {"abbr": "zh-CN", "lang": "Simplified Chinese", "translated_lang":"简体中文"},
   {"abbr": "zu", "lang": "Zulu"}]
 diff --git a/examples/guided.py b/examples/guided.py
-index e9240c03..88e26442 100644
+index e9240c03..3f095bf9 100644
 --- a/examples/guided.py
 +++ b/examples/guided.py
-@@ -43,7 +43,7 @@ def ask_user_questions():
- 	global_menu.enable('keyboard-layout')
- 
- 	# Set which region to download packages from during the installation
--	global_menu.enable('mirror-region')
-+	# global_menu.enable('mirror-region')
- 
- 	global_menu.enable('sys-language')
- 	global_menu.enable('sys-encoding')
-@@ -185,8 +185,8 @@ def perform_installation(mountpoint):
- 			time.sleep(1)
- 
- 		# Set mirrors used by pacstrap (outside of installation)
--		if archinstall.arguments.get('mirror-region', None):
--			archinstall.use_mirrors(archinstall.arguments['mirror-region'])  # Set the mirrors for the live medium
-+#		if archinstall.arguments.get('mirror-region', None):
-+#			archinstall.use_mirrors(archinstall.arguments['mirror-region'])  # Set the mirrors for the live medium
- 
- 		# Retrieve list of additional repositories and set boolean values appropriately
- 		if archinstall.arguments.get('additional-repositories', None) is not None:
-@@ -199,9 +199,24 @@ def perform_installation(mountpoint):
- 		if installation.minimal_installation(
- 				testing=enable_testing, multilib=enable_multilib, hostname=archinstall.arguments['hostname'],
- 				locales=[f"{archinstall.arguments['sys-language']} {archinstall.arguments['sys-encoding'].upper()}"]):
--			if archinstall.arguments.get('mirror-region') is not None:
--				if archinstall.arguments.get("mirrors", None) is not None:
--					installation.set_mirrors(archinstall.arguments['mirror-region'])  # Set the mirrors in the installation medium
+@@ -202,6 +202,20 @@ def perform_installation(mountpoint):
+ 			if archinstall.arguments.get('mirror-region') is not None:
+ 				if archinstall.arguments.get("mirrors", None) is not None:
+ 					installation.set_mirrors(archinstall.arguments['mirror-region'])  # Set the mirrors in the installation medium
 +
 +			# Add Chinese input method and fonts
 +			if archinstall.arguments.get("sys-language").startswith("zh_CN"):
@@ -198,10 +162,6 @@ index e9240c03..88e26442 100644
 +				archinstall.storage['installation_session'].arch_chroot('sed -i -e \'s/^#zh_CN.UTF-8/zh_CN.UTF-8/\' -e \'s/^#en_US.UTF-8/en_US.UTF-8/\' /etc/locale.gen')
 +				archinstall.storage['installation_session'].arch_chroot('locale-gen')
 +
-+			installation.set_hostname(archinstall.arguments['hostname'])
-+#			if archinstall.arguments.get('mirror-region') is not None:
-+#				if archinstall.arguments.get("mirrors", None) is not None:
-+#					installation.set_mirrors(archinstall.arguments['mirror-region'])  # Set the mirrors in the installation medium
  			if archinstall.arguments.get('swap'):
  				installation.setup_swap('zram')
  			if archinstall.arguments.get("bootloader") == "grub-install" and archinstall.has_uefi():
