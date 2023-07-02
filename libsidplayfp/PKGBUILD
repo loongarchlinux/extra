@@ -6,7 +6,7 @@
 
 pkgname=libsidplayfp
 pkgver=2.5.0
-pkgrel=1
+pkgrel=2
 pkgdesc='Library to play Commodore 64 music, derived from libsidplay2'
 url='https://github.com/libsidplayfp/libsidplayfp'
 arch=(loong64 x86_64)
@@ -20,11 +20,10 @@ sha256sums=('3a22751b72b1f5b36ba7d39af7f63947de201d02117a0e156153464cb89f0bd1')
 build() {
   cd $pkgname-$pkgver
   ./configure --prefix=/usr
+  sed -i -e 's/ -shared / -Wl,-O1,--as-needed\0/g' libtool
   make
 }
 
 package() {
   DESTDIR="$pkgdir" make -C $pkgname-$pkgver install
-  install -d "$pkgdir/usr/share/sidplayfp"
-  ln -t "$pkgdir/usr/share/sidplayfp" -s /usr/share/vice/C64/{kernal,basic,chargen}
 }

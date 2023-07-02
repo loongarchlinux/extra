@@ -1,30 +1,47 @@
-# Maintainer: Felix Yan <felixonmars@archlinux.org>
+# Maintainer: Maxime Gauduin <alucryd@archlinux.org>
+# Contributor: Felix Yan <felixonmars@archlinux.org>
 
 pkgname=python-pyjwt
-pkgver=2.6.0
-pkgrel=2
+pkgver=2.7.0
+pkgrel=1
 pkgdesc='JSON Web Token implementation in Python'
-arch=('any')
-url='https://github.com/jpadilla/pyjwt'
-license=('MIT')
-depends=('python')
-makedepends=('python-setuptools')
-checkdepends=('python-pytest' 'python-cryptography')
-source=("$pkgname-$pkgver.tar.gz::https://github.com/jpadilla/pyjwt/archive/$pkgver.tar.gz")
-sha512sums=('7b3d2aa5a12f51fb6b1137f939cfe6a08519b4d5b83f2c058dc31741e3ec6d7011844c7b426aa44aacf6570f3907a027ca1fe989a0c232e285e158a217f95557')
+arch=(any)
+url=https://github.com/jpadilla/pyjwt
+license=(MIT)
+depends=(python)
+makedepends=(
+  git
+  python-build
+  python-installer
+  python-setuptools
+  python-wheel
+)
+checkdepends=(
+  python-cryptography
+  python-pytest
+)
+_tag=d7c54dbebdab2ae17f7948fd4432b15e1bb82852
+source=(git+https://github.com/jpadilla/pyjwt.git#tag=${_tag})
+b2sums=(SKIP)
+
+pkgver() {
+  cd pyjwt
+  git describe --tags
+}
 
 build() {
-  cd pyjwt-$pkgver
-  python setup.py build
+  cd pyjwt
+  python -m build -wn
 }
 
 check() {
-  cd pyjwt-$pkgver
+  cd pyjwt
   pytest
 }
 
 package() {
-  cd pyjwt-$pkgver
-  python setup.py install --root="$pkgdir" -O1
-  install -Dm644 LICENSE -t "$pkgdir"/usr/share/licenses/$pkgname/
+  python -m installer -d "${pkgdir}" pyjwt/dist/*.whl
+  install -Dm 644 pyjwt/LICENSE -t "${pkgdir}"/usr/share/licenses/python-pyjwt/
 }
+
+# vim: ts=2 sw=2 et:

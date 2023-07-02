@@ -6,7 +6,7 @@
 
 pkgname=python-sphinx
 pkgver=7.0.1
-pkgrel=1
+pkgrel=2
 pkgdesc='Python documentation generator'
 arch=('any')
 url=http://www.sphinx-doc.org/
@@ -51,6 +51,10 @@ validpgpkeys=(
 build() {
   cd Sphinx-$pkgver
   python -m build --wheel --skip-dependency-check --no-isolation
+
+  mkdir -p tempinstall
+  bsdtar -xf dist/*.whl -C tempinstall
+  PYTHONPATH="$PWD/tempinstall" make -C doc man
 }
 
 check() {
@@ -61,6 +65,7 @@ check() {
 package() {
   cd Sphinx-$pkgver
   python -m installer --destdir="$pkgdir" dist/*.whl
+  install -Dt "$pkgdir"/usr/share/man/man1 doc/_build/man/sphinx-*.1
 
   # Symlink license file
   local site_packages=$(python -c "import site; print(site.getsitepackages()[0])")

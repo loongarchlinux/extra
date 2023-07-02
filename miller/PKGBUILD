@@ -1,7 +1,7 @@
 # Maintainer: George Rawlinson <grawlinson@archlinux.org>
 
 pkgname=miller
-pkgver=6.7.0
+pkgver=6.8.0
 pkgrel=1
 pkgdesc='Name-indexed data processing tool'
 arch=('loong64' 'x86_64')
@@ -10,9 +10,9 @@ license=('BSD')
 depends=('glibc')
 makedepends=('go' 'git')
 options=('!lto')
-_commit='79265e0fcea2f98779329aac71a8177a09a61e07'
+_commit='af17f681b57395a009df62a5b378d10079377eba'
 source=("$pkgname::git+$url#commit=$_commit")
-md5sums=('SKIP')
+b2sums=('SKIP')
 
 pkgver() {
   cd "$pkgname"
@@ -24,6 +24,7 @@ prepare() {
   cd "$pkgname"
 
   # download dependencies
+  export GOPATH="${srcdir}"
   go mod download
 }
 
@@ -34,13 +35,15 @@ build() {
   export CGO_CPPFLAGS="${CPPFLAGS}"
   export CGO_CFLAGS="${CFLAGS}"
   export CGO_CXXFLAGS="${CXXFLAGS}"
+  export GOPATH="${srcdir}"
 
   go build -v \
-    -trimpath \
     -buildmode=pie \
     -mod=readonly \
     -modcacherw \
-    -ldflags "-linkmode external -extldflags ${LDFLAGS}" \
+    -ldflags "-compressdwarf=false \
+    -linkmode external \
+    -extldflags ${LDFLAGS}" \
     ./cmd/mlr
 }
 

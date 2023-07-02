@@ -1,4 +1,4 @@
-#!/usr/bin/electron
+#!/usr/bin/electron22
 
 const name = 'caprine';
 

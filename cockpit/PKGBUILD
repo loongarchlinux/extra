@@ -5,20 +5,20 @@
 
 pkgbase=cockpit
 pkgname=(cockpit cockpit-packagekit cockpit-pcp cockpit-storaged)
-pkgver=292
+pkgver=295
 pkgrel=1
 pkgdesc='A systemd web based user interface for Linux servers'
 arch=('loong64' 'x86_64')
 url='https://cockpit-project.org/'
 license=(LGPL)
-makedepends=(krb5 libssh accountsservice perl-json perl-locale-po json-glib glib-networking
-             git intltool gtk-doc gobject-introspection networkmanager libgsystem xmlto npm pcp
-             gendesk)
+makedepends=(krb5 libssh json-glib glib-networking
+             git intltool gtk-doc gobject-introspection networkmanager xmlto npm pcp
+             gendesk python-installer python-wheel python-build python-pip)
 source=("https://github.com/cockpit-project/cockpit/releases/download/$pkgver/cockpit-$pkgver.tar.xz"
         "cockpit.pam"
         "cockpit-ws.sysuser.conf"
         "cockpit-wsinstance.sysuser.conf")
-sha256sums=('760fe2c37f877abc6ef8853213c393e6d25b43f358d3133af7c8de27cb53cae4'
+sha256sums=('fc8fdbef4abfd1517c69cfc6c23ad2a3293fb71f28b85b50219046422ece8eb6'
             'a979e236681c6a06906937cf0f012e976347af5d6d7e7ae04a11acb01cc2689d'
             '1ad9dad75858264778bd94799b60c651f7cc1c7f7fa1c54622174303e639287a'
             '46ee8ecad7bc97ba588ab9471dde76e41c00daf40658902425626c3a1938b438')
@@ -40,7 +40,8 @@ build() {
     --disable-dependency-tracking \
     --disable-silent-rules \
     --with-cockpit-user=cockpit-ws \
-    --with-cockpit-ws-instance-user=cockpit-wsinstance
+    --with-cockpit-ws-instance-user=cockpit-wsinstance \
+    --enable-pybridge
   make all
 
   gendesk -n \
@@ -54,8 +55,8 @@ build() {
 }
 
 package_cockpit() {
-  depends=(krb5 libssh accountsservice perl-json perl-locale-po json-glib glib-networking
-           libpwquality openssl kexec-tools which)
+  depends=(krb5 libssh json-glib glib-networking
+           libpwquality openssl kexec-tools python)
   backup=('etc/pam.d/cockpit')
   optdepends=("cockpit-pcp: reading performance metrics"
               "cockpit-storaged: manage storage"

@@ -2,15 +2,15 @@
 
 pkgname='opensearch-dashboards-query-workbench-plugin'
 _pluginname='query-workbench-dashboards-plugin'
-pkgver=2.6.0.0
-_dashboardsver=2.6.0
+pkgver=2.8.0.0
+_dashboardsver=2.8.0
 pkgrel=1
 pkgdesc='OpenSearch Dashboards Query Workbench Plugin'
 url='https://opensearch.org/docs/latest/query-workbench/index/'
 arch=('loong64' 'x86_64')
 license=('Apache')
 depends=("opensearch-dashboards=${_dashboardsver}")
-makedepends=('yarn' 'python' 'git')
+makedepends=('yarn' 'npm' 'python' 'git')
 options=('!strip' 'emptydirs')
 source=(
   "git+https://github.com/opensearch-project/dashboards-query-workbench.git#tag=${pkgver}"
@@ -25,6 +25,9 @@ prepare() {
   sed -i "s/    \"node\": \"[0-9\.]*\",/    \"node\": \"${nodeVersion:1}\",/" \
     "OpenSearch-Dashboards/package.json" \
     "dashboards-query-workbench/package.json"
+  # https://github.com/opensearch-project/OpenSearch-Dashboards/issues/4260
+  cd "OpenSearch-Dashboards"
+  git cherry-pick -n -m1 "986eb8c82a6be22bfb838a7dc1db997905737c88"
 }
 
 build() {
@@ -34,11 +37,10 @@ build() {
   yarn build --skip-archive
 }
 
-# TODO: Fix tests
-#check() {
-#  cd "OpenSearch-Dashboards/plugins/${_pluginname}"
-#  NODE_PATH=../../node_modules yarn test:jest
-#}
+check() {
+  cd "OpenSearch-Dashboards/plugins/${_pluginname}"
+  yarn test
+}
 
 package() {
   cd "${srcdir}/OpenSearch-Dashboards/plugins/${_pluginname}"

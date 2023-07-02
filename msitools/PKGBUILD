@@ -1,16 +1,16 @@
-# Maintainer: Sam L. Yes <samlukeyes123 at gmail dot com>
+# Contributor: Sam L. Yes <samlukeyes123 at gmail dot com>
 # Contributor: Andre Klitzing <aklitzing () gmail () com>
 
 pkgname=msitools
-pkgver=0.101
-pkgrel=6
+pkgver=0.102
+pkgrel=1
 pkgdesc='Set of programs to inspect and build Windows Installer (.MSI) files'
 arch=('loong64' 'x86_64')
 url='https://wiki.gnome.org/msitools'
 license=('LGPL' 'GPL')
 depends=('libgsf' 'gcab' 'libxml2')
 makedepends=('git' 'intltool' 'vala' 'meson' 'gobject-introspection' 'bash-bats')
-_commit='17ebe3af1ea2a4495d9ed5159fefd8a98291dc60'
+_commit=e0aa918bbed4c7593772db2a5b62ad902d03b0ae  # tags/v0.102^0
 source=(
   "$pkgname::git+https://gitlab.gnome.org/GNOME/msitools.git#commit=$_commit"
   'skip-failing-test.patch'
@@ -25,40 +25,33 @@ b2sums=('SKIP'
 pkgver() {
   cd "$pkgname"
 
-  git describe --tags | sed 's/^v//'
+  git describe --tags | sed 's/^v//;s/[^-]*-g/r&/;s/-/+/g'
 }
 
 prepare() {
   cd "$pkgname"
 
-  # glibc 2.71 patch
-  git cherry-pick --no-commit 18bc0b2ee79438b8e35c0769165a9a105e3792a0
-
-  # make msidiff and msidump executable 
-  git cherry-pick --no-commit 25c4353cf173cddeb76c0a2dd6621bcb753cabf8
-
   # skip failing test
-  patch -p1 -i "$srcdir/skip-failing-test.patch"
+  git apply -3 "$srcdir/skip-failing-test.patch"
 
   # remove -dirty suffix from pkgver
-  patch -p1 -i "$srcdir/remove-git-dirty-suffix.patch"
+  git apply -3 "$srcdir/remove-git-dirty-suffix.patch"
 
   # use system bats (bash-bats)
-  patch -p1 -i "$srcdir/use-system-bats.patch"
+  git apply -3 "$srcdir/use-system-bats.patch"
 }
 
 build() {
   arch-meson "$pkgname" build
-
-  ninja -C build
+  meson compile -C build
 }
 
 check() {
-  meson test -C build
+  meson test -C build --print-errorlogs
 }
 
 package() {
-  DESTDIR="$pkgdir" meson install -C build
+  meson install -C build --destdir "$pkgdir"
 
   # license
   install -vDm644 -t "$pkgdir/usr/share/licenses/$pkgname" "$pkgname/copyright"

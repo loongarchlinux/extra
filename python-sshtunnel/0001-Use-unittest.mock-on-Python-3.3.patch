@@ -1,0 +1,40 @@
+From 7328a71efc581c82ec232516ef94e2fc1692c6b3 Mon Sep 17 00:00:00 2001
+From: Jelle van der Waa <jelle@vdwaa.nl>
+Date: Sun, 25 Jun 2023 17:06:43 +0200
+Subject: [PATCH] Use unittest.mock on Python > 3.3
+
+---
+ tests/requirements.txt  | 2 +-
+ tests/test_forwarder.py | 5 ++++-
+ 2 files changed, 5 insertions(+), 2 deletions(-)
+
+diff --git a/tests/requirements.txt b/tests/requirements.txt
+index 6a91ea4..c8b4f88 100644
+--- a/tests/requirements.txt
++++ b/tests/requirements.txt
+@@ -1,5 +1,5 @@
+ coveralls
+-mock
++mock; python_version < '3.3'
+ pytest
+ pytest-cov
+ pytest-xdist
+diff --git a/tests/test_forwarder.py b/tests/test_forwarder.py
+index 40662d0..0e59f0b 100644
+--- a/tests/test_forwarder.py
++++ b/tests/test_forwarder.py
+@@ -14,7 +14,10 @@ from os import path, linesep
+ from functools import partial
+ from contextlib import contextmanager
+ 
+-import mock
++try:
++    from unittest import mock
++except ImportError:
++    import mock
+ import paramiko
+ import sshtunnel
+ import shutil
+-- 
+2.41.0
+

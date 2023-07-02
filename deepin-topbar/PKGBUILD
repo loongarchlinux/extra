@@ -3,24 +3,31 @@
 
 pkgname=deepin-topbar
 pkgver=0.7.0
-pkgrel=1
+pkgrel=2
 pkgdesc="This is topbar for Deepin"
 arch=('loong64' 'x86_64')
 url="https://github.com/kirigayakazushin/deepin-topbar"
 license=('GPL')
 depends=('deepin-network-utils' 'deepin-qt5integration' 'deepin-qt-dbus-factory' 'libdbusmenu-qt5'
-         'procps-ng')
-makedepends=('cmake' 'qt5-tools')
-source=("$pkgname-$pkgver.tar.gz::https://github.com/kirigayakazushin/deepin-topbar/archive/$pkgver.tar.gz")
-sha512sums=('30d0b0df25c5ceef626b079c1113d3915532e74c2392f964d5438b374aa5e3d2adedbc9cc3106f8aa23c822539310260f0d5a7d28392181c6b30bfb669dbbb9f')
+         'libprocps' 'libxtst')
+makedepends=('cmake' 'ninja' 'qt5-tools')
+source=("$pkgname-$pkgver.tar.gz::https://github.com/kirigayakazushin/deepin-topbar/archive/$pkgver.tar.gz"
+         fix-build.patch)
+sha512sums=('30d0b0df25c5ceef626b079c1113d3915532e74c2392f964d5438b374aa5e3d2adedbc9cc3106f8aa23c822539310260f0d5a7d28392181c6b30bfb669dbbb9f'
+            '6bacd6be8948afa46f84a42c66442fada74108ab1e86fcc95ede719337b260ad95dbc2282e0f88157a60cb49f7e0e8e9694ca0b619e21780505f166cdaecdb8f')
+
+prepare() {
+  cd $pkgname-$pkgver
+  patch -p1 -i ../fix-build.patch
+}
 
 build() {
   cd $pkgname-$pkgver
-  cmake . -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_INSTALL_LIBDIR=lib
-  make
+  cmake . -GNinja -DCMAKE_INSTALL_PREFIX=/usr
+  ninja
 }
 
 package() {
   cd $pkgname-$pkgver
-  make DESTDIR="$pkgdir" install
+  DESTDIR="$pkgdir" ninja install
 }

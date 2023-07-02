@@ -1,0 +1,43 @@
+# Maintainer: Maxime Gauduin <alucryd@archlinux.org>
+# Contributor: Donald Carr <d@chaos-reins.com>
+
+pkgname=system76-scheduler
+pkgver=2.0.1
+pkgrel=1
+pkgdesc='Auto-configure CFS and process priorities for improved desktop responsiveness'
+arch=(loong64 x86_64)
+url=https://github.com/pop-os/system76-scheduler
+license=(MPL2)
+depends=(
+  bcc-tools
+  glibc
+  libpipewire
+)
+makedepends=(
+  clang
+  git
+  lld
+  rust
+  just
+  linux-headers
+)
+backup=(
+  etc/system76-scheduler/config.kdl
+  etc/system76-scheduler/process-scheduler/pop_os.kdl
+)
+_tag=837da2c9aac7a8f665dded654dcf2d6672b75904
+source=(git+https://github.com/pop-os/system76-scheduler.git#tag=${_tag})
+b2sums=(SKIP)
+
+build() {
+  cd system76-scheduler
+  export CC=clang
+  just execsnoop=/usr/share/bcc/tools/execsnoop build-release
+}
+
+package() {
+  cd system76-scheduler
+  just rootdir="${pkgdir}" install
+}
+
+# vim: ts=2 sw=2 et:

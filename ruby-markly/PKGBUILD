@@ -1,7 +1,7 @@
 # Maintainer: Felix Yan <felixonmars@archlinux.org>
 
 pkgname=ruby-markly
-pkgver=0.7.0
+pkgver=0.8.1
 _cmark_gfm_commit=766f161ef6d61019acf3a69f5099489e7d14cd49
 pkgrel=1
 pkgdesc='CommonMark parser and renderer. Written in C, wrapped in Ruby.'
@@ -9,19 +9,20 @@ arch=(loong64 x86_64)
 url='https://github.com/ioquatix/markly'
 license=(MIT)
 depends=(ruby)
-checkdepends=(ruby-rspec ruby-rake-compiler)
+checkdepends=(ruby-bake ruby-bake-test ruby-bake-modernize ruby-build-files ruby-covered ruby-sus
+              ruby-kramdown ruby-redcarpet)
 options=(!emptydirs)
 source=(https://github.com/ioquatix/markly/archive/v$pkgver/$pkgname-$pkgver.tar.gz
         https://github.com/github/cmark-gfm/archive/$_cmark_gfm_commit/cmark-gfm-$_cmark_gfm_commit.tar.gz)
-sha256sums=('95171c4bbdd621c01e133c5c813343a38d818fef0204651fbe097b9867d288c4'
+sha256sums=('0ecb8f8dbab1b321e63afcd69dc5889b747a0d265c691fb8947e8a8fc8966805'
             'e95a1300cfe4c5b5ad68af6a77855df823b5d813334910a41991af0f70575d66')
 
 prepare() {
   cd markly-$pkgver
   rmdir cmark-gfm
   ln -s ../cmark-gfm-$_cmark_gfm_commit cmark-gfm
-  sed 's/~>/>=/' -i markly.gemspec
-  sed -i "/task 'test:unit' => :compile/d" Rakefile
+  sed 's/~>/>=/;/signing_key/d' -i markly.gemspec
+  sed '/bake-gem/d;/utopia-project/d' -i gems.rb
 }
 
 build() {
@@ -53,7 +54,7 @@ build() {
 check() {
   local _gemdir="$(gem env gemdir)"
   cd markly-$pkgver
-  GEM_HOME="tmp_install/$_gemdir" rake test
+  GEM_HOME="tmp_install/$_gemdir" sus
 }
 
 package() {

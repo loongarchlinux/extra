@@ -2,7 +2,7 @@
 # Contributor: Clément DEMOULINS <clement@archivel.fr>
 pkgname=texstudio
 pkgver=4.5.2
-pkgrel=1
+pkgrel=3
 pkgdesc="Integrated writing environment for creating LaTeX documents"
 arch=('loong64' 'x86_64')
 url="http://texstudio.sourceforge.net/"
@@ -11,6 +11,7 @@ depends=('poppler-qt6' 'qt6-svg' 'libxkbcommon-x11' 'hicolor-icon-theme' 'hunspe
          'qt6-declarative' 'qt6-5compat')
 makedepends=('qt6-tools' 'mercurial' 'imagemagick' 'librsvg' 'ninja' 'cmake')
 optdepends=('evince: pdf reader'
+            'languagetool: spelling and grammar checking'
             'okular: alternate pdf reader')
 replaces=('texmakerx')
 source=("$pkgname-$pkgver.tar.gz::https://github.com/texstudio-org/texstudio/archive/${pkgver}.tar.gz"
@@ -45,4 +46,7 @@ package() {
             "${pkgdir}"/usr/share/icons/hicolor/scalable/apps/texstudio.svg \
             "${pkgdir}"/usr/share/icons/hicolor/${res}/apps/texstudio.png
     done
+
+    # Remove the included dictionaries in favor of hunspell (FS#78778)
+    rm -rf "${pkgdir}"/usr/share/texstudio/{*.dic,*.aff}
 }

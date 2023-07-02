@@ -2,14 +2,25 @@
 
 _name=django_compressor
 pkgname=python-django-compressor
-pkgver=4.3.1
-pkgrel=2
+pkgver=4.4
+pkgrel=1
 pkgdesc="Compresses linked and inline javascript or CSS into a single cached file"
 arch=(any)
 url="https://github.com/django-compressor/django-compressor"
 license=(Apache BSD MIT)
-depends=(python-django-appconf python-rcssmin python-rjsmin)
-makedepends=(python-build python-installer python-setuptools python-wheel)
+depends=(
+  python
+  python-django
+  python-django-appconf
+  python-rcssmin
+  python-rjsmin
+)
+makedepends=(
+  python-build
+  python-installer
+  python-setuptools
+  python-wheel
+)
 checkdepends=(
   python-beautifulsoup4
   python-brotli
@@ -31,15 +42,13 @@ optdepends=(
   'python-lxml: for compressor.parser.LxmlParser'
 )
 source=(https://files.pythonhosted.org/packages/source/${_name::1}/$_name/$_name-$pkgver.tar.gz)
-sha512sums=('285dfd21f4b2e25788151f1ac652cbd1302958454872769c6a0d88f5b003de75e93471ec50efdea37388f3050e25a5b4063261d4f635dfcc8fd4edf27c57aa43')
-b2sums=('8048c55d3bc62e15c8093d8feb134ff87b05188c0ad755e30c76b090a9717dd3796f6b4efc32ec7bd502051b1bc0b3d68332dae728acd5b7a0b9c2158016af71')
+sha512sums=('54a3443f8900aca89534bb792f6e1d7d46ec9cec81c2bb2e019ea2a0e861845805d187748cc12531209be25c3d9f5dd3cd0f019fb9f439c9b1e7ad2a5785c6c8')
+b2sums=('ef6af4228067c66c522c38b54d672d21d275cbad2c11aad419388d57525da6cd2a6a4f3fe8c7e00cc1406926ee05534f71f438ea48275ba7913fd238306e3d7e')
 
 prepare() {
   cd $_name-$pkgver
-  # version pinning is just bad...
+  # we don't support version pinning: https://github.com/django-compressor/django-compressor/issues/1195
   sed -e 's/rcssmin ==/rcssmin >=/;s/rjsmin ==/rjsmin >=/' -i setup.py
-  # fix test using superseded jinja extension: https://github.com/django-compressor/django-compressor/issues/1139
-  sed '/jinja2.ext.with_/d' -i compressor/tests/test_offline.py
 }
 
 build() {

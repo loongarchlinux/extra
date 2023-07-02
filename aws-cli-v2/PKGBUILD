@@ -3,7 +3,7 @@
 # Contributor: David Birks <david@birks.dev>
 
 pkgname=aws-cli-v2
-pkgver=2.11.23
+pkgver=2.12.6
 pkgrel=1
 pkgdesc='Unified command line interface for Amazon Web Services (version 2)'
 arch=(any)
@@ -20,12 +20,14 @@ conflicts=(aws-cli)
 source=("https://awscli.amazonaws.com/awscli-$pkgver.tar.gz"{,.sig}
         build-ac.index-in-tmp.diff
         fix-env.diff
-        "$pkgname-tz-fix.patch::https://github.com/aws/aws-cli/pull/7762.patch")
-sha256sums=('a359834e1f75b13ae7d0896fab8bb7a3f78a4facd7335d57f5254fb413ca3f55'
+        "$pkgname-tz-fix.patch::https://github.com/aws/aws-cli/pull/7762.patch"
+        ruamel-yaml-0.17.22.diff)
+sha256sums=('f9759db394a2c6eb31fb12f7a6475b8ee60cecf0c2e62bd22991a74856f1f7d0'
             'SKIP'
             '0267e41561ab2c46a97ebfb024f0b047aabc9e6b9866f204b2c1a84ee5810d63'
             '893d61d7e958c3c02bfa1e03bf58f6f6abd98849d248cc661f1c56423df9f312'
-            '4fc614b8550d7363bb2d578c6b49326c9255203eb2f933fd0551f96ed5fb1f30')
+            '4fc614b8550d7363bb2d578c6b49326c9255203eb2f933fd0551f96ed5fb1f30'
+            '4f05e77fe667aa8a5bab643dc6b9888045c7646913ed6b999952150b60651e90')
 validpgpkeys=(
   'FB5DB77FD5C118B80511ADA8A6310ACC4672475C'  # the key mentioned on https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html
 )
@@ -44,6 +46,12 @@ prepare() {
 
   # Fix possible test failure with a non-UTC time zone (https://bugs.archlinux.org/task/77919)
   patch -Np1 -i ../$pkgname-tz-fix.patch
+
+  # Fix tests with ruamel.yaml >= 0.17.22
+  # From https://sourceforge.net/p/ruamel-yaml/code/ci/0.17.22/tree/CHANGES,
+  # "plain scalars: put single words longer than width on a line of their own, instead of after the previous line"
+  # XXX: I should open a pull request, but I am hesitant as many upstream pull requests are just ignored
+  patch -Np1 -i ../ruamel-yaml-0.17.22.diff
 }
 
 build() {

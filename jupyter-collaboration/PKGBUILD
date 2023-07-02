@@ -1,0 +1,33 @@
+# Maintainer: Antonio Rojas <arojas@archlinux.org>
+
+_pyname=jupyter_collaboration
+pkgname=${_pyname/_/-}
+pkgver=1.0.1
+pkgrel=1
+pkgdesc='A Jupyter Server Extension Providing Support for Y Documents'
+arch=(any)
+url='https://jupyterlab-realtime-collaboration.readthedocs.io/en/latest/'
+license=(custom)
+depends=(jupyter-server python-ypy-websocket jupyter-server-ydoc)
+makedepends=(python-build python-installer python-hatchling python-hatch-nodejs-version python-hatch-jupyter-builder)
+checkdepends=(python-pytest-jupyter python-pytest-timeout python-pytest-asyncio)
+source=(https://pypi.io/packages/source/${_pyname:0:1}/$_pyname/$_pyname-$pkgver.tar.gz)
+sha256sums=('71fec1a45e964a81d02505b42177690801937645fd44d599e09a2f4c7bdc3e1a')
+
+build() {
+  cd $_pyname-$pkgver
+  python -m build --wheel --no-isolation --skip-dependency-check
+}
+
+check() {
+  cd $_pyname-$pkgver
+  pytest -v
+}
+
+package() {
+  cd $_pyname-$pkgver
+  python -m installer --destdir="$pkgdir" dist/*.whl
+  mv "$pkgdir"{/usr,}/etc
+
+  install -Dm644 LICENSE -t "$pkgdir"/usr/share/licenses/$pkgname
+}

@@ -1,47 +1,53 @@
 # Maintainer: Daniel M. Capella <polyzen@archlinux.org>
 
+_name=svelte-language-tools
 pkgname=svelte-language-server
-pkgver=0.15.10
+pkgver=0.15.13
 pkgrel=1
 pkgdesc='Language server for Svelte'
+arch=('any')
 url=https://github.com/sveltejs/language-tools/tree/master/packages/language-server
 license=('MIT')
-arch=('any')
 depends=('nodejs')
-makedepends=('yarn')
+makedepends=('git' 'npm' 'pnpm')
 conflicts=("nodejs-$pkgname")
 replaces=("nodejs-$pkgname")
-source=("https://github.com/sveltejs/language-tools/archive/language-server-$pkgver/$pkgname-$pkgver.tar.gz")
-b2sums=('f4dccd3a1b0d2d162a4d50c88035e7dee6cf6a3f70b9cfcb7e819643b327bd2ff796a7a1eb650d0fdea0a01668c206847f7d51d557bed70558b22555ff41827c')
+source=("$_name::git+https://github.com/sveltejs/language-tools.git#tag=language-server-$pkgver")
+b2sums=('SKIP')
+
+prepare() {
+  cd $_name
+  pnpm install --frozen-lockfile
+}
 
 build() {
-  cd language-tools-language-server-$pkgver
-  yarn --frozen-lockfile
-  yarn workspace svelte2tsx build
-  cd packages/language-server
-  yarn build
+  cd $_name/packages/svelte2tsx
+  pnpm build
+  cd ../language-server
+  pnpm build
 }
 
 check() {
-  cd language-tools-language-server-$pkgver/packages/language-server
-  yarn test
+  cd $_name/packages/language-server
+  pnpm test
 }
 
 package() {
-  install -d "$pkgdir"/usr/{bin,lib/node_modules/$pkgname}
-  ln -s ../lib/node_modules/$pkgname/bin/server.js \
-    "$pkgdir"/usr/bin/svelteserver
+  local _npmdir=/usr/lib/node_modules/$pkgname
+  install -d "$pkgdir"/{/usr/bin,$_npmdir}
+  ln -s $_npmdir/bin/server.js "$pkgdir"/usr/bin/svelteserver
 
-  cd language-tools-language-server-$pkgver
+  cd $_name
   install -Dm644 -t "$pkgdir"/usr/share/licenses/$pkgname LICENSE
 
-  # Emulate `npm prune --production`
-  mv package.json{,.bak}
   cd packages/language-server
-  yarn --frozen-lockfile --production
-  mv ../../package.json{.bak,}
+  # Prune unnecessary packages
+  cp package.json{,.bak}
+  sed -i 's/workspace:~/*/' package.json
+  rm -r node_modules
+  npm install --production
+  mv package.json{.bak,}
 
-  cp -r bin dist node_modules package.json \
-    "$pkgdir"/usr/lib/node_modules/$pkgname
+  cp -r bin dist node_modules package.json "$pkgdir"/$_npmdir
   install -Dm644 -t "$pkgdir"/usr/share/doc/$pkgname README.md
 }

@@ -2,7 +2,7 @@
 
 pkgname=gnu-efi
 pkgver=3.0.17
-pkgrel=2
+pkgrel=3
 pkgdesc="Develop EFI applications using the GNU toolchain and the EFI development environment"
 arch=(loong64 x86_64)
 url="https://sourceforge.net/projects/gnu-efi/"
@@ -30,16 +30,11 @@ build() {
   LDFLAGS="${LDFLAGS//-Wl/}"
   LDFLAGS="${LDFLAGS//,/ }"
   make
-  make -C lib
-  make -C gnuefi
-  make -C inc
-  make -C apps
 }
 
 package() {
   cd $pkgname-$pkgver
   make INSTALLROOT="$pkgdir" PREFIX=/usr install
-  install -vDm 644 apps/*.efi -t "$pkgdir/usr/share/$pkgname/apps/$CARCH/"
   install -vDm 644 README.efilib -t "$pkgdir/usr/share/licenses/$pkgname/"
   install -vDm 644 {ChangeLog,README.{gnuefi,git,elilo}} -t "$pkgdir/usr/share/doc/$pkgname/"
 }

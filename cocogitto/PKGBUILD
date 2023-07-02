@@ -1,9 +1,9 @@
-# Maintainer: Caleb Maclennan <caleb@alerque.com
+# Maintainer: Caleb Maclennan <caleb@alerque.com>
 # Maintainer: Orhun Parmaksız <orhun@archlinux.org>
 
 pkgname=cocogitto
-_bin=cog
-pkgver=5.3.1
+_pkgname=cog
+pkgver=5.4.0
 pkgrel=2
 pkgdesc='Set of CLI tools for the conventional commit and semver specifications'
 arch=(loong64 x86_64)
@@ -16,7 +16,7 @@ depends=(git
 makedepends=(cargo)
 _archive="$pkgname-$pkgver"
 source=("$url/archive/$pkgver/$_archive.tar.gz")
-sha256sums=('ac6847ce55ba284184d0792afb53c6579da415600bc1b01c180dd87ad34597d0')
+sha256sums=('93065217191d3e1739e6bca78b0b6de7d7dd1b5334229702fff9e84162060feb')
 
 prepare() {
 	cd "$_archive"
@@ -28,17 +28,12 @@ build() {
 	cd "$_archive"
 	CFLAGS+=" -ffat-lto-objects"
 	cargo build --frozen --release
-	local compgen="target/release/$_bin generate-completions"
-	$compgen bash > "completions/$_bin"
-	$compgen fish > "completions/$_bin.fish"
-	$compgen zsh  > "completions/_$_bin"
-	local mangen="target/release/$_bin generate-manpage"
-	$mangen cog > "man/$_bin.1"
-	for cmd in 'check' 'commit' 'edit' 'log' 'verify' \
-		'changelog' 'bump' 'init' 'install-hook' \
-		'generate-completions'; do
-		$mangen $cmd > "man/$_bin-$cmd.1"
-	done
+	local compgen="target/release/$_pkgname generate-completions"
+	local mangen="target/release/$_pkgname generate-manpages"
+	$compgen bash > "completions/$_pkgname"
+	$compgen fish > "completions/$_pkgname.fish"
+	$compgen zsh  > "completions/_$_pkgname"
+	$mangen man/
 }
 
 check() {
@@ -49,11 +44,11 @@ check() {
 
 package() {
 	cd "$_archive"
-	install -Dm0755 -t "$pkgdir/usr/bin/" "target/release/$_bin"
-	install -Dm0644 -t "$pkgdir/usr/share/bash-completion/completions/" "completions/$_bin"
-	install -Dm0644 -t "$pkgdir/usr/share/fish/vendor_completions.d/" "completions/$_bin.fish"
-	install -Dm0644 -t "$pkgdir/usr/share/zsh/site-functions/" "completions/_$_bin"
+	install -Dm0755 -t "$pkgdir/usr/bin/" "target/release/$_pkgname"
+	install -Dm0644 -t "$pkgdir/usr/share/bash-completion/completions/" "completions/$_pkgname"
+	install -Dm0644 -t "$pkgdir/usr/share/fish/vendor_completions.d/" "completions/$_pkgname.fish"
+	install -Dm0644 -t "$pkgdir/usr/share/zsh/site-functions/" "completions/_$_pkgname"
 	install -Dm0644 -t "$pkgdir/usr/share/doc/$pkgname/" README.md
 	install -Dm0644 -t "$pkgdir/usr/share/licenses/$pkgname/" LICENSE
-	find man/ -type f -exec install -Dm0644 -t "$pkgdir/usr/share/man/man1" {} \;
+	install -Dm0644 -t "$pkgdir/usr/share/man/man1" man/*.1
 }

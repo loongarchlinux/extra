@@ -3,36 +3,42 @@
 # Contributor: Christopher Arndt <aur -at- chrisarndt -dot- de>
 
 pkgname=python-rtmidi
-pkgver=1.4.9
-pkgrel=5
+pkgver=1.5.4
+pkgrel=1
 pkgdesc='Python bindings for the MIDI I/O library RtMidi'
 arch=('loong64' 'x86_64')
 url='https://github.com/SpotlightKid/python-rtmidi'
 license=('MIT')
-depends=('python' 'rtmidi')
+depends=(
+  'glibc'
+  'gcc-libs'
+  'python'
+)
 makedepends=(
   'git'
+  'python-build'
   'python-installer'
-  'python-wheel'
-  'python-setuptools'
+  'meson-python'
+  'ninja'
   'cython'
   'alsa-lib'
   'jack'
   'python-sphinx'
+  'python-myst-parser'
 )
-_commit='0a5aa06d46485cb2dab836bd20205f60efb95eed'
+_commit='d2459ae466554999e5648cb1c9d4c32a9bf77f81'
 source=(
   "$pkgname::git+$url#commit=$_commit"
-  'unbundle-rtmidi.patch'
+  'github.com-SpotlightKid-rtmidi::git+https://github.com/SpotlightKid/rtmidi'
+  'use-system-ninja.patch'
   'remove-xdg-open.patch'
-  'remove-dev-suffix.patch'
   'skip-broken-clean.patch'
 )
 b2sums=('SKIP'
-        'b27c438fa93c00fd458fd8083302838ad0ca96c09c89f0993c6fdc09681f8eccddca53445925c1b437860faa488115d2bc33076a202a5dd730f44cef298c9831'
-        'ad41a0730e09cee2c0729c7b79e497187bf6cf8fd603b3dbe4af061859a14e868d1522c746bee17c1a9587709a8cba38dd573bf876dff0f47d82dbe1876ffb2f'
-        '083a035e09ac1338c6a96841ec8c360f1bf50b2a568ab39e3d388ef4205b25eb5e85062af6fb26e7ca19254d20e2ead45b3e8333695546790c85308a29f05ac5'
-        '8a15a1b6a977bb2ab3bd642cefb5e136b7f76f7784a8a3d33678ee892771969e3fb20039b8de4850007dc166ef9cde9445bf66a475eb577f25a9edf947828338')
+        'SKIP'
+        '89690e60c1a5fd983e6f08a83957e100b361a2ee7e560194fa2f09989712084c36a2e3ae5b7196a1a5ab3e3d335b783ffc4bb58aa31888a55aac7495fa2ec2a1'
+        '2c030e9d3c7b392a8a041165418b8012d0d5372217b515eb764943eefeb4ad7fa49e7fc462e53004106e8cbbf6ce9beb088603b58478812c870fccea6a723289'
+        'a5fa68ddcac7e5e0fcbfd05cfaf9fe0279f5f84fac6daca6a426a27c42514aabd20d9871da4b3a073f6add2f3431c410fc0155d64639d332a1616a3971c6cb91')
 
 pkgver() {
   cd "$pkgname"
@@ -43,8 +49,10 @@ pkgver() {
 prepare() {
   cd "$pkgname"
 
-  # use system rtmidi
-  patch -p1 -i "$srcdir/unbundle-rtmidi.patch"
+  # use forked/vendored rtmidi
+  git submodule init
+  git config submodule.src/rtmidi.url "$srcdir/github.com-SpotlightKid-rtmidi"
+  git -c protocol.file.allow=always submodule update
 
   # remove xdg-open from Makefile
   patch -p1 -i "$srcdir/remove-xdg-open.patch"
@@ -52,15 +60,15 @@ prepare() {
   # skip broken clean in Makefile
   patch -p1 -i "$srcdir/skip-broken-clean.patch"
 
-  # remove -dev suffix from version
-  patch -p1 -i "$srcdir/remove-dev-suffix.patch"
+  # use system Ninja
+  patch -p1 -i "$srcdir/use-system-ninja.patch"
 }
 
 build() {
   cd "$pkgname"
 
-  # module
-  make dist
+  # build python module
+  python -m build --wheel --no-isolation
 
   # documentation
   make docs
@@ -73,9 +81,13 @@ package() {
   python -m installer --destdir="$pkgdir" dist/*.whl
 
   # license
-  install -vDm644 -t "$pkgdir/usr/share/licenses/$pkgname" LICENSE.txt
+  local site_packages=$(python -c "import site; print(site.getsitepackages()[0])")
+  install -d "$pkgdir/usr/share/licenses/$pkgname"
+  ln -s "$site_packages/${pkgname/-/_}-$pkgver.dist-info/LICENSE.md" \
+    "$pkgdir/usr/share/licenses/$pkgname/LICENSE.md"
 
   # documentation
-  install -vDm644 -t "$pkgdir/usr/share/doc/$pkgname" README.rst
+  install -vDm644 -t "$pkgdir/usr/share/doc/$pkgname" README.md
   cp -vr docs/_build/html "$pkgdir/usr/share/doc/$pkgname"
+  cp -vr examples "$pkgdir/usr/share/doc/$pkgname"
 }

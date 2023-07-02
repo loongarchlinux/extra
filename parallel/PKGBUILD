@@ -6,7 +6,7 @@
 
 pkgbase=parallel
 pkgname=('parallel' 'parallel-docs')
-pkgver=20230522
+pkgver=20230622
 pkgrel=1
 pkgdesc='A shell tool for executing jobs in parallel'
 arch=('any')
@@ -16,30 +16,20 @@ source=(
   "https://ftp.gnu.org/gnu/$pkgbase/$pkgbase-$pkgver.tar.bz2"{,.sig}
   '0001-Remove-citation-things.patch'
 )
-sha512sums=('09099ffc9c82e19ededff917142d9d8be671ec5a85b18a263de2fcf791acee36d5c12273e812b125300e2f542009acbf3f03410c3c4d3de05c527241c01bcf0d'
+sha512sums=('07fe4f278d0e177e2825c0b98cc01ef53334e21f4e77e22e009c99c774d5641ea746bfbd416a11da60132135cd4f412ec818439558044cca872b05b93f6e5423'
             'SKIP'
-            '3f84d5001f67c36be5faf963519bcb70dfc9df1f54a084604736011cd5402eb016897643ff516734829fe6265ff0f8d0d00c2081c25e20dd4f16e87ef953cb30')
-b2sums=('7a571ff433e56e68956e1c6895cafe62ff87ca832f1cc57032a024a4f946a875f125c78ffdf6dbf75c397f6990e62e80fe2d840fa21b1db851bc6832de75c104'
+            'd91b0b07d8de0a471e5bd88e2da2e01f1858ff5516d2394ad54a02514456f156009b336b89a01c690b8b676962b42a7f47cbf3fa8ac8c24a2aa117cca0e16fe6')
+b2sums=('cd0c7ba266f056ea72703f59a16127218ba56422b130a38341f4052be8dc37711194933f226587aa663789a00ec36a18c0a7c24471502cadce2a5dd1a9fa2400'
         'SKIP'
-        'c1c450edaae64c70b786de024dd917733ff9bc270794e886d4aef419f9b6445ca6c1327de841fe78a92cebe6fdf671f9fb471a7282c23fc221aa79f7bf3f2e61')
+        '38d22c396e9cbf6bddf5bff77a1b69b2d9ce3749b00067d0d2b51f97ac4a2a8f1f94b8b8ce49976944e65bc95852a551320d9248446f59764425c821479a997b')
 validpgpkeys=('CDA01A4208C4F74506107E7BD1AB451688888888')
 
 prepare() {
   cd "$pkgbase-$pkgver"
 
   # remove citation warnings
+  # https://en.opensuse.org/openSUSE:Packaging_guidelines#Donation_requests
   patch -p1 -i "$srcdir/0001-Remove-citation-things.patch"
-
-  # remove gnu branding
-  sed \
-    --in-place \
-    --regexp-extended \
-    --expression 's/GNU\s{1,3}Parallel/Parallel/g' \
-    --expression 's/run_gnu_parallel/run_parallel/g' \
-    --expression 's/with_GNU_Parallel/with_Parallel/g' \
-    --expression 's/GNU \$Global::progname/\$Global::progname/g' \
-    --expression 's/@GNU_Parallel/@Parallel/g' \
-    src/parallel
 }
 
 build() {

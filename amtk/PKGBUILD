@@ -1,31 +1,20 @@
-# Maintainer: Jan Alexander Steffens (heftig) <heftig@archlinux.org>
-# Contributor: Balló György <ballogyor+arch at gmail dot com>
+# Maintainer: Balló György <ballogyor+arch at gmail dot com>
+# Contributor: Jan Alexander Steffens (heftig) <heftig@archlinux.org>
 
 pkgname=amtk
 pkgver=5.6.1
-pkgrel=1
-pkgdesc="Actions, Menus and Toolbars Kit for GTK applications"
-url="https://gitlab.gnome.org/World/amtk"
-arch=(loong64 x86_64)
-license=(LGPL3)
-depends=(gtk3)
-makedepends=(meson git gobject-introspection gtk-doc)
-options=(debug)
-_commit=f0029cf75ec416159079a27b578b9253a04b1c5a
-source=("git+https://gitlab.gnome.org/World/amtk.git#commit=$_commit")
-sha256sums=('SKIP')
-
-pkgver() {
-  cd amtk
-  git describe --tags | sed 's/[^-]*-g/r&/;s/-/+/g'
-}
-
-prepare() {
-  cd amtk
-}
+pkgrel=2
+pkgdesc='Actions, Menus and Toolbars Kit for GTK applications'
+arch=('loong64' 'x86_64')
+url='https://gitlab.gnome.org/Archive/amtk'
+license=('LGPL3')
+depends=('glib2' 'glibc' 'gtk3')
+makedepends=('meson' 'gobject-introspection' 'gtk-doc')
+source=("https://download.gnome.org/sources/$pkgname/${pkgver%.*}/$pkgname-$pkgver.tar.xz")
+sha256sums=('d50115b85c872aac296934b5ee726a3fa156c6f5ad96d27e0edd0aa5ad173228')
 
 build() {
-  arch-meson amtk build
+  arch-meson $pkgname-$pkgver build
   meson compile -C build
 }
 
@@ -34,8 +23,5 @@ check() {
 }
 
 package() {
-  depends+=(libg{lib,object,io}-2.0.so libgtk-3.so)
-  provides+=("libamtk-${pkgver%%.*}.so")
-
   meson install -C build --destdir "$pkgdir"
 }

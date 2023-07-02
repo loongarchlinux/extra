@@ -2,26 +2,26 @@
 # Contributor: Dmytro Meleshko <qzlgeb.zryrfuxb@tznvy.pbz(rot13)>
 
 pkgname=eslint-language-server
-pkgver=2.4.0
+pkgver=2.4.2
 pkgrel=1
 pkgdesc='Language server for ESLint'
 arch=('any')
 url=https://github.com/Microsoft/vscode-eslint
 license=('MIT')
 depends=('nodejs')
-makedepends=('npm')
+makedepends=('git' 'npm')
 conflicts=("vscode-$pkgname")
 replaces=("vscode-$pkgname")
-source=("${url}/archive/release/$pkgver/vscode-eslint-$pkgver.tar.gz")
-b2sums=('2ed76020de4d05a0935e2adb6b44dd841685d5f273bacee43beae5f2decaecc6b5ef49caab9bbd6dfc9fb3c84dbcead3ffedf1005abd9091c6d542c681f0c39c')
+source=("git+$url.git#tag=release/$pkgver")
+b2sums=('SKIP')
 
 prepare() {
-  cd vscode-eslint-release-$pkgver
+  cd vscode-eslint
   npm ci
 }
 
 build() {
-  cd vscode-eslint-release-$pkgver
+  cd vscode-eslint
   npm run compile:server
 }
 
@@ -31,7 +31,7 @@ package() {
   chmod +x "$pkgdir"/usr/bin/$pkgname
   ln -s $pkgname "$pkgdir"/usr/bin/vscode-$pkgname
 
-  cd vscode-eslint-release-$pkgver
+  cd vscode-eslint
   install -Dm644 -t "$pkgdir"/usr/share/doc/$pkgname README.md
   install -Dm644 -t "$pkgdir"/usr/share/licenses/$pkgname License.txt
 

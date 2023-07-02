@@ -3,20 +3,14 @@
 
 pkgname=gnome-tour
 pkgver=44.0
-pkgrel=1
+pkgrel=2
 pkgdesc='Guided tour and greeter for GNOME'
 arch=('loong64' 'x86_64')
 url='https://gitlab.gnome.org/GNOME/gnome-tour'
 license=('GPL3')
-depends=(
-  'gtk4'
-  'libadwaita'
-)
-makedepends=(
-  'appstream-glib'
-  'meson'
-  'rust'
-)
+depends=('gcc-libs' 'glib2' 'glibc' 'gtk4' 'hicolor-icon-theme' 'libadwaita')
+makedepends=('appstream-glib' 'meson' 'rust')
+groups=('gnome')
 source=("https://download.gnome.org/sources/$pkgname/${pkgver%.*}/$pkgname-$pkgver.tar.xz")
 sha256sums=('06de7677dd1c590d0ea33a032c9ccf4c37c62bc56215b823c879e42ee630c2b6')
 
@@ -29,9 +23,6 @@ export CARGO_PROFILE_RELEASE_DEBUG=2
 build() {
   arch-meson $pkgname-$pkgver build
   meson compile -C build
-
-  # Fails when run under fakeroot, so can't be in package()
-  meson install -C build --destdir "$srcdir/fakeinstall"
 }
 
 check() {
@@ -39,5 +30,5 @@ check() {
 }
 
 package() {
-  cp -a fakeinstall/* "$pkgdir"
+  meson install -C build --destdir "$pkgdir"
 }

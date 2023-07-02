@@ -3,7 +3,7 @@
 
 pkgbase=pyside6
 pkgname=(shiboken6 pyside6 pyside6-tools)
-_qtver=6.5.1
+_qtver=6.5.1.1
 _clangver=15.0.7
 pkgver=${_qtver/-/}
 pkgrel=1
@@ -17,15 +17,15 @@ makedepends=(cmake ninja clang llvm python-setuptools vulkan-headers python-nump
 _pkgfn=pyside-setup-everywhere-src-$_qtver
 source=(https://download.qt.io/official_releases/QtForPython/pyside6/PySide6-$pkgver-src/${_pkgfn}.tar.xz
         designer-plugin-install-dir.patch)
-sha256sums=('bc9153cbcc0cd234f3955c5eb90fe1191060b026adc7ea348fd6a6a9868bb8fe'
+sha256sums=('9741a06f0b7d4b2168818448134bc7e96ddb5efb846a3915b4177ba4159b5b78'
             '66e895e07d5b01c64a94092353854c946fd7fc445b6181068dca290b5a3887e0')
 
 prepare() {
-  patch -d $_pkgfn -p1 < designer-plugin-install-dir.patch # Fix designer plugin install dir
+  patch -d ${_pkgfn%.*} -p1 < designer-plugin-install-dir.patch # Fix designer plugin install dir
 }
 
 build() {
-  cmake -B build -S $_pkgfn -G Ninja \
+  cmake -B build -S ${_pkgfn%.*} -G Ninja \
     -DCMAKE_INSTALL_PREFIX=/usr \
     -DCMAKE_BUILD_TYPE=None \
     -DBUILD_TESTS=OFF \
@@ -44,7 +44,7 @@ package_shiboken6() {
 # Install egg-info
   export PATH="/usr/lib/qt6/bin:$PATH"
   export SETUPTOOLS_USE_DISTUTILS=stdlib
-  cd $_pkgfn
+  cd ${_pkgfn%.*}
   python setup.py egg_info --build-type=shiboken6
   python setup.py egg_info --build-type=shiboken6-generator
   _pythonpath=`python -c "from sysconfig import get_path; print(get_path('platlib'))"`
@@ -77,7 +77,7 @@ package_pyside6() {
 
 # Install egg-info
   export PATH="/usr/lib/qt6/bin:$PATH"
-  cd $_pkgfn
+  cd ${_pkgfn%.*}
   python setup.py egg_info --build-type=pyside6
   _pythonpath=`python -c "from sysconfig import get_path; print(get_path('platlib'))"`
   cp -r PySide6.egg-info "$pkgdir"/$_pythonpath

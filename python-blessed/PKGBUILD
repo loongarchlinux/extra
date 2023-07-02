@@ -3,12 +3,13 @@
 
 pkgname=python-blessed
 pkgver=1.20.0
-pkgrel=3
+pkgrel=4
 pkgdesc='A thin, practical wrapper around terminal styling, screen positioning, and keyboard input'
 arch=(any)
 url=https://github.com/jquast/blessed
 license=(GPL)
 depends=(
+  python
   python-six
   python-wcwidth
 )
@@ -17,33 +18,32 @@ makedepends=(
   python-setuptools
 )
 checkdepends=(
-  python-tox
+  python-pytest
+  python-pytest-cov
+  python-pytest-rerunfailures
+  python-pytest-xdist
 )
 _tag=d404d8ccde9ba900bc968c1213b915a691581603
 source=(git+https://github.com/jquast/blessed.git#tag=${_tag})
-sha256sums=(SKIP)
+b2sums=(SKIP)
 
 pkgver() {
   cd blessed
-
   git describe --tags
 }
 
 build() {
   cd blessed
-
   python setup.py build
 }
 
 check() {
   cd blessed
-
-  tox -e py310
+  pytest
 }
 
 package() {
   cd blessed
-
   python setup.py install --root="${pkgdir}" --optimize=1 --skip-build
 }
 

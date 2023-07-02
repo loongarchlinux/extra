@@ -5,17 +5,16 @@
 # Contributor: lucke <lucke at o2 dot pl>
 
 pkgname=weechat
-pkgver=3.8
-pkgrel=3
+pkgver=4.0.0
+pkgrel=1
 pkgdesc="Fast, light and extensible IRC client (curses UI)"
 arch=('loong64' 'x86_64')
 url="https://www.weechat.org/"
 license=('GPL')
 depends=('gnutls' 'curl' 'libgcrypt')
-makedepends=('asciidoctor' 'cmake' 'aspell' 'enchant' 'guile' 'lua' 'perl' 'python'
+makedepends=('asciidoctor' 'cmake' 'enchant' 'guile' 'lua' 'perl' 'python'
              'ruby' 'tcl')
-optdepends=('aspell: spellchecker support'
-            'enchant: spellchecker support'
+optdepends=('enchant: spellchecker support'
             'guile: support for guile scripts'
             'lua: support for lua scripts'
             'perl: support for perl scripts'
@@ -23,9 +22,9 @@ optdepends=('aspell: spellchecker support'
             'ruby: support for ruby scripts'
             'tcl: support for tcl scripts')
 source=("https://www.weechat.org/files/src/${pkgname}-${pkgver}.tar.xz"{,.asc})
-sha512sums=('f2fe125d03e9c8f8b5b03e2cdd340c6cd65c463187bd213c9128a3df19da56ae38f1a6d20a47c09606d1504448e3d554de042e33cc57b73753ce8491595ef516'
+sha512sums=('3872ae557943433a62de13ffa549b86554d5fb40a469a172d88beb201429629a2106519812400b6ada12a1cff4a1a549a330e78cb46f958299b7524cd955a4d8'
             'SKIP')
-b2sums=('46a2c2c5f14f1c47c0ef2c7591549e4568c1777a70c571ab6d0e5938685262a0806c1fd301eb0d840245b7df2c42a69b089d6eac82706ae5b2a8e590a910080a'
+b2sums=('580a4dfdc40a5ee25f6e8e083945b68de0408500602797b91a60d6105a85deb1389f4f4eefcd832b0f7e5eaead31b58eed5d021d3bcc61bf6a8c8940fb243a51'
         'SKIP')
 validpgpkeys=('A9AB5AB778FA5C3522FD0378F82F4B16DEC408F8') # WeeChat (signing key) <webmaster@weechat.org>
 
@@ -34,19 +33,19 @@ validpgpkeys=('A9AB5AB778FA5C3522FD0378F82F4B16DEC408F8') # WeeChat (signing key
 CFLAGS+=" ${CPPFLAGS}"
 
 build() {
-  mkdir -p build
-  cd build
-  cmake -Wno-dev "${srcdir}/${pkgname}-${pkgver}" \
+  cmake -B build -S ${pkgname}-${pkgver} \
+        -DCMAKE_BUILD_TYPE=None \
         -DCMAKE_INSTALL_PREFIX=/usr \
         -DENABLE_MAN=ON \
         -DENABLE_DOC=ON \
+        -DENABLE_DOC_INCOMPLETE=ON \
         -DENABLE_ENCHANT=ON \
         -DENABLE_JAVASCRIPT=OFF \
-        -DENABLE_PHP=OFF
-  make
+        -DENABLE_PHP=OFF \
+        -Wno-dev
+  cmake --build build
 }
 
 package() {
-  cd build
-  make DESTDIR="${pkgdir}" install
+  DESTDIR="${pkgdir}" cmake --install build
 }

@@ -2,20 +2,27 @@
 
 pkgname=xdg-user-dirs-gtk
 pkgver=0.11
-pkgrel=1
+pkgrel=2
 pkgdesc="Creates user dirs and asks to relocalize them"
 url="https://gitlab.gnome.org/GNOME/xdg-user-dirs-gtk"
 arch=(loong64 x86_64)
 license=(GPL)
-depends=(gtk3 xdg-user-dirs)
-makedepends=(intltool git)
+depends=(
+  gtk3
+  xdg-user-dirs
+)
+makedepends=(
+  git
+  intltool
+)
 groups=(gnome)
-options=(debug)
 _commit=cf2a85fa5370aa7cdf36d1c8259ca89d3d737ef9  # tags/0.11^0
-source=("git+https://gitlab.gnome.org/GNOME/xdg-user-dirs-gtk.git#commit=$_commit"
-        show-in-mate.diff)
-sha256sums=('SKIP'
-            '80bd751b9bfc95e06775da31ff1ae32417bfca2df3b9e063d478b056834224f3')
+source=(
+  "git+https://gitlab.gnome.org/GNOME/xdg-user-dirs-gtk.git#commit=$_commit"
+  show-in-more.diff
+)
+b2sums=('SKIP'
+        '13c74b98253791c248f4250d2a080160076ca1008a6747c3247121fcb8ec07bb3fd420356b7177a3865d50f675bc07ee4d1d327d4b2d920b1dd51d1bce6775a3')
 
 pkgver() {
   cd $pkgname
@@ -24,14 +31,23 @@ pkgver() {
 
 prepare() {
   cd $pkgname
-  git apply -3 ../show-in-mate.diff
+
+  # Show in more environments
+  git apply -3 ../show-in-more.diff
+
   autoreconf -fvi
 }
 
 build() {
-  cd $pkgname
-  ./configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var \
+  local configure_options=(
+    --prefix=/usr
+    --sysconfdir=/etc
+    --localstatedir=/var
     --disable-more-warnings
+  )
+
+  cd $pkgname
+  ./configure "${configure_options[@]}"
   make
 }
 

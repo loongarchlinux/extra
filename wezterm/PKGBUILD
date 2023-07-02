@@ -4,7 +4,7 @@ pkgbase=wezterm
 pkgname=(wezterm wezterm-terminfo wezterm-shell-integration)
 pkgver=20230408.112425.69ae8472
 _gitcommit=69ae847273aa2b0a64bdb07cf19d3f6fbaaa6b71
-pkgrel=1
+pkgrel=2
 pkgdesc="A GPU-accelerated cross-platform terminal emulator and multiplexer"
 arch=('loong64' 'x86_64')
 url="https://github.com/wez/wezterm"
@@ -46,23 +46,26 @@ prepare() {
   git config submodule."freetype2".url "${srcdir}/${pkgname}"-freetype2
 
   git -c protocol.file.allow=always submodule update --init --recursive
+  sed -i 's/"vendored-fonts", //' wezterm-gui/Cargo.toml
   cargo fetch --locked --target "$CARCH-unknown-linux-gnu"
 }
 
 build() {
   cd "$pkgname"
-  cargo build --frozen --release --features distro-defaults
+  LIBSSH2_SYS_USE_PKG_CONFIG=1 cargo build --frozen --release --features distro-defaults
 }
 
 check() {
   cd "$pkgname"
-  cargo test --frozen -- --skip "e2e::sftp"
+  LIBSSH2_SYS_USE_PKG_CONFIG=1 cargo test --frozen -- --skip "e2e::sftp"
 }
 
 package_wezterm() {
-  depends+=('wezterm-terminfo' 'wezterm-shell-integration')
+  depends+=('libssh2' 'ttf-jetbrains-mono' 'ttf-roboto' 'wezterm-terminfo' 'wezterm-shell-integration')
   optdepends=(
     'python-nautilus: WezTerm context menu in Nautilus'
+    'ttf-nerd-fonts-symbols-mono'
+    'noto-fonts-emoji'
   )
 
   cd "$pkgname"

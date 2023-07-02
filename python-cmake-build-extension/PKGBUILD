@@ -3,7 +3,7 @@
 
 pkgname=python-cmake-build-extension
 pkgver=0.5.1
-pkgrel=2
+pkgrel=3
 pkgdesc='Setuptools extension to build and package CMake projects'
 arch=(any)
 url=https://github.com/diegoferigo/cmake-build-extension
@@ -12,11 +12,15 @@ depends=(
   cmake
   python
   python-gitpython
+  python-setuptools
+  python-setuptools-scm
+  python-wheel
   ninja
 )
 makedepends=(
   git
-  python-setuptools
+  python-build
+  python-installer
 )
 _tag=2c3d822e40fe3fd2d769ad09dba367e6617dcc82
 source=(git+https://github.com/diegoferigo/cmake-build-extension.git#tag=${_tag})
@@ -29,13 +33,12 @@ pkgver() {
 
 build() {
   cd cmake-build-extension
-  python setup.py build
+  python -m build -wn
 }
 
 package() {
-  cd cmake-build-extension
-  python setup.py install --root="${pkgdir}" --optimize=1 --skip-build
-  install -Dm 644 LICENSE -t "${pkgdir}"/usr/share/licenses/python-cmake-build-extension
+  python -m installer --destdir="${pkgdir}" cmake-build-extension/dist/*.whl
+  install -Dm 644 cmake-build-extension/LICENSE -t "${pkgdir}"/usr/share/licenses/python-cmake-build-extension/
 }
 
 # vim: ts=2 sw=2 et

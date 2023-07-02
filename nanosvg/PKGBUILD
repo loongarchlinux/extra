@@ -1,0 +1,31 @@
+# Maintainer: Sven-Hendrik Haase <svenstaro@archlinux.org>
+pkgname=nanosvg
+_gitver=9da543e
+pkgver=0.1.0.git1.$_gitver
+pkgrel=3
+pkgdesc="Simple stupid SVG parser"
+arch=("loong64" "x86_64")
+url="https://github.com/memononen/nanosvg"
+license=('ZLIB')
+makedepends=('git' 'cmake')
+source=('nanosvg::git+https://github.com/memononen/nanosvg'
+        https://github.com/fltk/nanosvg/commit/abcd277ea45e9098bed752cf9c6875b533c0892f.patch)
+sha512sums=('SKIP'
+            'b14f8048fbf6bda66803c65f4f34414154b37d17d75d55bc2eeaceaf56fb36984b6ecf4b22fc219820a2d4eba6bdaae57e18aceeec687ce55220fffd6af799d9')
+
+prepare() {
+  patch -d nanosvg -Np1 -i "$srcdir"/abcd277ea45e9098bed752cf9c6875b533c0892f.patch
+}
+
+build() {
+  cmake -B build -S "$pkgname" \
+    -DCMAKE_BUILD_TYPE='None' \
+    -DCMAKE_INSTALL_PREFIX='/usr' \
+    -Wno-dev
+  cmake --build build
+}
+
+package() {
+  DESTDIR="$pkgdir" cmake --install build
+  install -D $pkgname/LICENSE.txt $pkgdir/usr/share/licenses/$pkgname/LICENSE
+}

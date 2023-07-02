@@ -6,20 +6,41 @@
 
 pkgname=upx
 pkgver=4.0.2
-pkgrel=1
+pkgrel=2
 pkgdesc='Extendable, high-performance executable packer for several executable formats'
 arch=(loong64 x86_64)
 url='https://github.com/upx/upx'
 license=(custom GPL2)
 makedepends=(cmake git perl setconf)
-source=("git+$url#commit=d1b59f65df7b980fd91c6590126c8d3c05a78e25") # tag: v4.0.2
-b2sums=(SKIP)
+# The fixed git commits are from the upstream "upx-vendor" branches, 2023-06-17
+source=(
+  git+$url-vendor-doctest#commit=661b7f1ee3a8f9f85936e05b1f31692c3a1302ed
+  git+$url-vendor-lzma-sdk#commit=0a9d590f276a08dc17b3a887b349d88b88251cee
+  git+$url-vendor-ucl#commit=4b58d592199dc1e5db691e1a54fb0e5e9af0ecaf
+  git+$url-vendor-valgrind#commit=5d06e9606f86ed4c3bb1664f09921249f6fd490a
+  git+$url-vendor-zlib#commit=460622b25ac8b5def9018d2e230cf63fc715822b
+  "git+$url#commit=d1b59f65df7b980fd91c6590126c8d3c05a78e25") # tag: v4.0.2
+b2sums=('SKIP'
+        'SKIP'
+        'SKIP'
+        'SKIP'
+        'SKIP'
+        'SKIP')
 
 prepare() {
   cd $pkgname
-  git submodule update --init --recursive
-  # upx does not believes that this is a release version if the git revision is set
+
+  # fix the version output by setting GIT_DESCRIBE to $pkgver, ref FS#78459
+  sed -i "66 a set(GIT_DESCRIBE \"$pkgver\")" CMakeLists.txt
+
+  # upx does not believe that this is a release version if the git revision is set
   setconf src/main.cpp 'bool warn' 'false;'
+
+  # set up symbolic links for the "vendor" repos
+  for x in doctest lzma-sdk ucl valgrind zlib; do
+    rm -frv vendor/$x
+    ln -s "$srcdir/upx-vendor-$x" vendor/$x
+  done
 }
 
 build() {

@@ -1,28 +1,28 @@
 # Maintainer: Felix Yan <felixonmars@archlinux.org>
 
 pkgname=ruby-net-http-persistent
-pkgver=4.0.1
+pkgver=4.0.2
 pkgrel=1
 pkgdesc='Thread-safe persistent connections with Net::HTTP'
 arch=(any)
 url='https://github.com/drbrain/net-http-persistent'
 license=(MIT)
 depends=(ruby-connection_pool)
-makedepends=(ruby-hoe ruby-rake)
-checkdepends=(ruby-minitest)
+checkdepends=(ruby-rake ruby-minitest)
 options=(!emptydirs)
 source=(https://github.com/drbrain/net-http-persistent/archive/v$pkgver/$pkgname-$pkgver.tar.gz)
-sha256sums=('3e5678c0befdcf26679c16e7583b2627fa72483f778fc131c17ba5cde34d918c')
+sha256sums=('10aab67179e80159f4e080dea3b47d86742331d693a8712803fe3906b5b1f6db')
 
 prepare() {
   cd net-http-persistent-$pkgver
-  sed 's/~>/>=/' -i Rakefile
+  sed 's/~>/>=/' -i net-http-persistent.gemspec
+  echo -e 'require "rake/testtask"\nRake::TestTask.new' > Rakefile
 }
 
 build() {
   local _gemdir="$(gem env gemdir)"
   cd net-http-persistent-$pkgver
-  rake gem
+  gem build net-http-persistent.gemspec
   gem install \
     --local \
     --verbose \
@@ -30,7 +30,7 @@ build() {
     --no-user-install \
     --install-dir "tmp_install/$_gemdir" \
     --bindir "tmp_install/usr/bin" \
-    pkg/net-http-persistent-$pkgver.gem
+    net-http-persistent-$pkgver.gem
   find "tmp_install/$_gemdir/gems/" \
     -type f \
     \( \
@@ -48,8 +48,7 @@ build() {
 check() {
   local _gemdir="$(gem env gemdir)"
   cd net-http-persistent-$pkgver
-  # https://github.com/drbrain/net-http-persistent/issues/141
-  GEM_HOME="tmp_install/$_gemdir" rake test || echo "Tests failed"
+  GEM_HOME="tmp_install/$_gemdir" rake test
 }
 
 package() {

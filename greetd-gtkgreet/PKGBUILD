@@ -1,0 +1,39 @@
+# Maintainer: Caleb Maclennan <caleb@alerque.com>
+# Contributor: Ignacio Taranto <ignacio_taranto@protonmail.com>
+# Contributor: Eric Engestrom <aur [at] engestrom [dot] ch>
+# Contributor: Kenny Levinsen <aur [at] kl [dot] wtf>
+
+pkgname=greetd-gtkgreet
+_pkgname=${pkgname#*-}
+pkgver=0.7
+pkgrel=2
+pkgdesc='GTK based greeter for greetd'
+arch=(loong64 x86_64)
+url="https://git.sr.ht/~kennylevinsen/$_pkgname"
+license=(GPL3)
+depends=(json-c
+         gtk-layer-shell
+         gtk3)
+makedepends=(meson
+             ninja
+             scdoc)
+_archive="$_pkgname-$pkgver"
+source=("$_archive.tar.gz::$url/archive/$pkgver.tar.gz"
+        "$pkgname-fix-build.patch")
+sha256sums=('eb4ba0e1e4f9cf888ce7b932b923f97521c2277032628cfc06bb86fecbad9373'
+            '2babd924eb99922543ee3dea63322df55e1a5414077c1ba89a22903107105bc1')
+
+prepare() {
+	cd "$_archive"
+	patch -Np1 -i "../${source[1]}"
+	mkdir -p build
+}
+
+build() {
+	arch-meson "$_archive" build -D layershell=enabled
+	ninja -C build
+}
+
+package() {
+	DESTDIR="$pkgdir" ninja -C build install
+}

@@ -4,7 +4,7 @@
 
 pkgname=geeqie
 pkgver=2.0.1
-pkgrel=5
+pkgrel=6
 pkgdesc='Lightweight image viewer'
 arch=('loong64' 'x86_64')
 url="http://www.geeqie.org/"
@@ -13,11 +13,15 @@ license=('GPL2')
 depends=('exiv2' 'gtk3' 'ffmpegthumbnailer'
          'djvulibre' 'libheif' 'libchamplain'
          'poppler-glib' 'libarchive' 'libraw' 'lua53'
-         'libjxl' 'gspell')
+         'libjxl' 'gspell'
+         'glib2' 'glibc' 'gcc-libs' 'lcms2'
+         'openjpeg2' 'clutter-gtk' 'clutter'
+         'gdk-pixbuf2' 'libtiff' 'cairo' 'pango'
+         'libjpeg-turbo' 'libwebp')
 makedepends=('meson'
              'intltool' 'python' 'librsvg'
              'vim'
-             'libwmf' 'libwebp' 'imagemagick'
+             'libwmf' 'imagemagick'
              'fbida' 'gawk' 'perl-image-exiftool'
              # for the docs
              'doxygen' 'yelp-tools' 'graphviz'
@@ -30,13 +34,21 @@ optdepends=('librsvg: SVG rendering'
             'imagemagick: command-line tools for various (plugin) operations')
 source=(#"http://www.geeqie.org/${pkgname}-${pkgver}.tar.xz"{,.asc}
         https://github.com/BestImageViewer/geeqie/releases/download/v${pkgver}/${pkgname}-${pkgver}.tar.xz{,.asc}
+        exiv2-0.28.0.patch::https://github.com/BestImageViewer/geeqie/commit/86d5f780bae35d0fc2122646ff415633b5f15a60.patch
 )
 sha256sums=('89c1a7574cfe3888972d10723f4cf3a277249bea494fd9c630aa8d0df944555d'
-            'SKIP')
+            'SKIP'
+            'b564d50e0d9f2583365e9810df07a955032a61c03054ab69f342889d7f220856')
 validpgpkeys=('91EC400226201276E2ADCEC7D0DA6F44C936D1DA') # "Colin Clark <colin.clark@cclark.uk>"
 
 # main repo: http://www.geeqie.org/cgi-bin/gitweb.cgi?p=geeqie.git
 # bug tracker: https://github.com/BestImageViewer/geeqie/issues
+
+prepare(){
+  cd $pkgname-$pkgver
+  # fix build with exiv2 v0.28.0
+  patch -Np1 -i ../exiv2-0.28.0.patch
+}
 
 build() {
   arch-meson $pkgname-$pkgver build

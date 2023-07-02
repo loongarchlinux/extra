@@ -2,20 +2,25 @@
 # Contributor: Thayne McCombs <astrothayne@gmail.com>
 
 pkgname=dart-sass
-pkgver=1.62.1
+pkgver=1.63.4
 pkgrel=1
 pkgdesc='Sass makes CSS fun again'
 arch=('loong64' 'x86_64')
 url='http://sass-lang.com/'
 license=('MIT')
 depends=('glibc')
-makedepends=('git' 'dart')
+makedepends=('git' 'dart' 'buf')
 options=('!strip')
 provides=('sass')
 conflicts=('ruby-sass')
-_commit='8dddcb7b7db13984fea69fa85438acf30b56b4bb'
-source=("$pkgname::git+https://github.com/sass/dart-sass.git#commit=$_commit")
-md5sums=('SKIP')
+_commit='e34a0c7fa9d917167b32ab2be223b2a370bb589b'
+_sass_commit='8b0296ab876115be26d9e5dab02e47a811487fba' # embedded-protocol-2.1.0
+source=(
+  "$pkgname::git+https://github.com/sass/dart-sass.git#commit=$_commit"
+  "github.com-sass-sass::git+https://github.com/sass/sass.git#commit=$_sass_commit"
+)
+b2sums=('SKIP'
+        'SKIP')
 
 pkgver() {
   cd "$pkgname"
@@ -26,6 +31,9 @@ pkgver() {
 prepare() {
   cd "$pkgname"
 
+  mkdir -p build
+  ln -sf "$srcdir/github.com-sass-sass" build/language
+
   # disable analytics
   dart --disable-analytics
 
@@ -35,7 +43,13 @@ prepare() {
 
 build() {
   cd "$pkgname"
-  dart compile exe -Dversion=$pkgver -o sass bin/sass.dart
+
+  UPDATE_SASS_PROTOCOL=false dart run grinder protobuf
+  dart compile exe \
+    -Dversion=$pkgver \
+    -Dprotocol-version=$(cat build/language/spec/EMBEDDED_PROTOCOL_VERSION) \
+    -o sass \
+    bin/sass.dart
 }
 
 package() {
@@ -43,6 +57,9 @@ package() {
 
   # binary
   install -vDm755 -t "$pkgdir/usr/bin" sass
+
+  # embedded-protocol protobuf file
+  install -vDm644 -t "$pkgdir/usr/share/$pkgname" build/language/spec/embedded_sass.proto
 
   # license
   install -vDm644 -t "$pkgdir/usr/share/licenses/$pkgname" LICENSE

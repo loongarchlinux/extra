@@ -1,36 +1,125 @@
 # Maintainer: Alexander Rødseth <rodseth@gmail.com>
 # Maintainer: Felix Yan <felixonmars@archlinux.org>
 # Maintainer: Orhun Parmaksız <orhun@archlinux.org>
+# Contributor: Daniele Basso <d dot bass05 at proton dot me>
 # Contributor: T. Jameson Little <t.jameson.little at gmail dot com>
 # Contributor: Usagi Ito <usagi@WonderRabbitProject.net>
 # Contributor: siasia <http://pastebin.com/qsBEmNCw>
 # Contributor: Julien Nicoulaud <julien.nicoulaud@gmail.com>
 
 pkgname=dart
-pkgver=2.19.5
+pkgver=3.0.5
+_commit=9830d0d6cb3f9988ad9056a84d55a73cd8299e87
 pkgrel=1
 pkgdesc='The dart programming language SDK'
 arch=('loong64' 'x86_64')
 url='https://www.dartlang.org/'
-depends=('bash')
+depends=('glibc')
 license=('BSD')
-makedepends=('setconf')
-options=('!strip')
-source=("$pkgname-$pkgver-64.zip::https://storage.googleapis.com/dart-archive/channels/stable/release/$pkgver/sdk/dartsdk-linux-x64-release.zip")
-sha512sums=('da84ddc322d2c30aff129058b471089bde6e3d8254736d2f2cb43900f543c1b81177294431aa8990b64b3375e8889ee890477e6c38cd20dde284c4dc57489116')
+makedepends=(
+  'clang'
+  'dart'
+  'git'
+  'gn'
+  'lld'
+  'llvm'
+  'ninja'
+  'python'
+  'python-httplib2'
+  'python-six'
+)
+source=(
+  "$pkgname::git+https://github.com/dart-lang/sdk.git"
+  "git+https://chromium.googlesource.com/chromium/tools/depot_tools.git"
+)
+sha512sums=('SKIP'
+            'SKIP')
 
 prepare() {
-  # Fix permissions
-  find "$pkgname-sdk" -type d -exec chmod a+rx '{}' + \
-    -or -type f -exec chmod a+r '{}' +
+cat >.gclient <<EOF
+solutions = [
+  {
+    "name": "sdk",
+    "url": "file://${srcdir}/$pkgname@${_commit}",
+    "deps_file": "DEPS",
+    "managed": False,
+    "custom_deps": {},
+    "custom_vars": {},
+  },
+]
+EOF
 
-  cd "$pkgname-sdk/bin"
+  export PATH+=":$PWD/depot_tools" DEPOT_TOOLS_UPDATE=0
 
-  # Extract license (AUTHORS and LICENSE files are missing)
-  head -n5 "../include/dart_api.h" > ../../LICENSE
+  depot_tools/gclient.py sync -D \
+      --nohooks \
+      --with_branch_heads \
+      --with_tags
+
+  dart sdk/tools/generate_package_config.dart
+  python sdk/tools/generate_sdk_version_file.py
+
+  cd sdk
+  # ------
+  # Credits: Lauren N. Liberda <lauren@selfisekai.rocks> on Alpine Linux
+
+  # shut up on clang
+  chmod u+w buildtools/linux-x64/clang/.versions/clang.cipd_version
+  echo '{"instance_id":"system"}' > buildtools/linux-x64/clang/.versions/clang.cipd_version
+  chmod u-w buildtools/linux-x64/clang/.versions/clang.cipd_version
+
+  # bind bootstrapped interpreter
+  ln -sf /usr/bin/dart tools/sdks/dart-sdk/bin/dart
+  ln -sf /usr/bin/dart2js tools/sdks/dart-sdk/bin/dart2js
+  # ------
+
+  sed -i 's|prefix = rebased_clang_dir|prefix= ""|g' build/toolchain/linux/BUILD.gn # use system clang
+  sed -i 's|}/|}|g' build/toolchain/linux/BUILD.gn # use system clang
+  sed -i 's|rebase|#|g' build/toolchain/linux/BUILD.gn
+
+}
+
+build() {
+  cd sdk
+
+  gn gen -qv out --args='target_os = "linux"
+                        host_cpu = "x64"
+                        target_cpu = "x64"
+                        dart_target_arch = "x64"
+                        dart_use_compressed_pointers = true
+                        dart_use_crashpad = false
+                        dart_snapshot_kind = "app-jit"
+                        dart_debug_optimization_level= "2"
+                        dart_use_fallback_root_certificates = true
+                        dart_use_compressed_pointers = true
+                        dart_use_tcmalloc = true
+                        dart_use_mallinfo2 = true
+                        is_debug = false
+                        is_release = false
+                        is_product = true
+                        dart_debug = false
+                        dart_runtime_mode = "release"
+                        exclude_kernel_service = false
+                        is_clang = true
+                        dart_vm_code_coverage = false
+                        is_asan = false
+                        is_lsan = false
+                        is_msan = false
+                        is_tsan = false
+                        is_ubsan = false
+                        is_qemu = false
+                        dart_platform_sdk = false
+                        dart_use_debian_sysroot = false
+                        verify_sdk_hash = false'
+
+  sed -i 's|ldflags}|ldflags} -fuse-ld=lld|g' out/toolchain.ninja # use system ldd
+  ninja create_sdk -v -C out
 }
 
 package() {
+  # cd to directory
+  cd sdk/out/
+
   # Create directories
   install -d "$pkgdir"{"/opt/$pkgname-sdk",/usr/{bin,"share/doc/$pkgname"}}
 
@@ -46,7 +135,7 @@ package() {
   install -Dm644 "$pkgdir/opt/$pkgname-sdk/README" -t "$pkgdir/usr/share/doc/$pkgname"
 
   # BSD License
-  install -Dm644 LICENSE "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
+  install -Dm644 ../LICENSE "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
 }
 
 # vim:set ts=2 sw=2 et:

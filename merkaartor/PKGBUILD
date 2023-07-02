@@ -6,15 +6,22 @@
 
 pkgname=merkaartor
 pkgver=0.19.0
-pkgrel=6
+pkgrel=7
 pkgdesc='OpenStreetMap editor'
 arch=('loong64' 'x86_64')
 url='http://merkaartor.be/'
 license=('GPL2')
 depends=('exiv2' 'gdal' 'gpsd' 'hicolor-icon-theme' 'qt5-svg')
 makedepends=('qt5-tools')
-source=("https://github.com/openstreetmap/$pkgname/archive/$pkgver/$pkgname-$pkgver.tar.gz")
-sha256sums=('f538d1eb380005cbd5d047070b276da59c58bb7ff47218e20a080b893d0ba457')
+source=("https://github.com/openstreetmap/$pkgname/archive/$pkgver/$pkgname-$pkgver.tar.gz"
+         https://github.com/openstreetmap/merkaartor/commit/1e20d2cc.patch)
+sha256sums=('f538d1eb380005cbd5d047070b276da59c58bb7ff47218e20a080b893d0ba457'
+            'f99f9bdeeed46b7c452b76a0292a4155535b3b6509d542d244b4a8fef8436dee')
+
+prepare() {
+# Fix build with exiv2 0.28
+  patch -d $pkgname-$pkgver -p1 < 1e20d2cc.patch
+}
 
 build() {
   cd $pkgname-$pkgver

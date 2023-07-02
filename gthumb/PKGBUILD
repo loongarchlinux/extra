@@ -4,21 +4,47 @@
 
 pkgname=gthumb
 pkgver=3.12.2
-pkgrel=5
+pkgrel=7
 pkgdesc="Image browser and viewer for the GNOME Desktop"
 url="https://wiki.gnome.org/Apps/gthumb"
 arch=(loong64 x86_64)
 license=(GPL)
-depends=(dconf librsvg clutter-gtk gst-plugins-base-libs gsettings-desktop-schemas libwebp
-         libsecret libsoup webkit2gtk json-glib gst-plugin-gtk libjxl libheif)
-makedepends=(exiv2 brasero libraw liboauth docbook-xsl yelp-tools meson git)
-optdepends=('libraw: read RAW files'
-            'exiv2: metadata support'
-            'brasero: burn discs'
-            'liboauth: web albums')
+depends=(
+  clutter-gtk
+  dconf
+  gsettings-desktop-schemas
+  gst-plugin-gtk
+  gst-plugins-base-libs
+  json-glib
+  libheif
+  libjxl
+  librsvg
+  libsecret
+  libsoup
+  libwebp
+  webkit2gtk
+)
+makedepends=(
+  brasero
+  docbook-xsl
+  exiv2
+  git
+  liboauth
+  libraw
+  meson
+  yelp-tools
+)
+optdepends=(
+  'brasero: burn discs'
+  'exiv2: metadata support'
+  'liboauth: web albums'
+  'libraw: read RAW files'
+)
 _commit=3132c5f25ffe6f22314ab0fbfb08e63ba523afab  # tags/3.12.2^0
-source=("git+https://gitlab.gnome.org/GNOME/gthumb.git#commit=$_commit")
-sha256sums=('SKIP')
+source=("git+https://gitlab.gnome.org/GNOME/gthumb.git#commit=$_commit"
+         exiv2-0.28.patch)
+b2sums=('SKIP'
+        '24fdf49b5ab9c73b6b7b60dd7c8e45ed074a6ae61ab63a876ff103c2b01b5533f0e7cee7dae4fbec28894e726a981163c9247d474540545a2b7d30c14af4a69d')
 
 pkgver() {
   cd gthumb
@@ -27,9 +53,11 @@ pkgver() {
 
 prepare() {
   cd gthumb
-  
+
   # Fix build with libraw 0.21
   git cherry-pick -n da0d3f22a5c3a141211d943e7d963d14090011ec
+  # Fix build with exiv2 0.28
+  patch -p1 -i ../exiv2-0.28.patch
 }
 
 build() {

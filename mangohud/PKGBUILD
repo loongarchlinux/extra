@@ -7,7 +7,7 @@ pkgname=mangohud
 _pkgver=0.6.9-1
 _tarpkgver="${_pkgver%-*}"
 pkgver=${_pkgver//-/.}
-pkgrel=6
+pkgrel=8
 pkgdesc="A Vulkan overlay layer for monitoring FPS, temperatures, CPU/GPU load and more."
 arch=('loong64' 'x86_64')
 url="https://github.com/flightlessmango/MangoHud"
@@ -20,9 +20,11 @@ optdepends=('libxnvctrl: NVIDIA GPU stats by XNVCtrl'
 replaces=("$pkgname-common" "$pkgname-common-wayland" "$pkgname-common-x11" "mangoapp" "$pkgname-x11" "$pkgname-wayland")
 conflicts=("$pkgname-common" "$pkgname-common-wayland" "$pkgname-common-x11" "mangoapp" "$pkgname-x11" "$pkgname-wayland")
 source=("$pkgname-$pkgver.tar.xz::https://github.com/flightlessmango/MangoHud/releases/download/v$_pkgver/$_pkgname-v$_pkgver-Source.tar.xz"
-        "3f8f036ee8773ae1af23dd0848b6ab487b5ac7de-reversed.patch")
+        "3f8f036ee8773ae1af23dd0848b6ab487b5ac7de-reversed.patch"
+        https://github.com/flightlessmango/MangoHud/commit/5754ca13ee2cdf19a76b4fc79dd914a58d6371f5.patch)
 sha256sums=('30d9336b60cbc7fdc2a1ba86ec62b9fb7f2986a2b0f6196ca347f5c13e583c6d'
-            '244ef8fffb27042d521993f9e9894f852d3061a980345e5c8c6a3f148dd26707')
+            '244ef8fffb27042d521993f9e9894f852d3061a980345e5c8c6a3f148dd26707'
+            '8ce4dbd1b5d0d8d798c9c9704c10c887252d8c5ffc579a1fd875804638d465ec')
 
 prepare() {
     cd "$_pkgname-v$_tarpkgver"
@@ -33,6 +35,8 @@ prepare() {
 
     # Fix build with GCC 13
     patch --forward --reverse --strip=1 --input="$srcdir/3f8f036ee8773ae1af23dd0848b6ab487b5ac7de-reversed.patch"
+    # bakcport https://github.com/flightlessmango/MangoHud/commit/5754ca13ee2cdf19a76b4fc79dd914a58d6371f5
+    patch -Np1 -i "$srcdir/5754ca13ee2cdf19a76b4fc79dd914a58d6371f5.patch"
 }
 
 build() {
@@ -45,7 +49,11 @@ build() {
     meson compile -C build
 }
 
-package() {    
+package() {
+    depends+=(
+        vulkan-icd-loader libvulkan.so
+        spdlog libspdlog.so
+    )
     meson install -C build --destdir "$pkgdir"
 
     install -Dm 0644 "$srcdir/$_pkgname-v$_tarpkgver/LICENSE" -t "$pkgdir/usr/share/licenses/$pkgname/"

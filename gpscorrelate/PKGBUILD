@@ -4,7 +4,7 @@
 
 pkgname=gpscorrelate
 pkgver=2.0
-pkgrel=4
+pkgrel=5
 pkgdesc='Correlate (geotagging) digital camera photos with GPS data in GPX format'
 arch=('loong64' 'x86_64')
 url='https://dfandrich.github.io/gpscorrelate/'
@@ -12,13 +12,16 @@ license=('GPL2')
 depends=('exiv2' 'gtk3')
 makedepends=('libxslt')
 source=("https://github.com/dfandrich/$pkgname/releases/download/$pkgver/$pkgname-$pkgver.tar.xz"
-        'io.github.dfandrich.gpscorrelate.metainfo.xml')
+        'io.github.dfandrich.gpscorrelate.metainfo.xml'
+         exiv2-0.28.patch)
 sha256sums=('3fba8ad72b9b42dfc870a04d1207357c2a6c28842b1ede51e28b30a93b48debe'
-            '3e12e59fff65ae03f7e39910c0c243401fca372fabe8af4539ef3e57f3b71824')
+            '3e12e59fff65ae03f7e39910c0c243401fca372fabe8af4539ef3e57f3b71824'
+            '2b14c7679b481ac5f7122d09bd1f0709965154a8f134e5a101c6734b90318723')
 
 prepare() {
   cd $pkgname-$pkgver
   sed -e '/^CFLAGS   =/d' -e '/^LDFLAGS  =/d' -i Makefile # Honor system build flags
+  patch -p1 -i ../exiv2-0.28.patch # Fix build with exiv2 0.28
 }
 
 build() {

@@ -12,10 +12,11 @@ pkgname=(
  netstandard-targeting-pack
  dotnet-targeting-pack
  aspnet-targeting-pack
+ dotnet-source-built-artifacts
 )
-pkgver=7.0.5.sdk105
-pkgrel=1
-_bootstrapver=7.0.104
+pkgver=7.0.7.sdk107
+_bootstrap=false
+pkgrel=2
 arch=(loong64 x86_64)
 url=https://www.microsoft.com/net/core
 license=(MIT)
@@ -23,6 +24,8 @@ makedepends=(
   bash
   clang
   cmake
+  dotnet-sdk
+  dotnet-source-built-artifacts
   git
   icu
   inetutils
@@ -43,22 +46,19 @@ options=(
   !lto
   staticlibs
 )
-_tag=e1bc5e001c9b8e87d9f99e06eb7dbf04c508f450
+_tag=bf72c06963e2bb23c1abfd97a9ed50e47e155027
 source=(
   dotnet-installer::git+https://github.com/dotnet/installer.git#tag=${_tag}
-  https://dotnetcli.azureedge.net/source-built-artifacts/assets/Private.SourceBuilt.Artifacts.${_bootstrapver}.tar.gz
   https://github.com/dotnet/runtime/commit/31e4f404c218eae7ba999c4df5346d30f971451c.patch
   dotnet.sh
 )
-noextract=(Private.SourceBuilt.Artifacts.${_bootstrapver}.tar.gz)
 b2sums=('SKIP'
-        'ca5dac7a4987ea22fbe4edac75a7fa13bba04366780d4298d13d13e4edb7157ea309070b6dc2b0b3a4b8fea1aa71198ccea9ab202aeaafca6b163cb69846eab2'
         '36e3dcba3be4d6c3a77cdb92287acaaae681078730d9e94dce3025e926b9691c4439a8b790ca4ece643b8162bdcd7d93d2a3860610841f0b282e8e21c0873446'
         '4a64e3ee550e296bdde894f9202c6f372934cc29154f47d302599b4c368825a96a7b786faa6109a24a1101ff130fd9e4d0ccba094ec91e7f2ca645725bf71b34')
 
 prepare() {
-  cd dotnet-installer
   # fix bootstrap
+  cd dotnet-installer
   git remote set-url origin https://github.com/dotnet/installer.git
 }
 
@@ -74,13 +74,6 @@ pkgver() {
 
   if [[ $_standardver != 2.1.0 ]]; then
     msg "Invalid Standard version '$_standardver'"
-    exit 1
-  fi
-
-  local _newbootstrapver=$(xmllint --xpath "//*[local-name()='PrivateSourceBuiltArtifactsPackageVersion']/text()" eng/Versions.props)
-
-  if [[ $_newbootstrapver != $_bootstrapver ]]; then
-    msg "Invalid Bootstrap version '$_newbootstrapver'"
     exit 1
   fi
 
@@ -119,17 +112,29 @@ build() {
   patch -Np1 -i "${srcdir}"/31e4f404c218eae7ba999c4df5346d30f971451c.patch
   popd
 
-  ln -sf "${srcdir}"/Private.SourceBuilt.Artifacts.${_bootstrapver}.tar.gz packages/archive/
-
-  ./prep.sh --bootstrap
-  ./build.sh \
-    -- \
-    /v:n \
-    /p:ContinueOnPrebuiltBaselineError=true \
-    /p:LogVerbosity=n \
-    /p:MinimalConsoleLogOutput=false \
-    /p:PrebuiltPackagesPath="${srcdir}"/sources/packages \
-    /p:SkipPortableRuntimeBuild=true
+  if [[ $_bootstrap ]]; then
+    ./prep.sh --bootstrap
+    ./build.sh \
+      -- \
+      /v:n \
+      /p:ContinueOnPrebuiltBaselineError=true \
+      /p:LogVerbosity=n \
+      /p:MinimalConsoleLogOutput=false \
+      /p:PrebuiltPackagesPath="${srcdir}"/sources/packages \
+      /p:SkipPortableRuntimeBuild=true
+  else
+    cp -r /usr/share/dotnet .
+    ln -sf /usr/share/dotnet/source-built-artifacts/Private.SourceBuilt.Artifacts.*.tar.gz packages/archive/
+    ./build.sh \
+      --with-sdk "${srcdir}"/sources/dotnet
+      -- \
+      /v:n \
+      /p:ContinueOnPrebuiltBaselineError=true \
+      /p:LogVerbosity=n \
+      /p:MinimalConsoleLogOutput=false \
+      /p:PrebuiltPackagesPath="${srcdir}"/sources/packages \
+      /p:SkipPortableRuntimeBuild=true
+  fi
 }
 
 package_dotnet-host() {
@@ -140,16 +145,14 @@ package_dotnet-host() {
   )
   optdepends=('bash-completion: Bash completion support')
 
-  cd sources/artifacts/x64/Release
-
   install -dm 755 "${pkgdir}"/{etc/profile.d,usr/{bin,lib,share/{dotnet,licenses/dotnet-host}}}
-  bsdtar -xf dotnet-sdk-${pkgver%.*.sdk*}.${pkgver#*sdk}-arch-x64.tar.gz -C "${pkgdir}"/usr/share/dotnet/ --no-same-owner dotnet host
-  bsdtar -xf dotnet-sdk-${pkgver%.*.sdk*}.${pkgver#*sdk}-arch-x64.tar.gz -C "${pkgdir}"/usr/share/licenses/dotnet-host/ --no-same-owner LICENSE.txt ThirdPartyNotices.txt
+  bsdtar -xf sources/artifacts/x64/Release/dotnet-sdk-${pkgver%.*.sdk*}.${pkgver#*sdk}-arch-x64.tar.gz -C "${pkgdir}"/usr/share/dotnet/ --no-same-owner dotnet host
+  bsdtar -xf sources/artifacts/x64/Release/dotnet-sdk-${pkgver%.*.sdk*}.${pkgver#*sdk}-arch-x64.tar.gz -C "${pkgdir}"/usr/share/licenses/dotnet-host/ --no-same-owner LICENSE.txt ThirdPartyNotices.txt
   ln -s /usr/share/dotnet/dotnet "${pkgdir}"/usr/bin/dotnet
   ln -s /usr/share/dotnet/host/fxr/${pkgver%.sdk*}/libhostfxr.so "${pkgdir}"/usr/lib/libhostfxr.so
-  install -Dm 644 ../../../src/sdk/scripts/register-completions.bash "${pkgdir}"/usr/share/bash-completion/completions/dotnet
-  install -Dm 644 ../../../src/sdk/scripts/register-completions.zsh "${pkgdir}"/usr/share/zsh/site-functions/_dotnet
-  install -Dm 644 ../../../../dotnet.sh -t "${pkgdir}"/etc/profile.d/
+  install -Dm 644 sources/src/sdk/scripts/register-completions.bash "${pkgdir}"/usr/share/bash-completion/completions/dotnet
+  install -Dm 644 sources/src/sdk/scripts/register-completions.zsh "${pkgdir}"/usr/share/zsh/site-functions/_dotnet
+  install -Dm 644 dotnet.sh -t "${pkgdir}"/etc/profile.d/
 }
 
 package_dotnet-runtime() {
@@ -164,15 +167,12 @@ package_dotnet-runtime() {
     zlib
     openssl
   )
-
   optdepends=('lttng-ust2.12: CoreCLR tracing')
   provides=(dotnet-runtime-7.0)
   conflicts=(dotnet-runtime-7.0)
 
-  cd sources/artifacts/x64/Release
-
   install -dm 755 "${pkgdir}"/usr/share/{dotnet,licenses}
-  bsdtar -xf dotnet-sdk-${pkgver%.*.sdk*}.${pkgver#*sdk}-arch-x64.tar.gz -C "${pkgdir}"/usr/share/dotnet/ --no-same-owner shared/Microsoft.NETCore.App
+  bsdtar -xf sources/artifacts/x64/Release/dotnet-sdk-${pkgver%.*.sdk*}.${pkgver#*sdk}-arch-x64.tar.gz -C "${pkgdir}"/usr/share/dotnet/ --no-same-owner shared/Microsoft.NETCore.App
   ln -s dotnet-host "${pkgdir}"/usr/share/licenses/dotnet-runtime
 }
 
@@ -182,10 +182,8 @@ package_aspnet-runtime() {
   provides=(aspnet-runtime-7.0)
   conflicts=(aspnet-runtime-7.0)
 
-  cd sources/artifacts/x64/Release
-
   install -dm 755 "${pkgdir}"/usr/share/{dotnet,licenses}
-  bsdtar -xf dotnet-sdk-${pkgver%.*.sdk*}.${pkgver#*sdk}-arch-x64.tar.gz -C "${pkgdir}"/usr/share/dotnet/ --no-same-owner shared/Microsoft.AspNetCore.App
+  bsdtar -xf sources/artifacts/x64/Release/dotnet-sdk-${pkgver%.*.sdk*}.${pkgver#*sdk}-arch-x64.tar.gz -C "${pkgdir}"/usr/share/dotnet/ --no-same-owner shared/Microsoft.AspNetCore.App
   ln -s dotnet-host "${pkgdir}"/usr/share/licenses/aspnet-runtime
 }
 
@@ -202,10 +200,8 @@ package_dotnet-sdk() {
   provides=(dotnet-sdk-7.0)
   conflicts=(dotnet-sdk-7.0)
 
-  cd sources/artifacts/x64/Release
-
   install -dm 755 "${pkgdir}"/usr/share/{dotnet,licenses}
-  bsdtar -xf dotnet-sdk-${pkgver%.*.sdk*}.${pkgver#*sdk}-arch-x64.tar.gz -C "${pkgdir}"/usr/share/dotnet/ --no-same-owner sdk sdk-manifests templates
+  bsdtar -xf sources/artifacts/x64/Release/dotnet-sdk-${pkgver%.*.sdk*}.${pkgver#*sdk}-arch-x64.tar.gz -C "${pkgdir}"/usr/share/dotnet/ --no-same-owner sdk sdk-manifests templates
   ln -s dotnet-host "${pkgdir}"/usr/share/licenses/dotnet-sdk
 }
 
@@ -214,10 +210,8 @@ package_netstandard-targeting-pack() {
   provides=(netstandard-targeting-pack-2.1)
   conflicts=(netstandard-targeting-pack-2.1)
 
-  cd sources/artifacts/x64/Release
-
   install -dm 755 "${pkgdir}"/usr/share/{dotnet,licenses}
-  bsdtar -xf dotnet-sdk-${pkgver%.*.sdk*}.${pkgver#*sdk}-arch-x64.tar.gz -C "${pkgdir}"/usr/share/dotnet/ --no-same-owner packs/NETStandard.Library.Ref
+  bsdtar -xf sources/artifacts/x64/Release/dotnet-sdk-${pkgver%.*.sdk*}.${pkgver#*sdk}-arch-x64.tar.gz -C "${pkgdir}"/usr/share/dotnet/ --no-same-owner packs/NETStandard.Library.Ref
   ln -s dotnet-host "${pkgdir}"/usr/share/licenses/netstandard-targeting-pack
 }
 
@@ -227,10 +221,8 @@ package_dotnet-targeting-pack() {
   provides=(dotnet-targeting-pack-7.0)
   conflicts=(dotnet-targeting-pack-7.0)
 
-  cd sources/artifacts/x64/Release
-
   install -dm 755 "${pkgdir}"/usr/share/{dotnet,licenses}
-  bsdtar -xf dotnet-sdk-${pkgver%.*.sdk*}.${pkgver#*sdk}-arch-x64.tar.gz -C "${pkgdir}"/usr/share/dotnet/ --no-same-owner packs/Microsoft.NETCore.App.{Host.arch-x64,Ref}
+  bsdtar -xf sources/artifacts/x64/Release/dotnet-sdk-${pkgver%.*.sdk*}.${pkgver#*sdk}-arch-x64.tar.gz -C "${pkgdir}"/usr/share/dotnet/ --no-same-owner packs/Microsoft.NETCore.App.{Host.arch-x64,Ref}
   ln -s dotnet-host "${pkgdir}"/usr/share/licenses/dotnet-targeting-pack
 }
 
@@ -240,11 +232,15 @@ package_aspnet-targeting-pack() {
   provides=(aspnet-targeting-pack-7.0)
   conflicts=(aspnet-targeting-pack-7.0)
 
-  cd sources/artifacts/x64/Release
-
   install -dm 755 "${pkgdir}"/usr/share/{dotnet,licenses}
-  bsdtar -xf dotnet-sdk-${pkgver%.*.sdk*}.${pkgver#*sdk}-arch-x64.tar.gz -C "${pkgdir}"/usr/share/dotnet/ --no-same-owner packs/Microsoft.AspNetCore.App.Ref
+  bsdtar -xf sources/artifacts/x64/Release/dotnet-sdk-${pkgver%.*.sdk*}.${pkgver#*sdk}-arch-x64.tar.gz -C "${pkgdir}"/usr/share/dotnet/ --no-same-owner packs/Microsoft.AspNetCore.App.Ref
   ln -s dotnet-host "${pkgdir}"/usr/share/licenses/aspnet-targeting-pack
+}
+
+package_dotnet-source-built-artifacts() {
+  pkgdesc='Internal package for building the .NET Core SDK'
+
+  install -Dm 644 sources/artifacts/x64/Release/Private.SourceBuilt.Artifacts.*.tar.gz -t "${pkgdir}"/usr/share/dotnet/source-built-artifacts/
 }
 
 # vim: ts=2 sw=2 et:

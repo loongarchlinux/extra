@@ -7,34 +7,38 @@ pkgname=(
   libdex-docs
 )
 pkgver=0.2.0
-pkgrel=1
+pkgrel=3
 pkgdesc="A library supporting 'Deferred Execution'"
-url="https://gitlab.gnome.org/chergert/libdex"
+url="https://gitlab.gnome.org/GNOME/libdex"
 arch=(loong64 x86_64)
 license=(LGPL)
 depends=(
-  libsoup3
+  glib2
   liburing
 )
 makedepends=(
   gi-docgen
   git
   gobject-introspection
+  libsoup3
   libsysprof-capture
   meson
   vala
 )
 _commit=c59ec85110954d8e9a1bf31322944225e1dc6874  # tags/0.2.0^0
-source=("git+https://gitlab.gnome.org/chergert/libdex.git#commit=$_commit")
+source=("git+$url.git#commit=$_commit")
 b2sums=('SKIP')
 
 pkgver() {
-  cd $pkgbase
+  cd libdex
   git describe --tags | sed -r 's/[^-]*-g/r&/;s/-/+/g'
 }
 
 prepare() {
-  cd $pkgbase
+  cd libdex
+
+  # Build fixes
+  git cherry-pick -n dd2453dab189643a73e8 2194086a5bf83a56a5bf
 }
 
 build() {
@@ -43,7 +47,7 @@ build() {
     -D sysprof=true
   )
 
-  arch-meson $pkgbase build "${meson_options[@]}"
+  arch-meson libdex build "${meson_options[@]}"
   meson compile -C build
 }
 

@@ -5,7 +5,7 @@
 pkgname=(texlive-bin libsynctex)
 _rev=66984
 pkgver=2023.$_rev
-pkgrel=4
+pkgrel=13
 license=(GPL)
 arch=(loong64 x86_64)
 makedepends=(git cairo pixman graphite t1lib gd libsigsegv zziplib libpng libjpeg freetype2
@@ -13,11 +13,11 @@ makedepends=(git cairo pixman graphite t1lib gd libsigsegv zziplib libpng libjpe
 url='https://tug.org/texlive/'
 _commit=871c7a2856d70e1a9703d1f72f0587b9995dba5f # tags/texlive-2023.0
 source=(git+https://github.com/Tex-Live/texlive-source.git#commit=$_commit
-        svn://tug.org/texlive/tags/texlive-2023.0/Master/tlpkg#revision=$_rev
-        ptex-debug-print.patch)
+        ptex-debug-print.patch
+        context-luatex-1.17.patch)
 sha256sums=('SKIP'
-            'SKIP'
-            'aa838f09003c62c2efb5770a8de66f99b409df049fbd65098d80fd1957d06c50')
+            'aa838f09003c62c2efb5770a8de66f99b409df049fbd65098d80fd1957d06c50'
+            'a56838d19c3bd820781693b5a2e058e1a22378b37ea199bac426d97fcc420920')
 
 prepare() {
   cd texlive-source
@@ -28,7 +28,9 @@ prepare() {
 # t4ht expects to be un /usr/share/texmf/bin/t4ht (FS#27251)
   sed -i s/SELFAUTOPARENT/TEXMFROOT/ texk/tex4htk/t4ht.c
 # remove spurious ptex "guessed encoding" print
-  patch -Np1 -i ../ptex-debug-print.patch
+  patch -p1 -i ../ptex-debug-print.patch
+# update context to work with luatex 1.17
+  patch -p1 -i ../context-luatex-1.17.patch
 }
 
 build() {
@@ -73,10 +75,10 @@ build() {
     --with-freetype2-include=/usr/include/freetype2 \
     --with-xdvi-x-toolkit=xaw \
     --disable-dump-share \
-    --disable-aleph \
-    --enable-luatex \
     --with-clisp-runtime=default \
-    --enable-xindy --disable-xindy-rules --disable-xindy-docs
+    --enable-xindy \
+    --disable-xindy-rules \
+    --disable-xindy-docs
   make
 }
 
@@ -96,30 +98,15 @@ package_texlive-bin() {
   depends=(cairo pixman graphite t1lib gd poppler ffcall libsigsegv zziplib libpng libjpeg freetype2 libxcrypt
            harfbuzz-icu mpfr potrace libpaper libsynctex)
   provides=(lcdf-typetools kpathsea xindy)
-  optdepends=('ed: for texconfig'
-              'dialog: for texconfig'
-              'biber: for bibliography processing'
-              'ghostscript: for epstopdf, epspdf and other ConTeXt tools'
-              'java-runtime: for utilities like arara, texplate, pdfannotextractor'
-              'perl-tk: for texdoctk'
-              'psutils: to manipulate the output of dvips'
-              'python: for de-macro, dviasm, pythontex'
-              'python-pygments: for pygmentex'
-              'ruby: for old ConTeXT MkII and epspdf'
-              't1utils: can be useful when installing Type1 fonts'
-              'wdiff: for texdiff'
-              'fontforge: for scripts from the lilyglyphs package'
-              'perl-yaml-tiny: for latexindent'
-              'perl-file-homedir: for latexindent')
+  optdepends=('psutils: to manipulate the output of dvips')
 
   cd texlive-source
-
 # fixes for xindy
   find utils/xindy -name Makefile -exec sed -i -e "s|^prefix =.\+$|prefix = $pkgdir/usr|" -e "s|^mandir =.\+$|mandir = \${prefix}/share/man|" -e "s|^datadir =.\+$|datadir = \${datarootdir}/texmf|" -e "s|^docdir =.\+$|docdir = \${datadir}/doc/xindy|" '{}' \;
 
   cd build
   make DESTDIR="$pkgdir" texmf="$pkgdir"/usr/share/texmf install
-  LD_LIBRARY_PATH="$pkgdir"/usr/lib \
+  LD_PRELOAD="$pkgdir"/usr/lib/libkpathsea.so.6 \
   make DESTDIR="$pkgdir" texlinks
 
 # install old ConTeXt stubs
@@ -128,17 +115,13 @@ package_texlive-bin() {
     install -m755 texk/texlive/linked_scripts/context/stubs/unix/$_stub "$pkgdir"/usr/bin/$_stub
   done
 
-# install tlpkg files needed by texconfig
-  install -Dm644 "$srcdir"/tlpkg/TeXLive/* -t "$pkgdir"/usr/share/perl5/vendor_perl/TeXLive/
-  install -Dm644 "$srcdir"/tlpkg/texlive.tlpdb -t "$pkgdir"/usr/share/tlpkg
-  install -Dm644 "$srcdir"/tlpkg/installer/config.guess -t "$pkgdir"/usr/share/tlpkg/installer
+# remove stuff included in texlive-texmf
+  rm -r "$pkgdir"/usr/share/texmf-dist
 
-# remove stuff included in texlive-core
-  rm -r "$pkgdir"/usr/share/texmf-dist/{bibtex,chktex,dvipdfmx,dvips,fonts,hbf2gf,texconfig,ttf2pk,web2c,xdvi,xindy}
-  rm -r "$pkgdir"/usr/share/texmf-dist/scripts/{make4ht,pythontex}
-
-# docs are provided in texlive-doc
-  rm -r "$pkgdir"/usr/share/texmf-dist/doc
+# remove links to scripts
+  for _link in $(ls "$pkgdir"/usr/bin); do
+    [[ $(readlink "$pkgdir"/usr/bin/$_link) == */scripts/* ]] && rm "$pkgdir"/usr/bin/$_link
+  done
 
 # remove libsynctex
   rm "$pkgdir"/usr/include/synctex/*

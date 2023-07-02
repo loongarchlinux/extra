@@ -3,7 +3,7 @@
 
 pkgname=dokuwiki
 pkgver=20230404
-pkgrel=1
+pkgrel=2
 _pkgver=${pkgver:0:4}-${pkgver:4:2}-${pkgver:6}
 _pkgver=${_pkgver/_/}
 _pkgver=${_pkgver/rc/}
@@ -18,9 +18,17 @@ backup=('etc/webapps/dokuwiki/.htaccess'
 options=('!strip')
 #source=("$pkgname-$pkgver.tar.gz::https://github.com/splitbrain/dokuwiki/archive/release_${_release}_${_pkgver}.tar.gz"
 source=("$pkgname-$pkgver.tar.gz::https://github.com/dokuwiki/dokuwiki/releases/download/release-${_pkgver}/dokuwiki-${_pkgver}.tgz"
+        'https://github.com/dokuwiki/dokuwiki/commit/36b2038abb.patch'
         'apache.example.conf')
 sha256sums=('3e3f97b47a24332ee59ea52286587ab9c342792b91f3eec18c3bf14957117b46'
+            'ce610df6543637ac237c4ccb06f9a70fe92e8ebbac0dcf269fd82991730b0819'
             '237e11ec2c1cd69d0b7e8cff2169d0072666b31694efd727338c9197199e0f5f')
+
+prepare() {
+  cd "$pkgname-$_pkgver"
+  # CVE-2023-34408 / 2023-04-04a
+  patch -Np1 -i ../36b2038abb.patch
+}
 
 package() {
   cd "$pkgdir"

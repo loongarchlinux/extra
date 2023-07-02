@@ -3,22 +3,28 @@
 pkgname=python-aiobotocore
 _pkgname=aiobotocore
 # https://github.com/aio-libs/aiobotocore/releases
-pkgver=2.5.0
-pkgrel=3
+pkgver=2.5.1
+pkgrel=1
 pkgdesc='asyncio support for botocore library using aiohttp'
 arch=(any)
 url='https://github.com/aio-libs/aiobotocore'
 license=(Apache)
-depends=(python python-aiohttp python-botocore python-wrapt python-aioitertools)
-makedepends=(python-setuptools)
+depends=(python python-aiohttp python-botocore python-wrapt python-aioitertools
+         # detected by namcap but not listed in setup.py
+         python-dateutil python-jmespath python-multidict python-urllib3)
+makedepends=(python-build python-installer python-setuptools python-wheel)
 checkdepends=(python-moto python-pytest python-pytest-asyncio
               # moto optdepends
               python-docker python-openapi-spec-validator python-yaml python-flask python-flask-cors)
-source=("https://github.com/aio-libs/aiobotocore/archive/$pkgver/$pkgname-$pkgver.tar.gz")
-sha256sums=('ef7ec846afe19be0832ed7caefd5ef884e48824bf3cb98cdcb117992561d4429')
+source=("https://github.com/aio-libs/aiobotocore/archive/$pkgver/$pkgname-$pkgver.tar.gz"
+        moto-4.1.7.diff)
+sha256sums=('5e0b3fe62b640b9cde4e501eddb676ca9e554eb68a672aa587b5126e0d8e277f'
+            '06c2548e54067c15c192c48b72a29b04b987aa3b694e7676366e3cbc638df81f')
 
 prepare() {
   cd $_pkgname-$pkgver
+
+  patch -Np1 -i ../moto-4.1.7.diff
 
   # Disable dependency pinning
   # Upstream tracking issue: https://github.com/aio-libs/aiobotocore/issues/670
@@ -32,7 +38,7 @@ prepare() {
 
 build() {
   cd $_pkgname-$pkgver
-  python setup.py build
+  python -m build --wheel --no-isolation
 }
 
 check() {
@@ -51,5 +57,5 @@ check() {
 
 package() {
   cd $_pkgname-$pkgver
-  python setup.py install --root="$pkgdir" --optimize=1 --skip-build
+  python -m installer --destdir="$pkgdir" dist/*.whl
 }

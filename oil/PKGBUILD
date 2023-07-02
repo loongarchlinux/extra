@@ -5,33 +5,46 @@
 # Contributor: andychu <andy@oilshell.org>
 
 pkgname=oil
-pkgver=0.15.0
+pkgver=0.16.0
 pkgrel=1
 pkgdesc='A new Unix shell'
 arch=('loong64' 'x86_64')
 url='https://www.oilshell.org'
 license=('Apache')
-depends=('glibc' 'readline')
+depends=('glibc' 'gcc-libs' 'readline')
 makedepends=('bash')
 replaces=('osh')
 install=oil.install
-options=('!lto' '!strip')
-source=("$url/download/$pkgname-$pkgver.tar.xz")
-sha512sums=('4c803224a932b1c2b21da9c780d5043379bc3690a6daacdf6434a22dfe6faedbabe3b35e230bb7484159582437481deb5248186df3e4ee7f5c5e1593288fa731')
-b2sums=('8aeaae2030dd430cb609261076651fa0c062995e0c3cae6994a0d8bd696ecf65ad14e6f4ae7c3f9548bfda9a88eaf8183f5b63f3e0dd6a9186e25dd1235744ab')
+source=("$url/download/oils-for-unix-$pkgver.tar.gz")
+sha256sums=('cc8a49beecd85063dc72eddc03a0f0289625f2efcf8a0406d5155066fa30a462')
+b2sums=('6a6d3439a2c629df137436493bae5b646809250d951729b7c40c3df8beccdb10b71bffa3fdca4d4b6a693c33e57c8a39db880c5ada968d8946ecc92325935af7')
+# https://www.oilshell.org/release/latest/
+
+prepare() {
+  mkdir -p path
+  cat >path/c++ <<END
+#!/bin/sh
+exec g++ \$CXXFLAGS \$LDFLAGS -fPIC "\$@"
+END
+  cat >path/strip <<END
+#!/bin/sh
+exec cp -p "\$3" "\$2"
+END
+  chmod +x path/*
+}
 
 build() {
-	cd "$pkgname-$pkgver"
+  cd "oils-for-unix-$pkgver"
 
-	./configure \
+  ./configure \
     --prefix=/usr \
     --datarootdir=/usr/share
 
-	make
+  PATH="$srcdir/path:$PATH" _build/oils.sh
 }
 
 package() {
-	cd "$pkgname-$pkgver"
+  cd "oils-for-unix-$pkgver"
 
-	make DESTDIR="$pkgdir" install
+  DESTDIR="$pkgdir" ./install
 }

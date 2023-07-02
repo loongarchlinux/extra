@@ -7,7 +7,7 @@
 
 pkgname=hugin
 pkgver=2022.0.0
-pkgrel=8
+pkgrel=9
 pkgdesc="Panorama photo stitcher"
 arch=(loong64 x86_64)
 url="http://hugin.sourceforge.net/"
@@ -20,8 +20,15 @@ optdepends=('perl-image-exiftool: GPano tags support'
             'dcraw: RAW import using dcraw'
             'darktable: RAW import using darktable'
             'rawtherapee: RAW import using rawtherapee')
-source=(https://downloads.sourceforge.net/${pkgname}/${pkgname}-${pkgver}.tar.bz2)
-sha256sums=('97c8562a0ba9a743e0b955a43dfde048b1c60cd9e5f2ee2b69de1a81646e05a7')
+source=(https://downloads.sourceforge.net/${pkgname}/${pkgname}-${pkgver}.tar.bz2
+        exiv2-0.28.patch)
+sha256sums=('97c8562a0ba9a743e0b955a43dfde048b1c60cd9e5f2ee2b69de1a81646e05a7'
+            '1c94a89448c6d5d105602234ab82aa37e5ceb96304cbad14b7c77680788e1541')
+
+prepare() {
+# Fix build with exiv2 0.28
+  patch -d $pkgname-$pkgver -p1 < exiv2-0.28.patch
+}
 
 build() {
   cmake -B build -S ${pkgname}-${pkgver} \

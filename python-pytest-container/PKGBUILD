@@ -1,0 +1,47 @@
+# Maintainer: Jelle van der Waa <jelle@archlinux.org>
+
+pkgname=python-pytest-container
+pkgver=0.2.0
+pkgrel=2
+pkgdesc="Pytest fixtures for writing container based tests"
+arch=('any')
+license=('LGPL')
+url="https://dcermak.github.io/pytest_container/"
+checkdepends=('podman' 'buildah' 'python-typeguard')
+depends=(python python-pytest python-pytest-testinfra python-filelock)
+makedepends=(python-build python-installer python-wheel python-poetry-core git)
+optdepends=(
+  'podman: podman support'
+  'buildah: podman support'
+  'docker: docker support'
+)
+source=(${pkgname}-${pkgver}.tar.gz::https://github.com/dcermak/pytest_container/archive/refs/tags/${pkgver}.tar.gz
+	typeguard-4-compatibility.patch)
+sha256sums=('772bbd12ae606e96cf7d5e8d106e45d913234dfda9bf2334058943e975f2a7d7'
+            '000db6b7363499375c5a13e31a09e9361b47a407b6e20f3aedb9f6c9f3ba384f')
+
+prepare() {
+  cd pytest_container-${pkgver}
+  patch -Np1 -i ${srcdir}/typeguard-4-compatibility.patch
+}
+
+build() {
+  cd pytest_container-${pkgver}
+
+  python -m build --wheel --no-isolation
+}
+
+check() {
+  cd pytest_container-${pkgver}
+  # FIXME: can we run podman in nspawn
+  #pytest .
+}
+
+package() {
+  cd pytest_container-${pkgver}
+
+  python -m installer --destdir="$pkgdir" dist/*.whl
+
+  install -Dm 644 README.rst -t "${pkgdir}/usr/share/doc/${pkgname}"
+  install -Dm 644 LICENSE "${pkgdir}/usr/share/licenses/${pkgname}/LICENSE"
+}

@@ -6,7 +6,7 @@
 # Contributor: Matthias Meulien <orontee@gmail.com>
 
 pkgname=global
-pkgver=6.6.9
+pkgver=6.6.10
 pkgrel=1
 pkgdesc='Source code tagging system'
 arch=(loong64 x86_64)
@@ -17,11 +17,12 @@ optdepends=(ctags emacs idutils python-pygments vim)
 options=(!emptydirs !libtool)
 validpgpkeys=("26F631B43D624A927E6F1C33969C3BE389DDA6EB")
 source=("https://ftp.gnu.org/pub/gnu/$pkgname/$pkgname-$pkgver.tar.gz"{,.sig})
-b2sums=('53b48a0aaa57160f5dc57c4096e91f2463c8ae1453b9f68b94639eeae1178d9fbe3bef3d75700ddfeeff4c47030f2a89ab4ae3a1b801ceb128cd3fb369ff0c14'
+b2sums=('496bac144c935893b29e23bbb1fa4583a5d6d0ab1b8cd818ff592d7259bb6fa832d79666703f2ac179b5fd39095fd922b8861ad73879c5bac299f9b785797c0b'
         'SKIP')
 
 prepare() {
   cd $pkgname-$pkgver
+
   sed -i 's/\.la/.so/g' gtags.conf.in
   # Rename lid to lid-idutils to avoid a name collision with idutils from AUR
   sed -i 's/usable("lid")/usable("lid-idutils")/g' "$pkgname/$pkgname.c"
@@ -29,6 +30,7 @@ prepare() {
 
 build() {
   cd $pkgname-$pkgver
+
   autoreconf -fi
   ./configure \
     --prefix=/usr \
@@ -43,9 +45,7 @@ check() {
 }
 
 package() {
-  cd $pkgname-$pkgver
-
-  make DESTDIR="$pkgdir" install
+  make -C $pkgname-$pkgver DESTDIR="$pkgdir" install
 
   # Package the emacs script
   install -d "$pkgdir/usr/share/emacs/site-lisp"

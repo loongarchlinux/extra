@@ -2,9 +2,7 @@
 
 pkgname=python-cfn-lint
 # https://github.com/aws-cloudformation/cfn-lint/blob/main/CHANGELOG.md
-pkgver=0.77.5
-# curl https://api.github.com/repos/aws-cloudformation/cfn-lint/git/ref/tags/v$pkgver | jq -r .object.sha
-_tag=43e42b2dfd7b0881ef5071c93d0e842137faba27
+pkgver=0.77.10
 pkgrel=1
 pkgdesc='CloudFormation Linter'
 arch=(any)
@@ -14,26 +12,28 @@ depends=(python python-yaml python-aws-sam-translator
          python-jsonpatch python-jsonschema python-networkx
          python-junit-xml python-jschema-to-python python-sarif-om
          python-sympy python-regex)
-makedepends=(git python-build python-installer python-setuptools python-wheel)
+makedepends=(python-build python-installer python-setuptools python-wheel)
 checkdepends=(python-pydot)
 optdepends=(
   'python-pydot: for building graphs from templates'
 )
-source=("git+https://github.com/aws-cloudformation/cfn-lint.git#tag=$_tag")
-sha256sums=('SKIP')
+source=("https://github.com/aws-cloudformation/cfn-lint/archive/v$pkgver/cfn-lint-$pkgver.tar.gz"
+        'skip-tests-that-require-git.diff')
+sha256sums=('e233e7afaabdd44f2857ace01063a7230e68ad27270d8a0c71ff8f8a45a2164d'
+            '2c00f29edd290e5c0de741ebce53d7a4caa7509a91befc806296c897b0f0e879')
 
-pkgver() {
-  cd cfn-lint
-  git describe --tags | sed 's/^v//'
+prepare() {
+  cd cfn-lint-$pkgver
+  patch -Np1 -i ../skip-tests-that-require-git.diff
 }
 
 build() {
-  cd cfn-lint
+  cd cfn-lint-$pkgver
   python -m build --wheel --no-isolation
 }
 
 check() {
-  cd cfn-lint
+  cd cfn-lint-$pkgver
 
   # Tests in test/integration need the cfn-lint binary
   python -m installer --destdir="$PWD/tmp_install" dist/*.whl
@@ -48,7 +48,7 @@ check() {
 }
 
 package() {
-  cd cfn-lint
+  cd cfn-lint-$pkgver
   python -m installer --destdir="$pkgdir" dist/*.whl
 
   install -Dm644 LICENSE -t "$pkgdir"/usr/share/licenses/$pkgname

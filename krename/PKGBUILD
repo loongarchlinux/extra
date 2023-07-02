@@ -3,17 +3,26 @@
 
 pkgname=krename
 pkgver=5.0.2
-pkgrel=1
+pkgrel=5
 pkgdesc='A very powerful batch file renamer'
 arch=(loong64 x86_64)
 url='https://www.krename.net'
 license=(GPL)
 depends=(kio kjs exiv2 podofo taglib hicolor-icon-theme)
 makedepends=(extra-cmake-modules)
-source=(https://download.kde.org/stable/$pkgname/$pkgver/src/$pkgname-$pkgver.tar.xz{,.sig})
+source=(https://download.kde.org/stable/$pkgname/$pkgver/src/$pkgname-$pkgver.tar.xz{,.sig}
+        podofo-0.10.patch
+        https://invent.kde.org/utilities/krename/-/commit/e7dd767a.patch)
 sha256sums=('b23c60a7ddd9f6db4dd7f55ac55fcca8a558fa68aaf8fa5cb89e1eaf692f23ed'
-            'SKIP')
+            'SKIP'
+            '84be211755fd522f839935d2d434337de4b56f962f96e71eef9895b9f93b1566'
+            'f0c29ceffc5695b5a7276c31ef9f7604e70483fddabe3fe8e171282cc21c70e3')
 validpgpkeys=(D81C0CB38EB725EF6691C385BB463350D6EF31EF) # Heiko Becker <heirecka@exherbo.org>
+
+prepare() {
+  patch -d $pkgname-$pkgver -p1 < podofo-0.10.patch # Fix build with podofo 1.0
+  patch -d $pkgname-$pkgver -p1 < e7dd767a.patch # Fix build with exiv2 0.28
+}
 
 build() {
   cmake -B build -S $pkgname-$pkgver \

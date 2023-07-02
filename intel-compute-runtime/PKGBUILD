@@ -1,8 +1,9 @@
 # Maintainer: Daniel Bermond <dbermond@archlinux.org>
 # Maintainer: Bruno Pagani <archange@archlinux.org>
+# Maintainer: Torsten Keßler <tpkessler@archlinux.org>
 
 pkgname=intel-compute-runtime
-pkgver=23.09.25812.14
+pkgver=23.17.26241.22
 pkgrel=1
 pkgdesc="Intel(R) Graphics Compute Runtime for oneAPI Level Zero and OpenCL(TM) Driver"
 arch=(loong64 x86_64)
@@ -15,8 +16,17 @@ optdepends=('libva: for cl_intel_va_api_media_sharing'
 provides=(opencl-driver level-zero-driver)
 # https://github.com/intel/compute-runtime/issues/528
 options=(!lto)
-source=(https://github.com/intel/compute-runtime/archive/${pkgver}/${pkgname}-${pkgver}.tar.gz)
-sha256sums=('abe2e6d9d2ac771d5f42ee2357ce897ca3b00dc6185c06f3f62772f729c7f8e1')
+source=(https://github.com/intel/compute-runtime/archive/${pkgver}/${pkgname}-${pkgver}.tar.gz
+        $pkgname-macro-define.patch
+        020-intel-compute-runtime-disable-werror.patch)
+sha256sums=('42526fc8678b5531a32c534388ff437ca4429afa26ccc0adcbdc1167308a5f85'
+            'd1d044bf9c5ce70fc7f3e90e1cafd816652cdd374ca67d975095923f0a44fd5b'
+            'f5de93bb589141d2d4a179b2165b658765bf3c470ae00353d97337c81c76fd69')
+
+prepare() {
+  patch -d compute-runtime-${pkgver} -Np1 -i "${srcdir}/${pkgname}-macro-define.patch"
+  patch -d compute-runtime-${pkgver} -Np1 -i "${srcdir}/020-intel-compute-runtime-disable-werror.patch"
+}
 
 build() {
   # ${${pkgver#*.}%.*} not supported by bash?

@@ -2,7 +2,7 @@
 
 pkgname=soju
 pkgver=0.6.2
-pkgrel=1
+pkgrel=2
 pkgdesc='A user-friendly IRC bouncer'
 arch=('loong64' 'x86_64')
 url='https://soju.im'
@@ -23,16 +23,16 @@ options=('!lto')
 _commit='fa94179363613538a4e56a5ef5bc90d070763e8d'
 source=(
   "$pkgname::git+https://git.sr.ht/~emersion/soju#commit=$_commit"
-  'systemd.service'
+  'systemd.service.patch'
   'sysusers.conf'
   'tmpfiles.conf'
 )
 sha512sums=('SKIP'
-            'f1cbf40994dabe6c27288f1d3e5a78ed89a529a834ab178ddd64c093646d85ecc23ecabb5f9a20e99b805f46bb49fe321188b000fb1a3d59a64b77d8fde043c3'
+            '2e4a3243166cc67f687342323b72279697aa6f556913820328da521bf9077107db7e81108de5b94c790f49b5aac676a6ab40301ef47c6809aaf85f14df0e8274'
             '7b4069043d204581b0eda376956f8996365631e83ca78e002d6ea0caec931605bb5e99cf4f42a75b6de958267b982ee8ed7f31046c6b97d8f2442430678f3c07'
             '378dd64a8c3fa4fd1b28c055bbeb7c46eb05ec79a925d5b138af5d373970e82bafba62ff29269f63e67c67f34fb961570d448a02fa08f7f6cf4e8d844a3c12a0')
 b2sums=('SKIP'
-        'fe0819958384f58bd04cb7022bd496538a9e70e532256bdbe92832b0e786c003dd2eac6199f2a343764ac50893dda1d85b0977a110aa67489fd7e3a20d4e4bdf'
+        '264fef7705bded83c8dd6e29edeba3bc52877d23d95a6c228c3c4037d61841433731255d499b903eb48d174d424f66ac8f7e2e26716b8443127e9e6d1371e95b'
         '14e951b98e80d0dddf08aa0c2b03c57a86bda5ea1fd62d332e56edaf42f478ff86e9367699ab83b1ce0b968068e31048573b703bca6f4900cea901ad518a94b7'
         '9d164e694980e40955b1e8cedf1875214299840a8fce09b20069d594e74265c4335c0693e4bdd7c073c062a1de66cca859657f7581a27baffbfab741f45d0acc')
 
@@ -51,6 +51,9 @@ prepare() {
   # download dependencies
   export GOPATH="${srcdir}"
   go mod download
+
+  # patch systemd service
+  patch -p1 -i "$srcdir/systemd.service.patch"
 }
 
 build() {
@@ -76,6 +79,7 @@ build() {
 
   # rename binaries to prevent file conflicts
   mv build/{migrate-db,/soju-migrate-db}
+  mv build/{migrate-logs,/soju-migrate-logs}
   mv build/{znc-import,soju-znc-import}
 
   # man page
@@ -97,15 +101,15 @@ check() {
 }
 
 package() {
-  # systemd integration
-  install -vDm644 systemd.service "$pkgdir/usr/lib/systemd/system/$pkgname.service"
-  install -vDm644 sysusers.conf "$pkgdir/usr/lib/sysusers.d/$pkgname.conf"
-  install -vDm644 tmpfiles.conf "$pkgdir/usr/lib/tmpfiles.d/$pkgname.conf"
-
   cd "$pkgname"
 
+  # systemd integration
+  install -vDm644 -t "$pkgdir/usr/lib/systemd/system" contrib/soju.service
+  install -vDm644 "$srcdir/sysusers.conf" "$pkgdir/usr/lib/sysusers.d/$pkgname.conf"
+  install -vDm644 "$srcdir/tmpfiles.conf" "$pkgdir/usr/lib/tmpfiles.d/$pkgname.conf"
+
   # binaries
-  install -vDm755 -t "$pkgdir/usr/bin" build/soju{,ctl,-migrate-db,-znc-import}
+  install -vDm755 -t "$pkgdir/usr/bin" build/soju{,ctl,-migrate-db,-migrate-logs,-znc-import}
   install -vDm755 contrib/casemap-logs.sh "$pkgdir/usr/bin/soju-casemap-logs"
 
   # man page

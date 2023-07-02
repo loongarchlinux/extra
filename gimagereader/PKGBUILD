@@ -4,15 +4,14 @@
 pkgbase=gimagereader
 pkgname=(gimagereader-gtk gimagereader-qt gimagereader-common)
 pkgver=3.4.1
-pkgrel=1
+pkgrel=2
 url='https://github.com/manisandro/gImageReader'
 pkgdesc='Gtk/Qt front-end to tesseract-ocr'
 arch=('loong64' 'x86_64')
 license=('GPL3')
-depends=('djvulibre' 'gtksourceviewmm' 'gtkspellmm' 'libtesseract.so' 'libxml++' 'libzip' 'podofo' 'poppler-glib'
+depends=('djvulibre' 'gtksourceviewmm' 'gtkspellmm' 'libtesseract.so' 'libxml++' 'libzip' 'podofo-0.9' 'poppler-glib'
          'poppler-qt6' 'qt6-imageformats' 'qtspell' 'quazip-qt6' 'sane' 'tesseract')
 makedepends=('cmake' 'intltool' 'ninja' 'python-gobject')
-options=(debug)
 source=("$url/releases/download/v$pkgver/$pkgbase-$pkgver.tar.xz"
         'openmp.patch')
 sha256sums=('8c57a60113b14b9f94dce20a8394a59cb8df2acb57f80d0e5c6f2e31ed5ee2a4'
@@ -28,6 +27,8 @@ prepare() {
 }
 
 build() {
+  export PKG_CONFIG_PATH=/usr/lib/podofo-0.9/pkgconfig
+
   cmake -S $pkgbase-$pkgver -B build-gtk -G Ninja \
     -DCMAKE_INSTALL_PREFIX='/usr' \
     -DINTERFACE_TYPE=gtk
@@ -42,7 +43,7 @@ build() {
 package_gimagereader-gtk() {
   pkgdesc='Gtk front-end to tesseract-ocr'
   depends=('gimagereader-common' 'djvulibre' 'gtksourceviewmm' 'gtkspellmm' 'libxml++' 'libzip'
-           'podofo' 'poppler-glib' 'sane' 'tesseract')
+           'podofo-0.9' 'poppler-glib' 'sane' 'tesseract')
 
   DESTDIR="$pkgdir" cmake --install build-gtk
 
@@ -53,7 +54,7 @@ package_gimagereader-gtk() {
 
 package_gimagereader-qt() {
   pkgdesc='Qt front-end to tesseract-ocr'
-  depends=('gimagereader-common' 'djvulibre' 'podofo' 'poppler-qt6' 'qt6-imageformats' 'qtspell'
+  depends=('gimagereader-common' 'djvulibre' 'podofo-0.9' 'poppler-qt6' 'qt6-imageformats' 'qtspell'
            'quazip-qt6' 'sane' 'tesseract')
 
   DESTDIR="$pkgdir" cmake --install build-qt

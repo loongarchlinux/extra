@@ -3,7 +3,7 @@
 # Contributor: Michael Yeatts <mwyeatts@gmail.com>
 
 pkgname=python-typing_extensions
-pkgver=4.6.3
+pkgver=4.7.0
 pkgrel=1
 pkgdesc='Backported and Experimental Type Hints for Python 3.7+'
 arch=(any)
@@ -14,7 +14,7 @@ makedepends=(git python-build python-flit-core python-installer)
 checkdepends=(python-tests)
 provides=(python-typing-extensions)
 conflicts=(python-typing-extensions)
-_tag=c57333b77603298e2d79fdaf7632e09e40d11f54
+_tag=633d2e2942372848d8d7859cf71a569259dba9ee
 source=("git+${url}.git#tag=${_tag}")
 b2sums=(SKIP)
 

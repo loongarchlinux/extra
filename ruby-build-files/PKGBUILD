@@ -1,22 +1,22 @@
 # Maintainer: Felix Yan <felixonmars@archlinux.org>
 
 pkgname=ruby-build-files
-pkgver=1.8.1
+pkgver=1.9.0
 pkgrel=1
 pkgdesc='Abstractions for handling and mapping paths'
 arch=(any)
 url='https://github.com/ioquatix/build-files'
 license=(MIT)
 depends=(ruby)
-checkdepends=(ruby-covered ruby-rspec)
+checkdepends=(ruby-covered ruby-sus ruby-bake-modernize ruby-bake-test ruby-bake-test-external)
 options=(!emptydirs)
 source=(https://github.com/ioquatix/build-files/archive/v$pkgver/$pkgname-$pkgver.tar.gz)
-sha256sums=('9ed539ab74e316e44d61c9c0b13c6c299e8dfd905e9ef89551446120146f0d62')
+sha256sums=('3fd12bf39d9993f8f205d78d8f024099f52012f554de2f80bc2b251d2b323fa0')
 
 prepare() {
   cd build-files-$pkgver
   sed -e 's|~>|>=|' -e '/signing_key/d' -i build-files.gemspec
-  echo "gemspec" > gems.rb
+  sed -i '/bake-gem/d;/bake-github-pages/d;/utopia-project/d' gems.rb
 }
 
 build() {
@@ -48,7 +48,7 @@ build() {
 check() {
   local _gemdir="$(gem env gemdir)"
   cd build-files-$pkgver
-  GEM_HOME="tmp_install/$_gemdir" rspec
+  GEM_HOME="tmp_install/$_gemdir" bake test
 }
 
 package() {

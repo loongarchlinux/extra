@@ -1,14 +1,14 @@
 # Maintainer: Jelle van der Waa <jelle@archlinux.org>
 
 pkgname=hedgedoc
-pkgver=1.9.7
+pkgver=1.9.8
 pkgrel=1
 pkgdesc="Platform to write and share markdown"
 arch=('any')
 url='https://github.com/hedgedoc/hedgedoc'
 license=('AGPL3')
-depends=('nodejs-lts-hydrogen')
-makedepends=('nodejs-lts-hydrogen' 'sqlite' 'python' 'node-gyp' 'git' 'yarn' 'npm')
+depends=('nodejs')
+makedepends=('nodejs' 'sqlite' 'python' 'node-gyp' 'git' 'yarn' 'npm')
 optdepends=('postgresql: postgresql database support'
             'mariadb: mariadb database support'
             'sqlite: sqlite database support')
@@ -18,7 +18,7 @@ source=("${pkgname}-${pkgver}.tar.gz::https://github.com/hedgedoc/${pkgname}/arc
         "tmpfiles.conf"
         "hedgedoc.service")
 options=(!emptydirs)
-sha256sums=('a48b697228077711c869dc4cd7dc42ff20c3d8545c824079b3c9b6bcf1d77b2e'
+sha256sums=('8c975587152a9391710693f328ec793c151dfc43fb134a364d7f28c821a28641'
             '44806410925bb13fddfc08bfeac94320285f3847e18a49552816eb823bec888a'
             'afe54a4a656aa5237962fe4efa3cd47dd90c8ce821aa259bfa978384c26ba53a'
             'd51bb443c52f759260d61e055a201398cfe1e2296208f20e3d8601a6c01aa3a4')
@@ -31,12 +31,8 @@ prepare() {
 
 build() {
   cd "${pkgname}-${pkgver}"
-  # Build steps from Dockerfile
-  yarn install --production=false
+  yarn install
   yarn run build
-  rm -rf node_modules
-  # Production modules
-  yarn install --production=true
 }
 
 package() {

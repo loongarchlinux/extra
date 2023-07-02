@@ -1,16 +1,18 @@
 # Maintainer: Caleb Maclennan <caleb@alerque.com>
 # Contributor: BrLi <brli at chakralinux dot org>
+# Contributor: loqs <bugs-archlinux@entropy-collector.net>
 
 pkgname=zettlr
 _pkgname=${pkgname^}
-pkgver=2.3.0
+_pkgver=3.0.0-beta.4
+pkgver=${_pkgver//-/}
 pkgrel=1
 pkgdesc='A Markdown Editor for the 21st century'
 arch=(loong64 x86_64)
 url=https://www.zettlr.com
 _url="https://github.com/$_pkgname/$_pkgname"
 license=(GPL)
-_electron=electron17
+_electron=electron24
 depends=(crimson-font
          $_electron
          pandoc
@@ -19,19 +21,21 @@ depends=(crimson-font
 makedepends=(gendesk
              git
              nodejs-lts-gallium # grep NODE_VERSION .github/workflows/build.yml
-             yarn)
+             node-gyp
+             yarn
+             jq)
 optdepends=('texlive-bin: For Latex support')
 # Migration path for soon to be deleted AUR package; remove if ever reinstated
 replaces=(zettlr-bin)
-_archive="$_pkgname-$pkgver"
-source=("$_url/archive/v$pkgver/$_archive.tar.gz"
+_archive="$_pkgname-$_pkgver"
+source=("$_url/archive/v$_pkgver/$_archive.tar.gz"
         "$pkgname.sh"
         "$pkgname.xml")
-sha256sums=('5b9bea09d48f74f0fa8e232cee4b9022d7b9b23d16c23e1acfa7093f6f6971eb'
+sha256sums=('9482a6d3e8f578c892fb55a7ea6c0f843e46540f500edf0fc8a4581f8841d48c'
             'e300f2cac217f98ab5c365dccc7581410bc296f2842d52f7f1520dd6679d20cf'
             'c3ecbb490a1d4fa5bc42f7166cc375e5629a452d25bb1d4facb5541938681292')
 
-_yarnargs="--cache-folder '$srcdir/cache' --link-folder '$srcdir/link'"
+#_yarnargs="--cache-folder '$srcdir/cache' --link-folder '$srcdir/link'"
 
 prepare() {
 	local _electronVersion=$($_electron --version | sed -e 's/^v//')
@@ -43,19 +47,18 @@ prepare() {
 		--mimetypes 'text/markdown' \
 		--custom StartupWMClass="$_pkgname"
 	cd "$_archive"
+	readarray -t _oldElectron <  <(yarn info --cache --json 'electron' | jq -r '.children | .Version,.Cache.Checksum')
+	sed -i "/${_oldElectron[1]:3}/d" yarn.lock
+	sed -i "s/\([\^ :]\)${_oldElectron[0]}/\1$_electronVersion/"  package.json yarn.lock
 	echo -ne '#!/usr/bin/env bash\n\nexit 0' > scripts/get-pandoc.sh
-	sed -i -e '/"electron"/d' package.json
 	sed -e "s/@ELECTRON@/$_electron/" "../${source[1]}" > $pkgname.sh
-	yarn $_yarnargs install --frozen-lockfile --ignore-scripts
-	yarn $_yarnargs add --dev --no-lockfile electron@$_electronVersion
-	yarn $_yarnargs install --pure-lockfile # postinstall script installs electron-builder deps
+	yarn $_yarnargs install --immutable # postinstall script installs electron-builder deps
 	ln -sf /usr/bin/pandoc resources/pandoc-linux-x64
 }
 
 build() {
 	cd "$_archive"
 	local NODE_ENV=''
-	yarn $_yarnargs reveal:build
 	yarn $_yarnargs package:linux-x64
 }
 
@@ -66,6 +69,7 @@ package() {
 	local _destdir="usr/lib/$pkgname"
 	install -Dm0644 -t "$pkgdir/$_destdir/" \
 		"out/$_pkgname-linux-x64/resources/"{app.asar,icon.code.icns}
+	cp -a out/$_pkgname-linux-x64/resources/app.asar.unpacked "$pkgdir/$_destdir/"
 	for px in 16 24 32 48 64 96 128 256 512 1024; do
 		install -Dm0644 "resources/icons/png/${px}x${px}.png" \
 			"$pkgdir/usr/share/icons/hicolor/${px}x${px}/apps/$pkgname.png"

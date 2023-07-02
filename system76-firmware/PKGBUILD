@@ -1,0 +1,48 @@
+# Maintainer: Maxime Gauduin <alucryd@archlinux.org>
+# Contributor: Mark Wagie <mark.wagie@proton.me>
+# Contributor: Corey Hinshaw <corey@electrickite.org>
+
+pkgname=system76-firmware
+pkgver=1.0.52
+pkgrel=3
+pkgdesc='System76 Firmware Tool and Daemon'
+arch=(loong64 x86_64)
+url=https://github.com/pop-os/system76-firmware
+license=(GPL3)
+depends=(
+  ca-certificates
+  dbus
+  dfu-programmer
+  gcc-libs
+  glibc
+  efibootmgr
+  openssl
+  xz
+)
+makedepends=(
+  git
+  rust
+)
+provides=(system76-firmware-daemon)
+conflicts=(system76-firmware-daemon)
+_tag=a900b63026d369a56beb0f715824bf94a2b1a2df
+source=(git+https://github.com/pop-os/system76-firmware.git#tag=${_tag})
+b2sums=(SKIP)
+
+pkgver() {
+  cd system76-firmware
+  git describe --tags
+}
+
+build() {
+  cd system76-firmware
+  make
+}
+
+package() {
+  cd system76-firmware
+  make DESTDIR="${pkgdir}" install
+  mv "${pkgdir}"/etc/systemd "${pkgdir}"/usr/lib/
+}
+
+# vim: ts=2 sw=2 et:

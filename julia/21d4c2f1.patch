@@ -39,47 +39,6 @@ index 3c94b226ad7b8..233f61c9fea6b 100644
          Changed = true;
      }
  
-
-From 286b371d680efe4350f85769c3f5ba9c1faee726 Mon Sep 17 00:00:00 2001
-From: Prem Chintalapudi <prem.chintalapudi@gmail.com>
-Date: Tue, 9 May 2023 21:51:00 -0400
-Subject: [PATCH 2/7] Update MemorySSA correctly when sinking gc_preserve_end
-
----
- src/llvm-julia-licm.cpp | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
-
-diff --git a/src/llvm-julia-licm.cpp b/src/llvm-julia-licm.cpp
-index 7bc8d91b525f3..6c996b313ce38 100644
---- a/src/llvm-julia-licm.cpp
-+++ b/src/llvm-julia-licm.cpp
-@@ -58,13 +58,13 @@ static void eraseInstruction(Instruction &I,
- //Stolen and modified from LICM.cpp
- static void moveInstructionBefore(Instruction &I, Instruction &Dest,
-                                   MemorySSAUpdater &MSSAU,
--                                  ScalarEvolution *SE) {
-+                                  ScalarEvolution *SE,
-+                                  MemorySSA::InsertionPlace Place = MemorySSA::BeforeTerminator) {
-   I.moveBefore(&Dest);
-   if (MSSAU.getMemorySSA())
-     if (MemoryUseOrDef *OldMemAcc = cast_or_null<MemoryUseOrDef>(
-             MSSAU.getMemorySSA()->getMemoryAccess(&I)))
--      MSSAU.moveToPlace(OldMemAcc, Dest.getParent(),
--                         MemorySSA::BeforeTerminator);
-+      MSSAU.moveToPlace(OldMemAcc, Dest.getParent(), Place);
-   if (SE)
-     SE->forgetValue(&I);
- }
-@@ -241,7 +241,7 @@ struct JuliaLICM : public JuliaPassContext {
-                         continue;
-                     }
-                     ++SunkPreserveEnd;
--                    moveInstructionBefore(*call, *exit_pts[0], MSSAU, SE);
-+                    moveInstructionBefore(*call, *exit_pts[0], MSSAU, SE, MemorySSA::Beginning);
-                     for (unsigned i = 1; i < exit_pts.size(); i++) {
-                         // Clone exit
-                         auto CI = CallInst::Create(call, {}, exit_pts[i]);
-
 From b2273d39542fe803f7d9da03ef57af7e815db68c Mon Sep 17 00:00:00 2001
 From: Valentin Churavy <v.churavy@gmail.com>
 Date: Sun, 30 Apr 2023 20:19:08 -0400

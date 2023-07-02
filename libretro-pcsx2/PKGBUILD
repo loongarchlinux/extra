@@ -1,8 +1,8 @@
 # Maintainer: Maxime Gauduin <alucryd@archlinux.org>
 
 pkgname=libretro-pcsx2
-pkgver=11900
-pkgrel=2
+pkgver=17053
+pkgrel=1
 pkgdesc='Sony PlayStation 2 core'
 arch=(loong64 x86_64)
 url=https://github.com/libretro/pcsx2
@@ -13,6 +13,7 @@ license=(
   LGPL3
 )
 depends=(
+  ffmpeg
   gcc-libs
   glibc
   libaio
@@ -20,31 +21,91 @@ depends=(
   libglib-2.0.so
   libglvnd
   libudev.so
+  soundtouch
+  xorg-xrandr
   zlib
 )
 makedepends=(
+  clang
   cmake
   git
+  lld
   ninja
   png++
   systemd
 )
-_commit=373fca4dc5fbcb71970f0fa4a7f4c5501eeb83ee
-source=(libretro-pcsx2::git+https://github.com/libretro/pcsx2.git#commit=${_commit})
-b2sums=(SKIP)
+_commit=d86c52557863f27b2504bc9cba9b196790cb3cfd
+source=(
+  libretro-pcsx2::git+https://github.com/libretro/pcsx2.git#commit=${_commit}
+  git+https://github.com/biojppm/c4core.git
+  c4core-cmake::git+https://github.com/biojppm/cmake.git
+  c4core-debugbreak::git+https://github.com/biojppm/debugbreak.git
+  git+https://github.com/fastfloat/fast_float.git
+  git+https://github.com/fmtlib/fmt.git
+  git+https://github.com/KhronosGroup/glslang.git
+  git+https://github.com/rtissera/libchdr.git
+  git+https://github.com/nih-at/libzip.git
+  git+https://github.com/biojppm/rapidyaml.git
+  git+https://github.com/libsdl-org/SDL.git
+  git+https://github.com/KhronosGroup/Vulkan-Headers.git
+  git+https://github.com/facebook/zstd.git
+)
+b2sums=('SKIP'
+        'SKIP'
+        'SKIP'
+        'SKIP'
+        'SKIP'
+        'SKIP'
+        'SKIP'
+        'SKIP'
+        'SKIP'
+        'SKIP'
+        'SKIP'
+        'SKIP'
+        'SKIP')
 
 pkgver() {
   cd libretro-pcsx2
-
   git rev-list --count HEAD
 }
 
 prepare() {
-  sed '/set(CMAKE_C_COMPILER_LAUNCHER ccache)/d; /set(CMAKE_CXX_COMPILER_LAUNCHER ccache)/d' -i libretro-pcsx2/CMakeLists.txt
+  cd libretro-pcsx2
+  git submodule init 3rdparty/fmt/fmt
+  git config submodule.3rdparty/fmt/fmt.url ../fmt
+  git submodule init 3rdparty/glslang/glslang
+  git config submodule.3rdparty/glslang/glslang.url ../glslang
+  git submodule init 3rdparty/libchdr/libchdr
+  git config submodule.3rdparty/libchdr/libchdr.url ../libchdr
+  git submodule init 3rdparty/libzip/libzip
+  git config submodule.3rdparty/libzip/libzip.url ../libzip
+  git submodule init 3rdparty/rapidyaml/rapidyaml
+  git config submodule.3rdparty/rapidyaml/rapidyaml.url ../rapidyaml
+  git submodule init 3rdparty/sdl2/SDL
+  git config submodule.3rdparty/sdl2/SDL.url ../SDL
+  git submodule init 3rdparty/vulkan-headers
+  git config submodule.3rdparty/vulkan-headers.url ../Vulkan-Headers
+  git submodule init 3rdparty/zstd/zstd
+  git config submodule.3rdparty/zstd/zstd.url ../zstd
+  git -c protocol.file.allow=always submodule update
+  sed '/set(CMAKE_C_COMPILER_LAUNCHER ccache)/d; /set(CMAKE_CXX_COMPILER_LAUNCHER ccache)/d' -i CMakeLists.txt
+  cd 3rdparty/rapidyaml/rapidyaml
+  git submodule init ext/c4core
+  git config submodule.ext/c4core.url ../../../../c4core
+  git -c protocol.file.allow=always submodule update
+  cd ext/c4core
+  git submodule init cmake
+  git config submodule.cmake.url ../../../../../../c4core-cmake
+  git submodule init src/c4/ext/debugbreak
+  git config submodule.extern/debugbreak.url ../../../../../../c4core-debugbreak
+  git submodule init src/c4/ext/fast_float
+  git config submodule.src/c4/ext/fast_float.url ../../../../../../fast_float
+  git -c protocol.file.allow=always submodule update
 }
 
 build() {
-  #export LDFLAGS+=' -lgio-2.0'
+  export CC=clang
+  export CXX=clang++
   cmake -S libretro-pcsx2 -B build -G Ninja \
     -DCMAKE_BUILD_TYPE=Release \
     -DCMAKE_INSTALL_PREFIX=/usr \
@@ -52,16 +113,14 @@ build() {
     -DDISABLE_BUILD_DATE=ON \
     -DENABLE_TESTS=OFF \
     -DLIBRETRO=ON \
-    -DSDL2_API=ON \
-    -DREBUILD_SHADER=ON \
-    -DUSE_LTO=ON \
-    -DXDG_STD=ON \
+    -DQT_BUILD=OFF \
+    -DUSE_SYSTEM_LIBS=ON \
     -Wno-dev
   ninja -C build
 }
 
 package() {
-  install -Dm 644 build/pcsx2/pcsx2_libretro.so -t "${pkgdir}"/usr/lib/libretro/
+  install -Dm 644 build/bin/pcsx2_libretro.so -t "${pkgdir}"/usr/lib/libretro/
 }
 
 # vim: ts=2 sw=2 et:

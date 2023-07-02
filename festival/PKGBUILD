@@ -5,7 +5,7 @@
 
 pkgname=festival
 pkgver=2.5.0
-pkgrel=4
+pkgrel=5
 pkgdesc="A general multi-lingual speech synthesis system"
 arch=(loong64 x86_64)
 url="http://festvox.org/festival/"
@@ -50,12 +50,12 @@ build() {
   # Build Speech Tools first
   cd speech_tools
   ./configure --prefix=/usr --sysconfdir=/etc
-  make OPTIMISE_CXXFLAGS="${CXXFLAGS}" OPTIMISE_CCFLAGS="${CFLAGS}"
+  make OPTIMISE_CXXFLAGS="$CPPFLAGS $CXXFLAGS" OPTIMISE_CCFLAGS="$CPPFLAGS $CFLAGS $LDFLAGS" LINKFLAGS="$LDFLAGS" MAKE_SHARED_LIB='$(CXX) $(LINKFLAGS) -shared -o XXX -Wl,-soname,YYY'
 
   # Build Festival itself
   cd ../festival
   ./configure --prefix=/usr --sysconfdir=/etc
-  make OPTIMISE_CXXFLAGS="${CXXFLAGS}" OPTIMISE_CCFLAGS="${CFLAGS}"
+  make OPTIMISE_CXXFLAGS="$CPPFLAGS $CXXFLAGS" OPTIMISE_CCFLAGS="$CPPFLAGS $CFLAGS $LDFLAGS" LINKFLAGS="$LDFLAGS" MAKE_SHARED_LIB='$(CXX) $(LINKFLAGS) -shared -o XXX -Wl,-soname,YYY'
 }
 
 package() {

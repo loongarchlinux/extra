@@ -6,24 +6,25 @@
 # Contributor: AUR[Severus]
 
 pkgname=mattermost-desktop
-pkgver=5.1.1
+pkgver=5.4.0
 pkgrel=3
 pkgdesc='Mattermost Desktop application'
 arch=(loong64 x86_64)
 url="https://github.com/${pkgname/-//}"
 license=(Apache)
-_electron=electron19
-_builderVersion='^23.0.8'
-depends=($_electron)
-makedepends=(git
-             gendesk
+_electron=electron24
+depends=($_electron
+         libxcrypt-compat)
+makedepends=(gendesk
+             git
              jq
              moreutils
+             node-gyp
              npm)
 _archive="${pkgname#*-}-$pkgver"
 source=("$pkgname-$pkgver.tar.gz::$url/archive/v$pkgver.tar.gz"
         "$pkgname.sh")
-sha256sums=('ff1c0937a1cbbb6ef64bf536cb19ef1c9254feca38a5b1e8054e255ba3d22fe7'
+sha256sums=('3dda3865597182c23ed30ed2791614ff10a0f0660636adc64d6a2e3d83ff7793'
             '1c2bf48b6397d04a5a536c5c9f4960db53249c838c380f03f808c612b00ba4c6')
 
 _npmargs="--cache '$srcdir/npm-cache' --no-audit --no-fund"
@@ -39,44 +40,34 @@ prepare() {
 	cd "$_archive"
 	sed -i -e "s/git rev-parse --short HEAD/echo $pkgver/" webpack.config.base.js
 	sed -e "s/@ELECTRON@/$_electron/" "../$pkgname.sh" > "$pkgname.sh"
-	sed -i -e 's#resources/linux#src/assets/linux#' electron-builder.json
-	sed -i -e 's/--ia32//g;s/--mac//g;s/--arm64//g;s/--win//g;s/--universal//g' package.json
-	local electronDist="/usr/lib/$_electron"
-	local electronVersion="$(<"$electronDist"/version)"
-	# Do not build tar.gz, nor .deb or appimages
-	# Use electron version that matches system package
-	jq '
-				.linux .target |= ["dir"] |
-				{
-					"electronDist": $electronDist,
-					"electronVersion": $electronVersion
-				} + .
-			' \
-			--arg electronDist "$electronDist" \
-			--arg electronVersion "$electronVersion" \
-			electron-builder.json |
+	local _electronVersion="$(< "/usr/lib/$_electron/version")"
+	jq '	.linux["target"] = [ "dir" ]' electron-builder.json |
 		sponge electron-builder.json
-	jq '
-				del(.devDependencies["electron"]) |
-				.devDependencies["electron-builder"] = $builderVersion
-			' \
-			--arg electronVersion "$electronVersion" \
-			--arg builderVersion "$_builderVersion" \
+	jq '	.devDependencies["electron"] = $electronVersion |
+		del(.devDependencies["electron-rebuild"]) |
+		.config.target = $electronVersion |
+		.config.runtime = $electronRuntime' \
+			--arg electronRuntime "$_electron" \
+			--arg electronVersion "$_electronVersion" \
 			package.json |
 		sponge package.json
+	sed -i -e '/package:/s/tar.gz deb rpm/dir/' package.json
 	npm $_npmargs install
 }
 
 build() {
 	cd "$_archive"
-	npm $_npmargs --offline run package:linux
+	export NODE_ENV=production
+	npm $_npmargs --offline run build
+	npm $_npmargs --offline run package:linux-all-x64
 }
 
 package() {
 	cd "$_archive"
-	install -Dm0644 -t "$pkgdir/usr/lib/$pkgname/" release/linux*unpacked/resources/app.asar
+	install -Dm0644 -t "$pkgdir/usr/lib/$pkgname/" release/linux-unpacked/resources/app.asar
+	cp -a release/linux-unpacked/resources/app.asar.unpacked "$pkgdir/usr/lib/$pkgname/"
 	install -Dm0644 -t "$pkgdir/usr/share/licenses/$pkgname/" LICENSE.txt
-	install -Dm0644 src/assets/linux/icon.svg "$pkgdir/usr/share/icons/hicolor/scalable/apps/$pkgname.svg"
+	install -Dm0644 src/assets/linux/app_icon.png "$pkgdir/usr/share/icons/$pkgname.png"
 	install -Dm0755 "$pkgname.sh" "$pkgdir/usr/bin/$pkgname"
 	install -Dm0644 -t "$pkgdir/usr/share/applications/" "../$pkgname.desktop"
 }

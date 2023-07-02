@@ -1,38 +1,44 @@
 # Maintainer: Daniel M. Capella <polyzen@archlinux.org>
 
+_name=svelte-language-tools
 pkgname=typescript-svelte-plugin
-pkgver=0.3.25
+pkgver=0.3.27
 pkgrel=1
 pkgdesc='TypeScript plugin for Svelte intellisense'
 url=https://github.com/sveltejs/language-tools/tree/master/packages/typescript-plugin
 license=('MIT')
 arch=('any')
 depends=('nodejs')
-makedepends=('yarn')
-source=("https://github.com/sveltejs/language-tools/archive/typescript-plugin-$pkgver/$pkgname-$pkgver.tar.gz")
-b2sums=('d729cf8f4e39bfe239eb09c2cdfcd36a1f99a20fc3f5c5aeb93ddfe536bd4b9f92e25eaebc52371b6e534d26cb727c69c8a9c81cefeac8d1372ab27c47e19af7')
+makedepends=('git' 'npm' 'pnpm')
+source=("$_name::git+https://github.com/sveltejs/language-tools.git#tag=typescript-plugin-$pkgver")
+b2sums=('SKIP')
+
+prepare() {
+  cd $_name
+  pnpm install --frozen-lockfile
+}
 
 build() {
-  cd language-tools-typescript-plugin-$pkgver
-  yarn --frozen-lockfile
-  yarn workspace svelte2tsx build
-  cd packages/typescript-plugin
-  yarn build
+  cd $_name/packages/svelte2tsx
+  pnpm build
+  cd ../typescript-plugin
+  pnpm build
 }
 
 package() {
   install -d "$pkgdir"/usr/lib/node_modules/$pkgname
 
-  cd language-tools-typescript-plugin-$pkgver
+  cd $_name
   install -Dm644 -t "$pkgdir"/usr/share/licenses/$pkgname LICENSE
 
-  # Emulate `npm prune --production`
-  mv package.json{,.bak}
   cd packages/typescript-plugin
-  yarn --frozen-lockfile --production
-  mv ../../package.json{.bak,}
+  # Prune unnecessary packages
+  cp package.json{,.bak}
+  sed -i 's/workspace:~/*/' package.json
+  rm -r node_modules
+  npm install --production
+  mv package.json{.bak,}
 
-  cp -r dist node_modules package.json \
-    "$pkgdir"/usr/lib/node_modules/$pkgname
+  cp -r dist node_modules package.json "$pkgdir"/usr/lib/node_modules/$pkgname
   install -Dm644 -t "$pkgdir"/usr/share/doc/$pkgname README.md
 }

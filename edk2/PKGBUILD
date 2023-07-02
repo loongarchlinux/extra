@@ -2,11 +2,11 @@
 # Contributor: Alexander Epaneshnikov <alex19ep@archlinux.org>
 
 _brotli_ver=1.0.9
-_openssl_ver=1.1.1s
+_openssl_ver=1.1.1t
 pkgbase=edk2
 pkgname=(edk2-arm edk2-aarch64 edk2-shell edk2-ovmf)
-pkgver=202302
-_commit=f80f052277c88a67c55e107b550f504eeea947d3  # refs/tags/edk2-stable202302
+pkgver=202305
+_commit=ba91d0292e593df8528b66f99c1b0b14fadc8e16  # refs/tags/edk2-stable202305
 pkgrel=1
 pkgdesc="Modern, feature-rich firmware development environment for the UEFI specifications"
 arch=(any)
@@ -55,7 +55,7 @@ source=(
 )
 sha512sums=('SKIP'
             'SKIP'
-            '2ef983f166b5e1bf456ca37938e7e39d58d4cd85e9fc4b5174a05f5c37cc5ad89c3a9af97a6919bcaab128a8a92e4bdc8a045e5d9156d90768da8f73ac67c5b9'
+            '628676c9c3bc1cf46083d64f61943079f97f0eefd0264042e40a85dbbd988f271bfe01cd1135d22cc3f67a298f1d078041f8f2e97b0da0d93fe172da573da18c'
             'SKIP'
             'b8e2df955e8796ac1f022eb4ebad29532cb7e3aa6a4b6aee91dbd2c7d637eee84d9a144d3e878895bb5e62800875c2c01c8f737a1261020c54feacf9f676b5f5'
             '9182615c6f89e4f3c19f1b0f4434aa0a3293f982cf3ed783a2c140c2555d824b417c7c3c7a00ad10616188507f5068226c720b20ffd41d44449605ba0844bad2'
@@ -83,7 +83,7 @@ sha512sums=('SKIP'
             'd074c794796d17d77eed7c34201d93d7ef3f1322fe1ea4a2ddd7137fae884d49f94f465ee39cfd8346b026142668a41f5a8671e521409505dd6d002f71c0eebc')
 b2sums=('SKIP'
         'SKIP'
-        'ecd19eaf84dbc80448b51651abe52a89cc0052f024537959c4ebe61528988f235d661244fce6967159a876dd038c817bad19df742e828ca1cbae97ce6a4124bb'
+        '66d76ea0c05a4afc3104e22602cffc2373e857728625d31ab3244881cafa91c099a817a09def7746bce4133585bfc90b769f43527e77a81ed13e60a8c2fb4d8d'
         'SKIP'
         '8b9939d5224396ef33b43e019250ba4bc8949903583615e8dc02c85340fc0a1e2d1632161e00b0ee7355d77f05529ac772f482e05d2089afd71a0bf71e803904'
         '98742b83c2d605772a1bfa64ee434430413516db13d80235f0bc0be3a0e930aa17d737a6d2c95ce3d60f33de9f93679e09f421632d9e3fc9575d662fcf198f4b'

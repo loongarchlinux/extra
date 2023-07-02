@@ -6,14 +6,14 @@
 
 pkgname=python-botocore
 # UPDATE_BLOCKED: newer python-botocore will likely break python-aiobotocore
-pkgver=1.29.89
-pkgrel=4
+pkgver=1.29.162
+pkgrel=1
 pkgdesc='A low-level interface to a growing number of Amazon Web Services'
 arch=('any')
 url="https://github.com/boto/botocore"
 license=('Apache')
 depends=('python' 'python-certifi' 'python-dateutil' 'python-jmespath' 'python-urllib3')
-makedepends=('python-setuptools' 'python-awscrt')
+makedepends=('python-build' 'python-installer' 'python-setuptools' 'python-wheel' 'python-awscrt')
 # Tests need the 'ps' binary
 checkdepends=('python-pytest' 'python-pytest-xdist' 'python-jsonschema' 'procps-ng')
 optdepends=(
@@ -21,7 +21,7 @@ optdepends=(
 )
 source=($pkgname-$pkgver.tar.gz::$url/archive/$pkgver.tar.gz
         tests-keep-env.diff)
-sha256sums=('a6a0cef87a99538c5651f3d188a422f8c4788e1d2c000e863ff89f8b2ca6b474'
+sha256sums=('7fa0a0f16b4498b81d220afee2e02a3f99b8fdb82d86eb85d134e48d2609f49b'
             '15c588d3f4cfcc0ef26fc4ff367eb6dc12dc2f303e299cbe397288089ee52a11')
 
 prepare() {
@@ -32,7 +32,7 @@ prepare() {
 
 build() {
   cd botocore-$pkgver
-  python setup.py build
+  python -m build --wheel --no-isolation
 }
 
 check() {
@@ -49,6 +49,6 @@ check() {
 
 package() {
   cd botocore-$pkgver
-  python setup.py install --root="$pkgdir" --optimize=1 --skip-build
+  python -m installer --destdir="$pkgdir" dist/*.whl
   install -Dm644 LICENSE.txt "$pkgdir"/usr/share/licenses/$pkgname/LICENSE
 }

@@ -3,7 +3,7 @@
 
 pkgname=hyprland
 pkgver=0.26.0
-pkgrel=1
+pkgrel=3
 pkgdesc='a highly customizable dynamic tiling Wayland compositor'
 arch=(loong64 x86_64 aarch64)
 url="https://github.com/hyprwm/${pkgname^}"
@@ -80,6 +80,19 @@ build() {
 
 package() {
 	cd "$_archive"
+	find src -name '*.hpp' -exec install -Dm0644 {} "$pkgdir/usr/include/hyprland/{}" \;
+	pushd subprojects/wlroots/include
+	find . -name '*.h' -exec install -Dm0644 {} "$pkgdir/usr/include/hyprland/wlroots/{}" \;
+	popd
+	pushd subprojects/wlroots/build/include
+	find . -name '*.h' -exec install -Dm0644 {} "$pkgdir/usr/include/hyprland/wlroots/{}" \;
+	popd
+	mkdir -p "$pkgdir/usr/include/hyprland/protocols"
+	cp protocols/*-protocol.h "$pkgdir/usr/include/hyprland/protocols"
+	pushd build
+	cmake -DCMAKE_INSTALL_PREFIX=/usr ..
+	popd
+	install -Dm0644 -t "$pkgdir/usr/share/pkgconfig" build/hyprland.pc
 	install -Dm0755 -t "$pkgdir/usr/bin" build/Hyprland
 	install -Dm0755 -t "$pkgdir/usr/bin" hyprctl/hyprctl
 	install -Dm0644 -t "$pkgdir/usr/share/$pkgname" assets/*.png

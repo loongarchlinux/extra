@@ -3,16 +3,16 @@
 
 pkgname=newsflash
 _pkgname=news_flash_gtk
-pkgver=2.2.4
+pkgver=2.3.0
 pkgrel=1
 pkgdesc='Desktop application designed to complement an already existing web-based RSS reader account'
 arch=('loong64' 'x86_64')
 url='https://gitlab.com/news-flash/news_flash_gtk'
 license=('GPL3')
-depends=('libadwaita' 'webkit2gtk-5.0')
+depends=('libadwaita' 'webkitgtk-6.0')
 makedepends=('appstream-glib' 'meson' 'rust')
 source=("https://gitlab.com/news-flash/$_pkgname/-/archive/v.$pkgver/$_pkgname-v.$pkgver.tar.gz")
-sha256sums=('a13f0bbc32c59a36b039737a374728fcacbacce1b3b4a1fa560e4eb733680511')
+sha256sums=('0a07ae7d891cf5424a60456e39d8dc9024e51b1dbdadb717a93d4d20a1b57f4a')
 options=(!lto)
 
 build() {
@@ -22,9 +22,12 @@ build() {
   export MERCURY_PARSER_USER="newsflash"
   export MERCURY_PARSER_KEY="R4qcKEHpr9RTq6YuRAPkm9kMhjp4GuxiWG44VDk3Na4ZsN7F"
   export RUSTC_BOOTSTRAP=1
-	
+
   arch-meson $_pkgname-v.$pkgver build
   meson compile -C build
+
+  # "failed to stat '/root/.gitconfig'" from cargo in fakeroot
+  meson install -C build --destdir "$srcdir/fakeinstall"
 }
 
 check() {
@@ -32,6 +35,6 @@ check() {
 }
 
 package() {
-  DESTDIR="$pkgdir" meson install -C build
+  cp -a fakeinstall/* "$pkgdir"
   ln -s com.gitlab.newsflash "$pkgdir/usr/bin/$pkgname"
 }

@@ -1,8 +1,8 @@
 # Maintainer: Felix Yan <felixonmars@archlinux.org>
 
 pkgname=mighttpd2
-pkgver=4.0.2
-pkgrel=114
+pkgver=4.0.3
+pkgrel=1
 pkgdesc="High performance web server on WAI/warp"
 url="https://kazu-yamamoto.github.io/mighttpd2/"
 license=("BSD")
@@ -14,16 +14,15 @@ depends=('ghc-libs' 'haskell-async' 'haskell-auto-update' 'haskell-base16-bytest
          'haskell-streaming-commons' 'haskell-time-manager' 'haskell-tls'
          'haskell-tls-session-manager' 'haskell-unix-time' 'haskell-unliftio'
          'haskell-unordered-containers' 'haskell-wai' 'haskell-wai-app-file-cgi'
-         'haskell-wai-http2-extra' 'haskell-wai-logger' 'haskell-warp' 'haskell-warp-quic'
-         'haskell-warp-tls')
-makedepends=('ghc' 'haskell-hspec')
-source=("https://hackage.haskell.org/packages/archive/$pkgname/$pkgver/$pkgname-$pkgver.tar.gz"
-        https://raw.githubusercontent.com/kazu-yamamoto/mighttpd2/v4.0.1/conf/example.dhall)
-sha256sums=('1d4dc43b96a3064a8c0b752f71591cb04d769b76e3b922a5ea3529057d530960'
-            '454bac34f3096ca43fca573b4e927f2d13db86f794cc1280ea4129ccc7f800c3')
+         'haskell-wai-logger' 'haskell-warp' 'haskell-warp-quic' 'haskell-warp-tls')
+makedepends=('ghc' 'uusi' 'haskell-hspec')
+source=("https://hackage.haskell.org/packages/archive/$pkgname/$pkgver/$pkgname-$pkgver.tar.gz")
+sha256sums=('1a43390e921ab1b1b473d5bf65b2dcf27d0a8466e3243c2dab5d0c3de32bf9e1')
 
 prepare() {
-  mv example.dhall $pkgname-$pkgver/conf/
+  cd $pkgname-$pkgver
+  # https://github.com/kazu-yamamoto/mighttpd2/pull/25
+  sed -i -e 's|"127.0.0.1","::1"|"0.0.0.0","::"|' test/ConfigSpec.hs
 }
 
 build() {

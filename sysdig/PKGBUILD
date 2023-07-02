@@ -5,10 +5,10 @@
 pkgbase=sysdig
 pkgname=(sysdig sysdig-dkms)
 pkgver=0.31.5
-pkgrel=1
+pkgrel=2
 
 # from src/sysdig-*/cmake/modules/falcosecurity-libs.cmake
-_falcover=0.10.5
+_falcover=0.11.0
 
 pkgdesc="Open source system-level exploration and troubleshooting tool"
 arch=('loong64' 'x86_64')
@@ -16,21 +16,24 @@ url="https://www.sysdig.com/"
 license=('GPL2' 'Apache' 'MIT')
 makedepends=('cmake' 'pandoc' 'gtest' 'jsoncpp' 'libjsoncpp.so' 'luajit' 'curl' 'libcurl.so' 'jq' 'libb64' 'intel-tbb' 'grpc' 'yaml-cpp' 're2')
 source=("https://github.com/draios/sysdig/archive/$pkgver/$pkgbase-$pkgver.tar.gz"
+        "https://github.com/draios/sysdig/compare/35ded9aab87801281e22898242e24e0bc63873b2...954e6fc6238f21d4870a491395d68a7dd3062aa9.patch"
         "falcosecurity-libs-$_falcover.tar.gz::https://github.com/falcosecurity/libs/archive/$_falcover.tar.gz"
         "bashcomp-location.patch"
         "falcosecurity-libs-nodownload.patch"
         "libsinsp-zstd.patch")
 sha256sums=('9af98cae7c38273f7429ba0df628c9745bd92c949f444e180b9dd800af14c6dd'
-            '2a4b37c08bec4ba81326314831f341385aff267062e8d4483437958689662936'
+            '02184e3c470c90ccf94defbc04e302e87bbcf669831a5295bc2162c1292eec30'
+            '90414d00591986e94f2c49e7d65eef5c2dedee266354dd3db8234bb3b06c86fa'
             '3b659326176c314eee9115adac39a249dc4b9530511b344ea6a2b23236bb8386'
             '3392204c265ef46c2a1378fc2acbb74b2b440585de4c9127a007f97ce10f0cfa'
-            'bb29a1dd7a854019e2408b98fd954e73263a47f6da637556a83885175a729034')
+            'b966998a576310ced927628c2b9e860ca7ab31cac7061b1d5339c2fa0398e236')
 
 prepare() {
   cd "$srcdir/libs-$_falcover"
   patch -p1 -i "$srcdir"/libsinsp-zstd.patch
 
   cd "$srcdir/$pkgbase-$pkgver"
+  patch -p1 -i "$srcdir"/35ded9aab87801281e22898242e24e0bc63873b2...954e6fc6238f21d4870a491395d68a7dd3062aa9.patch
   patch -p1 -i "$srcdir"/bashcomp-location.patch
   patch -p1 -i "$srcdir"/falcosecurity-libs-nodownload.patch
 
@@ -73,7 +76,7 @@ package_sysdig() {
 
   cd "$srcdir"/$pkgbase-$pkgver/build
   make install DESTDIR="$pkgdir"
-  rm -rf "$pkgdir"/usr/src "$pkgdir"/sysdig
+  rm -rf "$pkgdir"/usr/{include,lib,src} "$pkgdir"/sysdig
 
   install -dm755 "$pkgdir"/usr/share/licenses/$pkgname
   install -m644 "$srcdir"/$pkgbase-$pkgver/{NOTICES,COPYING} "$pkgdir"/usr/share/licenses/$pkgname
@@ -85,7 +88,7 @@ package_sysdig-dkms() {
 
   cd "$srcdir"/$pkgbase-$pkgver/build
   make install DESTDIR="$pkgdir"
-  rm -rf "$pkgdir"/usr/{share,bin} "$pkgdir"/sysdig
+  rm -rf "$pkgdir"/usr/{bin,include,lib,share} "$pkgdir"/sysdig
 
   install -dm755 "$pkgdir"/usr/share/licenses/$pkgname
   install -m644 "$srcdir"/$pkgbase-$pkgver/{NOTICES,COPYING} "$pkgdir"/usr/share/licenses/$pkgname

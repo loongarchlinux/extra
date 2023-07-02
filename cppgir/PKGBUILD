@@ -1,0 +1,37 @@
+# Maintainer: Sven-Hendrik Haase <svenstaro@archlinux.org>
+pkgname=cppgir
+_commit=960fe054
+pkgver=0.git1.$_commit
+pkgrel=1
+pkgdesc="GObject-Introspection C++ binding wrapper generator"
+arch=('loong64' 'x86_64')
+url="https://gitlab.com/mnauw/cppgir"
+license=('MIT')
+makedepends=('cmake' 'ninja' 'git' 'boost' 'fmt' 'tl-expected')
+source=("git+https://gitlab.com/mnauw/cppgir#commit=$_commit"
+        "git+https://github.com/martinmoene/expected-lite.git")
+sha512sums=('SKIP'
+            'SKIP')
+
+prepare() {
+  cd cppgir
+
+  git submodule init
+  git config submodule."expected-lite".url "${srcdir}/expected-lite"
+  git -c protocol.file.allow=always submodule update --init --recursive
+}
+
+build() {
+  cmake -B build -S cppgir \
+      -DCMAKE_BUILD_TYPE='None' \
+      -DCMAKE_INSTALL_PREFIX='/usr' \
+      -Wno-dev
+  cmake --build build
+}
+
+package() {
+  DESTDIR="$pkgdir/" cmake --install build
+}
+
+# vim:set ts=2 sw=2 et:
+

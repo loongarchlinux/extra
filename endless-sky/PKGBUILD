@@ -3,7 +3,7 @@
 # Contributor: Leonard König <leonard.r.koenig at googlemail dot com>
 
 pkgname=endless-sky
-pkgver=0.9.16.1
+pkgver=0.10.2
 pkgrel=1
 pkgdesc='A sandbox-style space exploration and combat game'
 arch=('loong64' 'x86_64')
@@ -20,6 +20,7 @@ license=(
   'custom:public-domain'
 )
 depends=(
+  'glibc'
   'gcc-libs'
   'openal'
   'libpng'
@@ -29,15 +30,19 @@ depends=(
   'sdl2'
   'libmad'
   'util-linux-libs'
+  'libglvnd'
 )
 makedepends=('git' 'scons')
 optdepends=(
   'endless-sky-high-dpi: high resolution graphics assets'
 )
-options=('debug')
-_commit='d930b95c14119a74c6ffaadbe14bfd67a679af81'
-source=("$pkgname::git+https://github.com/endless-sky/endless-sky#commit=$_commit")
-b2sums=('SKIP')
+_commit='68a8c4fd67b101600ae73e9b7de77eeff6c70749'
+source=(
+  "$pkgname::git+https://github.com/endless-sky/endless-sky#commit=$_commit"
+  'fix-binary-install.patch'
+)
+b2sums=('SKIP'
+        'c32e4962ab7ceff081df54a7a1cf3488f57b87aef4533a18b0a8ecafa7a7bea29babeaec4a44767124716c8194d5088444fe17dc238ea05bb22c40e9d591700b')
 
 pkgver() {
   cd "$pkgname"
@@ -49,7 +54,7 @@ prepare() {
   cd "$pkgname"
 
   # binary is installed to /usr/games instead of /usr/bin
-  sed -i 's:games", sky:bin", sky:' SConstruct
+  patch -p1 -i "$srcdir/fix-binary-install.patch"
 }
 
 build() {

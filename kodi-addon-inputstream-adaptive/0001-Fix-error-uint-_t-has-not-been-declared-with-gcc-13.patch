@@ -1,0 +1,126 @@
+From e5928d5dbb49a3dcb17ff9814ac4fceceb0032c2 Mon Sep 17 00:00:00 2001
+From: BlackEagle <ike.devolder@gmail.com>
+Date: Sat, 3 Jun 2023 12:42:09 +0200
+Subject: [PATCH] =?UTF-8?q?Fix=20error:=20=E2=80=98uint*=5Ft=E2=80=99=20ha?=
+ =?UTF-8?q?s=20not=20been=20declared=20with=20gcc=2013?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+When building with gcc 13 there are various build issues like:
+
+```
+[ 48%] Building CXX object CMakeFiles/inputstream.adaptive.dir/src/aes_decrypter.cpp.o
+In file included from /home/ike/devel/github/inputstream.adaptive-upstream/src/aes_decrypter.h:11,
+                 from /home/ike/devel/github/inputstream.adaptive-upstream/src/aes_decrypter.cpp:9:
+/home/ike/devel/github/inputstream.adaptive-upstream/src/Iaes_decrypter.h:28:31: error: ‘uint8_t’ has not been declared
+   28 |   virtual void ivFromSequence(uint8_t* buffer, uint64_t sid) = 0;
+      |                               ^~~~~~~
+/home/ike/devel/github/inputstream.adaptive-upstream/src/Iaes_decrypter.h:28:48: error: ‘uint64_t’ has not been declared
+   28 |   virtual void ivFromSequence(uint8_t* buffer, uint64_t sid) = 0;
+      |                                                ^~~~~~~~
+make[2]: *** [CMakeFiles/inputstream.adaptive.dir/build.make:692: CMakeFiles/inputstream.adaptive.dir/src/aes_decrypter.cpp.o] Error 1
+make[1]: *** [CMakeFiles/Makefile2:210: CMakeFiles/inputstream.adaptive.dir/all] Error 2
+make: *** [Makefile:166: all] Error 2
+```
+
+Using the `#include <cstdint>` in the various headers fixes this issue.
+
+Signed-off-by: BlackEagle <ike.devolder@gmail.com>
+---
+ src/Iaes_decrypter.h        | 1 +
+ src/SSD_dll.h               | 1 +
+ src/test/KodiStubs.h        | 1 +
+ src/utils/FileUtils.h       | 1 +
+ src/utils/PropertiesUtils.h | 1 +
+ src/utils/StringUtils.h     | 1 +
+ src/utils/Utils.h           | 1 +
+ 7 files changed, 7 insertions(+)
+
+diff --git a/src/Iaes_decrypter.h b/src/Iaes_decrypter.h
+index 7fdf604..e7f889b 100644
+--- a/src/Iaes_decrypter.h
++++ b/src/Iaes_decrypter.h
+@@ -11,6 +11,7 @@
+ #include <bento4/Ap4Types.h>
+ 
+ #include <string>
++#include <cstdint>
+ 
+ class IAESDecrypter
+ {
+diff --git a/src/SSD_dll.h b/src/SSD_dll.h
+index 6298d09..bf75346 100644
+--- a/src/SSD_dll.h
++++ b/src/SSD_dll.h
+@@ -10,6 +10,7 @@
+ 
+ #include <stdarg.h> // va_list, va_start, va_arg, va_end
+ #include <string_view>
++#include <cstdint>
+ 
+ //Functionality wich is supported by the Decrypter
+ class Adaptive_CencSingleSampleDecrypter;
+diff --git a/src/test/KodiStubs.h b/src/test/KodiStubs.h
+index 7a9d8e6..fe5107b 100644
+--- a/src/test/KodiStubs.h
++++ b/src/test/KodiStubs.h
+@@ -12,6 +12,7 @@
+ 
+ #include <string>
+ #include <vector>
++#include <cstdint>
+ 
+ #ifdef _WIN32 // windows
+ #if !defined(_SSIZE_T_DEFINED) && !defined(HAVE_SSIZE_T)
+diff --git a/src/utils/FileUtils.h b/src/utils/FileUtils.h
+index 40745b0..92e75b1 100644
+--- a/src/utils/FileUtils.h
++++ b/src/utils/FileUtils.h
+@@ -10,6 +10,7 @@
+ 
+ #include <string>
+ #include <string_view>
++#include <cstdint>
+ 
+ namespace UTILS
+ {
+diff --git a/src/utils/PropertiesUtils.h b/src/utils/PropertiesUtils.h
+index b277f58..0f0ba49 100644
+--- a/src/utils/PropertiesUtils.h
++++ b/src/utils/PropertiesUtils.h
+@@ -11,6 +11,7 @@
+ #include <map>
+ #include <string>
+ #include <utility>
++#include <cstdint>
+ 
+ namespace UTILS
+ {
+diff --git a/src/utils/StringUtils.h b/src/utils/StringUtils.h
+index fbafccd..066a6de 100644
+--- a/src/utils/StringUtils.h
++++ b/src/utils/StringUtils.h
+@@ -11,6 +11,7 @@
+ #include <string>
+ #include <string_view>
+ #include <vector>
++#include <cstdint>
+ 
+ namespace UTILS
+ {
+diff --git a/src/utils/Utils.h b/src/utils/Utils.h
+index e7ae209..24bccaf 100644
+--- a/src/utils/Utils.h
++++ b/src/utils/Utils.h
+@@ -12,6 +12,7 @@
+ #include <string>
+ #include <string_view>
+ #include <vector>
++#include <cstdint>
+ 
+ namespace UTILS
+ {
+-- 
+2.40.1
+

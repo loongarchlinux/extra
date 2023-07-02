@@ -4,8 +4,8 @@
 # Maintainer: Orhun Parmaksız <orhun@archlinux.org>
 
 pkgname=intellij-idea-community-edition
-pkgver=2023.1.2
-_build=231.9011.34
+pkgver=2023.1.3
+_build=231.9161.38
 _jrever=17
 _jdkver=17
 pkgrel=1

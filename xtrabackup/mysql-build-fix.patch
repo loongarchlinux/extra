@@ -1,0 +1,59 @@
+diff --git a/cmake/zlib.cmake b/cmake/zlib.cmake
+index 460d87a..4b98b68 100644
+--- a/cmake/zlib.cmake
++++ b/cmake/zlib.cmake
+@@ -32,7 +32,7 @@
+ SET(MIN_ZLIB_VERSION_REQUIRED "1.2.13")
+ 
+ 
+-FUNCTION(FIND_ZLIB_VERSION ZLIB_INCLUDE_DIR)
++MACRO(FIND_ZLIB_VERSION ZLIB_INCLUDE_DIR)
+   FOREACH(version_part
+       ZLIB_VER_MAJOR
+       ZLIB_VER_MINOR
+@@ -48,9 +48,9 @@ FUNCTION(FIND_ZLIB_VERSION ZLIB_INCLUDE_DIR)
+   SET(ZLIB_VERSION "${ZLIB_VERSION}" CACHE INTERNAL "ZLIB major.minor.step")
+   MESSAGE(STATUS "ZLIB_VERSION (${WITH_ZLIB}) is ${ZLIB_VERSION}")
+   MESSAGE(STATUS "ZLIB_INCLUDE_DIR ${ZLIB_INCLUDE_DIR}")
+-ENDFUNCTION(FIND_ZLIB_VERSION)
++ENDMACRO(FIND_ZLIB_VERSION)
+ 
+-FUNCTION(FIND_SYSTEM_ZLIB)
++MACRO(FIND_SYSTEM_ZLIB)
+   FIND_PACKAGE(ZLIB)
+   IF(ZLIB_FOUND)
+     ADD_LIBRARY(zlib_interface INTERFACE)
+@@ -61,7 +61,7 @@ FUNCTION(FIND_SYSTEM_ZLIB)
+         ${ZLIB_INCLUDE_DIR})
+     ENDIF()
+   ENDIF()
+-ENDFUNCTION(FIND_SYSTEM_ZLIB)
++ENDMACRO(FIND_SYSTEM_ZLIB)
+ 
+ MACRO (RESET_ZLIB_VARIABLES)
+   # Reset whatever FIND_PACKAGE may have left behind.
+@@ -114,9 +114,9 @@ MACRO (MYSQL_CHECK_ZLIB)
+     MYSQL_USE_BUNDLED_ZLIB()
+   ELSEIF(WITH_ZLIB STREQUAL "system")
+     FIND_SYSTEM_ZLIB()
+-    IF(NOT ZLIB_FOUND)
+-      MESSAGE(FATAL_ERROR "Cannot find system zlib libraries.")
+-    ENDIF()
++    # IF(NOT ZLIB_FOUND)
++    #   MESSAGE(FATAL_ERROR "Cannot find system zlib libraries.")
++    # ENDIF()
+   ELSE()
+     RESET_ZLIB_VARIABLES()
+     MESSAGE(FATAL_ERROR "WITH_ZLIB must be bundled or system")
+diff --git a/components/keyrings/common/data/data.h b/components/keyrings/common/data/data.h
+index 6340a26..566e036 100644
+--- a/components/keyrings/common/data/data.h
++++ b/components/keyrings/common/data/data.h
+@@ -23,6 +23,7 @@
+ #ifndef DATA_INCLUDED
+ #define DATA_INCLUDED
+ 
++#include <cstdint>
+ #include <functional>
+ #include <string>
+ #include "pfs_string.h"

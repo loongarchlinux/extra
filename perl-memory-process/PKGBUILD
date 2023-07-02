@@ -1,0 +1,40 @@
+# Maintainer: Caleb Maclennan <caleb@alerque.com>
+
+pkgname=perl-memory-process
+_pkgname=Memory-Process
+pkgver=0.06
+pkgrel=1
+pkgdesc='Perl/CPAN Module Memory::Process memory process reporting for Perl'
+arch=(any)
+license=(PerlArtistic GPL)
+options=(!emptydirs)
+depends=(perl
+         perl-memory-usage
+         perl-readonly)
+checkdepends=(perl-capture-tiny
+              perl-test-nowarnings)
+url="https://metacpan.org/release/$_pkgname"
+_archive="$_pkgname-$pkgver"
+source=("http://search.cpan.org/CPAN/authors/id/S/SK/SKIM/$_archive.tar.gz")
+sha256sums=('35814488ffd29c97621625ea3b3d700afbfa60ed055bd759d4e58d9c8fd44e4e')
+
+build() {
+	cd "$_archive"
+	unset PERL5LIB PERL_MM_OPT PERL_LOCAL_LIB_ROOT
+	export PERL_MM_USE_DEFAULT=1 PERL_AUTOINSTALL=--skipdeps
+	/usr/bin/perl Makefile.PL
+	make
+}
+
+check() {
+	cd "$_archive"
+	unset PERL5LIB PERL_MM_OPT PERL_LOCAL_LIB_ROOT
+	export PERL_MM_USE_DEFAULT=1
+	make test
+}
+
+package() {
+	cd "$_archive"
+	unset PERL5LIB PERL_MM_OPT PERL_LOCAL_LIB_ROOT
+	make install INSTALLDIRS=vendor DESTDIR="$pkgdir"
+}

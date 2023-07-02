@@ -5,21 +5,25 @@
 
 pkgname=phototonic
 pkgver=2.1
-pkgrel=4
+pkgrel=5
 pkgdesc='Image viewer and organizer built with Qt and Exiv2'
 arch=('loong64' 'x86_64')
 url='https://github.com/oferkv/phototonic/'
 license=('GPL3')
 depends=('exiv2' 'hicolor-icon-theme' 'qt5-imageformats' 'qt5-svg')
 source=("https://github.com/oferkv/phototonic/archive/v$pkgver/$pkgname-$pkgver.tar.gz"
-        'appstream.patch')
+        'appstream.patch'
+         exiv2-0.28.patch)
 sha256sums=('a8b2dbc81750efabb65a4732b1704641afd4a4f772ef9c90817871ca2a52f5ef'
-            'af7b0768c5752297e4a629f54540475f5db0c55bd4a0cdfcdb816343274ecdd9')
+            'af7b0768c5752297e4a629f54540475f5db0c55bd4a0cdfcdb816343274ecdd9'
+            '7a7ccf4e6f74cee26bd47d7b057f8eac822bbadf2d1725a1d2e588cc10dc0a56')
 
 prepare() {
   cd $pkgname-$pkgver
   patch -Np1 -i ../appstream.patch
   sed -i '/INSTALLS +=/ s/ iconPixmaps//' phototonic.pro
+# Fix build with exiv2 0.28 (Gentoo)
+  patch -p1 -i ../exiv2-0.28.patch
 }
 
 build() {

@@ -8,24 +8,27 @@
 # Contributor: Ignas Anikevicius <anikevicius ð gmail đ com>
 
 pkgname=tp_smapi
-pkgver=0.43
-pkgrel=483
+pkgver=0.43+r3+g35be4ab
+pkgrel=2
 pkgdesc="Modules for ThinkPad's SMAPI functionality"
-arch=('loong64' 'x86_64')
 url='https://github.com/evgeni/tp_smapi'
-license=('GPL')
-makedepends=('linux-headers' 'git')
-_commit=a63729ab30d85430048f65c37f29188ab484cd52  # tags/tp-smapi/0.43
+arch=(loong64 x86_64)
+license=(GPL)
+makedepends=(
+  git
+  linux-headers
+)
+_commit=35be4ab60d2330e4f806dfcbb616629f47e0e7f7  # master
 source=("git+https://github.com/evgeni/tp_smapi#commit=$_commit")
-sha256sums=('SKIP')
+b2sums=('SKIP')
 
 pkgver() {
-  cd $pkgname
-  git describe --tags | sed 's/^tp-smapi\///;s/-/+/g'
+  cd tp_smapi
+  git describe --tags | sed 's/^tp-smapi\///;s/[^-]*-g/r&/;s/-/+/g'
 }
 
 build() {
-  cd $pkgname
+  cd tp_smapi
 
   # https://bugs.archlinux.org/task/54975 (kernel has no _GLOBAL_OFFSET_TABLE_):
   # Clear EXTRA_CFLAGS since it defaults to injecting CFLAGS and -fno-plt breaks the modules
@@ -37,7 +40,7 @@ package() {
   depends=('linux')
 
   local extradir=/usr/lib/modules/$(</usr/src/linux/version)/extramodules
-  cd $pkgname
+  cd tp_smapi
 
   find . -name "*.ko" -exec install -Dt "$pkgdir$extradir" {} +
   find "$pkgdir" -name "*.ko" -exec strip --strip-debug {} +
@@ -46,3 +49,5 @@ package() {
   # load module on startup
   echo tp_smapi | install -Dm644 /dev/stdin "$pkgdir/usr/lib/modules-load.d/$pkgname.conf"
 }
+
+# vim:set sw=2 sts=-1 et:

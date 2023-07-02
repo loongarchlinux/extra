@@ -5,25 +5,25 @@
 
 pkgname=retro-gtk
 pkgver=1.0.2
-pkgrel=1
-pkgdesc='Toolkit to write GTK+ 3 based Libretro frontends'
+pkgrel=3
+pkgdesc='Toolkit to write GTK based Libretro frontends'
 arch=('loong64' 'x86_64')
+url='https://gnome.pages.gitlab.gnome.org/retro-gtk/'
 license=('GPL3')
-url='https://wiki.gnome.org/Apps/Games'
-depends=('libepoxy' 'glib2' 'gtk3' 'libpulse' 'libsamplerate')
-makedepends=('gobject-introspection' 'meson' 'vala' 'git' 'gtk-doc')
-provides=('libretro-gtk-1.so')
-_commit=422b70aa9465ea65ea70edcc9a093368cac22b2a  # tags/1.0.2^0
-source=("git+https://gitlab.gnome.org/GNOME/retro-gtk.git#commit=$_commit")
-sha256sums=('SKIP')
+depends=('gcc-libs' 'gdk-pixbuf2' 'glib2' 'glibc' 'gtk3' 'libepoxy' 'libpulse' 'libsamplerate')
+makedepends=('gobject-introspection' 'meson' 'vala')
+source=("https://download.gnome.org/sources/$pkgname/${pkgver%.*}/$pkgname-$pkgver.tar.xz"
+        'retro-gtk-remove-unknown-arguments.patch::https://gitlab.gnome.org/GNOME/retro-gtk/-/commit/8016c10e7216394bc66281f2d9be740140b6fad6.patch')
+sha256sums=('7118b0b5f9c1f2f0bc742faf8689eb48b44833efada0f6dbce990ec9783bcbd2'
+            '5a165f0e63fb9f8e10222c60d8c21068b3c2ebf4080dc822ddc65d649dcc39e0')
 
-pkgver() {
-  cd $pkgname
-  git describe --tags | sed 's/-/+/g'
+prepare() {
+  # https://gitlab.gnome.org/GNOME/retro-gtk/-/commit/8016c10e7216394bc66281f2d9be740140b6fad6
+  patch -d $pkgname-$pkgver -Np1 -i ../retro-gtk-remove-unknown-arguments.patch
 }
 
 build() {
-  arch-meson $pkgname build \
+  arch-meson $pkgname-$pkgver build \
     -D build-doc=true \
     -D install-doc=true
   meson compile -C build
@@ -39,5 +39,5 @@ check() {
 }
 
 package() {
-  DESTDIR="$pkgdir" meson install -C build
+  meson install -C build --destdir "$pkgdir"
 }

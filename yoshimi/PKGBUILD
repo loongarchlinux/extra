@@ -1,23 +1,17 @@
 # Maintainer: David Runge <dvzrv@archlinux.org>
 # Contributor: David Adler <d dot adler aet posteo dot de>
 
-pkgname=yoshimi
-pkgver=2.3.0
+pkgbase=yoshimi
+pkgname=(yoshimi{,-{data,docs,lv2,standalone}})
+pkgver=2.3.0.2
 pkgrel=1
 pkgdesc="A sophisticated soft-synth originally forked from ZynAddSubFX"
 arch=(loong64 x86_64)
 url="https://yoshimi.github.io/"
 license=(GPL2)
-groups=(lv2-plugins pro-audio)
-depends=(
-  cairo
-  gcc-libs
-  glibc
-  hicolor-icon-theme
-  zlib
-)
 makedepends=(
   alsa-lib
+  cairo
   cmake
   fftw
   fltk
@@ -26,15 +20,25 @@ makedepends=(
   mxml
   ncurses
   readline
+  zlib
 )
 checkdepends=(kxstudio-lv2-extensions lv2lint)
-optdepends=('lv2-host: for LV2 plugin')
 # plugin exposes symbols globally if built with LTO:
 # https://github.com/Yoshimi/yoshimi/issues/164
 options=(!lto)
 source=(https://github.com/$pkgname/$pkgname/archive/$pkgver/$pkgname-$pkgver.tar.gz)
-sha512sums=('a5ff3234a1cfa6fefe93eb1088b61e939fb2d89636dacb6ee7f5082532cc0bc04a701d6326b61a3d7d7ba3f4bd58acbf4cc806e9a693f4b89a6db1a8192d872c')
-b2sums=('3c415c4e0460a5a625eda3cd50324cd234f8c1b3c69fe46e01af6a5c3c7b896caba1f4950148bff35433a616163722913db213b2c40b84eba6956213e8ec86fb')
+sha512sums=('cfe679dca117c5510e8fece4b21044b38f8812699fefb2e340a9faf1fd1eba80c7a0c129cfeb5adab8f0b8cacced3d95de7dafe943b6c8c1395fdd533f3aec6c')
+b2sums=('f374e7a4218d1806fd6bf389dc105a882e61cbe3bef4324acccff526db6285753f44d6f046fd6671256907107500ce9bb6ebe2b2bb5147bdeb7ea73d69ceb4da')
+
+_pick() {
+  local p="$1" f d; shift
+  for f; do
+    d="$srcdir/$p/${f#$pkgdir/}"
+    mkdir -p "$(dirname "$d")"
+    mv "$f" "$d"
+    rmdir -p --ignore-fail-on-non-empty "$(dirname "$f")"
+  done
+}
 
 build() {
   local cmake_options=(
@@ -42,7 +46,7 @@ build() {
     -DCMAKE_BUILD_TYPE=None
     -Wno-dev
     -B build
-    -S $pkgname-$pkgver/src
+    -S $pkgbase-$pkgver/src
   )
 
   cmake "${cmake_options[@]}"
@@ -50,24 +54,87 @@ build() {
 }
 
 check() {
-  cp -v build/LV2_Plugin/${pkgname}_lv2.so $pkgname-$pkgver/src/LV2_Plugin/
-  lv2lint -Mpack -I $pkgname-$pkgver/src/LV2_Plugin/ "http://yoshimi.sourceforge.net/lv2_plugin"
-  rm -v $pkgname-$pkgver/src/LV2_Plugin/${pkgname}_lv2.so
+  cp -v build/LV2_Plugin/${pkgbase}_lv2.so $pkgbase-$pkgver/src/LV2_Plugin/
+  lv2lint -Mpack -I $pkgbase-$pkgver/src/LV2_Plugin/ "http://yoshimi.sourceforge.net/lv2_plugin"
+  rm -v $pkgbase-$pkgver/src/LV2_Plugin/${pkgbase}_lv2.so
   ctest --test-dir build --output-on-failure
 }
 
-package() {
-  depends+=(
-    alsa-lib libasound.so
-    fftw libfftw3f.so
-    fltk libfltk.so libfltk_images.so
-    jack libjack.so
-    mxml libmxml.so
-    ncurses libncursesw.so
-    readline libreadline.so
-  )
+package_yoshimi() {
+  depends=($pkgbase-{data,docs,lv2,standalone})
 
   DESTDIR="$pkgdir" cmake --install build
-  install -vDm 644 $pkgname-$pkgver/{Changelog,Dependencies,README.txt,Yoshimi_Helpers} -t "$pkgdir/usr/share/doc/$pkgname/"
+
+  (
+    cd "$pkgdir"
+    _pick $pkgbase-data usr/share/$pkgbase/
+    _pick $pkgbase-docs usr/share/doc/$pkgbase/
+    _pick $pkgbase-lv2 usr/lib/lv2/
+    _pick $pkgbase-standalone usr/bin/
+    _pick $pkgbase-standalone usr/share/applications/
+    _pick $pkgbase-standalone usr/share/icons/
+    _pick $pkgbase-standalone usr/share/man/
+    _pick $pkgbase-standalone usr/share/metainfo/
+    _pick $pkgbase-standalone usr/share/pixmaps/
+  )
 }
+
+package_yoshimi-data() {
+  pkgdesc+=" - data files"
+
+  mv -v $pkgname/* "$pkgdir"
+}
+
+package_yoshimi-docs() {
+  pkgdesc+=" - documentation"
+
+  mv -v $pkgname/* "$pkgdir"
+  install -vDm 644 $pkgbase-$pkgver/{Changelog,Dependencies,README.txt,Yoshimi_Helpers} -t "$pkgdir/usr/share/doc/$pkgbase/"
+}
+
+package_yoshimi-lv2() {
+  pkgdesc+=" - LV2 plugin"
+  groups=(
+    lv2-plugins
+    pro-audio
+  )
+  depends=(
+    cairo
+    fftw
+    fltk
+    gcc-libs
+    glibc
+    lv2-host
+    mxml
+    yoshimi-data
+    zlib
+  )
+  optdepends=('yoshimi-docs: for documentation')
+
+  mv -v $pkgname/* "$pkgdir"
+}
+
+package_yoshimi-standalone() {
+  pkgdesc+=" - standalone"
+  groups=(pro-audio)
+  depends=(
+    alsa-lib
+    cairo
+    fftw
+    fltk
+    gcc-libs
+    glibc
+    hicolor-icon-theme
+    jack
+    mxml
+    ncurses
+    readline
+    yoshimi-data
+    zlib
+  )
+  optdepends=('yoshimi-docs: for documentation')
+
+  mv -v $pkgname/* "$pkgdir"
+}
+
 # vim:set ts=2 sw=2 et:

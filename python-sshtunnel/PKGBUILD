@@ -5,15 +5,17 @@ pkgbase=python-sshtunnel
 pkgname=('sshtunnel' 'python-sshtunnel')
 _gitcommit=58a46ef8b66be5eded29cd9bda4dccedb46ec586
 pkgver=0.4.0
-pkgrel=5
+pkgrel=6
 pkgdesc='Pure python SSH tunnels'
 url='https://github.com/pahaz/sshtunnel'
 arch=('any')
 license=('MIT')
 makedepends=('git' 'python-build' 'python-installer' 'python-paramiko' 'python-setuptools' 'python-sphinx' 'python-wheel')
-checkdepends=('python-pytest' 'python-mock' 'openssh')
-source=(${pkgbase}::"git+https://github.com/pahaz/sshtunnel#commit=${_gitcommit}")
-sha512sums=('SKIP')
+checkdepends=('python-pytest' 'openssh')
+source=(${pkgbase}::"git+https://github.com/pahaz/sshtunnel#commit=${_gitcommit}"
+        0001-Use-unittest.mock-on-Python-3.3.patch)
+sha512sums=('SKIP'
+            'eb1f52abc18e12b82f55cf0576fe45c0eb211a94e4c86c3e7eb86a0005b8cef41f3b6014067a49bf93bbffd58c4fdd5c4d48098083db3b91a441360292337cf3')
 
 pkgver() {
   cd ${pkgbase}
@@ -23,6 +25,7 @@ pkgver() {
 prepare() {
   cd ${pkgbase}
   sed '/sphinxcontrib.napoleon/d' -i docs/conf.py
+  patch -Np1 -i ${srcdir}/0001-Use-unittest.mock-on-Python-3.3.patch
 }
 
 build() {

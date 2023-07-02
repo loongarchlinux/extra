@@ -3,13 +3,15 @@
 
 pkgname=gnome-games
 pkgver=40.0
-pkgrel=3
+pkgrel=4
 pkgdesc='Simple game launcher for GNOME'
 arch=('loong64' 'x86_64')
 url='https://wiki.gnome.org/Apps/Games'
 license=('GPL3')
 groups=('gnome-extra')
-depends=('grilo' 'libarchive' 'libhandy' 'libmanette' 'retro-gtk' 'tracker3')
+depends=('cairo' 'dconf' 'gdk-pixbuf2' 'glib2' 'glibc' 'grilo' 'gtk3' 'hicolor-icon-theme'
+         'libarchive' 'libhandy' 'libmanette' 'librsvg' 'libsoup3' 'libxml2' 'retro-gtk' 'sqlite'
+         'tracker3')
 makedepends=('appstream-glib' 'meson' 'vala')
 optdepends=('libretro-beetle-pce-fast: Support for TurboGrafx-16 and TurboGrafx-CD games'
             'libretro-beetle-psx: Support for PlayStation games'
@@ -32,10 +34,12 @@ optdepends=('libretro-beetle-pce-fast: Support for TurboGrafx-16 and TurboGrafx-
 #            'libretro-stella2014: Support for Atari 2600 games'
 source=("https://download.gnome.org/sources/$pkgname/${pkgver%.*}/$pkgname-$pkgver.tar.xz"
         'tracker3.patch'
-        'meson-0.60.patch')
+        'meson-0.60.patch'
+        'libsoup3.patch')
 sha256sums=('32cd413f89292a74b0a84a5a30d0f4878ce42caea36374b1fb4dce3b4f6adf0f'
             '6eaa476f7de1b17848ea64ce99b583a431c3cce6b48d49f034ac2d611a1bdb27'
-            'dc55d441d90c70f1767ec84390b95364a599397ce3af98d4d1b4f5368a4eb89c')
+            'dc55d441d90c70f1767ec84390b95364a599397ce3af98d4d1b4f5368a4eb89c'
+            'df1f78564bf04ca64ff8ed99c5e3681d879a7312d51d62cd9a08fc99c76285e4')
 
 prepare() {
   cd $pkgname-$pkgver
@@ -44,6 +48,9 @@ prepare() {
 
   # Fix build with meson 0.60 (Alpine)
   patch -p1 -i ../meson-0.60.patch
+
+  # Port to libsoup3 (Alpine)
+  patch -p1 -i ../libsoup3.patch
 
   # Replace pcsx_rearmed with mednafen_psx
   mv flatpak/libretro-cores/{pcsx_rearmed,mednafen_psx}.libretro
@@ -63,7 +70,7 @@ check() {
 }
 
 package() {
-  DESTDIR="$pkgdir" meson install -C build
+  meson install -C build --destdir "$pkgdir"
 
   # Install *.libretro files
   install -dm755 "$pkgdir/usr/lib/libretro/"

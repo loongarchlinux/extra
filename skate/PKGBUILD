@@ -2,8 +2,8 @@
 # Contributor: Christian Muehlhaeuser <muesli at gmail dot com>
 
 pkgname=skate
-pkgver=0.2.1
-pkgrel=3
+pkgver=0.2.2
+pkgrel=1
 pkgdesc='A personal key value store'
 arch=('loong64' 'x86_64')
 url='https://github.com/charmbracelet/skate'
@@ -11,7 +11,7 @@ license=('MIT')
 depends=('glibc')
 makedepends=('git' 'go')
 options=('!lto')
-_commit='ef9b1840a9b88ee70e0a2af05c3d5ee72bdf238a'
+_commit='b8e7bbcc205c5cc0f9010f78f8201528f01b124e'
 source=("git+$url.git#commit=$_commit")
 b2sums=('SKIP')
 
@@ -28,22 +28,26 @@ prepare() {
   mkdir build
 
   # download dependencies
+  export GOPATH="${srcdir}"
   go mod download
 }
 
 build() {
   cd skate
 
+  # set Go flags
   export CGO_CPPFLAGS="${CPPFLAGS}"
   export CGO_CFLAGS="${CFLAGS}"
   export CGO_CXXFLAGS="${CXXFLAGS}"
+  export GOPATH="${srcdir}"
 
   go build -v \
-    -trimpath \
     -buildmode=pie \
     -mod=readonly \
     -modcacherw \
-    -ldflags "-linkmode external -extldflags $LDFLAGS \
+    -ldflags "-compressdwarf=false \
+    -linkmode external \
+    -extldflags ${LDFLAGS} \
     -X main.Version=$pkgver \
     -X main.CommitSHA=$_commit" \
     -o build \

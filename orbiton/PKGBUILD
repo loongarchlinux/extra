@@ -1,72 +1,69 @@
 # Maintainer: Alexander F. Rødseth <xyproto@archlinux.org>
 
-pkgname=orbiton
-pkgver=2.62.2
+pkgbase=orbiton
+pkgname=(orbiton orbiton-gtk3)
+pkgver=2.62.5
 pkgrel=1
-pkgdesc='Text editor and IDE limited by VT100'
+pkgdesc='Configuration-free text editor and IDE limited by VT100'
 arch=(loong64 x86_64)
 url='https://orbiton.zip'
 license=(BSD)
 makedepends=(git go vte3)
-source=("git+https://github.com/xyproto/orbiton#commit=17e719d18fdf45de5d2bf9192d2bd50d749436b8") # tag: v2.62.2
-# TODO: consider moving one or more of these from AUR:
-# 'cxx: for compiling C and C++'
-# 'elm-bin: for compiling Elm'
-# 'fstabfmt: for formatting /etc/fstab'
-# 'guessica: for updating PKGBUILD files'
-# 'google-java-format: for formatting Java'
-# 'lua-format: for formatting Lua'
-# 'hare: for compiling Hare'
-# 'ktlint: for formatting Kotlin'
-# 'odin: for compiling Odin'
-# 'scala: for compiling Scala'
-# 'vlang: for compiling and formatting V'
-optdepends=('asciidoctor: for writing man pages'
-            'agda: for compiling Agda'
-            'astyle: for formatting C#'
-            'autopep8: for formatting Python'
-            'clang: for formatting C++ code with clang-format'
-            'clojure: for compiling Clojure'
-            'crystal: for compiling Crystal'
-            'fpc: for compiling Object Pascal'
-            'gdb: for debugging C'
-            'gcc-d: for compiling D'
-            'ghc: for compiling Haskell'
-            'godot: for using GDScript'
-            'haskell-brittany: for formatting Haskell'
-            'jad: for decompiling .class files on the fly'
-            'java-environment: for compiling Java'
-            'kotlin: for compiling Kotlin'
-            'lua: for compiling Lua'
-            'mlton: for compiling Standard ML'
-            'mono: for compiling C#'
-            'nasm: for compiling Assembly'
-            'ocaml: for compiling and formatting OCaml'
-            'perl-tidy: for formatting Perl'
-            'pandoc-bin: for exporting Markdown to PDF'
-            'prettier: for formatting JavaScript, TypeScript and CSS'
-            'rustup: for compiling and formatting Rust'
-            'scdoc: for writing man pages'
-            'shfmt: for formattig Shell scripts'
-            'tidy: for formatting HTML'
-            'vte3: for og, the Orbiton VTE/GUI frontend'
-            'yasm: for compiling Assembly'
-            'zig: for compiling and formatting Zig')
+source=("git+https://github.com/xyproto/orbiton#commit=5fd09e3900b9f5472052b1cb6fd525d12770f569") # tag: v2.62.5
 options=(!lto)
 b2sums=('SKIP')
 
 build() {
-  make -C $pkgname o gui
+  make -C $pkgbase o gui
 }
 
-package() {
-  cd $pkgname
+package_orbiton() {
+  # TODO: consider moving one or more of these from AUR:
+  # 'cxx: for compiling C and C++'
+  # 'elm-bin: for compiling Elm'
+  # 'guessica: for updating PKGBUILD files'
+  # 'google-java-format: for formatting Java'
+  # 'lua-format: for formatting Lua'
+  # 'hare: for compiling Hare'
+  # 'ktlint: for formatting Kotlin'
+  # 'odin: for compiling Odin'
+  # 'scala: for compiling Scala'
+  # 'vlang: for compiling and formatting V'
+  optdepends=('asciidoctor: for writing man pages'
+              'agda: for compiling Agda'
+              'astyle: for formatting C#'
+              'autopep8: for formatting Python'
+              'clang: for formatting C++ code with clang-format'
+              'clojure: for compiling Clojure'
+              'crystal: for compiling Crystal'
+              'fpc: for compiling Object Pascal'
+              'gdb: for debugging C'
+              'gcc-d: for compiling D'
+              'ghc: for compiling Haskell'
+              'godot: for using GDScript'
+              'haskell-brittany: for formatting Haskell'
+              'jad: for decompiling .class files on the fly'
+              'java-environment: for compiling Java'
+              'kotlin: for compiling Kotlin'
+              'lua: for compiling Lua'
+              'mlton: for compiling Standard ML'
+              'mono: for compiling C#'
+              'nasm: for compiling Assembly'
+              'ocaml: for compiling and formatting OCaml'
+              'perl-tidy: for formatting Perl'
+              'pandoc-bin: for exporting Markdown to PDF'
+              'prettier: for formatting JavaScript, TypeScript and CSS'
+              'rustup: for compiling and formatting Rust'
+              'scdoc: for writing man pages'
+              'shfmt: for formattig Shell scripts'
+              'tidy: for formatting HTML'
+              'yasm: for compiling Assembly'
+              'zig: for compiling and formatting Zig')
+  cd $pkgbase
+
   install -Dm755 o "$pkgdir/usr/bin/o"
   install -Dm644 o.1 "$pkgdir/usr/share/man/man1/o.1"
   install -Dm644 LICENSE "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
-
-  # VTE/GUI
-  DESTDIR="$pkgdir" make gui-install
 
   # Recommended symlinks for Orbiton
   ln -sf /usr/bin/o "$pkgdir/usr/bin/li"
@@ -75,11 +72,20 @@ package() {
   ln -sf /usr/bin/o "$pkgdir/usr/bin/edi"
   ln -sf /usr/bin/o "$pkgdir/usr/bin/vs"
   ln -sf /usr/bin/o "$pkgdir/usr/bin/feedgame"
+}
+
+package_orbiton-gtk3() {
+  pkgdesc='Configuration-free text editor and IDE limited by VT100 (GTK3/VTE)'
+  depends=(orbiton vte3)
+  cd $pkgbase
+
+  DESTDIR="$pkgdir" make gui-install
+  install -Dm644 LICENSE "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
 
   # Recommended symlinks for the VTE/GUI version of Orbiton
   ln -sf /usr/bin/og "$pkgdir/usr/bin/lig"
   ln -sf /usr/bin/og "$pkgdir/usr/bin/redblackg"
   ln -sf /usr/bin/og "$pkgdir/usr/bin/swg"
-  ln -sf /usr/bin/og "$pkgdir/usr/bin/edig"
-  ln -sf /usr/bin/og "$pkgdir/usr/bin/vsg"
+  ln -sf /usr/bin/og "$pkgdir/usr/bin/edg"
+  ln -sf /usr/bin/og "$pkgdir/usr/bin/vg"
 }

@@ -4,13 +4,13 @@
 # Contributor: Spider.007 <archlinux AT spider007 DOT net>
 
 pkgname=opensearch-dashboards
-pkgver=2.6.0
+pkgver=2.8.0
 pkgrel=1
 pkgdesc='Open source visualization dashboards for OpenSearch'
 url='https://opensearch.org/docs/dashboards/index/'
 arch=('loong64' 'x86_64')
 license=('Apache')
-depends=('nodejs-lts-fermium')
+depends=('nodejs-lts-hydrogen')
 optdepends=(
   'opensearch'
   'opensearch-dashboards-alerting-plugin'
@@ -24,7 +24,7 @@ optdepends=(
   'opensearch-dashboards-reports-plugin'
   'opensearch-dashboards-security-plugin'
 )
-makedepends=('yarn' 'git' 'python')
+makedepends=('yarn' 'npm' 'git' 'python')
 backup=('etc/opensearch-dashboards/opensearch_dashboards.yml')
 options=('!strip' 'emptydirs')
 source=(
@@ -47,15 +47,10 @@ sha512sums=('SKIP'
 prepare() {
   cd "OpenSearch-Dashboards"
 
-  nodeVersion="$(node -v)"
-  # Yes, you support this version. You just don't know it yet.
-  sed -i "s/    \"node\": \"[0-9\.]*\",/    \"node\": \"${nodeVersion:1}\",/" "package.json"
-
-  # Don't check the nodejs version for now until https://github.com/opensearch-project/OpenSearch-Dashboards/issues/1189
-  sed -i "/^require('.\/node_version_validator');$/d" src/setup_node_env/no_transpilation.js
-
   # set default quiet mode for systemd, cli option forces specified values
   sed -r 's|#(logging.quiet:) false|\1 true|' -i config/opensearch_dashboards.yml
+  # https://github.com/opensearch-project/OpenSearch-Dashboards/issues/4260
+  git cherry-pick -n -m1 "986eb8c82a6be22bfb838a7dc1db997905737c88"
 }
 
 build() {
