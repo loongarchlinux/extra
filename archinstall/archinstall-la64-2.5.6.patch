@@ -1,3 +1,23 @@
+diff --git a/archinstall/lib/disk/partition.py b/archinstall/lib/disk/partition.py
+index 87eaa6a7..b5fe0f75 100644
+--- a/archinstall/lib/disk/partition.py
++++ b/archinstall/lib/disk/partition.py
+@@ -204,7 +204,14 @@ class Partition:
+ 		output = SysCommand(f"sfdisk --json {self.block_device.path}").decode('UTF-8')
+ 
+ 		if output:
+-			sfdisk_info = json.loads(output)
++			try:
++				sfdisk_info = json.loads(output)
++			except:
++				lines = output.splitlines()
++				for i in range(len(lines)):
++					if lines[i] == '{':
++						break
++				sfdisk_info = json.loads("\n".join(output.splitlines()[i:]))
+ 			partitions = sfdisk_info.get('partitiontable', {}).get('partitions', [])
+ 			node = list(filter(lambda x: x['node'] == self._path, partitions))
+ 
 diff --git a/archinstall/lib/hardware.py b/archinstall/lib/hardware.py
 index 9660ea95..7d60b780 100644
 --- a/archinstall/lib/hardware.py
