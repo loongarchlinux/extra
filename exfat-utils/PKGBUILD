@@ -6,12 +6,13 @@
 pkgname=exfat-utils
 _pkgname=${pkgname%-utils}
 pkgver=1.4.0
-pkgrel=1
+pkgrel=2
 pkgdesc='Utilities for exFAT file system'
 url="https://github.com/relan/$_pkgname"
 arch=(loong64 x86_64)
 license=(GPL2)
-depends=(glibc fuse2)
+depends=(glibc
+         fuse3)
 conflicts=(fuse-exfat)
 provides=(fuse-exfat)
 replaces=(fuse-exfat)
@@ -20,20 +21,20 @@ source=("$url/archive/v$pkgver/$_archive.tar.gz")
 sha256sums=('af560659f55dca0270f94809530f359d6bdad5d313133c68b458fb0a8eeab1c8')
 
 prepare() {
-		cd "$_archive"
-		autoreconf -fiv
+	cd "$_archive"
+	autoreconf -fiv
 }
 
 build() {
-		cd "$_archive"
-		./configure \
-			--prefix=/usr \
-			--sbindir=/usr/bin
-		make CCFLAGS="$CFLAGS $CPPFLAGS -std=c99" LINKFLAGS="$LDFLAGS"
+	cd "$_archive"
+	./configure \
+		--prefix=/usr \
+		--sbindir=/usr/bin
+	make CCFLAGS="$CFLAGS $CPPFLAGS -std=c99" LINKFLAGS="$LDFLAGS"
 }
 
 package() {
-		cd "$_archive"
-		make DESTDIR="$pkgdir" install
-		install -Dm 644 */*.8 -t "$pkgdir/usr/share/man/man8"
+	cd "$_archive"
+	make DESTDIR="$pkgdir" install
+	install -Dm0644 -t "$pkgdir/usr/share/man/man8" */*.8
 }

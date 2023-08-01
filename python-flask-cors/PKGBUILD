@@ -2,24 +2,24 @@
 # Maintainer: Johannes Löthberg <johannes@kyriasis.com>
 
 pkgname=python-flask-cors
-pkgver=3.0.10
-pkgrel=5
+pkgver=4.0.0
+pkgrel=1
 
 pkgdesc='A Flask extension adding a decorator for CORS support'
 url='https://pypi.org/project/Flask-Cors'
 arch=('any')
 license=('MIT')
 
-depends=('python-flask' 'python-six')
-makedepends=('python-setuptools')
+depends=('python' 'python-flask' 'python-werkzeug')
+makedepends=('python-build' 'python-installer' 'python-wheel' 'python-setuptools')
 
 source=("https://pypi.org/packages/source/F/Flask-Cors/Flask-Cors-$pkgver.tar.gz")
 
-sha256sums=('b60839393f3b84a0f3746f6cdca56c1ad7426aa738b70d6c61375857823181de')
+sha256sums=('f268522fcb2f73e2ecdde1ef45e2fd5c71cc48fe03cffb4b441c6d1b40684eb0')
 
 build() {
 	cd Flask-Cors-$pkgver
-	python setup.py build
+	python -m build --wheel --no-isolation --skip-dependency-check
 }
 
 check() {
@@ -31,6 +31,6 @@ check() {
 
 package() {
 	cd Flask-Cors-$pkgver
-	python setup.py install --root="$pkgdir" --optimize=1 --skip-build
+	python -m installer --destdir="$pkgdir" dist/*.whl
 	install -Dm644 LICENSE "$pkgdir"/usr/share/licenses/$pkgname/LICENSE
 }

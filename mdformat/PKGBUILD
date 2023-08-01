@@ -1,0 +1,41 @@
+# Maintainer: Daniel M. Capella <polyzen@archlinux.org>
+# Contributor: Carlos Aznarán <caznaranl@uni.pe>
+
+pkgname=mdformat
+pkgver=0.7.16
+pkgrel=3
+pkgdesc='CommonMark compliant Markdown formatter'
+arch=('any')
+url=https://github.com/executablebooks/mdformat
+license=('MIT')
+depends=('python-markdown-it-py' 'python-tomli')
+makedepends=(
+  'python-build'
+  'python-installer'
+  'python-setuptools'
+  'python-wheel'
+)
+checkdepends=('python-pytest')
+source=("$url/archive/$pkgver/$pkgname-$pkgver.tar.gz")
+b2sums=('64a9222d00231e0a0a41adaa4282afc1c9b02c97338f450e37c90c63353437b9f51987767866c4356f96dd484964c7b47f53c778fc0ede496f7695e0815cd982')
+
+build() {
+  cd $pkgname-$pkgver
+  python -m build --wheel --skip-dependency-check --no-isolation
+}
+
+check() {
+  cd $pkgname-$pkgver
+  PYTHONPATH="build/lib" pytest
+}
+
+package() {
+  cd $pkgname-$pkgver
+  python -m installer --destdir="$pkgdir" dist/*.whl
+
+  # Symlink license file
+  local site_packages=$(python -c "import site; print(site.getsitepackages()[0])")
+  install -d "$pkgdir"/usr/share/licenses/$pkgname
+  ln -s "$site_packages"/$pkgname-$pkgver.dist-info/LICENSE \
+    "$pkgdir"/usr/share/licenses/$pkgname/LICENSE
+}

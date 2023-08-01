@@ -3,7 +3,7 @@
 # Contributor: Stefan Husmann <stefan-husmann@t-online.de>
 
 pkgname=gotosocial
-pkgver=0.9.0
+pkgver=0.10.0
 pkgrel=1
 pkgdesc='ActivityPub social network server written in Golang'
 arch=('loong64' 'x86_64')
@@ -36,7 +36,7 @@ backup=(
   'etc/gotosocial/template/status.tmpl'
   'etc/gotosocial/template/thread.tmpl'
 )
-_commit='282be6f26dd4dfb57c3a21b92b756c40c05b2e6c'
+_commit='89ee9d50047bd5b3ab1bd3c140a8c97d26050094'
 source=(
   "$pkgname::git+https://github.com/superseriousbusiness/gotosocial#commit=$_commit"
   'sysusers.conf'
@@ -65,6 +65,7 @@ prepare() {
   mkdir build
 
   # download dependencies
+  export GOPATH="${srcdir}"
   go mod download
 
   # use FHS directories
@@ -78,17 +79,19 @@ build() {
   export CGO_CPPFLAGS="${CPPFLAGS}"
   export CGO_CFLAGS="${CFLAGS}"
   export CGO_CXXFLAGS="${CXXFLAGS}"
+  export GOPATH="${srcdir}"
 
   # generate up-to-date swagger.yaml
   swagger generate spec --scan-models --exclude-deps -o web/assets/swagger.yaml
   sed -e "s/REPLACE_ME/$pkgver/" -i web/assets/swagger.yaml
 
   go build -v \
-    -trimpath \
     -buildmode=pie \
     -mod=readonly \
     -modcacherw \
-    -ldflags "-linkmode external -extldflags ${LDFLAGS} \
+    -ldflags "-compressdwarf=false \
+    -linkmode external \
+    -extldflags ${LDFLAGS} \
     -X main.Version=$pkgver" \
     -o build \
     ./cmd/...

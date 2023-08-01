@@ -2,8 +2,8 @@
 
 pkgname=python-aws-sam-translator
 # https://github.com/aws/serverless-application-model/releases
-pkgver=1.70.0
-pkgrel=1
+pkgver=1.72.0
+pkgrel=2
 pkgdesc='AWS Serverless Application Model (AWS SAM) prescribes rules for expressing Serverless applications on AWS'
 arch=(any)
 url='https://github.com/aws/serverless-application-model'
@@ -14,13 +14,18 @@ makedepends=(python-build python-installer python-setuptools python-wheel)
 checkdepends=(python-pytest python-pytest-rerunfailures python-yaml python-parameterized)
 # Upstream intentionally exclude tests from sdist
 # https://github.com/aws/serverless-application-model/pull/381#issuecomment-382143094
-source=("https://github.com/aws/serverless-application-model/archive/v$pkgver/$pkgname-$pkgver.tar.gz")
-sha256sums=('5e6dd7d8b9caeef477d611fd4f7016a4dc71900598756c9068ee1ea320d5f799')
+source=("https://github.com/aws/serverless-application-model/archive/v$pkgver/$pkgname-$pkgver.tar.gz"
+        "pydantic2.diff")
+sha256sums=('fa5655a1a996128ce262044be87dc90b6326818a64870a2dfd410e87cf669379'
+            '42072cdbba7ff000f78effd55f97cf2768cfdd2c9bce46d0c2114cdfa222f3bb')
 
 prepare() {
   cd serverless-application-model-$pkgver
   # skip pytest-coverage
   sed -i -r 's#--cov\S*\s+\S+##g' pytest.ini
+
+  # Proposed at https://github.com/aws/serverless-application-model/pull/3249#issuecomment-1634980000
+  patch -Np0 -i ../pydantic2.diff
 }
 
 build() {

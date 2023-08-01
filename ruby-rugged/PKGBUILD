@@ -4,9 +4,9 @@
 
 _name=rugged
 # ideally this should match $pkgver, as package() might fail otherwise. thanks, github
-_libgit2_pkgver=1.6.3
+_libgit2_pkgver=1.7.0
 pkgname=ruby-rugged
-pkgver=1.6.2
+pkgver=1.6.3
 pkgrel=1
 pkgdesc="A Ruby binding to the libgit2 linkable library"
 arch=(loong64 x86_64)
@@ -31,18 +31,24 @@ source=(
   $_name-$pkgver.tar.gz::https://github.com/libgit2/$_name/archive/v$pkgver.tar.gz
   libgit2-$_libgit2_pkgver.tar.gz::https://github.com/libgit2/libgit2/archive/v$_libgit2_pkgver.tar.gz
   $pkgname-1.6.2-remove_broken_libgit2_detection.patch
+  $pkgname-1.6.3-libgit2_1.7.0.patch
 )
-sha512sums=('23b9e292dcc2114333ad76d842551a0bea54e3fe487572e41b00480ed4c8b101c9eb9ae0314b44b07257ec448295748f7930bc1fe105bb2ad9c7c24bf813d0f9'
-            '5a390030395d5e00217ca3229ff1374f064b41c7c14c332618778af7067c378bca5ffee5c072ad144a71126f7e8cfcd770746b6af8eccf086c8a8b8afa1733f1'
-            '955a01271852fcae00750f2bc155e7697e033429fa4f47615d7a611eab5e9296038324d0c486942d878ade118872d1f895f580c08e463b854ab405419673824e')
-b2sums=('e17c05bfb27192db70d3704ee6504035699b58532c18442042ae9ae767a5fdd8fb09060d04e15639051459f659c92f804b539a9c07224800f44b0d7fbb51b966'
-        'c0a588e962c182c09b91e257760484bc0ebf2ab07fdd89b7b90db1dd6749d7fb65b8e3fcd20e8a46a6381038aeac8759161dc409be36eadc776a55d74290e59c'
-        'bf6339a9e4cf26336ea8c693e0ef115b7e4afb1dc56d8b7a5ee3faff7e07eac4b420c67d694c690e78328780730787eec64e816e4c840391500af29a5f4818b0')
+sha512sums=('4d54b5df04382628aff7e1abbf5fbd9730564c9bcb4e17da34ac59578b306db567b15151629a10c4a6d8174a31cd8be03c27ff0d1514cb19de237e773f4b64ce'
+            '68c8ed289de7daccaec17ea2ac49f4610325595cf90cddef763a31546a0a1c6bd400bf6180b68e2d3a8bdc3d031328efbbbaf3b61467dfc1b944e8cf3efcfd69'
+            '955a01271852fcae00750f2bc155e7697e033429fa4f47615d7a611eab5e9296038324d0c486942d878ade118872d1f895f580c08e463b854ab405419673824e'
+            '31ecec2b93f7606f7f6523e0ebe1aa03fe168b7e70edc7d263f8624651e0fd0120aad325b953cb46352d45e6bb2d6bc3c63cca313f014779d986bd51aa98cf6e')
+b2sums=('80c7d17a90031ebe24d6c51e19ca7f1e4e9cfc32cd528161255b440a9b608d96995a5ef6ee70ab1f422f71a03c459d502015a27b098080b0904af7212483935e'
+        '3382efb1f82e5598eae9f72b145fc8cc19876d925ae94513e42e5e8bedfbb923387d3c5d4c80f1333fe6b07e5d96866d4d0776b2190a50f6929862f943815d8f'
+        'bf6339a9e4cf26336ea8c693e0ef115b7e4afb1dc56d8b7a5ee3faff7e07eac4b420c67d694c690e78328780730787eec64e816e4c840391500af29a5f4818b0'
+        '5f2571d68dee4c946fa7be8e46b1429ee63f7d5adcb1d7594895d9c92c10bcd2e83096365131c1ced0df6b3789cace12e66ec5257a467b887ac7dbdebfc38a86')
 
 prepare() {
   # remove broken and useless libgit2 "version check":
   # https://github.com/libgit2/rugged/issues/698
   patch -Np1 -d $_name-$pkgver -i ../$pkgname-1.6.2-remove_broken_libgit2_detection.patch
+
+  # add libgit2 1.7.0 compatibility: https://github.com/libgit2/rugged/pull/964
+  patch -Np1 -d $_name-$pkgver -i ../$pkgname-1.6.3-libgit2_1.7.0.patch
 
   cd $_name-$pkgver
   # we don't do version pinning

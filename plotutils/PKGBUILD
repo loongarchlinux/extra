@@ -1,32 +1,37 @@
-# Maintainer: damir <damir@archlinux.org>
-# Packager: Maksim Sipos (maxsipos at gmail dot com)
+# Maintainer: Alexander F. Rødseth <xyproto@archlinux.org>
+# Contributor: damir <damir@archlinux.org>
+# Contributor: Maksim Sipos <maxsipos@gmail.com>
 
 pkgname=plotutils
 pkgver=2.6
-pkgrel=10
-arch=('loong64' 'x86_64')
-pkgdesc="Set of utilities and libraries for plotting."
-url="https://directory.fsf.org/graphics/plotutils.html"
-license=("GPL")
-depends=("libpng" "gcc-libs" "libxaw>=1.0.5")
-source=(https://ftp.gnu.org/pub/gnu/plotutils/$pkgname-$pkgver.tar.gz{,.sig} 
+pkgrel=11
+arch=(loong64 x86_64)
+pkgdesc='Set of utilities and libraries for plotting'
+url='https://directory.fsf.org/graphics/plotutils.html'
+license=(GPL)
+depends=(libpng "libxaw>=1.0.5")
+source=(https://ftp.gnu.org/pub/gnu/plotutils/$pkgname-$pkgver.tar.gz{,.sig}
         plotutils-2.6-libpng-1.5.patch)
-sha1sums=('7921301d9dfe8991e3df2829bd733df6b2a70838'
+validpgpkeys=('C7823604DFEA27BC29DD4F179DEB46C0D679F6CF') # Karl Berry
+b1sums=('7921301d9dfe8991e3df2829bd733df6b2a70838'
           'SKIP'
           '492f0e04f8265ab50d9ba0905a0f5adf3ec06ab8')
-validpgpkeys=('C7823604DFEA27BC29DD4F179DEB46C0D679F6CF') # Karl Berry
+sha256sums=('4f4222820f97ca08c7ea707e4c53e5a3556af4d8f1ab51e0da6ff1627ff433ab'
+            'SKIP'
+            '2d8d5a287ebaf857b76c5c3fb2da5f25c8c0c38995bb96291ba42d6d3d1d53ba')
 
 build() {
-  cd "${srcdir}/${pkgname}-${pkgver}"
+  cd $pkgname-$pkgver
   patch -p0 -i ../plotutils-2.6-libpng-1.5.patch
-  ./configure --prefix=/usr \
-	--with-gnu-ld \
-	--with-x \
-	--enable-libplotter
+  export CXXFLAGS+=' -std=c++11 -w'
+  ./configure \
+    --enable-libplotter \
+    --prefix=/usr \
+    --with-gnu-ld \
+    --with-x
   make
 }
 
 package() {
-  cd "${srcdir}/${pkgname}-${pkgver}"
-  make DESTDIR="${pkgdir}" install
+  DESTDIR="$pkgdir" make -C $pkgname-$pkgver install
 }

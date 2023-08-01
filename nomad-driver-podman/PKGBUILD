@@ -1,7 +1,7 @@
 # Maintainer: George Rawlinson <grawlinson@archlinux.org>
 
 pkgname=nomad-driver-podman
-pkgver=0.4.2
+pkgver=0.5.0
 pkgrel=1
 pkgdesc='A nomad taskdriver for podman containers'
 arch=('loong64' 'x86_64')
@@ -10,7 +10,7 @@ license=('MPL2')
 depends=('nomad' 'podman')
 makedepends=('git' 'go')
 options=('!lto')
-_commit=fa9030e05b0eff8a7bf488c58b37401c749aede6	#refs/tags/v0.4.2
+_commit=0d5cb3ba27225550e9d1415813a4e6bf1aaa3830	#refs/tags/v0.5.0
 source=("$pkgname::git+$url#commit=$_commit")
 b2sums=('SKIP')
 
@@ -27,18 +27,26 @@ prepare() {
   mkdir build
 
   # download dependencies
+  export GOPATH="${srcdir}"
   go mod download
 }
 
 build() {
 	cd "$pkgname"
 
+  # set Go flags
+  export CGO_CPPFLAGS="${CPPFLAGS}"
+  export CGO_CFLAGS="${CFLAGS}"
+  export CGO_CXXFLAGS="${CXXFLAGS}"
+  export GOPATH="${srcdir}"
+
   go build -v \
-    -trimpath \
     -buildmode=pie \
     -mod=readonly \
     -modcacherw \
-    -ldflags "-linkmode external -extldflags ${LDFLAGS}" \
+    -ldflags "-compressdwarf=false \
+    -linkmode external \
+    -extldflags ${LDFLAGS}" \
     -o build \
     .
 }

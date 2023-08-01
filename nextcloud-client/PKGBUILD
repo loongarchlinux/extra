@@ -11,8 +11,8 @@ pkgname=(nextcloud-client nextcloud-client-cloudproviders)
 epoch=2
 # Upstream does not provide signed tarballs (yet)
 # https://github.com/nextcloud/desktop/issues/1510
-pkgver=3.9.0
-_tag=33eba712958dd1fcdb89f6d9ab5030853ef0a2a4
+pkgver=3.9.1
+_tag=4fe44e3fc3313ab3df4b383af009c543cf44be5e
 pkgrel=1
 arch=(loong64 x86_64)
 url='https://nextcloud.com/'
@@ -59,12 +59,6 @@ prepare() {
   # tmpdir for check()
   mkdir -p tmpdir
   cd $pkgbase
-  # Monkey patch that disables bulk upload capability which causes infinite
-  # loops for many server/client combos. Feature is also disabled by default on
-  # server end in v23.0.3 because it was so problematic. This can abe re-enabled
-  # when underlying bug squashed:
-  # https://github.com/nextcloud/desktop/issues/4241
-  sed -i -e '/bulkupload/s/return _.*;$/return false;/' src/libsync/capabilities.cpp
   # Disable tests that touch on disabled feature
   sed -i -e '/SyncEngine/s/^/#/' -e '/Capabilities/s/^/#/' -e '/SecureFileDrop/s/^/#/' test/CMakeLists.txt
 }

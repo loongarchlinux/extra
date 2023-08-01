@@ -2,7 +2,7 @@
 
 _name=pdm
 pkgname=python-pdm
-pkgver=2.7.4
+pkgver=2.8.2
 pkgrel=1
 pkgdesc="A modern Python package manager with PEP 582 support"
 arch=(any)
@@ -46,20 +46,19 @@ optdepends=(
   'python-pytest-mock: for pytest plugin'
   'python-setuptools: for parsing setup.py files'
 )
-source=(https://files.pythonhosted.org/packages/source/${_name::1}/$_name/$_name-$pkgver.tar.gz)
-sha512sums=('17621b2243251b91737b8c0e4a393b00c7fd23b352ed99b521d965cfcf40c1ca0d33a409ea02fb03647f2662c10d7ee6f4e53f14cc4c276f08f0d7573f2de5b3')
-b2sums=('097ec9f15ef9ed82111509cbad135bf3c4c91bab38337d87f113a92d813c8dc8c980bb5131057819735a53b0a4dbdfb73cd0381b4915dc48a1e01e2652751a38')
+source=($_name-$pkgver.tar.gz::$url/archive/refs/tags/$pkgver.tar.gz)
+sha512sums=('9fdb5917c7808969d964ee12e19a22b7a54296c3bb44eeaeb8797ec662dd62a1affa2f0edb88f46b6606d770847bef5a1f64d0c8c0f57d6fa65cb98e653f439a')
+b2sums=('b43bef55e05675cbd0076f9d9ee4e239e738f160dc68e4b94600d9ec9390059722135a7b0692682ca7fc86599ae8093370fa2ef6f05aa9fa2c204e45fd44a567')
 
 build() {
   cd $_name-$pkgver
+  export PDM_BUILD_SCM_VERSION=$pkgver
   python -m build --wheel --no-isolation
 }
 
 check() {
   local pytest_options=(
     -vv
-    # https://github.com/pdm-project/pdm/issues/1831
-    --deselect tests/cli/test_others.py::test_build_distributions
     # we don't want to run tests that require the internet
     --deselect tests/test_project.py::test_access_index_with_auth
   )

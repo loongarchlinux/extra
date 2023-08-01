@@ -2,7 +2,7 @@
 
 pkgname=nsjail
 pkgver=3.3
-pkgrel=1
+pkgrel=2
 pkgdesc="Light-weight process isolation tool"
 arch=(loong64 x86_64)
 url="https://nsjail.com"
@@ -10,12 +10,17 @@ license=(Apache)
 depends=(protobuf libnl)
 makedepends=(git)
 source=(https://github.com/google/nsjail/archive/${pkgver}/${pkgname}-${pkgver}.tar.gz
-        git+https://github.com/google/kafel.git#commit=1af0975af45ca4404f357b9a4e1636f53a01bfd3)
+        git+https://github.com/google/kafel.git#commit=1af0975af45ca4404f357b9a4e1636f53a01bfd3
+        protobuf-23.patch)
 sha256sums=('9c247d0cba565b4e3f91cc76e827ddf7f3ad499f54ba611edd25d4d7be4890c3'
-            'SKIP')
+            'SKIP'
+            '3aa84fbe4be852b81b18ee2a7692835d1074c16918b757b40a05fd5cb6c13a4d')
 
 prepare() {
   mv kafel ${pkgname}-${pkgver}
+  # protobuf 23 requires C++17
+  sed -e 's|-std=c++14|-std=c++17|' -i $pkgname-$pkgver/Makefile
+  patch -d $pkgname-$pkgver -p1 < protobuf-23.patch
 }
 
 build() {

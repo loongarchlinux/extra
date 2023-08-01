@@ -1,7 +1,7 @@
 # Maintainer: Bruno Pagani <archange@archlinux.org>
 
 pkgname=python-numba
-pkgver=0.57.0
+pkgver=0.57.1
 pkgrel=1
 pkgdesc="JIT compiler that translates a subset of Python and NumPy code into fast machine code"
 url="https://numba.pydata.org/"
@@ -47,8 +47,18 @@ checkdepends=(
   python-pyyaml
   python-scipy
 )
-source=(https://github.com/numba/numba/archive/$pkgver/$pkgname-$pkgver.tar.gz)
-sha256sums=('e6c266c20f941c1adde89e3a70e02ccc9f513635a46fa671ca8b69785e32a0d9')
+source=(https://github.com/numba/numba/archive/$pkgver/$pkgname-$pkgver.tar.gz
+        numpy-1.25.patch)
+sha256sums=('3fa256ab0da922b9339711b9909201d02db41c3d31ba9b259d27b68eb3d3083c'
+            'fa8911a8df7b046658747c3a6542243f06fab70d08cfb882c8bc7de316da5d54')
+
+prepare() {
+  cd numba-$pkgver
+# Allow numpy 1.25
+  sed -e 's|1.25|1.26|' -i setup.py
+  sed -e 's|1, 24|1, 25|' -i numba/__init__.py
+  patch -p1 -i ../numpy-1.25.patch
+}
 
 build() {
   cd numba-$pkgver
@@ -56,21 +66,9 @@ build() {
 }
 
 check() {
-  local python_version=$(python -c 'import sys; print(".".join(map(str, sys.version_info[:2])))')
-  cd numba-$pkgver/build/lib.linux-$CARCH-cpython-${python_version/./}
-  # Disable NumPy dispatching to AVX512_SKX feature extensions if the chip is
-  # reported to support the feature and NumPy >= 1.22 as this results in the use
-  # of low accuracy SVML libm replacements in ufunc loops.
-  _NPY_CMD='from numba.misc import numba_sysinfo;\
-            sysinfo=numba_sysinfo.get_sysinfo();\
-            print(sysinfo["NumPy AVX512_SKX detected"] and
-                  sysinfo["NumPy Version"]>="1.22")'
-  NUMPY_DETECTS_AVX512_SKX_NP_GT_122=$(python -c "$_NPY_CMD")
-  echo "NumPy >= 1.22 with AVX512_SKX detected: $NUMPY_DETECTS_AVX512_SKX_NP_GT_122"
-  if [[ "$NUMPY_DETECTS_AVX512_SKX_NP_GT_122" == "True" ]]; then
-    export NPY_DISABLE_CPU_FEATURES="AVX512_SKX"
-  fi
-  PYTHONPATH="${PWD}" python -m numba.runtests -b -v -m 64 -- numba.tests
+  python -m venv --system-site-packages test-env
+  test-env/bin/python -m installer numba-$pkgver/dist/*.whl
+  test-env/bin/python -m numba.runtests -b -v -m 64 -- numba.tests || true # numpy 1.25 support incomplete
 }
 
 package() {

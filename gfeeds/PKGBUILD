@@ -2,19 +2,27 @@
 # Contributor: Gabriele Musco <gabmus@disroot.org>
 
 pkgname=gfeeds
-pkgver=0.16.2
-pkgrel=5
+pkgver=2.2.0
+pkgrel=1
 pkgdesc='RSS/Atom feed reader for GNOME'
 arch=('any')
 url='https://gfeeds.gabmus.org/'
 license=('GPL3')
-depends=('libhandy' 'python-beautifulsoup4' 'python-cssselect' 'python-dateutil'
-         'python-feedparser' 'python-gobject' 'python-html5lib' 'python-listparser' 'python-lxml'
-         'python-pillow' 'python-pygments' 'python-pytz' 'python-readability-lxml'
-         'python-requests' 'webkit2gtk')
-makedepends=('meson' 'gobject-introspection')
-source=("https://gitlab.gnome.org/World/$pkgname/-/archive/$pkgver/$pkgname-$pkgver.tar.gz")
-sha256sums=('f061e89a1962a5ac544ea98239c2503af8da817ded0a5bfd8094ddf43e9dd00e')
+depends=('gtk4' 'libadwaita' 'python-beautifulsoup4' 'python-dateutil' 'python-gobject' 'python-lxml'
+         'python-pillow' 'python-pygments' 'python-pytz' 'python-readability-lxml' 'python-requests' 'webkitgtk-6.0'
+         'syndication-domination' 'python-magic' 'python-humanize')
+makedepends=('meson' 'gobject-introspection' 'blueprint-compiler')
+source=("https://gitlab.gnome.org/World/$pkgname/-/archive/$pkgver/$pkgname-$pkgver.tar.gz"
+         https://gitlab.gnome.org/World/gfeeds/-/commit/d099fda0.patch
+         https://gitlab.gnome.org/World/gfeeds/-/commit/cfe860f4.patch)
+sha256sums=('13a3e99acbb0ee29389673fc0c9f9de69c29b6574acb848103ef0c5653a78b45'
+            'f3a0d72716f7bf63c74af38fe6917a1e1ede7105d026e9e1018fe0ce9078d2d1'
+            '50a8a599d1e1ccea36dc99a31fc571b63b0a33b7dda97d6c6478b470c5544422')
+
+prepare() {
+  patch -d $pkgname-$pkgver -p1 < d099fda0.patch # Fix build with new blueprint-compiler
+  patch -d $pkgname-$pkgver -p1 < cfe860f4.patch
+}
 
 build() {
   arch-meson $pkgname-$pkgver build

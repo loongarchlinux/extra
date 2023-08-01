@@ -7,27 +7,36 @@
 # Contributor: Muflone <webreg@vbsimple.net>
 
 pkgname=httrack
-pkgver=3.49.2
-pkgrel=4
+pkgver=3.49.4
+pkgrel=1
 pkgdesc="An easy-to-use offline browser utility"
 arch=('loong64' 'x86_64')
 url="https://www.httrack.com/"
 license=('GPL3')
 depends=('bash' 'xdg-utils' 'hicolor-icon-theme' 'openssl')
-source=(https://mirror.httrack.com/historical/$pkgname-$pkgver.tar.gz{,.asc})
-validpgpkeys=('BB71C7E6CB1AD8FAF53FE42A60C3AA7180598EFB') # Xavier Roche
-sha256sums=('3477a0e5568e241c63c9899accbfcdb6aadef2812fcce0173688567b4c7d4025'
-            'SKIP')
+makedepends=('git')
+_commit=4f24477a13e53346577691a0193e588e9ba992aa
+source=("git+https://github.com/xroche/httrack.git#commit=$_commit")
+# https://github.com/xroche/httrack/issues/243
+# source=(https://mirror.httrack.com/historical/$pkgname-$pkgver.tar.gz{,.asc})
+# validpgpkeys=('BB71C7E6CB1AD8FAF53FE42A60C3AA7180598EFB') # Xavier Roche
+sha256sums=('SKIP')
+
+prepare() {
+  cd "${srcdir}"/$pkgname
+
+  git submodule update --init --recursive
+}
 
 build() {
-  cd "${srcdir}"/$pkgname-$pkgver
+  cd "${srcdir}"/$pkgname
 
   ./configure --prefix=/usr --enable-static=no
   make
 }
 
 package() {
-  cd "${srcdir}"/$pkgname-$pkgver
+  cd "${srcdir}"/$pkgname
 
   make DESTDIR="${pkgdir}" install
 }

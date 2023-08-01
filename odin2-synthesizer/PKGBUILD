@@ -2,21 +2,31 @@
 # Contributor: Ryan Algar <ryzer@arch-linux>
 # Upstream: TheWaveWarden (Frederik Siepe) <info AT thewavewarden DOT com>
 
-pkgname=odin2-synthesizer
+pkgbase=odin2-synthesizer
+pkgname=(
+  'odin2-synthesizer'
+  'odin2-synthesizer-common'
+  'odin2-synthesizer-standalone'
+  'odin2-synthesizer-vst3'
+  'odin2-synthesizer-lv2'
+  'odin2-synthesizer-clap'
+)
 pkgver=2.3.4
-pkgrel=1
+pkgrel=2
 pkgdesc='24 voice polyphonic synthesizer with modulation and FX'
 arch=('loong64' 'x86_64')
 url='https://www.thewavewarden.com/odin2'
 license=('GPL3')
-groups=('pro-audio' 'vst3-plugins' 'lv2-plugins' 'clap-plugins')
-depends=(
+groups=('pro-audio')
+_common_depends=(
+  'glibc'
+  'gcc-libs'
   'alsa-lib'
   'libglvnd'
   'freetype2'
-  'hicolor-icon-theme'
 )
 makedepends=(
+  "${_common_depends[@]}"
   'git'
   'cmake'
   'curl'
@@ -27,16 +37,11 @@ makedepends=(
   'webkit2gtk'
   'libx11'
   'gendesk'
+  'hicolor-icon-theme'
 )
-optdepends=(
-  'vst3-host: for VST3 plugins'
-  'lv2-host: for LV2 plugins'
-  'clap-host: for CLAP plugins'
-)
-install='odin2-synthesizer.install'
 _commit='57272428423eb2655b4d482aeb547bf2fb4d2cbe'
 source=(
-  "$pkgname::git+https://github.com/TheWaveWarden/odin2#commit=$_commit"
+  "$pkgbase::git+https://github.com/TheWaveWarden/odin2#commit=$_commit"
   'add-missing-include.patch'
   'fix-lv2-include.patch'
   'github.com-surge-synthesizer-tuning-library::git+https://github.com/surge-synthesizer/tuning-library'
@@ -57,13 +62,13 @@ b2sums=('SKIP'
         'SKIP')
 
 pkgver() {
-  cd "$pkgname"
+  cd "$pkgbase"
 
   git describe --tags | sed 's/^v//'
 }
 
 prepare() {
-  cd "$pkgname"
+  cd "$pkgbase"
 
   # setup git submodules
   git submodule init
@@ -71,14 +76,14 @@ prepare() {
   git config submodule.libs/JUCE.url "$srcdir/github.com-juce-framework-JUCE"
   git config submodule.libs/clap-juce-extensions.url "$srcdir/github.com-free-audio-clap-juce-extensions"
   git config submodule.libs/libs/JUCELV2.url "$srcdir/github.com-lv2-porting-project-JUCE"
-  git submodule update
+  git -c protocol.file.allow=always submodule update
 
   # setup git submodules for clap-juce-extensions
   pushd libs/clap-juce-extensions
   git submodule init
   git config submodule.clap-libs/clap.url "$srcdir/github.com-free-audio-clap"
   git config submodule.clap-libs/clap-helpers.url "$srcdir/github.com-free-audio-clap-helpers"
-  git submodule update
+  git -c protocol.file.allow=always submodule update
   popd
 
   # fix FTBFS due to missing include directives
@@ -99,40 +104,94 @@ prepare() {
 
 build() {
   cmake \
-    -S "$pkgname" \
+    -S "$pkgbase" \
     -B build \
     -DCMAKE_BUILD_TYPE='Release'
 
   cmake --build build
 }
 
-package() {
+package_odin2-synthesizer() {
+  depends=($pkgbase-{common,standalone,vst3,clap,lv2}=$pkgver)
+  install='odin2-synthesizer.install'
+}
+
+package_odin2-synthesizer-common() {
+  pkgdesc='Common files for Odin2'
+
+  cd "$pkgbase"
+
+  install -vDm644 \
+    -t "$pkgdir/usr/share/doc/$pkgbase" \
+    README.md screenshot.png manual/manual.pdf
+}
+
+package_odin2-synthesizer-standalone() {
+  pkgdesc+=' - standalone'
+  depends=(
+    "odin2-synthesizer-common=$pkgver"
+    'hicolor-icon-theme'
+    "${_common_depends[@]}"
+  )
+  optdepends=(
+    'jack: audio backend'
+    'alsa-lib: audio backend'
+  )
+
+  # binary
   pushd build/Odin2_artefacts/Release
-
-  # create required directories
-  install -vd "$pkgdir/usr/"{bin,lib/lv2,lib/vst3,lib/clap}
-
-  # VST3
-  cp -vr VST3/Odin2.vst3 "$pkgdir/usr/lib/vst3"
-
-  # LV2
-  cp -vr LV2/Odin2.lv2 "$pkgdir/usr/lib/lv2"
-
-  # CLAP
-  cp -vr CLAP/Odin2.clap "$pkgdir/usr/lib/clap"
-
-  # standalone
   install -vDm755 Standalone/Odin2 "$pkgdir/usr/bin/odin2"
   popd
 
-  cd "$pkgname"
+  cd "$pkgbase"
 
   # desktop file
   install -vDm644 -t "$pkgdir/usr/share/applications" odin2.desktop
 
   # application icon
   install -vDm644 manual/graphics/logo.png "$pkgdir/usr/share/icons/hicolor/512x512/apps/odin2.png"
+}
 
-  # documentation
-  install -vDm644 -t "$pkgdir/usr/share/doc/$pkgname" README.md screenshot.png manual/manual.pdf
+package_odin2-synthesizer-vst3() {
+  pkgdesc+=' - VST3 plugin'
+  groups+=('vst3-plugins')
+  depends=(
+    "odin2-synthesizer-common=$pkgver"
+    "${_common_depends[@]}"
+    'vst3-host'
+  )
+
+  cd build/Odin2_artefacts/Release
+
+  install -vd "$pkgdir/usr/lib/vst3"
+
+  cp -vr VST3/Odin2.vst3 "$pkgdir/usr/lib/vst3"
+}
+
+package_odin2-synthesizer-lv2() {
+  pkgdesc+=' - LV2 plugin'
+  groups+=('lv2-plugins')
+  depends=(
+    "odin2-synthesizer-common=$pkgver"
+    "${_common_depends[@]}"
+    'lv2-host'
+  )
+  cd build/Odin2_artefacts/Release
+
+  install -vd "$pkgdir/usr/lib/lv2"
+
+  cp -vr LV2/Odin2.lv2 "$pkgdir/usr/lib/lv2"
+}
+
+package_odin2-synthesizer-clap() {
+  pkgdesc+=' - CLAP plugin'
+  groups+=('clap-plugins')
+  depends=(
+    "odin2-synthesizer-common=$pkgver"
+    "${_common_depends[@]}"
+    'clap-host'
+  )
+  cd build/Odin2_artefacts/Release
+
+  install -vDm755 -t "$pkgdir/usr/lib/clap" CLAP/Odin2.clap
 }

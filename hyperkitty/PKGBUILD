@@ -4,7 +4,7 @@ _name=HyperKitty
 pkgname=hyperkitty
 pkgver=1.3.7
 _commit=09a4553758b6296b3577126cec2a0591cf4e11c6 # refs/tags/1.3.7
-pkgrel=2
+pkgrel=3
 pkgdesc="A web interface to access GNU Mailman v3 archives"
 arch=(any)
 url="https://gitlab.com/mailman/hyperkitty"
@@ -32,6 +32,7 @@ backup=(
 install=$pkgname.install
 source=(
   git+https://gitlab.com/mailman/hyperkitty#tag=$_commit?signed
+  django-4.2-compat.patch
   $pkgname-1.3.5-settings.patch
   $pkgname-qcluster.service
   $pkgname.sysusers
@@ -39,12 +40,14 @@ source=(
   $pkgname.uwsgi
 )
 sha512sums=('SKIP'
+            '725c23b52ab436aa7134a139c217c9fdabcc9f3a06151152f5a889e81cd69946143983fc039e83dd6eb8555118ad26111771894c11b7c5828600d7b8d96a8d73'
             'd33a2ec2fb4547da56795c450882bbedbcce962ed2e96e26817fdaa8045859c444f215107fabcf71d62f2b76f41212f5fb49b7e2ed432ccd970eb13988f2f67d'
             'a41c938082ceee555143ddb21c3a95835f9832b9aff423142d78d3e52f12500561f80e0ce43c67a4f190065c9d045945741ac71ab3307db1419c4dc0686db09a'
             '3267427109b08b8c9336b187381ed14357a07370bdcdfc24da94555020ad0424c5bbebc09e131e981e0540c51db443ffe558209e1bca7c2a1b7b1f602ed0805b'
             'c943d82b8640a513728e3f07fa44c0ddb5a3bb8ec84a3a70990e51287ca01977887f895b901688fc4643d8fcb106d524259a86a51bccaafd77c69b241f1b23ba'
             '351f40a6bc1fd1735c883408f9941808e081206927a7c02467e03228243dd156378cac21f851b498702bd4f96fde8e4c80536dbcc6f3c384bf708bed4e988971')
 b2sums=('SKIP'
+        '9e626ed478fa0e715e86f93dab587b0a0c35076bb1db9b1fffc92d5a5205a459b363e7917ee14ba953950dde8e58e5f926e1b3d8fbfed3dbe4f419ef1e2a2ecb'
         '62793fe38541dd570163ab0cd740fd6aeae9eb652164fbb066c1b958dcdba845c5ee3d5ca05770a8179ef292c584c9fbd293ad88956c58ad306ab8b352ea679c'
         'e8ae1d123e74b0c6984df3e5fff720e03dcbc3f007123718fe845024b42e5c13b7eac4da6bde04a9e1372d446bfa50ac12479730a9092e8396b73434e59663d3'
         'f4e912e75c5127897837d67626ba94a418ec408f0f3a9bcd1767633347e107600cc43825caa5737a84362273a353bf03097879ff5b9065663150f6db4b96238a'
@@ -60,6 +63,8 @@ pkgver() {
 prepare() {
   # setting FHS compliant default paths, remove debug options
   patch -d $pkgname -p1 -i ../$pkgname-1.3.5-settings.patch
+
+  patch -d $pkgname -p1 -i ../django-4.2-compat.patch
 
   touch $pkgname/settings_local.py
 }

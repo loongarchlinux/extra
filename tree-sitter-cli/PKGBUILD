@@ -1,0 +1,32 @@
+# Maintainer: Daniel M. Capella <polyzen@archlinux.org>
+
+pkgname=tree-sitter-cli
+pkgver=0.20.8
+pkgrel=4
+pkgdesc='CLI tool for developing, testing, and using Tree-sitter parsers'
+arch=('loong64' 'x86_64')
+url=https://github.com/tree-sitter/tree-sitter
+license=('MIT')
+depends=('gcc-libs')
+makedepends=('git' 'rust')
+optdepends=('nodejs: for the generate subcommand')
+options=('!lto')
+source=("git+$url.git#tag=v$pkgver")
+b2sums=('SKIP')
+
+prepare() {
+  cd ${pkgname%-cli}/cli
+  cargo fetch --locked --target "$CARCH-unknown-linux-gnu"
+}
+
+build() {
+  cd ${pkgname%-cli}/cli
+  cargo build --release --locked --offline --all-features
+}
+
+package() {
+  cd ${pkgname%-cli}
+  install -Dm 755 target/release/${pkgname%-cli} -t "$pkgdir"/usr/bin
+  install -Dm 644 LICENSE -t "$pkgdir"/usr/share/licenses/$pkgname
+}
+

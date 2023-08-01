@@ -1,0 +1,42 @@
+# Maintainer: George Rawlinson <grawlinson@archlinux.org>
+# Contributor: Tavian Barnes <tavianator@tavianator.com>
+
+pkgname=bfs
+pkgver=3.0.1
+pkgrel=2
+pkgdesc='A breadth-first version of find'
+arch=('loong64' 'x86_64')
+url='https://tavianator.com/projects/bfs.html'
+license=('BSD')
+depends=('glibc' 'acl' 'libcap' 'oniguruma')
+makedepends=('git')
+_commit='fb023fdeea088fa66b0df6cbf4e7becf8edeebbb'
+source=("$pkgname::git+https://github.com/tavianator/bfs#commit=$_commit")
+b2sums=('SKIP')
+
+pkgver() {
+  cd "$pkgname"
+
+  git describe --tags | sed 's/^v//'
+}
+
+build() {
+  cd "$pkgname"
+
+  make release CFLAGS="$CFLAGS"
+}
+
+check() {
+  cd "$pkgname"
+
+  make -k release check CFLAGS="$CFLAGS"
+}
+
+package() {
+  cd "$pkgname"
+
+  make install DESTDIR="$pkgdir"
+
+  # license
+  install -vDm644 -t "$pkgdir/usr/share/licenses/$pkgname" LICENSE
+}

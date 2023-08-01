@@ -5,7 +5,7 @@
 
 pkgname=ncnn
 pkgver=20230517
-pkgrel=1
+pkgrel=2
 pkgdesc='High-performance neural network inference framework optimized for the mobile platform'
 url='https://github.com/Tencent/ncnn'
 arch=('loong64' 'x86_64')
@@ -14,8 +14,15 @@ depends=('vulkan-icd-loader')
 makedepends=('cmake' 'glslang' 'ninja' 'protobuf' 'vulkan-headers')
 optdepends=('protobuf: for onnx2ncnn')
 conflicts=('ncnn-git')
-source=("$pkgname-$pkgver.tar.gz::https://github.com/Tencent/ncnn/archive/$pkgver.tar.gz")
-b2sums=('eefb6c2aab6ee97a258c8b7eaad749b7bf9712f8d03a0398b57b6e6e6b3e42357de64db0fe4ce244391dd9f495f576bc27704ab7ed810cd130b1d710ffdd75ef')
+source=("$pkgname-$pkgver.tar.gz::https://github.com/Tencent/ncnn/archive/$pkgver.tar.gz"
+         protobuf-23.patch)
+b2sums=('eefb6c2aab6ee97a258c8b7eaad749b7bf9712f8d03a0398b57b6e6e6b3e42357de64db0fe4ce244391dd9f495f576bc27704ab7ed810cd130b1d710ffdd75ef'
+        'e91c9c354fccbab2adf03d275116c811f5d09130a3a0e20b7ce3898861293ffa84eede38ee75b12953d59d9b71cbb68348dbbc8aeaad62080fb60ccb8bc46160')
+
+prepare() {
+  # Fix build with protobuf 23
+  patch -d $pkgname-$pkgver -p1 < protobuf-23.patch
+}
 
 build() {
     cmake -B build -S "$pkgname-$pkgver" \

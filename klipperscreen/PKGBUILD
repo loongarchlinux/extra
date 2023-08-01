@@ -1,0 +1,54 @@
+# Maintainer: Maxime Gauduin <alucryd@archlinux.org>
+
+pkgname=klipperscreen
+pkgver=0.3.3
+pkgrel=1
+pkgdesc='GUI for Klipper'
+arch=(any)
+url=https://github.com/KlipperScreen/KlipperScreen
+license=(AGPL3)
+depends=(
+  cairo
+  dbus-glib
+  gnu-free-fonts
+  gtk3
+  librsvg
+  mpv
+  openjpeg2
+  python-cairo
+  python-gobject
+  python-jinja
+  python-mpv
+  python-netifaces
+  python-numpy
+  python-requests
+  python-six
+  python-websocket-client
+  xorg-xinit
+  xorg-server
+)
+makedepends=(git)
+_tag=6190581101e1efdda445a0175b65707efa300d07
+source=(
+  git+https://github.com/jordanruthe/KlipperScreen.git#tag=${_tag}
+  klipperscreen.service
+)
+b2sums=('SKIP'
+        '1657a79da1e37a0494e021b19e3b95cd1979a3d8465de7f38b95bda77a3a59a382706bbcb61c60e9d1bb3c84590e74fcb58f36b2e835e0ef4df50d07beab01be')
+
+pkgver() {
+  cd KlipperScreen
+  git describe --tags | sed 's/^v//'
+}
+
+build() {
+  python -m compileall KlipperScreen
+}
+
+package() {
+  install -dm 755 "${pkgdir}"/opt/klipperscreen
+  cp -dr --no-preserve=ownership KlipperScreen/{docs,ks_includes,panels,scripts,styles,screen.py} "${pkgdir}"/opt/klipperscreen/
+  install -Dm 644 klipperscreen.service -t "${pkgdir}"/usr/lib/systemd/system/
+}
+
+# vim: ts=2 sw=2 et:

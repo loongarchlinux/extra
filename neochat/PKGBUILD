@@ -1,8 +1,8 @@
 # Maintainer: Antonio Rojas <arojas@archlinux.org>
 
 pkgname=neochat
-pkgver=23.04.2
-pkgrel=1
+pkgver=23.04.3
+pkgrel=3
 pkgdesc='A client for matrix, the decentralized communication protocol'
 url='https://apps.kde.org/neochat/'
 arch=(loong64 x86_64)
@@ -11,12 +11,19 @@ groups=(kde-applications kde-network)
 depends=(qqc2-desktop-style kirigami-addons
          libquotient kquickimageeditor kitemmodels kio syntax-highlighting qtkeychain-qt5 cmark hicolor-icon-theme)
 makedepends=(extra-cmake-modules qcoro-qt5 kdoctools)
-source=(https://download.kde.org/stable/release-service/$pkgver/src/$pkgname-$pkgver.tar.xz{,.sig})
-sha256sums=('f422ed5ea1b7df39817fd1ffd2da2b8fa2da65b7bdfc2a34e57912b012af0960'
-            'SKIP')
+source=(https://download.kde.org/stable/release-service/$pkgver/src/$pkgname-$pkgver.tar.xz{,.sig}
+        https://invent.kde.org/network/neochat/-/commit/d9d5e17b.patch)
+sha256sums=('2e7a006e24eea80049a0213897048291d1ddb52d484aae8d2d0f48bbb020af04'
+            'SKIP'
+            'd66a3934d598bf6007dd8cf27d1ef64cae0fdfdd51b03418f1384c0116a40fb4')
 validpgpkeys=(CA262C6C83DE4D2FB28A332A3A6A4DB839EAA6D7  # Albert Astals Cid <aacid@kde.org>
               F23275E4BF10AFC1DF6914A6DBD2CE893E2D1C87  # Christoph Feck <cfeck@kde.org>
               D81C0CB38EB725EF6691C385BB463350D6EF31EF) # Heiko Becker <heiko.becker@kde.org>
+
+prepare() {
+# Fix build with libquotient 0.8
+  patch -d $pkgname-$pkgver -p1 < d9d5e17b.patch
+}
 
 build() {
   cmake -B build -S $pkgname-$pkgver \

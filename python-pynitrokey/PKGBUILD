@@ -2,16 +2,15 @@
 
 _name=pynitrokey
 pkgname=python-pynitrokey
-_commit=4f26a6e84c200da1f87cc861fd8f125a142af60e  # v0.4.38
-pkgver=0.4.38
+_commit=33264f882a8b40cfc8d24b39a57af1fab606cbfa  # v0.4.39
+pkgver=0.4.39
 pkgrel=1
 pkgdesc="A command line interface for the Nitrokey FIDO2 and Nitrokey Start"
 arch=(any)
 url="https://github.com/Nitrokey/pynitrokey"
 license=(Apache)
-# NOTE: libnitrokey is required for udev rules
 depends=(
-  libnitrokey
+  libnitrokey  # NOTE: libnitrokey is required for udev rules
   python
   python-certifi
   python-cffi
@@ -47,7 +46,7 @@ optdepends=(
   'python-libusb1: for pro and storage subcommands'
   'python-pyscard: for pcsclite integration'
 )
-source=(git+$url#tag=$_commit?signed)
+source=("git+$url#tag=$_commit?signed")
 sha512sums=('SKIP')
 b2sums=('SKIP')
 validpgpkeys=(

@@ -10,7 +10,7 @@ for _coll in ${_collections[@]}; do
 done
 _rev=66594
 pkgver=2023.$_rev
-pkgrel=15
+pkgrel=19
 pkgdesc='TeX Live - '
 license=(GPL)
 arch=(any)
@@ -60,10 +60,10 @@ prepare() {
   for _coll in ${_collections[@]}; do
     echo -ne "splitting collection ${_coll}"
     # extract description
-    _desc=`sed -e "0,/^name collection-${_coll}$/d;/^$/Q" tlpkg/texlive.tlpdb | grep shortdesc | sed -e 's|shortdesc ||'`
+    _desc=`sed -e "0,/^name collection-${_coll}$/d;/^$/Q" tlpkg/texlive.tlpdb | sed -ne 's|^shortdesc ||p'`
     echo $_desc > pkgdesc-$_coll
     # extract depends
-    _pkgs=`sed -e "0,/^name collection-${_coll}$/d;/^$/Q" tlpkg/texlive.tlpdb | grep depend | sed -e 's|depend ||'`
+    _pkgs=`sed -e "0,/^name collection-${_coll}$/d;/^$/Q" tlpkg/texlive.tlpdb | sed -ne 's|^depend ||p'`
     _prog=0
     _total=`echo $_pkgs | wc -w`
     for _pkg in $_pkgs; do
@@ -78,6 +78,8 @@ prepare() {
         _split=`sed -e "0,/^name ${_pkg}$/d;/^$/Q" tlpkg/texlive.tlpdb`
         _files=`echo "$_split" | sed -e "0,/^runfiles/d;/^[a-z]/Q" | grep texmf-dist` || true
         for _file in $_files; do
+          # some modules include docs in runfiles
+          [[ $_file == texmf-dist/doc/* ]] && continue
           mkdir -p texlive-$_coll/$(dirname $_file)
           mv $_file texlive-$_coll/$(dirname $_file)
         done
@@ -108,9 +110,9 @@ prepare() {
         if [[ ${_pkg} != psutils && "$_split" == *${_pkg}.ARCH* ]]; then
           _links=`sed -e "0,/^name ${_pkg}.x86_64-linux$/d;/^$/Q" tlpkg/texlive.tlpdb | grep "bin/x86_64-linux" | sed -e 's|bin/x86_64-linux||g'`
           for _link in $_links; do
-            if [[ $(readlink x86_64-linux/$_link) == */scripts/* ]]; then
+            if [[ $(readlink -m x86_64-linux/$_link) == */scripts/* ]]; then
               mkdir -p ${_coll}-bin
-              mv x86_64-linux/$_link ${_coll}-bin
+              cp -P x86_64-linux/$_link ${_coll}-bin
               ln -sfn "$(readlink ${_coll}-bin/$_link | sed 's|..\/..|..\/share|')" ${_coll}-bin/$_link
             fi
           done
@@ -147,6 +149,7 @@ _package() {
                  'perl-tk: for texdoctk'
                  'perl-yaml-tiny: for latexindent'
                  'perl-file-homedir: for latexindent'
+                 'perl-ipc-system-simple: for latex-git-log'
                  'python: for de-macro, dviasm, pythontex'
                  'wdiff: for texdiff')
     conflicts=(git-latexdiff)
@@ -174,8 +177,6 @@ _package() {
 
   mkdir -p "$pkgdir"/usr/share
   mv texlive-$1/texmf-dist "$pkgdir"/usr/share
-# some modules wrongly include docs in runfiles
-  rm -fr "$pkgdir"/usr/share/texmf-dist/doc
   
   [[ -d $1-bin ]] && mv $1-bin "$pkgdir"/usr/bin
 
@@ -247,13 +248,16 @@ done
 package_texlive-doc() {
   pkgdesc+='documentation'
 
-# Remove man and info pages, provided by texlive-bin
-  rm -r texmf-dist/doc/{info,man}
   mkdir -p "$pkgdir"/usr/share/doc
+  mv texmf-dist/doc/{info,man} "$pkgdir"/usr/share
   mv texmf-dist/doc "$pkgdir"/usr/share/doc/texlive
 # Symlink so texdoc can find it
   mkdir -p "$pkgdir"/usr/share/texmf-dist
   ln -s /usr/share/doc/texlive "$pkgdir"/usr/share/texmf-dist/doc
+# Fix conflicts with asymptote, psutils, dvisvgm, t1utils
+  rm "$pkgdir"/usr/share/info/asy-faq.info
+  rm "$pkgdir"/usr/share/man/man1/{asy,dvisvgm,epsffit,extractres,includeres,psbook,psjoin,psnup,psresize,psselect,pstops,psutils,t1ascii,t1asm,t1binary,t1disasm,t1mac,t1unmac}.1
+  rm -f "$pkgdir"/usr/share/man{,/man*}/{Makefile,*.pdf}
 }
  
 package_texlive-meta() {

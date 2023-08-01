@@ -1,7 +1,7 @@
 # Maintainer: George Rawlinson <grawlinson@archlinux.org>
 
 pkgname=nomad-driver-nspawn
-pkgver=0.9.1
+pkgver=0.10.0
 pkgrel=1
 pkgdesc='A nomad taskdriver for systemd-nspawn'
 arch=('loong64' 'x86_64')
@@ -10,7 +10,7 @@ license=('MIT')
 depends=('glibc' 'nomad' 'systemd')
 makedepends=('git' 'go')
 options=('!lto')
-_commit='4a438f9c20e10930acb273afc09ecb2824093b9a'
+_commit='3d7877c1212ff3f340e0e9c42c82357b7fd31444'
 source=("$pkgname::git+$url#commit=$_commit")
 b2sums=('SKIP')
 
@@ -33,12 +33,20 @@ prepare() {
 build() {
 	cd "$pkgname"
 
+  # set Go flags
+  export CGO_CPPFLAGS="${CPPFLAGS}"
+  export CGO_CFLAGS="${CFLAGS}"
+  export CGO_CXXFLAGS="${CXXFLAGS}"
+  export GOPATH="${srcdir}"
+
   go build -v \
-    -trimpath \
     -buildmode=pie \
     -mod=vendor \
     -modcacherw \
-    -ldflags "-extldflags $LDFLAGS -X "github.com/JanMa/nomad-driver-nspawn/nspawn.pluginVersion=${pkgver}"" \
+    -ldflags "-compressdwarf=false \
+    -linkmode external \
+    -extldflags ${LDFLAGS} \
+    -X "github.com/JanMa/nomad-driver-nspawn/nspawn.pluginVersion=${pkgver}"" \
     -o build \
     .
 }

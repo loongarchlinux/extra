@@ -2,7 +2,7 @@
 
 _name=flufl_i18n
 pkgname=python-flufl.i18n
-pkgver=5.0.1
+pkgver=5.0.2
 pkgrel=1
 pkgdesc="A high level API for internationalization"
 arch=(any)
@@ -24,8 +24,8 @@ checkdepends=(
 provides=(python-flufl-i18n)
 replaces=(python-flufl-i18n)
 source=(https://files.pythonhosted.org/packages/source/${_name::1}/$_name/$_name-$pkgver.tar.gz)
-sha512sums=('94c6e8a948b0093bbd026732b65e11fcf1fa4ff9af75f5f39685e7dc2b709584ced10c38d9a3f2568ff649dfef943362e62c8d52dbafd709876a9e3d97ef4351')
-b2sums=('d0a8f830e1939403be0afe01185d9f6804d48663e9ae2719ad9faf844cefbda0cbd24d42c17578bc50f3c4cb336558e7da143ac22f7c0f987dac86fce706b66d')
+sha512sums=('9980f3df2f04237dad8861c7c03be174a9b4555375daeb49a4f2f668f305b7d2ed5cc0ef6db5692f93b66ff0e93b61c041a06cb21790c36c585bf9415eedf0a7')
+b2sums=('b636d8b2feb4a9da302464f126486a5e7d4d14d3fd5cbed919272a9efd1a122e7db16a465bb3fba284ff9b6e625ec9eff99369c2972621f31898724d07e00f86')
 
 build() {
   cd $_name-$pkgver

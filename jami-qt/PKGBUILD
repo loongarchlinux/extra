@@ -1,8 +1,8 @@
 # Maintainer: Bruno Pagani <archange@archlinux.org>
 
 pkgname=jami-qt
-pkgver=20230323
-pkgrel=2
+pkgver=20230619
+pkgrel=1
 pkgdesc="Free and universal communication platform which preserves the users’ privacy and freedoms (Qt client)"
 arch=(loong64 x86_64)
 url="https://jami.net"
@@ -14,12 +14,18 @@ depends=(jami-daemon glib2 gdk-pixbuf2 libnm libnotify qrencode
 makedepends=(git cmake python qt6-networkauth qt6-tools)
 replaces=(jami-gnome jami-libclient)
 conflicts=(jami-gnome jami-libclient)
-_commit=1510ccaede0726a4e002be0445fef06a840dbde6
+_commit=b948646cbd201b023b18c9d5cc3d6cca45bba00c
 _sfpmcommit=a2a0c72e4db38e1c5478bd3e0f67ff99fae11f00
+_md4ccommit=e9ff661ff818ee94a4a231958d9b6768dc6882c9
+_tidycommit=d08ddc2860aa95ba8e301343a30837f157977cba
 source=(git+https://git.jami.net/savoirfairelinux/jami-client-qt.git#commit=${_commit}
         git+https://github.com/atraczyk/SortFilterProxyModel#commit=${_sfpmcommit}
+        git+https://github.com/mity/md4c#commit=${_md4ccommit}
+        git+https://github.com/htacg/tidy-html5#commit=${_tidycommit}
         drop-qt-version-check.patch)
 sha256sums=('SKIP'
+            'SKIP'
+            'SKIP'
             'SKIP'
             'd0118269d637b984f13755a5c3548b2509215789aeda2c3b9ac7850c2bd7cf3e')
 
@@ -33,11 +39,8 @@ prepare() {
   patch -p1 -d jami-client-qt < drop-qt-version-check.patch
 
   cd jami-client-qt
-  rm -r 3rdparty/SortFilterProxyModel
-  mv "$srcdir"/SortFilterProxyModel 3rdparty
-
-# Fix crashes with Qt>=6.4
-  git cherry-pick -n 9b876c198e024153c1019f28fb792e853a515c69
+  rm -r 3rdparty/{SortFilterProxyModel,md4c,tidy-html5}
+  mv "$srcdir"/{SortFilterProxyModel,md4c,tidy-html5} 3rdparty
 }
 
 build() {

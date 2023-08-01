@@ -3,19 +3,25 @@
 _pipname=pplpy
 pkgname=python-pplpy
 pkgver=0.8.7
-pkgrel=7
+pkgrel=10
 pkgdesc='Python wrapper to the C++ Parma Polyhedra Library (PPL)'
 arch=(loong64 x86_64)
 url='https://gitlab.com/videlec/pplpy/'
 license=(LGPL2.1)
 depends=(python-cysignals python-gmpy2 ppl)
-makedepends=(cython python-setuptools python-sphinx)
-source=(https://pypi.io/packages/source/${_pipname:0:1}/$_pipname/$_pipname-$pkgver.tar.gz)
-sha256sums=('500bd0f4ae1a76956fae7fcba77854f5ec3e64fce76803664983763c3f2bd8bd')
+makedepends=(cython0 python-build python-installer python-setuptools python-wheel python-sphinx)
+source=(https://pypi.io/packages/source/${_pipname:0:1}/$_pipname/$_pipname-$pkgver.tar.gz
+        https://gitlab.com/videlec/pplpy/-/commit/653c482f.patch)
+sha256sums=('500bd0f4ae1a76956fae7fcba77854f5ec3e64fce76803664983763c3f2bd8bd'
+            'f9056ea6767fcc97243a4d37ef93f7237d847c7abf650dcc850ea27c9ba44bd1')
+
+prepare() {
+  patch -d $_pipname-$pkgver -p1 < 653c482f.patch # Fix build with cython 3
+}
 
 build() {
   cd $_pipname-$pkgver
-  python setup.py build
+  python -m build --wheel --no-isolation
 
   _pythonver=`python -c "from sysconfig import get_python_version; print(get_python_version())"`
   PYTHONPATH="$PWD/build/lib.linux-$CARCH-cpython-${_pythonver/./}" make -C docs html
@@ -23,7 +29,7 @@ build() {
 
 package() {
   cd $_pipname-$pkgver 
-  python setup.py install --root="$pkgdir" --optimize=1 --skip-build
+  python -m installer --destdir="$pkgdir" dist/*.whl
 
   mkdir -p "$pkgdir"/usr/share/doc/pplpy
   cp -r docs/build/html/* "$pkgdir"/usr/share/doc/pplpy

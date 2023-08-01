@@ -8,8 +8,8 @@
 
 pkgname=julia
 epoch=2
-pkgver=1.9.1
-pkgrel=3
+pkgver=1.9.2
+pkgrel=2
 arch=(loong64 x86_64)
 pkgdesc='High-level, high-performance, dynamic programming language'
 url='https://julialang.org/'
@@ -21,16 +21,18 @@ optdepends=('gnuplot: If using the Gaston Package from julia')
 source=(https://github.com/JuliaLang/julia/releases/download/v$pkgver/$pkgname-$pkgver-full.tar.gz{,.asc}
         julia-libunwind-1.6.patch
         julia-hardcoded-libs.patch
+        julia-libgit2-1.7.patch
         julia-suitesparse-7.patch
         959902f1.patch
         e08e1444.patch
         f11bfc6c.patch
         21d4c2f1.patch)
 backup=(etc/julia/startup.jl)
-sha256sums=('a13ce716b63d3e46d9108395e1ffc8a1de712e6a848a603ac592bcf080ea0139'
+sha256sums=('87063d4c2ea41c736aa2e8cbbc7c2f1a062e223955157f8404553ced764913cd'
             'SKIP'
             '3c0c03eabb668e3242fcd3058c1011dfbb579cc1c5adc3ae1016531e711cc64e'
             '94e6d4fa9c68360c795807b49bcb126bbbbf4c927cf7e8358b3e0e3d2183d63e'
+            '0128233fdef9cf93c8f55c65ecd374a2431c5ed6776eadf134d6e59733c76637'
             '481ce9b093969c2433b86d4d2bc0815470225f680712fc6231df3629ca7fbe5e'
             '5e3f55e68e3f7172d545888479cd9a35e7589d0467684c6d98c721e3b1878acd'
             '628d41c0b7739ed6c4c34c7416efd81646fbd17ebab9e88ae46a3668650d3104'
@@ -51,6 +53,8 @@ prepare() {
   patch -p1 -i ../julia-libunwind-1.6.patch
 # Don't hardcode library names
   patch -p1 -i ../julia-hardcoded-libs.patch
+# Fix tests with libgit2 1.7
+  patch -p1 -i ../julia-libgit2-1.7.patch
 # Fix warnings with suitesparse 7
   cd stdlib/srccache
   tar -xzf SparseArrays-37e6e58706a54c5a1b96a17cda7d3e8be8bcb190.tar.gz

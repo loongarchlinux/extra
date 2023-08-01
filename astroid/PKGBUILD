@@ -3,7 +3,7 @@
 # Contributor: Johannes Heinz <heinzeljo@web.de>
 pkgname=astroid
 pkgver=0.16
-pkgrel=6
+pkgrel=7
 pkgdesc="A graphical threads-with-tags style, lightweight and fast, e-mail client for Notmuch"
 arch=('loong64' 'x86_64')
 url="https://github.com/astroidmail/astroid"
@@ -29,8 +29,14 @@ checkdepends=('notmuch-runtime'
 optdepends=('cmark: for markdown to html composition'
             'emacs: can be used as editor'
             'gvim: default editor')
-source=("${pkgname}-${pkgver}.tar.gz::https://github.com/astroidmail/astroid/archive/v${pkgver}.tar.gz")
-sha256sums=('32ecb8c2fafe67f70c7d5f2bc60bda1796d98a56a75f7868c7c1ca50cd7baf5e')
+source=("${pkgname}-${pkgver}.tar.gz::https://github.com/astroidmail/astroid/archive/v${pkgver}.tar.gz"
+         protobuf-23.patch)
+sha256sums=('32ecb8c2fafe67f70c7d5f2bc60bda1796d98a56a75f7868c7c1ca50cd7baf5e'
+            '53bfd2814aa57475b284a518c368c7a27453e11d9442695d05ce3fbb86bbbc73')
+
+prepare() {
+  patch -d $pkgname-$pkgver -p1 < protobuf-23.patch # Fix build with protobuf 23
+}
 
 build() {
   cd "${pkgname}-${pkgver}"
@@ -38,6 +44,7 @@ build() {
   cmake -B build \
     -DCMAKE_BUILD_TYPE="None" \
     -DCMAKE_INSTALL_PREFIX="/usr" \
+    -DCMAKE_CXX_STANDARD=17 \
     -Wno-dev
   cmake --build build
 }

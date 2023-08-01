@@ -1,0 +1,29 @@
+# Maintainer:
+
+pkgname=syndication-domination
+pkgver=1.0
+pkgrel=3
+pkgdesc='A simple RSS/Atom parser library in C++'
+arch=(loong64 x86_64)
+url='https://gitlab.com/gabmus/syndication-domination'
+license=(GPL3)
+depends=(pugixml fmt tidy)
+makedepends=(meson pybind11)
+source=(https://gitlab.com/gabmus/syndication-domination/-/archive/$pkgver/$pkgname-$pkgver.tar.gz
+        https://gitlab.com/gabmus/syndication-domination/-/commit/75920321.patch)
+sha256sums=('eb8a1d6b3ebc2e3997397b07fe75eb62e4c788ee37d8b2a12e72becd65cf479f'
+            'f7a7b25338f632de1ed563efc50846d1b477da13ff6b7e417c73cacccfc0111f')
+
+prepare() {
+  patch -d $pkgname-$pkgver -p1 < 75920321.patch # Needed for gfeeds
+}
+
+build() {
+  meson build $pkgname-$pkgver \
+    --prefix=/usr
+  meson compile -C build
+}
+
+package() {
+  meson install -C build --destdir "$pkgdir"
+}

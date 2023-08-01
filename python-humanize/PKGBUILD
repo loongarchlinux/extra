@@ -1,31 +1,42 @@
 # Maintainer: Jerome Leclanche <jerome@leclan.ch>
+# Maintainer: Caleb Maclennan <caleb@alerque.com>
+
 _pkgname=humanize
 pkgname=python-$_pkgname
-pkgver=3.1.0
-pkgrel=6
-pkgdesc="Common humanization utilities for Python"
-arch=("any")
+pkgver=4.7.0
+pkgrel=1
+pkgdesc='Common humanization utilities for Python'
+arch=(any)
+url="https://github.com/$pkgname/$_pkgname"
+license=(MIT)
+depends=(python)
+makedepends=(python-{build,installer,wheel}
+             python-hatch-vcs
+             python-hatchling)
+checkdepends=(python-freezegun
+              python-pytest)
+_archive="$_pkgname-$pkgver"
+source=("https://pypi.python.org/packages/source/${_pkgname::1}/$_pkgname/$_archive.tar.gz")
+sha256sums=('7ca0e43e870981fa684acb5b062deb307218193bca1a01f2b2676479df849b3a')
 
-url="https://github.com/jmoiron/humanize"
-license=("MIT")
-depends=("python")
-makedepends=("python-setuptools" "python-setuptools-scm")
-source=("https://pypi.python.org/packages/source/${_pkgname:0:1}/$_pkgname/$_pkgname-$pkgver.tar.gz")
-sha256sums=("fd3eb915310335c63a54d4507289ecc7b3a7454cd2c22ac5086d061a3cbfd592")
-
-
-check() {
-	cd "$srcdir/$_pkgname-$pkgver"
-	python setup.py check
+prepare() {
+	cd "$_archive"
+	sed -i -e "/^__version__/s/=.*/= '$pkgver'/" src/humanize/__init__.py
 }
 
 build() {
-	cd "$srcdir/$_pkgname-$pkgver"
-	python setup.py build
+	cd "$_archive"
+	python -m build -wn
+}
+
+check() {
+	cd "$_archive"
+	export PYTHONPATH="$PWD/src"
+	pytest
 }
 
 package() {
-	cd "$srcdir/$_pkgname-$pkgver"
-	python setup.py install --prefix=/usr --root="$pkgdir" --optimize=1 --skip-build
-	install -Dm 644 LICENCE "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
+	cd "$_archive"
+	python -m installer -d "$pkgdir" dist/*.whl
+	install -Dm0644 -t "$pkgdir/usr/share/licenses/$pkgname/" LICENCE
 }

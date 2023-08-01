@@ -1,20 +1,20 @@
 # Maintainer: George Rawlinson <grawlinson@archlinux.org>
 
 pkgname=python-versioneer
-pkgver=0.28
-pkgrel=2
+pkgver=0.29
+pkgrel=1
 pkgdesc='A tool for managing a recorded version number in setuptools-based python projects'
 arch=('any')
 url='https://github.com/python-versioneer/python-versioneer'
 license=('custom:Unlicense')
-depends=('python' 'python-setuptools' 'python-tomli') # tomli: remove once we move to python 3.11
+depends=('python' 'python-setuptools')
 makedepends=(
   'git'
   'python-build'
   'python-installer'
   'python-wheel'
 )
-_commit='83f20fdf886df7a6089fca3bb7fc3c33198bd629'
+_commit='28c613dbef5fce09dc3ba6b1baa811c2d76b2245'
 source=("$pkgname::git+$url#commit=$_commit")
 b2sums=('SKIP')
 
@@ -42,6 +42,9 @@ package() {
 
   python -m installer --destdir="$pkgdir" dist/*.whl
 
-  # license
-  install -vDm644 -t "$pkgdir/usr/share/licenses/$pkgname" LICENSE
+  # symlink license file
+  local site_packages=$(python -c "import site; print(site.getsitepackages()[0])")
+  install -d "$pkgdir/usr/share/licenses/$pkgname"
+  ln -s "$site_packages/${pkgname#python-}-$pkgver.dist-info/LICENSE" \
+    "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
 }

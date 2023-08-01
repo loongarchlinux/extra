@@ -3,7 +3,7 @@
 
 pkgname=usbguard
 pkgver=1.1.2
-pkgrel=1
+pkgrel=2
 pkgdesc='Software framework for implementing USB device authorization policies'
 url='https://github.com/USBGuard/usbguard'
 arch=('loong64' 'x86_64')
@@ -15,9 +15,11 @@ makedepends=('catch2' 'pegtl' 'libxslt' 'libxml2' 'asciidoc' 'systemd')
 provides=('libusbguard.so')
 backup=(etc/usbguard/usbguard-daemon.conf
         etc/usbguard/rules.conf)
-source=(https://github.com/USBGuard/usbguard/releases/download/usbguard-${pkgver}/usbguard-${pkgver}.tar.gz{,.asc})
+source=(https://github.com/USBGuard/usbguard/releases/download/usbguard-${pkgver}/usbguard-${pkgver}.tar.gz{,.asc}
+        22b1e089.patch)
 sha512sums=('03b6dd026a0fe6a7a055208f09a56e2cc86985570388e33fde08671b8aa2d60ea4a0e59505e9646ddf50f42f5b6310d1b230379f9c26ec99c7ca736f3b4ad850'
-            'SKIP')
+            'SKIP'
+            'a544cf8787cd58e85d5acd78b0fcc88005e67b13f92947805561e3ec3b5de8518e109ab8e4aa91ce63f74b03b2d4be16e6a6ce4113865b3b94d9ca9204c369b1')
 validpgpkeys=(
   'DE78B93EAED8A620F5AA14DF52F7E84653274B59' # Radovan Sroka <rsroka@redhat.com>
 )
@@ -25,6 +27,9 @@ validpgpkeys=(
 prepare() {
   cd ${pkgname}-${pkgver}
   autoreconf -fiv
+
+# Fix build with GCC 12
+  patch -p1 -i ../22b1e089.patch
 }
 
 build() {

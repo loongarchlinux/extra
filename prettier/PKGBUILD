@@ -3,17 +3,17 @@
 # Maintainer: Daniel M. Capella <polyzen@archlinux.org>
 
 pkgname=prettier
-pkgver=2.8.7
+pkgver=3.0.0
 pkgrel=1
 pkgdesc="An opinionated code formatter for JS, JSON, CSS, YAML and much more"
 arch=("any")
 url="https://prettier.io/"
 license=("MIT")
 depends=("nodejs")
-makedepends=("yarn")
-checkdepends=("npm")
+makedepends=("jq" "yarn")
+checkdepends=("git" "npm")
 source=("https://github.com/$pkgname/$pkgname/archive/$pkgver/$pkgname-$pkgver.tar.gz")
-sha256sums=('c51f13e53a6bae75676dc79dfcb1776b81c2e82d195a8c1f6d0c5eb5200a666c')
+sha256sums=('0a6384cedb4539330d23480a6aa156c64f9be83a76d3f0138d3c5490975587bb')
 
 prepare() {
     cd "$pkgname-$pkgver"
@@ -27,14 +27,15 @@ build() {
 
 check() {
     cd "$pkgname-$pkgver"
-    # https://github.com/prettier/prettier/pull/13682#issuecomment-1283981785
-    yarn test:dist --testPathIgnorePatterns tests/integration/__tests__/third-party.js
+    yarn test:dist
 }
 
 package() {
+    local _npmdir=/usr/lib/node_modules/$pkgname
+    install -d "$pkgdir"/{usr/bin,usr/share/licenses/$pkgname,$_npmdir}
+    ln -s "$_npmdir/bin/$pkgname.cjs" "$pkgdir/usr/bin/$pkgname"
+    ln -s "$_npmdir/LICENSE" "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
+
     cd "$pkgname-$pkgver"
-    install -d "$pkgdir/usr/"{bin,"lib/$pkgname","share/licenses/$pkgname"}
-    cp -a dist/* "$pkgdir/usr/lib/$pkgname"
-    ln -s "/usr/lib/$pkgname/bin-$pkgname.js" "$pkgdir/usr/bin/$pkgname"
-    ln -s "/usr/lib/$pkgname/LICENSE" "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
+    cp -a dist/* "$pkgdir"/$_npmdir
 }

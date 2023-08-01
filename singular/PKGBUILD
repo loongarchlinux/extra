@@ -3,29 +3,19 @@
 
 pkgname=singular
 _majver=4-3-2
-_patchver=p2
+_patchver=p4
 _pkgver=${_majver}${_patchver}
 pkgver=${_majver//-/.}${_patchver/p/.p}
-pkgrel=1
+pkgrel=2
 pkgdesc='Computer Algebra System for polynomial computations'
 arch=(loong64 x86_64)
 url='https://www.singular.uni-kl.de/'
 license=(GPL)
 depends=(flint cddlib)
-makedepends=(doxygen texlive-core texlive-pictures sharutils)
 provides=(singular-factory)
-source=(ftp://jim.mathematik.uni-kl.de/pub/Math/Singular/SOURCES/$_majver/singular-${_pkgver//-/.}.tar.gz
-        https://github.com/Singular/Singular/commit/8d54773d.patch)
-#source=(https://github.com/Singular/Singular/archive/Release-$_pkgver/$pkgname-$_pkgver.tar.gz)
-sha256sums=('660ae93ace79db4209203770d93baf16b5b741dc26b6bae06c9b2c98ad188df1'
-            'bc9867caad8de879569590ac49272d64151f29029351920fb3d067deb2894c9c')
+source=(ftp://jim.mathematik.uni-kl.de/pub/Math/Singular/SOURCES/$_majver/singular-${_pkgver//-/.}.tar.gz)
+sha256sums=('22f263665e7e6def39f48fd2695f613a377281af39350414f461ba7f3bd07149')
 options=(!zipman)
-
-prepare() {
-  cd singular-${_majver//-/.}
-  patch -p1 -i ../8d54773d.patch # Fix make install
-  ./autogen.sh
-}
 
 build() {
   cd singular-${_majver//-/.}
@@ -37,8 +27,7 @@ build() {
     --enable-Order-module \
     --enable-python-module \
     --enable-gfanlib-module \
-    --enable-polymake-module \
-    --enable-doc-build
+    --enable-polymake-module
 # https://bugzilla.gnome.org/show_bug.cgi?id=655517
   sed -i -e 's/ -shared / -Wl,-O1,--as-needed\0/g' libtool
   make
@@ -52,9 +41,4 @@ check() {
 package() {
   cd singular-${_majver//-/.}
   make DESTDIR="$pkgdir" install
-
-# Install docs
-  install -Dm644 doc/html/* -t "$pkgdir"/usr/share/doc/singular
-  install -Dm644 doc/singular.info -t "$pkgdir"/usr/share/info
-  install -Dm644 doc/singular.idx -t "$pkgdir"/usr/share/singular
 }

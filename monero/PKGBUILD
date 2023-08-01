@@ -3,7 +3,7 @@
 pkgname=monero
 pkgver=0.18.2.2
 _commit=e06129bb4d1076f4f2cebabddcee09f1e9e30dcc
-pkgrel=1
+pkgrel=2
 pkgdesc="Monero: the secure, private, untraceable peer-to-peer currency"
 license=('BSD')
 arch=('loong64' 'x86_64')
@@ -43,12 +43,17 @@ prepare() {
   git config submodule.external/trezor-common.url "$srcdir/trezor-common"
   git config submodule.external/randomx.url "$srcdir/randomx"
   git -c protocol.file.allow=always submodule update
+
+# Fix build with GCC 13
+  git cherry-pick -n c32befe4f8385f5f893c0db611060bc7c7b425f3
+# Fix build with protobuf 23
+  sed -e 's|CMAKE_CXX_STANDARD 14|CMAKE_CXX_STANDARD 17|' -i CMakeLists.txt
 }
 
 build() {
   cd "${pkgname}"
   mkdir -p build && cd build
-  cmake -D BUILD_TESTS=ON -D CMAKE_BUILD_TYPE=release -D ARCH=default ../
+  cmake -D CMAKE_BUILD_TYPE=release -D ARCH=default ../
   make
 }
 

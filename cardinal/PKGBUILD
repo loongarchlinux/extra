@@ -1,9 +1,9 @@
 # Maintainer: David Runge <dvzrv@archlinux.org>
 
 pkgbase=cardinal
-pkgname=(cardinal cardinal-clap cardinal-data cardinal-jack cardinal-lv2 cardinal-vst cardinal-vst3)
-pkgver=23.02
-pkgrel=2
+pkgname=(cardinal cardinal-{clap,data,lv2,standalone,vst,vst3})
+pkgver=23.07
+pkgrel=1
 pkgdesc="Virtual modular synthesizer"
 arch=(loong64 x86_64)
 url="https://github.com/DISTRHO/Cardinal"
@@ -40,9 +40,9 @@ source=(
   https://github.com/DISTRHO/$pkgbase/releases/download/$pkgver/$pkgbase-$pkgver.tar.xz
   $pkgbase-$pkgver.svg::https://raw.githubusercontent.com/DISTRHO/Cardinal/eb95b5990cf734c10f2caab1a246eac893f0266d/plugins/Cardinal/orig/distrho.svg
 )
-sha512sums=('60d6dcb2f3c90e41739c645f75408dc1603c5c999819577be26dbc7d05e2fbbce8dbf3d8d20d7d9e3075459f0fadb6f32c17d98c2186cf0ebed767f016410aec'
+sha512sums=('1ac4aa15629e8b0932b1302cb48e203108b4badef767dbfa64148163cde32eac8e5359d121cf38c804868ffd8cf973a4bc8a4196171ab191f2e319963c2b9784'
             '31a7d1e548285af0ead1bc844fbb1d35b50f6284159047cb401a829d4068992fa328770e42c377c08d013f6787e55ac12b94eba4d5af4b90373b157971fc8835')
-b2sums=('c28b1aff34c3e1b5fff01cf74c2df38e4ed58e7c56ccb5e106ef8582675e2914e4973bca874053371521150a838007d4eaa0e8ea58899337c22a2f5b22dfd5cd'
+b2sums=('8b64e74da61bb1aa8cbca333c5a90bf59cc7d5ce2f781f73d1789296ba23c368caa5a4aabfd0cf46060972d9da05b6ef3d6b94f7e21361f9bd22481ee6d9a12e'
         'd82fefe15234c1ed3a4d487c6082a2e3ac73b60f11041314e99c5a5de5b3ea141efbd5afd18851510bd4f801fd71f7cd89d54d86258d1ba750bbfd762aa37a8d')
 
 _common_depends=(
@@ -83,7 +83,7 @@ prepare() {
           --exec Cardinal \
           --name Cardinal \
           --pkgname studio.kx.distrho.Cardinal \
-          --pkgdesc "$pkgdesc JACK standalone" \
+          --pkgdesc "$pkgdesc standalone" \
           --icon $pkgbase \
           --genericname "Virtual modular synthesizer"
 }
@@ -108,7 +108,7 @@ check() {
 }
 
 package_cardinal() {
-  depends=(cardinal-jack cardinal-lv2 cardinal-vst cardinal-vst3)
+  depends=(cardinal-{clap,lv2,standalone,vst,vst3})
 
   make PREFIX=/usr SYSDEPS=true DESTDIR="$pkgdir" install -C $pkgbase-$pkgver
 
@@ -121,7 +121,7 @@ package_cardinal() {
     _pick $pkgbase-clap usr/lib/clap/
     _pick $pkgbase-data usr/share/$pkgbase
     _pick $pkgbase-data usr/share/doc
-    _pick $pkgbase-jack usr/bin/
+    _pick $pkgbase-standalone usr/bin/
     _pick $pkgbase-lv2 usr/lib/lv2/
     _pick $pkgbase-vst usr/lib/vst/
     _pick $pkgbase-vst3 usr/lib/vst3/
@@ -143,40 +143,65 @@ package_cardinal-data() {
   mv -v $pkgbase-data/* "$pkgdir"
 }
 
-package_cardinal-jack() {
-  pkgdesc+=" - JACK standalone"
+package_cardinal-standalone() {
+  pkgdesc+=" - standalone"
   groups=(pro-audio)
-  depends=("${_common_depends[@]}" hicolor-icon-theme jack)
+  depends=(
+    "${_common_depends[@]}"
+    alsa-lib
+    hicolor-icon-theme
+    jack
+  )
   optdepends=("${_common_optdepends[@]}")
+  conflicts=(cardinal-jack)
+  replaces=(cardinal-jack)
 
-  mv -v $pkgbase-jack/* "$pkgdir"
-  install -vDm 644 *.desktop -t "$pkgdir/usr/share/applications"
+  mv -v $pkgname/* "$pkgdir"
+  install -vDm 644 ./*.desktop -t "$pkgdir/usr/share/applications"
   install -vDm 644 $pkgbase-$pkgver.svg "$pkgdir/usr/share/icons/hicolor/scalable/apps/$pkgbase.svg"
 }
 
 package_cardinal-lv2() {
   pkgdesc+=" - LV2 plugin"
-  groups=(lv2-plugins pro-audio)
-  depends=("${_common_depends[@]}" lv2-host)
+  groups=(
+    lv2-plugins
+    pro-audio
+  )
+  depends=(
+    "${_common_depends[@]}"
+    lv2-host
+  )
   optdepends=("${_common_optdepends[@]}")
 
-  mv -v $pkgbase-lv2/* "$pkgdir"
+  mv -v $pkgname/* "$pkgdir"
 }
 
 package_cardinal-vst() {
   pkgdesc+=" - VST2 plugin"
-  groups=(pro-audio vst-plugins)
-  depends=("${_common_depends[@]}" vst-host)
+  groups=(
+    pro-audio
+    vst-plugins
+  )
+  depends=(
+    "${_common_depends[@]}"
+    vst-host
+  )
   optdepends=("${_common_optdepends[@]}")
 
-  mv -v $pkgbase-vst/* "$pkgdir"
+  mv -v $pkgname/* "$pkgdir"
 }
 
 package_cardinal-vst3() {
   pkgdesc+=" - VST3 plugin"
-  groups=(pro-audio vst3-plugins)
-  depends=("${_common_depends[@]}" vst3-host)
+  groups=(
+    pro-audio
+    vst3-plugins
+  )
+  depends=(
+    "${_common_depends[@]}"
+    vst3-host
+  )
   optdepends=("${_common_optdepends[@]}")
 
-  mv -v $pkgbase-vst3/* "$pkgdir"
+  mv -v $pkgname/* "$pkgdir"
 }

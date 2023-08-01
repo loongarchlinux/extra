@@ -3,43 +3,32 @@
 # Contributor: Tomasz Jakub Rup <tomasz.rup@gmail.com>
 
 pkgname=pnpm
-pkgver=8.6.5
-pkgrel=2
+pkgver=8.6.11
+pkgrel=1
 pkgdesc='Fast, disk space efficient package manager'
 arch=('any')
 url=https://pnpm.io
 license=('MIT')
-depends=("nodejs>=16.14")
-makedepends=('jq' 'npm')
-source=("$pkgname-$pkgver.tar.gz::https://github.com/pnpm/$pkgname/archive/v$pkgver.tar.gz")
-b2sums=('26cdc51b9edab9249b6e5f1bf91f5ec6550751b643e0ca2f279ffa211084eff844f0f81fc9da099049d55d6dc2fddf67351c5986323cc0bd3059924e948c54c3')
+depends=("nodejs")
+makedepends=('pnpm')
+source=("https://github.com/$pkgname/$pkgname/archive/v$pkgver/$pkgname-$pkgver.tar.gz")
+b2sums=('7d012a8ed8372aec573122b4e0e14a7aa06444bee04909ba09ae655dffcccceb97a68f93dcfdea242078831664171189c01ded50342714152c9941d758d9d569')
+
+build() {
+  cd $pkgname-$pkgver/$pkgname
+  pnpm install --frozen-lockfile
+  pnpm run compile
+}
 
 package() {
-  npm install -g \
-    --cache "$srcdir/npm-cache" \
-    --prefix "$pkgdir/usr" \
-    $pkgname
-
-  cd "$pkgdir"
-  # npm gives ownership of ALL FILES to build user
-  # https://bugs.archlinux.org/task/63396
-  chown -R root:root .
-
-  # Delete unnecessary JavaScript source maps
-  find usr/lib -depth -name "*.map" -delete
-
-  # Link README and LICENSE to the appropriate locations
   local _npmdir=/usr/lib/node_modules/$pkgname
-  install -d usr/share/{doc,licenses}/$pkgname
-  ln -s $_npmdir/LICENSE usr/share/licenses/$pkgname
-  ln -s $_npmdir/README.md usr/share/doc/$pkgname
+  install -d "$pkgdir"/{usr/bin,$_npmdir/dist}
+  ln -s $_npmdir/bin/$pkgname.cjs "$pkgdir"/usr/bin/$pkgname
+  ln -s $_npmdir/bin/pnpx.cjs "$pkgdir"/usr/bin/pnpx
 
-  # Remove node-gyp and Windows files
-  rm -rf ./$_npmdir/dist/{node-gyp-bin,/node_modules/node-gyp,vendor/*.exe}
-
-  # Remove references to $srcdir and $pkgdir
-  local _tmp_package="$(mktemp)"
-  jq '.|=with_entries(select(.key|test("_.+")|not))' ./$_npmdir/package.json > "$_tmp_package"
-  mv "$_tmp_package" ./$_npmdir/package.json
-  chmod 644 ./$_npmdir/package.json
+  cd $pkgname-$pkgver/$pkgname
+  cp -r bin package.json "$pkgdir"/$_npmdir
+  install -Dt "$pkgdir"/usr/share/licenses/$pkgname LICENSE
+  cd dist
+  cp -r $pkgname.cjs pnpmrc scripts "$pkgdir"/$_npmdir/dist
 }

@@ -2,28 +2,37 @@
 # Contributor: Felix Yan <felixonmars@archlinux.org>
 
 pkgname=python-josepy
-_pkgname=josepy
 pkgver=1.13.0
-pkgrel=3
-pkgdesc="JOSE protocol implementation in Python"
-url="https://github.com/certbot/josepy"
-license=('PerlArtistic')
+pkgrel=4
+pkgdesc='JOSE protocol implementation in Python'
 arch=('any')
+url='https://github.com/certbot/josepy'
+license=('Apache')
 depends=(
+  'python'
   'python-cryptography'
   'python-pyopenssl'
 )
-makedepends=('python-setuptools')
+makedepends=(
+  'git'
+  'python-build'
+  'python-installer'
+  'python-setuptools'
+  'python-wheel'
+)
 checkdepends=('python-pytest')
-source=("https://files.pythonhosted.org/packages/source/${_pkgname::1}/$_pkgname/$_pkgname-$pkgver.tar.gz"{,.asc})
-sha512sums=('fb91946ac4bbb2a81195d200e4fdf06d40865b345005ab4ee328fd72545da2345b44c5b9ffb3115b16ffed65ab3a0c01d5b20d0d2ff3c2c2af30537a6a4721df'
-            'SKIP')
-b2sums=('e4f3caed3be0775a49d6a9c38bf6e2b61ecc50b4e3804afa9e597b741821ab63a27fe95d1592531fee7152e2076760d838f4efa50ab8b3e2f1e129c9d7457f8c'
-        'SKIP')
-validpgpkeys=('20F201346BF8F3F455A73F9A780CC99432A28621')
+_commit='10e2e3a1c09974d41097cc4c08f836421ce39f1b'
+source=("$pkgname::git+$url#commit=$_commit")
+b2sums=('SKIP')
+
+pkgver() {
+  cd "$pkgname"
+
+  git describe --tags | sed 's/^v//'
+}
 
 prepare() {
-  cd "$_pkgname-$pkgver"
+  cd "$pkgname"
 
   # thou shalt not enforce coverage in distro packaging
   # https://github.com/certbot/josepy/issues/34
@@ -36,19 +45,19 @@ prepare() {
 }
 
 build() {
-  cd "$_pkgname-$pkgver"
+  cd "$pkgname"
 
-  python setup.py build
+  python -m build --wheel --no-isolation
 }
 
 check() {
-  cd "$_pkgname-$pkgver"
+  cd "$pkgname"
 
-  PYTHONPATH="$PWD/build/lib" pytest
+  PYTHONPATH="$(pwd)/build/lib" pytest -v
 }
 
 package() {
-  cd "$_pkgname-$pkgver"
+  cd "$pkgname"
 
-  python setup.py install --root="$pkgdir" --optimize=1
+  python -m installer --destdir="$pkgdir" dist/*.whl
 }

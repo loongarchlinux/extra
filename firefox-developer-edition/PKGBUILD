@@ -2,7 +2,7 @@
 # Contributor: Jan Alexander Steffens (heftig) <heftig@archlinux.org>
 
 pkgname=firefox-developer-edition
-pkgver=115.0b9
+pkgver=116.0b8
 pkgrel=1
 pkgdesc="Developer Edition of the popular Firefox web browser"
 arch=('loong64' 'x86_64')
@@ -50,7 +50,7 @@ source=(https://archive.mozilla.org/pub/firefox/releases/$pkgver/source/firefox-
         firefox-install-dir.patch
         "$pkgname".desktop
         identity-icons-brand.svg)
-b2sums=('22dfc698386602234b5ac6e156d3702a99ec4c90d99d6a76b33ce4adb825b907efca3fd21e0734ff2d4099f983a1966c01d3a13417ef142125622cf420aedfeb'
+b2sums=('a0fd229c4fd9863cb29a62ba6b67a9aada9ef4e7e62f967228250dcd3fae31a47fda718b190ac1d05465bf3886f9bdfb9e694e15ef9351bcf535d5d2ccee4ef7'
         'SKIP'
         'eb61793257458b20bc7ab5598240bc1901666d7fb7e971941af99ac706d387859642d8fba3130fa31789546b9123c7500edbe6373701ce9fc7d65aef3974c90c'
         'dfb74f902b5b7e4533c6dd91bcade3de809751d2c6d991b5c57c831be3d42759e0d416fc90a71977f17036db5f8b49775b483f5f4032d3022533b8b81f8c9e65'
@@ -183,6 +183,9 @@ pref("browser.shell.checkDefaultBrowser", false);
 
 // Don't disable our bundled extensions in the application directory.
 pref("extensions.autoDisableScopes", 11);
+
+// Enable GNOME Shell search provider
+pref("browser.gnome-search-provider.enabled", true);
 END
 
   local distini="$pkgdir/usr/lib/$pkgname/distribution/distribution.ini"
@@ -230,6 +233,15 @@ END
   if [[ -e $nssckbi ]]; then
     ln -srfv "$pkgdir/usr/lib/libnssckbi.so" "$nssckbi"
   fi
+
+  local sprovider="$pkgdir/usr/share/gnome-shell/search-providers/$pkgname.search-provider.ini"
+  install -Dvm644 /dev/stdin "$sprovider" <<END
+[Shell Search Provider]
+DesktopId=$pkgname.desktop
+BusName=org.mozilla.${pkgname//-/}.SearchProvider
+ObjectPath=/org/mozilla/${pkgname//-/}/SearchProvider
+Version=2
+END
 
   export SOCORRO_SYMBOL_UPLOAD_TOKEN_FILE="$startdir/.crash-stats-api.token"
   if [[ -f $SOCORRO_SYMBOL_UPLOAD_TOKEN_FILE ]]; then

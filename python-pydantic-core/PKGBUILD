@@ -1,0 +1,67 @@
+# Maintainer: David Runge <dvzrv@archlinux.org>
+
+_name=pydantic-core
+pkgname=python-pydantic-core
+pkgver=2.2.0
+pkgrel=1
+pkgdesc="Core validation logic for pydantic written in rust "
+arch=(loong64 x86_64)
+url="https://github.com/pydantic/pydantic-core"
+license=(MIT)
+depends=(
+  gcc-libs
+  glibc
+  python
+  python-typing-extensions
+)
+makedepends=(
+  python-build
+  python-installer
+  python-maturin
+)
+checkdepends=(
+  python-dirty-equals
+  python-hypothesis
+  python-pytest
+  python-pytest-examples
+  python-pytest-mock
+  python-pytest-timeout
+)
+options=(!lto)
+source=($pkgname-$pkgver.tar.gz::$url/archive/refs/tags/v$pkgver.tar.gz)
+sha512sums=('b8deb54086579b8b7470e25c95047278101b57867474fa47e32fcaa879744e85238da45bccb06cf37563bfa758b582d5a57f5a6d401fabb81a15a20e8c24f7ac')
+b2sums=('1aad6b24faba50e1b9934e8ed281f8a8a229982e2bcd910106e02da9dd94611f24ddf90886438cb65d26f56e41e9b3c26bb851d2a8f71d2e796c8ef896b7b25a')
+
+prepare() {
+  # we don't support version pinning
+  sed -e 's/,!=4.7.0//g' -i $_name-$pkgver/pyproject.toml
+  # remove pytest benchmark options
+  sed -e '/benchmark/d' -i $_name-$pkgver/pyproject.toml
+}
+
+build() {
+  cd $_name-$pkgver
+  python -m build --wheel --no-isolation
+}
+
+check() {
+  local pytest_options=(
+    -vv
+    --ignore tests/benchmarks  # don't run benchmark tests
+    --deselect tests/test_hypothesis.py::test_recursive  # recursion error?!
+  )
+  local site_packages=$(python -c "import site; print(site.getsitepackages()[0])")
+
+  cd $_name-$pkgver
+  # install to temporary location, as importlib is used
+  python -m installer --destdir=test_dir dist/*.whl
+  export PYTHONPATH="$PWD/test_dir/$site_packages:$PYTHONPATH"
+  HYPOTHESIS_PROFILE=slow pytest "${pytest_options[@]}"
+}
+
+package() {
+  cd $_name-$pkgver
+  python -m installer --destdir="$pkgdir" dist/*.whl
+  install -vDm 644 LICENSE -t "$pkgdir/usr/share/licenses/$pkgname/"
+  install -vDm 644 README.md -t "$pkgdir/usr/share/doc/$pkgname/"
+}

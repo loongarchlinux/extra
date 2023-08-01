@@ -6,31 +6,42 @@
 # repositories, libsasl and the rest of cyrus-sasl are provided separately
 # (else this would require mariadb and postgresql in [core])
 pkgbase=cyrus-sasl
-pkgname=(cyrus-sasl cyrus-sasl-gssapi cyrus-sasl-ldap cyrus-sasl-sql)
+pkgname=(
+  cyrus-sasl
+  cyrus-sasl-{gssapi,ldap,sql}
+)
 pkgver=2.1.28
-pkgrel=2
+pkgrel=3
 pkgdesc="Cyrus Simple Authentication Service Layer (SASL) library"
 arch=(loong64 x86_64)
 url="https://www.cyrusimap.org/sasl/"
 license=(custom)
-makedepends=(gdbm glibc krb5 libldap libsasl=$pkgver mariadb-libs openssl pam postgresql-libs sqlite)
-options=(debug)
+makedepends=(
+  gdbm
+  glibc
+  krb5
+  libldap
+  libsasl=$pkgver
+  libxcrypt
+  mariadb-libs
+  openssl
+  pam
+  postgresql-libs
+  sqlite
+)
 source=(
   https://github.com/cyrusimap/$pkgbase/releases/download/$pkgbase-$pkgver/$pkgbase-$pkgver.tar.gz{,.sig}
   saslauthd.service
   saslauthd.conf.d
-  tmpfiles.conf
 )
 sha512sums=('db15af9079758a9f385457a79390c8a7cd7ea666573dace8bf4fb01bb4b49037538d67285727d6a70ad799d2e2318f265c9372e2427de9371d626a1959dd6f78'
             'SKIP'
-            '99573a52c0558d34548cc14e2fc3d95c4b7dc11e0b85f6aba31b1a98d2937d559fed7bb268b88f7ebf929c70e987901b9fe7d406eb74c088628b403a45013197'
-            'e99e2da452d2d5b9c0fc7ef10a844f5aa80f20fe5d5778666e450b5e6eb183876322592ae075d55c7e24d93d8a39bf7d47864697faf398cc40fd589808dd0282'
-            '2cee9d6626aa16b6b51a5f48ad2c162564ce97dabc367738b4d6af654fcd5845e0d2cd78e5c9fb2378dfba2fd67f32fdbfd42321dc59c9a1222369860312d0a7')
+            'c6f2c3e59f0a3cc35b0b9c1bf593d4985d633e30071a246c070ba86e827c530840226a017e9c933df77f94a83d7b5ae0b9299df86e8dcd7220dce5015b6ea028'
+            'e99e2da452d2d5b9c0fc7ef10a844f5aa80f20fe5d5778666e450b5e6eb183876322592ae075d55c7e24d93d8a39bf7d47864697faf398cc40fd589808dd0282')
 b2sums=('6cca8c26cebb9c2ee5d539c43797d30b6309a476ec4233225789978e1d7315c4ea5d2abbc7f5464be0f3c0de5fd9212706b43fbc92f40b76cd0b1013cc00f823'
         'SKIP'
-        'a63fb542a7eb93bb119d655e068ca7a9be71e760298c37f220beae5331ae73c1478fb3d1455e5431a6487bcf0ce7a612e9cdc923e2da5834fc1ae58d810f8e8d'
-        'fd9c1f0a1dd3b812c483e1b119782994b556b997583d75fc905a35ba4d4aae94326b24d0313a3b396fef69d4eb6c7dcbd397144b72fd1b729c590cfba432a275'
-        'e7f38d8c42d48a08b5ca810e237899111856d57635260a5c440cbe8d01ed3dc89541fe7e4d8b84b9d54b1328f17f2c1ea9cf7b6a4a1f37b962bbb6e3cc916da8')
+        'a8d86aa30d73918d24132a117a4dd2ccc478f0d64f6bd07ccd41caec58a275a97d3a74db778309cf0d8253134f903dbdfa56366bf77dfe43d0a889baaf736f92'
+        'fd9c1f0a1dd3b812c483e1b119782994b556b997583d75fc905a35ba4d4aae94326b24d0313a3b396fef69d4eb6c7dcbd397144b72fd1b729c590cfba432a275')
 validpgpkeys=(
   '829F339F8C296FE80F409D93E3D7C118C7B9F46A'  # Partha Susarla <mail@spartha.org>
   'DEA1999F0CDB1AAEBA001E0DBEE3E3B4D2F06546'  # Quanah Gibson-Mount <quanah@fast-mail.org>
@@ -42,41 +53,45 @@ prepare() {
 }
 
 build() {
+  local configure_options=(
+    --prefix=/usr
+    --disable-krb4
+    --disable-macos-framework
+    --disable-otp
+    --disable-passdss
+    --disable-srp
+    --disable-srp-setpass
+    --disable-static
+    --enable-alwaystrue
+    --enable-anon
+    --enable-auth-sasldb
+    --enable-checkapop
+    --enable-cram
+    --enable-digest
+    --enable-gssapi
+    --enable-ldapdb
+    --enable-login
+    --enable-ntlm
+    --enable-plain
+    --enable-shared
+    --enable-sql
+    --infodir=/usr/share/info
+    --mandir=/usr/share/man
+    --sbin=/usr/bin
+    --sysconfdir=/etc
+    --with-dblib=gdbm
+    --with-devrandom=/dev/urandom
+    --with-configdir=/etc/sasl2:/etc/sasl:/usr/lib/sasl2
+    --with-ldap
+    --with-mysql=/usr
+    --with-pam
+    --with-pgsql=/usr/lib
+    --with-saslauthd=/run/saslauthd
+    --with-sqlite3=/usr/lib
+  )
+
   cd $pkgbase-$pkgver
-  ./configure --prefix=/usr \
-      --disable-krb4 \
-      --disable-macos-framework \
-      --disable-otp \
-      --disable-passdss \
-      --disable-srp \
-      --disable-srp-setpass \
-      --disable-static \
-      --enable-alwaystrue \
-      --enable-anon \
-      --enable-auth-sasldb \
-      --enable-checkapop \
-      --enable-cram \
-      --enable-digest \
-      --enable-gssapi \
-      --enable-ldapdb \
-      --enable-login \
-      --enable-ntlm \
-      --enable-plain \
-      --enable-shared \
-      --enable-sql \
-      --infodir=/usr/share/info \
-      --mandir=/usr/share/man \
-      --sbin=/usr/bin \
-      --sysconfdir=/etc \
-      --with-dblib=gdbm \
-      --with-devrandom=/dev/urandom \
-      --with-configdir=/etc/sasl2:/etc/sasl:/usr/lib/sasl2 \
-      --with-ldap \
-      --with-mysql=/usr \
-      --with-pam \
-      --with-pgsql=/usr/lib \
-      --with-saslauthd=/var/run/saslauthd \
-      --with-sqlite3=/usr/lib
+  ./configure "${configure_options[@]}"
   # prevent excessive overlinking by libtool
   sed -i -e 's/ -shared / -Wl,-O1,--as-needed\0/g' libtool
   make
@@ -87,7 +102,16 @@ check() {
 }
 
 package_cyrus-sasl() {
-  depends=(gdbm libgdbm.so glibc krb5 libkrb5.so libldap libsasl=$pkgver openssl pam libpam.so)
+  depends=(
+    gdbm libgdbm.so
+    glibc
+    krb5 libkrb5.so
+    libldap
+    libsasl=$pkgver
+    libxcrypt
+    openssl
+    pam libpam.so
+  )
   pkgdesc="Cyrus saslauthd SASL authentication daemon"
   backup=(etc/conf.d/saslauthd)
 
@@ -97,7 +121,6 @@ package_cyrus-sasl() {
 
   install -vDm 644 saslauthd.conf.d "$pkgdir/etc/conf.d/saslauthd"
   install -vDm 644 saslauthd.service -t "$pkgdir/usr/lib/systemd/system/"
-  install -vDm 644 tmpfiles.conf "$pkgdir/usr/lib/tmpfiles.d/saslauthd.conf"
 }
 
 package_cyrus-sasl-gssapi() {
@@ -112,7 +135,11 @@ package_cyrus-sasl-gssapi() {
 
 package_cyrus-sasl-ldap() {
   pkgdesc="ldapdb auxprop module for Cyrus SASL"
-  depends=(glibc libldap libsasl=$pkgver)
+  depends=(
+    glibc
+    libldap
+    libsasl=$pkgver
+  )
   replaces=('cyrus-sasl-plugins')
 
   install -vdm 755 "$pkgdir/usr/lib/sasl2"
@@ -122,7 +149,13 @@ package_cyrus-sasl-ldap() {
 
 package_cyrus-sasl-sql() {
   pkgdesc="SQL auxprop module for Cyrus SASL"
-  depends=(libsasl=$pkgver mariadb-libs libmariadb.so postgresql-libs libpq.so sqlite)
+  depends=(
+    glibc
+    libsasl=$pkgver
+    mariadb-libs libmariadb.so
+    postgresql-libs libpq.so
+    sqlite
+  )
   replaces=('cyrus-sasl-plugins')
 
   install -vdm 755 "$pkgdir/usr/lib/sasl2"

@@ -3,22 +3,29 @@
 # Contributor: acxz <akashpatel2008 at yahoo dot com>
 
 pkgname=rocm-opencl-runtime
-pkgver=5.4.3
+pkgver=5.6.0
 pkgrel=1
 pkgdesc='OpenCL implementation for AMD'
 arch=('loong64' 'x86_64')
 url='https://github.com/RadeonOpenCompute/ROCm-OpenCL-Runtime'
 license=('MIT')
-depends=('hsakmt-roct' 'hsa-rocr' 'comgr' 'mesa' 'opencl-icd-loader')
+depends=('hsakmt-roct' 'hsa-rocr' 'comgr' 'mesa' 'opencl-icd-loader' 'opencl-headers')
 makedepends=('rocm-cmake')
 provides=('opencl-driver')
 _rocclr='https://github.com/ROCm-Developer-Tools/ROCclr'
 source=("$pkgname-$pkgver.tar.gz::$url/archive/rocm-$pkgver.tar.gz"
-        "$pkgname-rocclr-$pkgver.tar.gz::$_rocclr/archive/rocm-$pkgver.tar.gz")
-sha256sums=('b0f8339c844a2e62773bd85cd1e7c5ecddfe71d7c8e8d604e1a1d60900c30873'
-            '71d9668619ab57ec8a4564d11860438c5aad5bd161a3e58fbc49555fbd59182d')
+        "$pkgname-rocclr-$pkgver.tar.gz::$_rocclr/archive/rocm-$pkgver.tar.gz"
+        "hip-amd-stdint.patch")
+sha256sums=('52ab260d00d279c2a86c353901ffd88ee61b934ad89e9eb480f210656705f04e'
+            '864f87323e793e60b16905284fba381a7182b960dd4a37fb67420c174442c03c'
+            '48849a16c9c72d24cd62a94d49987424e737908fbd0a776b4b4911153f057da8')
 _dirname="$(basename "$url")-$(basename "${source[0]}" .tar.gz)"
 _rocclr_dir="$(basename "$_rocclr")-$(basename "${source[1]}" .tar.gz)"
+
+prepare() {
+    cd "$_rocclr_dir"
+    patch -Np1 -i "$srcdir/hip-amd-stdint.patch"
+}
 
 build() {
     cmake \

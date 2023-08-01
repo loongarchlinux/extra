@@ -1,22 +1,22 @@
 # Maintainer: Felix Yan <felixonmars@archlinux.org>
 
 pkgname=ruby-rspec-memory
-pkgver=1.0.3
-pkgrel=2
+pkgver=1.0.4
+pkgrel=1
 pkgdesc='RSpec helpers for checking memory allocations'
 arch=(any)
 url='https://github.com/socketry/rspec-memory'
 license=(MIT)
 depends=(ruby-rspec)
-checkdepends=(ruby-covered ruby-rake)
+checkdepends=(ruby-covered ruby-bake-modernize ruby-bake-test ruby-bake-test-external)
 options=(!emptydirs)
 source=(https://github.com/socketry/rspec-memory/archive/v$pkgver/$pkgname-$pkgver.tar.gz)
-sha256sums=('4fcbf51cd43844293e4397ead2a3e79a80ca2760b810bf83d4804d6e41abdeb1')
+sha256sums=('f3b25f8fe54692fe2434da2a01ffed3f4331fbc71dc456b2a2ac0496b2a4be9c')
 
 prepare() {
   cd rspec-memory-$pkgver
-  sed -r -e 's|~>|>=|g' -i rspec-memory.gemspec
-  echo gemspec > gems.rb
+  sed -r -e 's|~>|>=|g' -e '/signing_key/d' -i rspec-memory.gemspec
+  sed -i '/bake-gem/d' gems.rb
 }
 
 build() {
@@ -48,7 +48,7 @@ build() {
 check() {
   local _gemdir="$(gem env gemdir)"
   cd rspec-memory-$pkgver
-  GEM_HOME="tmp_install/$_gemdir" rspec
+  GEM_HOME="tmp_install/$_gemdir" bake test
 }
 
 package() {

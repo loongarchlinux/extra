@@ -1,20 +1,21 @@
 # Maintainer: Santiago Torres-Arias <santiago @ usualplace>
 # Contributor: Kaizhao Zhang <zhangkaizhao@gmail.com>
+# Contributor: Phillip A. (flying-sheep)
 
 pkgname=python-hatch
 pkgver=1.7.0
-pkgrel=2
+pkgrel=3
 pkgdesc="A modern project, package, and virtual env manager"
 arch=('any')
-url="https://github.com/ofek/hatch"
+url="https://github.com/pypa/hatch"
 license=('MIT')
 depends=(
-  'python' 'python-appdirs' 'python-atomicwrites' 'python-click'
-  'python-colorama' 'python-coverage' 'python-pexpect' 'python-pip'
-  'python-pytest' 'python-semver' 'python-setuptools' 'python-sortedcontainers'
-  'python-toml' 'twine' 'python-userpath' 'python-virtualenv' 'python-wheel'
-  'python-build'
+  'python' 'python-build' 'python-tomli-w' 'python-tomlkit' 'python-click' 'python-hatchling'
+  'python-httpx' 'python-hyperlink' 'python-keyring' 'python-packaging' 'python-pexpect'
+  'python-platformdirs' 'python-pyperclip' 'python-rich' 'python-shellingham' 'python-userpath'
+  'python-virtualenv' 
 )
+makedepends=('python-build' 'python-installer' 'python-wheel')
 
 
 _name=${pkgname/python-/}
@@ -29,12 +30,12 @@ sha256sums=('7afc701fd5b33684a6650e1ecab8957e19685f824240ba7458dcacd66f90fb46'
 
 build() {
   cd "${srcdir}/${_name}-${pkgver}"
-  python -m build
+  python -m build --wheel --no-isolation
 }
 
 package() {
   cd "${srcdir}/${_name}-${pkgver}"
-  PIP_CONFIG_FILE=/dev/null pip install --isolated --root="${pkgdir}" --ignore-installed --no-deps dist/*.whl
+  python -m installer --destdir="${pkgdir}" dist/*.whl
   install -Dm644 LICENSE.txt -t "${pkgdir}/usr/share/licenses/${pkgname}/LICENSE"
 
   cd "${srcdir}"

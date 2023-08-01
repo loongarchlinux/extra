@@ -3,29 +3,30 @@
 # Contributor: JP-Ellis <josh@jpellis.me>
 
 pkgname=miopen-hip
-pkgver=5.4.3
+pkgver=5.6.0
 pkgrel=1
 pkgdesc="AMD's Machine Intelligence Library (HIP backend)"
 arch=('loong64' 'x86_64')
 url='https://rocmsoftwareplatform.github.io/MIOpen/doc/html/'
 license=('MIT')
 depends=('rocblas' 'rocm-clang-ocl' 'hip' 'composable-kernel' 'sqlite')
-makedepends=('rocm-cmake' 'miopengemm' 'boost' 'nlohmann-json' 'half' 'ninja')
+makedepends=('cmake' 'ninja' 'rocm-cmake' 'boost'
+             'nlohmann-json' 'eigen' 'half' 'functional-plus' 'frugally-deep')
 provides=('miopen')
 conflicts=('miopen')
 _git='https://github.com/ROCmSoftwarePlatform/MIOpen'
 _mlir='https://github.com/ROCmSoftwarePlatform/rocMLIR'
-_mlirver=5.4.1 #No changes between 5.4.1 and 5.4.3, so no upstream tag
+_mlirver=5.5.0 #No changes between 5.5.0 and 5.6.0, so no upstream tag
 source=("$pkgname-$pkgver.tar.gz::$_git/archive/rocm-$pkgver.tar.gz"
         "$pkgname-rocmlir-$pkgver.tar.gz::$_mlir/archive/rocm-$_mlirver.tar.gz")
-sha256sums=('37ffe2ed3d7942da8ea2f6bdb85c7a2f58e3ccd31767db158a322769d3604efd'
-            '2474c0b82593284a6ae8e55982e6c7b672e7812ad13f0a4544d1b796d7243966')
+sha256sums=('d620ddab5b488bdf81242654fefa337c6b71dc410c2ff26d30a4ee86a8d22d11'
+            'a5f62769d28a73e60bc8d61022820f050e97c977c8f6f6275488db31512e1f42')
 options=(!lto)
 _dirname="$(basename "$_git")-$(basename "${source[0]}" .tar.gz)"
 _mlirname="$(basename "$_mlir")-$(basename "${source[1]}" .tar.gz)"
 
 prepare() {
-    # Disable tests as they require a AMD GPU at build time
+    # Disable tests as they require an AMD GPU at build time
     sed -i '/add_subdirectory(test)/d' "$_dirname/CMakeLists.txt"
 }
 
@@ -33,8 +34,10 @@ build() {
   export CC=/opt/rocm/llvm/bin/clang
   export CXX=/opt/rocm/llvm/bin/clang++
   # -fcf-protection is not supported by HIP, see
-  # https://docs.amd.com/bundle/ROCm-Compiler-Reference-Guide-v5.4/page/Appendix_A.html
-  export CXXFLAGS="${CXXFLAGS} -fcf-protection=none"
+  # https://rocm.docs.amd.com/en/latest/reference/rocmcc/rocmcc.html#support-status-of-other-clang-options
+  # define NDEBUG to silence internal logging (mimics cmake release build)
+  # https://rocmsoftwareplatform.github.io/MIOpen/doc/html/DebugAndLogging.html
+  export CXXFLAGS="${CXXFLAGS} -fcf-protection=none -DNDEBUG"
 
   # Set ROCm test chipset to Vega in order to pass the configuration step.
   cmake \

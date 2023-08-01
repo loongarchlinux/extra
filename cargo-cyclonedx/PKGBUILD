@@ -1,0 +1,49 @@
+# Maintainer: David Runge <dvzrv@archlinux.org>
+
+pkgname=cargo-cyclonedx
+pkgver=0.3.8
+pkgrel=2
+pkgdesc="Creates CycloneDX Software Bill of Materials (SBOM) from Rust (Cargo) projects"
+arch=(loong64 x86_64)
+url="https://github.com/CycloneDX/cyclonedx-rust-cargo"
+license=(Apache)
+depends=(
+  curl
+  gcc-libs
+  glibc
+  openssl
+  zlib
+)
+makedepends=(rust)
+# NOTE: linking issues with libssh2 with LTO
+options=(!lto)
+source=($pkgname-$pkgver.tar.gz::https://github.com/CycloneDX/cyclonedx-rust-cargo/archive/refs/tags/$pkgname-$pkgver.tar.gz)
+sha512sums=('a3bf391bc0d020cbe1cc09425877f995d6c3f80f78eb3bc32351bf8dca7f8505f2d06fcd6ce3f157ad1aebbf4518a857aca49c3c6c43f6a523d34f130592e8cb')
+b2sums=('ab5ed6d25077870f13d1d73fb669838772ee00f702b8a6c7a1ed75272b0074b5be8732175fd61674467cec50692d0a1ffe3442a14cbed1bfc2f88bcc36beda5d')
+
+prepare() {
+  cd cyclonedx-rust-cargo-$pkgname-$pkgver
+  export RUSTUP_TOOLCHAIN=stable
+  cargo fetch --locked --target "$CARCH-unknown-linux-gnu"
+}
+
+build() {
+  cd cyclonedx-rust-cargo-$pkgname-$pkgver
+  export RUSTUP_TOOLCHAIN=stable
+  export CARGO_TARGET_DIR=target
+  cargo build --frozen --release --all-features
+}
+
+check() {
+  cd cyclonedx-rust-cargo-$pkgname-$pkgver
+  export RUSTUP_TOOLCHAIN=stable
+  # NOTE: use different target dir to have reproducible executable
+  export CARGO_TARGET_DIR=target_test
+  cargo test --frozen --all-features --workspace
+}
+
+package() {
+  cd cyclonedx-rust-cargo-$pkgname-$pkgver
+  install -vDm 755 "target/release/$pkgname" -t "$pkgdir/usr/bin/"
+  install -vDm 644 $pkgname/README.md -t "$pkgdir/usr/share/doc/$pkgname/"
+}

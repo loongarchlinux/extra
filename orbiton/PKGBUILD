@@ -2,19 +2,20 @@
 
 pkgbase=orbiton
 pkgname=(orbiton orbiton-gtk3)
-pkgver=2.62.5
+pkgver=2.62.9
 pkgrel=1
 pkgdesc='Configuration-free text editor and IDE limited by VT100'
 arch=(loong64 x86_64)
 url='https://orbiton.zip'
 license=(BSD)
 makedepends=(git go vte3)
-source=("git+https://github.com/xyproto/orbiton#commit=5fd09e3900b9f5472052b1cb6fd525d12770f569") # tag: v2.62.5
+source=("git+https://github.com/xyproto/orbiton#commit=3ed708f7e6e8a29f45fb6ecf0ebc9d73dfbc4461") # tag: v2.62.9
 options=(!lto)
 b2sums=('SKIP')
 
 build() {
-  make -C $pkgbase o gui
+  CXXFLAGS="$CXXFLAGS -Wl,--as-needed,--strip-all,--sort-common,-z,relro,-z,now" \
+    make -C $pkgbase o gui
 }
 
 package_orbiton() {
@@ -36,6 +37,7 @@ package_orbiton() {
               'clang: for formatting C++ code with clang-format'
               'clojure: for compiling Clojure'
               'crystal: for compiling Crystal'
+              'dart: for compiling and formatting Dart'
               'fpc: for compiling Object Pascal'
               'gdb: for debugging C'
               'gcc-d: for compiling D'
@@ -44,6 +46,7 @@ package_orbiton() {
               'haskell-brittany: for formatting Haskell'
               'jad: for decompiling .class files on the fly'
               'java-environment: for compiling Java'
+              'just: for editing justfiles'
               'kotlin: for compiling Kotlin'
               'lua: for compiling Lua'
               'mlton: for compiling Standard ML'
@@ -51,7 +54,7 @@ package_orbiton() {
               'nasm: for compiling Assembly'
               'ocaml: for compiling and formatting OCaml'
               'perl-tidy: for formatting Perl'
-              'pandoc-bin: for exporting Markdown to PDF'
+              'pandoc: for exporting Markdown to PDF'
               'prettier: for formatting JavaScript, TypeScript and CSS'
               'rustup: for compiling and formatting Rust'
               'scdoc: for writing man pages'
@@ -59,33 +62,13 @@ package_orbiton() {
               'tidy: for formatting HTML'
               'yasm: for compiling Assembly'
               'zig: for compiling and formatting Zig')
-  cd $pkgbase
-
-  install -Dm755 o "$pkgdir/usr/bin/o"
-  install -Dm644 o.1 "$pkgdir/usr/share/man/man1/o.1"
-  install -Dm644 LICENSE "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
-
-  # Recommended symlinks for Orbiton
-  ln -sf /usr/bin/o "$pkgdir/usr/bin/li"
-  ln -sf /usr/bin/o "$pkgdir/usr/bin/redblack"
-  ln -sf /usr/bin/o "$pkgdir/usr/bin/sw"
-  ln -sf /usr/bin/o "$pkgdir/usr/bin/edi"
-  ln -sf /usr/bin/o "$pkgdir/usr/bin/vs"
-  ln -sf /usr/bin/o "$pkgdir/usr/bin/feedgame"
+  DESTDIR="$pkgdir" \
+    make -C $pkgbase install symlinks easteregg license
 }
 
 package_orbiton-gtk3() {
   pkgdesc='Configuration-free text editor and IDE limited by VT100 (GTK3/VTE)'
   depends=(orbiton vte3)
-  cd $pkgbase
-
-  DESTDIR="$pkgdir" make gui-install
-  install -Dm644 LICENSE "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
-
-  # Recommended symlinks for the VTE/GUI version of Orbiton
-  ln -sf /usr/bin/og "$pkgdir/usr/bin/lig"
-  ln -sf /usr/bin/og "$pkgdir/usr/bin/redblackg"
-  ln -sf /usr/bin/og "$pkgdir/usr/bin/swg"
-  ln -sf /usr/bin/og "$pkgdir/usr/bin/edg"
-  ln -sf /usr/bin/og "$pkgdir/usr/bin/vg"
+  DESTDIR="$pkgdir" PROJECT=$pkgname \
+    make -C $pkgbase gui-install gui-symlinks license
 }

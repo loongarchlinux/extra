@@ -4,7 +4,7 @@
 # Contributor: Massimiliano Torromeo <massimiliano dot torromeo at gmail dot com>
 
 pkgname=mattermost
-pkgver=7.10.0
+pkgver=8.0.1
 pkgrel=1
 pkgdesc="Open source Slack-alternative in Golang and React"
 arch=(loong64 x86_64)
@@ -18,21 +18,18 @@ optdepends=('mariadb: SQL server storage'
             'postgresql: SQL server storage')
 options=(!lto)
 backup=(etc/webapps/${pkgname}/config.json)
-_server_archive="$pkgname-server-$pkgver"
-_webapp_archive="$pkgname-webapp-$pkgver"
-source=(https://github.com/$pkgname/$pkgname-server/archive/v$pkgver/$_server_archive.tar.gz
-        https://github.com/$pkgname/$pkgname-webapp/archive/v$pkgver/$_webapp_archive.tar.gz
+_archive="$pkgname-$pkgver"
+source=(https://github.com/$pkgname/$pkgname-server/archive/v$pkgver/$_archive.tar.gz
         $pkgname.service
         $pkgname.sysusers
         $pkgname.tmpfiles)
-sha256sums=('b86274a23470068dda5bb3049cf8724e3b2a1384449aaf658da0d200d0c59eb3'
-            'f41d4ebb2b1ac1f11223964030a0f6d796974acb048a1d067b48780e872ad0e3'
+sha256sums=('f5e2df997862e1f78cd2e8e39876179dd52fbcdfbb5ee6f5fce68c992c798396'
             '9e73dc5e9ab9a95049352bd504fb4e0d6becbd5c715026d8c1df4f515d258b68'
             'f7bd36f6d7874f1345d205c6dcb79af1804362fc977a658db88951a172d1dfa0'
             '8dfeee28655b91dc75aca2317846284013ac3d5a837d360eba9641e9fbcf3aa2')
 
 prepare() {
-    cd "$_server_archive"
+    cd "$_archive/server"
     go mod vendor
 
     # The configuration isn’t available at this time yet, modify the default.
@@ -46,21 +43,17 @@ prepare() {
     # Remove platform specific precompiled plugin downloads
     sed '/# Download prepackaged plugins/,+8d' -i build/release.mk
 
-    cd "../$_webapp_archive"
+    cd ../webapp
 
     # Modify npm commands to always use srcdir cache + temporary workaround for OpenSSL3 support
     sed -r -i Makefile \
         -e "/^\tnpm /s!npm!npm --cache '$srcdir/npm-cache' --no-audit --no-fund!" \
         -e "s|--max-old-space-size=4096|--openssl-legacy-provider|"
     make node_modules -W package.json
-
-    # Enforce build hash to Arch Linux for the field corresponding to the webapp.
-    sed -r -i webpack.config.js \
-        -e "s/^(\s*)COMMIT_HASH:(.*),$/\1COMMIT_HASH: JSON.stringify\(\"$pkgver-$pkgrel Arch Linux \($CARCH\)\"\),/"
 }
 
 build() {
-    cd "$_server_archive"
+    cd "$_archive/server"
     export CGO_CPPFLAGS="$CPPFLAGS"
     export CGO_CFLAGS="$CFLAGS"
     export CGO_CXXFLAGS="$CXXFLAGS"
@@ -76,10 +69,9 @@ build() {
                    -X \"$_config.BuildEnterpriseReady=false\"" \
          -o bin/ ./...
     # Move to the client directory to avoid LDFLAGS pollution of a `make build-client` invocation
-    cd "../$_webapp_archive"
-    make build
-    cd "../$_server_archive"
-    export BUILD_WEBAPP_DIR="$srcdir"/$_webapp_archive
+    cd ../webapp
+    npm run build
+    cd ../server
     make package-prep
 }
 
@@ -90,7 +82,7 @@ package() {
     install -Dm644 $pkgname.tmpfiles "$pkgdir"/usr/lib/tmpfiles.d/$pkgname.conf
 
     # core stuff
-    cd "$_server_archive"
+    cd "$_archive/server"
 
     install -dm755 "$pkgdir"/usr/share/webapps
     cp -a dist/$pkgname "$pkgdir"/usr/share/webapps/

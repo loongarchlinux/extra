@@ -3,8 +3,8 @@
 # Contributor: Lukas Jirkovsky <l.jirkovsky@gmail.com>
 
 pkgname=geeqie
-pkgver=2.0.1
-pkgrel=6
+pkgver=2.1
+pkgrel=1
 pkgdesc='Lightweight image viewer'
 arch=('loong64' 'x86_64')
 url="http://www.geeqie.org/"
@@ -12,33 +12,42 @@ license=('GPL2')
 # https://github.com/BestImageViewer/geeqie#optional-libraries
 depends=('exiv2' 'gtk3' 'ffmpegthumbnailer'
          'djvulibre' 'libheif' 'libchamplain'
-         'poppler-glib' 'libarchive' 'libraw' 'lua53'
+         'poppler-glib' 'libarchive' 'libraw' 'lua'
          'libjxl' 'gspell'
          'glib2' 'glibc' 'gcc-libs' 'lcms2'
          'openjpeg2' 'clutter-gtk' 'clutter'
          'gdk-pixbuf2' 'libtiff' 'cairo' 'pango'
-         'libjpeg-turbo' 'libwebp')
+         'libjpeg-turbo'
+         'hicolor-icon-theme')
 makedepends=('meson'
              'intltool' 'python' 'librsvg'
-             'vim'
+             'vim' 'evince'
              'libwmf' 'imagemagick'
              'fbida' 'gawk' 'perl-image-exiftool'
+             'webp-pixbuf-loader' 'libwebp'
              # for the docs
              'doxygen' 'yelp-tools' 'graphviz'
+             'pandoc-cli'
 )
+checkdepends=('xorg-server-xvfb' 'shellcheck')
 optdepends=('librsvg: SVG rendering'
             'fbida: for jpeg rotation'
             'gawk: to use the geo-decode function'
             'perl-image-exiftool: for the jpeg extraction plugin'
             'gphoto2: command-line tools for various (plugin) operations'
-            'imagemagick: command-line tools for various (plugin) operations')
+            'imagemagick: command-line tools for various (plugin) operations'
+            'evince: for print preview')
 source=(#"http://www.geeqie.org/${pkgname}-${pkgver}.tar.xz"{,.asc}
         https://github.com/BestImageViewer/geeqie/releases/download/v${pkgver}/${pkgname}-${pkgver}.tar.xz{,.asc}
-        exiv2-0.28.0.patch::https://github.com/BestImageViewer/geeqie/commit/86d5f780bae35d0fc2122646ff415633b5f15a60.patch
+        exiv2-0.28.0_1.patch::https://github.com/BestImageViewer/geeqie/commit/c45cca777aa3477eaf297db99f337e18d9683c61.patch
+        exiv2-0.28.0_2.patch::https://github.com/BestImageViewer/geeqie/commit/b04f7cd0546976dc4f7ea440648ac0eedd8df3ce.patch
+        geeqie-2.1-lua.patch
 )
-sha256sums=('89c1a7574cfe3888972d10723f4cf3a277249bea494fd9c630aa8d0df944555d'
+sha256sums=('d0511b7840169d37e457880d1ab2a787c52b609a0ab8fa1a8a391e841fdd2dde'
             'SKIP'
-            'b564d50e0d9f2583365e9810df07a955032a61c03054ab69f342889d7f220856')
+            'SKIP'
+            'SKIP'
+            '135d82097edac120c63fc895f720d84e23a1ed8c19e5e1523c181ea6cde5f247')
 validpgpkeys=('91EC400226201276E2ADCEC7D0DA6F44C936D1DA') # "Colin Clark <colin.clark@cclark.uk>"
 
 # main repo: http://www.geeqie.org/cgi-bin/gitweb.cgi?p=geeqie.git
@@ -46,8 +55,13 @@ validpgpkeys=('91EC400226201276E2ADCEC7D0DA6F44C936D1DA') # "Colin Clark <colin.
 
 prepare(){
   cd $pkgname-$pkgver
-  # fix build with exiv2 v0.28.0
-  patch -Np1 -i ../exiv2-0.28.0.patch
+  # fix segfault + build with exiv2 v0.28.0
+  # https://github.com/Exiv2/exiv2/issues/2638
+  patch -Np1 -i ../exiv2-0.28.0_1.patch
+  patch -Np1 -i ../exiv2-0.28.0_2.patch
+  # fix build with lua
+  # https://github.com/BestImageViewer/geeqie/pull/1130
+  patch -Np1 -i ../geeqie-2.1-lua.patch
 }
 
 build() {

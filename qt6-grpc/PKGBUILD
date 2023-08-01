@@ -2,7 +2,7 @@
 # Maintainer: Felix Yan <felixonmars@archlinux.org>
 
 pkgname=qt6-grpc
-_qtver=6.5.1
+_qtver=6.5.2
 pkgver=${_qtver/-/}
 pkgrel=1
 arch=(loong64 x86_64)
@@ -13,8 +13,17 @@ depends=(qt6-base grpc)
 makedepends=(cmake ninja protobuf)
 groups=(qt6)
 _pkgfn=${pkgname/6-/}-everywhere-src-$_qtver
-source=(https://download.qt.io/official_releases/qt/${pkgver%.*}/$_qtver/submodules/$_pkgfn.tar.xz)
-sha256sums=('9abe2d1a6946ec79144fd834d3afff85cd30f7ada991f8a1982f2c15d8a947e4')
+source=(https://download.qt.io/official_releases/qt/${pkgver%.*}/$_qtver/submodules/$_pkgfn.tar.xz
+        grpc-1.53.patch
+        protobuf-23.patch)
+sha256sums=('7ab2969b07cde418cce87a8aa7904e218d235222ea927949f153dde3ade0d204'
+            '6318facf1729903a53ba6c1785e5b89277001b5a51182a24c6e91db52766fa55'
+            '353774a32444def3db3a8d6056820b758750b47579b683a2c42105191121c281')
+
+prepare() {
+  patch -d $_pkgfn -p1 < grpc-1.53.patch # Fix build with grpc 1.53
+  patch -d $_pkgfn -p1 < protobuf-23.patch # Fix build with protobuf 23
+}
 
 build() {
   cmake -B build -S $_pkgfn -G Ninja \

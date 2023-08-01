@@ -3,7 +3,7 @@
 pkgname=postorius
 pkgver=1.3.8
 _commit=a52a54cff4c3ecd9a6349cd1f8dabe107d82540d  # refs/tags/1.3.8
-pkgrel=2
+pkgrel=3
 pkgdesc="The New Mailman Web UI"
 arch=(any)
 url="https://gitlab.com/mailman/postorius"
@@ -28,17 +28,20 @@ install=$pkgname.install
 source=(
   git+https://gitlab.com/mailman/$pkgname#tag=$_commit?signed
   $pkgname-1.3.6-settings.patch
+  django-4.2-compat.patch
   $pkgname.sysusers
   $pkgname.tmpfiles
   $pkgname.uwsgi
 )
 sha512sums=('SKIP'
             '0fc6611c4d8846a387c1ec3d74b01cba9bc10e22abc6fa6aa4bff11711b66155623fd356adbd548244998e0c76e936b3488141d1c13a70ad7df04b327cb474bf'
+            'cf481a49b9d01235c2c7f9940b0ae7c18f196ebf03ef3a7225a8e53c7f5fcc638d78dce7d9a43b5147183a3cccf1130f4a792c6d6b9495068a18a1d79cbd50c9'
             '3884b818da2deb148279e50316f720c95f0aaa529777b1b3662d8ab253cda823a90682a9eb47e941ca5ba80eefcb9a2d4afacd29f0340d7f9828b36ebcee23b3'
             '44925c7ce6d1c13bd5bdd2cb449fa978b8eaadaac7ecff74075c23a13478decc4acd1f2cd0399bf55c312d6a08985a3e80f6e7a6e85be9e3dcb93ffb526ca9fb'
             'c042f00d0d8dc72dadd19023152e55246c4d7a4b9d53bca3a05e7b8cb38cac5116417440d4ae82350820c7cb0cd414dcce45fa6af9be19296c4ebd0862dba896')
 b2sums=('SKIP'
         'ea175042786a1c2647fccc2026544c552ba56850582251a367873288daff136812556c47b3836cc040c684dbc129abe7fcdbf2faab896ffc5f864b378ffd5f00'
+        '89cc9f6b63f5f8a78027c5f726778c6c998350eba230ebf208a5fa1c32ead49309663dcb95340479460663fe096f4794bf2381aa89df026ff80155b887d25967'
         '1ef6dc98c6751e6d65e49812d08d813879b791a7f13622ea31ecadae6dd1859a918761d7723732ed2e4872b9cae61b84c8dbfec2dd2522de9f0929a1ee1cec24'
         '502d59cb0009b7cdf108a1611d17470d1a73c2d06bf6d9509799b63d4bbb4bb0a2cb71a39eddb0dc5990ee6489625174de6ce2d7e04e77a601c90a6da6d69c84'
         '4b80d60c88d46edd0e6e61ad2ff37ba3568c6c56a2abd449f903f7302aeec4a3bc91bbd3ee846731513fa1906df2e3d7d1c52b75a55214051fb96b048f9b4999')
@@ -52,6 +55,8 @@ pkgver() {
 prepare() {
   # become FHS compliant and disable the use of debug
   patch -d $pkgname -p1 -i ../$pkgname-1.3.6-settings.patch
+
+  patch -d $pkgname -p1 -i ../django-4.2-compat.patch
 
   touch settings_local.py
 }

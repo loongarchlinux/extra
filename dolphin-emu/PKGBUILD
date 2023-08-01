@@ -4,7 +4,7 @@
 
 pkgname=dolphin-emu
 pkgver=5.0.r19433.34527cadcc
-pkgrel=4
+pkgrel=5
 epoch=1
 pkgdesc='A Gamecube / Wii / Triforce emulator'
 arch=(loong64 x86_64)
@@ -63,6 +63,7 @@ source=(
   git+https://github.com/KhronosGroup/SPIRV-Cross.git
   git+https://github.com/GPUOpen-LibrariesAndSDKs/VulkanMemoryAllocator.git
   git+https://github.com/zlib-ng/zlib-ng.git
+  fmt-10.patch
 )
 b2sums=('SKIP'
         'SKIP'
@@ -73,7 +74,8 @@ b2sums=('SKIP'
         'SKIP'
         'SKIP'
         'SKIP'
-        'SKIP')
+        'SKIP'
+        '83aa91ed5a78ed4e661ce20f9ae5a28ea7c1c7f63c999ac8f6c23f5e8518cadaec44b3fa6e7deb557cbe8ea4aaab11fec8da751f0c669139af618b78c137287b')
 
 prepare() {
   cd dolphin-emu
@@ -82,6 +84,7 @@ prepare() {
     git config submodule.${submodule}.url ../${submodule##*/}
     git -c protocol.file.allow=always submodule update ${submodule}
   done
+  patch -p1 -i ../fmt-10.patch # Fix build with fmt 10
   cd Externals/cubeb/cubeb
   git submodule init cmake/sanitizers-cmake
   git config submodule.cmake/sanitizers-cmake.url "${srcdir}"/sanitizers-cmake

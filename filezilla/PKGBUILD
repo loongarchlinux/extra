@@ -3,32 +3,33 @@
 # Contributor: Alexander Fehr <pizzapunk gmail com>
 
 pkgname=filezilla
-pkgver=3.64.0
-pkgrel=3
+pkgver=3.65.0
+pkgrel=1
 pkgdesc='Fast and reliable FTP, FTPS and SFTP client'
 url='https://filezilla-project.org/'
 arch=('loong64' 'x86_64')
 license=('GPL')
 depends=(
-  'dbus' 'xdg-utils' 'wxwidgets-gtk3' 'libidn' 'hicolor-icon-theme' 'sqlite'
-  'gnutls' 'libfilezilla'
-  libfilezilla.so libdbus-1.so libgtk-3.so libgdk-3.so libnettle.so
+  dbus libdbus-1.so
+  gtk3 libgtk-3.so libgdk-3.so
+  hicolor-icon-theme
+  libfilezilla libfilezilla.so
+  nettle libnettle.so
+  sqlite libsqlite3.so
+  wxwidgets-gtk3
+  xdg-utils
+  )
+makedepends=(
+  boost
+  gnutls
+  libidn
 )
-source=(https://download.filezilla-project.org/client/FileZilla_${pkgver}_src.tar.xz
-        libfilezilla-compat.patch::"https://svn.filezilla-project.org/filezilla/FileZilla3/trunk/src/engine/storj/storjcontrolsocket.cpp?view=patch&r1=10966&r2=10965&pathrev=10966"
-        libfilezilla-compat2.patch::"https://svn.filezilla-project.org/filezilla/FileZilla3/trunk/src/engine/sftp/sftpcontrolsocket.cpp?view=patch&r1=10966&r2=10965&pathrev=10966"
-)
-sha256sums=('813d184d54984cf0fb27a455423089070e273b2ef8a70cb613e741170edf479a'
-            '98a4fab4b7e08d2222ca6c7034fcb78e0595f9cc80c825687dc9498d107645b9'
-            '3b38deebcc06667e6015026aaabca66a3bbc2b88accb82243d8d3cba49ef0768')
-sha512sums=('4c4ab1969613e789999bf634d62b612f21be5e221b969941c8097b7cb3525b089f4dd846e6489a3e66df7671732445e7fb8f77fc8d59cb34a78044136a3d2a99'
-            '4ba330706c110f4de4a50d0f34b8b391fd54d4d08745942cc2ad5c410079e2f697530bbbff691459572e291231c332d86f7b54400b15fcfcd3d3bc85093c9326'
-            '0571bd8987107567fba8d5a5f8682ea122f0b50c5bfeadc4132dec4f22e8e559f0355981c2cd383a092a090375b01d36834e5f31d126c83e14a66cdd6a1896e6')
+source=(https://download.filezilla-project.org/client/FileZilla_${pkgver}_src.tar.xz)
+sha256sums=('d2bce4dbaa80fe035836db19441e90befcbabdef5556e9a4b3d4dd233638bdea')
+sha512sums=('8fb2862eaa7aa4331a095e67335f8e2805936f4866c49f617bdfb819638ecdcbc94e15e8810d90c2eb56e04f0100b8deeb5b691a45012896963ea4ba59644d04')
 
 prepare() {
   cd ${pkgname}-${pkgver}
-  patch -Np2 < ../libfilezilla-compat.patch
-  patch -Np2 < ../libfilezilla-compat2.patch
   autoreconf -vif
 }
 

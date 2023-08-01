@@ -1,0 +1,119 @@
+diff --git requirements/base.txt requirements/base.txt
+index 4a1af3f7..8fb12685 100755
+--- requirements/base.txt
++++ requirements/base.txt
+@@ -3,4 +3,4 @@ jsonschema<5,>=3.2  # TODO: evaluate risk of removing jsonschema 3.x support
+ typing_extensions>=4.4,<5 # 3.7 doesn't have Literal
+ 
+ # resource validation & schema generation
+-pydantic~=1.8
++pydantic>=1.8
+diff --git samtranslator/compat.py samtranslator/compat.py
+new file mode 100644
+index 00000000..7f913f0d
+--- /dev/null
++++ samtranslator/compat.py
+@@ -0,0 +1,4 @@
++try:
++    from pydantic import v1 as pydantic
++except ImportError:
++    import pydantic
+diff --git samtranslator/internal/schema_source/any_cfn_resource.py samtranslator/internal/schema_source/any_cfn_resource.py
+index 08f78fcb..a13b3741 100644
+--- samtranslator/internal/schema_source/any_cfn_resource.py
++++ samtranslator/internal/schema_source/any_cfn_resource.py
+@@ -1,4 +1,4 @@
+-import pydantic
++from samtranslator.compat import pydantic
+ 
+ from samtranslator.internal.schema_source.common import LenientBaseModel
+ 
+diff --git samtranslator/internal/schema_source/common.py samtranslator/internal/schema_source/common.py
+index 66fc77d7..ed1ed5b2 100644
+--- samtranslator/internal/schema_source/common.py
++++ samtranslator/internal/schema_source/common.py
+@@ -3,11 +3,10 @@ from functools import partial
+ from pathlib import Path
+ from typing import Any, Dict, List, Optional, TypeVar, Union
+ 
+-import pydantic
+-from pydantic import Extra, Field
+ from typing_extensions import Literal
+ 
+ from samtranslator.model.types import PassThrough
++from samtranslator.compat import pydantic
+ 
+ 
+ # If using PassThrough as-is, pydantic will mark the field as not required:
+@@ -53,7 +52,7 @@ def passthrough_prop(sam_docs_stem: str, sam_docs_name: str, prop_path: List[str
+     for s in prop_path[1:]:
+         path.extend(["properties", s])
+     docs = _DOCS["properties"][sam_docs_stem][sam_docs_name]
+-    return Field(
++    return pydantic.Field(
+         title=sam_docs_name,
+         # We add a custom value to the schema containing the path to the pass-through
+         # documentation; the dict containing the value is replaced in the final schema
+@@ -68,7 +67,7 @@ def passthrough_prop(sam_docs_stem: str, sam_docs_name: str, prop_path: List[str
+ 
+ def _get_prop(stem: str, name: str) -> Any:
+     docs = _DOCS["properties"][stem][name]
+-    return Field(
++    return pydantic.Field(
+         title=name,
+         # https://code.visualstudio.com/docs/languages/json#_use-rich-formatting-in-hovers
+         markdownDescription=docs,
+@@ -78,7 +77,7 @@ def _get_prop(stem: str, name: str) -> Any:
+ # By default strict: https://pydantic-docs.helpmanual.io/usage/model_config/#change-behaviour-globally
+ class BaseModel(LenientBaseModel):
+     class Config:
+-        extra = Extra.forbid
++        extra = pydantic.Extra.forbid
+ 
+     def __getattribute__(self, __name: str) -> Any:
+         """Overloading get attribute operation to allow access PassThroughProp without using __root__"""
+diff --git samtranslator/internal/schema_source/schema.py samtranslator/internal/schema_source/schema.py
+index 6550c407..1e3cd1f8 100644
+--- samtranslator/internal/schema_source/schema.py
++++ samtranslator/internal/schema_source/schema.py
+@@ -6,7 +6,7 @@ from copy import deepcopy
+ from pathlib import Path
+ from typing import Any, Callable, Dict, List, Optional, Type, Union
+ 
+-import pydantic
++from samtranslator.compat import pydantic
+ 
+ from samtranslator.internal.schema_source import (
+     any_cfn_resource,
+diff --git samtranslator/model/__init__.py samtranslator/model/__init__.py
+index 77748744..9cffffbc 100644
+--- samtranslator/model/__init__.py
++++ samtranslator/model/__init__.py
+@@ -5,8 +5,7 @@ from abc import ABC, ABCMeta, abstractmethod
+ from contextlib import suppress
+ from typing import Any, Callable, Dict, List, Optional, Tuple, Type, TypeVar
+ 
+-from pydantic import BaseModel
+-from pydantic.error_wrappers import ValidationError
++from samtranslator.compat import pydantic
+ 
+ from samtranslator.model.exceptions import (
+     ExpectedType,
+@@ -17,7 +16,7 @@ from samtranslator.model.tags.resource_tagging import get_tag_list
+ from samtranslator.model.types import IS_DICT, IS_STR, PassThrough, Validator, any_type, is_type
+ from samtranslator.plugins import LifeCycleEvents
+ 
+-RT = TypeVar("RT", bound=BaseModel)  # return type
++RT = TypeVar("RT", bound=pydantic.BaseModel)  # return type
+ 
+ 
+ class PropertyType:
+@@ -348,7 +347,7 @@ class Resource(ABC):
+         """
+         try:
+             return cls.parse_obj(self._generate_resource_dict()["Properties"])
+-        except ValidationError as e:
++        except pydantic.error_wrappers.ValidationError as e:
+             error_properties: str = ""
+             with suppress(KeyError):
+                 error_properties = ".".join(str(x) for x in e.errors()[0]["loc"])

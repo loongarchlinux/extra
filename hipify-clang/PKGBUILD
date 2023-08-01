@@ -1,0 +1,37 @@
+# Maintainer: Torsten Keßler <tpkessler at archlinux dot org>
+pkgname=hipify-clang
+pkgver=5.6.0
+pkgrel=1
+pkgdesc='Convert CUDA to Portable C++ Code'
+arch=('loong64' 'x86_64')
+url='https://rocm.docs.amd.com/projects/HIPIFY/en/latest'
+license=('MIT')
+depends=('rocm-llvm' 'cuda')
+makedepends=('cmake')
+_git='https://github.com/ROCm-Developer-Tools/HIPIFY'
+source=("${pkgname}-${pkgver}.tar.gz::$_git/archive/rocm-$pkgver.tar.gz"
+	"hipify-fix-install-cmake.patch")
+sha256sums=('a2572037a7d3bd0813bd6819a5e6c0e911678db5fd3ab15a65370601df91891b'
+            '2ae92a69d77451e2ac9bb946cdcd08ba0950822f7aea4abf62af80a7ed1757bc')
+options=(!lto)
+_dirname="$(basename "$_git")-$(basename "${source[0]}" .tar.gz)"
+
+prepare() {
+  cd "$_dirname"
+  patch -Np1 -i "$srcdir/hipify-fix-install-cmake.patch"
+}
+
+build() {
+  cmake \
+    -Wno-dev -B build \
+    -S "$_dirname" \
+    -DCMAKE_BUILD_TYPE=None \
+    -DCMAKE_INSTALL_PREFIX=/opt/rocm
+  cmake --build build
+}
+
+package() {
+  DESTDIR="$pkgdir" cmake --install build
+
+  install -Dm644 "$_dirname/LICENSE.txt" "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
+}

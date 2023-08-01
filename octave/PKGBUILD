@@ -4,25 +4,31 @@
 
 pkgname=octave
 pkgver=8.2.0
-pkgrel=1
+pkgrel=2
 pkgdesc="A high-level language, primarily intended for numerical computations"
 arch=('loong64' 'x86_64')
 url="https://www.gnu.org/software/octave/"
 license=('GPL')
 depends=('fftw' 'curl' 'graphicsmagick' 'glpk' 'hdf5' 'qhull' 'arpack' 'glu' 'ghostscript'
  	   'sundials' 'gl2ps' 'qscintilla-qt5' 'libsndfile' 'qt5-tools' 'qrupdate' 'pcre2')
-makedepends=('gcc-fortran' 'texlive-core' 'suitesparse' 'texinfo' 'gnuplot' 'fltk' 'portaudio' 'jdk-openjdk' 'rapidjson')
+makedepends=('gcc-fortran' 'suitesparse' 'texinfo' 'gnuplot' 'fltk' 'portaudio' 'jdk-openjdk' 'rapidjson')
 optdepends=('texinfo: for help-support in octave'
             'gnuplot: alternative plotting'
             'portaudio: audio support'
             'java-runtime: java support'
             'fltk: FLTK GUI'
             'texlive-bin: for the publish command')
-source=(https://ftp.gnu.org/gnu/octave/octave-$pkgver.tar.gz{,.sig})
+source=(https://ftp.gnu.org/gnu/octave/octave-$pkgver.tar.gz{,.sig}
+        https://github.com/gnu-octave/octave/commit/7ea31a1e.patch)
 options=('!emptydirs')
 validpgpkeys=('DBD9C84E39FE1AAE99F04446B05F05B75D36644B')  # John W. Eaton
 sha512sums=('987dac6bd6d41316e1bb12f544a4ed8767639e60a117ad7125f2b299bf3dbdb516b6a657fcce5b597759bcaa1f8e49d91bead7a4c43fac73c16cb4818de9c29d'
-            'SKIP')
+            'SKIP'
+            '761ccbdc5a9b3eeb95a6f57c5264624203ce787436962cabdadcc0f7b4a57f034e42a431ec10e8cef472119a4842f846e54c073714d32d16f4e4fe42fbd7d6e6')
+
+prepare() {
+  patch -d $pkgname-$pkgver -p1 < 7ea31a1e.patch # Fix build with suitesparse 7.1
+}
 
 build() {
   cd ${pkgname}-${pkgver}

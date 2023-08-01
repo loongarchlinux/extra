@@ -2,7 +2,7 @@
 
 _name=flufl_lock
 pkgname=python-flufl-lock
-pkgver=8.0.1
+pkgver=8.0.2
 pkgrel=1
 pkgdesc="NFS-safe file locking with timeouts for POSIX systems for Python"
 arch=(any)
@@ -23,8 +23,8 @@ checkdepends=(
   python-sybil
 )
 source=(https://files.pythonhosted.org/packages/source/${_name::1}/$_name/$_name-$pkgver.tar.gz)
-sha512sums=('059a0ed742d941f936a5a06f6fb0b72aa218fc4cd4c03788fcec6ddcef9fcc2bda767ff89a7d380ad79e07a2eec4840b32efc0921c0ff277d00a9fb8cbe80e4e')
-b2sums=('07a837ec1965ae9c9f61a7601de0727bbab25b625744358e1c7e4c3112e26cd02db00fefe31d4900a2631d436eff8150aaddf6e80f8adb5e799bc9440ccea681')
+sha512sums=('2ef382cf22be72ceace89ad01646db31186fa7f505d72306025b90e47dad46fa0831d951f515fc321b873acc4a339e2ae1ed1a4861c355bc9961e0a3ab209d7c')
+b2sums=('e16af81933141628664bfcbece3ede038b150df468af00b840b9b7ad4aaa7e0e10c8a0ce415c685e2aa1e556198b2ac4f8339bdfa3e41c004c32592f0bd025bf')
 
 build() {
   cd $_name-$pkgver

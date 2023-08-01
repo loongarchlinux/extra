@@ -1,17 +1,18 @@
-# Maintainer Christian Rebischke <chris.rebischke@archlinux.org>
+# Maintainer: Christian Rebischke <chris.rebischke@archlinux.org>
+# Maintainer: Andreas 'Segaja' Schleifer <segaja at archlinux dot org>
 # Maintainer: Fredy García <frealgagu at gmail dot com>
 # Maintainer: Maxim Baz <${pkgname} at maximbaz dot com>
 # Contributor: Stefan Cocora <stefan dot cocora at gmail dot com>
 
 pkgname=skaffold
-pkgver=2.0.1
+pkgver=2.6.0
 pkgrel=1
 pkgdesc="A command line tool that facilitates continuous development for Kubernetes applications"
 arch=("loong64" "x86_64")
 url="https://github.com/GoogleContainerTools/${pkgname}"
 license=("Apache")
 depends=("docker" "kompose")
-makedepends=("go" "go-licenses")
+makedepends=("go" "go-licenses" "python")
 optdepends=(
   "minikube: To use Minikube"
   "kubectl: For Kubernetes support"
@@ -20,9 +21,9 @@ optdepends=(
 source=(
   "${pkgname}-${pkgver}.tar.gz::https://github.com/GoogleContainerTools/${pkgname}/archive/v${pkgver}.tar.gz"
 )
-sha256sums=('58ca783891cb1dfe4a1c06027d637a3e699d1fd675b2235cdc8904400cc7744d')
-b2sums=('b83904e78ac5b08b5c847b41e8e1866e8fc351e70ef1a7582a360de3a1e3f4ab48edc92413d47239de04e868c7a5095247aaf09ddf98291ae89868aa80a09cc8')
-_commit="7ed1d722b53b55ac1c909f00d00a05b47d0964dd"
+sha512sums=('9465b05bf6cd04cc645d5b72d2956f43b7800a6b920f363b0603198eabd9578609491b73fff7ff426aae774a0d7f144bb4e2b5a3154092e812bd41209464dab9')
+b2sums=('c93efd58f9ecfe50e6534e41f28443e407c5d422df2fe07ec57d06c6055d3e6e23e300b027357c4efe389f831e4d2919f6fe90a56c4bd5309c7992958d04f673')
+_commit="23c5c16b9fc777b87602aa27dcbe3136291959f3"
 
 prepare() {
   cd "${srcdir}/${pkgname}-${pkgver}"
@@ -31,6 +32,13 @@ prepare() {
   mkdir -p "${srcdir}/gopath/bin"
   mkdir -p "${srcdir}/gopath/src/github.com/GoogleContainerTools"
   ln -rTsf "${srcdir}/${pkgname}-${pkgver}" "${srcdir}/gopath/src/github.com/GoogleContainerTools/${pkgname}"
+
+  sed -i 's/-race//g' Makefile Makefile.diag
+  sed -i '/check-docs/d' hack/checks.sh
+  sed -i '/check-licenses/d' hack/checks.sh
+  sed -i '/check-schema-changes/d' hack/checks.sh
+  sed -i '/test-generated-proto/d' hack/checks.sh
+  rm --verbose pkg/skaffold/tag/git_commit_test.go
 }
 
 build() {
@@ -53,6 +61,13 @@ build() {
   # Create completion files
   "${srcdir}/gopath/bin/${pkgname}" completion bash > "${srcdir}/${pkgname}-completion.bash"
   "${srcdir}/gopath/bin/${pkgname}" completion zsh > "${srcdir}/${pkgname}-completion.zsh"
+}
+
+check() {
+  cd "${srcdir}/${pkgname}-${pkgver}"
+
+  make test
+  make -f Makefile.diag test
 }
 
 package() {

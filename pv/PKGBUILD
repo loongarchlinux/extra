@@ -4,30 +4,30 @@
 # Contributor: Aaron Schaefer <aaron@elasticdog.com>
 
 pkgname=pv
-pkgver=1.6.20
-pkgrel=2
+pkgver=1.7.0
+pkgrel=1
 pkgdesc='A terminal-based tool for monitoring the progress of data through a pipeline.'
 arch=('loong64' 'x86_64')
-url='http://www.ivarch.com/programs/pv.shtml'
-_url="https://github.com/a-j-wood/$pkgname"
+url='https://www.ivarch.com/programs/pv.shtml'
+# _url="https://github.com/a-j-wood/$pkgname"
 license=('custom:Artistic 2.0')
 depends=('glibc')
-# source=("http://www.ivarch.com/programs/sources/$pkgname-$pkgver.tar.bz2")
-source=("$_url/releases/download/v$pkgver/$pkgname-$pkgver.tar.bz2")
-md5sums=('85b25c827add82ebdd5a58a5ffde1d7d')
-sha256sums=('e831951eff0718fba9b1ef286128773b9d0e723e1fbfae88d5a3188814fdc603')
-b2sums=('b50623f623231e8e8615f960bad83d10e12d5274c57d23ea843d16fce30b3e690284b2d9b01f82a16b9790e2bf26f80f560e226589a62ca677a2cf90ea007691')
+_archive="$pkgname-$pkgver"
+source=("${url%/*}/sources/$_archive.tar.bz2"
+        "$_archive.tar.bz2.sig::${url%/*}/sources/$_archive.tar.bz2.txt")
+# source=("$_url/releases/download/v$pkgver/$_archive.tar.gz")
+sha256sums=('1372b41053881a05e2df10cb054304decc0233261c0aa0e96185842fa5a422ad'
+            'SKIP')
+validpgpkeys=(2189D5C29F041F2277AFD50AC1596BA33FC56F51) # andrew.wood@ivarch.com
 
 build() {
-  cd "${srcdir}/${pkgname}-${pkgver}"
-
-  ./configure --prefix=/usr --mandir=/usr/share/man
+  cd "$_archive"
+  ./configure --prefix=/usr
   make
 }
 
 package() {
-  cd "${srcdir}/${pkgname}-${pkgver}"
-
+  cd "$_archive"
   make DESTDIR="$pkgdir" install
-  install -Dm0644 doc/COPYING "$pkgdir/usr/share/licenses/$pkgname/COPYING"
+  install -Dm0644 -t "$pkgdir/usr/share/licenses/$pkgname/" doc/COPYING
 }

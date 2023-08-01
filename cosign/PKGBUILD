@@ -2,7 +2,7 @@
 # Maintainer: Christian Rebischke <chris.rebischke@archlinux.org>
 
 pkgname=cosign
-pkgver=2.0.1
+pkgver=2.1.1
 pkgrel=1
 pkgdesc="Container Signing with support for ephemeral keys and Sigstore signing"
 arch=('loong64' 'x86_64')
@@ -12,8 +12,8 @@ depends=('pcsclite')
 makedepends=('go' 'git')
 checkdepends=('go-tools')
 source=("${pkgname}-${pkgver}.tar.gz::https://github.com/sigstore/${pkgname}/archive/v${pkgver}.tar.gz")
-sha512sums=('2d8ce3c495818091e8077503fd2266bd0f3d8ee8a76f2a9b27ab1ab1cf1e2a01fee3ce6138f54d634015010d80e8193f79a8029dd3eb7a09c4b457be16ee4e50')
-b2sums=('eb552f0160473cd98d4c876c126f1bbacb53deeddaa9b475f12c3baa5b076fdc06ac3e9783f785059a96baf3643d010617efb695fb6a10f28f5d40023fa6602d')
+sha512sums=('1c938ad9fbc48a04cbbab76cc11d8c0b34d936b7d0e092b009ace4f3086a6f135af4e7c9ed921639425baaaba7a593ea4e04dcb08bbe104da0ece64f82a16aef')
+b2sums=('15a6eaf130dc57044feb8b5d8cc0d2fa8457ff68d3f1b7968567a662ea1ae7d7a62def107b9745cc8a11fcecd66f573a444ce5a64206a689740a53062f1f7bdb')
 options=('!lto')
 
 build(){
@@ -26,7 +26,6 @@ build(){
   export GOFLAGS="-buildmode=pie -trimpath -mod=readonly -modcacherw -ldflags=-linkmode=external -ldflags=-buildid='' -ldflags=-X=sigs.k8s.io/release-utils/version.gitVersion=v$pkgver"
   mkdir build
   go build -o build/ ./cmd/cosign
-  go build -o build/ ./cmd/sget
 }
 
 # Disabling tests, because of a segfault
@@ -50,19 +49,5 @@ package() {
   # build fish completions
   mkdir -p "${pkgdir}/usr/share/fish/vendor_completions.d/"
   "$pkgdir"/usr/bin/cosign completion fish > "${pkgdir}/usr/share/fish/vendor_completions.d/cosign.fish"
-
-  install -Dm755 build/sget "${pkgdir}/usr/bin/sget"
-
-  # build bash completions
-  mkdir -p "${pkgdir}/usr/share/bash-completion/completions"
-  "$pkgdir"/usr/bin/sget completion bash > "${pkgdir}/usr/share/bash-completion/completions/sget"
-
-  # build zsh completions
-  mkdir -p "${pkgdir}/usr/share/zsh/site-functions"
-  "$pkgdir"/usr/bin/sget completion zsh > "${pkgdir}/usr/share/zsh/site-functions/_sget"
-
-  # build fish completions
-  mkdir -p "${pkgdir}/usr/share/fish/vendor_completions.d/"
-  "$pkgdir"/usr/bin/sget completion fish > "${pkgdir}/usr/share/fish/vendor_completions.d/sget.fish"
 }
 

@@ -1,8 +1,8 @@
 # Maintainer: David Runge <dvzrv@archlinux.org>
 
 pkgname=sequoia-chameleon-gnupg
-pkgver=0.2.0
-pkgrel=2
+pkgver=0.3.2
+pkgrel=1
 pkgdesc="A re-implementation and drop-in replacement of gpg and gpgv"
 arch=(loong64 x86_64)
 url="https://gitlab.com/sequoia-pgp/sequoia-chameleon-gnupg"
@@ -11,17 +11,18 @@ groups=(sequoia)
 depends=(
   gcc-libs
   glibc
-  gmp
 )
 makedepends=(
   bzip2
   cargo
   clang
-  nettle
+  openssl
+  sqlite
 )
+checkdepends=(gnupg)
 source=($url/-/archive/v$pkgver/$pkgname-v$pkgver.tar.gz)
-sha512sums=('1028e58c5e2a51599fed765fec23bbbd608780c9ec6f78ddc197bb5cbce4cc7dc432d736dcc310c1cd16badfc3b38248ac596d58fa271dda4602cee10aff4e09')
-b2sums=('6c371b635512c5f0dce7127c3aba4fc0a0755613f9578cd9c6ed5dc8da499c9bd6140156683c2b876bacd50ab26156357d72f184fae4169ddcb24dfaffcf512d')
+sha512sums=('d69faae869eea58223e1d01cc582214182aa0bb45a848846be01c508b67354f750acbc8f661e5c2364a14a4718a48f558d9b3f1abdfc295a56dc9391d84fca88')
+b2sums=('2b703f891f90798c984c0ca5e0dccd476e0ea0d0561771a2fc6f3efa75ddf3ac98946c2c3523027c3162d7f37b5dca0ab88ba5ac73897481bf5b2856dd84d249')
 
 prepare() {
   cd $pkgname-v$pkgver
@@ -32,22 +33,26 @@ build() {
   cd $pkgname-v$pkgver
   export RUSTUP_TOOLCHAIN=stable
   export CARGO_TARGET_DIR=target
-  cargo build --frozen --release --all-features
+  cargo build --frozen --release --no-default-features --features=crypto-openssl
 }
 
-# checks broken: https://gitlab.com/sequoia-pgp/sequoia-chameleon-gnupg/-/issues/8
-# check() {
-#   cd $pkgname-v$pkgver
-#   export RUSTUP_TOOLCHAIN=stable
-#   cargo test --frozen --all-features
-# }
+check() {
+  cd $pkgname-v$pkgver
+  export RUSTUP_TOOLCHAIN=stable
+  RUST_BACKTRACE=1
+
+  cargo test --frozen --no-default-features --features=crypto-openssl
+}
 
 package() {
   depends+=(
     bzip2 libbz2.so
-    nettle libnettle.so libhogweed.so
+    openssl libcrypto.so libssl.so
+    sqlite libsqlite3.so
   )
+
   cd $pkgname-v$pkgver
   install -vDm 755 target/release/gpg{,v}-sq -t "$pkgdir/usr/bin/"
+  install -vDm 644 gpg-sq-parcimonie.service -t "$pkgdir/usr/lib/systemd/user/"
   install -vDm 644 README.md -t "$pkgdir/usr/share/doc/$pkgname/"
 }

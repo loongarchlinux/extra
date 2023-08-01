@@ -3,35 +3,35 @@
 
 pkgname=jupyter-notebook
 _pipname=notebook
-pkgver=6.5.4
-pkgrel=3
+pkgver=7.0.0
+pkgrel=2
 pkgdesc='The language-agnostic HTML notebook application for Project Jupyter'
 arch=(any)
 url='https://github.com/jupyter/notebook'
 license=(BSD)
-depends=(python-jinja python-tornado python-terminado python-traitlets jupyter-nbformat python-jupyter-core
-         python-jupyter-client python-send2trash jupyter-nbconvert python-prometheus_client
-         python-argon2_cffi python-ipython-genutils jupyter-nbclassic)
-# Much of their official dependency tree appears inverted and circular?
-makedepends=(python-build python-installer python-wheel python-jupyter-packaging python-setuptools)
-checkdepends=(python-pytest python-requests)
-optdepends=('pandoc: notebook export' 'jupyter-widgetsnbextension: interactive widgets')
+depends=(jupyterlab python-tornado python-traitlets python-jupyter-core python-jupyter-client)
+makedepends=(python-build python-installer python-hatch-jupyter-builder)
+checkdepends=(python-pytest-jupyter python-pytest-timeout python-requests)
+replaces=(jupyter-retrolab)
 source=(https://pypi.io/packages/source/${_pipname:0:1}/$_pipname/$_pipname-$pkgver.tar.gz)
-sha256sums=('517209568bd47261e2def27a140e97d49070602eea0d226a696f42a7f16c9a4e')
+sha256sums=('38b55e6939df0ba73b53212c3b234e41102f1789e0158606cedaebf00abef6c8')
 
 build() {
   cd notebook-$pkgver
   python -m build --wheel --no-isolation --skip-dependency-check
 }
 
-#check() {
-#  cd notebook-$pkgver
-#  pytest -v
-#}
+check() {
+  cd notebook-$pkgver
+  python -m venv --system-site-packages test-env
+  test-env/bin/python -m installer dist/*.whl
+  test-env/bin/python -m pytest -v -W ignore::DeprecationWarning
+}
 
 package() {
   cd notebook-$pkgver
   python -m installer --destdir="$pkgdir" dist/*.whl
+  mv "$pkgdir"/{usr/,}etc
 
   install -Dm644 LICENSE -t "$pkgdir"/usr/share/licenses/$pkgname
   install -Dm644 jupyter-notebook.desktop -t "$pkgdir"/usr/share/applications

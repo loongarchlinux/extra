@@ -1,63 +1,64 @@
 # Maintainer: Felix Yan <felixonmars@archlinux.org>
+# Maintainer: Daniel M. Capella <polyzen@archlinux.org>
 
 pkgname=npm
-pkgver=8.19.2
-pkgrel=2
-pkgdesc='A package manager for javascript'
+pkgver=9.8.1
+pkgrel=1
+pkgdesc='A package manager for JavaScript'
 arch=('any')
 url='https://www.npmjs.com/'
 license=('custom:Artistic')
 depends=('nodejs' 'node-gyp' 'nodejs-nopt' 'semver')
-# libgl: TODO
-# libvips: for sharp (doc build) (disabled as current version of gatsby imports a broken sharp)
-# libxi: for cwebp (doc build)
-makedepends=('libgl' 'libxi' 'procps-ng' 'python')
-options=('!emptydirs')
-source=("https://github.com/npm/cli/archive/v$pkgver/$pkgname-$pkgver.tar.gz")
-sha512sums=('5133c15d6564d3eee8f0dba2ca95a535c3c9096111f2c0c00cfd830d3b3915b906624ffe3d6c4de02c2c06c4c8e4f8b5f435a8697e843eb6c29eb7b758e403b7')
-
-prepare() {
-  cd cli-$pkgver
-  # 'deps' was added as a dep for many Makefile targets since 8.6 but it's not easy to fix.
-  # Let's skip and do it ourselves instead.
-  sed -i 's|node bin/npm-cli.js run resetdeps|true|' Makefile
-}
+makedepends=('git')
+optdepends=("git: for dependencies using Git URL's")
+source=("npm-cli::git+https://github.com/npm/cli.git#tag=v$pkgver")
+b2sums=('SKIP')
 
 build() {
-  cd cli-$pkgver
-  node . i --ignore-scripts --no-audit --no-fund
-  NODE_PATH=/usr/lib/node_modules make
+  cd npm-cli
+  node scripts/resetdeps.js
+  node . run build -w docs
+
+  # Workaround for https://github.com/npm/cli/issues/780
+  cd man
+  local f name sec title
+  for f in man5/folders.5 man5/install.5 man7/*.7; do
+    sec=${f##*.}
+    name=$(basename "$f" ."$sec")
+    title=$(echo "$name" | tr '[:lower:]' '[:upper:]')
+
+    sed -Ei "s/^\.TH \"$title\"/.TH \"NPM-$title\"/" "$f"
+    mv "$f" "${f%/*}/npm-$name.$sec"
+  done
+}
+
+check() {
+  cd npm-cli
+  node . run test --ignore-scripts
 }
 
 package() {
-  cd cli-$pkgver
-  node bin/npm-cli.js install -g -f --prefix="$pkgdir/usr" "$(node bin/npm-cli.js pack | tail -1)"
+  local _npmdir=/usr/lib/node_modules/$pkgname
+  install -d "$pkgdir"/usr/share/{bash-completion/completions,licenses/$pkgname}
+  ln -s $_npmdir/LICENSE "$pkgdir"/usr/share/licenses/$pkgname/LICENSE
 
-  # Non-deterministic race in npm gives 777 permissions to random directories.
-  # See https://github.com/npm/npm/issues/9359 for details.
-  chmod -R u=rwX,go=rX "$pkgdir"
+  cd npm-cli
+  node . install -g --prefix="$pkgdir/usr" "$(node . pack --ignore-scripts | tail -1)"
+  node . completion > "$pkgdir"/usr/share/bash-completion/completions/npm
+  echo 'globalconfig=/etc/npmrc' > "$pkgdir"/$_npmdir/npmrc
 
-  # npm installs package.json owned by build user
-  # https://bugs.archlinux.org/task/63396
-  chown -R root:root "$pkgdir"
+  cd "$pkgdir"
+  # Remove superfluous scripts
+  rm -r ./$_npmdir/{bin/np{m,x}{,.{cmd,ps1}},node_modules/.bin}
 
   # Experimental dedup
-  local _npmdir="$pkgdir"/usr/lib/node_modules/$pkgname
-  rm -r "$_npmdir"/node_modules/{,.bin/}semver
-  rm -r "$_npmdir"/node_modules/{,.bin/}node-gyp
-  rm -r "$_npmdir"/node_modules/{,.bin/}nopt
-  sed -i 's|../../node_modules/node-gyp/bin/node-gyp.js|../../../node-gyp/bin/node-gyp.js|' \
-    "$_npmdir"/bin/node-gyp-bin/node-gyp
+  rm -r ./$_npmdir/node_modules/{node-gyp,nopt,semver}
 
-  install -d "$pkgdir"/usr/share/bash-completion/completions
-  node "$srcdir"/cli-$pkgver/bin/npm-cli.js completion > "$pkgdir"/usr/share/bash-completion/completions/npm
-
-  for mandir in "$pkgdir"/usr/lib/node_modules/npm/man/man?; do
-    local dst="$pkgdir"/usr/share/man/"$(basename "$mandir")"
+  # Support both `man` and `npm help`
+  for mandir in ./"$_npmdir"/man/man?; do
+    local dst=usr/share/man/"$(basename "$mandir")"
     gzip "$mandir"/*
     install -d "$dst"
     ln -r -s "$mandir"/* "$dst"
   done
-
-  install -Dm644 "$srcdir"/cli-$pkgver/LICENSE -t "$pkgdir"/usr/share/licenses/$pkgname/
 }

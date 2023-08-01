@@ -1,0 +1,44 @@
+# Maintainer: Antonio Rojas <arojas@archlinux.org>
+# Contributor: Specter119 <spcter119 AT gmail.com>
+# Contributor: Erich Eckner <arch at eckner dot net>
+# Contributor: Philip Goto <philip.goto@gmail.com>
+
+_pyname=ipympl
+pkgname=python-$_pyname
+pkgver=0.9.3
+pkgrel=3
+pkgdesc='Matplotlib Jupyter Extension'
+url='https://pypi.org/project/ipympl/'
+depends=(python-matplotlib python-ipython-genutils python-ipywidgets)
+makedepends=(python-build python-installer python-setuptools python-jupyter-packaging jupyterlab)
+checkdepends=(python-pytest python-nbval python-ipywidgets python-numpy)
+license=(BSD)
+arch=(any)
+source=(https://pypi.io/packages/source/${_pyname:0:1}/$_pyname/$_pyname-$pkgver.tar.gz)
+sha256sums=('49bab75c05673a6881d1aaec5d8ac81d4624f73d292d154c5fb7096f10236a2b')
+
+prepare() {
+  sed -e 's|>=.*\"|\"|g' -e 's|~=.*\"|\"|g' -i $_pyname-$pkgver/pyproject.toml
+}
+
+build() {
+  cd $_pyname-$pkgver
+  python setup.py build
+}
+
+# pypi tarball missing tests
+#check() {
+#  cd $_pyname-$pkgver
+#  PYTHONPATH="$PWD" \
+#  pytest -v
+#}
+
+package() {
+  cd $_pyname-$pkgver
+  python setup.py install --root="$pkgdir" --skip-build --optimize=1
+  mkdir -p "$pkgdir"/usr/share/jupyter/labextensions
+  _sitepackages=$(python -c 'import sysconfig; print(sysconfig.get_paths()["purelib"])')
+  ln -s $_sitepackages/ipympl/labextension "$pkgdir"/usr/share/jupyter/labextensions/jupyter-matplotlib
+  install -Dm644 jupyter-matplotlib.json -t "$pkgdir"/etc/jupyter/nbconfig/notebook.d/
+  install -Dm644 LICENSE -t "$pkgdir"/usr/share/licenses/$pkgname
+}

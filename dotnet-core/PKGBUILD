@@ -14,9 +14,8 @@ pkgname=(
  aspnet-targeting-pack
  dotnet-source-built-artifacts
 )
-pkgver=7.0.7.sdk107
-_bootstrap=false
-pkgrel=2
+pkgver=7.0.9.sdk109
+pkgrel=1
 arch=(loong64 x86_64)
 url=https://www.microsoft.com/net/core
 license=(MIT)
@@ -46,7 +45,7 @@ options=(
   !lto
   staticlibs
 )
-_tag=bf72c06963e2bb23c1abfd97a9ed50e47e155027
+_tag=3e9283a8e906761fcf9973c0007a75c0eb20baea
 source=(
   dotnet-installer::git+https://github.com/dotnet/installer.git#tag=${_tag}
   https://github.com/dotnet/runtime/commit/31e4f404c218eae7ba999c4df5346d30f971451c.patch
@@ -73,7 +72,7 @@ pkgver() {
   local _standardver=$(xmllint --xpath "//*[local-name()='NETStandardLibraryRefPackageVersion']/text()" eng/Versions.props)
 
   if [[ $_standardver != 2.1.0 ]]; then
-    msg "Invalid Standard version '$_standardver'"
+    msg "Invalid Standard version"
     exit 1
   fi
 
@@ -99,6 +98,9 @@ build() {
 
   cd dotnet-installer
 
+  local _bootstrapver=$(xmllint --xpath "//*[local-name()='PrivateSourceBuiltArtifactsPackageVersion']/text()" eng/Versions.props)
+  local _previousver=$(pacman -Q dotnet-source-built-artifacts-6.0 | sed -r 's/.*([0-9]\.[0-9])\.[0-9]\.sdk([0-9]+)-.*/\1.\2/')
+
   ./build.sh \
     /p:ArcadeBuildTarball=true \
     /p:TarballDir="${srcdir}"/sources
@@ -112,7 +114,7 @@ build() {
   patch -Np1 -i "${srcdir}"/31e4f404c218eae7ba999c4df5346d30f971451c.patch
   popd
 
-  if [[ $_bootstrap ]]; then
+  if [[ $_bootstrapver != $_previousver ]]; then
     ./prep.sh --bootstrap
     ./build.sh \
       -- \

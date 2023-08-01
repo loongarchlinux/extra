@@ -2,7 +2,7 @@
 
 pkgname=ukui-screensaver
 pkgver=3.0.2
-pkgrel=5
+pkgrel=6
 pkgdesc="Screensaver for UKUI desktop environment"
 arch=('loong64' 'x86_64')
 license=('GPL')
@@ -10,14 +10,18 @@ url="https://github.com/ukui/ukui-screensaver"
 groups=('ukui')
 depends=('dconf' 'gsettings-qt' 'libxtst' 'opencv' 'qt5-svg' 'qt5-x11extras')
 makedepends=('cmake' 'qt5-tools')
-source=("$pkgname-$pkgver.tar.gz::https://github.com/ukui/ukui-screensaver/archive/v$pkgver.tar.gz")
-sha512sums=('5d7af2f2d2903bf5f6e337223e9f4a29069e76b3aec448289efbec16de1e24a0c040ad537aef15bf532abc4305e3bb618950bdaf8346de217408126258643596')
+source=("$pkgname-$pkgver.tar.gz::https://github.com/ukui/ukui-screensaver/archive/v$pkgver.tar.gz"
+         qt-5.15.10.patch)
+sha512sums=('5d7af2f2d2903bf5f6e337223e9f4a29069e76b3aec448289efbec16de1e24a0c040ad537aef15bf532abc4305e3bb618950bdaf8346de217408126258643596'
+            'f28d9405d4124255be41e52b3fe3c9e752c4f548b56ad4b4114a17ff24071d252ccd2e51c02f642eb09e756d550da3d473533ec0718055d615a82ffa775ae492')
 
 prepare() {
   mkdir -p build
   # https://github.com/ukui/ukui-screensaver/issues/65
   cp /etc/pam.d/login $pkgname-$pkgver/data/ukui-screensaver-qt
   sed -e 's|gio-unix-2.0|glib-2.0|' -i $pkgname-$pkgver/BiometricAuth/giodbus.cpp
+  # Fix build with Qt 5.15.10
+  patch -d $pkgname-$pkgver -p1 < qt-5.15.10.patch
 }
 
 build() {

@@ -8,7 +8,7 @@
 
 pkgbase=qtcreator
 pkgname=(qtcreator qtcreator-devel)
-pkgver=10.0.2
+pkgver=11.0.0
 _clangver=15.0.7
 pkgrel=1
 pkgdesc='Lightweight, cross-platform integrated development environment'
@@ -30,7 +30,7 @@ optdepends=('qt6-doc: integrated Qt documentation'
             'perf: performer analyzer'
             'mlocate: locator filter')
 source=(https://download.qt.io/official_releases/qtcreator/${pkgver%.*}/$pkgver/qt-creator-opensource-src-$pkgver.tar.xz)
-sha256sums=('da7fc5e7dc1a80c71c09e245b7d2711eb01ba575e2f99110d04a7ce799926d4e')
+sha256sums=('dbf44f55fb03834d270bedeff695ac4fc02af3ada845f5b9ef982b6b159a1430')
 options=(docs)
 
 build() {

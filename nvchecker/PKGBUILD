@@ -5,7 +5,7 @@ pkgname=nvchecker
 pkgver=2.12
 # curl https://api.github.com/repos/lilydjwg/nvchecker/git/ref/tags/v$pkgver | jq -r .object.sha
 _tag=7df19d25b745481622f23668036020b664e6ee66
-pkgrel=1
+pkgrel=2
 pkgdesc="New version checker for software releases"
 arch=('any')
 url="https://github.com/lilydjwg/nvchecker"
@@ -30,8 +30,12 @@ optdepends=(
   'python-gobject: for nvchecker-notify'
   'libnotify: for nvchecker-notify'
 )
-source=("git+https://github.com/lilydjwg/nvchecker.git?signed#tag=$_tag")
-sha512sums=('SKIP')
+source=("git+https://github.com/lilydjwg/nvchecker.git?signed#tag=$_tag"
+        # see https://github.com/lilydjwg/nvchecker/pull/233
+        "${pkgname}_fix_symlinks.patch::https://github.com/lilydjwg/nvchecker/pull/233/commits/1986f2953a0e1dda8abb42b9d8847308546f4ea6.patch"
+)
+sha512sums=('SKIP'
+            'd55d46774773aa8cd2d35ef3f1531d747affa03a9d9f176967e82348b609b22ed755b71b206b384464840015b29a2c1725e57e75fdfe9e73c9b66d4a19fb67ad')
 validpgpkeys=(
   # No direct trust chain. Some related stuffs:
   # https://api.github.com/users/lilydjwg/gpg_keys
@@ -42,6 +46,8 @@ validpgpkeys=(
 _backports=(
   # Fix test_alpmfiles in Arch chroots
   'd9888cc49d3531a947e7b443a3bab47a7e09da14'
+  # bump android-sdk-cmake and xml2 version
+  'fe1342e9fb39774e63d2f650db8e04f50d3355a9'
 )
 
 pkgver() {
@@ -51,6 +57,8 @@ pkgver() {
 
 prepare() {
   cd nvchecker
+
+  patch --verbose --strip=1 --input="../${pkgname}_fix_symlinks.patch"
 
   # this loop is stolen from core/systemd :)
   local _c

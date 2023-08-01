@@ -1,0 +1,59 @@
+From 6d6e1ec9bca8f0759bd1ca0903819e7b5c120a3d Mon Sep 17 00:00:00 2001
+From: Emil Velikov <emil.l.velikov@gmail.com>
+Date: Sun, 2 Jul 2023 11:53:31 +0100
+Subject: [PATCH 1/2] generator: update xz firmware reference
+
+The compressed firmware has landed with linux 5.3. Which distribution
+decided to support it (and when) is orthogonal.
+
+Signed-off-by: Emil Velikov <emil.l.velikov@gmail.com>
+Signed-off-by: Laurent Carlier <lordheavym@gmail.com>
+---
+ generator/generator.go | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/generator/generator.go b/generator/generator.go
+index 8f0a72f..24f6d78 100644
+--- a/generator/generator.go
++++ b/generator/generator.go
+@@ -330,7 +330,7 @@ func lookupPath(binary string) (string, error) {
+ func findFwFile(fw string) (string, error) {
+ 	supportedFwExt := []string{
+ 		"",
+-		".xz", // https://archlinux.org/news/linux-firmware-202201190c6a7b3-2-requires-kernel-53-and-package-splitting/
++		".xz", // since linux v5.3
+ 	}
+ 
+ 	fwBasePath := firmwareDir + fw
+-- 
+2.41.0
+
+From 7e20561cd54da02ca0f03ca430ccdb78bb0475f7 Mon Sep 17 00:00:00 2001
+From: Emil Velikov <emil.l.velikov@gmail.com>
+Date: Sun, 2 Jul 2023 11:55:29 +0100
+Subject: [PATCH 2/2] generator: support ZSTD compressed firmware
+
+Since booster does not (and should not IMHO) decompress the firmware,
+adding a one-liner to detect the correct extension should be enough.
+
+Signed-off-by: Emil Velikov <emil.l.velikov@gmail.com>
+Signed-off-by: Laurent Carlier <lordheavym@gmail.com>
+---
+ generator/generator.go | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/generator/generator.go b/generator/generator.go
+index 24f6d78..91368a7 100644
+--- a/generator/generator.go
++++ b/generator/generator.go
+@@ -331,6 +331,7 @@ func findFwFile(fw string) (string, error) {
+ 	supportedFwExt := []string{
+ 		"",
+ 		".xz", // since linux v5.3
++		".zst", // since linux v5.19
+ 	}
+ 
+ 	fwBasePath := firmwareDir + fw
+-- 
+2.41.0
+

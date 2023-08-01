@@ -2,13 +2,13 @@
 
 _name=svelte-language-tools
 pkgname=svelte-language-server
-pkgver=0.15.13
+pkgver=0.15.16
 pkgrel=1
 pkgdesc='Language server for Svelte'
 arch=('any')
 url=https://github.com/sveltejs/language-tools/tree/master/packages/language-server
 license=('MIT')
-depends=('nodejs')
+depends=('nodejs' 'typescript')
 makedepends=('git' 'npm' 'pnpm')
 conflicts=("nodejs-$pkgname")
 replaces=("nodejs-$pkgname")
@@ -34,7 +34,7 @@ check() {
 
 package() {
   local _npmdir=/usr/lib/node_modules/$pkgname
-  install -d "$pkgdir"/{/usr/bin,$_npmdir}
+  install -d "$pkgdir"/{usr/bin,$_npmdir}
   ln -s $_npmdir/bin/server.js "$pkgdir"/usr/bin/svelteserver
 
   cd $_name
@@ -46,6 +46,7 @@ package() {
   sed -i 's/workspace:~/*/' package.json
   rm -r node_modules
   npm install --production
+  rm -r node_modules/typescript
   mv package.json{.bak,}
 
   cp -r bin dist node_modules package.json "$pkgdir"/$_npmdir

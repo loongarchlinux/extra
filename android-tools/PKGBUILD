@@ -5,15 +5,22 @@
 pkgname=android-tools
 pkgver=34.0.1
 _tag=${pkgver} # https://github.com/nmeum/android-tools sometimes carries extra patch version on top of the upstream versioning
-pkgrel=1
+pkgrel=2
 pkgdesc='Android platform tools'
 arch=(loong64 x86_64)
 url='http://tools.android.com/'
 license=(Apache MIT)
 depends=(libusb protobuf brotli zstd android-udev pcre2)
 makedepends=(gtest cmake go ninja git)
-source=(https://github.com/nmeum/android-tools/releases/download/$_tag/android-tools-$_tag.tar.xz)
-sha256sums=('60234ecbca19a17a7e2f46a4581960d645b7c55b870d924a21494c76a6f548ec')
+source=(https://github.com/nmeum/android-tools/releases/download/$_tag/android-tools-$_tag.tar.xz
+        protobuf-23.patch)
+sha256sums=('60234ecbca19a17a7e2f46a4581960d645b7c55b870d924a21494c76a6f548ec'
+            '4de4a9951a2748b2816514c66d326488bf65d89cff0af94962a6f9ee4f450462')
+
+prepare() {
+  cd android-tools-$_tag
+  patch -p1 -i ../protobuf-23.patch
+}
 
 build() {
   cd android-tools-$_tag
@@ -24,6 +31,7 @@ build() {
     -DCMAKE_CXX_FLAGS="$CXXFLAGS" \
     -DCMAKE_C_FLAGS="$CFLAGS" \
     -G Ninja -S . -B build
+  cmake --build build
 }
 
 package() {
