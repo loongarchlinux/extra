@@ -1,0 +1,153 @@
+diff --git a/archinstall/lib/global_menu.py b/archinstall/lib/global_menu.py
+index fb62b7b5..a61901fb 100644
+--- a/archinstall/lib/global_menu.py
++++ b/archinstall/lib/global_menu.py
+@@ -46,7 +46,9 @@ class GlobalMenu(AbstractMenu):
+ 				_('Archinstall language'),
+ 				lambda x: self._select_archinstall_language(x),
+ 				display_func=lambda x: x.display_name,
+-				default=self.translation_handler.get_language_by_abbr('en'))
++				default=self.translation_handler.get_language_by_abbr('zh-CN'))
++		self.translation_handler.activate(self.translation_handler.get_language_by_abbr('zh-CN'))
++
+ 		self._menu_options['locale_config'] = \
+ 			Selector(
+ 				_('Locales'),
+diff --git a/archinstall/lib/hardware.py b/archinstall/lib/hardware.py
+index 85f903e1..bbdbadd4 100644
+--- a/archinstall/lib/hardware.py
++++ b/archinstall/lib/hardware.py
+@@ -21,6 +21,7 @@ class GfxPackage(Enum):
+ 	VulkanRadeon = 'vulkan-radeon'
+ 	Xf86VideoAmdgpu = "xf86-video-amdgpu"
+ 	Xf86VideoAti = "xf86-video-ati"
++	Xf86VideoLoongson = 'xf86-video-loongson'
+ 	Xf86VideoNouveau = 'xf86-video-nouveau'
+ 	Xf86VideoVmware = 'xf86-video-vmware'
+ 
+@@ -50,6 +51,7 @@ class GfxDriver(Enum):
+ 					GfxPackage.Mesa,
+ 					GfxPackage.Xf86VideoAmdgpu,
+ 					GfxPackage.Xf86VideoAti,
++					GfxPackage.Xf86VideoLoongson,
+ 					GfxPackage.Xf86VideoNouveau,
+ 					GfxPackage.Xf86VideoVmware,
+ 					GfxPackage.LibvaMesaDriver,
+@@ -63,6 +65,7 @@ class GfxDriver(Enum):
+ 					GfxPackage.Mesa,
+ 					GfxPackage.Xf86VideoAmdgpu,
+ 					GfxPackage.Xf86VideoAti,
++					GfxPackage.Xf86VideoLoongson,
+ 					GfxPackage.LibvaMesaDriver,
+ 					GfxPackage.VulkanRadeon
+ 				]
+@@ -244,6 +247,7 @@ class SysInfo:
+ 			'snd_gina20',
+ 			'snd_gina24',
+ 			'snd_hda_codec_ca0132',
++			'snd_hda_loongson',
+ 			'snd_hdsp',
+ 			'snd_indigo',
+ 			'snd_indigodj',
+diff --git a/archinstall/lib/installer.py b/archinstall/lib/installer.py
+index 94bdff7d..0376ed0a 100644
+--- a/archinstall/lib/installer.py
++++ b/archinstall/lib/installer.py
+@@ -879,10 +879,10 @@ class Installer:
+ 			self.pacman.strap('efibootmgr') # TODO: Do we need? Yes, but remove from minimal_installation() instead?
+ 
+ 			try:
+-				SysCommand(f'/usr/bin/arch-chroot {self.target} grub-install --debug --target=x86_64-efi --efi-directory={boot_partition.mountpoint} --bootloader-id=GRUB --removable', peek_output=True)
++				SysCommand(f'/usr/bin/arch-chroot {self.target} grub-install --debug --target=loongarch64-efi --efi-directory={boot_partition.mountpoint} --bootloader-id=GRUB --removable', peek_output=True)
+ 			except SysCallError:
+ 				try:
+-					SysCommand(f'/usr/bin/arch-chroot {self.target} grub-install --debug --target=x86_64-efi --efi-directory={boot_partition.mountpoint} --bootloader-id=GRUB --removable', peek_output=True)
++					SysCommand(f'/usr/bin/arch-chroot {self.target} grub-install --debug --target=loongarch64-efi --efi-directory={boot_partition.mountpoint} --bootloader-id=GRUB --removable', peek_output=True)
+ 				except SysCallError as err:
+ 					raise DiskError(f"Could not install GRUB to {self.target}{boot_partition.mountpoint}: {err}")
+ 		else:
+diff --git a/archinstall/lib/locale/locale_menu.py b/archinstall/lib/locale/locale_menu.py
+index 29dd775d..38f3db0c 100644
+--- a/archinstall/lib/locale/locale_menu.py
++++ b/archinstall/lib/locale/locale_menu.py
+@@ -16,7 +16,7 @@ class LocaleConfiguration:
+ 
+ 	@staticmethod
+ 	def default() -> 'LocaleConfiguration':
+-		return LocaleConfiguration('us', 'en_US', 'UTF-8')
++		return LocaleConfiguration('us', 'zh_CN', 'UTF-8')
+ 
+ 	def json(self) -> Dict[str, str]:
+ 		return {
+@@ -68,7 +68,7 @@ class LocaleMenu(AbstractSubMenu):
+ 			Selector(
+ 				_('Locale language'),
+ 				lambda preset: select_locale_lang(preset),
+-				default='en_US',
++				default='zh_CN',
+ 				enabled=True)
+ 		self._menu_options['sys-encoding'] = \
+ 			Selector(
+diff --git a/archinstall/lib/menu/abstract_menu.py b/archinstall/lib/menu/abstract_menu.py
+index eee99747..3d20e3c8 100644
+--- a/archinstall/lib/menu/abstract_menu.py
++++ b/archinstall/lib/menu/abstract_menu.py
+@@ -1,5 +1,6 @@
+ from __future__ import annotations
+ 
++import unicodedata
+ from typing import Callable, Any, List, Iterator, Tuple, Optional, Dict, TYPE_CHECKING
+ 
+ from .menu import Menu, MenuSelectionType
+@@ -9,6 +10,13 @@ from ..translationhandler import TranslationHandler, Language
+ if TYPE_CHECKING:
+ 	_: Any
+ 
++def count_cjk_chars(string):
++	return sum(unicodedata.east_asian_width(c) in 'FW' for c in string)
++
++def cjkljust(string, width, fillbyte=' '):
++	"""  Align left  >>> cjkljust('hello', 10, '*') 'hello*****' >>> cjkljust(' Hello world', 10, '*') ' Hello world*' >>> cjkljust(' Hello world', 1, '*') ' Hello world' """
++	return string.ljust(width - count_cjk_chars(string), fillbyte)
++
+ 
+ class Selector:
+ 	def __init__(
+@@ -128,7 +136,7 @@ class Selector:
+ 
+ 		if current:
+ 			padding += 5
+-			description = str(self._description).ljust(padding, ' ')
++			description = cjkljust(str(self._description), padding, ' ')
+ 			current = current
+ 		else:
+ 			description = self._description
+diff --git a/archinstall/lib/mirrors.py b/archinstall/lib/mirrors.py
+index 74cdd0aa..70b3794e 100644
+--- a/archinstall/lib/mirrors.py
++++ b/archinstall/lib/mirrors.py
+@@ -323,7 +323,7 @@ def list_mirrors() -> Dict[str, List[str]]:
+ 		with pathlib.Path('/etc/pacman.d/mirrorlist').open('r') as fp:
+ 			mirrorlist = fp.read()
+ 	else:
+-		url = "https://archlinux.org/mirrorlist/?protocol=https&protocol=http&ip_version=4&ip_version=6&use_mirror_status=on"
++		url = "https://archapi.zhcn.cc/api/v1/mirrorlist/?protocol=https&protocol=http&ip_version=4&ip_version=6&use_mirror_status=on"
+ 		try:
+ 			mirrorlist = fetch_data_from_url(url)
+ 		except ValueError as err:
+diff --git a/archinstall/lib/translationhandler.py b/archinstall/lib/translationhandler.py
+index a2e44065..486abfb8 100644
+--- a/archinstall/lib/translationhandler.py
++++ b/archinstall/lib/translationhandler.py
+@@ -24,7 +24,10 @@ class Language:
+ 
+ 	@property
+ 	def display_name(self) -> str:
+-		name = self.name_en
++		if self.translated_lang:
++			name = self.translated_lang
++		else:
++			name = self.name_en
+ 		return f'{name} ({self.translation_percent}%)'
+ 
+ 	def is_match(self, lang_or_translated_lang: str) -> bool:
