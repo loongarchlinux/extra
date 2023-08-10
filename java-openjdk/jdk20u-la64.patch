@@ -464,7 +464,7 @@ index 39d0324e5ee..9ca4596215f 100644
        AC_MSG_RESULT([no, $OPENJDK_TARGET_OS-$OPENJDK_TARGET_CPU])
        AVAILABLE=false
 diff --git a/make/autoconf/platform.m4 b/make/autoconf/platform.m4
-index babb24a9b0c..e25c7042270 100644
+index 4a13dad24b5..ba6d8d6862a 100644
 --- a/make/autoconf/platform.m4
 +++ b/make/autoconf/platform.m4
 @@ -23,6 +23,12 @@
@@ -60447,10 +60447,10 @@ index 00000000000..03c53a1c04e
 +};
 diff --git a/src/hotspot/cpu/loongarch/templateInterpreterGenerator_loongarch.cpp b/src/hotspot/cpu/loongarch/templateInterpreterGenerator_loongarch.cpp
 new file mode 100644
-index 00000000000..6b0897a81a9
+index 00000000000..380fedba233
 --- /dev/null
 +++ b/src/hotspot/cpu/loongarch/templateInterpreterGenerator_loongarch.cpp
-@@ -0,0 +1,2069 @@
+@@ -0,0 +1,2073 @@
 +/*
 + * Copyright (c) 2003, 2013, Oracle and/or its affiliates. All rights reserved.
 + * Copyright (c) 2015, 2023, Loongson Technology. All rights reserved.
@@ -60715,6 +60715,10 @@ index 00000000000..6b0897a81a9
 +  }
 +  return NULL;
 +}
++
++// Not supported
++address TemplateInterpreterGenerator::generate_Float_float16ToFloat_entry() { return nullptr; }
++address TemplateInterpreterGenerator::generate_Float_floatToFloat16_entry() { return nullptr; }
 +
 +//
 +// Various method entries
@@ -68323,7 +68327,7 @@ index 00000000000..c42b4ebd326
 +  return icache_line_size;
 +}
 diff --git a/src/hotspot/os/linux/os_linux.cpp b/src/hotspot/os/linux/os_linux.cpp
-index 7d9636d250a..008f67cbd99 100644
+index 81ab0c96869..e6577e82662 100644
 --- a/src/hotspot/os/linux/os_linux.cpp
 +++ b/src/hotspot/os/linux/os_linux.cpp
 @@ -23,6 +23,12 @@
@@ -70044,7 +70048,7 @@ index 00000000000..3711a7036a1
 +      HWCAP_LOONGARCH_LBT_MIPS);
 +}
 diff --git a/src/hotspot/share/c1/c1_Compiler.cpp b/src/hotspot/share/c1/c1_Compiler.cpp
-index 819ee6adeb9..a94c8b236af 100644
+index 33cb201c673..a872beac09d 100644
 --- a/src/hotspot/share/c1/c1_Compiler.cpp
 +++ b/src/hotspot/share/c1/c1_Compiler.cpp
 @@ -43,6 +43,12 @@
@@ -70060,7 +70064,7 @@ index 819ee6adeb9..a94c8b236af 100644
  
  Compiler::Compiler() : AbstractCompiler(compiler_c1) {
  }
-@@ -216,7 +222,7 @@ bool Compiler::is_intrinsic_supported(const methodHandle& method) {
+@@ -220,7 +226,7 @@ bool Compiler::is_intrinsic_supported(const methodHandle& method) {
    case vmIntrinsics::_updateCRC32:
    case vmIntrinsics::_updateBytesCRC32:
    case vmIntrinsics::_updateByteBufferCRC32:
@@ -70070,7 +70074,7 @@ index 819ee6adeb9..a94c8b236af 100644
    case vmIntrinsics::_updateDirectByteBufferCRC32C:
  #endif
 diff --git a/src/hotspot/share/c1/c1_LIR.cpp b/src/hotspot/share/c1/c1_LIR.cpp
-index d07274f785f..9b89a82f85e 100644
+index 1cdc523c4fc..322d47a07b7 100644
 --- a/src/hotspot/share/c1/c1_LIR.cpp
 +++ b/src/hotspot/share/c1/c1_LIR.cpp
 @@ -22,6 +22,12 @@
@@ -70094,7 +70098,7 @@ index d07274f785f..9b89a82f85e 100644
        do_stub(opConvert->_stub);
  
        break;
-@@ -1099,7 +1106,7 @@ LIR_List::LIR_List(Compilation* compilation, BlockBegin* block)
+@@ -1101,7 +1108,7 @@ LIR_List::LIR_List(Compilation* compilation, BlockBegin* block)
    , _file(NULL)
    , _line(0)
  #endif
@@ -70103,7 +70107,7 @@ index d07274f785f..9b89a82f85e 100644
    , _cmp_opr1(LIR_OprFact::illegalOpr)
    , _cmp_opr2(LIR_OprFact::illegalOpr)
  #endif
-@@ -1120,7 +1127,7 @@ void LIR_List::set_file_and_line(const char * file, int line) {
+@@ -1122,7 +1129,7 @@ void LIR_List::set_file_and_line(const char * file, int line) {
  }
  #endif
  
@@ -70112,7 +70116,7 @@ index d07274f785f..9b89a82f85e 100644
  void LIR_List::set_cmp_oprs(LIR_Op* op) {
    switch (op->code()) {
      case lir_cmp:
-@@ -1143,7 +1150,7 @@ void LIR_List::set_cmp_oprs(LIR_Op* op) {
+@@ -1145,7 +1152,7 @@ void LIR_List::set_cmp_oprs(LIR_Op* op) {
        break;
  #if INCLUDE_ZGC
      case lir_zloadbarrier_test:
@@ -70121,7 +70125,7 @@ index d07274f785f..9b89a82f85e 100644
        _cmp_opr2 = LIR_OprFact::intConst(0);
        break;
  #endif
-@@ -1398,11 +1405,12 @@ void LIR_List::unsigned_shift_right(LIR_Opr value, LIR_Opr count, LIR_Opr dst, L
+@@ -1400,11 +1407,12 @@ void LIR_List::unsigned_shift_right(LIR_Opr value, LIR_Opr count, LIR_Opr dst, L
                      tmp));
  }
  
@@ -70136,7 +70140,7 @@ index d07274f785f..9b89a82f85e 100644
  }
  
  void LIR_List::lock_object(LIR_Opr hdr, LIR_Opr obj, LIR_Opr lock, LIR_Opr scratch, CodeStub* stub, CodeEmitInfo* info) {
-@@ -1917,6 +1925,9 @@ void LIR_OpConvert::print_instr(outputStream* out) const {
+@@ -1921,6 +1929,9 @@ void LIR_OpConvert::print_instr(outputStream* out) const {
    print_bytecode(out, bytecode());
    in_opr()->print(out);                  out->print(" ");
    result_opr()->print(out);              out->print(" ");
@@ -70147,7 +70151,7 @@ index d07274f785f..9b89a82f85e 100644
  
  void LIR_OpConvert::print_bytecode(outputStream* out, Bytecodes::Code code) {
 diff --git a/src/hotspot/share/c1/c1_LIR.hpp b/src/hotspot/share/c1/c1_LIR.hpp
-index c50ca261da3..9bedc8682c7 100644
+index a0987a23feb..51bba43864e 100644
 --- a/src/hotspot/share/c1/c1_LIR.hpp
 +++ b/src/hotspot/share/c1/c1_LIR.hpp
 @@ -22,6 +22,12 @@
@@ -70163,7 +70167,7 @@ index c50ca261da3..9bedc8682c7 100644
  #ifndef SHARE_C1_C1_LIR_HPP
  #define SHARE_C1_C1_LIR_HPP
  
-@@ -1451,15 +1457,18 @@ class LIR_OpConvert: public LIR_Op1 {
+@@ -1453,15 +1459,18 @@ class LIR_OpConvert: public LIR_Op1 {
   private:
     Bytecodes::Code _bytecode;
     ConversionStub* _stub;
@@ -70184,7 +70188,7 @@ index c50ca261da3..9bedc8682c7 100644
  
    virtual void emit_code(LIR_Assembler* masm);
    virtual LIR_OpConvert* as_OpConvert() { return this; }
-@@ -2095,7 +2104,7 @@ class LIR_List: public CompilationResourceObj {
+@@ -2097,7 +2106,7 @@ class LIR_List: public CompilationResourceObj {
    const char *  _file;
    int           _line;
  #endif
@@ -70193,7 +70197,7 @@ index c50ca261da3..9bedc8682c7 100644
    LIR_Opr       _cmp_opr1;
    LIR_Opr       _cmp_opr2;
  #endif
-@@ -2111,7 +2120,7 @@ class LIR_List: public CompilationResourceObj {
+@@ -2113,7 +2122,7 @@ class LIR_List: public CompilationResourceObj {
      }
  #endif // PRODUCT
  
@@ -70202,7 +70206,7 @@ index c50ca261da3..9bedc8682c7 100644
      set_cmp_oprs(op);
      // lir_cmp set cmp oprs only on riscv
      if (op->code() == lir_cmp) return;
-@@ -2133,7 +2142,7 @@ class LIR_List: public CompilationResourceObj {
+@@ -2135,7 +2144,7 @@ class LIR_List: public CompilationResourceObj {
    void set_file_and_line(const char * file, int line);
  #endif
  
@@ -70211,7 +70215,7 @@ index c50ca261da3..9bedc8682c7 100644
    void set_cmp_oprs(LIR_Op* op);
  #endif
  
-@@ -2226,7 +2235,9 @@ class LIR_List: public CompilationResourceObj {
+@@ -2228,7 +2237,9 @@ class LIR_List: public CompilationResourceObj {
    void safepoint(LIR_Opr tmp, CodeEmitInfo* info)  { append(new LIR_Op1(lir_safepoint, tmp, info)); }
    void return_op(LIR_Opr result)                   { append(new LIR_OpReturn(result)); }
  
@@ -70222,7 +70226,7 @@ index c50ca261da3..9bedc8682c7 100644
  
    void logical_and (LIR_Opr left, LIR_Opr right, LIR_Opr dst) { append(new LIR_Op2(lir_logic_and,  left, right, dst)); }
    void logical_or  (LIR_Opr left, LIR_Opr right, LIR_Opr dst) { append(new LIR_Op2(lir_logic_or,   left, right, dst)); }
-@@ -2332,7 +2343,7 @@ class LIR_List: public CompilationResourceObj {
+@@ -2336,7 +2347,7 @@ class LIR_List: public CompilationResourceObj {
    void unsigned_shift_right(LIR_Opr value, int count, LIR_Opr dst) { unsigned_shift_right(value, LIR_OprFact::intConst(count), dst, LIR_OprFact::illegalOpr); }
  
    void lcmp2int(LIR_Opr left, LIR_Opr right, LIR_Opr dst)        { append(new LIR_Op2(lir_cmp_l2i,  left, right, dst)); }
@@ -70232,7 +70236,7 @@ index c50ca261da3..9bedc8682c7 100644
    void call_runtime_leaf(address routine, LIR_Opr tmp, LIR_Opr result, LIR_OprList* arguments) {
      append(new LIR_OpRTCall(routine, tmp, result, arguments));
 diff --git a/src/hotspot/share/c1/c1_LinearScan.cpp b/src/hotspot/share/c1/c1_LinearScan.cpp
-index 8365baeefed..72e930ef731 100644
+index bb4019ecd22..e9f0bde6661 100644
 --- a/src/hotspot/share/c1/c1_LinearScan.cpp
 +++ b/src/hotspot/share/c1/c1_LinearScan.cpp
 @@ -22,6 +22,12 @@
@@ -70427,7 +70431,7 @@ index 7d31ff02e1a..07dac06aecf 100644
  #endif
  
 diff --git a/src/hotspot/share/interpreter/abstractInterpreter.cpp b/src/hotspot/share/interpreter/abstractInterpreter.cpp
-index 4a795d4ec54..1e0834482dc 100644
+index f2dc82060a8..9b7fa3392e2 100644
 --- a/src/hotspot/share/interpreter/abstractInterpreter.cpp
 +++ b/src/hotspot/share/interpreter/abstractInterpreter.cpp
 @@ -22,6 +22,12 @@
@@ -70443,10 +70447,10 @@ index 4a795d4ec54..1e0834482dc 100644
  #include "precompiled.hpp"
  #include "asm/macroAssembler.hpp"
  #include "asm/macroAssembler.inline.hpp"
-@@ -133,7 +139,7 @@ AbstractInterpreter::MethodKind AbstractInterpreter::method_kind(const methodHan
-       case vmIntrinsics::_floatToRawIntBits: return java_lang_Float_floatToRawIntBits;
-       case vmIntrinsics::_longBitsToDouble:  return java_lang_Double_longBitsToDouble;
+@@ -135,7 +141,7 @@ AbstractInterpreter::MethodKind AbstractInterpreter::method_kind(const methodHan
        case vmIntrinsics::_doubleToRawLongBits: return java_lang_Double_doubleToRawLongBits;
+       case vmIntrinsics::_float16ToFloat:    return java_lang_Float_float16ToFloat;
+       case vmIntrinsics::_floatToFloat16:    return java_lang_Float_floatToFloat16;
 -#if defined(AMD64) || defined(AARCH64) || defined(RISCV64)
 +#if defined(AMD64) || defined(AARCH64) || defined(RISCV64) || defined(LOONGARCH64)
        case vmIntrinsics::_currentThread:     return java_lang_Thread_currentThread;
@@ -70505,7 +70509,7 @@ index ee3337d8f7f..87bc4d07c4f 100644
    static void popframe_move_outgoing_args(JavaThread* current, void* src_address, void* dest_address);
  #endif
 diff --git a/src/hotspot/share/interpreter/templateInterpreterGenerator.cpp b/src/hotspot/share/interpreter/templateInterpreterGenerator.cpp
-index 52d6583b55c..581315028c6 100644
+index 65e425ff071..c48ae9e47f4 100644
 --- a/src/hotspot/share/interpreter/templateInterpreterGenerator.cpp
 +++ b/src/hotspot/share/interpreter/templateInterpreterGenerator.cpp
 @@ -22,6 +22,12 @@
@@ -70530,7 +70534,7 @@ index 52d6583b55c..581315028c6 100644
    method_entry(java_lang_Thread_currentThread)
  #endif
    AbstractInterpreter::initialize_method_handle_entries();
-@@ -433,7 +439,7 @@ address TemplateInterpreterGenerator::generate_method_entry(
+@@ -436,7 +442,7 @@ address TemplateInterpreterGenerator::generate_method_entry(
                                             : // fall thru
    case Interpreter::java_util_zip_CRC32C_updateDirectByteBuffer
                                             : entry_point = generate_CRC32C_updateBytes_entry(kind); break;
@@ -70540,7 +70544,7 @@ index 52d6583b55c..581315028c6 100644
                                             : entry_point = generate_currentThread(); break;
  #endif
 diff --git a/src/hotspot/share/interpreter/templateInterpreterGenerator.hpp b/src/hotspot/share/interpreter/templateInterpreterGenerator.hpp
-index df9fb5276b3..79827035a78 100644
+index a9835a502f5..b68c36c1356 100644
 --- a/src/hotspot/share/interpreter/templateInterpreterGenerator.hpp
 +++ b/src/hotspot/share/interpreter/templateInterpreterGenerator.hpp
 @@ -22,6 +22,12 @@
@@ -70565,7 +70569,7 @@ index df9fb5276b3..79827035a78 100644
    address generate_currentThread();
  #endif
  #ifdef IA32
-@@ -113,9 +119,9 @@ class TemplateInterpreterGenerator: public AbstractInterpreterGenerator {
+@@ -116,9 +122,9 @@ class TemplateInterpreterGenerator: public AbstractInterpreterGenerator {
  
    void generate_fixed_frame(bool native_call);
  
@@ -70639,7 +70643,7 @@ index 916577d913c..993b35faa05 100644
  
  #define VM_STRUCTS_CPU(nonstatic_field, static_field, unchecked_nonstatic_field, volatile_nonstatic_field, nonproduct_nonstatic_field, c2_nonstatic_field, unchecked_c1_static_field, unchecked_c2_static_field) \
 diff --git a/src/hotspot/share/memory/metaspace.cpp b/src/hotspot/share/memory/metaspace.cpp
-index 0832d452ffc..828caaed7a3 100644
+index 44e621d5cbf..1ccae8e49b2 100644
 --- a/src/hotspot/share/memory/metaspace.cpp
 +++ b/src/hotspot/share/memory/metaspace.cpp
 @@ -23,6 +23,12 @@
@@ -70663,15 +70667,15 @@ index 0832d452ffc..828caaed7a3 100644
 +#if defined(AARCH64) || defined(PPC64) || defined(LOONGARCH64)
    const size_t alignment = Metaspace::reserve_alignment();
  
-   // AArch64: Try to align metaspace so that we can decode a compressed
-   // klass with a single MOVK instruction. We can do this iff the
+   // AArch64: Try to align metaspace class space so that we can decode a
+   // compressed klass with a single MOVK instruction. We can do this iff the
    // compressed class base is a multiple of 4G.
 +
    // Additionally, above 32G, ensure the lower LogKlassAlignmentInBytes bits
    // of the upper 32-bits of the address are zero so we can handle a shift
    // when decoding.
-@@ -628,16 +635,16 @@ ReservedSpace Metaspace::reserve_address_space_for_compressed_classes(size_t siz
-       a +=  search_ranges[i].increment;
+@@ -648,16 +655,16 @@ ReservedSpace Metaspace::reserve_address_space_for_compressed_classes(size_t siz
+       return rs;
      }
    }
 -#endif // defined(AARCH64) || defined(PPC64)
@@ -70876,7 +70880,7 @@ index 63f48a1afe3..11faed791cf 100644
  #else
    frame sender = frame();
 diff --git a/src/hotspot/share/runtime/continuationFreezeThaw.cpp b/src/hotspot/share/runtime/continuationFreezeThaw.cpp
-index 436da04f8ee..84a7ec03d84 100644
+index d33803d4de3..97b5a3ccb74 100644
 --- a/src/hotspot/share/runtime/continuationFreezeThaw.cpp
 +++ b/src/hotspot/share/runtime/continuationFreezeThaw.cpp
 @@ -22,6 +22,12 @@
@@ -70958,7 +70962,7 @@ index 26cd072e0f7..aa37108c488 100644
  
    // stack grows downwards; if old_fp is below current fp or if the stack
 diff --git a/src/hotspot/share/runtime/sharedRuntime.cpp b/src/hotspot/share/runtime/sharedRuntime.cpp
-index 369790dff3a..3ea05f56df9 100644
+index b8e660e1d2a..18c42d67ef4 100644
 --- a/src/hotspot/share/runtime/sharedRuntime.cpp
 +++ b/src/hotspot/share/runtime/sharedRuntime.cpp
 @@ -22,6 +22,12 @@
@@ -70974,7 +70978,7 @@ index 369790dff3a..3ea05f56df9 100644
  #include "precompiled.hpp"
  #include "classfile/javaClasses.inline.hpp"
  #include "classfile/stringTable.hpp"
-@@ -3118,7 +3124,7 @@ void AdapterHandlerLibrary::create_native_wrapper(const methodHandle& method) {
+@@ -3030,7 +3036,7 @@ void AdapterHandlerLibrary::create_native_wrapper(const methodHandle& method) {
        struct { double data[20]; } locs_buf;
        struct { double data[20]; } stubs_locs_buf;
        buffer.insts()->initialize_shared_locs((relocInfo*)&locs_buf, sizeof(locs_buf) / sizeof(relocInfo));
@@ -71025,7 +71029,7 @@ index 3dc2d4163d4..abda7863550 100644
  static double __kernel_sin(double x, double y, int iy)
  {
 diff --git a/src/hotspot/share/runtime/synchronizer.cpp b/src/hotspot/share/runtime/synchronizer.cpp
-index 9e190e876c2..d490aa78190 100644
+index f8b972898ec..531efa5bbb0 100644
 --- a/src/hotspot/share/runtime/synchronizer.cpp
 +++ b/src/hotspot/share/runtime/synchronizer.cpp
 @@ -22,6 +22,12 @@
@@ -71041,7 +71045,7 @@ index 9e190e876c2..d490aa78190 100644
  #include "precompiled.hpp"
  #include "classfile/vmSymbols.hpp"
  #include "jfr/jfrEvents.hpp"
-@@ -462,7 +468,7 @@ void ObjectSynchronizer::handle_sync_on_value_based_class(Handle obj, JavaThread
+@@ -466,7 +472,7 @@ void ObjectSynchronizer::handle_sync_on_value_based_class(Handle obj, JavaThread
  }
  
  static bool useHeavyMonitors() {
@@ -75710,7 +75714,7 @@ index 8aa9280bd05..b24d6690673 100644
 +# loongson added
 +compiler/vectorapi/TestVectorShiftImm.java generic-loongarch64
 diff --git a/test/hotspot/jtreg/ProblemList.txt b/test/hotspot/jtreg/ProblemList.txt
-index ce7cbad96a9..ca79af697a7 100644
+index 84c73acbb73..68b23fb8745 100644
 --- a/test/hotspot/jtreg/ProblemList.txt
 +++ b/test/hotspot/jtreg/ProblemList.txt
 @@ -21,6 +21,12 @@
@@ -75726,7 +75730,7 @@ index ce7cbad96a9..ca79af697a7 100644
  #############################################################################
  #
  # List of quarantined tests -- tests that should not be run by default, because
-@@ -170,3 +176,10 @@ vmTestbase/nsk/stress/strace/strace002.java 8288912 macosx-x64,windows-x64
+@@ -171,3 +177,10 @@ vmTestbase/nsk/stress/strace/strace002.java 8288912 macosx-x64,windows-x64
  vmTestbase/nsk/stress/strace/strace003.java 8297824 macosx-x64,windows-x64
  vmTestbase/nsk/stress/strace/strace004.java 8297824 macosx-x64,windows-x64
  vmTestbase/nsk/monitoring/ThreadMXBean/ThreadInfo/Multi/Multi005/TestDescription.java 8076494 windows-x64
