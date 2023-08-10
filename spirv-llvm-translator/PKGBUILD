@@ -13,14 +13,10 @@ depends=(llvm-libs spirv-tools)
 makedepends=(git cmake llvm spirv-headers)
 makedepends+=(python python-setuptools clang)
 # Current point in the used LLVM branch
-#_commit=81c9ac632ead5c233728725179ed2530c2c820ec
-_commit=093814af9ac10647c66f94f5332d328166d70928
-source=(git+${url}.git#commit=$_commit
-  spirv-llvm-translator-16.0.0-ld_library_path.patch
-  spirv-llvm-translator-16.0.0-llvm-link-llvm-dylib.patch)
-sha256sums=('SKIP'
-            'a36ce0c02bf3939199966ca049c2269d2c00e753ff906f74a2ca8e3712c24602'
-            '62d9b1d1246918fdafea198bd3e80d80b05b0ab0e4c09c5bf39a57867dac9a1a')
+#_commit=81c9ac632ead5c233728725179ed2530c2c820ec # tag 16.0.0
+_commit=322fca5d9c59bfdb80562a52ace51cdbe2a60e92 # branch llvm_release_160
+source=(git+${url}.git#commit=$_commit)
+sha256sums=('SKIP')
 
 pkgver() {
   cd ${_srcname}
@@ -31,8 +27,6 @@ pkgver() {
 
 prepare() {
   cd ${_srcname}
-  patch -p1 -i $srcdir/spirv-llvm-translator-16.0.0-ld_library_path.patch
-  patch -p1 -i $srcdir/spirv-llvm-translator-16.0.0-llvm-link-llvm-dylib.patch
 }
 
 build() {
@@ -45,7 +39,6 @@ build() {
     -DLLVM_INCLUDE_TESTS=ON \
     -DLLVM_EXTERNAL_LIT=/usr/bin/lit \
     -DLLVM_EXTERNAL_SPIRV_HEADERS_SOURCE_DIR=/usr/include/spirv/ \
-    -DBASE_LLVM_VERSION=16.0.0 \
     -Wno-dev
   make -C build
 }
