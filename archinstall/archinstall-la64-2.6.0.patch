@@ -89,36 +89,29 @@ index 29dd775d..38f3db0c 100644
  		self._menu_options['sys-encoding'] = \
  			Selector(
 diff --git a/archinstall/lib/menu/abstract_menu.py b/archinstall/lib/menu/abstract_menu.py
-index eee99747..3d20e3c8 100644
+index eee99747..1cfa5a51 100644
 --- a/archinstall/lib/menu/abstract_menu.py
 +++ b/archinstall/lib/menu/abstract_menu.py
-@@ -1,5 +1,6 @@
- from __future__ import annotations
- 
-+import unicodedata
- from typing import Callable, Any, List, Iterator, Tuple, Optional, Dict, TYPE_CHECKING
+@@ -4,12 +4,12 @@ from typing import Callable, Any, List, Iterator, Tuple, Optional, Dict, TYPE_CH
  
  from .menu import Menu, MenuSelectionType
-@@ -9,6 +10,13 @@ from ..translationhandler import TranslationHandler, Language
+ from ..output import error
++from ..output import cjk_ljust
+ from ..translationhandler import TranslationHandler, Language
+ 
  if TYPE_CHECKING:
  	_: Any
  
-+def count_cjk_chars(string):
-+	return sum(unicodedata.east_asian_width(c) in 'FW' for c in string)
-+
-+def cjkljust(string, width, fillbyte=' '):
-+	"""  Align left  >>> cjkljust('hello', 10, '*') 'hello*****' >>> cjkljust(' Hello world', 10, '*') ' Hello world*' >>> cjkljust(' Hello world', 1, '*') ' Hello world' """
-+	return string.ljust(width - count_cjk_chars(string), fillbyte)
-+
- 
+-
  class Selector:
  	def __init__(
-@@ -128,7 +136,7 @@ class Selector:
+ 		self,
+@@ -128,7 +128,7 @@ class Selector:
  
  		if current:
  			padding += 5
 -			description = str(self._description).ljust(padding, ' ')
-+			description = cjkljust(str(self._description), padding, ' ')
++			description = cjk_ljust(str(self._description), padding, ' ')
  			current = current
  		else:
  			description = self._description
@@ -135,6 +128,73 @@ index 74cdd0aa..70b3794e 100644
  		try:
  			mirrorlist = fetch_data_from_url(url)
  		except ValueError as err:
+diff --git a/archinstall/lib/output.py b/archinstall/lib/output.py
+index 9f2a2ae3..25d98a71 100644
+--- a/archinstall/lib/output.py
++++ b/archinstall/lib/output.py
+@@ -1,6 +1,7 @@
+ import logging
+ import os
+ import sys
++import unicodedata
+ from enum import Enum
+ 
+ from pathlib import Path
+@@ -83,7 +84,7 @@ class FormattedOutput:
+ 			if capitalize:
+ 				key = key.capitalize()
+ 
+-			key_list.append(key.ljust(width))
++			key_list.append(cjk_ljust(key, width))
+ 
+ 		output += ' | '.join(key_list) + '\n'
+ 		output += '-' * len(output) + '\n'
+@@ -99,9 +100,9 @@ class FormattedOutput:
+ 					value = '*' * width
+ 
+ 				if isinstance(value, (int, float)) or (isinstance(value, str) and value.isnumeric()):
+-					obj_data.append(str(value).rjust(width))
++					obj_data.append(cjk_rjust(str(value), width))
+ 				else:
+-					obj_data.append(str(value).ljust(width))
++					obj_data.append(cjk_ljust(str(value), width))
+ 
+ 			output += ' | '.join(obj_data) + '\n'
+ 
+@@ -326,3 +327,33 @@ def log(
+ 		if level != logging.DEBUG or storage.get('arguments', {}).get('verbose', False):
+ 			sys.stdout.write(f"{text}\n")
+ 			sys.stdout.flush()
++
++def _count_cjk_chars(string: str) -> int:
++	"Count the total number of CJK characters contained in a string"
++	return sum(unicodedata.east_asian_width(c) in 'FW' for c in string)
++
++def cjk_ljust(string: str, width: int, fillbyte: str = ' ') -> str:
++	"""Return a left-justified CJK string of length width.
++	>>> cjk_ljust('Hello', 15, '*')
++	'Hello**********'
++	>>> cjk_ljust('你好', 15, '*')
++	'你好***********'
++	>>> cjk_ljust('안녕하세요', 15, '*')
++	'안녕하세요*****'
++	>>> cjk_ljust('こんにちは', 15, '*')
++	'こんにちは*****'
++	"""
++	return string.ljust(width - _count_cjk_chars(string), fillbyte)
++
++def cjk_rjust(string: str, width: int, fillbyte: str = ' ') -> str:
++	"""Return a right-justified CJK string of length width.
++	>>> cjk_rjust('Hello', 15, '*')
++	'**********Hello'
++	>>> cjk_rjust('你好', 15, '*')
++	'***********你好'
++	>>> cjk_rjust('안녕하세요', 15, '*')
++	'*****안녕하세요'
++	>>> cjk_rjust('こんにちは', 15, '*')
++	'*****こんにちは'
++	"""
++	return string.rjust(width - _count_cjk_chars(string), fillbyte)
 diff --git a/archinstall/lib/translationhandler.py b/archinstall/lib/translationhandler.py
 index a2e44065..486abfb8 100644
 --- a/archinstall/lib/translationhandler.py
@@ -151,3 +211,6 @@ index a2e44065..486abfb8 100644
  		return f'{name} ({self.translation_percent}%)'
  
  	def is_match(self, lang_or_translated_lang: str) -> bool:
+diff --git a/archinstall/locales/zh-CN/LC_MESSAGES/base.mo b/archinstall/locales/zh-CN/LC_MESSAGES/base.mo
+index a07e57f3..c7208160 100644
+Binary files a/archinstall/locales/zh-CN/LC_MESSAGES/base.mo and b/archinstall/locales/zh-CN/LC_MESSAGES/base.mo differ
