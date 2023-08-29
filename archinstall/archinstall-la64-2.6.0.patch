@@ -66,6 +66,28 @@ index 94bdff7d..0376ed0a 100644
  				except SysCallError as err:
  					raise DiskError(f"Could not install GRUB to {self.target}{boot_partition.mountpoint}: {err}")
  		else:
+diff --git a/archinstall/lib/locale/locale_menu.py b/archinstall/lib/locale/locale_menu.py
+index 29dd775d..38f3db0c 100644
+--- a/archinstall/lib/locale/locale_menu.py
++++ b/archinstall/lib/locale/locale_menu.py
+@@ -16,7 +16,7 @@ class LocaleConfiguration:
+ 
+ 	@staticmethod
+ 	def default() -> 'LocaleConfiguration':
+-		return LocaleConfiguration('us', 'en_US', 'UTF-8')
++		return LocaleConfiguration('us', 'zh_CN', 'UTF-8')
+ 
+ 	def json(self) -> Dict[str, str]:
+ 		return {
+@@ -68,7 +68,7 @@ class LocaleMenu(AbstractSubMenu):
+ 			Selector(
+ 				_('Locale language'),
+ 				lambda preset: select_locale_lang(preset),
+-				default='en_US',
++				default='zh_CN',
+ 				enabled=True)
+ 		self._menu_options['sys-encoding'] = \
+ 			Selector(
 diff --git a/archinstall/lib/menu/abstract_menu.py b/archinstall/lib/menu/abstract_menu.py
 index eee99747..1cfa5a51 100644
 --- a/archinstall/lib/menu/abstract_menu.py
@@ -192,3 +214,27 @@ index a2e44065..486abfb8 100644
 diff --git a/archinstall/locales/zh-CN/LC_MESSAGES/base.mo b/archinstall/locales/zh-CN/LC_MESSAGES/base.mo
 index a07e57f3..c7208160 100644
 Binary files a/archinstall/locales/zh-CN/LC_MESSAGES/base.mo and b/archinstall/locales/zh-CN/LC_MESSAGES/base.mo differ
+diff --git a/archinstall/scripts/guided.py b/archinstall/scripts/guided.py
+index 605d2b0e..dc15d27a 100644
+--- a/archinstall/scripts/guided.py
++++ b/archinstall/scripts/guided.py
+@@ -181,6 +181,19 @@ def perform_installation(mountpoint: Path):
+ 		if profile_config := archinstall.arguments.get('profile_config', None):
+ 			profile_handler.install_profile_config(installation, profile_config)
+ 
++			# Add Chinese input method and fonts
++			if locale_config.sys_lang in ["zh_CN", "zh_TW"]:
++				installation.add_additional_packages(['wqy-bitmapfont', 'wqy-microhei', 'wqy-microhei-lite', 'wqy-zenhei'])
++				# Install Chinese Input Method
++				if profile_config.profile.is_desktop_type_profile():
++					installation.add_additional_packages(['fcitx5', 'fcitx5-chinese-addons', 'fcitx5-configtool', 'fcitx5-gtk', 'fcitx5-qt'])
++					with open(f"{archinstall.storage['installation_session'].target}/etc/X11/xinit/xinitrc.d/50-input.sh", 'w') as finput:
++						finput.write(f'export XIM=fcitx\n')
++						finput.write(f'export GTK_IM_MODULE=fcitx\n')
++						finput.write(f'export QT_IM_MODULE=fcitx\n')
++						finput.write(f'export XMODIFIERS="@im=fcitx"\n')
++					installation.arch_chroot('chmod +x /etc/X11/xinit/xinitrc.d/50-input.sh')
++
+ 		if timezone := archinstall.arguments.get('timezone', None):
+ 			installation.set_timezone(timezone)
+ 
