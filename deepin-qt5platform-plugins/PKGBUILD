@@ -1,9 +1,8 @@
 # Maintainer: Felix Yan <felixonmars@archlinux.org>
 
 pkgname=deepin-qt5platform-plugins
-pkgver=5.6.5
-_commit=965122fa305412037a9b877a18432a967d1341b7
-pkgrel=4
+pkgver=5.6.12
+pkgrel=1
 pkgdesc='Qt platform plugins for DDE'
 arch=('loong64' 'x86_64')
 url="https://github.com/linuxdeepin/qt5platform-plugins"
@@ -11,24 +10,24 @@ license=('LGPL3')
 provides=('deepin-qt5dxcb-plugin')
 conflicts=('deepin-qt5dxcb-plugin')
 replaces=('deepin-qt5dxcb-plugin')
-depends=('cairo' 'qt5-x11extras')
-makedepends=('git' 'expac' 'qt5-xcb-private-headers' 'libglvnd' 'libxcb')
+depends=('cairo' 'qt5-base' 'qt5-x11extras' 'libx11' 'libxi' 'libxcb' 'xcb-util-wm' 'gcc-libs')
+makedepends=('expac' 'qt5-xcb-private-headers' 'libglvnd')
 groups=('deepin')
-source=("git+https://github.com/linuxdeepin/qt5platform-plugins.git#commit=$_commit")
-sha512sums=('SKIP')
+source=("https://github.com/linuxdeepin/qt5platform-plugins/archive/$pkgver/$pkgname-$pkgver.tar.gz")
+sha512sums=('ce95797ba32a502edcd554dca5426953825d5b204161480f340627048eda5782063f68d5704d6c62da12eefcee0fa0cb038b6004f57557008504039fbe1f43f5')
 
 prepare() {
-  cd qt5platform-plugins
+  cd qt5platform-plugins-$pkgver
   rm -r xcb/libqt5xcbqpa-dev wayland/qtwayland-dev
 }
 
 build() {
-  cd qt5platform-plugins
+  cd qt5platform-plugins-$pkgver
   qmake-qt5 PREFIX=/usr QT_XCB_PRIVATE_INCLUDE=/usr/include/qtxcb-private CONFIG+=DISABLE_WAYLAND
   make
 }
 
 package() {
-  cd qt5platform-plugins
+  cd qt5platform-plugins-$pkgver
   make INSTALL_ROOT="$pkgdir" install
 }

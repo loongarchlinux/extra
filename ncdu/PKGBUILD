@@ -7,29 +7,20 @@
 # Contributor: Gaetan Bisson <bisson@archlinux.org>
 
 pkgname='ncdu'
-pkgver=2.2.2
-pkgrel=2
+pkgver=2.3
+pkgrel=1
 pkgdesc='Disk usage analyzer with an ncurses interface'
 url='https://dev.yorhel.nl/ncdu'
 license=('MIT')
 depends=('ncurses')
 makedepends=('zig')
 arch=('loong64' 'x86_64')
-source=("https://dev.yorhel.nl/download/${pkgname}-${pkgver}.tar.gz"{,.asc}
-        "ncdu-pie.patch")
-sha256sums=('90d920024e752318b469776ce57e03b3c702d49329ad9825aeeab36c3babf993'
-            'SKIP'
-            '05e2a1809dc62fe85b5b47f1e6fff3487f7302da72889ac6d2a73d0aa5bba886')
-b2sums=('fca41e74e4eb2509496276aa964ecf6a20db860d0b1d6bab9a169d8d6c5c7c2d41f088241cf57c92d7cf51bb5d84642c2a3a6db99410e6332061e6d35efa94e6'
-        'SKIP'
-        '0c42f7d004b8293c3d5a937cdc850e63ecb3133e38cdbdb36e89832250d75b6423b5f3da3b1b91c304e8a2ec44dfca3f9f0c84c253ce610e1e5d8c68da0a95b4')
+source=("https://dev.yorhel.nl/download/${pkgname}-${pkgver}.tar.gz"{,.asc})
+sha256sums=('bbce1d1c70f1247671be4ea2135d8c52cd29a708af5ed62cecda7dc6a8000a3c'
+            'SKIP')
+b2sums=('9fd73fba83c57195f8ffbad5b954140a776d1cd1d7b3e458f832255ee9c07eb8af9888a23ed3c671f508d6ba3795e2361f79e64b4b24630d744470efc5bfaded'
+        'SKIP')
 validpgpkeys=('74460D32B80810EBA9AFA2E962394C698C2739FA') # Yoran Heling <projects@yorhel.nl>
-
-prepare() {
-    cd "${pkgname}-${pkgver}"
-
-    patch -i ../ncdu-pie.patch
-}
 
 build() {
     cd "${pkgname}-${pkgver}"
@@ -39,7 +30,8 @@ build() {
       --search-prefix /usr \
       -Dtarget=native-linux.5.15-gnu \
       -Dcpu=baseline \
-      -Drelease-safe
+      -Doptimize=ReleaseSafe \
+      -Dpie=true
 }
 
 check() {
@@ -50,7 +42,8 @@ check() {
       --search-prefix /usr \
       -Dtarget=native-linux.5.15-gnu \
       -Dcpu=baseline \
-      -Drelease-safe
+      -Doptimize=ReleaseSafe \
+      -Dpie=true
 }
 
 package() {

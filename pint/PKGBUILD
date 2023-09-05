@@ -1,0 +1,61 @@
+# Maintainer: George Rawlinson <grawlinson@archlinux.org>
+
+pkgname=pint
+pkgver=0.45.0
+pkgrel=1
+pkgdesc='Rule linter/validator for Prometheus'
+arch=('loong64' 'x86_64')
+url='https://github.com/cloudflare/pint'
+license=('Apache')
+depends=('glibc')
+makedepends=('git' 'go')
+options=('!lto')
+_commit='2b94079b3829a58c4ad59c2e72d219ebc3d915f9'
+source=("$pkgname::git+$url#commit=$_commit")
+b2sums=('SKIP')
+
+pkgver() {
+  cd "$pkgname"
+
+  git describe --tags | sed 's/^v//'
+}
+
+prepare() {
+  cd "$pkgname"
+
+  # create directory for build output
+  mkdir build
+
+  # download dependencies
+  export GOPATH="${srcdir}"
+  go mod download
+}
+
+build() {
+  cd "$pkgname"
+
+  # set Go flags
+  export CGO_CPPFLAGS="${CPPFLAGS}"
+  export CGO_CFLAGS="${CFLAGS}"
+  export CGO_CXXFLAGS="${CXXFLAGS}"
+  export GOPATH="${srcdir}"
+
+  go build -v \
+    -buildmode=pie \
+    -mod=readonly \
+    -modcacherw \
+    -ldflags "-compressdwarf=false \
+    -linkmode external \
+    -extldflags ${LDFLAGS} \
+    -X main.version=${pkgver} \
+    -X main.commit=${_commit}" \
+    -o build \
+    ./cmd/...
+}
+
+package() {
+  cd "$pkgname"
+
+  # binary
+  install -vDm755 -t "$pkgdir/usr/bin" build/pint
+}

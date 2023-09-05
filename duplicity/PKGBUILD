@@ -4,8 +4,8 @@
 # Contributor: Aaron Schaefer <aaron@elasticdog.com>
 
 pkgname=duplicity
-pkgver=1.2.3
-pkgrel=2
+pkgver=2.1.0
+pkgrel=1
 pkgdesc='A utility for encrypted, bandwidth-efficient backups using the rsync algorithm'
 arch=('loong64' 'x86_64')
 url='https://duplicity.gitlab.io/'
@@ -17,12 +17,19 @@ depends=(
   'python-fasteners'
   'python-future'
 )
-makedepends=('python-setuptools-scm')
+makedepends=(
+  'git'
+  'python-build'
+  'python-installer'
+  'python-setuptools'
+  'python-setuptools-scm'
+  'python-wheel'
+)
 optdepends=(
   'lftp: backend for ftp, ftps, fish'
   'ncftp: alternative backend for ftp'
   'python-b2sdk: Backblaze B2 backend'
-  'python-boto: Amazon S3 and Google Cloud Storage backend'
+  'python-boto3: Amazon S3 and Google Cloud Storage backend'
   'python-dropbox: Dropbox backend'
   'python-gobject: GIO backend'
   'gvfs: GIO backend'
@@ -31,23 +38,38 @@ optdepends=(
   'python-requests-oauthlib: OneDrive backend'
   'rsync: rsync backend'
 )
-source=("$pkgname-$pkgver.tar.gz::https://gitlab.com/duplicity/duplicity/-/archive/rel.$pkgver/duplicity-rel.$pkgver.tar.gz")
-sha512sums=('9a8b2c4add41a41a06999ee8f9c56071ca3dacb0b684c558b9e83d84f0de97b436980f95570532290e254c042be75e852b4f0f0e3daf1024b287b27333b5de34')
-b2sums=('697ebd7627ae8745949373290a038b2c7920e581e90fe10393048c569a60815d8adf36557d3c65272a80d1c46fd70f87ee3ad831e73c3d5057fbd1004b84aaab')
+_commit='80cba3758f6e3562697bb6cc042ca1ae7df0eca4'
+source=(
+  "$pkgname::git+https://gitlab.com/duplicity/duplicity#commit=$_commit"
+  'fix-documentation-directory.patch'
+)
+b2sums=('SKIP'
+        'ca3e295183f6a484f1483bcd20b537c02d37b9190469c36dd21a9fa53510e5ab3f5bf9b01a5b9ce7e251bfdd418bcc32a448cc94fede1ed4201fb5f063034f0f')
+
+pkgver() {
+  cd "$pkgname"
+
+  git describe --tags | sed 's/^rel\.//'
+}
 
 prepare() {
-  cd "$pkgname-rel.$pkgver"
+  cd "$pkgname"
 
-  # FS#76307 - fix version string
-  sed -e "s/\$version/$pkgver/" -i "$pkgname/__init__.py"
+  # move documentation to the correct directory
+  patch -p1 -i "$srcdir/fix-documentation-directory.patch"
+}
+
+build() {
+  cd "$pkgname"
+
+  # FS#76307, FS#79399 - ensure version is correct
+  sed -e "s:\$version:$pkgver:" -i "$pkgname/__init__.py"
+
+  SETUPTOOLS_SCM_PRETEND_VERSION="$pkgver" python -m build --wheel --no-isolation
 }
 
 package() {
-  cd "$pkgname-rel.$pkgver"
+  cd "$pkgname"
 
-  python setup.py install --root="$pkgdir" --optimize=1
-
-  # move documentation to the correct directory
-  cd "$pkgdir/usr/share/doc"
-  mv "$pkgname-$pkgver" "$pkgname"
+  python -m installer --destdir="$pkgdir" dist/*.whl
 }

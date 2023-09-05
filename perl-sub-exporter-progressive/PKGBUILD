@@ -3,14 +3,14 @@
 
 pkgname=perl-sub-exporter-progressive
 pkgver=0.001013
-pkgrel=8
+pkgrel=9
 pkgdesc="Only use Sub::Exporter if you need it"
 arch=('any')
 url="https://search.cpan.org/dist/Sub-Exporter-Progressive"
 license=('PerlArtistic' 'GPL')
 options=('!emptydirs')
 source=(https://search.cpan.org/CPAN/authors/id/F/FR/FREW/Sub-Exporter-Progressive-$pkgver.tar.gz)
-md5sums=('72cf6acdd2a0a8b105821a4db98e4ebe')
+sha256sums=('d535b7954d64da1ac1305b1fadf98202769e3599376854b2ced90c382beac056')
 
 build() {
   cd "$srcdir"/Sub-Exporter-Progressive-$pkgver

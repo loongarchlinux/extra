@@ -3,7 +3,7 @@
 
 pkgname=hostapd
 pkgver=2.10
-pkgrel=2
+pkgrel=3
 pkgdesc="IEEE 802.11 AP, IEEE 802.1X/WPA/WPA2/EAP/RADIUS Authenticator"
 arch=(loong64 x86_64)
 url="https://w1.fi/hostapd/"
@@ -14,15 +14,18 @@ source=(
   "https://w1.fi/releases/$pkgname-$pkgver.tar.gz"{,.asc}
   config
   hostapd.service
+  hostapd@.service
 )
 sha512sums=('243baa82d621f859d2507d8d5beb0ebda15a75548a62451dc9bca42717dcc8607adac49b354919a41d8257d16d07ac7268203a79750db0cfb34b51f80ff1ce8f'
             'SKIP'
             'a959eda72d1c7e77943cc44cd0a00f1853223777b4f45ed18d6077ed5866e65a8a17bac0398375d1178d529a19e6df51b2572c026a262a919c7abcd5b72ca6ff'
-            '34e16c5d46383477bcb9e0dba5073b7f01354a6adca8e591050aeff6319255f8939926b70d76d109735496bbaf9ff2d04be9cf6e0d057c4d2f4a4140067957a3')
+            '34e16c5d46383477bcb9e0dba5073b7f01354a6adca8e591050aeff6319255f8939926b70d76d109735496bbaf9ff2d04be9cf6e0d057c4d2f4a4140067957a3'
+            '51f472ed969037bd4d480d13e356a03207316169ef0ac532c40d2e7a618d0fef0529eb060a7d146d28c31efef9b5942bc12661f29d970a6ea0d972f7d2b9d3dc')
 b2sums=('dbeeae2f62a8ab52df3e2d05ff0467b643cd68349ef3b28814a11dfb67d4b23d14cf2461a3040694706ec614fcd7c2e0fe58f3597e877cf47296cd75e11c792f'
         'SKIP'
         '944d3808054876e32e47d72883b0d32632ed916ff8f15d7bb98edef9460e36d6db90d409ce75d8d4afe819264a0274377d523911064bd546245ac868c3723608'
-        'dbb4d1ad4359931bd70d6ad428b509e0c40dab3a55ba7b87cf1c00a458d737c2a4ed6f06dd23286d9e4a38a481e4af9ab4ffa8e6fb27d852aa4eb7d16d046bf8')
+        'dbb4d1ad4359931bd70d6ad428b509e0c40dab3a55ba7b87cf1c00a458d737c2a4ed6f06dd23286d9e4a38a481e4af9ab4ffa8e6fb27d852aa4eb7d16d046bf8'
+        'a36556144a4e98b2be15fb2920ce18bc13377dc2fa4becb5f122f40aaaa7ece4e169fdaa39a60b96275fdc94ee08a31a21684c6ffd14a5417b9752c79215edb4')
 validpgpkeys=('EC4AA0A991A5F2464582D52D2B6EF432EFC895FA') # Jouni Malinen
 
 prepare() {
@@ -55,6 +58,7 @@ package() {
   make -C "${pkgname}" install DESTDIR="${pkgdir}" BINDIR="/usr/bin"
   # systemd service
   install -vDm 644 "../${pkgname}.service" -t "$pkgdir/usr/lib/systemd/system/"
+  install -vDm 644 "../${pkgname}@.service" -t "$pkgdir/usr/lib/systemd/system/"
   # license
   install -vDm 644 LICENSE -t "$pkgdir/usr/share/licenses/$pkgname/"
   # config

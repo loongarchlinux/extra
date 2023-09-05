@@ -3,13 +3,13 @@
 # Contributor: Platon Pronko <platon7pronko@gmail.com>
 
 pkgname=python-lsp-server
-pkgver=1.7.2
-pkgrel=3
+pkgver=1.7.4
+pkgrel=1
 pkgdesc="Fork of the python-language-server project, maintained by the Spyder IDE team and the community"
 arch=(any)
 url="https://github.com/python-lsp/python-lsp-server"
 license=(MIT)
-depends=(python-jedi python-lsp-jsonrpc python-pluggy python-ujson python-setuptools python-websockets python-docstring-to-markdown)
+depends=(python-jedi python-lsp-jsonrpc python-pluggy python-ujson python-setuptools python-websockets python-docstring-to-markdown python-importlib-metadata)
 makedepends=(python-build python-installer python-setuptools-scm python-wheel)
 optdepends=(
     'python-mccabe: complexity checking'
@@ -42,16 +42,19 @@ checkdepends=(
     python-pyqt5
     python-appdirs
 )
-source=(https://files.pythonhosted.org/packages/source/${pkgname::1}/${pkgname}/${pkgname}-${pkgver}.tar.gz)
-sha256sums=('b2433467d0fcb8fd45828463ff1cc805837c08731fcea5d7d953d9be776881e1')
+source=(https://files.pythonhosted.org/packages/source/${pkgname::1}/${pkgname}/${pkgname}-${pkgver}.tar.gz
+        https://github.com/python-lsp/python-lsp-server/commit/43104e98.patch)
+sha256sums=('c84254485a4d9431b24ecefd59741d21c00165611bcf6037bd7d54d0ed06a197'
+            '74994a6122dba591b7e95727ae3502c2c5864be65cf399d5ba2cf5e1b4e94ca7')
 
 prepare() {
   cd ${pkgname}-${pkgver}
+  patch -p1 -i ../43104e98.patch # support pyflakes 3.1
   sed 's|autopep8>=1.6.0,<1.7.0|autopep8>=1.6.0|' -i pyproject.toml
-  sed 's|flake8>=5.0.0,<7|flake8>=5.0.0|' -i pyproject.toml
+  sed 's|flake8>=6.1.0,<7|flake8>=6.1.0|' -i pyproject.toml
   sed 's|mccabe>=0.7.0,<0.8.0|mccabe>=0.7.0|' -i pyproject.toml
-  sed 's|pycodestyle>=2.9.0,<2.11.0|pycodestyle>=2.9.0|' -i pyproject.toml
-  sed 's|pyflakes>=2.5.0,<3.1.0|pyflakes>=2.5.0|' -i pyproject.toml
+  sed 's|pycodestyle>=2.11.0,<2.12.0|pycodestyle>=2.11.0|' -i pyproject.toml
+  sed 's|pyflakes>=3.1.0,<3.2.0|pyflakes>=3.1.0|' -i pyproject.toml
   sed 's|yapf<=0.32.0|yapf>=0.33.0|' -i pyproject.toml
 }
 

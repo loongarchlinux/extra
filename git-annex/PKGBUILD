@@ -4,7 +4,7 @@
 
 pkgname=git-annex
 pkgver=10.20230626
-pkgrel=4
+pkgrel=23
 pkgdesc="Manage files with git, without checking their contents into git"
 url="https://git-annex.branchable.com/"
 license=("AGPL3")
@@ -35,9 +35,13 @@ sha512sums=('SKIP')
 
 prepare() {
   cd git-annex
+
   # persistent-template was merged into persistent
-  uusi -d persistent-template -r connection:crypton-connection git-annex.cabal
+  uusi -d persistent-template -r connection:crypton-connection -u unix-compat git-annex.cabal
   sed -i 's/MIN_VERSION_persistent_template/MIN_VERSION_persistent/' Database/ContentIdentifier.hs Database/Export.hs Database/Fsck.hs Database/Keys/SQL.hs
+
+  # unix-compat 0.7 removed System.PosixCompat.User
+  sed -i 's/System.PosixCompat.User/System.Posix.User/' Utility/UserInfo.hs Build/DesktopFile.hs
 }
 
 build() {

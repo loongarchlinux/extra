@@ -1,12 +1,12 @@
 # Maintainer: Konstantin Gizdov <arch at kge dot pw>
+# Maintainer: Robin Candau <antiz@archlinux.org>
 # Contributor: Baptiste Jonglez <baptiste--aur at jonglez dot org>
 # Contributor: nfnty
 
 pkgbase='kea'
 pkgname=("${pkgbase}" "${pkgbase}-docs")
-pkgver=2.2.0
-_upstreamver="${pkgver}"
-pkgrel=7
+pkgver=2.4.0
+pkgrel=3
 pkgdesc='High-performance, extensible DHCP server engine from ISC, supporting both DHCPv4 and DHCPv6'
 arch=('loong64' 'x86_64')
 url='https://kea.isc.org'
@@ -16,14 +16,14 @@ makedepends=(
   'boost'
   'mariadb'
   'postgresql'
-  'python'  # kea-shell
+  'python' # kea-shell
   'python-sphinx'
   'python-sphinx_rtd_theme'
   'doxygen'
   'graphviz'
   # texlive-most group
   'texlive-bibtexextra'
-  'texlive-core'
+  'texlive-basic'
   'texlive-fontsextra'
   'texlive-formatsextra'
   'texlive-games'
@@ -44,14 +44,14 @@ optdepends=('mariadb: lease information database'
 # We can ignore mysql/pgsql, but admin tests use custom scripts that break everything
 checkdepends=('gtest' 'procps-ng') # procps-ng needed for 'pgrep'
 source=(
-  "https://ftp.isc.org/isc/${pkgbase}/${_upstreamver}/${pkgbase}-${_upstreamver}.tar.gz"{,.asc}
+  "https://ftp.isc.org/isc/${pkgbase}/${pkgver}/${pkgbase}-${pkgver}.tar.gz"{,.asc}
   'tmpfiles-kea.conf'
   'kea-dhcp4.service'
   'kea-dhcp6.service'
   'kea-dhcp-ddns.service'
   'kea-ctrl-agent.service'
 )
-b2sums=('10b4bca1a135c6d146490f8c4c7bd4d56c1c03e2b4cc88a6888fcad5d1a5c2ee2d2c0215cb345b53a2a4262dbd02516d75d5778835d45384a7d69a062b8696b9'
+b2sums=('07a4424c01872142b85446ee881afbdc9d8b3a0bc7879226463dd0ba20eba6d3d6db3dfd5fff88cd54af05c4f58183032c7df90d24a969a7ae63200822b6f35f'
         'SKIP'
         '7ac151ae19093350e75112ab1fba38561f6f986a8ac333ada91b86819abd65559e31cec86ef19fce68e0e56cbae7ed28858654507c4d975985db4d34ee0184fb'
         'b25f29b3cd8657508d766eb4c92c8c2b9ebebd60c3639930cb0439f69d205352b6ef066409d704228721ae252b0d954e5f6a3a26bb46c33bbc9ede4170c22e94'
@@ -60,10 +60,11 @@ b2sums=('10b4bca1a135c6d146490f8c4c7bd4d56c1c03e2b4cc88a6888fcad5d1a5c2ee2d2c021
         'f7be743d8b90ffc82551c3afc28477c8bef10596c77368ccb63e61de7355518e5e668429ab277e3f1a994cdc8b3ef542867ddb91bc7f23860dfe2d72f67b99ba')
 validpgpkeys=('BE0E9748B718253A28BB89FFF1B11BF05CF02E57'  # Internet Systems Consortium, Inc. (Signing key, 2017-2018) <codesign@isc.org>
               'AE3FAC796711EC59FC007AA474BB6B9A4CBB3D38'  # Internet Systems Consortium, Inc. (Signing key, 2019-2020) <codesign@isc.org>
-              '7E1C91AC8030A5A59D1EFAB9750F3C87723E4012') # Internet Systems Consortium, Inc. (Signing key, 2021-2022) <codesign@isc.org>
+              '7E1C91AC8030A5A59D1EFAB9750F3C87723E4012'  # Internet Systems Consortium, Inc. (Signing key, 2021-2022) <codesign@isc.org>
+              '090A2A07923F925B5767803A42E5DF78C83271DB') # Marcin Godzina (Code-Signing Key) <mgodzina@isc.org>
 
 build() {
-  cd "${srcdir}/${pkgbase}-${_upstreamver}"
+  cd "${pkgbase}-${pkgver}"
   ./configure \
       --prefix='/usr' \
       --sbindir='/usr/bin' \
@@ -93,7 +94,7 @@ build() {
 }
 
 check() {
-  cd "${srcdir}/${pkgname}-${_upstreamver}"
+  cd "${pkgbase}-${pkgver}"
   # Disable mysql and postgresql for now, tests require live DBs
   export GTEST_FILTER='-mysql.*:*mysql*:*MySql*:*MySQL*:pgsql.*:*pgsql*:*PgSql*:*PgSQL*'
   # the above works, but admin tests use custom scripts that ignore it and break everything
@@ -109,29 +110,28 @@ package_kea() {
     'etc/kea/keactrl.conf'
     'etc/kea/kea-ctrl-agent.conf'
   )
-  cd "${srcdir}/kea-${_upstreamver}"
+  cd "${pkgbase}-${pkgver}"
   make DESTDIR="${pkgdir}" install
   # Do not package /run
-  rm -rf "${pkgdir}"/run
-  install -Dm644 "${srcdir}"/tmpfiles-kea.conf "${pkgdir}"/usr/lib/tmpfiles.d/${pkgname}.conf
+  rm -rf "${pkgdir}/run"
+  install -Dm644 "${srcdir}/tmpfiles-kea.conf" "${pkgdir}/usr/lib/tmpfiles.d/${pkgbase}.conf"
   # Systemd service files
-  install -Dm644 "${srcdir}"/kea-dhcp4.service "${pkgdir}"/usr/lib/systemd/system/kea-dhcp4.service
-  install -Dm644 "${srcdir}"/kea-dhcp6.service "${pkgdir}"/usr/lib/systemd/system/kea-dhcp6.service
-  install -Dm644 "${srcdir}"/kea-dhcp-ddns.service "${pkgdir}"/usr/lib/systemd/system/kea-dhcp-ddns.service
-  install -Dm644 "${srcdir}"/kea-ctrl-agent.service "${pkgdir}"/usr/lib/systemd/system/kea-ctrl-agent.service
+  install -Dm644 "${srcdir}/kea-dhcp4.service" "${pkgdir}/usr/lib/systemd/system/kea-dhcp4.service"
+  install -Dm644 "${srcdir}/kea-dhcp6.service" "${pkgdir}/usr/lib/systemd/system/kea-dhcp6.service"
+  install -Dm644 "${srcdir}/kea-dhcp-ddns.service" "${pkgdir}/usr/lib/systemd/system/kea-dhcp-ddns.service"
+  install -Dm644 "${srcdir}/kea-ctrl-agent.service" "${pkgdir}/usr/lib/systemd/system/kea-ctrl-agent.service"
   # split docs in a separate package
-  rm -rf "${pkgdir}"/usr/share/{doc,man}
+  rm -rf "${pkgdir}/usr/share/"{doc,man}
 }
 
 package_kea-docs() {
-  depends=()
-  optdepends=()
+  pkgdesc='High-performance, extensible DHCP server engine from ISC, supporting both DHCPv4 and DHCPv6 (user and developer documentation)'
   provides=('kea-devel-docs')
   replaces=('kea-devel-docs')
 
-  cd "${srcdir}/${pkgbase}-${_upstreamver}"
+  cd "${pkgbase}-${pkgver}"
   install -d "${pkgdir}/usr/share/doc/${pkgbase}/"
   make DESTDIR="${pkgdir}" -C doc install
   cp -r doc/devel/html "${pkgdir}/usr/share/doc/${pkgbase}/devel"
-  rm "${pkgdir}"/usr/share/doc/kea/devel/doxygen{,-error}.log
+  rm -f "${pkgdir}/usr/share/doc/kea/devel/doxygen"{,-error}.log
 }

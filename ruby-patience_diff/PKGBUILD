@@ -2,7 +2,7 @@
 
 pkgname=ruby-patience_diff
 pkgver=1.2.0
-pkgrel=1
+pkgrel=2
 pkgdesc='A Ruby implementation of the Patience diff algorithm'
 arch=(any)
 url='https://github.com/watt/ruby_patience_diff'
@@ -10,11 +10,15 @@ license=(MIT)
 depends=(ruby-optimist)
 makedepends=(ruby-hoe ruby-rake)
 options=(!emptydirs)
-source=(https://github.com/watt/ruby_patience_diff/archive/v$pkgver/$pkgname-$pkgver.tar.gz)
-sha256sums=('3c767f112c46ff7a4f42224897786187c845bacd06882fb3cfdf40208c6ac142')
+source=(https://github.com/watt/ruby_patience_diff/archive/v$pkgver/$pkgname-$pkgver.tar.gz
+        'ruby-patience_diff_hoe4-build.patch')
+sha256sums=('3c767f112c46ff7a4f42224897786187c845bacd06882fb3cfdf40208c6ac142'
+            '49212287615870679b9a76c04158b554b98a63c0efb354c23da37f9b300310fb')
 
 prepare() {
   cd ruby_patience_diff-$pkgver
+  # FS#78331: fix the build with hoe4 (https://github.com/watt/ruby_patience_diff/issues/6)
+  patch --forward --strip=1 --input="${srcdir}/ruby-patience_diff_hoe4-build.patch"
   sed -r -e 's|~>|>=|' -i Rakefile
 }
 

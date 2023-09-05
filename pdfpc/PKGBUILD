@@ -4,21 +4,43 @@
 
 pkgname=pdfpc
 pkgver=4.6.0
-pkgrel=1
+pkgrel=2
+_discountver=2.2.7d
 pkgdesc="Presenter console with multi-monitor support for PDF files"
 arch=(loong64 x86_64)
 url="https://pdfpc.github.io/"
 license=(GPL)
-depends=(gtk3 poppler-glib libgee gstreamer gst-plugins-base webkit2gtk discount
-         libsoup qrencode)
+depends=(gtk3 poppler-glib libgee gstreamer gst-plugins-base webkit2gtk
+         libsoup qrencode) # discount 3 not supported, statically build it for now
 optdepends=('gst-plugin-gtk: for video playback'
             'gst-plugins-good: more codecs for video playback support'
             'gst-libav: more codecs for video playback support')
 makedepends=(cmake vala)
-source=(https://github.com/pdfpc/pdfpc/archive/v$pkgver/$pkgname-$pkgver.tar.gz)
-sha256sums=('3b1a393f36a1b0ddc29a3d5111d8707f25fb2dd2d93b0401ff1c66fa95f50294')
+source=(https://github.com/pdfpc/pdfpc/archive/v$pkgver/$pkgname-$pkgver.tar.gz
+        https://github.com/pdfpc/pdfpc/commit/d38edfac.patch
+        https://github.com/Orc/discount/archive/v$_discountver/discount-$_discountver.tar.gz)
+sha256sums=('3b1a393f36a1b0ddc29a3d5111d8707f25fb2dd2d93b0401ff1c66fa95f50294'
+            'e0b980efe688360e222b6ff2ac47a41d22cb7dabc0b446d61d2a5536df22457c'
+            'eb9f6629dadddb44c3111267b82e51d5fb8364e228cc3533fe937d8a99e0155b')
+
+prepare() {
+  patch -d $pkgname-$pkgver -p1 < d38edfac.patch # Fix build with vala 0.56
+}
 
 build() {
+  # build discount
+    cd discount-$_discountver
+    ./configure.sh \
+      --prefix=/usr \
+      --enable-all-features \
+      --with-fenced-code
+    make
+    make DESTDIR="$PWD" install
+    cd ..
+
+    PKG_CONFIG_PATH="$PWD"/discount-$_discountver/usr/lib/pkgconfig \
+    CFLAGS+=" -I$PWD/discount-$_discountver/usr/include" \
+    LDFLAGS+=" -L$PWD/discount-$_discountver/usr/lib" \
     cmake -B build -S $pkgname-$pkgver \
         -DCMAKE_INSTALL_PREFIX=/usr
     cmake --build build

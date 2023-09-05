@@ -4,23 +4,26 @@
 
 pkgname=python-mysql-connector
 _pkgname=mysql-connector-python
-pkgver=8.0.33
-pkgrel=2
+pkgver=8.1.0
+pkgrel=1
 pkgdesc="A standardized database driver for Python platforms and development"
 arch=('any')
 url="https://dev.mysql.com/downloads/connector/python/"
 license=('GPL')
 depends=('python' 'python-dnspython' 'python-typing_extensions')
 makedepends=(python-build python-installer python-wheel python-setuptools)
-source=("https://github.com/mysql/mysql-connector-python/archive/$pkgver/$pkgname-$pkgver.tar.gz")
-sha512sums=('e9df5218de9ece29a318aafafa264db2c4486b441b1f4a398e338ba090eac66d596d0afdecdf2662b37dda73972d2c3882b799bb2d1b622a87f22bee55572f3e')
+source=("https://cdn.mysql.com//Downloads/Connector-Python/${_pkgname}-${pkgver}-src.tar.gz"
+		 "${_pkgname}-${pkgver}-src.tar.gz.asc::https://dev.mysql.com/downloads/gpg/?file=${_pkgname}-${pkgver}-src.tar.gz&p=29")
+sha512sums=('de67c127c2c40372ebb5937498576e69a6a9e4e3d46c478502d62ab521c0d040e6019018a01c4cec00edcddcbc474f6e568316a56e258f248b7b76a08f1aeff7'
+            'SKIP')
+validpgpkeys=('859BE8D7C586F538430B19C2467B942D3A79BD29')  # MySQL Release Engineering <mysql-build@oss.oracle.com>
 
 build() {
-	cd "${srcdir}/${_pkgname}-${pkgver}"
+	cd "${_pkgname}-${pkgver}-src"
 	python -m build --wheel --no-isolation
 }
 
 package() {
-	cd "${srcdir}/${_pkgname}-${pkgver}"
+	cd "${_pkgname}-${pkgver}-src"
 	python -m installer --destdir="$pkgdir" dist/*.whl
 }

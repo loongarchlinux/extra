@@ -1,8 +1,8 @@
 # Maintainer: Felix Yan <felixonmars@archlinux.org>
 
 pkgname=python-pytest-ruff
-pkgver=0.1
-_commit=4c2608da2b88c5182b06a0c0480ee5b6253b99d3
+pkgver=0.1.1
+_commit=16004c5655f1ca55a77e114940f4ab5419dac426
 pkgrel=1
 pkgdesc="Pytest plugin to check ruff requirements"
 url="https://github.com/businho/pytest-ruff"

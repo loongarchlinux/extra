@@ -1,0 +1,46 @@
+# Maintainer: Jelle van der Waa <jelle@archlinux.org>
+# Contributor: Thomas Booker <tw.booker@outlook.com>
+# Contributor: Philip Goto <philip.goto@gmail.com>
+
+pkgname=phosh
+pkgver=0.31.1
+pkgrel=1
+pkgdesc='A pure Wayland shell prototype for GNOME on mobile devices'
+arch=(loong64 x86_64 aarch64)
+url='https://gitlab.gnome.org/World/Phosh/phosh'
+license=(GPL3)
+depends=(gtk3 libhandy gnome-desktop gnome-session upower libpulse gcr
+	libnm phoc gnome-shell callaudiod evince fribidi wayland evolution-data-server
+	libsecret polkit libadwaita libical libedataserverui4
+	squeekboard)
+makedepends=(meson git wayland-protocols python-docutils feedbackd)
+checkdepends=(xorg-server-xvfb xorg-xauth)
+optdepends=('iio-sensor-proxy: accelerometer and other sensors'
+            'feedbackd: haptic/visual/audio feedback')
+source=("git+${url}.git#tag=v${pkgver}?signed")
+validpgpkeys=("0DB3932762F78E592F6522AFBB5A2C77584122D3")
+sha256sums=('SKIP')
+
+prepare() {
+  cd phosh
+  git submodule update --init
+}
+
+build() {
+  arch-meson --libexecdir=/usr/lib/phosh  \
+    -D tests=true -D phoc_tests=disabled \
+    -D man=true -D gtk_doc=false -D callui-i18n=true \
+    -D lockscreen-plugins=true -D systemd=true phosh build 
+  meson compile -C build
+}
+
+check() {
+	xvfb-run meson test --no-suite screenshots -C build
+}
+
+package() {
+  DESTDIR="${pkgdir}" meson install -C build
+  # make squeekboard the default keyboard 
+  mkdir -p "$pkgdir"/usr/share/applications
+  ln -s sm.puri.Squeekboard.desktop "$pkgdir"/usr/share/applications/sm.puri.OSK0.desktop
+}

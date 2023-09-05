@@ -1,7 +1,7 @@
 # Maintainer: Antonio Rojas <arojas@archlinux.org>
 
 pkgname=jupyter-server
-pkgver=2.7.0
+pkgver=2.7.3
 pkgrel=1
 pkgdesc='Provides the backend for Jupyter web applications like Jupyter notebook, JupyterLab, and Voila'
 arch=(any)
@@ -14,7 +14,7 @@ checkdepends=(python-pytest-tornasync python-pytest-console-scripts python-pytes
               python-flaky python-requests python-terminado)
 optdepends=('jupyter-server-mathjax: to use local MathJax' 'python-jupyter-server-terminals: terminals support')
 source=(https://pypi.io/packages/source/j/${pkgname/-/_}/${pkgname/-/_}-$pkgver.tar.gz)
-sha256sums=('36da0a266d31a41ac335a366c88933c17dfa5bb817a48f5c02c16d303bc9477f')
+sha256sums=('d4916c8581c4ebbc534cebdaa8eca2478d9f3bfdd88eae29fcab0120eac57649')
 
 prepare() {
   cd ${pkgname/-/_}-$pkgver
@@ -29,7 +29,9 @@ build() {
 check() {
   cd ${pkgname/-/_}-$pkgver
 # Skip tests that fail on the build server
-  pytest -v -k 'not test_api.py and not test_authorized_requests'
+  python -m venv --system-site-packages test-env
+  test-env/bin/python -m installer dist/*.whl
+  test-env/bin/python -m pytest -v -k 'not test_api.py and not test_authorized_requests and not test_delete_non_empty_folder'
 }
 
 package() {

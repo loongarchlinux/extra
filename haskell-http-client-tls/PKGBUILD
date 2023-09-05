@@ -3,8 +3,8 @@
 
 _hkgname=http-client-tls
 pkgname=haskell-http-client-tls
-pkgver=0.3.6.1
-pkgrel=105
+pkgver=0.3.6.3
+pkgrel=3
 pkgdesc="http-client backend using the connection package and tls library"
 url="https://github.com/snoyberg/http-client"
 license=("MIT")
@@ -14,12 +14,12 @@ depends=('ghc-libs' 'haskell-case-insensitive' 'haskell-crypton' 'haskell-crypto
          'haskell-network' 'haskell-network-uri' 'haskell-tls')
 makedepends=('ghc' 'uusi' 'haskell-hspec')
 source=("https://hackage.haskell.org/packages/archive/${_hkgname}/${pkgver}/${_hkgname}-${pkgver}.tar.gz")
-sha512sums=('81b6e9ad3956f237bec83173ab8ac153ea3e9b555f0a84dc6ec0a13f6ad96dfc104d61125b66fc8733c8d8c3b7f8fc5e89cfcb885a7352f3af2e2b5473732294')
+sha512sums=('2b4475a9fdcfed07512f19af989289d8b8eacc8568392c03839a806327d5b1cd6dfcbc5afe29a0dd3f63d9c93a7043c4fea594b73c46b43db94518dd7a39325f')
 
 prepare() {
     cd $_hkgname-$pkgver
-    uusi -r connection:crypton-connection -r cryptonite:crypton $_hkgname.cabal
-    sed -i 's|MIN_VERSION_connection|MIN_VERSION_crypton_connection|' Network/HTTP/Client/TLS.hs
+    # https://github.com/snoyberg/http-client/commit/89770ff263da242f0004443e0b3ae0a162233c6e#diff-ba1d2cc64da913f00a57c0ea78a399740ba9bec10e610e620803eab2eb049688
+    uusi -r hspec:hspec,crypton-connection $_hkgname.cabal
 
     # httpbin.org is very unstable
     sed -i 's|httpbin.org|ddosgan.com|' test/Spec.hs
@@ -29,8 +29,10 @@ build() {
     cd $_hkgname-$pkgver
     
     runhaskell Setup configure -O --enable-shared --enable-executable-dynamic --disable-library-vanilla \
-        --prefix=/usr --docdir=/usr/share/doc/$pkgname --datasubdir=$pkgname --enable-tests \
-        --dynlibdir=/usr/lib --libsubdir=\$compiler/site-local/\$pkgid --ghc-option=-fllvm
+        --prefix=/usr --docdir="/usr/share/doc/$pkgname" --enable-tests \
+        --dynlibdir=/usr/lib --libsubdir=\$compiler/site-local/\$pkgid --ghc-option=-fllvm \
+        --ghc-option=-optl-Wl\,-z\,relro\,-z\,now \
+        --ghc-option='-pie'
     runhaskell Setup build $MAKEFLAGS
     runhaskell Setup register --gen-script
     runhaskell Setup unregister --gen-script

@@ -1,9 +1,9 @@
 # Maintainer: David Runge <dvzrv@archlinux.org>
 
 pkgname=bespokesynth
-pkgver=1.1.0.r154.g0acb8ebf
-_commit=0acb8ebff6e59f8b000da240e11f31ccee9cca72  # current HEAD
-pkgrel=2
+pkgver=1.2.0
+_commit=b69c3fb28333ff18e5cd253fd70c787d9df37025  # refs/tags/v1.2.0
+pkgrel=1
 pkgdesc="A software modular synth"
 arch=(loong64 x86_64)
 url="https://www.bespokesynth.com/"
@@ -22,10 +22,15 @@ makedepends=(
   abletonlink
   alsa-lib
   cmake
+  flac
   freetype2
   git
   jack
   jsoncpp
+  juce
+  libjpeg-turbo
+  libogg
+  libvorbis
   libusb
   libx11
   libxcursor
@@ -42,33 +47,37 @@ provides=(vst3-host)
 source=(
   $pkgname::git+https://github.com/$pkgname/$pkgname#commit=$_commit
   MTS-ESP::git+https://github.com/ODDSound/MTS-ESP
-  $pkgname-1.1.0-devendor_ableton_link.patch
+  $pkgname-1.2.0-devendor_abletonlink.patch
+  $pkgname-1.2.0-juce_7.0.5.patch
 )
 sha512sums=('SKIP'
             'SKIP'
-            '29f6ea325ae9ab974443bfc87ace59a89b18c8ec355224a4d15ad5bda6601c1901381259761f561b96426ab4688680f0409297eb8750b2d6516e6ca49da16f73')
+            '02a78c539f990aa3662211ea2da7afd65cdb0b8e39d723f3083970bf591c6dcdbc2a8be3b79df61e8d8c6bdfa22b56af15496ae83484428cfaf56e7f0857a147'
+            'd607fa7af629366f2fc14fc292dd60ffb7351717029340fec6bd4ba2e16473bc7da6ce5768a3cd751f7f3edbb23ef7003f8f134978637de83897245ac3ae1a91')
 b2sums=('SKIP'
         'SKIP'
-        'f1d45e9220ec4d33327fb96594b6b3b5db2b4d3fc8716946568fe695de8ad5a8558218f803a9906cb31f955fc3f44ce9fd5265db65a94ea4cd538cb7777c88f4')
+        'e70e2d63535cd08ec6bb55054840913ac45c600c642a343e1e852c46e453c0adb630362e253030a8965c2f433752c88b6a1f7283abd40c0d5ee72eb31cf108c1'
+        '5d8f942003cddc229f0100fb9318d623c32fb8ddfdfaf686330ca60135b141bc0806ec793ea1e4f505552e791a71c5c9fdaecc8bf7dad7c43f367cc44ac699dd')
 
 pkgver() {
   cd $pkgname
-  git describe --exclude Nightly --long --tags | sed 's/v//;s/\([^-]*-g\)/r\1/;s/-/./g'
+  git describe --exclude Nightly --tags | sed 's/v//;s/\([^-]*-g\)/r\1/;s/-/./g'
 }
 
 prepare() {
-  # devendor abletonlink
-  patch -Np1 -d $pkgname -i ../$pkgname-1.1.0-devendor_ableton_link.patch
-
   cd $pkgname
   git submodule init
   git config submodule.libs/oddsound-mts/MTS-ESP.url "$srcdir/MTS-ESP"
-  # NOTE: use bundled juce as upstream is seemingly not interested in doing releases: https://github.com/BespokeSynth/BespokeSynth/issues/918
-  # git submodule deinit libs/JUCE
+  git submodule deinit libs/JUCE
   git submodule deinit libs/pybind11
   git submodule deinit libs/tuning-library
   git submodule deinit libs/json/jsoncpp
   git -c protocol.file.allow=always submodule update
+
+  # devendor abletonlink: https://github.com/BespokeSynth/BespokeSynth/pull/1397
+  patch -Np1 -i ../$pkgname-1.2.0-devendor_abletonlink.patch
+  # fix for JUCE >= 7.0.3: https://github.com/BespokeSynth/BespokeSynth/pull/1398
+  patch -Np1 -i ../$pkgname-1.2.0-juce_7.0.5.patch
 }
 
 build() {
@@ -76,12 +85,12 @@ build() {
     -B build
     -D CMAKE_BUILD_TYPE=None
     -D CMAKE_INSTALL_PREFIX=/usr
-    -D BESPOKE_DEVENDORED_SYSTEM_JUCE=OFF
+    -D BESPOKE_DEVENDORED_SYSTEM_JUCE=ON
     -D BESPOKE_SYSTEM_ABLETONLINK=ON
     -D BESPOKE_SYSTEM_PYBIND11=ON
     -D BESPOKE_SYSTEM_JSONCPP=ON
     -D BESPOKE_SYSTEM_TUNING_LIBRARY=ON
-    -D BESPOKE_SYSTEM_JUCE=OFF
+    -D BESPOKE_SYSTEM_JUCE=ON
     -S $pkgname
     -W no-dev
   )
@@ -97,8 +106,12 @@ check() {
 package() {
   depends+=(
     alsa-lib libasound.so
+    flac libFLAC.so
     freetype2 libfreetype.so
     jsoncpp libjsoncpp.so
+    libjpeg-turbo libjpeg.so
+    libogg libogg.so
+    libvorbis libvorbis.so
     libusb libusb-1.0.so
   )
 

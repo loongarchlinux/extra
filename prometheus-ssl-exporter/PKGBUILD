@@ -1,0 +1,92 @@
+# Maintainer: George Rawlinson <george@rawlinson.net.nz>
+
+pkgname=prometheus-ssl-exporter
+_pkgname=ssl_exporter
+pkgver=2.4.2
+pkgrel=3
+pkgdesc='Prometheus exporter for TLS certificates'
+arch=('loong64' 'x86_64')
+url='https://github.com/ribbybibby/ssl_exporter'
+license=('MIT')
+depends=('glibc')
+makedepends=('go' 'git')
+backup=('etc/conf.d/prometheus-ssl-exporter')
+options=('!lto')
+_commit='8b30e0983c79f57b87b9f114a86ead0b728bf55e'
+source=(
+  "$pkgname::git+$url.git#commit=$_commit"
+  'systemd.service'
+  'sysusers.conf'
+  'config.env'
+)
+b2sums=('SKIP'
+        '683e70dc8108a98ff6da1abfd38fbcb8502d68a9fb17dd804ac10a034267baa7306cac18bd642c0eec14092dcade12304d16019c2665525d51bdf73092a74536'
+        'cd77da1f9c3c6919306124ef36ab7dcec96a338ba667fcd226b66c8ea54e448b14600783a6289091e9776be96e92c0ad98c007019160aa48c68df31f2eae8403'
+        '4cd5f8df6d1d4e8dcb5775de96d91f6087dcd7002a9cd910ec06e4bbb855e0f6567fd07a596e0c36dcdab610d467011dfadc65bcd2f466afcad9d7561f6eb51c')
+
+pkgver() {
+  cd "$pkgname"
+
+  git describe --tags | sed 's/^v//'
+}
+
+prepare() {
+  cd "$pkgname"
+
+  # create directory for build output
+  mkdir build
+
+  # download dependencies
+  export GOPATH="${srcdir}"
+  go mod download
+}
+
+
+build() {
+  cd "$pkgname"
+
+  # set Go flags
+  export CGO_CPPFLAGS="${CPPFLAGS}"
+  export CGO_CFLAGS="${CFLAGS}"
+  export CGO_CXXFLAGS="${CXXFLAGS}"
+  export GOPATH="${srcdir}"
+
+  # reproducible: use commit date for build date
+  local _commit_date=$(git show --no-patch --format=%cd --date=format:%Y-%m-%d-%H:%M:%S)
+
+  go build -v \
+    -buildmode=pie \
+    -mod=readonly \
+    -modcacherw \
+    -ldflags "-compressdwarf=false \
+    -linkmode external \
+    -extldflags ${LDFLAGS} \
+    -X github.com/prometheus/common/version.Version=$pkgver \
+    -X github.com/prometheus/common/version.Revision=$(git rev-parse HEAD) \
+    -X github.com/prometheus/common/version.Branch=main \
+    -X github.com/prometheus/common/version.BuildUser=archlinux \
+    -X github.com/prometheus/common/version.BuildDate=$_commit_date" \
+    -o build \
+    ./...
+}
+
+check() {
+  cd "$pkgname"
+
+  go test -v ./...
+}
+
+package() {
+  # systemd integration
+  install -vDm644 systemd.service "$pkgdir/usr/lib/systemd/system/$pkgname.service"
+  install -vDm644 sysusers.conf "$pkgdir/usr/lib/sysusers.d/$pkgname.conf"
+  install -vDm640 config.env "$pkgdir/etc/conf.d/$pkgname"
+
+  cd "$pkgname"
+
+  # binary
+  install -vDm755 "build/$_pkgname" "$pkgdir/usr/bin/$pkgname"
+
+  # license
+  install -Dm644 -t "$pkgdir/usr/share/licenses/$pkgname" LICENSE
+}

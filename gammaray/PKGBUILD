@@ -1,39 +1,55 @@
 # Maintainer: Antonio Rojas <arojas@archlinux.org>
 
 pkgname=gammaray
-pkgver=2.11.3
-pkgrel=3
+pkgver=3.0.0
+pkgrel=1
 pkgdesc='A tool for examining the internals of a Qt application and to some extent also manipulate it'
 arch=(loong64 x86_64)
 url='https://www.kdab.com/gammaray/'
 license=(GPL)
-depends=(syntax-highlighting qt5-tools qt5-svg qt5-3d)
-makedepends=(cmake kcoreaddons qt5-script qt5-wayland qt5-webengine qt5-scxml qt5-location qt5-connectivity doxygen glslang)
-optdepends=('qt5-wayland: Wayland compositor inspector plugin'
-            'qt5-webengine: web inspector plugin'
-            'qt5-scxml: state machine viewer plugin'
-            'qt5-connectivity: bluetooth plugin'
-            'qt5-script: script engine debugger plugin'
-            'kcoreaddons: KJob tracker plugin')
+depends=(qt6-tools qt6-svg)
+makedepends=(cmake qt5-svg qt5-script qt5-wayland qt5-webengine qt5-scxml qt5-location qt5-connectivity syntax-highlighting
+             qt6-shadertools qt6-wayland qt6-webengine qt6-scxml qt6-location qt6-connectivity doxygen)
+optdepends=('qt5-base: Qt5 applications support'
+            'qt5-wayland: Qt5 Wayland compositor inspector plugin'
+            'qt5-webengine: Qt5 web inspector plugin'
+            'qt5-scxml: Qt5 state machine viewer plugin'
+            'qt5-script: Qt5 script engine debugger plugin'
+            'qt5-connectivity: Qt5 bluetooth plugin'
+            'qt6-declarative: QML support'
+            'qt6-positioning: Qt Positioning support'
+            'qt6-wayland: Wayland compositor inspector plugin'
+            'qt6-webengine: web inspector plugin'
+            'qt6-connectivity: bluetooth plugin')
 source=(https://github.com/KDAB/GammaRay/releases/download/v$pkgver/gammaray-$pkgver.tar.gz{,.asc})
-sha256sums=('03d7ca7bd5eb600c9c389d0cf071960330592f1f392a783b7fec5f9eaa5df586'
+sha256sums=('acd27dbbcbdf73fed497e0b5d6c477f2e11b59c48499752602677037dcd64ba5'
             'SKIP')
 validpgpkeys=(E86C000370B1B9E2A9191AD53DBFB6882C9358FB) # KDAB Products <info@kdab.com>
 
 prepare() {
 # Fix plugin install dir
-  sed -e 's|plugins/gammaray|lib/qt/plugins/gammaray|' -i $pkgname-$pkgver/CMakeLists.txt
+  sed -e 's|plugins/gammaray|lib/qt6/plugins/gammaray|' -i $pkgname-$pkgver/CMakeLists.txt
 }
 
 build() {
-  cmake -B build -S $pkgname-$pkgver \
+  cmake -B build5 -S $pkgname-$pkgver \
     -DCMAKE_INSTALL_PREFIX=/usr \
+    -DQT_VERSION_MAJOR=5 \
     -DGAMMARAY_INSTALL_QT_LAYOUT=ON \
     -DECM_MKSPECS_INSTALL_DIR=/usr/lib/qt/mkspecs/modules \
     -DPLUGIN_INSTALL_DIR=/usr/lib/qt/plugins/gammaray
-  cmake --build build
+  cmake --build build5
+
+  cmake -B build6 -S $pkgname-$pkgver \
+    -DCMAKE_INSTALL_PREFIX=/usr \
+    -DQT_VERSION_MAJOR=6 \
+    -DGAMMARAY_INSTALL_QT_LAYOUT=ON \
+    -DECM_MKSPECS_INSTALL_DIR=/usr/lib/qt6/mkspecs/modules \
+    -DPLUGIN_INSTALL_DIR=/usr/lib/qt6/plugins/gammaray
+  cmake --build build6
 }
 
 package() {
-  DESTDIR="$pkgdir" cmake --install build
+  DESTDIR="$pkgdir" cmake --install build5
+  DESTDIR="$pkgdir" cmake --install build6
 }

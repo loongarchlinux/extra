@@ -1,0 +1,18 @@
+[Unit]
+Description=Prometheus exporter for SSL metrics
+Requires=network-online.target
+After=network-online.target
+
+[Service]
+User=prometheus-ssl-exporter
+Group=prometheus-ssl-exporter
+Restart=on-failure
+EnvironmentFile=-/etc/conf.d/prometheus-ssl-exporter
+ExecStart=/usr/bin/prometheus-ssl-exporter $SSL_EXPORTER_ARGS
+ExecReload=/bin/kill -HUP $MAINPID
+NoNewPrivileges=true
+ProtectHome=read-only
+ProtectSystem=strict
+
+[Install]
+WantedBy=multi-user.target

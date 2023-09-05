@@ -5,41 +5,28 @@
 # Contributor: Daniel J Griffiths <ghost1227@archlinux.us>
 
 pkgname=upx
-pkgver=4.0.2
-pkgrel=2
+pkgver=4.1.0
+pkgrel=1
 pkgdesc='Extendable, high-performance executable packer for several executable formats'
 arch=(loong64 x86_64)
 url='https://github.com/upx/upx'
 license=(custom GPL2)
-makedepends=(cmake git perl setconf)
-# The fixed git commits are from the upstream "upx-vendor" branches, 2023-06-17
+makedepends=(cmake git perl)
+# The fixed git commits are from the upstream "upx-vendor" branches, 2023-08-08
 source=(
-  git+$url-vendor-doctest#commit=661b7f1ee3a8f9f85936e05b1f31692c3a1302ed
-  git+$url-vendor-lzma-sdk#commit=0a9d590f276a08dc17b3a887b349d88b88251cee
+  git+$url-vendor-doctest#commit=15e49a5fb7e49dd8f590d3666534b209e7212c6c
+  git+$url-vendor-lzma-sdk#commit=f0b8d236c1bdf66532a198c983469da5c05593cf
   git+$url-vendor-ucl#commit=4b58d592199dc1e5db691e1a54fb0e5e9af0ecaf
-  git+$url-vendor-valgrind#commit=5d06e9606f86ed4c3bb1664f09921249f6fd490a
-  git+$url-vendor-zlib#commit=460622b25ac8b5def9018d2e230cf63fc715822b
-  "git+$url#commit=d1b59f65df7b980fd91c6590126c8d3c05a78e25") # tag: v4.0.2
-b2sums=('SKIP'
-        'SKIP'
-        'SKIP'
-        'SKIP'
-        'SKIP'
-        'SKIP')
+  git+$url-vendor-valgrind#commit=4edff0085c968515309446620901468a4a6eee96
+  git+$url-vendor-zlib#commit=1e2d7fbf597e10396c1b3408eb3f30ee655e9fee
+  "git+$url#commit=877911313161fbf86e2688e091b8fd1657985d19") # tag: v4.1.0
+b2sums=('SKIP' 'SKIP' 'SKIP' 'SKIP' 'SKIP' 'SKIP')
 
 prepare() {
   cd $pkgname
-
-  # fix the version output by setting GIT_DESCRIBE to $pkgver, ref FS#78459
-  sed -i "66 a set(GIT_DESCRIBE \"$pkgver\")" CMakeLists.txt
-
-  # upx does not believe that this is a release version if the git revision is set
-  setconf src/main.cpp 'bool warn' 'false;'
-
-  # set up symbolic links for the "vendor" repos
+  # set up symbolic links for the vendor repos
   for x in doctest lzma-sdk ucl valgrind zlib; do
-    rm -frv vendor/$x
-    ln -s "$srcdir/upx-vendor-$x" vendor/$x
+    rm -frv vendor/$x && ln -s "$srcdir/upx-vendor-$x" vendor/$x
   done
 }
 
@@ -47,8 +34,14 @@ build() {
   make -C $pkgname \
     CHECK_WHITESPACE=/bin/true \
     CXXFLAGS_WERROR="" \
+    UPX_CMAKE_CONFIG_FLAGS="-DUPX_CONFIG_DISABLE_GITREV=1" \
     UPX_LZMA_VERSION=0x465 \
     UPX_LZMADIR="$srcdir"
+}
+
+check() {
+  # check that the version has the proper version number and not something like "git-877911+"
+  $pkgname/build/release/upx --help | grep -q "^UPX $pkgver" || exit 1
 }
 
 package() {

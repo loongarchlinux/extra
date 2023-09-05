@@ -4,20 +4,41 @@
 # Contributor: VuDu <vudu.curse@gmail.com>
 
 pkgname=nfoview
-pkgver=1.29
-_commit=84dc60c423506ad0a8411f3552429fb080f97260
+pkgver=1.99
+_commit=839fbd127765b1d608e3587321e0464d97adb4a2  # refs/tags/1.99
 pkgrel=2
 pkgdesc="Simple NFO file viewer in GTK+ 3"
 arch=(any)
 url="https://otsaloma.io/nfoview/"
-license=(GPL3)
-depends=(gtk3 python-gobject)
-checkdepends=(python-pytest xorg-server-xvfb)
-makedepends=(git python-build python-installer python-setuptools python-wheel)
-optdepends=('terminus-font: recommended font')
+license=(GPL-3.0-or-later)
+depends=(
+  gobject-introspection-runtime
+  gtk4
+  hicolor-icon-theme
+  pango
+  python
+  python-gobject
+)
+checkdepends=(
+  python-pytest
+  xorg-server-xvfb
+)
+makedepends=(
+  git
+  python-build
+  python-installer
+  python-setuptools
+  python-wheel
+)
+optdepends=('ttf-cascadia-code: recommended font')
 source=($pkgname::git+https://github.com/otsaloma/$pkgname.git#tag=$_commit?signed)
 sha512sums=('SKIP')
 validpgpkeys=('8DD6B3FCDAB33C91EA915B913A584A9504CACA67') # Osmo Salomaa <otsaloma@iki.fi>
+
+pkgver() {
+  cd $pkgname
+  git describe --tags | sed 's/\([^-]*-g\)/r\1/;s/-/./g'
+}
 
 build() {
   make -C $pkgname

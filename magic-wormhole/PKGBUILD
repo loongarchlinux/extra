@@ -3,8 +3,8 @@
 # Contributor: Storm Dragon <stormdragon2976@gmail.com>
 
 pkgname=magic-wormhole
-pkgver=0.12.0
-pkgrel=9
+pkgver=0.13.0
+pkgrel=1
 pkgdesc="Securely transfer data between computers"
 arch=('any')
 url="https://github.com/magic-wormhole/magic-wormhole"
@@ -12,12 +12,13 @@ license=('MIT')
 depends=('python-click' 'python-cffi' 'python-autobahn' 'python-tqdm'
          'python-hkdf' 'python-pynacl' 'python-spake2' 'python-humanize'
          'python-idna' 'python-service-identity' 'python-txtorcon'
-         'python-pyopenssl' 'python-setuptools'
-         'python-build' 'python-installer' 'python-wheel')
+         'python-pyopenssl')
+makedepends=(python-{build,installer,wheel}
+             python-setuptools)
 checkdepends=('python-mock' 'python-magic-wormhole-transit-relay'
               'python-magic-wormhole-mailbox-server')
-source=(${pkgname}-${pkgver}.tar.gz::"https://github.com/magic-wormhole/magic-wormhole/archive/refs/tags/${pkgver}.tar.gz")
-sha512sums=('141244e746b0718f2c9417e8f7de6a714b0feb051aea8c7950ea0d1bc5d2e24e922bed29544fe76aa61b06aa2ce2b5f330824017af8c6030813415e6c004c716')
+source=("$url/archive/${pkgver}/${pkgname}-${pkgver}.tar.gz")
+sha512sums=('5a3ade0853511d5bf059814dc43bb2d27d8e733804ab6370a6a18c6eff34df672f0ec1b550ed18c79a99566f4dcc1c390d0dd1171c172f55f1352eb447707a64')
 
 build() {
 	cd "${pkgname}-${pkgver}"

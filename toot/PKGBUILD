@@ -1,0 +1,45 @@
+# Maintainer: George Rawlinson <grawlinson@archlinux.org>
+
+pkgname=toot
+pkgver=0.38.1
+pkgrel=2
+pkgdesc='A Mastodon CLI client'
+arch=('any')
+url='https://github.com/ihabunek/toot'
+license=('GPL3')
+depends=(
+  'python'
+  'python-requests'
+  'python-beautifulsoup4'
+  'python-wcwidth'
+  'python-urwid'
+  'python-tomlkit'
+)
+makedepends=(
+  'git'
+  'python-build'
+  'python-installer'
+  'python-setuptools'
+  'python-wheel'
+)
+_commit='0a70af9e091904e2414867854570249c57449f8b'
+source=("$pkgname::git+$url#commit=$_commit")
+b2sums=('SKIP')
+
+pkgver() {
+  cd "$pkgname"
+
+  git describe --tags | sed 's/^v//'
+}
+
+build() {
+  cd "$pkgname"
+
+  python -m build --wheel --no-isolation
+}
+
+package() {
+  cd "$pkgname"
+
+  python -m installer --destdir="$pkgdir" dist/*.whl
+}

@@ -3,7 +3,7 @@
 
 pkgname=perl-term-ui
 pkgver=0.50
-pkgrel=2
+pkgrel=3
 pkgdesc='User interfaces via Term::ReadLine made easy'
 arch=('any')
 license=('PerlArtistic' 'GPL')

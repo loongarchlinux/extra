@@ -4,7 +4,7 @@
 
 pkgname=intel-compute-runtime
 pkgver=23.22.26516.18
-pkgrel=1
+pkgrel=3
 pkgdesc="Intel(R) Graphics Compute Runtime for oneAPI Level Zero and OpenCL(TM) Driver"
 arch=(loong64 x86_64)
 url="https://01.org/compute-runtime"
@@ -30,6 +30,9 @@ prepare() {
 
 build() {
   # ${${pkgver#*.}%.*} not supported by bash?
+  # Fix runtime error in blender
+  CXXFLAGS+=' -DSANITIZER_BUILD=1'
+  CFLAGS+=' -DSANITIZER_BUILD=1'
   # tests currently disabled because of https://github.com/intel/compute-runtime/issues/599
   cmake -B build -S compute-runtime-${pkgver} \
     -G 'Unix Makefiles' \

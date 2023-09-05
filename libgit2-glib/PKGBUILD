@@ -7,9 +7,9 @@ pkgname=(
   libgit2-glib
   libgit2-glib-docs
 )
-_commit=274f81c596b7c248407c14d4a7d58d72fb12cedc  # tags/v1.1.0^{}
-pkgver=1.1.0
-pkgrel=4
+_commit=f9843757630160f1222ef084a47931c7d0b90fe3  # tags/v1.2.0^0
+pkgver=1.2.0
+pkgrel=1
 pkgdesc="GLib wrapper for libgit2"
 url="https://gitlab.gnome.org/GNOME/libgit2-glib"
 license=(LGPL2.1)
@@ -19,14 +19,13 @@ makedepends=(
   git
   glib2
   gobject-introspection
-  gtk-doc
   libgit2
   meson
   python-gobject
   vala
 )
-source=(git+$url.git#commit=$_commit)
-sha256sums=('SKIP')
+source=("git+$url.git#commit=$_commit")
+b2sums=('SKIP')
 
 _pick() {
   local p="$1" f d; shift
@@ -40,7 +39,7 @@ _pick() {
 
 pkgver() {
   cd $pkgname
-  git describe --tags | sed 's/\([^-]*-g\)/r\1/;s/v//g;s/-/./g'
+  git describe --tags | sed 's/^v//g;s/\([^-]*-g\)/r\1/;s/-/./g'
 }
 
 build() {
@@ -70,10 +69,6 @@ package_libgit2-glib() {
     _pick libgit2-glib-docs usr/share/gtk-doc
   )
 
-  # strip $pkgdir from embedded paths:
-  python -m compileall -d "/usr/lib" "$pkgdir/usr/lib"
-  python -O -m compileall -d "/usr/lib" "$pkgdir/usr/lib"
-
   install -vDm 644 $pkgname/{AUTHORS,ChangeLog,NEWS,README} -t "$pkgdir/usr/share/doc/$pkgname/"
 }
 
@@ -82,3 +77,5 @@ package_libgit2-glib-docs() {
 
   mv -v $pkgname/* "$pkgdir"
 }
+
+# vim:set sw=2 sts=-1 et:

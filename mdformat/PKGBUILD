@@ -3,7 +3,7 @@
 
 pkgname=mdformat
 pkgver=0.7.16
-pkgrel=3
+pkgrel=4
 pkgdesc='CommonMark compliant Markdown formatter'
 arch=('any')
 url=https://github.com/executablebooks/mdformat
@@ -16,8 +16,17 @@ makedepends=(
   'python-wheel'
 )
 checkdepends=('python-pytest')
-source=("$url/archive/$pkgver/$pkgname-$pkgver.tar.gz")
-b2sums=('64a9222d00231e0a0a41adaa4282afc1c9b02c97338f450e37c90c63353437b9f51987767866c4356f96dd484964c7b47f53c778fc0ede496f7695e0815cd982')
+source=(
+  "$url/archive/$pkgver/$pkgname-$pkgver.tar.gz"
+  'mdformat-markdown-it-py_v3.patch::https://github.com/executablebooks/mdformat/commit/8713c9f8b7bdd3390708a389de338d7350738278.patch'
+)
+b2sums=('64a9222d00231e0a0a41adaa4282afc1c9b02c97338f450e37c90c63353437b9f51987767866c4356f96dd484964c7b47f53c778fc0ede496f7695e0815cd982'
+        '5b638a7edfc1338b1f3e809f64baa7911a10a40f099a7860437563d2bc570552f6d0f112ccab4c61116fdd88ff597b68a44aa7f365ff2a5092d27486e143a639')
+
+prepare() {
+  cd $pkgname-$pkgver
+  patch --forward --strip=1 --input=../mdformat-markdown-it-py_v3.patch
+}
 
 build() {
   cd $pkgname-$pkgver

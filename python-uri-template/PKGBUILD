@@ -1,8 +1,8 @@
 # Maintainer: George Rawlinson <grawlinson@archlinux.org>
 
 pkgname=python-uri-template
-pkgver=1.2.0
-pkgrel=2
+pkgver=1.3.0
+pkgrel=1
 pkgdesc='An implementation of RFC 6570 URI Templates'
 arch=('any')
 url='https://github.com/plinss/uri_template'
@@ -14,8 +14,9 @@ makedepends=(
   'python-installer'
   'python-wheel'
   'python-setuptools'
+  'python-setuptools-scm'
 )
-_commit='ae070b1716c853fbc5a3c879e6ef1d1cfb2c9533'
+_commit='00135e0f819b6e5542ce60627dd7b20bdc5706c4'
 source=("$pkgname::git+$url#commit=$_commit")
 b2sums=('SKIP')
 
@@ -23,14 +24,6 @@ pkgver() {
   cd "$pkgname"
 
   git describe --tags | sed 's/^v//'
-}
-
-prepare() {
-  cd "$pkgname"
-
-  # below string is extracted from upstream's setup.py
-  # version='0.0.0',  # version will get replaced by git version tag - do not edit
-  sed -e "s:\(version='\)0.0.0:\1$pkgver:" -i setup.py
 }
 
 build() {
@@ -53,6 +46,9 @@ package() {
   # documentation
   install -vDm644 -t "$pkgdir/usr/share/doc/$pkgname" README.md
 
-  # license
-  install -vDm644 -t "$pkgdir/usr/share/licenses/$pkgname" LICENSE
+  # symlink license file
+  local site_packages=$(python -c "import site; print(site.getsitepackages()[0])")
+  install -d "$pkgdir/usr/share/licenses/$pkgname"
+  ln -s "$site_packages/uri_template-$pkgver.dist-info/LICENSE" \
+    "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
 }

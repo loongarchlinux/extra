@@ -6,7 +6,7 @@
 
 pkgname=python-botocore
 # UPDATE_BLOCKED: newer python-botocore will likely break python-aiobotocore
-pkgver=1.29.162
+pkgver=1.31.25
 pkgrel=1
 pkgdesc='A low-level interface to a growing number of Amazon Web Services'
 arch=('any')
@@ -21,7 +21,7 @@ optdepends=(
 )
 source=($pkgname-$pkgver.tar.gz::$url/archive/$pkgver.tar.gz
         tests-keep-env.diff)
-sha256sums=('7fa0a0f16b4498b81d220afee2e02a3f99b8fdb82d86eb85d134e48d2609f49b'
+sha256sums=('85bcd8030921d8a365e5038f1850de52243f80aa8caa483a9b80d76aefc143a5'
             '15c588d3f4cfcc0ef26fc4ff367eb6dc12dc2f303e299cbe397288089ee52a11')
 
 prepare() {

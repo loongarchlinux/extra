@@ -2,8 +2,8 @@
 # Contributor: Y7n05h < echo WTduMDVoQHk3bjA1aC5kZXY= | base64 -d >
 
 pkgname=pwru
-pkgver=0.0.9
-pkgrel=2
+pkgver=1.0.0
+pkgrel=1
 pkgdesc="Packet, where are you? -- eBPF-based Linux kernel networking debugger"
 arch=("loong64" "x86_64")
 url="https://github.com/cilium/pwru"
@@ -11,7 +11,7 @@ license=("GPL2")
 depends=("glibc")
 makedepends=("clang" "llvm" "go")
 source=("$pkgname-$pkgver.tar.gz::$url/archive/v$pkgver.tar.gz")
-sha256sums=('46f92e5b8eeea8fb60518acc172489701c64ef135d438b979dfddfab13b73957')
+sha256sums=('221666f47d9dcd69302fe2ddd52e65337351fd4e8d5a448bd27514f39ff34bbf')
 
 prepare() {
 	cd "$pkgname-$pkgver"
@@ -21,7 +21,8 @@ prepare() {
 	export CGO_LDFLAGS="${LDFLAGS}"
 	export GOPATH="${srcdir}"
 	export GOFLAGS="-buildmode=pie -mod=vendor -modcacherw"
-	go generate "main_amd64.go"
+	export TARGET_GOARCH=amd64
+	go generate
 }
 
 build() {
@@ -32,6 +33,7 @@ build() {
 	export CGO_LDFLAGS="${LDFLAGS}"
 	export GOPATH="${srcdir}"
 	export GOFLAGS="-buildmode=pie -mod=vendor -modcacherw"
+	make libpcap/libpcap.a
 	go build \
 		-ldflags "-compressdwarf=false -linkmode external -X \"github.com/cilium/pwru/internal/pwru.Version=${pkgver}\"" \
 		-o ${pkgname}

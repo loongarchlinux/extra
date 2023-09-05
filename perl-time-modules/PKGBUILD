@@ -4,14 +4,14 @@
 
 pkgname=perl-time-modules
 pkgver=2013.0912
-pkgrel=8
+pkgrel=9
 pkgdesc='Perl time related modules'
 url='https://search.cpan.org/~muir/Time-modules/'
 license=('GPL' 'PerlArtistic')
 options=('!emptydirs')
 arch=('any')
 source=("https://search.cpan.org/CPAN/authors/id/M/MU/MUIR/modules/Time-modules-$pkgver.tar.gz")
-md5sums=('a4330144e24c356ca4c925d14e5ab06b')
+sha256sums=('45bcab023e1853d27e53c6a214bc860a4026c65ec16c422a757235e836fb648c')
 
 build() {
   cd Time-modules-$pkgver

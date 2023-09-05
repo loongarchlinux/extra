@@ -2,7 +2,7 @@
 
 pkgname=perl-file-tail
 pkgver=1.3
-pkgrel=8
+pkgrel=9
 pkgdesc='Perl extension for reading from continously updated files'
 arch=(any)
 license=(PerlArtistic GPL)

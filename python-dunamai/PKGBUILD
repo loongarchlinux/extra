@@ -1,7 +1,7 @@
 # Maintainer: George Rawlinson <grawlinson@archlinux.org>
 
 pkgname=python-dunamai
-pkgver=1.17.0
+pkgver=1.18.0
 pkgrel=1
 pkgdesc='A library for producing dynamic version strings, derived from VCS tags'
 arch=('any')
@@ -18,7 +18,7 @@ makedepends=(
   'python-poetry-core'
 )
 checkdepends=('python-pytest' 'python-setuptools')
-_commit='3e00ba34f60eb4a2d27d511deffb0dc0a31e368c'
+_commit='8dec48ce6eff2092aff01aa92847e4bf1c67f0af'
 source=("$pkgname::git+$url#commit=$_commit")
 b2sums=('SKIP')
 
@@ -59,6 +59,9 @@ package() {
 
   python -m installer --destdir="$pkgdir" dist/*.whl
 
-  # license
-  install -vDm644 -t "$pkgdir/usr/share/licenses/$pkgname" LICENSE
+  # symlink license file
+  local site_packages=$(python -c "import site; print(site.getsitepackages()[0])")
+  install -d "$pkgdir/usr/share/licenses/$pkgname"
+  ln -s "$site_packages/${pkgname#python-}-$pkgver.dist-info/LICENSE" \
+    "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
 }

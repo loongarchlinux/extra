@@ -1,0 +1,51 @@
+# Maintainer: Caleb Maclennan <caleb@alerque.com>
+
+pkgbase=lua-semver
+_rockname=${pkgbase#lua-}
+pkgname=("$pkgbase" "lua51-$_rockname" "lua52-$_rockname" "lua53-$_rockname")
+pkgver=1.2.1
+_rockrel=1
+pkgrel=1
+pkgdesc='an implementation of semantic versioning (semver.org 2.0.0) in pure Lua'
+arch=(any)
+url="https://github.com/kikito/$_rockname.lua"
+license=(MIT)
+makedepends=(lua
+             lua51
+             lua52
+             lua53
+             luarocks)
+checkdepends=(busted)
+_archive="$_rockname.lua-$pkgver"
+_rockspec="$_rockname-$pkgver-$_rockrel.rockspec"
+source=("$url/archive/v$pkgver/$_archive.tar.gz")
+sha256sums=('ea750211171046d23cdfb501738f45a15ec91a67779722b8627d761c18daf323')
+
+check() {
+	cd "$_archive"
+	busted
+}
+
+_package() {
+	cd "$_archive"
+	depends=("${pkgname%-*}")
+	luarocks --lua-version="$1" --tree="$pkgdir/usr/" \
+		make --deps-mode=none --no-manifest "rockspecs/$_rockspec"
+	install -Dm0644 -t "$pkgdir/usr/share/licenses/$pkgname/" MIT-LICENSE.txt
+}
+
+package_lua-semver() {
+	_package 5.4
+}
+
+package_lua51-semver() {
+	_package 5.1
+}
+
+package_lua52-semver() {
+	_package 5.2
+}
+
+package_lua53-semver() {
+	_package 5.3
+}

@@ -1,7 +1,7 @@
 # Maintainer: kpcyrd <kpcyrd[at]archlinux[dot]org>
 
 pkgname=mitmproxy2swagger
-pkgver=0.10.1
+pkgver=0.11.0
 pkgrel=1
 pkgdesc='Automagically reverse-engineer REST APIs via capturing traffic'
 url='https://github.com/alufers/mitmproxy2swagger'
@@ -10,11 +10,20 @@ license=('MIT')
 depends=(python mitmproxy python-ruamel-yaml python-json-stream)
 makedepends=(python-build python-installer python-wheel python-poetry-core)
 source=(https://github.com/alufers/${pkgname}/archive/${pkgver}/${pkgname}-${pkgver}.tar.gz)
-b2sums=('efd29efd9e770a88a2a7e2d9719a01d39344ce125d6d12732e8f6bf0bfd88c96f0eaba3500924fc7ab3e1b6f064bdc644b4d23752efbc66a81f7f82083831af7')
+b2sums=('de97fb48032d3b33e4cdc19ae8ffef59e2281ae5a68aeb9378e32165aa1c686365e370f328032f24a4e9d11f4810542a94bcd1d4268e7093d8d044e8b5de61fc')
 
 build() {
   cd ${pkgname}-${pkgver}
   python -m build --wheel --no-isolation
+}
+
+check() {
+  local _site_packages=$(python -c "import site; print(site.getsitepackages()[0])")
+
+  cd ${pkgname}-${pkgver}
+  python -m installer --destdir=test_dir dist/*.whl
+
+  PATH="test_dir/usr/bin:$PATH" PYTHONPATH="test_dir/$_site_packages:$PYTHONPATH" mitmproxy2swagger --help
 }
 
 package() {

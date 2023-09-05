@@ -2,7 +2,7 @@
 # Contributor: lod <aur@cyber-anlage.de>
 
 pkgname=amdvlk
-pkgver=2023.Q2.3
+pkgver=2023.Q3.1
 pkgrel=1
 pkgdesc="AMD's standalone Vulkan driver"
 arch=(loong64 x86_64)
@@ -12,10 +12,8 @@ provides=('vulkan-driver')
 makedepends=('perl-xml-xpath' 'python' 'wayland' 'libxrandr' 'xorg-server-devel' 'directx-shader-compiler' 'glslang'
              'cmake' 'ninja' 'git')
 options=('!lto')
-source=("https://github.com/GPUOpen-Drivers/AMDVLK/archive/v-${pkgver}.tar.gz"
-        cstdint.patch)
-sha256sums=('0fd70d472200c98dabdf86b58a0cf7a1af1a46dd32d02d165676faa8dedf16f7'
-            '4509fd9a02aa15a94317228df31402879631f567719d0588225adc2eafe61318')
+source=("https://github.com/GPUOpen-Drivers/AMDVLK/archive/v-${pkgver}.tar.gz")
+sha256sums=('197ef6d18ea17f54a397975f89af03ab41755a9a51ecf5490156f2e7cae8d52f')
             
 prepare() {
   local nrepos path name revision
@@ -34,8 +32,6 @@ prepare() {
       popd
     (( nrepos-- ))
   done
-
-  patch -Np1 -i cstdint.patch
 }
 
 build() {
@@ -49,6 +45,8 @@ build() {
 }
 
 package() {
+  depends=('glibc' 'gcc-libs' 'zlib' 'zstd')
+
   install -m755 -d "${pkgdir}"/usr/lib
   install -m755 -d "${pkgdir}"/usr/share/vulkan/icd.d
   install -m755 -d "${pkgdir}"/usr/share/vulkan/implicit_layer.d

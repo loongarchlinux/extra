@@ -3,7 +3,7 @@
 
 pkgname=perl-dist-checkconflicts
 pkgver=0.11
-pkgrel=8
+pkgrel=9
 pkgdesc="Declare version conflicts for your dist"
 arch=('any')
 license=('PerlArtistic' 'GPL')
@@ -13,7 +13,7 @@ makedepends=('perl-extutils-makemaker')
 checkdepends=('perl-test-fatal' 'perl-module-runtime')
 url="https://metacpan.org/release/Dist-CheckConflicts"
 source=(https://search.cpan.org/CPAN/authors/id/D/DO/DOY/Dist-CheckConflicts-$pkgver.tar.gz)
-md5sums=('c8725a92b9169708b0f63036812070f2')
+sha256sums=('ea844b9686c94d666d9d444321d764490b2cde2f985c4165b4c2c77665caedc4')
 
 build() {
   ( export PERL_MM_USE_DEFAULT=1 PERL5LIB="" \

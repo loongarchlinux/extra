@@ -3,16 +3,26 @@
 
 pkgname=ccls
 pkgver=0.20220729
-pkgrel=3
+pkgrel=4
 pkgdesc='C/C++/ObjC language server supporting cross references, hierarchies, completion and semantic highlighting'
 arch=('loong64' 'x86_64')
 url='https://github.com/MaskRay/ccls'
 license=('Apache')
-depends=('clang=15.0.7' 'llvm-libs' 'rapidjson')
+depends=('clang' 'llvm-libs' 'rapidjson')
 makedepends=("cmake" "llvm")
 conflicts=('ccls-git')
-source=("https://github.com/MaskRay/$pkgname/archive/$pkgver/$pkgname-$pkgver.tar.gz")
-sha512sums=('63cb4eace1700118f9c8c4d2f4be40aac948f9c658485c8e3f49dcc863ce7bdd8b6de810b95ec8f46c943b65c8aa5fa643b110a6b981a2e43f57569d897d36c1')
+source=("https://github.com/MaskRay/$pkgname/archive/$pkgver/$pkgname-$pkgver.tar.gz"
+        $pkgname-llvm16.patch::https://github.com/MaskRay/ccls/commit/6dc564f2a860.patch
+        $pkgname-fix-gmodule-crash.patch::https://github.com/MaskRay/ccls/commit/8bc3959537ad.patch)
+sha512sums=('63cb4eace1700118f9c8c4d2f4be40aac948f9c658485c8e3f49dcc863ce7bdd8b6de810b95ec8f46c943b65c8aa5fa643b110a6b981a2e43f57569d897d36c1'
+            '2d2ac37c6636c6a7882c2376fa0ecd699de6681cc7f0fca6b1e6e5563ad5b9a26c85608989cb68d0510b056b780db537b77c3daa0c2584ad6e0cb4765780d37d'
+            'a2309591f988c72371b21787b598dfc401de2cc4a326b5d628e65e0c46f10cfd84b660799d0fc8c18842c918c09e4f866a04d323f632098400b0e5fd266a4f1d')
+
+prepare() {
+  cd $pkgname-$pkgver
+  patch -Np1 -i ../$pkgname-llvm16.patch
+  patch -Np1 -i ../$pkgname-fix-gmodule-crash.patch
+}
 
 build() {
   cd $pkgname-$pkgver

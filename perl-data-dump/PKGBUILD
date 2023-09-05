@@ -2,7 +2,7 @@
 
 pkgname=perl-data-dump
 pkgver=1.25
-pkgrel=3
+pkgrel=4
 pkgdesc="Pretty printing of data structures"
 arch=(any)
 url="https://metacpan.org/release/Data-Dump"

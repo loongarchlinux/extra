@@ -6,8 +6,8 @@
 # Contributor: loqs <bugs-archlinux@entropy-collector.net>
 
 pkgname=catfish
-pkgver=4.16.4
-pkgrel=3
+pkgver=4.18.0
+pkgrel=1
 pkgdesc='Versatile file searching tool'
 arch=('any')
 url='https://docs.xfce.org/apps/catfish/start'
@@ -18,7 +18,7 @@ makedepends=('intltool' 'python-distutils-extra')
 optdepends=('mlocate: search in locate index'
             'zeitgeist: search in zeitgeist index')
 source=("https://archive.xfce.org/src/apps/catfish/${pkgver%.*}/$pkgname-$pkgver.tar.bz2")
-sha256sums=('6e5c01c534de7a8ce911965c4cd298c5b5d2079e0bc29c91b1e310c9884bb5fc')
+sha256sums=('fdae9b73cc754a50716bb04b958aa31dbd7e94047068b7207f2ae313a7d58b99')
 
 build() {
   cd $pkgname-$pkgver

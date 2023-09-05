@@ -1,46 +1,53 @@
-# Maintainer: Jerome Leclanche <jerome@leclan.ch>
+# Contributor: Jerome Leclanche <jerome@leclan.ch>
+
 pkgname=heimdall
 _pkgname=Heimdall
 pkgver=1.4.2
 _pkgver=v$pkgver
-pkgrel=6
+pkgrel=7
 pkgdesc="Tool suite used to flash firmware (ROMs) onto Samsung Galaxy S devices"
-arch=("loong64" "x86_64")
+arch=(loong64 x86_64)
 url="https://glassechidna.com.au/heimdall/"
-license=("MIT")
-depends=("libusb")
-makedepends=("cmake" "qt5-base")
+license=(MIT)
+depends=(
+  gcc-libs
+  glibc
+  libusb
+  zlib
+)
+makedepends=(
+  cmake
+  qt5-base
+)
 optdepends=(
-    "android-udev: Udev rules to connect Android devices to your linux box"
-    "qt5-base: GUI support for heimdall-frontend"
+  "android-udev: Udev rules to connect Android devices to your linux box"
+  "qt5-base: GUI support for heimdall-frontend"
 )
 source=(
-	"$pkgname-$pkgver.tar.gz::https://gitlab.com/BenjaminDobell/Heimdall/-/archive/v$pkgver/$_pkgname-$_pkgver.tar.gz"
-	"heimdall.desktop"
+  $pkgname-$pkgver.tar.gz::https://gitlab.com/BenjaminDobell/Heimdall/-/archive/v$pkgver/$_pkgname-$_pkgver.tar.gz
+  $pkgname.desktop
 )
 sha256sums=(
-	"9f14beaca4a0ee6459b972c30eec1baccbd057726caafe4cbba6c30e0d5e7d56"
-	"439cea1a8976b9b589ffe4030a084243bcc5e937dcb9c571cdb94d3ff08b4fb4"
+  "9f14beaca4a0ee6459b972c30eec1baccbd057726caafe4cbba6c30e0d5e7d56"
+  "439cea1a8976b9b589ffe4030a084243bcc5e937dcb9c571cdb94d3ff08b4fb4"
 )
 
 build() {
-	cd "$srcdir/$_pkgname-$_pkgver"
+  local cmake_options=(
+    -B build
+    -D CMAKE_BUILD_TYPE=None
+    -D CMAKE_INSTALL_PREFIX=/usr
+    -S $_pkgname-$_pkgver
+    -W no-dev
+  )
 
-	cmake . -DCMAKE_INSTALL_PREFIX="/usr"
-	make
+  cmake "${cmake_options[@]}"
+  cmake --build build --verbose
 }
 
 package() {
-	cd "$srcdir/$_pkgname-$_pkgver"
-
-	# Install desktop file
-	install -m644 -D "$srcdir/heimdall.desktop" "$pkgdir/usr/share/applications/heimdall.desktop"
-
-	# Install license file
-	install -m644 -D LICENSE "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
-
-	# Install heimdall command line tool
-	install -d "$pkgdir"/usr/bin
-	install -Dm755 bin/* "$pkgdir"/usr/bin/
-	install -Dm644 heimdall/60-heimdall.rules "$pkgdir"/usr/lib/udev/rules.d/60-heimdall.rules
+  install -vDm 755 build/bin/* -t "$pkgdir"/usr/bin/
+  install -vDm 644 $_pkgname-$_pkgver/heimdall/60-$pkgname.rules -t "$pkgdir"/usr/lib/udev/rules.d/
+  install -vDm 644 $pkgname.desktop -t "$pkgdir/usr/share/applications/"
+  install -vDm 644 $_pkgname-$_pkgver/LICENSE -t "$pkgdir/usr/share/licenses/$pkgname/"
 }

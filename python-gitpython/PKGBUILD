@@ -5,11 +5,11 @@
 _name=gitpython
 pkgdesc="A python library used to interact with Git repositories"
 pkgname=python-gitpython
-_commit=5598d37f64905a5906ba16975b53b59c0ab5381b  # refs/tags/3.1.32
-pkgver=3.1.32
+_commit=b60033e81f54eb734187c33ca4add5a241e970fc  # refs/tags/3.1.34
+pkgver=3.1.34
 pkgrel=1
 url="https://github.com/gitpython-developers/gitpython"
-license=(BSD)
+license=(BSD-3-Clause)
 arch=(any)
 depends=(
   git
@@ -33,6 +33,11 @@ source=(git+$url#tag=$_commit?signed)
 sha512sums=('SKIP')
 b2sums=('SKIP')
 validpgpkeys=('27C50E7F590947D7273A741E85194C08421980C9') # Sebastian Thiel (In Rust I trust!) <byronimo@gmail.com>
+
+pkgver() {
+  cd $_name
+  git describe --tags | sed 's/\([^-]*-g\)/r\1/;s/-/./g'
+}
 
 build() {
   cd $_name

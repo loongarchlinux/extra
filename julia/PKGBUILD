@@ -8,15 +8,15 @@
 
 pkgname=julia
 epoch=2
-pkgver=1.9.2
-pkgrel=2
+pkgver=1.9.3
+pkgrel=1
 arch=(loong64 x86_64)
 pkgdesc='High-level, high-performance, dynamic programming language'
 url='https://julialang.org/'
 license=(MIT)
 depends=(fftw hicolor-icon-theme libgit2 libunwind libutf8proc blas64-openblas
-         suitesparse mbedtls2 openlibm pcre2 llvm-libs p7zip libblastrampoline lld)
-makedepends=(cmake gcc-fortran python llvm patchelf libwhich)
+         suitesparse mbedtls2 openlibm pcre2 llvm15-libs p7zip libblastrampoline lld)
+makedepends=(cmake gcc-fortran python llvm15 patchelf libwhich)
 optdepends=('gnuplot: If using the Gaston Package from julia')
 source=(https://github.com/JuliaLang/julia/releases/download/v$pkgver/$pkgname-$pkgver-full.tar.gz{,.asc}
         julia-libunwind-1.6.patch
@@ -28,11 +28,11 @@ source=(https://github.com/JuliaLang/julia/releases/download/v$pkgver/$pkgname-$
         f11bfc6c.patch
         21d4c2f1.patch)
 backup=(etc/julia/startup.jl)
-sha256sums=('87063d4c2ea41c736aa2e8cbbc7c2f1a062e223955157f8404553ced764913cd'
+sha256sums=('8fc0c9dc5443a28d359bd79dda3940fa94ba2b7966b89865beb20da81123c316'
             'SKIP'
             '3c0c03eabb668e3242fcd3058c1011dfbb579cc1c5adc3ae1016531e711cc64e'
             '94e6d4fa9c68360c795807b49bcb126bbbbf4c927cf7e8358b3e0e3d2183d63e'
-            '0128233fdef9cf93c8f55c65ecd374a2431c5ed6776eadf134d6e59733c76637'
+            '63e26f66ab4ea31e493805d3bf906f1c90e5b7f7f43b0c052e19b19894e3a510'
             '481ce9b093969c2433b86d4d2bc0815470225f680712fc6231df3629ca7fbe5e'
             '5e3f55e68e3f7172d545888479cd9a35e7589d0467684c6d98c721e3b1878acd'
             '628d41c0b7739ed6c4c34c7416efd81646fbd17ebab9e88ae46a3668650d3104'
@@ -65,45 +65,53 @@ prepare() {
   sha512sum SparseArrays-37e6e58706a54c5a1b96a17cda7d3e8be8bcb190.tar.gz | cut -d ' ' -f 1 > ../../deps/checksums/SparseArrays-37e6e58706a54c5a1b96a17cda7d3e8be8bcb190.tar.gz/sha512
 }
 
-_buildopts="prefix=/usr \
-    bindir=/usr/bin \
-    sysconfdir=/etc \
-    libexecdir=/usr/lib \
-    USE_BINARYBUILDER=0 \
-    USE_SYSTEM_CSL=1 \
-    USE_SYSTEM_LLVM=1 \
-    USE_SYSTEM_LLD=1 \
-    USE_SYSTEM_LIBUNWIND=1 \
-    USE_SYSTEM_PCRE=1 \
-    USE_SYSTEM_BLAS=1 \
-    USE_SYSTEM_LAPACK=1 \
-    USE_SYSTEM_LIBBLASTRAMPOLINE=1 \
-    USE_SYSTEM_GMP=1 \
-    USE_SYSTEM_MPFR=1 \
-    USE_SYSTEM_LIBSUITESPARSE=1 \
-    USE_SYSTEM_LIBWHICH=1 \
-    USE_SYSTEM_DSFMT=0 \
-    USE_SYSTEM_LIBUV=0 \
-    USE_SYSTEM_UTF8PROC=1 \
-    USE_SYSTEM_LIBGIT2=1 \
-    USE_SYSTEM_LIBSSH2=1 \
-    USE_SYSTEM_MBEDTLS=1 \
-    USE_SYSTEM_CURL=1 \
-    USE_SYSTEM_PATCHELF=1 \
-    USE_SYSTEM_ZLIB=1 \
-    USE_SYSTEM_P7ZIP=1 \
-    USE_SYSTEM_OPENLIBM=1 \
-    USE_BLAS64=1 \
-    LIBBLAS=-lblas64 \
-    LIBBLASNAME=libblas64 \
-    LIBLAPACK=-llapack64 \
-    LIBLAPACKNAME=liblapack64 \
-    MARCH=x86-64"
+_make() {
+  local make_options=(
+    prefix=/usr
+    bindir=/usr/bin
+    sysconfdir=/etc
+    libexecdir=/usr/lib
+    USE_BINARYBUILDER=0
+    USE_SYSTEM_CSL=1
+    USE_SYSTEM_LLVM=1
+    USE_SYSTEM_LLD=1
+    USE_SYSTEM_LIBUNWIND=1
+    USE_SYSTEM_PCRE=1
+    USE_SYSTEM_BLAS=1
+    USE_SYSTEM_LAPACK=1
+    USE_SYSTEM_LIBBLASTRAMPOLINE=1
+    USE_SYSTEM_GMP=1
+    USE_SYSTEM_MPFR=1
+    USE_SYSTEM_LIBSUITESPARSE=1
+    USE_SYSTEM_LIBWHICH=1
+    USE_SYSTEM_DSFMT=0
+    USE_SYSTEM_LIBUV=0
+    USE_SYSTEM_UTF8PROC=1
+    USE_SYSTEM_LIBGIT2=1
+    USE_SYSTEM_LIBSSH2=1
+    USE_SYSTEM_MBEDTLS=1
+    USE_SYSTEM_CURL=1
+    USE_SYSTEM_PATCHELF=1
+    USE_SYSTEM_ZLIB=1
+    USE_SYSTEM_P7ZIP=1
+    USE_SYSTEM_OPENLIBM=1
+    USE_BLAS64=1
+    LIBBLAS=-lblas64
+    LIBBLASNAME=libblas64
+    LIBLAPACK=-llapack64
+    LIBLAPACKNAME=liblapack64
+    MARCH=x86-64
+    VERBOSE=1
+    JLDFLAGS="$LDFLAGS"
+    LLVM_CONFIG=llvm-config-15
+  )
+
+  LD_LIBRARY_PATH="/usr/lib/mbedtls2" make "${make_options[@]}" "$@"
+}
 
 build() {
   cd $pkgname-$pkgver
-  LD_LIBRARY_PATH="/usr/lib/mbedtls2" \
-  make release VERBOSE=1 JLDFLAGS=${LDFLAGS} $_buildopts
+  _make release
 }
 
 check() {
@@ -132,8 +140,7 @@ check() {
 
 package() {
   cd $pkgname-$pkgver
-  LD_LIBRARY_PATH="/usr/lib/mbedtls2" \
-  make DESTDIR="$pkgdir" install $_buildopts
+  _make DESTDIR="$pkgdir" install
 
   ln -sf /etc/ssl/cert.pem "$pkgdir"/usr/share/julia # Needed by some packages
 

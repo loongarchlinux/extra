@@ -1,30 +1,30 @@
 # Maintainer: Antonio Rojas <arojas@archlinux.org>
 
 pkgname=sagemath-doc
-pkgver=10.0
-pkgrel=1
+pkgver=10.1
+pkgrel=2
 pkgdesc='HTML documentation for SageMath'
 arch=(any)
 url='http://www.sagemath.org'
 license=(GPL)
-depends=(python-pplpy)
+depends=(python-pplpy mathjax)
 makedepends=(sagemath python-pyzmq python-docutils python-jupyter_client python-pkgconfig cython
-             python-jupyter-sphinx mathjax python-sphinx-furo python-sphinx-copybutton)
+             python-jupyter-sphinx python-sphinx-furo python-sphinx-copybutton)
 source=(https://github.com/sagemath/sage/archive/$pkgver/sagemath-$pkgver.tar.gz
-        sagemath-sphinx-7.patch)
-sha256sums=('60858efd0d1f2526486740962bf72c99f9141a56caf8395f3291fded276faf55'
-            '48b12d002fb5f0e0f1af74d80d3b732ce7651f137d57b67b2b3cbdb813c442c3')
+        fix-build.patch
+        https://github.com/sagemath/sage/commit/a3e6bb2e.patch)
+sha256sums=('a658612b1b2376ddaf207cc8ed0ef458d4c2880c16e19139bedbe8baa42ad62f'
+            'ff0ae9866b6e6b74f8b5c947eacd2de50ec2dfd9ab4ca8d07e69df5a35a7c617'
+            '1c7cd3f12be9330ccb19d5a8bc4c2f916fc13199995decf38fb00b73acb599fb')
 options=(!strip) # nothing to strip, save packaging time
 
 prepare() {
   cd sage-$pkgver
 
-# Fix build with Sphinx 7
-  patch -p1 -i ../sagemath-sphinx-7.patch
-
-# https://trac.sagemath.org/ticket/25833#comment:98
-  mkdir mathjax-tmp
-  cp -r /usr/share/mathjax mathjax-tmp
+# fix build with sphinx 7.2
+  patch -p1 -i ../fix-build.patch
+# correctly detect mathjax path
+  patch -p1 -i ../a3e6bb2e.patch
 
   SAGE_ROOT="$PWD" PATH="$PWD/build/bin:$PATH" src/doc/bootstrap
   make -C src/doc doc-src
@@ -36,8 +36,9 @@ build() {
   cd sage-$pkgver/src
 
   export SAGE_SRC="$PWD" \
+         SAGE_ROOT="$PWD/.." \
          SAGE_DOC="$PWD"/doc \
-         MATHJAX_DIR="$srcdir"/sage-$pkgver/mathjax-tmp \
+         PYTHONPATH="$PWD" \
          SAGE_NUM_THREADS=10 \
          LANGUAGE=C
   python -m sage_docbuild --no-pdf-links --mathjax all html

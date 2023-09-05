@@ -2,7 +2,7 @@
 
 pkgname=claws-mail
 pkgver=4.1.1
-pkgrel=1
+pkgrel=2
 pkgdesc="A GTK+ based e-mail client"
 arch=('loong64' 'x86_64')
 license=('GPL3')
@@ -12,7 +12,7 @@ depends=('gtk3' 'gnutls' 'startup-notification' 'enchant' 'gpgme'
 makedepends=('spamassassin' 'bogofilter' 'networkmanager' 'valgrind'
              # dependencies for plugins
              'libgdata' 'libnotify' 'libcanberra' 'poppler-glib' 'libytnef' 'libical'
-             'dillo' 'python' 'gumbo-parser'
+             'dillo' 'python' 'gumbo-parser' 'webkit2gtk'
              # deps to build the docs
              'docbook-utils' 'texlive-formatsextra')
 optdepends=('python:           needed for some tools'
@@ -36,16 +36,19 @@ optdepends=('python:           needed for some tools'
 provides=('claws')
 install=$pkgname.install
 source=(https://www.claws-mail.org/download.php?file=releases/claws-mail-$pkgver.tar.xz{,.asc}
-        bash_completion)
+        bash_completion
+        gcc-13.patch)
 sha256sums=('b189e700c1896f5e0deb0b76d4bfa820eb7ac1935ee10aa9afbada3cf53a0344'
             'SKIP'
-            '3f6c248b8658cd7a62186bff572cce2525712a498f363cbbda1ed459021c28cb')
+            '3f6c248b8658cd7a62186bff572cce2525712a498f363cbbda1ed459021c28cb'
+            'a02be465ab69a24d9062d3e8521a1481b3ea7f5b6b77388f821d6b724c98199b')
 validpgpkeys=('8B3B297A03468356692F8D592CD716D654D6BBD4') # Paul <paul@claws-mail.org>
 
-#prepare() {
-#  cd "${pkgname}"-${pkgver}
-##  # upstream fixes
-#}
+prepare() {
+  cd "${pkgname}"-${pkgver}
+  # upstream fixes
+  patch -p1 -i ../gcc-13.patch # Fix build with GCC 13
+}
 
 build() {
   cd "${pkgname}"-${pkgver}

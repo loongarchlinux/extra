@@ -4,8 +4,8 @@
 pkgbase=mariadb
 pkgname=('mariadb-libs' 'mariadb-clients' 'mariadb' 'mytop')
 pkgdesc='Fast SQL database server, derived from MySQL'
-pkgver=11.0.2
-pkgrel=2
+pkgver=11.1.2
+pkgrel=1
 arch=('loong64' 'x86_64')
 license=('GPL')
 url='https://mariadb.org/'
@@ -17,11 +17,9 @@ validpgpkeys=('177F4010FE56CA3336300305F1656F24C74CD1D8') # MariaDB Signing Key 
 # rsync source via https and hope it does not hurt them too much.
 # https://mariadb.com/kb/en/library/mirror-sites-for-mariadb/
 source=("https://rsync.osuosl.org/pub/mariadb/mariadb-${pkgver}/source/mariadb-${pkgver}.tar.gz"{,.asc}
-        '0002-MDEV-31443-FATAL-InnoDB-Unable-to-find-charset-colla.patch'
         '0001-arch-specific.patch')
-sha256sums=('3c71576cad0ea416882270e383f94cc89693b7fbcce1fa4f306fe3e931e464ae'
+sha256sums=('19a9e980e57fa332931f643b48ad7390528c889ff6ea8b0e16fd306aa3088238'
             'SKIP'
-            'e4ea86c72fe0258e442cc8a2dc6cf040696535e22d70be4cb63007130e39d222'
             '3289efb3452d199aec872115f35da3f1d6fd4ce774615076690e9bc8afae1460')
 
 prepare() {
@@ -32,10 +30,6 @@ prepare() {
   #  * force preloading jemalloc for memory management
   #  * make systemd-tmpfiles create MYSQL_DATADIR
   patch -Np1 < ../0001-arch-specific.patch
-
-  # MDEV-31443 assert [FATAL] InnoDB: Unable to find charset-collation for 254 after upgrade from 10.11.4 to 11.0
-  # https://jira.mariadb.org/browse/MDEV-31443
-  patch -Np1 < ../0002-MDEV-31443-FATAL-InnoDB-Unable-to-find-charset-colla.patch
 }
 
 build() {
@@ -227,7 +221,7 @@ package_mariadb() {
   rm usr/bin/mytop
 
   # not needed
-  rm -r usr/{mysql-test,sql-bench}
+  rm -r usr/{mariadb-test,sql-bench}
   rm usr/share/man/man1/mysql-test-run.pl.1
 }
 

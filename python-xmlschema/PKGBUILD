@@ -3,7 +3,7 @@
 
 pkgname=python-xmlschema
 _pkgname="${pkgname#python-}"
-pkgver=2.3.0
+pkgver=2.4.0
 pkgrel=1
 pkgdesc='An XML Schema validator and decoder'
 arch=('any')
@@ -19,7 +19,7 @@ makedepends=(
 )
 checkdepends=('python-lxml' 'python-jinja')
 optdepends=('python-jinja: for XSD based code generators')
-_commit='839e28e253b950c6353dafd8e493280e83d48557'
+_commit='9046651d6ad2628ee3c7bbfe789ad44429784d35'
 source=("$pkgname::git+$url#commit=$_commit")
 b2sums=('SKIP')
 
@@ -46,6 +46,9 @@ package() {
 
   python -m installer --destdir="$pkgdir" dist/*.whl
 
-  # license
-  install -vDm644 -t "$pkgdir/usr/share/licenses/$pkgname" LICENSE
+  # symlink license file
+  local site_packages=$(python -c "import site; print(site.getsitepackages()[0])")
+  install -d "$pkgdir/usr/share/licenses/$pkgname"
+  ln -s "$site_packages/${pkgname#python-}-$pkgver.dist-info/LICENSE" \
+    "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
 }

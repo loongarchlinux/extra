@@ -1,48 +1,56 @@
-# Maintainer: Kyle Keen <keenerd@gmail.com>
+# Maintainer: George Rawlinson <grawlinson@archlinux.org>
+# Contributor: Kyle Keen <keenerd@gmail.com>
 # Contributor: Sergej Pupykin <pupykin.s+arch@gmail.com>
 # Contributor: Jose Negron <josenj.arch@mailnull.net>
 
 pkgname=sdcc
-pkgver=4.2.0
-pkgrel=3
-pkgdesc="Retargettable ANSI C compiler (Intel 8051, Maxim 80DS390, Zilog Z80 and the Motorola 68HC08)"
+pkgver=4.3.0
+pkgrel=1
+pkgdesc='Retargettable ANSI C compiler'
 arch=('loong64' 'x86_64')
+url='https://sdcc.sourceforge.net/'
 license=('GPL')
-depends=('bash' 'gcc-libs' 'boost-libs')
-makedepends=('gputils' 'flex' 'bison' 'patch' 'boost')
+depends=('gcc-libs' 'bash')
+makedepends=('gputils' 'boost' 'patchutils')
 optdepends=('python')
-url="http://sdcc.sourceforge.net/"
-options=(!strip  staticlibs)
-source=(https://downloads.sourceforge.net/sourceforge/sdcc/$pkgname-src-${pkgver//_/-}.tar.bz2)
-md5sums=('cc5042a207b15c387185867ca1b32145')
-sha256sums=('b49bae1d23bcd6057a82c4ffe5613f9cd0cbcfd1e940e9d84c4bfe9df0a8c053')
-
-# namcap claims boost-libs isn't needed, investigate this
+options=('!strip' 'staticlibs')
+source=(
+  "$pkgname-$pkgver.tar.bz2::https://sourceforge.net/projects/sdcc/files/sdcc/$pkgver/$pkgname-src-$pkgver.tar.bz2"
+  'r14312.diff'
+  'build-all-mcs51-models.patch'
+)
+sha512sums=('dabe276a0d2872bee2cdc14433f31a1e94153f9dce5a11add916ede2e76bfacf763be8e6d8134dc3aefdae29e38d3a7354626755e81e0f6db0e60c1798476f21'
+            '092c460f5286a104e95e05b1cdc9a0e88058002e1242ae25ad8e5e51e1e9de94329fde3994b2b5a0455b88088d96a53c1b0e5783f796fbeadc49530647347f02'
+            '265982849af52f5d84069ef9dd43f6d768eb46b2ff07e1652c3036d69e59fd366481a4447b6c376d2c74123cf6cf5f08afe957fa18a8038a4b0602f4593238f9')
+b2sums=('94fc7ade96801ea6c9eb89d32b99554d27ad3d926d2d5889e91334b11d4658ccc160606cd2b1c6f3bb21bd25ea3df1dca274f40553aa8a52a73ac07764b3eaad'
+        '32b264427b685cfd5b3e14ba5a3d9b2d5dcde9a5c2501dbf3f50bf6315e58f85467bf90fee4a8af588dfe22e2d2facce3b1e35f6d170ac1c7fe383209980c647'
+        '28bca84a8e1c2eda552efb0129941fdf1b17cdc2e888c26bf896295d392fd31f729136e76794913770b052f5171091bddbb944cde7407fd65e0df370654faf29')
 
 prepare() {
-  cd "$srcdir/$pkgname-$pkgver"
-  sed -i 's|CC -E|CC -O2 -E|g' support/sdbinutils/libiberty/configure
+  cd "$pkgname-$pkgver"
+
+  # FS#79070: FTBFS
+  filterdiff -p0 -i 'support/cpp/*' ../r14312.diff | patch -Np0
+
+  # FS#79070: Build all models for mcs51 by default
+  patch -p1 -i "$srcdir/build-all-mcs51-models.patch"
 }
 
 build() {
-  cd "$srcdir/$pkgname-$pkgver"
+  cd "$pkgname-$pkgver"
+
   ./configure \
-	--prefix=/usr \
-	--includedir=/usr/include/sdcc \
-	--libdir=/usr/lib/sdcc \
-	--disable-werror
+    --prefix=/usr \
+    --includedir=/usr/include/sdcc \
+    --libdir=/usr/lib/sdcc \
+    --libexecdir=/usr/lib \
+    --disable-werror
+
   make
 }
 
 package() {
-  cd "$srcdir/$pkgname-$pkgver"
+  cd "$pkgname-$pkgver"
 
-  make install DESTDIR="$pkgdir"
-
-  if [ -d "$pkgdir/usr/lib/lib" ]; then
-    mv "$pkgdir/usr/lib/lib/"* "$pkgdir/usr/lib/sdcc/"
-    rm -rf "$pkgdir/usr/lib/lib"
-  fi
-
-  sed -i 's|#!/usr/bin/env python|#!/usr/bin/env python3|' "$pkgdir/usr/bin/as2gbmap"
+  make DESTDIR="$pkgdir" install
 }

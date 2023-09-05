@@ -3,8 +3,8 @@
 # Contributor: Ivan Shapovalov <intelfx@intelfx.name>
 
 pkgname=matrix-synapse
-_tag=c85852b063677bc0dc7ea0823adf7d73385bc82d
-pkgver=1.88.0
+_tag=bb460a7f19b9fd88cecf95198908ad83eb0a46c8
+pkgver=1.91.0
 pkgrel=1
 pkgdesc="Matrix reference homeserver"
 url="https://github.com/matrix-org/synapse"

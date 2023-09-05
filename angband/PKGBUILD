@@ -9,8 +9,8 @@
 # Contributor: Sebastian Sareyko <public@nooms.de>
 
 pkgname=angband
-pkgver=4.2.4
-pkgrel=2
+pkgver=4.2.5
+pkgrel=1
 pkgdesc='A roguelike dungeon exploration game based on the writings of JRR Tolkien'
 arch=('loong64' 'x86_64')
 url='https://rephial.org/'
@@ -26,9 +26,13 @@ depends=(
   'hicolor-icon-theme'
 )
 makedepends=('git' 'python-docutils')
-_commit='ae4c7293778346b4307583911537c2db4401397f'
-source=("$pkgname::git+https://github.com/angband/angband#commit=$_commit")
-b2sums=('SKIP')
+_commit='69e24dbb001818d5f902215e7a474d122e12202c'
+source=(
+  "$pkgname::git+https://github.com/angband/angband#commit=$_commit"
+  'remove-dirty-version.patch'
+)
+b2sums=('SKIP'
+        '84e2a3f0a959072167aaf55718e02643d0b5793da18bc60d5464de0477fe9237e5f6e3374ee0919ca7079fb86a65c011db979e7d9dbe052af8caa883bf16e906')
 
 pkgver() {
   cd "$pkgname"
@@ -36,15 +40,11 @@ pkgver() {
   git describe --tags | sed 's/^v//'
 }
 
-prepare() {
-  cd "$pkgname"
-
-  # fix icons & desktop files
-  git cherry-pick --no-commit 167668321504e2a585882487842f032cc5956507
-}
-
 build() {
   cd "$pkgname"
+
+  # contrary to popular belief, arch linux is *not* dirty.
+  patch -p1 -i "$srcdir/remove-dirty-version.patch"
 
   ./autogen.sh
 
@@ -67,15 +67,17 @@ package() {
   install -vDm644 docs/copying.rst "$pkgdir/usr/share/licenses/$pkgname/COPYING"
 
 
-  # see above cherry pick in prepare()
   # hopefully the following is fixed by next release
   pushd "$pkgdir/usr/share/angband/icons"
   # application icons
   for i in 16 32 128 256 512; do
     install -vDm644 "att-${i}.png" "$pkgdir/usr/share/icons/hicolor/${i}x${i}/apps/$pkgname.png"
   done
+  popd
 
+  pushd lib/icons
   # desktop files
+  rm -vf "$pkgdir/usr/share/applications/angband.desktop"
   install -vDm644 -t "$pkgdir/usr/share/applications" angband-{x11,sdl2}.desktop
 
   # metainfo

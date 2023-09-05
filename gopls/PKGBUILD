@@ -2,7 +2,7 @@
 # Contributor: Chad Kunde <Kunde21@gmail.com>
 
 pkgname=gopls
-pkgver=0.12.4
+pkgver=0.13.2
 pkgrel=1
 pkgdesc='Language server for Go programming language'
 arch=('loong64' 'x86_64' 'aarch64' 'armv7h' 'armv7l')
@@ -10,18 +10,27 @@ url='https://github.com/golang/tools/tree/master/gopls'
 license=('BSD')
 depends=('go')
 makedepends=('git')
+options=('!lto')
 source=("${pkgname}-${pkgver}.tar.gz::https://github.com/golang/tools/archive/gopls/v${pkgver}.tar.gz")
-sha256sums=('746b0e1942c028c62fd8c114242a024faed19009ac64180f2cbfc9480fd45544')
+sha256sums=('fa8a5d38c1e040686fda6018c3456801229d6ed992b6eecfbaba146e1fc772b2')
 
 build() {
   cd "tools-${pkgname}-v${pkgver}/${pkgname}"
 
+  # set Go flags
   export CGO_CPPFLAGS="${CPPFLAGS}"
   export CGO_CFLAGS="${CFLAGS}"
   export CGO_CXXFLAGS="${CXXFLAGS}"
-  export CGO_LDFLAGS="${LDFLAGS}"
-  export GOFLAGS="-buildmode=pie -trimpath -ldflags=-linkmode=external -mod=readonly -modcacherw"
-  go build -o "${pkgname}"
+  export GOPATH="${srcdir}"
+
+  go build -v \
+    -buildmode=pie \
+    -mod=readonly \
+    -modcacherw \
+    -ldflags "-compressdwarf=false \
+    -linkmode external \
+    -extldflags ${LDFLAGS}" \
+    -o "${pkgname}"
 }
 
 package() {

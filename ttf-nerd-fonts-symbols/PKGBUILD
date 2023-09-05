@@ -8,7 +8,7 @@ pkgname=(
 )
 pkgbase=ttf-nerd-fonts-symbols
 pkgver=3.0.2
-pkgrel=1
+pkgrel=2
 pkgdesc="High number of extra glyphs from popular 'iconic fonts'"
 arch=('any')
 url=https://github.com/ryanoasis/nerd-fonts
@@ -28,7 +28,7 @@ b2sums=('d6b24c31d525f869f98833a4388b1d0d37fed5c4a5a3c82fa79e6e1910180659502b4b1
 _package() {
   groups=('nerd-fonts')
   depends=('ttf-nerd-fonts-symbols-common')
-  provides=('nerd-fonts' 'ttf-font-nerd')
+  provides=('ttf-font-nerd')
 
   install -d "$pkgdir"/usr/share/licenses/"$1"
   ln -s /usr/share/licenses/ttf-nerd-fonts-symbols-common/LICENSE \

@@ -1,0 +1,61 @@
+# Maintainer: Levente Polyak <anthraxx[at]archlinux[dot]org>
+# Maintainer: PRESFIL <echo cHJlc2ZpbEBwcm90b25tYWlsLmNvbQo= | base64 -d>
+
+_hkgname=xmonad-dbus
+pkgname=${_hkgname}
+pkgver=0.1.0.2
+pkgrel=3
+pkgdesc='XMonad DBus monitor application and library to easily connect XMonad with Polybar'
+url='https://github.com/troydm/xmonad-dbus'
+license=("custom: BSD3")
+arch=('loong64' 'x86_64')
+depends=(
+  glibc
+  ghc-libs
+  haskell-dbus
+)
+makedepends=(
+  ghc
+)
+checkdepends=(
+  dbus
+)
+provides=(haskell-xmonad-dbus)
+source=(${url}/archive/refs/tags/v${pkgver}/${_hkgname}-${pkgver}.tar.gz)
+sha256sums=('85313a2355cff4840e3780f8965b59380618bf88d55425b2c7083729ce42074b')
+b2sums=('f5f1bf39d9f07342340e41cafa97a73dcc88b786b4eee17803e97e699bf374774362800b498441dfecd4d360a684a3d4b3b2a95a3e99eda5a6fd0629ee9d2110')
+
+build() {
+  cd "${pkgname}-${pkgver}"
+
+  runhaskell Setup configure -O --enable-shared --enable-executable-dynamic --disable-library-vanilla \
+    --prefix=/usr --docdir=/usr/share/doc/$pkgname --datasubdir=$pkgname --enable-tests \
+    --dynlibdir=/usr/lib --libsubdir=\$compiler/site-local/\$pkgid --ghc-option=-fllvm \
+    --ghc-option=-optl-Wl\,-z\,relro\,-z\,now \
+    --ghc-option=-pie
+  runhaskell Setup build $MAKEFLAGS
+  runhaskell Setup register --gen-script
+  runhaskell Setup unregister --gen-script
+  sed -i -r -e "s|ghc-pkg.*update[^ ]* |&'--force' |" register.sh
+  sed -i -r -e "s|ghc-pkg.*unregister[^ ]* |&'--force' |" unregister.sh
+}
+
+check() {
+  cd "${pkgname}-${pkgver}"
+  eval $(dbus-launch --sh-syntax)
+  runhaskell Setup test --show-details=direct
+}
+
+package() {
+  cd "${pkgname}-${pkgver}"
+
+  install -D -m744 register.sh "${pkgdir}"/usr/share/haskell/register/${pkgname}.sh
+  install -D -m744 unregister.sh "${pkgdir}"/usr/share/haskell/unregister/${pkgname}.sh
+  runhaskell Setup copy --destdir="${pkgdir}"
+
+  install -Dm 644 README.md -t "${pkgdir}/usr/share/doc/${pkgname}"
+  install -Dm 644 LICENSE -t "${pkgdir}/usr/share/licenses/${pkgname}"
+  rm -f "$pkgdir"/usr/share/doc/$pkgname/LICENSE
+}
+
+# vim: ts=2 sw=2 et:

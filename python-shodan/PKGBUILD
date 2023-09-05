@@ -2,7 +2,8 @@
 # Contributor: liara <liara@archlinux.email>
 
 pkgname=python-shodan
-pkgver=1.29.1
+_pkgname="${pkgname#python-}"
+pkgver=1.30.0
 pkgrel=1
 pkgdesc='The official Python library and CLI for Shodan'
 url='https://shodan.readthedocs.io/'
@@ -16,35 +17,25 @@ depends=(
   'python-xlsxwriter'
   'python-requests'
   'python-setuptools'
+  'python-tldextract'
 )
 makedepends=(
-  'git'
   'python-build'
   'python-installer'
   'python-wheel'
 )
 optdepends=('python-ujson: faster JSON decoding')
-_commit='9ccc16ada4761d19ee2079a9334cac3ddbc62415'
-source=("$pkgname::git+https://github.com/achillean/shodan-python.git#commit=$_commit")
-b2sums=('SKIP')
-
-pkgver() {
-  cd "$pkgname"
-
-  # https://github.com/achillean/shodan-python/issues/185
-  # git describe --tags | sed 's/^v//'
-
-  grep 'version=' setup.py | sed -e "s/^    version='\(.*\)',/\1/"
-}
+source=("$pkgname-$pkgver.tar.gz::https://files.pythonhosted.org/packages/source/${_pkgname::1}/$_pkgname/$_pkgname-$pkgver.tar.gz")
+b2sums=('1c3c030e84d31dc79ad737b71e63ce6c9218441be04ec94b4144013545e0d7dd79f1e25e51af1811cdd624f2f32b128e5aeb7dbc8d71b21741712733ca4b6d39')
 
 build() {
-  cd "$pkgname"
+  cd "$_pkgname-$pkgver"
 
   python -m build --wheel --no-isolation
 }
 
 package() {
-  cd "$pkgname"
+  cd "$_pkgname-$pkgver"
 
   python -m installer --destdir="$pkgdir" dist/*.whl
 

@@ -4,7 +4,7 @@
 
 pkgname=wlroots
 pkgver=0.16.2
-pkgrel=1
+pkgrel=2
 license=('MIT')
 pkgdesc='Modular Wayland compositor library'
 url='https://gitlab.freedesktop.org/wlroots/wlroots'
@@ -46,14 +46,23 @@ options=(
 source=(
     "$pkgname-$pkgver.tar.gz::https://gitlab.freedesktop.org/wlroots/wlroots/-/releases/$pkgver/downloads/wlroots-$pkgver.tar.gz"
     "https://gitlab.freedesktop.org/wlroots/wlroots/-/releases/$pkgver/downloads/wlroots-$pkgver.tar.gz.sig"
+    "Revert-layer-shell-error-on-0-dimension-without-anch.patch"
 )
 sha256sums=('83e9a11605f23d4bf781ab1947089483d9ec3f7e9ba65398e0609593b77d44aa'
-            'SKIP')
+            'SKIP'
+            'd53a62f49334fe15583a951c9e38e7f9f74b19210bdb7f80f16ec0398c3d7b3e')
 validpgpkeys=(
     '34FF9526CFEF0E97A340E2E40FDE7BE0E88F5E48' # Simon Ser
     '9DDA3B9FA5D58DD5392C78E652CB6609B22DA89A' # Drew DeVault
     '4100929B33EEB0FD1DB852797BC79407090047CA' # Sway signing key
 )
+
+prepare() {
+    cd "${pkgname}-${pkgver}"
+    # Allow a minor protocol violation until phosh is fixed without this patch
+    # phosh crashes on launch.
+    patch -Np1 -i "${srcdir}/Revert-layer-shell-error-on-0-dimension-without-anch.patch"
+}
 
 build() {
     arch-meson "$pkgname-$pkgver" build

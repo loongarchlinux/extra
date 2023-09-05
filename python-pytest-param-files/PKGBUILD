@@ -5,14 +5,15 @@ BUILDENV+=(!check)
 pkgname=python-pytest-param-files
 _pyname=${pkgname#python-}
 pkgver=0.6.0
-pkgrel=1
+pkgrel=2
 pkgdesc='Create pytest parametrize decorators from external files '
 arch=(any)
 url="https://github.com/chrisjsewell/$_pyname"
 license=(MIT)
 depends=(python
+         python-ruamel-yaml
          python-pytest)
-makedepends=(python-{build,installer,wheel}
+makedepends=(python-{build,installer}
              python-flit-core)
 _archive="${_pyname//-/_}-$pkgver"
 source=("https://files.pythonhosted.org/packages/source/${_pyname::1}/$_pyname/$_archive.tar.gz")

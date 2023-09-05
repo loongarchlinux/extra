@@ -3,7 +3,7 @@
 
 pkgname=perl-cwd-guard
 pkgver=0.05
-pkgrel=8
+pkgrel=9
 pkgdesc="Temporary changing working directory (chdir)"
 arch=('any')
 url="https://search.cpan.org/dist/Cwd-Guard/"
@@ -13,7 +13,7 @@ makedepends=('perl-module-build')
 checkdepends=('perl-test-requires')
 options=('!emptydirs')
 source=("https://search.cpan.org/CPAN/authors/id/K/KA/KAZEBURO/Cwd-Guard-$pkgver.tar.gz")
-md5sums=('3d9c31722ab475fcb095716fe80c6bb1')
+sha256sums=('7afc7ca2b9502e440241938ad97a3e7ebd550180ebd6142e1db394186b268e77')
 
 build() {
   cd "$srcdir/Cwd-Guard-$pkgver"

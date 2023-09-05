@@ -1,9 +1,10 @@
 # Maintainer: Filipe Laíns (FFY00) <lains@archlinux.org>
+# Maintainer: Robin Candau <antiz@archlinux.org>
 
 _pkgname=userpath
 pkgname=python-$_pkgname
-pkgver=1.8.0
-pkgrel=2
+pkgver=1.9.0
+pkgrel=1
 pkgdesc='Cross-platform tool for adding locations to the user PATH, no elevated privileges required!'
 arch=('any')
 url='https://github.com/ofek/userpath'
@@ -12,23 +13,20 @@ depends=('python' 'python-click' 'python-distro')
 makedepends=('python-build' 'python-installer' 'python-hatchling' 'python-wheel')
 checkdepends=('python-pytest')
 source=("$pkgname-$pkgver.tar.gz::$url/archive/v$pkgver.tar.gz")
-sha512sums=('d2f082909fad22cf5b33f175afdeebe14a44ebd245c84506395f01a288eccf9c376ac28dcc4b618cc2464e1a23e740b41f4f4ad0e780a42e1185c5283ccc7330')
+sha512sums=('a5683a7423465426debda02d58b2f5ef8d17d38d2fac2378cdf3075a2a6f0b7d75210bb1eac30966d323ec5f25073cc9286ae1b37acaa1bf7785da02a4c40805')
 
 build() {
   cd $_pkgname-$pkgver
-
-  python -m build -nw
+  python -m build --wheel --no-isolation
 }
 
 check() {
   cd $_pkgname-$pkgver
-
-  python -m pytest
+  pytest
 }
 
 package() {
   cd $_pkgname-$pkgver
-
   python -m installer -d "$pkgdir" dist/*.whl
 
   install -Dm 644 LICENSE.txt "$pkgdir"/usr/share/licenses/$pkgname/LICENSE-MIT

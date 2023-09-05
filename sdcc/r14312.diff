@@ -1,0 +1,3561 @@
+Index: ChangeLog
+===================================================================
+--- ChangeLog	(revision 14311)
++++ ChangeLog	(revision 14312)
+@@ -1,3 +1,104 @@
++2023-08-19 Maarten Brock <sourceforge.brock AT dse.nl>
++
++	* device/include/asm/default/features.h,
++	* device/include/asm/ds390/features.h,
++	* device/include/asm/mcs51/features.h,
++	* device/include/asm/pic14/features.h,
++	* device/include/asm/pic16/features.h,
++	* device/include/asm/r2k/features.h,
++	* device/include/asm/r3ka/features.h,
++	* device/include/asm/sm83/features.h,
++	* device/include/asm/stm8/features.h,
++	* device/include/asm/tlcs90/features.h,
++	* device/include/asm/z80/features.h: added __SDCC_NONBANKED
++	* device/include/float.h: use __SDCC_NONBANKED for __SDCC_FLOAT_NONBANKED
++	* device/include/sdcc-lib.h: cosmetics
++	* device/lib/_divsint.c,
++	* device/lib/_divslong.c,
++	* device/lib/_divslonglong.c,
++	* device/lib/_divuint.c,
++	* device/lib/_divulong.c,
++	* device/lib/_divulonglong.c,
++	* device/lib/_modsint.c,
++	* device/lib/_modslong.c,
++	* device/lib/_modslonglong.c,
++	* device/lib/_moduint.c,
++	* device/lib/_modulong.c,
++	* device/lib/_modulonglong.c,
++	* device/lib/_mulint.c,
++	* device/lib/_mullong.c,
++	* device/lib/_mullonglong.c: moved __SDCC_NONBANKED to sdcc-lib.h
++	* device/lib/_slonglong2fs.c: cosmetics
++	* device/lib/Makefile.in,
++	* device/lib/hc08/Makefile.in,
++	* device/lib/mos6502/Makefile.in,
++	* device/lib/mos6502-stack-auto/Makefile.in,
++	* device/lib/mos65c02/Makefile.in,
++	* device/lib/pdk13/Makefile.in,
++	* device/lib/pdk14/Makefile.in,
++	* device/lib/pdk15/Makefile.in,
++	* device/lib/pdk15-stack-auto/Makefile.in,
++	* device/lib/s08/Makefile.in,
++	* device/lib/s08-stack-auto/Makefile.in,
++	* device/lib/stm8/Makefile.in,
++	* device/lib/stm8-large/Makefile.in,
++	* src/SDCCsymt.c (initCSupport): renamed _r[lr][su]longlong.c to
++	  _s[lr][su]longlong.c because they are shifts not rotates
++	* device/lib/_slslonglong.c: renamed from _rlslonglong.c,
++	  moved __SDCC_NONBANKED to sdcc-lib.h
++	* device/lib/_slulonglong.c: renamed from _rlulonglong.c,
++	  moved __SDCC_NONBANKED to sdcc-lib.h,
++	  use _AUTOMEM for better code generation
++	* device/lib/_srslonglong.c: renamed from _rrslonglong.c,
++	  bugfix little endian variant,
++	  moved __SDCC_NONBANKED to sdcc-lib.h,
++	  use _AUTOMEM for better code generation,
++	  removed comment about non-existing rrulonglong_rrx_s.c
++	* device/lib/_srulonglong.c: renamed from _rrulonglong.c,
++	  moved __SDCC_NONBANKED to sdcc-lib.h,
++	  use _AUTOMEM for better code generation,
++	  removed comment about non-existing rrulonglong_rrx_s.c
++	* device/lib/mos6502/_srslonglong.c: renamed from _rrslonglong.c
++	* device/lib/mos6502/_srulonglong.c: renamed from _rrulonglong.c
++	* device/lib/mos6502-stack-auto/_srslonglong.c: renamed from _rrslonglong.c
++	* device/lib/mos6502-stack-auto/_srulonglong.c: renamed from _rrulonglong.c
++
++	* device/lib/atomic_flag_clear.c: generate external definition for
++	  inline definition with external linkage
++	* device/include/stdatomic.h: inline atomic_flag_clear(),
++	  use 0xfe for z80-like,
++	  use __SDCC_NONBANKED
++	* device/lib/ez80_z80/atomic_flag_test_and_set.s,
++	* device/lib/r2k/atomic_flag_test_and_set.s,
++	* device/lib/r2ka/atomic_flag_test_and_set.s,
++	* device/lib/r3ka/atomic_flag_test_and_set.s,
++	* device/lib/sm83/atomic_flag_test_and_set.s,
++	* device/lib/z180/atomic_flag_test_and_set.s,
++	* device/lib/z80/atomic_flag_test_and_set.s,
++	* device/lib/z80n/atomic_flag_test_and_set.s: use sra on 0xfe and drop ccf
++
++	* device/lib/strtoull.c: drop oldret
++	* device/lib/wcstoull.c: drop oldret,
++	  (_isdigit): fix L'a',
++	  (strtoull): bugfix, renamed to wcstoull() & use iswblank()
++
++	* debugger/mcs51/sdcdb.c (readCdb): fixed warning/bug
++	* src/SDCC.y: fixed warnings
++	* src/SDCCval.h,
++	* src/SDCCval.c (ullFromVal): make val const to fix warnings
++	* src/mcs51/ralloc.c (regsUsedIniCode): removed label to fix warning
++	* src/mos6502/gen.c (opInfo): fix warning,
++	  (genRightShift): fixed warning
++	* src/z80/ralloc.c (regsUsedIniCode): removed label to fix warning
++	* support/cpp/gcc/diagnostic.cc (fancy_abort): fixed warning,
++	  removed formfeeds
++	* support/cpp/gcc/gcc.cc (insert_comments,get_random_number): fixed warnings
++	  removed formfeeds
++	* support/cpp/libcpp/expr.cc (cpp_classify_number): fixed warnings,
++	  removed formfeeds
++	* support/cpp/libcpp/macro.cc (update,create_iso_definition): fixed warnings
++	* support/makebin/makebin.c: fixed warning
++
+ 2023-08-17 Benedikt Freisen <b.freisen AT gmx.net>
+ 
+ 	* device/include/inttypes.h,
+Index: debugger/mcs51/sdcdb.c
+===================================================================
+--- debugger/mcs51/sdcdb.c	(revision 14311)
++++ debugger/mcs51/sdcdb.c	(revision 14312)
+@@ -414,9 +414,8 @@
+             }
+ 
+           bp += 2;
+-          currl->line = Safe_malloc(strlen(bp));
+-          strncpy(currl->line, bp, strlen(bp)-1);
+-          currl->line[strlen(bp)-1] = '\0';
++          currl->line = Safe_malloc(strlen(bp)+1);
++          strcpy(currl->line, bp);
+         }
+ 
+       if (!(bp = fgets(buffer, sizeof(buffer), file)))
+Index: device/include/asm/default/features.h
+===================================================================
+--- device/include/asm/default/features.h	(revision 14311)
++++ device/include/asm/default/features.h	(revision 14312)
+@@ -13,7 +13,7 @@
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+    GNU General Public License for more details.
+ 
+-   You should have received a copy of the GNU General Public License 
++   You should have received a copy of the GNU General Public License
+    along with this library; see the file COPYING. If not, write to the
+    Free Software Foundation, 51 Franklin Street, Fifth Floor, Boston,
+    MA 02110-1301, USA.
+@@ -26,8 +26,8 @@
+    might be covered by the GNU General Public License.
+ -------------------------------------------------------------------------*/
+ 
+-#ifndef __SDC51_ASM_FEATURES_H
+-#define __SDC51_ASM_FEATURES_H   1
++#ifndef __SDCC_ASM_FEATURES_H
++#define __SDCC_ASM_FEATURES_H   1
+ 
+ #define _REENTRANT	__reentrant
+ #define _CODE		__code
+@@ -34,4 +34,6 @@
+ #define _AUTOMEM
+ #define _STATMEM
+ 
++#define __SDCC_NONBANKED
++
+ #endif
+Index: device/include/asm/ds390/features.h
+===================================================================
+--- device/include/asm/ds390/features.h	(revision 14311)
++++ device/include/asm/ds390/features.h	(revision 14312)
+@@ -13,7 +13,7 @@
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+    GNU General Public License for more details.
+ 
+-   You should have received a copy of the GNU General Public License 
++   You should have received a copy of the GNU General Public License
+    along with this library; see the file COPYING. If not, write to the
+    Free Software Foundation, 51 Franklin Street, Fifth Floor, Boston,
+    MA 02110-1301, USA.
+@@ -26,8 +26,8 @@
+    might be covered by the GNU General Public License.
+ -------------------------------------------------------------------------*/
+ 
+-#ifndef __SDC51_ASM_DS390_FEATURES_H
+-#define __SDC51_ASM_DS390_FEATURES_H   1
++#ifndef __SDCC_ASM_DS390_FEATURES_H
++#define __SDCC_ASM_DS390_FEATURES_H   1
+ 
+ #define _REENTRANT	__reentrant
+ #define _CODE		__code
+@@ -71,4 +71,6 @@
+   #define _STATMEM __xdata
+ #endif
+ 
++#define __SDCC_NONBANKED
++
+ #endif
+Index: device/include/asm/mcs51/features.h
+===================================================================
+--- device/include/asm/mcs51/features.h	(revision 14311)
++++ device/include/asm/mcs51/features.h	(revision 14312)
+@@ -13,7 +13,7 @@
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+    GNU General Public License for more details.
+ 
+-   You should have received a copy of the GNU General Public License 
++   You should have received a copy of the GNU General Public License
+    along with this library; see the file COPYING. If not, write to the
+    Free Software Foundation, 51 Franklin Street, Fifth Floor, Boston,
+    MA 02110-1301, USA.
+@@ -26,8 +26,8 @@
+    might be covered by the GNU General Public License.
+ -------------------------------------------------------------------------*/
+ 
+-#ifndef __SDC51_ASM_MCS51_FEATURES_H
+-#define __SDC51_ASM_MCS51_FEATURES_H   1
++#ifndef __SDCC_ASM_MCS51_FEATURES_H
++#define __SDCC_ASM_MCS51_FEATURES_H   1
+ 
+ #define _REENTRANT	__reentrant
+ #define _CODE		__code
+@@ -82,5 +82,6 @@
+  #define _RETURN ret
+ #endif
+ 
++#define __SDCC_NONBANKED __nonbanked
+ 
+ #endif
+Index: device/include/asm/pic14/features.h
+===================================================================
+--- device/include/asm/pic14/features.h	(revision 14311)
++++ device/include/asm/pic14/features.h	(revision 14312)
+@@ -14,7 +14,7 @@
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+    GNU General Public License for more details.
+ 
+-   You should have received a copy of the GNU General Public License 
++   You should have received a copy of the GNU General Public License
+    along with this library; see the file COPYING. If not, write to the
+    Free Software Foundation, 51 Franklin Street, Fifth Floor, Boston,
+    MA 02110-1301, USA.
+@@ -37,4 +37,6 @@
+ #define _AUTOMEM
+ #define _STATMEM
+ 
++#define __SDCC_NONBANKED
++
+ #endif	/* __PIC14_ASM_FEATURES_H */
+Index: device/include/asm/pic16/features.h
+===================================================================
+--- device/include/asm/pic16/features.h	(revision 14311)
++++ device/include/asm/pic16/features.h	(revision 14312)
+@@ -13,7 +13,7 @@
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+    GNU General Public License for more details.
+ 
+-   You should have received a copy of the GNU General Public License 
++   You should have received a copy of the GNU General Public License
+    along with this library; see the file COPYING. If not, write to the
+    Free Software Foundation, 51 Franklin Street, Fifth Floor, Boston,
+    MA 02110-1301, USA.
+@@ -40,4 +40,6 @@
+ #define _AUTOMEM
+ #define _STATMEM
+ 
++#define __SDCC_NONBANKED
++
+ #endif	/* __PIC16_ASM_FEATURES_H */
+Index: device/include/asm/r2k/features.h
+===================================================================
+--- device/include/asm/r2k/features.h	(revision 14311)
++++ device/include/asm/r2k/features.h	(revision 14312)
+@@ -13,7 +13,7 @@
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+    GNU General Public License for more details.
+ 
+-   You should have received a copy of the GNU General Public License 
++   You should have received a copy of the GNU General Public License
+    along with this library; see the file COPYING. If not, write to the
+    Free Software Foundation, 51 Franklin Street, Fifth Floor, Boston,
+    MA 02110-1301, USA.
+@@ -37,5 +37,7 @@
+ #define _SDCC_MANGLES_SUPPORT_FUNS	1
+ #define _SDCC_Z80_STYLE_LIB_OPT		1
+ 
++#define __SDCC_NONBANKED
++
+ #endif
+ 
+Index: device/include/asm/r3ka/features.h
+===================================================================
+--- device/include/asm/r3ka/features.h	(revision 14311)
++++ device/include/asm/r3ka/features.h	(revision 14312)
+@@ -2,7 +2,7 @@
+    features.h - Rabbit 3000A specific features.
+ 
+    Copyright (C) 2001, Michael Hope
+-   
++
+    This library is free software; you can redistribute it and/or modify it
+    under the terms of the GNU General Public License as published by the
+    Free Software Foundation; either version 2, or (at your option) any
+@@ -13,7 +13,7 @@
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+    GNU General Public License for more details.
+ 
+-   You should have received a copy of the GNU General Public License 
++   You should have received a copy of the GNU General Public License
+    along with this library; see the file COPYING. If not, write to the
+    Free Software Foundation, 51 Franklin Street, Fifth Floor, Boston,
+    MA 02110-1301, USA.
+@@ -37,5 +37,7 @@
+ #define _SDCC_MANGLES_SUPPORT_FUNS	1
+ #define _SDCC_Z80_STYLE_LIB_OPT		1
+ 
++#define __SDCC_NONBANKED
++
+ #endif
+ 
+Index: device/include/asm/sm83/features.h
+===================================================================
+--- device/include/asm/sm83/features.h	(revision 14311)
++++ device/include/asm/sm83/features.h	(revision 14312)
+@@ -13,7 +13,7 @@
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+    GNU General Public License for more details.
+ 
+-   You should have received a copy of the GNU General Public License 
++   You should have received a copy of the GNU General Public License
+    along with this library; see the file COPYING. If not, write to the
+    Free Software Foundation, 51 Franklin Street, Fifth Floor, Boston,
+    MA 02110-1301, USA.
+@@ -26,8 +26,8 @@
+    might be covered by the GNU General Public License.
+ -------------------------------------------------------------------------*/
+ 
+-#ifndef __SDC51_ASM_SM83_FEATURES_H
+-#define __SDC51_ASM_SM83_FEATURES_H   1
++#ifndef __SDCC_ASM_SM83_FEATURES_H
++#define __SDCC_ASM_SM83_FEATURES_H   1
+ 
+ #define _REENTRANT
+ #define _CODE
+@@ -37,5 +37,7 @@
+ #define _SDCC_MANGLES_SUPPORT_FUNS	1
+ #define _SDCC_Z80_STYLE_LIB_OPT		1
+ 
++#define __SDCC_NONBANKED
++
+ #endif
+ 
+Index: device/include/asm/stm8/features.h
+===================================================================
+--- device/include/asm/stm8/features.h	(revision 14311)
++++ device/include/asm/stm8/features.h	(revision 14312)
+@@ -13,7 +13,7 @@
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+    GNU General Public License for more details.
+ 
+-   You should have received a copy of the GNU General Public License 
++   You should have received a copy of the GNU General Public License
+    along with this library; see the file COPYING. If not, write to the
+    Free Software Foundation, 51 Franklin Street, Fifth Floor, Boston,
+    MA 02110-1301, USA.
+@@ -37,5 +37,7 @@
+ #define _SDCC_MANGLES_SUPPORT_FUNS	1
+ #define _SDCC_Z80_STYLE_LIB_OPT		1
+ 
++#define __SDCC_NONBANKED
++
+ #endif
+ 
+Index: device/include/asm/tlcs90/features.h
+===================================================================
+--- device/include/asm/tlcs90/features.h	(revision 14311)
++++ device/include/asm/tlcs90/features.h	(revision 14312)
+@@ -13,7 +13,7 @@
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+    GNU General Public License for more details.
+ 
+-   You should have received a copy of the GNU General Public License 
++   You should have received a copy of the GNU General Public License
+    along with this library; see the file COPYING. If not, write to the
+    Free Software Foundation, 51 Franklin Street, Fifth Floor, Boston,
+    MA 02110-1301, USA.
+@@ -37,5 +37,7 @@
+ #define _SDCC_MANGLES_SUPPORT_FUNS	1
+ #define _SDCC_Z80_STYLE_LIB_OPT		1
+ 
++#define __SDCC_NONBANKED
++
+ #endif
+ 
+Index: device/include/asm/z80/features.h
+===================================================================
+--- device/include/asm/z80/features.h	(revision 14311)
++++ device/include/asm/z80/features.h	(revision 14312)
+@@ -13,7 +13,7 @@
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+    GNU General Public License for more details.
+ 
+-   You should have received a copy of the GNU General Public License 
++   You should have received a copy of the GNU General Public License
+    along with this library; see the file COPYING. If not, write to the
+    Free Software Foundation, 51 Franklin Street, Fifth Floor, Boston,
+    MA 02110-1301, USA.
+@@ -37,5 +37,7 @@
+ #define _SDCC_MANGLES_SUPPORT_FUNS	1
+ #define _SDCC_Z80_STYLE_LIB_OPT		1
+ 
++#define __SDCC_NONBANKED
++
+ #endif
+ 
+Index: device/include/float.h
+===================================================================
+--- device/include/float.h	(revision 14311)
++++ device/include/float.h	(revision 14312)
+@@ -31,6 +31,8 @@
+ 
+ #include <limits.h>
+ 
++#include <sdcc-lib.h>
++
+ #define FLT_RADIX       2
+ #define FLT_MANT_DIG    24
+ #define FLT_EPSILON     1.192092896E-07F
+@@ -80,11 +82,7 @@
+ #define PACK(s,e,m)	((s) | ((unsigned long)(e) << 23) | (m))
+ #endif
+ 
+-#ifdef __SDCC_mcs51
+-#define __SDCC_FLOAT_NONBANKED __nonbanked
+-#else
+-#define __SDCC_FLOAT_NONBANKED
+-#endif
++#define __SDCC_FLOAT_NONBANKED __SDCC_NONBANKED
+ 
+ float __uchar2fs (unsigned char) __SDCC_FLOAT_NONBANKED;
+ float __schar2fs (signed char) __SDCC_FLOAT_NONBANKED;
+Index: device/include/sdcc-lib.h
+===================================================================
+--- device/include/sdcc-lib.h	(revision 14311)
++++ device/include/sdcc-lib.h	(revision 14312)
+@@ -14,7 +14,7 @@
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+    GNU General Public License for more details.
+ 
+-   You should have received a copy of the GNU General Public License 
++   You should have received a copy of the GNU General Public License
+    along with this library; see the file COPYING. If not, write to the
+    Free Software Foundation, 51 Franklin Street, Fifth Floor, Boston,
+    MA 02110-1301, USA.
+@@ -27,8 +27,8 @@
+    might be covered by the GNU General Public License.
+ -------------------------------------------------------------------------*/
+ 
+-#ifndef __SDC51_SDCC_LIB_H
+-#define __SDC51_SDCC_LIB_H	1
++#ifndef __SDCC_SDCC_LIB_H
++#define __SDCC_SDCC_LIB_H	1
+ 
+ #if defined(__SDCC_z80) || defined(__SDCC_z180) || defined(__SDCC_ez80_z80) || defined(__SDCC_z80n)
+ #include <asm/z80/features.h>
+Index: device/include/stdatomic.h
+===================================================================
+--- device/include/stdatomic.h	(revision 14311)
++++ device/include/stdatomic.h	(revision 14312)
+@@ -1,29 +1,50 @@
+ #ifndef __SDCC_STDATOMIC_H
+ #define __SDCC_STDATOMIC_H 1
+ 
++#include <sdcc-lib.h>
++
++#ifndef __SDCC_ATOMIC_EXTERN
++#define __SDCC_ATOMIC_EXTERN
++#endif
++
+ typedef struct {unsigned char flag;} atomic_flag;
+ 
+-#if defined(__SDCC_tlcs90) || defined(__SDCC_z80) || defined(__SDCC_z180) || defined(__SDCC_ez80_z80) || defined(__SDCC_z80n) || defined(__SDCC_sm83) || defined(__SDCC_r2k) || defined(__SDCC_r2ka) || defined(__SDCC_r3ka) || defined(__SDCC_stm8) || defined(__SDCC_hc08) || defined(__SDCC_s08) || defined(__SDCC_mos6502) || defined(__SDCC_mos65c02)
++#if defined(__SDCC_mcs51) || defined(__SDCC_ds390)
+ 
+-#define ATOMIC_FLAG_INIT {1}
+-_Bool atomic_flag_test_and_set(volatile atomic_flag *object);
++#define ATOMIC_FLAG_INIT {0}
+ 
+-void atomic_flag_clear(volatile atomic_flag *object);
++_Bool atomic_flag_test_and_set(volatile atomic_flag __idata *object) __SDCC_NONBANKED;
+ 
+-#elif defined(__SDCC_mcs51)
++__SDCC_ATOMIC_EXTERN
++inline void atomic_flag_clear(volatile atomic_flag __idata *object) __SDCC_NONBANKED
++{
++	object->flag = 0;
++}
+ 
+-#define ATOMIC_FLAG_INIT {0}
+-_Bool atomic_flag_test_and_set(volatile atomic_flag __idata *object) __nonbanked;
++#elif defined(__SDCC_z80) || defined(__SDCC_z180) || defined(__SDCC_ez80_z80) || defined(__SDCC_z80n) || defined(__SDCC_sm83) || defined(__SDCC_r2k) || defined(__SDCC_r2ka) || defined(__SDCC_r3ka)
+ 
+-void atomic_flag_clear(volatile atomic_flag __idata *object) __nonbanked;
++#define ATOMIC_FLAG_INIT {0xfe}
+ 
+-#elif defined(__SDCC_ds390)
++_Bool atomic_flag_test_and_set(volatile atomic_flag *object);
+ 
+-#define ATOMIC_FLAG_INIT {0}
+-_Bool atomic_flag_test_and_set(volatile atomic_flag __idata *object);
++__SDCC_ATOMIC_EXTERN
++inline void atomic_flag_clear(volatile atomic_flag *object)
++{
++	object->flag = 0xfe;
++}
+ 
+-void atomic_flag_clear(volatile atomic_flag __idata *object);
++#elif defined(__SDCC_tlcs90) || defined(__SDCC_stm8) || defined(__SDCC_hc08) || defined(__SDCC_s08) || defined(__SDCC_mos6502) || defined(__SDCC_mos65c02)
+ 
++#define ATOMIC_FLAG_INIT {1}
++
++_Bool atomic_flag_test_and_set(volatile atomic_flag *object);
++
++__SDCC_ATOMIC_EXTERN
++inline void atomic_flag_clear(volatile atomic_flag *object)
++{
++	object->flag = 1;
++}
++
+ #else
+ 
+ #error Support for atomic_flag not implemented
+Index: device/lib/_rrulonglong.c
+===================================================================
+--- device/lib/_rrulonglong.c	(revision 14311)
++++ device/lib/_rrulonglong.c	(nonexistent)
+@@ -1,91 +0,0 @@
+-/*-------------------------------------------------------------------------
+-   _rrulonglong.c - routine for right shift of 64 bit unsigned long long
+-
+-   Copyright (C) 2012, Philipp Klaus Krause . philipp@informatik.uni-frankfurt.de
+-
+-   This library is free software; you can redistribute it and/or modify it
+-   under the terms of the GNU General Public License as published by the
+-   Free Software Foundation; either version 2, or (at your option) any
+-   later version.
+-
+-   This library is distributed in the hope that it will be useful,
+-   but WITHOUT ANY WARRANTY; without even the implied warranty of
+-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+-   GNU General Public License for more details.
+-
+-   You should have received a copy of the GNU General Public License 
+-   along with this library; see the file COPYING. If not, write to the
+-   Free Software Foundation, 51 Franklin Street, Fifth Floor, Boston,
+-   MA 02110-1301, USA.
+-
+-   As a special exception, if you link this library with other files,
+-   some of which are compiled with SDCC, to produce an executable,
+-   this library does not by itself cause the resulting executable to
+-   be covered by the GNU General Public License. This exception does
+-   not however invalidate any other reasons why the executable file
+-   might be covered by the GNU General Public License.
+--------------------------------------------------------------------------*/
+-
+-#include <stdint.h>
+-
+-#include <stdbit.h>
+-
+-#ifdef __SDCC_mcs51
+-#define __SDCC_NONBANKED __nonbanked
+-#else
+-#define __SDCC_NONBANKED
+-#endif
+-
+-#ifdef __SDCC_LONGLONG
+-// This function is the same as the one from rrslonglong_rrx_s.c, except for the type of top, and b[0/3].
+-
+-#if __STDC_ENDIAN_NATIVE__ == __STDC_ENDIAN_BIG__
+-unsigned long long _rrulonglong(unsigned long long l, char s) __SDCC_NONBANKED
+-{
+-	uint32_t *const top = (uint32_t *)((char *)(&l) + 0);
+-	uint32_t *const middle = (uint16_t *)((char *)(&l) + 2);
+-	uint32_t *const bottom = (uint32_t *)((char *)(&l) + 4);
+-	uint16_t *const b = (uint16_t *)(&l);
+-
+-	for(;s >= 16; s -= 16)
+-	{
+-		b[3] = b[2];
+-		b[2] = b[1];
+-		b[1] = b[0];
+-		b[0] = 0x000000;
+-	}
+-
+-	(*bottom) >>= s;
+-	(*middle) |= (((*middle & 0xffff0000ul) >> s) & 0x0000fffful);
+-	(*top) >>= s;
+-
+-	return(l);
+-}
+-#elif __STDC_ENDIAN_NATIVE__ == __STDC_ENDIAN_LITTLE__
+-unsigned long long _rrulonglong(unsigned long long l, char s) __SDCC_NONBANKED
+-{
+-	uint32_t *const top = (uint32_t *)((char *)(&l) + 4);
+-	uint16_t *const middle = (uint16_t *)((char *)(&l) + 4);
+-	uint32_t *const bottom = (uint32_t *)(&l);
+-	uint16_t *const b = (uint16_t *)(&l);
+-
+-	for(;s >= 16; s -= 16)
+-	{
+-		b[0] = b[1];
+-		b[1] = b[2];
+-		b[2] = b[3];
+-		b[3] = 0x000000;
+-	}
+-
+-	(*bottom) >>= s;
+-	(*middle) |= (uint16_t)(((uint32_t)(*middle) << 16) >> s);
+-	(*top) |= (((*middle) & 0xffff0000ul) >> s);
+-
+-	return(l);
+-}
+-#else
+-#error Support for mixed endiannness not implemented!
+-#endif
+-
+-#endif
+-
+
+Property changes on: device/lib/_rrulonglong.c
+___________________________________________________________________
+Deleted: svn:eol-style
+## -1 +0,0 ##
+-native
+\ No newline at end of property
+Deleted: svn:keywords
+## -1 +0,0 ##
+-Author Date Id Revision
+\ No newline at end of property
+Index: device/lib/_rrslonglong.c
+===================================================================
+--- device/lib/_rrslonglong.c	(revision 14311)
++++ device/lib/_rrslonglong.c	(nonexistent)
+@@ -1,89 +0,0 @@
+-/*-------------------------------------------------------------------------
+-   _rrulonglong.c - routine for right shift of 64 bit unsigned long long
+-
+-   Copyright (C) 2012, Philipp Klaus Krause . philipp@informatik.uni-frankfurt.de
+-
+-   This library is free software; you can redistribute it and/or modify it
+-   under the terms of the GNU General Public License as published by the
+-   Free Software Foundation; either version 2, or (at your option) any
+-   later version.
+-
+-   This library is distributed in the hope that it will be useful,
+-   but WITHOUT ANY WARRANTY; without even the implied warranty of
+-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+-   GNU General Public License for more details.
+-
+-   You should have received a copy of the GNU General Public License 
+-   along with this library; see the file COPYING. If not, write to the
+-   Free Software Foundation, 51 Franklin Street, Fifth Floor, Boston,
+-   MA 02110-1301, USA.
+-
+-   As a special exception, if you link this library with other files,
+-   some of which are compiled with SDCC, to produce an executable,
+-   this library does not by itself cause the resulting executable to
+-   be covered by the GNU General Public License. This exception does
+-   not however invalidate any other reasons why the executable file
+-   might be covered by the GNU General Public License.
+--------------------------------------------------------------------------*/
+-
+-#include <stdint.h>
+-
+-#ifdef __SDCC_mcs51
+-#define __SDCC_NONBANKED __nonbanked
+-#else
+-#define __SDCC_NONBANKED
+-#endif
+-
+-#ifdef __SDCC_LONGLONG
+-// This function is the same as the one from rrulonglong_rrx_s.c, except for the type of top.
+-
+-#if __STDC_ENDIAN_NATIVE__ == __STDC_ENDIAN_BIG__
+-long long _rrslonglong(long long l, char s) __SDCC_NONBANKED
+-{
+-	int32_t *top = (uint32_t *)((char *)(&l) + 0);
+-	uint32_t *middle = (uint16_t *)((char *)(&l) + 2);
+-	uint32_t *bottom = (uint32_t *)((char *)(&l) + 4);
+-	uint16_t *b = (uint16_t *)(&l);
+-
+-	for(;s >= 16; s-= 16)
+-	{
+-		b[3] = b[2];
+-		b[2] = b[1];
+-		b[1] = b[0];
+-		b[0] = (b[0] & 0x8000) ? 0xffff : 0x000000;
+-	}
+-
+-	(*bottom) >>= s;
+-	(*middle) |= (((*middle & 0xffff0000ul) >> s) & 0x0000fffful);
+-	(*top) >>= s;
+-
+-	return(l);
+-}
+-#elif __STDC_ENDIAN_NATIVE__ == __STDC_ENDIAN_LITTLE__
+-long long _rrslonglong(long long l, char s) __SDCC_NONBANKED
+-{
+-	int32_t *top = (uint32_t *)((char *)(&l) + 4);
+-	uint16_t *middle = (uint16_t *)((char *)(&l) + 3);
+-	uint32_t *bottom = (uint32_t *)(&l);
+-	uint16_t *b = (uint16_t *)(&l);
+-
+-	for(;s >= 16; s-= 16)
+-	{
+-		b[0] = b[1];
+-		b[1] = b[2];
+-		b[2] = b[3];
+-		b[3] = (b[3] & 0x8000) ? 0xffff : 0x000000;
+-	}
+-
+-	(*bottom) >>= s;
+-	(*bottom) |= ((uint32_t)((*middle) >> s) << 16);
+-	(*top) |= (((*middle) & 0xffff0000) >> s);
+-
+-	return(l);
+-}
+-#else
+-#error Support for mixed endiannness not implemented!
+-#endif
+-
+-#endif
+-
+
+Property changes on: device/lib/_rrslonglong.c
+___________________________________________________________________
+Deleted: svn:eol-style
+## -1 +0,0 ##
+-native
+\ No newline at end of property
+Deleted: svn:keywords
+## -1 +0,0 ##
+-Author Date Id Revision
+\ No newline at end of property
+Index: device/lib/_rlulonglong.c
+===================================================================
+--- device/lib/_rlulonglong.c	(revision 14311)
++++ device/lib/_rlulonglong.c	(nonexistent)
+@@ -1,94 +0,0 @@
+-/*-------------------------------------------------------------------------
+-   _rlulonglong.c - routine for left shift of 64 bit unsigned long long
+-
+-   Copyright (C) 2012, Philipp Klaus Krause . philipp@informatik.uni-frankfurt.de
+-
+-   This library is free software; you can redistribute it and/or modify it
+-   under the terms of the GNU General Public License as published by the
+-   Free Software Foundation; either version 2, or (at your option) any
+-   later version.
+-
+-   This library is distributed in the hope that it will be useful,
+-   but WITHOUT ANY WARRANTY; without even the implied warranty of
+-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+-   GNU General Public License for more details.
+-
+-   You should have received a copy of the GNU General Public License 
+-   along with this library; see the file COPYING. If not, write to the
+-   Free Software Foundation, 51 Franklin Street, Fifth Floor, Boston,
+-   MA 02110-1301, USA.
+-
+-   As a special exception, if you link this library with other files,
+-   some of which are compiled with SDCC, to produce an executable,
+-   this library does not by itself cause the resulting executable to
+-   be covered by the GNU General Public License. This exception does
+-   not however invalidate any other reasons why the executable file
+-   might be covered by the GNU General Public License.
+--------------------------------------------------------------------------*/
+-
+-#include <stdint.h>
+-
+-#include <stdbit.h>
+-
+-#ifdef __SDCC_mcs51
+-#define __SDCC_NONBANKED __nonbanked
+-#else
+-#define __SDCC_NONBANKED
+-#endif
+-
+-#ifdef __SDCC_LONGLONG
+-
+-#if __STDC_ENDIAN_NATIVE__ == __STDC_ENDIAN_BIG__
+-
+-unsigned long long _rlulonglong(unsigned long long l, char s) __SDCC_NONBANKED
+-{
+-	uint32_t *const top = (uint32_t *)((char *)(&l) + 0);
+-	uint16_t *const middle = (uint16_t *)((char *)(&l) + 4);
+-	uint32_t *const bottom = (uint32_t *)((char *)(&l) + 4);
+-	uint16_t *const b = (uint16_t *)(&l);
+-
+-	for(;s >= 16; s-= 16)
+-	{
+-		b[0] = b[1];
+-		b[1] = b[2];
+-		b[2] = b[3];
+-		b[3] = 0;
+-	}
+-
+-	(*top) <<= s;
+-	(*top) |= (((uint32_t)((*middle) & 0xffffu) << s) >> 16);
+-	(*bottom) <<= s;
+-
+-	return(l);
+-}
+-
+-#elif __STDC_ENDIAN_NATIVE__ == __STDC_ENDIAN_LITTLE__
+-
+-unsigned long long _rlulonglong(unsigned long long l, char s) __SDCC_NONBANKED
+-{
+-	uint32_t *const top = (uint32_t *)((char *)(&l) + 4);
+-	uint16_t *const middle = (uint16_t *)((char *)(&l) + 2);
+-	uint32_t *const bottom = (uint32_t *)(&l);
+-	uint16_t *const b = (uint16_t *)(&l);
+-
+-	for(;s >= 16; s-= 16)
+-	{
+-		b[3] = b[2];
+-		b[2] = b[1];
+-		b[1] = b[0];
+-		b[0] = 0;
+-	}
+-
+-	(*top) <<= s;
+-	(*top) |= (((uint32_t)((*middle) & 0xffffu) << s) >> 16);
+-	(*bottom) <<= s;
+-
+-	return(l);
+-}
+-
+-#else
+-#error Support for mixed endiannness not implemented!
+-#endif
+-
+-#endif
+-
+
+Property changes on: device/lib/_rlulonglong.c
+___________________________________________________________________
+Deleted: svn:eol-style
+## -1 +0,0 ##
+-native
+\ No newline at end of property
+Deleted: svn:keywords
+## -1 +0,0 ##
+-Author Date Id Revision
+\ No newline at end of property
+Index: device/lib/_rlslonglong.c
+===================================================================
+--- device/lib/_rlslonglong.c	(revision 14311)
++++ device/lib/_rlslonglong.c	(nonexistent)
+@@ -1,45 +0,0 @@
+-/*-------------------------------------------------------------------------
+-   _rlslonglong.c - routine for left shift of 64 bit long long
+-
+-   Copyright (C) 2012, Philipp Klaus Krause . philipp@informatik.uni-frankfurt.de
+-
+-   This library is free software; you can redistribute it and/or modify it
+-   under the terms of the GNU General Public License as published by the
+-   Free Software Foundation; either version 2, or (at your option) any
+-   later version.
+-
+-   This library is distributed in the hope that it will be useful,
+-   but WITHOUT ANY WARRANTY; without even the implied warranty of
+-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+-   GNU General Public License for more details.
+-
+-   You should have received a copy of the GNU General Public License 
+-   along with this library; see the file COPYING. If not, write to the
+-   Free Software Foundation, 51 Franklin Street, Fifth Floor, Boston,
+-   MA 02110-1301, USA.
+-
+-   As a special exception, if you link this library with other files,
+-   some of which are compiled with SDCC, to produce an executable,
+-   this library does not by itself cause the resulting executable to
+-   be covered by the GNU General Public License. This exception does
+-   not however invalidate any other reasons why the executable file
+-   might be covered by the GNU General Public License.
+--------------------------------------------------------------------------*/
+-
+-#include <stdint.h>
+-
+-#ifdef __SDCC_mcs51
+-#define __SDCC_NONBANKED __nonbanked
+-#else
+-#define __SDCC_NONBANKED
+-#endif
+-
+-#ifdef __SDCC_LONGLONG
+-
+-long long _rlslonglong(long long l, char s) __SDCC_NONBANKED
+-{
+-	return((unsigned long long)(l) << s);
+-}
+-
+-#endif
+-
+
+Property changes on: device/lib/_rlslonglong.c
+___________________________________________________________________
+Deleted: svn:eol-style
+## -1 +0,0 ##
+-native
+\ No newline at end of property
+Deleted: svn:keywords
+## -1 +0,0 ##
+-Author Date Id Revision
+\ No newline at end of property
+Index: device/lib/Makefile.in
+===================================================================
+--- device/lib/Makefile.in	(revision 14311)
++++ device/lib/Makefile.in	(revision 14312)
+@@ -93,7 +93,7 @@
+   _fsreturnval.c \
+   _fsrshift.c \
+   _fsswapargs.c \
+-  _logexpf.c 
++  _logexpf.c
+ 
+ SOURCES_INT = $(COMMON_INT) \
+   _divsint.c \
+@@ -107,10 +107,10 @@
+   _mullong.c
+ 
+ SOURCES_LONGLONG = $(COMMON_LONGLONG) \
+-  _rrulonglong.c \
+-  _rrslonglong.c \
+-  _rlulonglong.c \
+-  _rlslonglong.c \
++  _srulonglong.c \
++  _srslonglong.c \
++  _slulonglong.c \
++  _slslonglong.c \
+   _mullonglong.c \
+   _divslonglong.c \
+   _divulonglong.c \
+Index: device/lib/_divsint.c
+===================================================================
+--- device/lib/_divsint.c	(revision 14311)
++++ device/lib/_divsint.c	(revision 14312)
+@@ -30,12 +30,6 @@
+ 
+ #include <sdcc-lib.h>
+ 
+-#ifdef __SDCC_mcs51
+-#define __SDCC_NONBANKED __nonbanked
+-#else
+-#define __SDCC_NONBANKED
+-#endif
+-
+ #if _SDCC_MANGLES_SUPPORT_FUNS
+ unsigned unsigned _divuint (unsigned x, unsigned y);
+ #endif
+Index: device/lib/_divslong.c
+===================================================================
+--- device/lib/_divslong.c	(revision 14311)
++++ device/lib/_divslong.c	(revision 14312)
+@@ -29,12 +29,6 @@
+ 
+ #include <sdcc-lib.h>
+ 
+-#ifdef __SDCC_mcs51
+-#define __SDCC_NONBANKED __nonbanked
+-#else
+-#define __SDCC_NONBANKED
+-#endif
+-
+ #if _SDCC_MANGLES_SUPPORT_FUNS
+ unsigned long _divulong (unsigned long x, unsigned long y);
+ #endif
+Index: device/lib/_divslonglong.c
+===================================================================
+--- device/lib/_divslonglong.c	(revision 14311)
++++ device/lib/_divslonglong.c	(revision 14312)
+@@ -13,7 +13,7 @@
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+ 
+-   You should have received a copy of the GNU General Public License 
++   You should have received a copy of the GNU General Public License
+    along with this library; see the file COPYING. If not, write to the
+    Free Software Foundation, 51 Franklin Street, Fifth Floor, Boston,
+    MA 02110-1301, USA.
+@@ -29,14 +29,10 @@
+ #include <stdint.h>
+ #include <stdbool.h>
+ 
+-#ifdef __SDCC_mcs51
+-#define __SDCC_NONBANKED __nonbanked
+-#else
+-#define __SDCC_NONBANKED
+-#endif
++#include <sdcc-lib.h>
+ 
+ #ifdef __SDCC_LONGLONG
+-long long 
++long long
+ _divslonglong (long long numerator, long long denominator) __SDCC_NONBANKED
+ {
+   bool numeratorneg = (numerator < 0);
+Index: device/lib/_divuint.c
+===================================================================
+--- device/lib/_divuint.c	(revision 14311)
++++ device/lib/_divuint.c	(revision 14312)
+@@ -33,11 +33,7 @@
+ 
+ #include <stdbool.h>
+ 
+-#ifdef __SDCC_mcs51
+-#define __SDCC_NONBANKED __nonbanked
+-#else
+-#define __SDCC_NONBANKED
+-#endif
++#include <sdcc-lib.h>
+ 
+ #if !defined(__SDCC_USE_XSTACK) && !defined(_SDCC_NO_ASM_LIB_FUNCS)
+ #  if defined(__SDCC_mcs51)
+Index: device/lib/_divulong.c
+===================================================================
+--- device/lib/_divulong.c	(revision 14311)
++++ device/lib/_divulong.c	(revision 14312)
+@@ -33,11 +33,7 @@
+ 
+ #include <stdbool.h>
+ 
+-#ifdef __SDCC_mcs51
+-#define __SDCC_NONBANKED __nonbanked
+-#else
+-#define __SDCC_NONBANKED
+-#endif
++#include <sdcc-lib.h>
+ 
+ #if !defined(__SDCC_USE_XSTACK) && !defined(_SDCC_NO_ASM_LIB_FUNCS)
+ #  if defined(__SDCC_mcs51)
+Index: device/lib/_divulonglong.c
+===================================================================
+--- device/lib/_divulonglong.c	(revision 14311)
++++ device/lib/_divulonglong.c	(revision 14312)
+@@ -14,7 +14,7 @@
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+ 
+-   You should have received a copy of the GNU General Public License 
++   You should have received a copy of the GNU General Public License
+    along with this library; see the file COPYING. If not, write to the
+    Free Software Foundation, 51 Franklin Street, Fifth Floor, Boston,
+    MA 02110-1301, USA.
+@@ -30,11 +30,7 @@
+ #include <stdint.h>
+ #include <stdbool.h>
+ 
+-#ifdef __SDCC_mcs51
+-#define __SDCC_NONBANKED __nonbanked
+-#else
+-#define __SDCC_NONBANKED
+-#endif
++#include <sdcc-lib.h>
+ 
+ #ifdef __SDCC_LONGLONG
+ #define MSB_SET(x) ((x >> (8*sizeof(x)-1)) & 1)
+Index: device/lib/_modsint.c
+===================================================================
+--- device/lib/_modsint.c	(revision 14311)
++++ device/lib/_modsint.c	(revision 14312)
+@@ -29,12 +29,6 @@
+ 
+ #include <sdcc-lib.h>
+ 
+-#ifdef __SDCC_mcs51
+-#define __SDCC_NONBANKED __nonbanked
+-#else
+-#define __SDCC_NONBANKED
+-#endif
+-
+ #if _SDCC_MANGLES_SUPPORT_FUNS
+ unsigned unsigned _moduint (unsigned a, unsigned b);
+ #endif
+Index: device/lib/_modslong.c
+===================================================================
+--- device/lib/_modslong.c	(revision 14311)
++++ device/lib/_modslong.c	(revision 14312)
+@@ -28,12 +28,6 @@
+ 
+ #include <sdcc-lib.h>
+ 
+-#ifdef __SDCC_mcs51
+-#define __SDCC_NONBANKED __nonbanked
+-#else
+-#define __SDCC_NONBANKED
+-#endif
+-
+ #if _SDCC_MANGLES_SUPPORT_FUNS
+ unsigned long _modulong (unsigned long a, unsigned long b);
+ #endif
+Index: device/lib/_modslonglong.c
+===================================================================
+--- device/lib/_modslonglong.c	(revision 14311)
++++ device/lib/_modslonglong.c	(revision 14312)
+@@ -13,7 +13,7 @@
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+ 
+-   You should have received a copy of the GNU General Public License 
++   You should have received a copy of the GNU General Public License
+    along with this library; see the file COPYING. If not, write to the
+    Free Software Foundation, 51 Franklin Street, Fifth Floor, Boston,
+    MA 02110-1301, USA.
+@@ -29,14 +29,10 @@
+ #include <stdint.h>
+ #include <stdbool.h>
+ 
+-#ifdef __SDCC_mcs51
+-#define __SDCC_NONBANKED __nonbanked
+-#else
+-#define __SDCC_NONBANKED
+-#endif
++#include <sdcc-lib.h>
+ 
+ #ifdef __SDCC_LONGLONG
+-long long 
++long long
+ _modslonglong (long long numerator, long long denominator) __SDCC_NONBANKED
+ {
+   bool numeratorneg = (numerator < 0);
+Index: device/lib/_moduint.c
+===================================================================
+--- device/lib/_moduint.c	(revision 14311)
++++ device/lib/_moduint.c	(revision 14312)
+@@ -32,11 +32,7 @@
+      mcs51 small stack-auto
+ */
+ 
+-#ifdef __SDCC_mcs51
+-#define __SDCC_NONBANKED __nonbanked
+-#else
+-#define __SDCC_NONBANKED
+-#endif
++#include <sdcc-lib.h>
+ 
+ #if !defined(__SDCC_USE_XSTACK) && !defined(_SDCC_NO_ASM_LIB_FUNCS)
+ #  if defined(__SDCC_mcs51)
+Index: device/lib/_modulong.c
+===================================================================
+--- device/lib/_modulong.c	(revision 14311)
++++ device/lib/_modulong.c	(revision 14312)
+@@ -32,11 +32,7 @@
+      mcs51 small stack-auto
+ */
+ 
+-#ifdef __SDCC_mcs51
+-#define __SDCC_NONBANKED __nonbanked
+-#else
+-#define __SDCC_NONBANKED
+-#endif
++#include <sdcc-lib.h>
+ 
+ #if !defined(__SDCC_USE_XSTACK) && !defined(_SDCC_NO_ASM_LIB_FUNCS)
+ #  if defined(__SDCC_mcs51)
+@@ -238,7 +234,7 @@
+ 
+ __modlong:			; entry point for __modslong
+ 				; a in r1, b, dph, dpl
+-				; b in r5, r4, r3, r2 
++				; b in r5, r4, r3, r2
+ 
+ 	mov	count,#0
+ 
+Index: device/lib/_modulonglong.c
+===================================================================
+--- device/lib/_modulonglong.c	(revision 14311)
++++ device/lib/_modulonglong.c	(revision 14312)
+@@ -15,7 +15,7 @@
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+ 
+-   You should have received a copy of the GNU General Public License 
++   You should have received a copy of the GNU General Public License
+    along with this library; see the file COPYING. If not, write to the
+    Free Software Foundation, 51 Franklin Street, Fifth Floor, Boston,
+    MA 02110-1301, USA.
+@@ -30,11 +30,7 @@
+ 
+ #include <stdint.h>
+ 
+-#ifdef __SDCC_mcs51
+-#define __SDCC_NONBANKED __nonbanked
+-#else
+-#define __SDCC_NONBANKED
+-#endif
++#include <sdcc-lib.h>
+ 
+ #ifdef __SDCC_LONGLONG
+ 
+Index: device/lib/_mulint.c
+===================================================================
+--- device/lib/_mulint.c	(revision 14311)
++++ device/lib/_mulint.c	(revision 14312)
+@@ -36,11 +36,7 @@
+      mcs51 large
+ */
+ 
+-#ifdef __SDCC_mcs51
+-#define __SDCC_NONBANKED __nonbanked
+-#else
+-#define __SDCC_NONBANKED
+-#endif
++#include <sdcc-lib.h>
+ 
+ #if !defined(__SDCC_USE_XSTACK) && !defined(_SDCC_NO_ASM_LIB_FUNCS)
+ #  if defined(__SDCC_ds390)
+Index: device/lib/_mullong.c
+===================================================================
+--- device/lib/_mullong.c	(revision 14311)
++++ device/lib/_mullong.c	(revision 14312)
+@@ -35,11 +35,7 @@
+      mcs51 small stack-auto
+ */
+ 
+-#ifdef __SDCC_mcs51
+-#define __SDCC_NONBANKED __nonbanked
+-#else
+-#define __SDCC_NONBANKED
+-#endif
++#include <sdcc-lib.h>
+ 
+ #if !defined(__SDCC_USE_XSTACK) && !defined(_SDCC_NO_ASM_LIB_FUNCS)
+ #  if defined(__SDCC_mcs51)
+Index: device/lib/_mullonglong.c
+===================================================================
+--- device/lib/_mullonglong.c	(revision 14311)
++++ device/lib/_mullonglong.c	(revision 14312)
+@@ -13,7 +13,7 @@
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+ 
+-   You should have received a copy of the GNU General Public License 
++   You should have received a copy of the GNU General Public License
+    along with this library; see the file COPYING. If not, write to the
+    Free Software Foundation, 51 Franklin Street, Fifth Floor, Boston,
+    MA 02110-1301, USA.
+@@ -28,11 +28,7 @@
+ 
+ #include <stdint.h>
+ 
+-#ifdef __SDCC_mcs51
+-#define __SDCC_NONBANKED __nonbanked
+-#else
+-#define __SDCC_NONBANKED
+-#endif
++#include <sdcc-lib.h>
+ 
+ #ifdef __SDCC_LONGLONG
+ 
+Index: device/lib/_slonglong2fs.c
+===================================================================
+--- device/lib/_slonglong2fs.c	(revision 14311)
++++ device/lib/_slonglong2fs.c	(revision 14312)
+@@ -1,6 +1,6 @@
+ /*-------------------------------------------------------------------------
+    _slonglong2fs.c - Floating point library in optimized assembly for 8051
+- 
++
+    Copyright (C) 2004, Paul Stoffregen, paul@pjrc.com
+                  2022, Benedikt Freisen
+ 
+@@ -14,7 +14,7 @@
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+ 
+-   You should have received a copy of the GNU General Public License 
++   You should have received a copy of the GNU General Public License
+    along with this library; see the file COPYING. If not, write to the
+    Free Software Foundation, 51 Franklin Street, Fifth Floor, Boston,
+    MA 02110-1301, USA.
+@@ -31,11 +31,11 @@
+ #define __SDCC_FLOAT_LIB
+ #include <float.h>
+ 
+-
+ /* convert signed long long to float */
+-float __slonglong2fs (signed long long sll) __SDCC_FLOAT_NONBANKED {
+-  if (sll<0) 
++float __slonglong2fs (signed long long sll) __SDCC_FLOAT_NONBANKED
++{
++  if (sll<0)
+     return -__ulonglong2fs(-sll);
+-  else 
++  else
+     return __ulonglong2fs(sll);
+ }
+Index: device/lib/_slslonglong.c
+===================================================================
+--- device/lib/_slslonglong.c	(nonexistent)
++++ device/lib/_slslonglong.c	(revision 14312)
+@@ -0,0 +1,41 @@
++/*-------------------------------------------------------------------------
++   _slslonglong.c - routine for shift left of 64 bit signed long long
++
++   Copyright (C) 2012, Philipp Klaus Krause . philipp@informatik.uni-frankfurt.de
++
++   This library is free software; you can redistribute it and/or modify it
++   under the terms of the GNU General Public License as published by the
++   Free Software Foundation; either version 2, or (at your option) any
++   later version.
++
++   This library is distributed in the hope that it will be useful,
++   but WITHOUT ANY WARRANTY; without even the implied warranty of
++   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++   GNU General Public License for more details.
++
++   You should have received a copy of the GNU General Public License
++   along with this library; see the file COPYING. If not, write to the
++   Free Software Foundation, 51 Franklin Street, Fifth Floor, Boston,
++   MA 02110-1301, USA.
++
++   As a special exception, if you link this library with other files,
++   some of which are compiled with SDCC, to produce an executable,
++   this library does not by itself cause the resulting executable to
++   be covered by the GNU General Public License. This exception does
++   not however invalidate any other reasons why the executable file
++   might be covered by the GNU General Public License.
++-------------------------------------------------------------------------*/
++
++#include <stdint.h>
++
++#include <sdcc-lib.h>
++
++#ifdef __SDCC_LONGLONG
++
++long long _slslonglong(long long l, char s) __SDCC_NONBANKED
++{
++    return((unsigned long long)(l) << s);
++}
++
++#endif
++
+
+Property changes on: device/lib/_slslonglong.c
+___________________________________________________________________
+Added: svn:eol-style
+## -0,0 +1 ##
++native
+\ No newline at end of property
+Added: svn:keywords
+## -0,0 +1 ##
++Author Date Id Revision
+\ No newline at end of property
+Index: device/lib/_slulonglong.c
+===================================================================
+--- device/lib/_slulonglong.c	(nonexistent)
++++ device/lib/_slulonglong.c	(revision 14312)
+@@ -0,0 +1,90 @@
++/*-------------------------------------------------------------------------
++   _slulonglong.c - routine for shift left of 64 bit unsigned long long
++
++   Copyright (C) 2012, Philipp Klaus Krause . philipp@informatik.uni-frankfurt.de
++
++   This library is free software; you can redistribute it and/or modify it
++   under the terms of the GNU General Public License as published by the
++   Free Software Foundation; either version 2, or (at your option) any
++   later version.
++
++   This library is distributed in the hope that it will be useful,
++   but WITHOUT ANY WARRANTY; without even the implied warranty of
++   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++   GNU General Public License for more details.
++
++   You should have received a copy of the GNU General Public License
++   along with this library; see the file COPYING. If not, write to the
++   Free Software Foundation, 51 Franklin Street, Fifth Floor, Boston,
++   MA 02110-1301, USA.
++
++   As a special exception, if you link this library with other files,
++   some of which are compiled with SDCC, to produce an executable,
++   this library does not by itself cause the resulting executable to
++   be covered by the GNU General Public License. This exception does
++   not however invalidate any other reasons why the executable file
++   might be covered by the GNU General Public License.
++-------------------------------------------------------------------------*/
++
++#include <stdint.h>
++
++#include <stdbit.h>
++
++#include <sdcc-lib.h>
++
++#ifdef __SDCC_LONGLONG
++
++#if __STDC_ENDIAN_NATIVE__ == __STDC_ENDIAN_BIG__
++
++unsigned long long _slulonglong(unsigned long long l, char s) __SDCC_NONBANKED
++{
++    uint32_t * const top =    (uint32_t *)((char *)(&l) + 0);
++    uint16_t * const middle = (uint16_t *)((char *)(&l) + 4);
++    uint32_t * const bottom = (uint32_t *)((char *)(&l) + 4);
++    uint16_t * const w =      (uint16_t *)(&l);
++
++    for (; s >= 16; s-= 16)
++    {
++        w[0] = w[1];
++        w[1] = w[2];
++        w[2] = w[3];
++        w[3] = 0;
++    }
++
++    (*top) <<= s;
++    (*top) |= (((uint32_t)((*middle) & 0xffffu) << s) >> 16);
++    (*bottom) <<= s;
++
++    return(l);
++}
++
++#elif __STDC_ENDIAN_NATIVE__ == __STDC_ENDIAN_LITTLE__
++
++unsigned long long _slulonglong(unsigned long long l, char s) __SDCC_NONBANKED
++{
++    _AUTOMEM uint32_t * const top =    (_AUTOMEM uint32_t *)((_AUTOMEM char *)(&l) + 4);
++    _AUTOMEM uint16_t * const middle = (_AUTOMEM uint16_t *)((_AUTOMEM char *)(&l) + 2);
++    _AUTOMEM uint32_t * const bottom = (_AUTOMEM uint32_t *)((_AUTOMEM char *)(&l) + 0);
++    _AUTOMEM uint16_t * const w =      (_AUTOMEM uint16_t *)(&l);
++
++    for (; s >= 16; s-= 16)
++    {
++        w[3] = w[2];
++        w[2] = w[1];
++        w[1] = w[0];
++        w[0] = 0;
++    }
++
++    (*top) <<= s;
++    (*top) |= (((uint32_t)((*middle) & 0xffffu) << s) >> 16);
++    (*bottom) <<= s;
++
++    return(l);
++}
++
++#else
++#error Support for mixed endiannness not implemented!
++#endif
++
++#endif
++
+
+Property changes on: device/lib/_slulonglong.c
+___________________________________________________________________
+Added: svn:eol-style
+## -0,0 +1 ##
++native
+\ No newline at end of property
+Added: svn:keywords
+## -0,0 +1 ##
++Author Date Id Revision
+\ No newline at end of property
+Index: device/lib/_srslonglong.c
+===================================================================
+--- device/lib/_srslonglong.c	(nonexistent)
++++ device/lib/_srslonglong.c	(revision 14312)
+@@ -0,0 +1,86 @@
++/*-------------------------------------------------------------------------
++   _srslonglong.c - routine for shift right of 64 bit signed long long
++
++   Copyright (C) 2012, Philipp Klaus Krause . philipp@informatik.uni-frankfurt.de
++
++   This library is free software; you can redistribute it and/or modify it
++   under the terms of the GNU General Public License as published by the
++   Free Software Foundation; either version 2, or (at your option) any
++   later version.
++
++   This library is distributed in the hope that it will be useful,
++   but WITHOUT ANY WARRANTY; without even the implied warranty of
++   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++   GNU General Public License for more details.
++
++   You should have received a copy of the GNU General Public License
++   along with this library; see the file COPYING. If not, write to the
++   Free Software Foundation, 51 Franklin Street, Fifth Floor, Boston,
++   MA 02110-1301, USA.
++
++   As a special exception, if you link this library with other files,
++   some of which are compiled with SDCC, to produce an executable,
++   this library does not by itself cause the resulting executable to
++   be covered by the GNU General Public License. This exception does
++   not however invalidate any other reasons why the executable file
++   might be covered by the GNU General Public License.
++-------------------------------------------------------------------------*/
++
++#include <stdint.h>
++
++#include <stdbit.h>
++
++#include <sdcc-lib.h>
++
++#ifdef __SDCC_LONGLONG
++
++#if __STDC_ENDIAN_NATIVE__ == __STDC_ENDIAN_BIG__
++long long _srslonglong(long long l, char s) __SDCC_NONBANKED
++{
++     int32_t * const top =    ( int32_t *)((char *)(&l) + 0);
++    uint32_t * const middle = (uint32_t *)((char *)(&l) + 2);
++    uint32_t * const bottom = (uint32_t *)((char *)(&l) + 4);
++    uint16_t * const w =      (uint16_t *)(&l);
++
++    for (; s >= 16; s-= 16)
++    {
++        w[3] = w[2];
++        w[2] = w[1];
++        w[1] = w[0];
++        w[0] = (w[0] & 0x8000) ? 0xffff : 0x000000;
++    }
++
++    (*bottom) >>= s;
++    (*middle) |= (((*middle & 0xffff0000ul) >> s) & 0x0000fffful);
++    (*top) >>= s;
++
++    return(l);
++}
++#elif __STDC_ENDIAN_NATIVE__ == __STDC_ENDIAN_LITTLE__
++long long _srslonglong(long long l, char s) __SDCC_NONBANKED
++{
++    _AUTOMEM  int32_t * const top =    (_AUTOMEM  int32_t *)((_AUTOMEM char *)(&l) + 4);
++    _AUTOMEM uint32_t * const middle = (_AUTOMEM uint32_t *)((_AUTOMEM char *)(&l) + 2);
++    _AUTOMEM uint32_t * const bottom = (_AUTOMEM uint32_t *)((_AUTOMEM char *)(&l) + 0);
++    _AUTOMEM uint16_t * const w =      (_AUTOMEM uint16_t *)(&l);
++
++    for (; s >= 16; s-= 16)
++    {
++        w[0] = w[1];
++        w[1] = w[2];
++        w[2] = w[3];
++        w[3] = (w[3] & 0x8000) ? 0xffff : 0x000000;
++    }
++
++    (*bottom) >>= s;
++    (*middle) |= (((*middle & 0xffff0000ul) >> s) & 0x0000fffful);
++    (*top) >>= s;
++
++    return(l);
++}
++#else
++#error Support for mixed endiannness not implemented!
++#endif
++
++#endif
++
+
+Property changes on: device/lib/_srslonglong.c
+___________________________________________________________________
+Added: svn:eol-style
+## -0,0 +1 ##
++native
+\ No newline at end of property
+Added: svn:keywords
+## -0,0 +1 ##
++Author Date Id Revision
+\ No newline at end of property
+Index: device/lib/_srulonglong.c
+===================================================================
+--- device/lib/_srulonglong.c	(nonexistent)
++++ device/lib/_srulonglong.c	(revision 14312)
+@@ -0,0 +1,86 @@
++/*-------------------------------------------------------------------------
++   _srulonglong.c - routine for shift right of 64 bit unsigned long long
++
++   Copyright (C) 2012, Philipp Klaus Krause . philipp@informatik.uni-frankfurt.de
++
++   This library is free software; you can redistribute it and/or modify it
++   under the terms of the GNU General Public License as published by the
++   Free Software Foundation; either version 2, or (at your option) any
++   later version.
++
++   This library is distributed in the hope that it will be useful,
++   but WITHOUT ANY WARRANTY; without even the implied warranty of
++   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++   GNU General Public License for more details.
++
++   You should have received a copy of the GNU General Public License
++   along with this library; see the file COPYING. If not, write to the
++   Free Software Foundation, 51 Franklin Street, Fifth Floor, Boston,
++   MA 02110-1301, USA.
++
++   As a special exception, if you link this library with other files,
++   some of which are compiled with SDCC, to produce an executable,
++   this library does not by itself cause the resulting executable to
++   be covered by the GNU General Public License. This exception does
++   not however invalidate any other reasons why the executable file
++   might be covered by the GNU General Public License.
++-------------------------------------------------------------------------*/
++
++#include <stdint.h>
++
++#include <stdbit.h>
++
++#include <sdcc-lib.h>
++
++#ifdef __SDCC_LONGLONG
++
++#if __STDC_ENDIAN_NATIVE__ == __STDC_ENDIAN_BIG__
++unsigned long long _srulonglong(unsigned long long l, char s) __SDCC_NONBANKED
++{
++    uint32_t *const top =    (uint32_t *)((char *)(&l) + 0);
++    uint32_t *const middle = (uint16_t *)((char *)(&l) + 2);
++    uint32_t *const bottom = (uint32_t *)((char *)(&l) + 4);
++    uint16_t *const w =      (uint16_t *)(&l);
++
++    for (; s >= 16; s -= 16)
++    {
++        w[3] = w[2];
++        w[2] = w[1];
++        w[1] = w[0];
++        w[0] = 0x000000;
++    }
++
++    (*bottom) >>= s;
++    (*middle) |= (((*middle & 0xffff0000ul) >> s) & 0x0000fffful);
++    (*top) >>= s;
++
++    return(l);
++}
++#elif __STDC_ENDIAN_NATIVE__ == __STDC_ENDIAN_LITTLE__
++unsigned long long _srulonglong(unsigned long long l, char s) __SDCC_NONBANKED
++{
++    _AUTOMEM uint32_t *const top =    (_AUTOMEM uint32_t *)((_AUTOMEM char *)(&l) + 4);
++    _AUTOMEM uint16_t *const middle = (_AUTOMEM uint16_t *)((_AUTOMEM char *)(&l) + 4);
++    _AUTOMEM uint32_t *const bottom = (_AUTOMEM uint32_t *)((_AUTOMEM char *)(&l) + 0);
++    _AUTOMEM uint16_t *const w =      (_AUTOMEM uint16_t *)(&l);
++
++    for (; s >= 16; s -= 16)
++    {
++        w[0] = w[1];
++        w[1] = w[2];
++        w[2] = w[3];
++        w[3] = 0x000000;
++    }
++
++    (*bottom) >>= s;
++    (*middle) |= (uint16_t)(((uint32_t)(*middle) << 16) >> s);
++    (*top) |= (((*middle) & 0xffff0000ul) >> s);
++
++    return(l);
++}
++#else
++#error Support for mixed endiannness not implemented!
++#endif
++
++#endif
++
+
+Property changes on: device/lib/_srulonglong.c
+___________________________________________________________________
+Added: svn:eol-style
+## -0,0 +1 ##
++native
+\ No newline at end of property
+Added: svn:keywords
+## -0,0 +1 ##
++Author Date Id Revision
+\ No newline at end of property
+Index: device/lib/atomic_flag_clear.c
+===================================================================
+--- device/lib/atomic_flag_clear.c	(revision 14311)
++++ device/lib/atomic_flag_clear.c	(revision 14312)
+@@ -26,16 +26,6 @@
+    might be covered by the GNU General Public License.
+ -------------------------------------------------------------------------*/
+ 
++#define __SDCC_ATOMIC_EXTERN extern
++
+ #include <stdatomic.h>
+-
+-void atomic_flag_clear(volatile atomic_flag *object)
+-{
+-#if defined(__SDCC_mcs51)
+-	object->flag = 0;
+-#elif defined(__SDCC_tlcs90) || defined(__SDCC_z80) || defined(__SDCC_z180) || defined(__SDCC_ez80_z80) || defined(__SDCC_z80n) || defined(__SDCC_sm83) || defined(__SDCC_r2k) || defined(__SDCC_r2ka) || defined(__SDCC_r3ka) || defined(__SDCC_stm8) || defined(__SDCC_hc08) || defined(__SDCC_s08) || defined(__SDCC_mos6502) || defined(__SDCC_mos65c02)
+-	object->flag = 1;
+-#else
+-#error Support for atomic_flag not implemented
+-#endif
+-}
+-
+Index: device/lib/ez80_z80/atomic_flag_test_and_set.s
+===================================================================
+--- device/lib/ez80_z80/atomic_flag_test_and_set.s	(revision 14311)
++++ device/lib/ez80_z80/atomic_flag_test_and_set.s	(revision 14312)
+@@ -13,7 +13,7 @@
+ ;  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ ;  GNU General Public License for more details.
+ ;
+-;  You should have received a copy of the GNU General Public License 
++;  You should have received a copy of the GNU General Public License
+ ;  along with this library; see the file COPYING. If not, write to the
+ ;  Free Software Foundation, 51 Franklin Street, Fifth Floor, Boston,
+ ;   MA 02110-1301, USA.
+@@ -36,8 +36,7 @@
+ 	push	hl
+ 	push	de
+ 	xor a, a
+-	srl	(hl)
+-	ccf
++	sra	(hl)
+ 	rla
+ 	ld	l, a
+ 	ret
+Index: device/lib/hc08/Makefile.in
+===================================================================
+--- device/lib/hc08/Makefile.in	(revision 14311)
++++ device/lib/hc08/Makefile.in	(revision 14312)
+@@ -28,10 +28,10 @@
+   _divulong.c
+ 
+ HC08_LONGLONG = $(COMMON_LONGLONG) \
+-  _rrulonglong.c \
+-  _rrslonglong.c \
+-  _rlulonglong.c \
+-  _rlslonglong.c \
++  _srulonglong.c \
++  _srslonglong.c \
++  _slulonglong.c \
++  _slslonglong.c \
+   _mullonglong.c \
+   _divslonglong.c \
+   _divulonglong.c \
+Index: device/lib/mcs51/Makefile.in
+===================================================================
+--- device/lib/mcs51/Makefile.in	(revision 14311)
++++ device/lib/mcs51/Makefile.in	(revision 14312)
+@@ -15,7 +15,7 @@
+ override PORTDIR = ../build/$(PORT)
+ 
+ OBJ = crtstart.rel crtxinit.rel crtxclear.rel crtclear.rel \
+-      crtpagesfr.rel crtbank.rel crtcall.rel \
++      crtpagesfr.rel crtbank.rel crtcall.rel crtstackprobe.rel \
+       crtxstack.rel crtxpush.rel crtxpushr0.rel crtxpop.rel crtxpopr0.rel \
+       gptr_cmp.rel atomic_flag_test_and_set.rel atomic_flag_clear.rel
+ 
+Index: device/lib/mos6502/_rrslonglong.c
+===================================================================
+--- device/lib/mos6502/_rrslonglong.c	(revision 14311)
++++ device/lib/mos6502/_rrslonglong.c	(nonexistent)
+@@ -1,40 +0,0 @@
+-
+-#pragma std_c99
+-
+-#include <stdint.h>
+-
+-#ifdef __SDCC_LONGLONG
+-
+-long long _rrslonglong(long long l, char s)
+-{
+-
+-  uint8_t *const b = (uint8_t *)(&l);
+-  unsigned char shift,t1,t2, sign;
+-  signed char zb,i;
+-
+-  sign=b[7]&0x80;
+-  
+-  zb=s>>3;
+-  if(zb) {
+-    i=0;
+-    for(;i<(8-zb);i++) {
+-      b[i]=b[zb+i];
+-    }
+-    for(;i<8;i++)
+-      b[i]=sign?0xff:0x00;
+-  }
+-  
+-  shift=s&0x7;
+-  while(shift--) {
+-    t2=sign;
+-    for(i=7-zb;i>=0;i--) {
+-      t1=b[i]&1;
+-      b[i]=(b[i]>>1)|t2;
+-      t2=t1?0x80:0;
+-    } 
+-  }
+-  
+-  return(l);
+-}
+-
+-#endif
+Index: device/lib/mos6502/_rrulonglong.c
+===================================================================
+--- device/lib/mos6502/_rrulonglong.c	(revision 14311)
++++ device/lib/mos6502/_rrulonglong.c	(nonexistent)
+@@ -1,38 +0,0 @@
+-
+-#pragma std_c99
+-
+-#include <stdint.h>
+-
+-#ifdef __SDCC_LONGLONG
+-
+-unsigned long long _rrulonglong(unsigned long long l, char s)
+-{
+-
+-  uint8_t *const b = (uint8_t *)(&l);
+-  unsigned char shift,t1,t2;
+-  signed char zb,i;
+-  
+-  zb=s>>3;
+-  if(zb) {
+-    for(i=0;i<(8-zb);i++) {
+-      b[i]=b[zb+i];
+-    }
+-  
+-    for(;i<8;i++)
+-      b[i]=0;
+-  }
+-  
+-  shift=s&0x7;
+-  while(shift--) {
+-    t2=0;
+-    for(i=7-zb;i>=0;i--) {
+-      t1=b[i]&1;
+-      b[i]=(b[i]>>1)|t2;
+-      t2=t1?0x80:0;
+-    } 
+-  }
+-  
+-  return(l);
+-}
+-
+-#endif
+Index: device/lib/mos6502/Makefile.in
+===================================================================
+--- device/lib/mos6502/Makefile.in	(revision 14311)
++++ device/lib/mos6502/Makefile.in	(revision 14312)
+@@ -41,10 +41,10 @@
+   _mullong.c
+ 
+ MOS6502_LONGLONG = $(COMMON_LONGLONG) \
+-  _rrulonglong.c \
+-  _rrslonglong.c \
+-  _rlulonglong.c \
+-  _rlslonglong.c \
++  _srulonglong.c \
++  _srslonglong.c \
++  _slulonglong.c \
++  _slslonglong.c \
+   _mullonglong.c \
+   _divslonglong.c \
+   _divulonglong.c \
+Index: device/lib/mos6502/_srslonglong.c
+===================================================================
+--- device/lib/mos6502/_srslonglong.c	(nonexistent)
++++ device/lib/mos6502/_srslonglong.c	(revision 14312)
+@@ -0,0 +1,37 @@
++#include <stdint.h>
++
++#ifdef __SDCC_LONGLONG
++
++long long _srslonglong(long long l, char s)
++{
++
++  uint8_t *const b = (uint8_t *)(&l);
++  unsigned char shift,t1,t2, sign;
++  signed char zb,i;
++
++  sign=b[7]&0x80;
++
++  zb=s>>3;
++  if(zb) {
++    i=0;
++    for(;i<(8-zb);i++) {
++      b[i]=b[zb+i];
++    }
++    for(;i<8;i++)
++      b[i]=sign?0xff:0x00;
++  }
++
++  shift=s&0x7;
++  while(shift--) {
++    t2=sign;
++    for(i=7-zb;i>=0;i--) {
++      t1=b[i]&1;
++      b[i]=(b[i]>>1)|t2;
++      t2=t1?0x80:0;
++    }
++  }
++
++  return(l);
++}
++
++#endif
+Index: device/lib/mos6502/_srulonglong.c
+===================================================================
+--- device/lib/mos6502/_srulonglong.c	(nonexistent)
++++ device/lib/mos6502/_srulonglong.c	(revision 14312)
+@@ -0,0 +1,34 @@
++#include <stdint.h>
++
++#ifdef __SDCC_LONGLONG
++
++unsigned long long _srulonglong(unsigned long long l, char s)
++{
++  uint8_t *const b = (uint8_t *)(&l);
++  unsigned char shift,t1,t2;
++  signed char zb,i;
++
++  zb=s>>3;
++  if(zb) {
++    for(i=0;i<(8-zb);i++) {
++      b[i]=b[zb+i];
++    }
++
++    for(;i<8;i++)
++      b[i]=0;
++  }
++
++  shift=s&0x7;
++  while(shift--) {
++    t2=0;
++    for(i=7-zb;i>=0;i--) {
++      t1=b[i]&1;
++      b[i]=(b[i]>>1)|t2;
++      t2=t1?0x80:0;
++    }
++  }
++
++  return(l);
++}
++
++#endif
+Index: device/lib/mos6502-stack-auto/_rrslonglong.c
+===================================================================
+--- device/lib/mos6502-stack-auto/_rrslonglong.c	(revision 14311)
++++ device/lib/mos6502-stack-auto/_rrslonglong.c	(nonexistent)
+@@ -1,40 +0,0 @@
+-
+-#pragma std_c99
+-
+-#include <stdint.h>
+-
+-#ifdef __SDCC_LONGLONG
+-
+-long long _rrslonglong(long long l, char s)
+-{
+-
+-  uint8_t *const b = (uint8_t *)(&l);
+-  unsigned char shift,t1,t2, sign;
+-  signed char zb,i;
+-
+-  sign=b[7]&0x80;
+-  
+-  zb=s>>3;
+-  if(zb) {
+-    i=0;
+-    for(;i<(8-zb);i++) {
+-      b[i]=b[zb+i];
+-    }
+-    for(;i<8;i++)
+-      b[i]=sign?0xff:0x00;
+-  }
+-  
+-  shift=s&0x7;
+-  while(shift--) {
+-    t2=sign;
+-    for(i=7-zb;i>=0;i--) {
+-      t1=b[i]&1;
+-      b[i]=(b[i]>>1)|t2;
+-      t2=t1?0x80:0;
+-    } 
+-  }
+-  
+-  return(l);
+-}
+-
+-#endif
+Index: device/lib/mos6502-stack-auto/_rrulonglong.c
+===================================================================
+--- device/lib/mos6502-stack-auto/_rrulonglong.c	(revision 14311)
++++ device/lib/mos6502-stack-auto/_rrulonglong.c	(nonexistent)
+@@ -1,38 +0,0 @@
+-
+-#pragma std_c99
+-
+-#include <stdint.h>
+-
+-#ifdef __SDCC_LONGLONG
+-
+-unsigned long long _rrulonglong(unsigned long long l, char s)
+-{
+-
+-  uint8_t *const b = (uint8_t *)(&l);
+-  unsigned char shift,t1,t2;
+-  signed char zb,i;
+-  
+-  zb=s>>3;
+-  if(zb) {
+-    for(i=0;i<(8-zb);i++) {
+-      b[i]=b[zb+i];
+-    }
+-  
+-    for(;i<8;i++)
+-      b[i]=0;
+-  }
+-  
+-  shift=s&0x7;
+-  while(shift--) {
+-    t2=0;
+-    for(i=7-zb;i>=0;i--) {
+-      t1=b[i]&1;
+-      b[i]=(b[i]>>1)|t2;
+-      t2=t1?0x80:0;
+-    } 
+-  }
+-  
+-  return(l);
+-}
+-
+-#endif
+Index: device/lib/mos6502-stack-auto/Makefile.in
+===================================================================
+--- device/lib/mos6502-stack-auto/Makefile.in	(revision 14311)
++++ device/lib/mos6502-stack-auto/Makefile.in	(revision 14312)
+@@ -35,10 +35,10 @@
+   _mullong.c
+ 
+ MOS6502_LONGLONG = $(COMMON_LONGLONG) \
+-  _rrulonglong.c \
+-  _rrslonglong.c \
+-  _rlulonglong.c \
+-  _rlslonglong.c \
++  _srulonglong.c \
++  _srslonglong.c \
++  _slulonglong.c \
++  _slslonglong.c \
+   _mullonglong.c \
+   _divslonglong.c \
+   _divulonglong.c \
+Index: device/lib/mos6502-stack-auto/_srslonglong.c
+===================================================================
+--- device/lib/mos6502-stack-auto/_srslonglong.c	(nonexistent)
++++ device/lib/mos6502-stack-auto/_srslonglong.c	(revision 14312)
+@@ -0,0 +1,37 @@
++#include <stdint.h>
++
++#ifdef __SDCC_LONGLONG
++
++long long _srslonglong(long long l, char s)
++{
++
++  uint8_t *const b = (uint8_t *)(&l);
++  unsigned char shift,t1,t2, sign;
++  signed char zb,i;
++
++  sign=b[7]&0x80;
++
++  zb=s>>3;
++  if(zb) {
++    i=0;
++    for(;i<(8-zb);i++) {
++      b[i]=b[zb+i];
++    }
++    for(;i<8;i++)
++      b[i]=sign?0xff:0x00;
++  }
++
++  shift=s&0x7;
++  while(shift--) {
++    t2=sign;
++    for(i=7-zb;i>=0;i--) {
++      t1=b[i]&1;
++      b[i]=(b[i]>>1)|t2;
++      t2=t1?0x80:0;
++    }
++  }
++
++  return(l);
++}
++
++#endif
+Index: device/lib/mos6502-stack-auto/_srulonglong.c
+===================================================================
+--- device/lib/mos6502-stack-auto/_srulonglong.c	(nonexistent)
++++ device/lib/mos6502-stack-auto/_srulonglong.c	(revision 14312)
+@@ -0,0 +1,34 @@
++#include <stdint.h>
++
++#ifdef __SDCC_LONGLONG
++
++unsigned long long _srulonglong(unsigned long long l, char s)
++{
++  uint8_t *const b = (uint8_t *)(&l);
++  unsigned char shift,t1,t2;
++  signed char zb,i;
++  
++  zb=s>>3;
++  if(zb) {
++    for(i=0;i<(8-zb);i++) {
++      b[i]=b[zb+i];
++    }
++  
++    for(;i<8;i++)
++      b[i]=0;
++  }
++  
++  shift=s&0x7;
++  while(shift--) {
++    t2=0;
++    for(i=7-zb;i>=0;i--) {
++      t1=b[i]&1;
++      b[i]=(b[i]>>1)|t2;
++      t2=t1?0x80:0;
++    } 
++  }
++  
++  return(l);
++}
++
++#endif
+Index: device/lib/mos65c02/Makefile.in
+===================================================================
+--- device/lib/mos65c02/Makefile.in	(revision 14311)
++++ device/lib/mos65c02/Makefile.in	(revision 14312)
+@@ -27,10 +27,10 @@
+   _divulong.c
+ 
+ M6502_LONGLONG = $(COMMON_LONGLONG) \
+-  _rrulonglong.c \
+-  _rrslonglong.c \
+-  _rlulonglong.c \
+-  _rlslonglong.c \
++  _srulonglong.c \
++  _srslonglong.c \
++  _slulonglong.c \
++  _slslonglong.c \
+   _mullonglong.c \
+   _divslonglong.c \
+   _divulonglong.c \
+Index: device/lib/pdk13/Makefile.in
+===================================================================
+--- device/lib/pdk13/Makefile.in	(revision 14311)
++++ device/lib/pdk13/Makefile.in	(revision 14312)
+@@ -41,10 +41,10 @@
+   _mullong.c
+ 
+ PDK13_LONGLONG = $(COMMON_LONGLONG) \
+-  _rrulonglong.c \
+-  _rrslonglong.c \
+-  _rlulonglong.c \
+-  _rlslonglong.c \
++  _srulonglong.c \
++  _srslonglong.c \
++  _slulonglong.c \
++  _slslonglong.c \
+   _mullonglong.c \
+   _divslonglong.c \
+   _divulonglong.c \
+Index: device/lib/pdk14/Makefile.in
+===================================================================
+--- device/lib/pdk14/Makefile.in	(revision 14311)
++++ device/lib/pdk14/Makefile.in	(revision 14312)
+@@ -35,10 +35,10 @@
+   _mullong.c
+ 
+ PDK14_LONGLONG = $(COMMON_LONGLONG) \
+-  _rrulonglong.c \
+-  _rrslonglong.c \
+-  _rlulonglong.c \
+-  _rlslonglong.c \
++  _srulonglong.c \
++  _srslonglong.c \
++  _slulonglong.c \
++  _slslonglong.c \
+   _mullonglong.c \
+   _divslonglong.c \
+   _divulonglong.c \
+Index: device/lib/pdk15/Makefile.in
+===================================================================
+--- device/lib/pdk15/Makefile.in	(revision 14311)
++++ device/lib/pdk15/Makefile.in	(revision 14312)
+@@ -35,10 +35,10 @@
+   _mullong.c
+ 
+ PDK15_LONGLONG = $(COMMON_LONGLONG) \
+-  _rrulonglong.c \
+-  _rrslonglong.c \
+-  _rlulonglong.c \
+-  _rlslonglong.c \
++  _srulonglong.c \
++  _srslonglong.c \
++  _slulonglong.c \
++  _slslonglong.c \
+   _mullonglong.c \
+   _divslonglong.c \
+   _divulonglong.c \
+Index: device/lib/pdk15-stack-auto/Makefile.in
+===================================================================
+--- device/lib/pdk15-stack-auto/Makefile.in	(revision 14311)
++++ device/lib/pdk15-stack-auto/Makefile.in	(revision 14312)
+@@ -35,10 +35,10 @@
+   _mullong.c
+ 
+ PDK15_LONGLONG = $(COMMON_LONGLONG) \
+-  _rrulonglong.c \
+-  _rrslonglong.c \
+-  _rlulonglong.c \
+-  _rlslonglong.c \
++  _srulonglong.c \
++  _srslonglong.c \
++  _slulonglong.c \
++  _slslonglong.c \
+   _mullonglong.c \
+   _divslonglong.c \
+   _divulonglong.c \
+Index: device/lib/r2k/atomic_flag_test_and_set.s
+===================================================================
+--- device/lib/r2k/atomic_flag_test_and_set.s	(revision 14311)
++++ device/lib/r2k/atomic_flag_test_and_set.s	(revision 14312)
+@@ -13,7 +13,7 @@
+ ;  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ ;  GNU General Public License for more details.
+ ;
+-;  You should have received a copy of the GNU General Public License 
++;  You should have received a copy of the GNU General Public License
+ ;  along with this library; see the file COPYING. If not, write to the
+ ;  Free Software Foundation, 51 Franklin Street, Fifth Floor, Boston,
+ ;   MA 02110-1301, USA.
+@@ -33,8 +33,7 @@
+ _atomic_flag_test_and_set:
+ 	ld	hl, 2 (sp)
+ 	xor a, a
+-	srl	(hl)
+-	ccf
++	sra	(hl)
+ 	rla
+ 	ld	l, a
+ 	ret
+Index: device/lib/r2ka/atomic_flag_test_and_set.s
+===================================================================
+--- device/lib/r2ka/atomic_flag_test_and_set.s	(revision 14311)
++++ device/lib/r2ka/atomic_flag_test_and_set.s	(revision 14312)
+@@ -13,7 +13,7 @@
+ ;  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ ;  GNU General Public License for more details.
+ ;
+-;  You should have received a copy of the GNU General Public License 
++;  You should have received a copy of the GNU General Public License
+ ;  along with this library; see the file COPYING. If not, write to the
+ ;  Free Software Foundation, 51 Franklin Street, Fifth Floor, Boston,
+ ;   MA 02110-1301, USA.
+@@ -33,8 +33,7 @@
+ _atomic_flag_test_and_set:
+ 	ld	hl, 2 (sp)
+ 	xor a, a
+-	srl	(hl)
+-	ccf
++	sra	(hl)
+ 	rla
+ 	ld	l, a
+ 	ret
+Index: device/lib/r3ka/atomic_flag_test_and_set.s
+===================================================================
+--- device/lib/r3ka/atomic_flag_test_and_set.s	(revision 14311)
++++ device/lib/r3ka/atomic_flag_test_and_set.s	(revision 14312)
+@@ -13,7 +13,7 @@
+ ;  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ ;  GNU General Public License for more details.
+ ;
+-;  You should have received a copy of the GNU General Public License 
++;  You should have received a copy of the GNU General Public License
+ ;  along with this library; see the file COPYING. If not, write to the
+ ;  Free Software Foundation, 51 Franklin Street, Fifth Floor, Boston,
+ ;   MA 02110-1301, USA.
+@@ -33,8 +33,7 @@
+ _atomic_flag_test_and_set:
+ 	ld	hl, 2 (sp)
+ 	xor a, a
+-	srl	(hl)
+-	ccf
++	sra	(hl)
+ 	rla
+ 	ld	l, a
+ 	ret
+Index: device/lib/s08/Makefile.in
+===================================================================
+--- device/lib/s08/Makefile.in	(revision 14311)
++++ device/lib/s08/Makefile.in	(revision 14312)
+@@ -29,10 +29,10 @@
+   _divulong.c
+ 
+ HC08_LONGLONG = $(COMMON_LONGLONG) \
+-  _rrulonglong.c \
+-  _rrslonglong.c \
+-  _rlulonglong.c \
+-  _rlslonglong.c \
++  _srulonglong.c \
++  _srslonglong.c \
++  _slulonglong.c \
++  _slslonglong.c \
+   _mullonglong.c \
+   _divslonglong.c \
+   _divulonglong.c \
+Index: device/lib/s08-stack-auto/Makefile.in
+===================================================================
+--- device/lib/s08-stack-auto/Makefile.in	(revision 14311)
++++ device/lib/s08-stack-auto/Makefile.in	(revision 14312)
+@@ -29,10 +29,10 @@
+   _divulong.c
+ 
+ HC08_LONGLONG = $(COMMON_LONGLONG) \
+-  _rrulonglong.c \
+-  _rrslonglong.c \
+-  _rlulonglong.c \
+-  _rlslonglong.c \
++  _srulonglong.c \
++  _srslonglong.c \
++  _slulonglong.c \
++  _slslonglong.c \
+   _mullonglong.c \
+   _divslonglong.c \
+   _divulonglong.c \
+Index: device/lib/sm83/atomic_flag_test_and_set.s
+===================================================================
+--- device/lib/sm83/atomic_flag_test_and_set.s	(revision 14311)
++++ device/lib/sm83/atomic_flag_test_and_set.s	(revision 14312)
+@@ -13,7 +13,7 @@
+ ;  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ ;  GNU General Public License for more details.
+ ;
+-;  You should have received a copy of the GNU General Public License 
++;  You should have received a copy of the GNU General Public License
+ ;  along with this library; see the file COPYING. If not, write to the
+ ;  Free Software Foundation, 51 Franklin Street, Fifth Floor, Boston,
+ ;   MA 02110-1301, USA.
+@@ -34,8 +34,7 @@
+ 	ld	l, e
+ 	ld	h, d
+ 	xor	a, a
+-	srl	(hl)
+-	ccf
++	sra	(hl)
+ 	rla
+ 	ret
+ 
+Index: device/lib/stm8/Makefile.in
+===================================================================
+--- device/lib/stm8/Makefile.in	(revision 14311)
++++ device/lib/stm8/Makefile.in	(revision 14312)
+@@ -31,10 +31,10 @@
+   _modulong.c
+ 
+ STM8_LONGLONG = $(COMMON_LONGLONG) \
+-  _rrulonglong.c \
+-  _rrslonglong.c \
+-  _rlulonglong.c \
+-  _rlslonglong.c \
++  _srulonglong.c \
++  _srslonglong.c \
++  _slulonglong.c \
++  _slslonglong.c \
+   _mullonglong.c \
+   _divslonglong.c \
+   _divulonglong.c \
+Index: device/lib/stm8-large/Makefile.in
+===================================================================
+--- device/lib/stm8-large/Makefile.in	(revision 14311)
++++ device/lib/stm8-large/Makefile.in	(revision 14312)
+@@ -28,10 +28,10 @@
+ STM8_LONG =
+ 
+ STM8_LONGLONG = $(COMMON_LONGLONG) \
+-  _rrulonglong.c \
+-  _rrslonglong.c \
+-  _rlulonglong.c \
+-  _rlslonglong.c \
++  _srulonglong.c \
++  _srslonglong.c \
++  _slulonglong.c \
++  _slslonglong.c \
+   _mullonglong.c \
+   _divslonglong.c \
+   _divulonglong.c \
+Index: device/lib/strtoull.c
+===================================================================
+--- device/lib/strtoull.c	(revision 14311)
++++ device/lib/strtoull.c	(revision 14312)
+@@ -107,7 +107,6 @@
+   else if (b == 2 && (!strncmp (ptr, "0b", 2) || !strncmp (ptr, "0B", 2)))
+     ptr += 2;
+ 
+-
+   // Empty sequence conversion error
+   if (_isdigit (*ptr, b) < 0)
+     {
+@@ -118,13 +117,11 @@
+ 
+   for (ret = 0;; ptr++)
+     {
+-      unsigned long long int oldret;
+       signed char digit = _isdigit (*ptr, b);
+ 
+       if (digit < 0)
+         break;
+ 
+-      oldret = ret;
+       range_error |= ckd_mul (&ret, ret, b);
+       range_error |= ckd_add (&ret, ret, digit);
+ 
+Index: device/lib/wcstoull.c
+===================================================================
+--- device/lib/wcstoull.c	(revision 14311)
++++ device/lib/wcstoull.c	(revision 14312)
+@@ -47,7 +47,7 @@
+   if (c >= L'0' && c <= L'9')
+     v = c - L'0';
+   else if (c >= L'a' && c <= L'z')
+-    v = c - 'a' + 10;
++    v = c - L'a' + 10;
+   else if (c >= L'A' && c <= L'Z')
+     v = c - L'A' + 10;
+   else
+@@ -61,7 +61,7 @@
+ 
+ // NOTE for maintenance: strtoull, wcstoul and wcstoull have been derived from strtoul
+ 
+-unsigned long long int strtoull(const wchar_t *nptr, wchar_t **endptr, int base)
++unsigned long long int wcstoull(const wchar_t *nptr, wchar_t **endptr, int base)
+ {
+   const wchar_t *ptr = nptr;
+   unsigned long long int ret;
+@@ -69,7 +69,7 @@
+   bool neg = false;
+   unsigned char b = base;
+ 
+-  while (isblank (*ptr))
++  while (iswblank (*ptr))
+     ptr++;
+ 
+   // Handle sign.
+@@ -108,7 +108,6 @@
+   else if (b == 2 && (!wcsncmp (ptr, L"0b", 2) || !wcsncmp (ptr, L"0B", 2)))
+     ptr += 2;
+ 
+-
+   // Empty sequence conversion error
+   if (_isdigit (*ptr, b) < 0)
+     {
+@@ -119,13 +118,11 @@
+ 
+   for (ret = 0;; ptr++)
+     {
+-      unsigned long long int oldret;
+       signed char digit = _isdigit (*ptr, b);
+ 
+       if (digit < 0)
+         break;
+ 
+-      oldret = ret;
+       range_error |= ckd_mul(&ret, ret, b);
+       range_error |= ckd_add (&ret, ret, digit);
+ 
+Index: device/lib/z180/atomic_flag_test_and_set.s
+===================================================================
+--- device/lib/z180/atomic_flag_test_and_set.s	(revision 14311)
++++ device/lib/z180/atomic_flag_test_and_set.s	(revision 14312)
+@@ -13,7 +13,7 @@
+ ;  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ ;  GNU General Public License for more details.
+ ;
+-;  You should have received a copy of the GNU General Public License 
++;  You should have received a copy of the GNU General Public License
+ ;  along with this library; see the file COPYING. If not, write to the
+ ;  Free Software Foundation, 51 Franklin Street, Fifth Floor, Boston,
+ ;   MA 02110-1301, USA.
+@@ -32,8 +32,7 @@
+ 
+ _atomic_flag_test_and_set:
+ 	xor a, a
+-	srl	(hl)
+-	ccf
++	sra	(hl)
+ 	rla
+ 	ret
+ 
+Index: device/lib/z80/atomic_flag_test_and_set.s
+===================================================================
+--- device/lib/z80/atomic_flag_test_and_set.s	(revision 14311)
++++ device/lib/z80/atomic_flag_test_and_set.s	(revision 14312)
+@@ -13,7 +13,7 @@
+ ;  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ ;  GNU General Public License for more details.
+ ;
+-;  You should have received a copy of the GNU General Public License 
++;  You should have received a copy of the GNU General Public License
+ ;  along with this library; see the file COPYING. If not, write to the
+ ;  Free Software Foundation, 51 Franklin Street, Fifth Floor, Boston,
+ ;   MA 02110-1301, USA.
+@@ -32,8 +32,7 @@
+ 
+ _atomic_flag_test_and_set:
+ 	xor a, a
+-	srl	(hl)
+-	ccf
++	sra	(hl)
+ 	rla
+ 	ret
+ 
+Index: device/lib/z80n/atomic_flag_test_and_set.s
+===================================================================
+--- device/lib/z80n/atomic_flag_test_and_set.s	(revision 14311)
++++ device/lib/z80n/atomic_flag_test_and_set.s	(revision 14312)
+@@ -13,7 +13,7 @@
+ ;  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ ;  GNU General Public License for more details.
+ ;
+-;  You should have received a copy of the GNU General Public License 
++;  You should have received a copy of the GNU General Public License
+ ;  along with this library; see the file COPYING. If not, write to the
+ ;  Free Software Foundation, 51 Franklin Street, Fifth Floor, Boston,
+ ;   MA 02110-1301, USA.
+@@ -32,8 +32,7 @@
+ 
+ _atomic_flag_test_and_set:
+ 	xor a, a
+-	srl	(hl)
+-	ccf
++	sra	(hl)
+ 	rla
+ 	ret
+ 
+Index: src/SDCC.y
+===================================================================
+--- src/SDCC.y	(revision 14311)
++++ src/SDCC.y	(revision 14312)
+@@ -2155,7 +2155,7 @@
+                 {
+                     if (FUNC_ISCRITICAL ($1->type))
+                         inCriticalFunction = 1;
+-                    strncpy (function_name, $1->name, sizeof (function_name) - 4);
++                    strncpyz (function_name, $1->name, sizeof (function_name) - 3);
+                     memset (function_name + sizeof (function_name) - 4, 0x00, 4);
+                 }
+         }
+@@ -2173,8 +2173,8 @@
+             $2 = createFunctionDecl($2);
+             if ($2)
+                 {
+-                	if (!strcmp ($2->name, "_sdcc_external_startup")) // The rename (and semantics change happened) in SDCC 4.2.10. Keep this warning for two major releases afterwards.
+-                		werror (W__SDCC_EXTERNAL_STARTUP_DEF);
++                    if (!strcmp ($2->name, "_sdcc_external_startup")) // The rename (and semantics change happened) in SDCC 4.2.10. Keep this warning for two major releases afterwards.
++                        werror (W__SDCC_EXTERNAL_STARTUP_DEF);
+                     if (FUNC_ISCRITICAL ($2->type))
+                         inCriticalFunction = 1;
+                     // warn for loss of calling convention for inlined functions.
+@@ -2183,7 +2183,7 @@
+                           FUNC_BANKED ($2->type)         || FUNC_REGBANK ($2->type)          ||
+                           FUNC_ISOVERLAY ($2->type)      || FUNC_ISISR ($2->type) ))
+                         werror (W_INLINE_FUNCATTR, $2->name);
+-                    strncpy (function_name, $2->name, sizeof (function_name) - 4);
++                    strncpyz (function_name, $2->name, sizeof (function_name) - 3);
+                     memset (function_name + sizeof (function_name) - 4, 0x00, 4);
+                 }
+         }
+Index: src/SDCCsymt.c
+===================================================================
+--- src/SDCCsymt.c	(revision 14311)
++++ src/SDCCsymt.c	(revision 14312)
+@@ -4581,7 +4581,7 @@
+     "s", "su", "us", "u"
+   };
+   const char *srlrr[] = {
+-    "rl", "rr"
++    "sl", "sr"
+   };
+   /* type as character codes for typeFromStr() */
+   const char *sbwdCodes[] = {
+Index: src/SDCCval.c
+===================================================================
+--- src/SDCCval.c	(revision 14311)
++++ src/SDCCval.c	(revision 14312)
+@@ -1181,7 +1181,7 @@
+ /*-----------------------------------------------------------------*/
+ /* sepStrToUll - like stroull, but also handles digit separators   */
+ /*-----------------------------------------------------------------*/
+-static unsigned long long 
++static unsigned long long
+ sepStrToUll (const char *nptr, char **endptr, int base)
+ {
+   wassert (base >= 2 && base <= 16);
+@@ -1199,7 +1199,7 @@
+           separated = true;
+           continue;
+         }
+-      
++
+       // Assumes 0-9, a-f and A-F are consecutive in character set.
+       if (next >= 'a' && next <= 'f')
+         next = next - 'a' + 10;
+@@ -1212,7 +1212,7 @@
+ 
+       if (!(next >= 0 && next < base))
+         break;
+-        
++
+       ret *= base;
+       ret += next;
+     }
+@@ -1526,9 +1526,9 @@
+       val->type = val->etype = newLink (SPECIFIER); /* create the specifier */
+       SPEC_SCLS (val->type) = S_LITERAL;
+       SPEC_CONST (val->type) = 1;
+-    
++
+       SPEC_NOUN (val->type) = (bit) ? V_BIT : V_BOOL;
+-    
++
+       SPEC_CVAL (val->type).v_uint = (unsigned int) v;
+       return val;
+     }
+@@ -1548,9 +1548,9 @@
+   val->type = val->etype = newLink (SPECIFIER); /* create the specifier */
+   SPEC_SCLS (val->type) = S_LITERAL;
+   SPEC_CONST (val->type) = 1;
+-    
++
+   SPEC_NOUN (val->type) = V_NULLPTR;
+-    
++
+   SPEC_CVAL (val->type).v_uint = 0;
+   return val;
+ }
+@@ -1659,7 +1659,6 @@
+ 
+   if (s[0] == '"' || explicit_u8) // UTF-8 string literal
+     {
+-      
+       // Convert input string (mixed UTF-8 and UTF-32) to UTF-8 (handling all escape sequences, etc).
+       utf_8 = copyStr (s[0] == '"' ? s : s + 2, &utf_8_size);
+ 
+@@ -1678,7 +1677,7 @@
+     {
+       // Convert input string (mixed UTF-8 and UTF-32) to UTF-8 first (handling all escape sequences, etc).
+       utf_8 = copyStr (s + 1, &utf_8_size);
+-      
++
+       size_t utf_32_size;
+       // Convert to UTF-32 next, since converting UTF-32 to UTF-16 is easier than UTF-8 to UTF-16.
+       const TYPE_UDWORD *utf_32 = utf_32_from_utf_8 (&utf_32_size, utf_8, utf_8_size);
+@@ -1718,7 +1717,7 @@
+ {
+   struct dbuf_s dbuf;
+   value *val = newValue ();
+-  
++
+   dbuf_init (&dbuf, size);
+   wassert (dbuf_append (&dbuf, s, size));
+ 
+@@ -2024,7 +2023,7 @@
+       werror (E_CONST_EXPECTED, val->name);
+       return 0;
+     }
+- 
++
+   /* if it is not a specifier then we can assume that */
+   /* it will be an unsigned long                      */
+   /* 2012-Apr-30 EEP - Why is this true?              */
+@@ -2043,7 +2042,7 @@
+ #else
+       p += offset;
+ #endif
+-      return *p;      
++      return *p;
+     }
+ 
+   if (SPEC_NOUN (val->etype) == V_FIXED16X16)
+@@ -2054,7 +2053,7 @@
+       if (SPEC_USIGN (val->etype))
+         return offset < 8 ? (SPEC_CVAL (val->etype).v_ulonglong >> shift) & 0xff : 0;
+       else
+-        return offset < 8 ? (SPEC_CVAL (val->etype).v_longlong >> shift) & 0xff : 
++        return offset < 8 ? (SPEC_CVAL (val->etype).v_longlong >> shift) & 0xff :
+                (SPEC_CVAL (val->etype).v_longlong < 0 ? 0xff : 0);
+     }
+ 
+@@ -2063,7 +2062,7 @@
+       if (SPEC_USIGN (val->etype))
+         return offset < 4 ? (SPEC_CVAL (val->etype).v_ulong >> shift) & 0xff : 0;
+       else
+-        return offset < 4 ? (SPEC_CVAL (val->etype).v_long >> shift) & 0xff : 
++        return offset < 4 ? (SPEC_CVAL (val->etype).v_long >> shift) & 0xff :
+                (SPEC_CVAL (val->etype).v_long < 0 ? 0xff : 0);
+     }
+ 
+@@ -2171,7 +2170,7 @@
+ /* ullFromVal - value to unsigned long long conversion              */
+ /*------------------------------------------------------------------*/
+ unsigned long long
+-ullFromVal (value * val)
++ullFromVal (const value * val)
+ {
+   if (!val)
+     return 0;
+@@ -2408,7 +2407,7 @@
+         SPEC_CVAL (val->etype).v_int = !SPEC_CVAL (val->etype).v_int;
+ 
+     }
+-    
++
+   /* ANSI: result type is int, value is 0 or 1 */
+   /* If reduction is allowed SDCC will hold this in an 'unsigned char' */
+   if (reduceType)
+@@ -2810,7 +2809,7 @@
+   val->type = val->etype = newCharLink ();
+   val->type->xclass = SPECIFIER;
+   SPEC_SCLS (val->type) = S_LITERAL;    /* will remain literal */
+-  
++
+   if (reduceType)
+     {
+       SPEC_NOUN (val->type) = V_CHAR;       /* type is char */
+@@ -3021,7 +3020,7 @@
+   val->type = val->etype = newCharLink ();
+   val->type->xclass = SPECIFIER;
+   SPEC_SCLS (val->type) = S_LITERAL;    /* will remain literal */
+-  
++
+   if (reduceType)
+       SPEC_USIGN (val->type) = 1;
+   else
+@@ -3057,7 +3056,7 @@
+     return NULL;
+   if ((fval > 0x7ffffffful) || (-fval > 0x7ffffffful))
+     l = (unsigned long)llval;
+-    
++
+ #if 0
+   printf("valCastLiteral: %llx to ", (unsigned long long)llval); printTypeChain (dtype, stdout); printf("\n");
+ #endif
+Index: src/SDCCval.h
+===================================================================
+--- src/SDCCval.h	(revision 14311)
++++ src/SDCCval.h	(revision 14312)
+@@ -130,7 +130,7 @@
+ void printVal (value *);
+ double floatFromVal (value *);
+ unsigned long ulFromVal (const value *);
+-unsigned long long ullFromVal (value *);
++unsigned long long ullFromVal (const value *);
+ 
+ /* convert a fixed16x16 type to double */
+ double doubleFromFixed16x16 (TYPE_TARGET_ULONG value);
+Index: src/mcs51/ralloc.c
+===================================================================
+--- src/mcs51/ralloc.c	(revision 14311)
++++ src/mcs51/ralloc.c	(revision 14312)
+@@ -1787,7 +1787,6 @@
+   if (IC_RESULT (ic))
+     rmask = bitVectUnion (rmask, mcs51_rUmaskForOp (IC_RESULT (ic)));
+ 
+-ret:
+   return rmask;
+ }
+ 
+@@ -3308,12 +3307,12 @@
+         if (IC_LEFT (ic) && IS_SYMOP (IC_LEFT (ic)) && OP_SYMBOL (IC_LEFT (ic))->nRegs &&
+             IC_RESULT (ic) && IS_SYMOP (IC_RESULT (ic)) && OP_SYMBOL (IC_RESULT (ic))->nRegs)
+           {
+-            positionRegs (OP_SYMBOL (IC_RESULT (ic)), OP_SYMBOL (IC_LEFT (ic)), 1);    
++            positionRegs (OP_SYMBOL (IC_RESULT (ic)), OP_SYMBOL (IC_LEFT (ic)), 1);
+           }
+         if (IC_RIGHT (ic) && IS_SYMOP (IC_RIGHT (ic)) && OP_SYMBOL (IC_RIGHT (ic))->nRegs &&
+             IC_RESULT (ic) && IS_SYMOP (IC_RESULT (ic)) && OP_SYMBOL (IC_RESULT (ic))->nRegs)
+           {
+-            positionRegs (OP_SYMBOL (IC_RESULT (ic)), OP_SYMBOL (IC_RIGHT (ic)), 1);    
++            positionRegs (OP_SYMBOL (IC_RESULT (ic)), OP_SYMBOL (IC_RIGHT (ic)), 1);
+           }
+       }
+ }
+Index: src/mos6502/gen.c
+===================================================================
+--- src/mos6502/gen.c	(revision 14311)
++++ src/mos6502/gen.c	(revision 14312)
+@@ -327,8 +327,9 @@
+   if(op==0) {
+     snprintf(str, 64, "---");
+   } else if(IS_SYMOP(op)) {
+-    snprintf(str, 64, "SYM:%s(%s:%d)",
+-      op->svt.symOperand->rname, type, size);
++    if (snprintf(str, 64, "SYM:%s(%s:%d)", op->svt.symOperand->rname, type, size) >= 64) {
++      str[63] = 0; // ridiculous workaround to silence GCC warning ‘%s’ directive output may be truncated
++    }
+   } else if(IS_VALOP(op)) {
+     snprintf(str, 64, "VAL(%s:%d)",
+       type, size);
+@@ -3355,7 +3356,7 @@
+   if (aop->type==AOP_SOF)
+     {
+ #if 0
+-      // code for lda [BASEPTR],y 
++      // code for lda [BASEPTR],y
+       aopPrepareStoreTemp = storeRegTemp(m6502_reg_y, false);
+       // FIXME: offset is wrong
+       emitComment (TRACE_AOP, "ofs=%d base=%d tsx=%d push=%d stk=%d loffset=%d", _G.stackOfs, _G.baseStackPushes, _G.tsxStackPushes, _G.stackPushes, aop->aopu.aop_stk, loffset);
+@@ -8438,7 +8439,6 @@
+   operand *left   = IC_LEFT (ic);
+   operand *result = IC_RESULT (ic);
+ 
+-  sym_link *retype;
+   int size, offset;
+   symbol *tlbl, *tlbl1;
+   char *shift;
+@@ -9926,7 +9926,7 @@
+   /* the result is now in the z flag bit */
+   freeAsmop (cond, NULL);
+ 
+-// TODO: redundant bne/beq 
++// TODO: redundant bne/beq
+   emitComment (TRACEGEN|VVDBG, "      genIfx - call jump");
+   genIfxJump (ic, "a");
+ 
+@@ -10346,7 +10346,7 @@
+           offset++;
+           size--;
+         }
+-      else if ((size > 2 || size >= 2 && !signExtend) && m6502_reg_y->isDead && m6502_reg_x->isDead && 
++      else if ((size > 2 || size >= 2 && !signExtend) && m6502_reg_y->isDead && m6502_reg_x->isDead &&
+         (AOP_TYPE (right) == AOP_IMMD || IS_MOS65C02 && AOP_TYPE (right) == AOP_EXT) &&
+         (AOP_TYPE (result) == AOP_DIR || IS_MOS65C02 && AOP_TYPE (result) == AOP_EXT))
+         {
+Index: src/z80/ralloc.c
+===================================================================
+--- src/z80/ralloc.c	(revision 14311)
++++ src/z80/ralloc.c	(revision 14312)
+@@ -468,7 +468,6 @@
+   if (IC_RESULT (ic))
+     rmask = bitVectUnion (rmask, rUmaskForOp (IC_RESULT (ic)));
+ 
+-ret:
+   return rmask;
+ }
+ 
+Index: support/cpp/gcc/diagnostic.cc
+===================================================================
+--- support/cpp/gcc/diagnostic.cc	(revision 14311)
++++ support/cpp/gcc/diagnostic.cc	(revision 14312)
+@@ -79,7 +79,7 @@
+ /* A diagnostic_context surrogate for stderr.  */
+ static diagnostic_context global_diagnostic_context;
+ diagnostic_context *global_dc = &global_diagnostic_context;
+-
++
+ /* Return a malloc'd string containing MSG formatted a la printf.  The
+    caller is responsible for freeing the memory.  */
+ char *
+@@ -105,8 +105,6 @@
+   return build_message_string ("%s%s:%s ", locus_cs, f, locus_ce);
+ }
+ 
+-
+-
+ /* Return the value of the getenv("COLUMNS") as an integer. If the
+    value is not set to a positive integer, use ioctl to get the
+    terminal width. If it fails, return INT_MAX.  */
+@@ -135,11 +133,11 @@
+ diagnostic_set_caret_max_width (diagnostic_context *context, int value)
+ {
+   /* One minus to account for the leading empty space.  */
+-  value = value ? value - 1 
++  value = value ? value - 1
+     : (isatty (fileno (pp_buffer (context->printer)->stream))
+        ? get_terminal_width () - 1: INT_MAX);
+-  
+-  if (value <= 0) 
++
++  if (value <= 0)
+     value = INT_MAX;
+ 
+   context->caret_max_width = value;
+@@ -1357,7 +1355,7 @@
+ 	      || diagnostic_kind_count (context, DK_SORRY) > 0)
+ 	  && !context->abort_on_error)
+ 	{
+-	  expanded_location s 
++	  expanded_location s
+ 	    = expand_location (diagnostic_location (diagnostic));
+ 	  fnotice (stderr, "%s:%d: confused by earlier errors, bailing out\n",
+ 		   s.file, s.line);
+@@ -1470,7 +1468,7 @@
+ 
+   return p;
+ }
+-
++
+ /* Standard error reporting routines in increasing order of severity.
+    All of these take arguments like printf.  */
+ 
+@@ -1966,7 +1964,7 @@
+ 
+   gcc_unreachable ();
+ }
+-
++
+ /* Special case error functions.  Most are implemented in terms of the
+    above, or should be.  */
+ 
+@@ -2024,7 +2022,7 @@
+   if (global_dc->printer == NULL)
+     {
+       /* Print the error message.  */
+-      fnotice (stderr, diagnostic_kind_text[DK_ICE]);
++      fnotice (stderr, "%s", diagnostic_kind_text[DK_ICE]);
+       fnotice (stderr, "in %s, at %s:%d", function, trim_filename (file), line);
+       fputc ('\n', stderr);
+ 
+Index: support/cpp/gcc/gcc.cc
+===================================================================
+--- support/cpp/gcc/gcc.cc	(revision 14311)
++++ support/cpp/gcc/gcc.cc	(revision 14312)
+@@ -47,7 +47,6 @@
+ 
+ #define untested() { fprintf (stderr, "@@#\n@@@:%s:%d:%s\n", __FILE__, __LINE__, __func__); }
+ 
+-
+ // sdcpp
+ extern bool flag_wpa;
+ bool flag_wpa;
+@@ -173,8 +172,6 @@
+ #pragma GCC poison getenv putenv
+ #endif
+ 
+-
+-
+ /* By default there is no special suffix for target executables.  */
+ #ifdef TARGET_EXECUTABLE_SUFFIX
+ #define HAVE_TARGET_EXECUTABLE_SUFFIX
+@@ -451,7 +448,6 @@
+ static char *quote_spec_arg (char *);
+ static bool not_actual_file_p (const char *);
+ 
+-
+ /* The Specs Language
+ 
+ Specs are strings containing lines, each of which (if not blank)
+@@ -681,7 +677,7 @@
+ GCC also knows implicitly that arguments starting in `-l' are to be
+ treated as compiler output files, and passed to the linker in their
+ proper position among the other output files.  */
+-
++
+ /* Define the macros used for specs %a, %l, %L, %S, %C, %1.  */
+ 
+ /* config.h can define ASM_SPEC to provide extra args to the assembler
+@@ -924,7 +920,7 @@
+    compilations.  */
+ #  define ASM_DEBUG_DWARF_OPTION ""
+ # elif defined(HAVE_AS_GDWARF_5_DEBUG_FLAG) && !defined(HAVE_LD_BROKEN_PE_DWARF5)
+-#  define ASM_DEBUG_DWARF_OPTION "%{%:dwarf-version-gt(4):--gdwarf-5;" \
++#  define ASM_DEBUG_DWARF_OPTION "%{%:dwarf-version-gt(4):--gdwarf-5;"	\
+ 	"%:dwarf-version-gt(3):--gdwarf-4;"				\
+ 	"%:dwarf-version-gt(2):--gdwarf-3;"				\
+ 	":--gdwarf2}"
+@@ -1377,7 +1373,6 @@
+ 
+ static struct user_specs *user_specs_head, *user_specs_tail;
+ 
+-
+ /* Record the mapping from file suffixes for compilation specs.  */
+ 
+ struct compiler
+@@ -1522,7 +1517,7 @@
+    These options are accumulated by -Wp,
+    and substituted into the preprocessor command with %Z.  */
+ static vec<char_p> preprocessor_options;
+-
++
+ static char *
+ skip_whitespace (char *p)
+ {
+@@ -1665,7 +1660,7 @@
+    set_multilib_dir based on the compilation options.  */
+ 
+ static const char *multiarch_dir;
+-
++
+ /* Structure to keep track of the specs that have been defined so far.
+    These are accessed using %(specname) in a compiler or link
+    spec.  */
+@@ -1757,7 +1752,7 @@
+ /* List of dynamically allocates specs that have been defined so far.  */
+ 
+ static struct spec_list *specs = (struct spec_list *) 0;
+-
++
+ /* List of static spec functions.  */
+ 
+ static const struct spec_function static_spec_functions[] =
+@@ -1789,7 +1784,7 @@
+ };
+ 
+ static int processing_spec_function;
+-
++
+ /* Add appropriate libgcc specs to OBSTACK, taking into account
+    various permutations of -shared-libgcc, -shared, and such.  */
+ 
+@@ -2044,7 +2039,6 @@
+   return set_static_spec (spec, val, false);
+ }
+ 
+-
+ /* Change the value of spec NAME to SPEC.  If SPEC is empty, then the spec is
+    removed; If the spec starts with a + then SPEC is added to the end of the
+    current spec.  */
+@@ -2106,7 +2100,7 @@
+   sl->user_p = user_p;
+   sl->alloc_p = true;
+ }
+-
++
+ /* Accumulate a command (program name and args), and run it.  */
+ 
+ typedef const char *const_char_p; /* For DEF_VEC_P.  */
+@@ -2152,7 +2146,7 @@
+ /* Number of commands that exited with a signal.  */
+ 
+ static int signal_count;
+-
++
+ /* Allocate the argument vector.  */
+ 
+ static void
+@@ -2284,7 +2278,7 @@
+ 
+   record_temp_file (temp_file, !save_temps_flag, !save_temps_flag);
+ }
+-
++
+ /* Load specs from a file name named FILENAME, replacing occurrences of
+    various different types of line-endings, \r\n, \n\r and just \r, with
+    a single \n.  */
+@@ -2609,7 +2603,7 @@
+ 
+   XDELETEVEC (buffer);
+ }
+-
++
+ /* Record the names of temporary files we tell compilers to write,
+    and delete them at the end of the run.  */
+ 
+@@ -2749,7 +2743,7 @@
+ {
+   failure_delete_queue = 0;
+ }
+-
++
+ /* Call CALLBACK for each path in PATHS, breaking out early if CALLBACK
+    returns non-NULL.
+    If DO_MULTI is true iterate over the paths twice, first with multilib
+@@ -2992,7 +2986,7 @@
+ {
+   xputenv (build_search_list (paths, env_var, true, do_multi));
+ }
+-
++
+ /* Check whether NAME can be accessed in MODE.  This is like access,
+    except that it never considers directories to be executable.  */
+ 
+@@ -3234,7 +3228,6 @@
+ 	      require_machine_suffix, os_multilib);
+ }
+ 
+-
+ /* Execute the command specified by the arguments on the current line of spec.
+    When using pipes, this includes several piped-together commands
+    with `|' between them.
+@@ -3588,7 +3581,7 @@
+     return ret_code;
+   }
+ }
+-
++
+ /* Find all the switches given to us
+    and make a vector describing them.
+    The elements of the vector are strings, one per switch given.
+@@ -3698,7 +3691,7 @@
+ /* And a vector of corresponding output files is made up later.  */
+ 
+ const char **outfiles;
+-
++
+ #if defined(HAVE_TARGET_OBJECT_SUFFIX) || defined(HAVE_TARGET_EXECUTABLE_SUFFIX)
+ 
+ /* Convert NAME to a new name if it is the standard suffix.  DO_EXE
+@@ -3754,7 +3747,7 @@
+   return name;
+ }
+ #endif
+-
++
+ /* Display the command line switches accepted by gcc.  */
+ static void
+ display_help (void)
+@@ -3851,7 +3844,7 @@
+ {
+   linker_options.safe_push (save_string (option, len));
+ }
+-
++
+ /* Allocate space for an input file in infiles.  */
+ 
+ static void
+@@ -5581,7 +5574,7 @@
+   obstack_grow (&collect_obstack, "\0", 1);
+   xputenv (XOBFINISH (&collect_obstack, char *));
+ }
+-
++
+ /* Process a spec string, accumulating and running commands.  */
+ 
+ /* These variables describe the input file name.
+@@ -6766,7 +6759,7 @@
+ 		     "%{foo=*:bar%*}%{foo=*:one%*two}"
+ 
+ 		   matches -foo=hello then it will produce:
+-		   
++
+ 		     barhello onehellotwo
+ 		*/
+ 		if (*p == 0 || *p == '}')
+@@ -7415,7 +7408,7 @@
+  invalid:
+   fatal_error (input_location, "braced spec body %qs is invalid", body);
+ }
+-
++
+ /* Return 0 iff switch number SWITCHNUM is obsoleted by a later switch
+    on the command line.  PREFIX_LENGTH is the length of XXX in an {XXX*}
+    spec, or -1 if either exact match or %* is used.
+@@ -7496,7 +7489,7 @@
+   switches[switchnum].live_cond |= SWITCH_LIVE;
+   return 1;
+ }
+-
++
+ /* Pass a switch to the current accumulating command
+    in the same form that we received it.
+    SWITCHNUM identifies the switch; it is an index into
+@@ -7550,7 +7543,7 @@
+   do_spec_1 (" ", 0, NULL);
+   switches[switchnum].validated = true;
+ }
+-
++
+ /* Print GCC configuration (e.g. version, thread model, target,
+    configuration_arguments) to a given FILE.  */
+ 
+@@ -7783,16 +7776,18 @@
+ 	       char **out_file, char **err_file)
+ {
+   int i, status;
++  ssize_t ret;
+   int fd = open (*out_file, O_RDWR | O_APPEND);
+   if (fd < 0)
+     return;
+-  write (fd, "\n//", 3);
++  ret = write (fd, "\n//", 3);
+   for (i = 0; i < nargs; i++)
+     {
+-      write (fd, " ", 1);
+-      write (fd, new_argv[i], strlen (new_argv[i]));
++      ret = write (fd, " ", 1);
++      ret = write (fd, new_argv[i], strlen (new_argv[i]));
+     }
+-  write (fd, "\n\n", 2);
++  ret = write (fd, "\n\n", 2);
++  (void)ret;
+   close (fd);
+   new_argv[nargs] = "-E";
+   new_argv[nargs + 1] = NULL;
+@@ -7986,7 +7981,7 @@
+      INPUT_STAT_SET signals that the stat is needed.  */
+   input_stat_set = 0;
+ }
+-
++
+ /* On fatal signals, delete all the temporary files.  */
+ 
+ static void
+@@ -9316,7 +9311,7 @@
+     }
+   return 0;
+ }
+-
++
+ static char *
+ save_string (const char *s, int len)
+ {
+@@ -9328,7 +9323,6 @@
+   return result;
+ }
+ 
+-
+ static inline void
+ validate_switches_from_spec (const char *spec, bool user)
+ {
+@@ -9444,7 +9438,7 @@
+   return p;
+ #undef SKIP_WHITE
+ }
+-
++
+ struct mdswitchstr
+ {
+   const char *str;
+@@ -10188,7 +10182,7 @@
+       ++p;
+     }
+ }
+-
++
+ /* getenv built-in spec function.
+ 
+    Returns the value of the environment variable given by its first argument,
+@@ -10569,14 +10563,14 @@
+ get_random_number (void)
+ {
+   unsigned HOST_WIDE_INT ret = 0;
+-  int fd; 
++  int fd;
+ 
+-  fd = open ("/dev/urandom", O_RDONLY); 
++  fd = open ("/dev/urandom", O_RDONLY);
+   if (fd >= 0)
+     {
+-      read (fd, &ret, sizeof (HOST_WIDE_INT));
++      ssize_t r = read (fd, &ret, sizeof (HOST_WIDE_INT));
+       close (fd);
+-      if (ret)
++      if (ret && r == sizeof (HOST_WIDE_INT))
+         return ret;
+     }
+ 
+@@ -11002,16 +10996,16 @@
+   return (c == ' ' || c == '\t');
+ }
+ 
+-/* Insert backslash before spaces in ORIG (usually a file path), to 
++/* Insert backslash before spaces in ORIG (usually a file path), to
+    avoid being broken by spec parser.
+ 
+    This function is needed as do_spec_1 treats white space (' ' and '\t')
+    as the end of an argument. But in case of -plugin /usr/gcc install/xxx.so,
+    the file name should be treated as a single argument rather than being
+-   broken into multiple. Solution is to insert '\\' before the space in a 
++   broken into multiple. Solution is to insert '\\' before the space in a
+    file name.
+-   
+-   This function converts and only converts all occurrence of ' ' 
++
++   This function converts and only converts all occurrence of ' '
+    to '\\' + ' ' and '\t' to '\\' + '\t'.  For example:
+    "a b"  -> "a\\ b"
+    "a  b" -> "a\\ \\ b"
+Index: support/cpp/libcpp/expr.cc
+===================================================================
+--- support/cpp/libcpp/expr.cc	(revision 14311)
++++ support/cpp/libcpp/expr.cc	(revision 14312)
+@@ -799,26 +799,25 @@
+       if ((result & CPP_N_WIDTH) == CPP_N_LARGE
+ 	  && CPP_OPTION (pfile, cpp_warn_long_long))
+         {
+-          const char *message = CPP_OPTION (pfile, cplusplus) 
+-				? N_("use of C++11 long long integer constant")
+-		                : N_("use of C99 long long integer constant");
++          const char *message = CPP_OPTION (pfile, cplusplus)
++                                ? N_("use of C++11 long long integer constant")
++                                : N_("use of C99 long long integer constant");
+ 
+-	  if (CPP_OPTION (pfile, c99))
+-            cpp_warning_with_line (pfile, CPP_W_LONG_LONG, virtual_location,
+-				   0, message);
++          if (CPP_OPTION (pfile, c99))
++            cpp_warning_with_line (pfile, CPP_W_LONG_LONG,
++                                   virtual_location, 0, "%s", message);
+           else
+             cpp_pedwarning_with_line (pfile, CPP_W_LONG_LONG,
+-				      virtual_location, 0, message);
++                                      virtual_location, 0, "%s", message);
+         }
+ 
+-      if ((result & CPP_N_SIZE_T) == CPP_N_SIZE_T
+-	  && !CPP_OPTION (pfile, size_t_literals))
++      if ((result & CPP_N_SIZE_T) == CPP_N_SIZE_T && !CPP_OPTION (pfile, size_t_literals))
+        {
+-	  const char *message = (result & CPP_N_UNSIGNED) == CPP_N_UNSIGNED
+-				? N_("use of C++23 %<size_t%> integer constant")
+-				: N_("use of C++23 %<make_signed_t<size_t>%> integer constant");
+-	  cpp_warning_with_line (pfile, CPP_W_SIZE_T_LITERALS,
+-				 virtual_location, 0, message);
++          const char *message = (result & CPP_N_UNSIGNED) == CPP_N_UNSIGNED
++                                ? N_("use of C++23 %<size_t%> integer constant")
++                                : N_("use of C++23 %<make_signed_t<size_t>%> integer constant");
++          cpp_warning_with_line (pfile, CPP_W_SIZE_T_LITERALS,
++                                 virtual_location, 0, "%s", message);
+        }
+ 
+       result |= CPP_N_INTEGER;
+@@ -866,8 +865,7 @@
+    because the preprocessor doesn't need it and we don't want to
+    drag in GCC's floating point emulator.  */
+ cpp_num
+-cpp_interpret_integer (cpp_reader *pfile, const cpp_token *token,
+-		       unsigned int type)
++cpp_interpret_integer (cpp_reader *pfile, const cpp_token *token, unsigned int type)
+ {
+   const uchar *p, *end;
+   cpp_num result;
+@@ -1226,7 +1224,7 @@
+   result.unsignedp = !!unsignedp;
+   return result;
+ }
+-
++
+ /* Operator precedence and flags table.
+ 
+ After an operator is returned from the lexer, if it has priority less
+@@ -1577,7 +1575,7 @@
+ 	case CPP_OPEN_PAREN:
+ 	  if (op != CPP_CLOSE_PAREN)
+ 	    {
+-	      cpp_error_with_line (pfile, CPP_DL_ERROR, 
++	      cpp_error_with_line (pfile, CPP_DL_ERROR,
+ 				   top->token->src_loc,
+ 				   0, "missing ')' in expression");
+ 	      return 0;
+Index: support/cpp/libcpp/macro.cc
+===================================================================
+--- support/cpp/libcpp/macro.cc	(revision 14311)
++++ support/cpp/libcpp/macro.cc	(revision 14312)
+@@ -183,7 +183,7 @@
+ 	if (m_state == 2 && token->type == CPP_PASTE)
+ 	  {
+ 	    cpp_error_at (m_pfile, CPP_DL_ERROR, token->src_loc,
+-			  vaopt_paste_error);
++			  "%s", vaopt_paste_error);
+ 	    return ERROR;
+ 	  }
+ 	/* Advance states before further considering this token, in
+@@ -212,7 +212,7 @@
+ 		if (was_paste)
+ 		  {
+ 		    cpp_error_at (m_pfile, CPP_DL_ERROR, token->src_loc,
+-				  vaopt_paste_error);
++				  "%s", vaopt_paste_error);
+ 		    return ERROR;
+ 		  }
+ 
+@@ -512,9 +512,9 @@
+             struct _cpp_file *file = cpp_get_file (pbuffer);
+ 	    if (file)
+ 	      {
+-    		/* Generate __TIMESTAMP__ string, that represents 
+-		   the date and time of the last modification 
+-		   of the current source file. The string constant 
++    		/* Generate __TIMESTAMP__ string, that represents
++		   the date and time of the last modification
++		   of the current source file. The string constant
+ 		   looks like "Sun Sep 16 01:03:52 1973".  */
+ 		struct tm *tb = NULL;
+ 		struct stat *st = _cpp_get_file_stat (file);
+@@ -625,7 +625,7 @@
+ 	    {
+ 	      cpp_errno (pfile, CPP_DL_WARNING,
+ 			 "could not determine date and time");
+-		
++
+ 	      pfile->date = UC"\"??? ?? ????\"";
+ 	      pfile->time = UC"\"??:??:??\"";
+ 	    }
+@@ -686,7 +686,7 @@
+       sprintf ((char *) result, "%u", number);
+     }
+ 
+-  return result;      
++  return result;
+ }
+ 
+ /* Get an idempotent date.  Either the cached value, the value from
+@@ -1386,7 +1386,7 @@
+       pfile->state.parsing_args = 2;
+       return collect_args (pfile, node, pragma_buff, num_args);
+     }
+-  
++
+   /* Back up.  A CPP_EOF is either an EOF from an argument we're
+      expanding, or a fake one from lex_direct.  We want to backup the
+      former, but not the latter.  We may have skipped padding, in
+@@ -1693,7 +1693,7 @@
+     case MACRO_ARG_TOKEN_NORMAL:
+       tokens_ptr = arg->first;
+       break;
+-    case MACRO_ARG_TOKEN_STRINGIFIED:      
++    case MACRO_ARG_TOKEN_STRINGIFIED:
+       tokens_ptr = (const cpp_token **) &arg->stringified;
+       break;
+     case MACRO_ARG_TOKEN_EXPANDED:
+@@ -1811,12 +1811,12 @@
+    want each tokens resulting from function-like macro arguments
+    expansion to have a different location or not.
+ 
+-   E.g, consider this function-like macro: 
++   E.g, consider this function-like macro:
+ 
+         #define M(x) x - 3
+ 
+    Then consider us "calling" it (and thus expanding it) like:
+-   
++
+        M(1+4)
+ 
+    It will be expanded into:
+@@ -1954,7 +1954,7 @@
+      location that records many things like the locus of the expansion
+      point as well as the original locus inside the definition of the
+      macro.  This location is called a virtual location.
+-     
++
+      So the buffer BUFF holds a set of cpp_token*, and the buffer
+      VIRT_LOCS holds the virtual locations of the tokens held by BUFF.
+ 
+@@ -1962,7 +1962,7 @@
+      context, when the latter is pushed.  The memory allocated to
+      store the tokens and their locations is going to be freed once
+      the context of macro expansion is popped.
+-     
++
+      As far as tokens are concerned, the memory overhead of
+      -ftrack-macro-expansion is proportional to the number of
+      macros that get expanded multiplied by sizeof (location_t).
+@@ -2602,7 +2602,7 @@
+ {
+   const cpp_token **result;
+   location_t *virt_loc_dest = NULL;
+-  unsigned token_index = 
++  unsigned token_index =
+     (BUFF_FRONT (buffer) - buffer->base) / sizeof (cpp_token *);
+ 
+   /* Abort if we pass the end the buffer.  */
+@@ -2749,7 +2749,7 @@
+   if (pfile == NULL)
+     return false;
+ 
+-  return (pfile->about_to_expand_macro_p 
++  return (pfile->about_to_expand_macro_p
+ 	  || macro_of_context (pfile->context));
+ }
+ 
+@@ -2853,7 +2853,7 @@
+       *location = (*token)->src_loc;
+       FIRST (c).token++;
+     }
+-  else if ((c)->tokens_kind == TOKENS_KIND_INDIRECT)		
++  else if ((c)->tokens_kind == TOKENS_KIND_INDIRECT)
+     {
+       *token = *FIRST (c).ptoken;
+       *location = (*token)->src_loc;
+@@ -3114,7 +3114,7 @@
+ 	    _cpp_extend_buff (pfile, &pfile->u_buff, len + 1 + dotme * 2);
+ 	  unsigned char *buf = BUFF_FRONT (pfile->u_buff);
+ 	  size_t pos = 0;
+-	      
++
+ 	  if (dotme)
+ 	    {
+ 	      buf[pos++] = '.';
+@@ -3130,7 +3130,7 @@
+ 
+ 	  tmp->type = CPP_HEADER_NAME;
+ 	  XDELETEVEC (fname);
+-	  
++
+ 	  result = tmp;
+ 	}
+     }
+@@ -3384,7 +3384,7 @@
+ 	= XRESIZEVEC (unsigned char, pfile->macro_buffer, len);
+       pfile->macro_buffer_len = len;
+     }
+-  
++
+   macro_arg_saved_data *saved = (macro_arg_saved_data *)pfile->macro_buffer;
+   saved[n].canonical_node = node;
+   saved[n].value = node->value;
+@@ -3701,7 +3701,7 @@
+ 	     function-like macros, but not at the end.  */
+ 	  if (following_paste_op)
+ 	    {
+-	      cpp_error (pfile, CPP_DL_ERROR, paste_op_error_msg);
++	      cpp_error (pfile, CPP_DL_ERROR, "%s", paste_op_error_msg);
+ 	      goto out;
+ 	    }
+ 	  if (!vaopt_tracker.completed ())
+@@ -3716,7 +3716,7 @@
+ 	     function-like macros, but not at the beginning.  */
+ 	  if (macro->count == 1)
+ 	    {
+-	      cpp_error (pfile, CPP_DL_ERROR, paste_op_error_msg);
++	      cpp_error (pfile, CPP_DL_ERROR, "%s", paste_op_error_msg);
+ 	      goto out;
+ 	    }
+ 
+@@ -3842,7 +3842,7 @@
+ 	    = (cpp_builtin_macro_p (node) && !(node->flags & NODE_WARN))
+ 	    ? CPP_W_BUILTIN_MACRO_REDEFINED : CPP_W_NONE;
+ 
+-	  bool warned = 
++	  bool warned =
+ 	    cpp_pedwarning_with_line (pfile, reason,
+ 				      pfile->directive_line, 0,
+ 				      "\"%s\" redefined", NODE_NAME (node));
+Index: support/makebin/makebin.c
+===================================================================
+--- support/makebin/makebin.c	(revision 14311)
++++ support/makebin/makebin.c	(revision 14312)
+@@ -130,7 +130,7 @@
+ struct gb_opt_s
+ {
+   char cart_name[CART_NAME_LEN];  /* cartridge name buffer */
+-  char licensee_str[2];           /* new licensee string */
++  char licensee_str[3];           /* new licensee string */
+   BYTE mbc_type;                  /* MBC type (default: no MBC) */
+   short nb_rom_banks;             /* Number of rom banks (default: 2) */
+   BYTE nb_ram_banks;              /* Number of ram banks (default: 0) */
+@@ -699,7 +699,7 @@
+   int sms = 0;
+ 
+   struct gb_opt_s gb_opt = {.cart_name="",
+-                            .licensee_str={'0', '0'},
++                            .licensee_str="00",
+                             .mbc_type=0,
+                             .nb_rom_banks=2,
+                             .nb_ram_banks=0,
+@@ -721,10 +721,13 @@
+   setmode (fileno (stdout), O_BINARY);
+ #endif
+ 
+-  while (*++argv && '-' == argv[0][0] && '\0' != argv[0][1])
++  while (*++argv && '-' == argv[0][0])
+     {
+       switch (argv[0][1])
+         {
++        case '\0':
++          break;
++
+         case 's':
+           if (!*++argv)
+             {
+@@ -762,6 +765,7 @@
+            * -ya  Number of ram banks (default: 0)
+            * -yt  MBC type (default: no MBC)
+            * -yn  Name of program (default: name of output file)
++           * -yk,-yl,-yc,-yC,-yN,-ys,-yS,-yj,-yp see usage()
+            */
+           switch (argv[0][2])
+             {
+@@ -815,7 +819,6 @@
+                   usage ();
+                   return 1;
+                 }
+-              // we don't need \0
+               strncpy (gb_opt.licensee_str, *argv, 2);
+               break;
+ 

@@ -3,7 +3,7 @@
 
 _pkgname=furo
 pkgname=python-sphinx-$_pkgname
-pkgver=2023.07.26
+pkgver=2023.08.19
 pkgrel=1
 pkgdesc='Clean customizable documentation theme for Sphinx'
 arch=('any')

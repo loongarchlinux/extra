@@ -4,47 +4,60 @@
 # Contributor: Dave Reisner <dreisner@archlinux.org>
 
 pkgname=mkosi
-pkgver=14
+pkgver=15.1
 pkgrel=3
 pkgdesc="Build Legacy-Free OS Images"
 arch=(any)
 url="https://github.com/systemd/mkosi"
-license=(LGPL2.1)
-depends=(arch-install-scripts python python-pexpect qemu-img)
-makedepends=(python-build python-installer python-setuptools python-wheel)
-checkdepends=(python-pexpect python-pytest)
+license=(LGPL-2.1-or-later)
+depends=(
+  bubblewrap
+  python
+  systemd
+)
+makedepends=(
+  pandoc-cli
+  python-build
+  python-installer
+  python-setuptools
+  python-setuptools-scm
+  python-wheel
+)
+checkdepends=(
+  python-pytest
+)
 optdepends=(
+  'acl: for removing directories created by mkosi'
+  # 'apt: for creating Debian and Ubuntu images'  # TODO: package apt
   'btrfs-progs: raw_btrfs and subvolume output formats'
+  'cpio: for cpio output format'
   'debian-archive-keyring: build Debian images'
-  'debootstrap: build Debian or Ubuntu images'
-  'cryptsetup: add dm-verity partitions'
-  'dosfstools: build bootable images'
-  'gnupg: sign images'
-  'qemu: run bootable images using QEMU'
-  'sbsigntools: sign EFI binaries for UEFI SecureBoot'
-  'squashfs-tools: raw_squashfs output format'
-  'tar: tar output format'
-  'ubuntu-keyring: build Ubuntu images'
-  'xz: compress images with xz'
-  'zstd: compress images with zstd'
+  'dnf: for creating CentOS, Fedora, OpenMandriva, Mageia and OpenSUSE images'
+  'edk2-ovmf: for running bootable images using QEMU'
+  'gnupg: for signing image checksums'
+  'kmod: for images using Linux kernels'
+  'openssl: for UEFI SecureBoot'
+  'python-pefile: for bootable images'
+  'qemu: for running bootable images using QEMU'
+  'sbsigntools: for UEFI SecureBoot'
+  'swtpm: for adding software TPM when running bootable images using QEMU'
+  'systemd-ukify: for Unified Kernel Image (UKI) support'
+  'tar: for tar output format and Debian or Ubuntu images'
+  'ubuntu-keyring: for building Ubuntu images'
+  'xz: for compressing images with xz'
+  'zstd: for compressing images with zstd'
+  # 'zypper: for creating OpenSUSE images'  # TODO: package zypper
 )
 source=(
   $pkgname-$pkgver.tar.gz::$url/archive/v$pkgver.tar.gz
-  $pkgname-14-fix_tests.patch::https://github.com/systemd/mkosi/commit/60289499675661169cd7bfda2faf331663a43c73.patch
 )
-sha512sums=('33a387bda9bd74415719d9081373936ead331135fc5c17276bace1a999ec1b90e6caea37fb0fd832bc89ca75635f3dbd1ed19af7679a7d8a59c85a36120d737f'
-            '2deeca538132944ce94fd774c9ef5af618731580f406cdabdfb5e360b715d4b77efd66b8163bc550133a48f84ac4231f4e7eb489dfa35f4567d36ea86124180d')
-b2sums=('04fd81233647bac63a21f6a34972b18aa652d1d8ed07e1618b35372fcc6125ee43fbc80501dbcb81a1aa96b69ee372c9c1b8c61b31c3d6319b5f86f1e2a374ac'
-        '409359a7ad7fe3cffcb4f6de95717002137c17081e1eec78ec761421e7f9d9ab6ebecd9e6ef64c9838829176dc1f79da1e86ce22e0702bbfa2c55f14f06299ab')
-
-prepare() {
-  # fix issues with tests: https://github.com/systemd/mkosi/commit/60289499675661169cd7bfda2faf331663a43c73
-  patch -Np1 -d $pkgname-$pkgver -i ../$pkgname-14-fix_tests.patch
-}
+sha512sums=('3b65c6b964aa2bde12117b7b2c3e4be0ac72036a92a115f1e93e7be0b3b0aa0bd3adb753ee49865723a9bc677bc4492416caafff4fec3ffd942de78357c11608')
+b2sums=('36171c08c18dd3ba3c2e54c8a3374fad2a9b008f8253e6cd57cedf7b7e8216b6610b30f9f46aa634de62ebf257d1e8eff94a83b07c027708e4875e24bc0a8305')
 
 build() {
   cd $pkgname-$pkgver
   python -m build --wheel --no-isolation
+  pandoc -t man -s -o $pkgname/resources/$pkgname.1 $pkgname/resources/$pkgname.md
 }
 
 check() {
@@ -55,5 +68,6 @@ check() {
 package() {
   cd $pkgname-$pkgver
   python -m installer --destdir="$pkgdir" dist/*.whl
-  install -vDm 644 {NEWS,README}.md -t "$pkgdir/usr/share/doc/$pkgname/"
+  install -vDm 644 $pkgname/resources/$pkgname.1 -t "$pkgdir/usr/share/man/man1/"
+  install -vDm 644 docs/*.md {NEWS,README}.md -t "$pkgdir/usr/share/doc/$pkgname/"
 }

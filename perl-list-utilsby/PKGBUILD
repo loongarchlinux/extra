@@ -3,7 +3,7 @@
 pkgname=perl-list-utilsby
 _cpanname="List-UtilsBy"
 pkgver=0.12
-pkgrel=1
+pkgrel=2
 pkgdesc="Higher-order list utility functions"
 arch=('any')
 url="https://search.cpan.org/~pevans/$_cpanname"

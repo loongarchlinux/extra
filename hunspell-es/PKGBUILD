@@ -3,11 +3,11 @@
 
 pkgbase=hunspell-es
 pkgname=(hunspell-es_any hyphen-es mythes-es)
-pkgver=2.7
-pkgrel=3
+pkgver=2.8
+pkgrel=1
 epoch=1
 arch=(any)
-url="https://github.com/sbosio/rla-es"
+url='https://github.com/sbosio/rla-es'
 license=(LGPL3)
 makedepends=(qt6-webengine)
 _countries=(

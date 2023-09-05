@@ -2,7 +2,7 @@
 
 pkgname=webrtc-audio-processing
 pkgver=0.3.1
-pkgrel=3
+pkgrel=4
 pkgdesc="AudioProcessing library based on Google's implementation of WebRTC"
 url="https://freedesktop.org/software/pulseaudio/webrtc-audio-processing/"
 arch=(loong64 x86_64)
@@ -12,11 +12,11 @@ makedepends=(git)
 provides=(libwebrtc_audio_processing.so)
 _commit=e882a5442ac22c93648e12837248d651d18b9247  # tags/v0.3.1^0
 source=("git+https://gitlab.freedesktop.org/pulseaudio/webrtc-audio-processing.git#commit=$_commit")
-sha256sums=('SKIP')
+b2sums=('SKIP')
 
 pkgver() {
   cd $pkgname
-  git describe --tags | sed 's/^v//;s/-/+/g'
+  git describe --tags | sed 's/^v//;s/[^-]*-g/r&/;s/-/+/g'
 }
 
 prepare() {
@@ -25,8 +25,13 @@ prepare() {
 }
 
 build() {
+  local configure_options=(
+    --prefix /usr
+    --disable-static
+  )
+
   cd $pkgname
-  ./configure --prefix=/usr --disable-static
+  ./configure "${configure_options[@]}"
   sed -i -e 's/ -shared / -Wl,-O1,--as-needed\0/g' libtool
   make
 }
@@ -42,4 +47,4 @@ package() {
   install -Dt "$pkgdir/usr/share/licenses/$pkgname" -m644 COPYING
 }
 
-# vim:set sw=2 et:
+# vim:set sw=2 sts=-1 et:

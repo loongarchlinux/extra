@@ -1,0 +1,28 @@
+# Maintainer: Jelle van der Waa <jelle@archlinux.org>
+# Contributor: Ghassan Alduraibi <git@ghassan.dev>
+# Contributor: Philip Goto <philip.goto@gmail.com>
+
+pkgname=squeekboard
+pkgver=1.22.0
+pkgrel=1
+pkgdesc='An on-screen-keyboard input method for Wayland'
+arch=(loong64 x86_64 aarch64)
+url='https://gitlab.gnome.org/World/Phosh/squeekboard'
+license=(GPL3)
+depends=(feedbackd gnome-desktop python)
+makedepends=(pkg-config meson libbsd intltool rust gtk-doc wayland-protocols)
+source=("https://gitlab.gnome.org/World/Phosh/squeekboard/-/archive/v${pkgver}/squeekboard-v${pkgver}.tar.gz")
+sha256sums=('a4843cdeee6ffbcaad5a04c6c8e3eec2e588f333af80a58ceaad76b5d9ec6e6f')
+
+build() {
+  arch-meson -Dnewer=true "squeekboard-v${pkgver}" build
+  meson compile -C build
+}
+
+check() {
+  meson test -C build --print-errorlogs
+}
+
+package() {
+  DESTDIR="$pkgdir" ninja -C build install
+}

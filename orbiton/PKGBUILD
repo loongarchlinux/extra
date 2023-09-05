@@ -1,17 +1,17 @@
 # Maintainer: Alexander F. Rødseth <xyproto@archlinux.org>
 
 pkgbase=orbiton
-pkgname=(orbiton orbiton-gtk3)
-pkgver=2.62.9
+pkgname=(orbiton orbiton-gtk3 orbiton-nano)
+pkgver=2.64.3
 pkgrel=1
-pkgdesc='Configuration-free text editor and IDE limited by VT100'
+pkgdesc='Fast and configuration-free text editor and IDE limited by VT100'
 arch=(loong64 x86_64)
 url='https://orbiton.zip'
 license=(BSD)
 makedepends=(git go vte3)
-source=("git+https://github.com/xyproto/orbiton#commit=3ed708f7e6e8a29f45fb6ecf0ebc9d73dfbc4461") # tag: v2.62.9
+source=("git+https://github.com/xyproto/orbiton#commit=0bd842f0551ac80b6263c907d99d24bf0bf0427a") # tag: v2.64.3
 options=(!lto)
-b2sums=('SKIP')
+b2sums=(SKIP)
 
 build() {
   CXXFLAGS="$CXXFLAGS -Wl,--as-needed,--strip-all,--sort-common,-z,relro,-z,now" \
@@ -67,8 +67,19 @@ package_orbiton() {
 }
 
 package_orbiton-gtk3() {
-  pkgdesc='Configuration-free text editor and IDE limited by VT100 (GTK3/VTE)'
+  pkgdesc='Fast and configuration-free text editor and IDE limited by VT100 (GTK3/VTE3)'
   depends=(orbiton vte3)
   DESTDIR="$pkgdir" PROJECT=$pkgname \
     make -C $pkgbase gui-install gui-symlinks license
+  mv "$pkgdir/usr/share/pixmaps/"{vg,lig}.png
+}
+
+package_orbiton-nano() {
+  pkgdesc='Fast and configuration-free text editor and IDE limited by VT100 (Nano/Pico Mode)'
+  depends=(orbiton)
+  conflicts=(nano)
+  provides=(nano)
+  install -d "$pkgdir/usr/bin"
+  DESTDIR="$pkgdir" PROJECT=$pkgname \
+    make -C $pkgbase nano-symlink
 }

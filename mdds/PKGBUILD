@@ -2,7 +2,7 @@
 # Contributor: kusakata <shohei atmark kusakata period com>
 
 pkgname=mdds
-pkgver=2.0.3
+pkgver=2.1.1
 pkgrel=1
 pkgdesc="A collection of multi-dimensional data structures and indexing algorithms"
 arch=('any')
@@ -12,7 +12,7 @@ checkdepends=('boost')
 #source=(https://gitlab.com/mdds/mdds/repository/archive.tar.gz?ref=${pkgver})
 source=(https://kohei.us/files/mdds/src/${pkgname}-${pkgver}.tar.xz)
 # checksums listed there - https://gitlab.com/mdds/mdds/-/releases
-sha256sums=('6c01cdbd7f662a7adee5a6879d31130815fd31048d940f1b780ed67b719fc8e4')
+sha256sums=('1483d90cefb8aa4563c4d0a85cb7b243aa95217d235d422e9ca6722fd5b97e56')
 
 build() {
   cd ${pkgname}-${pkgver}

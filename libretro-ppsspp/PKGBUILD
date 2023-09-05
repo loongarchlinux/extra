@@ -3,7 +3,7 @@
 # Contributor: Duck Hunt <vaporeon@tfwno.gf>
 
 pkgname=libretro-ppsspp
-pkgver=35819
+pkgver=37801
 pkgrel=1
 pkgdesc='Sony PlayStation Portable core'
 arch=(loong64 x86_64)
@@ -31,18 +31,19 @@ makedepends=(
   ninja
   python
 )
-_commit=964aa313a563780ffeddbeb9d7c5f61811c60ade
+_commit=9f2699192939ebc231a2caa560793fb3c7f7fe28
 source=(
   libretro-ppsspp::git+https://github.com/hrydgard/ppsspp.git#commit=${_commit}
   git+https://github.com/Kingcom/armips.git
   git+https://github.com/google/cpu_features.git
   git+https://github.com/hrydgard/ppsspp-ffmpeg.git
-  ppsspp-glslang::git+https://github.com/hrydgard/glslang.git
+  armips-filesystem::git+https://github.com/Kingcom/filesystem.git
+  git+https://github.com/KhronosGroup/glslang.git
   git+https://github.com/hrydgard/ppsspp-lang.git
   ppsspp-miniupnp::git+https://github.com/hrydgard/miniupnp.git
   git+https://github.com/Tencent/rapidjson.git
+  git+https://github.com/RetroAchievements/rcheevos.git
   git+https://github.com/KhronosGroup/SPIRV-Cross.git
-  armips-filesystem::git+https://github.com/Kingcom/filesystem.git
   libretro-ppsspp-assets-path.patch
 )
 b2sums=('SKIP'
@@ -55,11 +56,11 @@ b2sums=('SKIP'
         'SKIP'
         'SKIP'
         'SKIP'
-        'c72640695e3e3b9512f13d71956872cea34b41cf28bd31c7dbd8062e1166d5ae8f248b01d6f5c73dd96d3ed5d5d59eab69c5619272525aefaa322cc2ca8b8541')
+        'SKIP'
+        'ae0f14c04d6b308b524dc47776eccb52c0f4b306a1173cee8fa7e3766da90482f4921ca2777304692121f17c55e4edcf81d937982cbb1bd0d65ae7f92e8e0640')
 
 pkgver() {
   cd libretro-ppsspp
-
   git rev-list --count HEAD
 }
 
@@ -70,12 +71,12 @@ prepare() {
 
   git config --global protocol.file.allow always
 
-  for submodule in ffmpeg assets/lang ext/glslang ext/miniupnp; do
+  for submodule in ffmpeg assets/lang ext/miniupnp; do
     git submodule init ${submodule}
     git config submodule.${submodule}.url ../ppsspp-${submodule#*/}
     git submodule update ${submodule}
   done
-  for submodule in ext/{armips,cpu_features,rapidjson,SPIRV-Cross}; do
+  for submodule in ext/{armips,cpu_features,glslang,rapidjson,rcheevos,SPIRV-Cross}; do
     git submodule init ${submodule}
     git config submodule.${submodule}.url ../${submodule#*/}
     git submodule update ${submodule}

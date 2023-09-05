@@ -3,8 +3,8 @@
 # Contributor: David Anderson <dave@natulte.net>
 
 pkgname=tailscale
-pkgver=1.46.1
-pkgrel=1
+pkgver=1.48.1
+pkgrel=2
 pkgdesc="A mesh VPN that makes it easy to connect your devices, wherever they are."
 arch=("loong64" "x86_64")
 url="https://tailscale.com"
@@ -14,7 +14,7 @@ depends=("glibc")
 backup=("etc/default/tailscaled")
 # Important: Check if the version has been published before updating
 # curl -s "https://pkgs.tailscale.com/stable/?mode=json"
-_commit=e42e60103b1ea58d9d06d5a0c77500e44c44f202 #  git rev-parse tags/v1.46.1
+_commit=528f95da6a5e12961b36a39bb3fa512c093d2330 #  git rev-parse tags/v1.48.1
 source=("git+https://github.com/tailscale/tailscale.git#commit=${_commit}")
 sha256sums=('SKIP')
 
@@ -40,9 +40,9 @@ build() {
     GO_LDFLAGS="\
         -compressdwarf=false \
         -linkmode=external \
-        -X tailscale.com/version.Long=${pkgver} \
-        -X tailscale.com/version.Short=$(cut -d+ -f1 <<< "${pkgver}") \
-        -X tailscale.com/version.GitCommit=${_commit}"
+        -X tailscale.com/version.longStamp=${pkgver} \
+        -X tailscale.com/version.shortStamp=$(cut -d+ -f1 <<< "${pkgver}") \
+        -X tailscale.com/version.gitCommitStamp=${_commit}"
     for cmd in ./cmd/tailscale ./cmd/tailscaled; do
         go build -v -tags xversion -ldflags "$GO_LDFLAGS" "$cmd"
     done

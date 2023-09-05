@@ -3,24 +3,25 @@
 # Contributor: Xu Fasheng <fasheng.xu[AT]gmail.com>
 
 pkgname=deepin-screen-recorder
-pkgver=5.11.15
-_commit=8ef647a6c8affee317a91517afaa0f64353aca6d
-pkgrel=4
+pkgver=5.12.5
+pkgrel=1
 pkgdesc='Deepin Screen Recorder'
 arch=('loong64' 'x86_64')
 url="https://github.com/linuxdeepin/deepin-screen-recorder"
 license=('GPL3')
-depends=('deepin-qt5integration' 'deepin-turbo' 'ffmpeg' 'libxtst' 'opencv' 'portaudio' 'deepin-image-editor')
-makedepends=('git' 'deepin-dock')
+depends=('deepin-qt5integration' 'deepin-qt-dbus-factory' 'dtkcore' 'dtkgui' 'dtkwidget'
+         'qt5-base' 'qt5-x11extras' 'qt5-multimedia' 'deepin-turbo' 'ffmpeg' 'libxtst' 'opencv'
+         'dconf' 'libxext' 'libx11' 'libxfixes' 'portaudio' 'deepin-image-editor' 'gcc-libs')
+makedepends=('deepin-dock')
 optdepends=('deepin-shortcut-viewer: for shortcut display')
 provides=('deepin-screenshot')
 conflicts=('deepin-screenshot')
 groups=('deepin-extra')
-source=("git+https://github.com/linuxdeepin/deepin-screen-recorder.git#commit=$_commit")
-sha512sums=('SKIP')
+source=("https://github.com/linuxdeepin/deepin-screen-recorder/archive/$pkgver/$pkgname-$pkgver.tar.gz")
+sha512sums=('8ccd78b7139625722ffe5aae36e3b8e12a7acfdc5709eb58eb40c60af4c7e845084395e69e476f6c0aac13f2248b3b63c8bbb85e9c293be53d4d035d312d35af')
 
 prepare() {
-  cd deepin-screen-recorder
+  cd deepin-screen-recorder-$pkgver
 
   # https://github.com/linuxdeepin/developer-center/issues/3035
   sed -i "s|/etc/os-version|/etc/uos-version|" src/src.pro
@@ -33,12 +34,12 @@ prepare() {
 }
 
 build(){
-  cd deepin-screen-recorder
+  cd deepin-screen-recorder-$pkgver
   qmake-qt5 PREFIX=/usr
   make
 }
 
 package() {
-  cd deepin-screen-recorder
+  cd deepin-screen-recorder-$pkgver
   make INSTALL_ROOT="$pkgdir" install
 }

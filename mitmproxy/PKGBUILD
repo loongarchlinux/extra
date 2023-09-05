@@ -5,47 +5,82 @@
 # Contributor: Dobroslaw Kijowski
 
 pkgname=mitmproxy
-pkgver=9.0.1
-pkgrel=2
+pkgver=10.0.0
+pkgrel=1
 pkgdesc='SSL-capable man-in-the-middle HTTP proxy'
 arch=('any')
 url='https://mitmproxy.org'
 license=('MIT')
-depends=('python-asgiref' 'python-blinker' 'python-brotli' 'python-certifi' 'python-cryptography'
-         'python-flask' 'python-h11' 'python-h2' 'python-hyperframe' 'python-kaitaistruct'
-         'python-ldap3' 'python-mitmproxy-wireguard' 'python-msgpack' 'python-passlib' 'python-protobuf'
-         'python-pyopenssl' 'python-pyparsing' 'python-pyperclip' 'python-ruamel-yaml' 'python-setuptools'
-         'python-sortedcontainers' 'python-tornado' 'python-urwid' 'python-wsproto' 'python-publicsuffix2'
-         'python-zstandard')
-checkdepends=('python-asynctest' 'python-parver' 'python-pytest-runner' 'python-pytest-asyncio'
-              'python-requests' 'python-hypothesis')
+depends=(
+  'python'
+  'python-aioquic'
+  'python-asgiref'
+  'python-blinker'
+  'python-brotli'
+  'python-certifi'
+  'python-cryptography'
+  'python-flask'
+  'python-h11'
+  'python-h2'
+  'python-hyperframe'
+  'python-kaitaistruct'
+  'python-ldap3'
+  'python-mitmproxy-rs'
+  'python-mitmproxy-wireguard'
+  'python-msgpack'
+  'python-passlib'
+  'python-protobuf'
+  'python-psutil'
+  'python-publicsuffix2'
+  'python-pylsqpack'
+  'python-pyopenssl'
+  'python-pyparsing'
+  'python-pyperclip'
+  'python-requests'
+  'python-ruamel-yaml'
+  'python-sortedcontainers'
+  'python-tornado'
+  'python-typing_extensions'
+  'python-urwid'
+  'python-werkzeug'
+  'python-wsproto'
+  'python-zstandard'
+)
+makedepends=('python-build' 'python-installer' 'python-wheel')
+checkdepends=(
+  'python-asynctest'
+  'python-hypothesis'
+  'python-parver'
+  'python-pytest-asyncio'
+  'python-pytest-cov'
+  'python-pytest-runner'
+  'python-pytest-timeout'
+  'python-tox-current-env'
+)
 provides=('pathod')
 conflicts=('pathod')
 replaces=('pathod')
 source=("https://github.com/mitmproxy/mitmproxy/archive/$pkgver/$pkgname-$pkgver.tar.gz")
-sha512sums=('601d9171f48d93fbc6f002a1dc243c2f358186059e491490ffe5ab7be797e8e622fdb5a9e2fdab10fac7350057f9e9491952527d600477c841c9b5102a045bc1')
-
-prepare() {
-  cd $pkgname-$pkgver
-
-  # Let's remove all the upper bounds
-  sed -e 's/, *<[0-9=.]*//' \
-      -i setup.py
-}
+sha512sums=('d67a48736af265ff9182f7a9cdac36d2d55bfce1cfb7e346928473925cf99b60e65fe3b62dfa1cd0942d978a2dda2d7cecdac27b5ee43e9aaea3224ee3eab00a')
 
 build() {
   cd $pkgname-$pkgver
-  python setup.py build
+  python -m build --wheel --no-isolation
 }
 
 check() {
+  local _site_packages=$(python -c "import site; print(site.getsitepackages()[0])")
+
   cd $pkgname-$pkgver
-  python setup.py pytest --addopts "--deselect test/mitmproxy/test_version.py::test_get_version"
+  python -m installer --destdir=test_dir dist/*.whl
+
+  PATH="test_dir/usr/bin:$PATH" PYTHONPATH="test_dir/$_site_packages:$PYTHONPATH" tox -e py --current-env
 }
 
 package() {
   cd $pkgname-$pkgver
-  python setup.py install --root="$pkgdir" -O1
-
+  python -m installer --destdir="$pkgdir" dist/*.whl
   install -Dm644 LICENSE -t "$pkgdir"/usr/share/licenses/$pkgname/
 }
+
+# vim:set ts=2 sw=2 et:

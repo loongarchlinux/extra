@@ -2,8 +2,8 @@
 # Maintainer: Mantas M. <grawity@gmail.com>
 
 pkgname=sssd
-pkgver=2.9.0
-pkgrel=2
+pkgver=2.9.1
+pkgrel=1
 pkgdesc="System Security Services Daemon"
 arch=('loong64' 'x86_64')
 url="https://github.com/SSSD/sssd"
@@ -44,10 +44,10 @@ checkdepends=(
 options=('!lto')
 backup=('etc/logrotate.d/sssd')
 source=("https://github.com/SSSD/$pkgname/releases/download/$pkgver/$pkgname-$pkgver.tar.gz"{,.asc}
-        "https://patch-diff.githubusercontent.com/raw/SSSD/sssd/pull/6724/file-watch-realpath.patch")
-sha512sums=('cf65572cfa6468c4b3edc3a33a48ab6d58979917901662eb8b2d8fc5931494be81da13295246500a3a315b71d0395594c9a565014e5875f3cdde50da096f253d'
+        "https://github.com/sumit-bose/sssd/commit/f89c1fb82e402d29fa42a051e4a9ce865b18efc1.patch")
+sha512sums=('eb7345dcfbbd51f005f67ee5032364d369d24589111ded60701e2dbe09563f0b862d343f231dd2e9d548acd8c560a036c8b88a0601f9aa048a7202da8202cd9b'
             'SKIP'
-            '778b448ab80cac2f225802746b1db53656ba7bde4deaca9596f0509ff4fb057a82812c43f7c7e5b70afcc7622ff61081f48a511d270376abb144f382c2d11ad0')
+            'f6738d8f1c9cf49be1c96210ef3e560253e1e234ac9a0265f809e59dbab3ecdbbe828b122242baa9d977a58860b613742191b672231813389ace0f8cb07ad0aa')
 validpgpkeys=('C13CD07FFB2DB1408E457A3CD3D21B2910CF6759')
 
 prepare() {
@@ -66,10 +66,6 @@ prepare() {
 
   # dbus policy files in /usr/share/dbus-1
   sed -i 's/^dbuspolicydir = $(sysconfdir)/dbuspolicydir = $(datadir)/' Makefile.in
-
-  # fix search path for libsofthsm2.so
-  # see: https://github.com/SSSD/sssd/issues/5329
-  sed -i 's#/usr/lib64/pkcs11/libsofthsm2.so ##' src/external/test_ca.m4
 
   # remove flaky network test
   sed '/fail_over-tests/d' -i Makefile.am

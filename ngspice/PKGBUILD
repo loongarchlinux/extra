@@ -1,61 +1,72 @@
-# Maintainer: Kyle Keen <keenerd@gmail.com>
+# Maintainer: George Rawlinson <grawlinson@archlinux.org>
+# Contributor: Kyle Keen <keenerd@gmail.com>
 # Contributor: Abhishek Dasgupta <abhidg@gmail.com>
 # Contributor: Jason Taylor <jftaylor21@gmail.com>
 # Contributor: Luis Henrique <lmello.009@gmail.com>
 
 pkgname=ngspice
-pkgver=40
+pkgver=41
 pkgrel=1
-pkgdesc='Mixed-level/Mixed-signal circuit simulator based on Spice3f5, Ciber1b1, and Xspice.'
-url='http://ngspice.sourceforge.net'
-license=('BSD')
+pkgdesc='Mixed-level/Mixed-signal circuit simulator based on Spice3f5, Ciber1b1, and Xspice'
 arch=('loong64' 'x86_64')
-depends=('libxaw' 'libedit' 'gcc-libs')
-source=("https://downloads.sourceforge.net/project/$pkgname/ng-spice-rework/$pkgver/$pkgname-$pkgver.tar.gz"
-        "https://ngspice.sourceforge.net/docs/ngspice-$pkgver-manual.pdf")
-sha256sums=('e303ca7bc0f594e2d6aa84f68785423e6bf0c8dad009bb20be4d5742588e890d'
-            '25b640f9f2015cf3df3a2047ed76ccae9fd08bf2b50858f106a6f6e0e7b5f640')
-
-# figure out why libedit is okay, but readline isn't
+url='https://ngspice.sourceforge.net'
+license=('BSD')
+depends=(
+  'gcc-libs'
+  'libedit'
+  'libxaw'
+)
+source=(
+  "$pkgname-$pkgver.tar.gz::https://downloads.sourceforge.net/project/$pkgname/ng-spice-rework/$pkgver/$pkgname-$pkgver.tar.gz"
+  "https://ngspice.sourceforge.net/docs/ngspice-$pkgver-manual.pdf"
+)
+sha512sums=('fb0960cc9fcde1871fad82571cacebb1f5cce09ee3297cc938a24b88173ed102a2cb3f246599cdfbde7275e45e3d551edd0368e3ba6e79c592937c4cc466325e'
+            '51569cc774e0d5dda8d6e24122050515d6eda7719488534fe0a32b43d6bb34655472455d62d83bcb6d3847878bd26c7e45976a1eec256b321547b768858f6d74')
+b2sums=('eb6c37ac011440929f6067f16fb96877f771a938666b377838c79cccb4462fcc056929151a148085c175bd06d28c1c769c281f2a4f3de6654d8c146adf7abc11'
+        '84fb021668f7c75648e093a8b12341a6ff0df2ddf3f407f481c4d6f35cb81eaac04b330a0c4b2dde5ac0550cf6bbaad07cea627a072c5f21f2051af38568dc03')
 
 build() {
-  cd $pkgname-$pkgver
+  cd "$pkgname-$pkgver"
+
+  local _common_flags=(
+    --prefix=/usr
+    --mandir=/usr/share/man
+    --infodir=/usr/share/info
+    --with-readline=no
+    --enable-xspice
+    --enable-cider
+    --enable-openmp
+    --disable-debug
+  )
 
   # FS#45230, create so lib
   # shared lib sets flags and modifies headers, needs dedicated pass
-  ./configure --prefix=/usr \
-              --mandir=/usr/share/man \
-              --infodir=/usr/share/info \
-              --with-readline=no \
-              --enable-xspice \
-              --enable-cider \
-              --enable-openmp \
-              --disable-debug \
-              --with-ngshared
+  ./configure \
+    "${_common_flags[@]}" \
+    --with-ngshared
   make
-  #strip ./src/.libs/libngspice.so.0.0.0
 
-  ./configure --prefix=/usr \
-              --mandir=/usr/share/man \
-              --infodir=/usr/share/info \
-              --with-readline=no \
-              --enable-xspice \
-              --enable-cider \
-              --disable-debug \
-              --enable-openmp
+  ./configure "${_common_flags[@]}"
   make
-  # --enable-oldapps seems broken on v36?
 }
 
 package() {
-  cd $pkgname-$pkgver
-  make DESTDIR="$pkgdir" install
-  install -D -m644 COPYING "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
-  install -D -m644  "$srcdir/ngspice-$pkgver-manual.pdf" "$pkgdir/usr/share/doc/$pkgname/manual.pdf"
+  cd "$pkgname-$pkgver"
 
-  install -Dm755 src/.libs/libngspice.so.0.0.7 "$pkgdir/usr/lib/libngspice.so.0.0.7"
-  ln -s "libngspice.so.0.0.7" "$pkgdir/usr/lib/libngspice.so.0"
-  ln -s "libngspice.so.0.0.7" "$pkgdir/usr/lib/libngspice.so"
+  make DESTDIR="$pkgdir" install
+
+  # license
+  install -vDm644 COPYING "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
+
+  # documentation
+  install -vDm644  "$srcdir/ngspice-$pkgver-manual.pdf" "$pkgdir/usr/share/doc/$pkgname/manual.pdf"
+
+  # shared library
+  local _sover="0.0.8"
+  install -vDm755 "src/.libs/libngspice.so.$_sover" "$pkgdir/usr/lib/libngspice.so.$_sover"
+  ln -s "libngspice.so.$_sover" "$pkgdir/usr/lib/libngspice.so.0"
+  ln -s "libngspice.so.$_sover" "$pkgdir/usr/lib/libngspice.so"
+
   # FS#70563, probably remove on v35
   install -Dm644 ngspice.pc "$pkgdir/usr/lib/pkgconfig/ngspice.pc"
   install -Dm644 src/include/ngspice/sharedspice.h "$pkgdir/usr/include/ngspice/sharedspice.h"

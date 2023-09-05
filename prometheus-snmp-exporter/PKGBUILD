@@ -1,0 +1,89 @@
+# Maintainer: George Rawlinson <george@rawlinson.net.nz>
+
+pkgname=prometheus-snmp-exporter
+_pkgname=snmp_exporter
+pkgver=0.24.1
+pkgrel=1
+pkgdesc='Prometheus exporter for SNMP metrics'
+arch=('loong64' 'x86_64')
+url='https://github.com/prometheus/snmp_exporter'
+license=('Apache')
+depends=('glibc' 'net-snmp')
+makedepends=('git' 'go')
+backup=("etc/conf.d/$pkgname")
+install='package.install'
+options=('!lto')
+_commit='f8826bcfadf9d93df9516c660fdc1d503f4e0b95'
+source=(
+  "$pkgname::git+$url#commit=$_commit"
+  'systemd.service'
+  'sysusers.conf'
+  'config.env'
+)
+b2sums=('SKIP'
+        'ac862a1fecc719c04684836b0c0e0aaff93912ad09f676555fc3212dcb8fa93bd4569550247fb0aaca9e7083e6d4707ebd7f6332d28ab14ba0774625fc176737'
+        '08c063a6626e53100e971f10437a9dc17eeb962bedcd6c9e746ae0d336205c68991518103e0ca393d3711ca4d4394d65574e9c611bcc98e61b9224d3b5d5d6a7'
+        '88d48f0485a485a7840f9cc9aa6c5c3a0de2c28542bd77f16fa181772532287375e214f214bf925c30705a60ee48ebf15ac6ca707f58a7b3ed74984afb22aded')
+
+pkgver() {
+  cd "$pkgname"
+
+  git describe --tags | sed 's/^v//'
+}
+
+prepare() {
+  cd "$pkgname"
+
+  # create directory for build output
+  mkdir build
+
+  # download dependencies
+  export GOPATH="${srcdir}"
+  go mod download
+}
+
+build() {
+  cd "$pkgname"
+
+  # set Go flags
+  export CGO_CPPFLAGS="${CPPFLAGS}"
+  export CGO_CFLAGS="${CFLAGS}"
+  export CGO_CXXFLAGS="${CXXFLAGS}"
+  export GOPATH="${srcdir}"
+
+  go build -v \
+    -buildmode=pie \
+    -mod=readonly \
+    -modcacherw \
+    -ldflags "-compressdwarf=false \
+    -linkmode external \
+    -extldflags ${LDFLAGS} \
+    -X github.com/prometheus/common/version.Version=$pkgver \
+    -X github.com/prometheus/common/version.Revision=$pkgver \
+    -X github.com/prometheus/common/version.Branch=main \
+    -X github.com/prometheus/common/version.BuildUser=archlinux \
+    -X github.com/prometheus/common/version.BuildDate=$(date -d@"$SOURCE_DATE_EPOCH" +%Y%m%d-%H:%M:%S)" \
+    -o build \
+    ./generator .
+}
+
+package() {
+  # systemd integration
+  install -vDm644 systemd.service "$pkgdir/usr/lib/systemd/system/$pkgname.service"
+  install -vDm644 sysusers.conf "$pkgdir/usr/lib/sysusers.d/$pkgname.conf"
+  install -vDm644 config.env "$pkgdir/etc/conf.d/$pkgname"
+
+  cd "$pkgname"
+
+  # binaries
+  install -vDm755 "build/$_pkgname" "$pkgdir/usr/bin/$pkgname"
+  install -vDm755 build/generator "$pkgdir/usr/bin/${pkgname%exporter}generator"
+
+  # documentation
+  install -vDm644 -t "$pkgdir/usr/share/doc/$pkgname" README.md auth-split-migration.md
+  install -vDm644 snmp.yml "$pkgdir/usr/share/doc/$pkgname/snmp_example.yml"
+  install -vDm644 -t "$pkgdir/usr/share/doc/$pkgname/generator" generator/{README.md,generator.yml}
+
+  # license
+  install -vDm644 -t "$pkgdir/usr/share/licenses/$pkgname" LICENSE
+}

@@ -2,7 +2,7 @@
 # Maintainer: Daniel M. Capella <polyzen@archlinux.org>
 
 pkgname=eslint
-pkgver=8.46.0
+pkgver=8.48.0
 pkgrel=1
 pkgdesc='An AST-based pattern checker for JavaScript'
 arch=('any')
@@ -12,7 +12,7 @@ depends=('acorn' 'nodejs')
 makedepends=('npm' 'rsync')
 options=('!emptydirs')
 source=("https://github.com/$pkgname/$pkgname/archive/v$pkgver/$pkgname-$pkgver.tar.gz")
-b2sums=('d0e7928aa5ad71cd1e3d8a166d0c1a26b992c3d9d4ae1aac5e9910b408d06b0f95d7b9f981b75b5c8b60b382b4308fb1678c5e7ba89dd8e0d10b30b6a9a0ca86')
+b2sums=('dcee47d79b527043a4b6428be7bb57cc5d5e4e8da03da2b579827a0bdaa2b85ca821df0d932aed200bd4dfc9b875b3b9386a1bac3cfd6eaca5f406cdfd75c346')
 
 prepare() {
   cd $pkgname-$pkgver
@@ -21,17 +21,17 @@ prepare() {
 
 check() {
   cd $pkgname-$pkgver
-  node Makefile mocha
+  node Makefile.js mocha
 }
 
 package() {
-  cd $pkgname-$pkgver
-
-  npm prune --production
-
   local _npmdir=/usr/lib/node_modules/$pkgname
   install -d "$pkgdir"/usr/bin
   ln -s $_npmdir/bin/$pkgname.js "$pkgdir"/usr/bin/$pkgname
+
+  cd $pkgname-$pkgver
+  npm prune --production
+
   install -Dt "$pkgdir"/$_npmdir/bin bin/$pkgname.js
   rsync -r --exclude .cache --exclude .package-lock.json conf lib messages \
     node_modules package.json "$pkgdir"/$_npmdir

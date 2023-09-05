@@ -2,20 +2,21 @@
 # Contributor: Jan "heftig" Steffens <jan.steffens@gmail.com>
 
 pkgname=lldb
-pkgver=15.0.7
-pkgrel=3
+pkgver=16.0.6
+pkgrel=1
 pkgdesc="Next generation, high-performance debugger"
 arch=('loong64' 'x86_64')
 url="https://lldb.llvm.org/"
 license=('custom:Apache 2.0 with LLVM Exception')
-depends=('llvm-libs' 'clang' 'python' 'python-six')
+depends=('llvm-libs' 'clang' 'gcc-libs' 'zlib' 'xz' 'libedit' 'ncurses'
+         'libxml2' 'python')
 makedepends=('llvm' 'cmake' 'ninja' 'swig' 'python-sphinx')
 _source_base=https://github.com/llvm/llvm-project/releases/download/llvmorg-$pkgver
 source=($_source_base/lldb-$pkgver.src.tar.xz{,.sig}
         $_source_base/cmake-$pkgver.src.tar.xz{,.sig})
-sha256sums=('f64d5533661c766a2ff97062af5a0523b9e2cd56aa3d95d9624c418e120d1427'
+sha256sums=('e70a2360aff09553ab327f0f87a08ab869cea991068df38fd3e530368d4d3fae'
             'SKIP'
-            '8986f29b634fdaa9862eedda78513969fe9788301c9f2d938f4c10a3e7a3e7ea'
+            '39d342a4161095d2f28fb1253e4585978ac50521117da666e2b1f6f28b62f514'
             'SKIP')
 validpgpkeys=('474E22316ABF4785A88C6E8EA2C794A986419D8A'  # Tom Stellard <tstellar@redhat.com>
               'D574BD5D1D0E98895E3BF90044F2485E45D59042') # Tobias Hieta <tobias@hieta.se>
@@ -29,13 +30,16 @@ prepare() {
 build() {
   cd lldb-$pkgver.src/build
 
+  # Build only minimal debug info to reduce size
+  CFLAGS=${CFLAGS/-g /-g1 }
+  CXXFLAGS=${CXXFLAGS/-g /-g1 }
+
   local cmake_args=(
     -G Ninja
     -DCMAKE_BUILD_TYPE=Release
     -DCMAKE_INSTALL_PREFIX=/usr
     -DCMAKE_SKIP_RPATH=ON
     -DCLANG_LINK_CLANG_DYLIB=ON
-    -DLLDB_USE_SYSTEM_SIX=1
     -DLLVM_ENABLE_SPHINX=ON
     -DLLVM_LINK_LLVM_DYLIB=ON
   )

@@ -1,8 +1,9 @@
-# Maintainer: Brad Fanella <cesura@archlinux.org>
+# Maintainer:  Alexander Epaneshnikov <alex19ep@archlinux.org>
+# Contributor: Brad Fanella <cesura@archlinux.org>
 # Contributor: Martin Wimpress <code@flexion.org>
 
 pkgname=mate-themes
-pkgver=3.22.23
+pkgver=3.22.24
 pkgrel=1
 pkgdesc="Default themes for the MATE desktop"
 url="http://mate-desktop.org"
@@ -15,7 +16,7 @@ optdepends=('gtk-engines: for gtk2 themes'
 options=('!emptydirs')
 groups=('mate')
 source=("https://pub.mate-desktop.org/releases/themes/${pkgver%.*}/${pkgname}-${pkgver}.tar.xz")
-sha256sums=('61e5ad626c9841f5763c908f1769139b2a812687b98f6b330afee4da18fb6fab')
+sha256sums=('3d8b3a2a285331de24c4cf5d8c9dd846daa11695f206765d8f1693ebcacf6e4a')
 
 build() {
     	cd "${pkgname}-${pkgver}"

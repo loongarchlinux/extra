@@ -6,7 +6,7 @@
 
 _name=pytest-testinfra
 pkgname=python-pytest-testinfra
-pkgver=8.1.0
+pkgver=9.0.0
 pkgrel=1
 pkgdesc='Testinfra test your infrastructures'
 arch=(any)
@@ -41,11 +41,13 @@ optdepends=(
   'python-pywinrm: for testing on Windows hosts'
   'salt: for tests using saltstack'
 )
-source=(https://files.pythonhosted.org/packages/source/${_name::1}/$_name/$_name-$pkgver.tar.gz)
-sha512sums=('2f98cc15952c5607ecc1db76bae90aa9d299951cd1f4c5f8ba6085a7f4e6babac7f4ef4e44e089829f7382139164259007125f505c18129cc7135b840d709931')
-b2sums=('169ccd6afc4260f3dd42c8eff8112395adc7216cfd3e5f7abeb9b9d3db0cd766465dd94a5ca500d610db469f0e51298b6fc26f3c0ffd27f2fc215d859c99e52d')
+source=($_name-$pkgver.tar.gz::$url/archive/refs/tags/$pkgver.tar.gz)
+sha512sums=('92faa7d8bac702876514e7d0566db8d04ed69325dd74b0a0a8b66c0a514450a8815b8ac3b8f67ed7c17bd39349a2363f73627cb88700a194be496cfcf7f15973')
+b2sums=('2e506a9a41dc403f9b9a9c667ced5c905a47da63f9155da436f210871aefb85a477dd35fd1931c123cfa4f9c7e608aef8daecb0a4051ef31eb8ea83950177c7b')
 
 build() {
+  export SETUPTOOLS_SCM_PRETEND_VERSION="$pkgver"
+
   cd $_name-$pkgver
   python -m build --wheel --no-isolation
   make -C doc man

@@ -4,7 +4,7 @@
 # Contributor: Bennett Piater <bennett at piater dot name>
 
 pkgname=doctl
-pkgver=1.97.1
+pkgver=1.98.1
 pkgrel=1
 pkgdesc='The official command line interface for the DigitalOcean API'
 url='https://github.com/digitalocean/doctl'
@@ -13,8 +13,8 @@ license=('Apache')
 depends=('glibc')
 makedepends=('go')
 source=(https://github.com/digitalocean/${pkgname}/archive/v${pkgver}/${pkgname}-${pkgver}.tar.gz)
-sha512sums=('2b046d61d2717a5f87ca98e39417601720a3ba2902e2f08f01f2954587682c63471c78ecf6b7105dcb949b3d90e15d6809d1d6075c4ec0d72fac5c4f5bb8f4cb')
-b2sums=('0c1c1a27386c006d73f49a316e2669264d719027045f314743a0efd0fc69fc79d254271d558de90ebdb278b86d85815a27a11c6d8ad4694864d80000698da9b2')
+sha512sums=('2858e835a50996123d9532fd05998b007db42ce1273877bfc7c17c2666d1d90887e9804cba33ede4c3466944383228709cb675592afeca4b82c1a478af05add6')
+b2sums=('c3daee7eb4c5ea2579ef49a26484d7959640562f43483d68d861cb8629614026101e021a1fc9dea2431914e3df0322b6bf02848bb7ed65c69a397085c3a617ae')
 
 build() {
   cd ${pkgname}-${pkgver}
@@ -22,8 +22,18 @@ build() {
     -trimpath \
     -buildmode=pie \
     -mod=readonly \
-    -ldflags "-linkmode external -extldflags \"${LDFLAGS}\"" \
+    -ldflags "-linkmode external -extldflags \"${LDFLAGS}\"
+      -X github.com/digitalocean/doctl.Major=$(echo $pkgver | cut -d. -f1)
+      -X github.com/digitalocean/doctl.Minor=$(echo $pkgver | cut -d. -f2)
+      -X github.com/digitalocean/doctl.Patch=$(echo $pkgver | cut -d. -f3)
+      -X github.com/digitalocean/doctl.Label=release
+    " \
     ./cmd/...
+}
+
+check() {
+  cd ${pkgname}-${pkgver}
+  ./doctl --help
 }
 
 package() {

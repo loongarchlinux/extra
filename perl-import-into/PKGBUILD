@@ -4,7 +4,7 @@
 
 pkgname='perl-import-into'
 pkgver=1.002005
-pkgrel=8
+pkgrel=9
 pkgdesc="Import packages into other packages"
 arch=('any')
 license=('PerlArtistic' 'GPL')

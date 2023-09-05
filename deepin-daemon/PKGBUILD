@@ -3,16 +3,16 @@
 # Contributor: Xu Fasheng <fasheng.xu[AT]gmail.com>
 
 pkgname=deepin-daemon
-pkgver=5.14.125
-_commit=2ceed313e55509008dff2c6de2b197896d9785b1
+pkgver=5.14.129
 pkgrel=1
 pkgdesc='Daemon handling the DDE session settings'
 arch=('loong64' 'x86_64')
 url="https://github.com/linuxdeepin/dde-daemon"
 license=('GPL3')
 depends=('deepin-desktop-schemas' 'deepin-api' 'deepin-app-services'
-         # TODO:
-         'iso-codes'
+         # TODO
+         'gtk3' 'libx11' 'gdk-pixbuf-xlib' 'gdk-pixbuf2' 'libxi' 'libpulse' 'glib2' 'libxcursor'
+         'libxcrypt' 'libgudev' 'pam' 'iso-codes'
          # accounts
          'accountsservice'
          # accounts/grub
@@ -22,7 +22,7 @@ depends=('deepin-desktop-schemas' 'deepin-api' 'deepin-app-services'
          # appearance
          'fontconfig' 'noto-fonts'
          # audio/session
-         'pulseaudio'
+         'pulseaudio' 'alsa-lib'
          # bin/backlight_helper
          'ddcutil'
          'pkgconf'
@@ -43,7 +43,7 @@ depends=('deepin-desktop-schemas' 'deepin-api' 'deepin-app-services'
          # network
          'mobile-broadband-provider-info' 'org.freedesktop.secrets' 'xdg-utils'
          # network/system
-         'systemd'
+         'systemd' 'systemd-libs'
          # system
          'dmidecode' 'libinput' 'lshw' 'upower'
          # systeminfo
@@ -60,11 +60,11 @@ conflicts=('dde-daemon')
 replaces=('dde-daemon')
 groups=('deepin')
 install="$pkgname.install"
-source=("git+https://github.com/linuxdeepin/dde-daemon.git#commit=$_commit"
+source=("https://github.com/linuxdeepin/dde-daemon/archive/$pkgver/$pkgname-$pkgver.tar.gz"
         $pkgname-dpkg-architecture.patch::https://github.com/linuxdeepin/dde-daemon/commit/56b7a2010ab43fe73ee7456527d0792bb7220a35.patch
         $pkgname-fix-vanilla-libinput.patch
         'deepin-daemon.sysusers')
-sha512sums=('SKIP'
+sha512sums=('fd75ba1a9a85f9fef98a21d9725d8f8a252324320bfbc06cbe5e09990870279bd2b968b40eaa701154733a046b0d126bdf6e5d4be5a839d2a829fa510e8821ee'
             '87b7acca26338899316219daa300a83c6a2e94bd0f2bea372dfea50218187f81d010da7cd4b2049e1403357868e3394634358a5a7c8c3a7be6d5aa4f84bf8d65'
             '944b0ae6cf7f613fd00884593c5e5f43aaf0efe4ea7aaa546a06b4367b8da4f2bc486dca640f77743bd1b7b9e4aacf741afe5c5e3ee219c2fdd4cc891ab3d367'
             '808c02d4fec4cbbb01119bbb10499090199e738b7dd72c28a57dde098eef6132723f3434c151f79e21d9f788c7f7bae8046573ac93ba917afe0e803fbffa6d5a')
@@ -72,7 +72,7 @@ sha512sums=('SKIP'
 export GO111MODULE=off
 
 prepare() {
-  cd dde-daemon
+  cd dde-daemon-$pkgver
   patch -p1 -i ../$pkgname-fix-vanilla-libinput.patch
 
   # Revert commit to use dpkg-architecture instead of pkg-config
@@ -97,20 +97,21 @@ prepare() {
 }
 
 build() {
+  cd dde-daemon-$pkgver
+
   export CGO_CPPFLAGS="${CPPFLAGS}"
   export CGO_CFLAGS="${CFLAGS}"
   export CGO_CXXFLAGS="${CXXFLAGS}"
   export CGO_LDFLAGS="${LDFLAGS}"
   export GOFLAGS="-buildmode=pie -trimpath -mod=readonly -modcacherw"
-
-  cd dde-daemon
+  export GOPATH="$srcdir/build:/usr/share/gocode"
   
   make -C network/nm_generator gen-nm-code
   make
 }
 
 package() {
-  cd dde-daemon
+  cd dde-daemon-$pkgver
   make DESTDIR="$pkgdir" PAM_MODULE_DIR=usr/lib/security install
 
   mv "$pkgdir"{,/usr}/lib/systemd

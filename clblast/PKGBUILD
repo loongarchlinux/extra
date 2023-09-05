@@ -1,0 +1,37 @@
+# Maintainer: kpcyrd <kpcyrd[at]archlinux[dot]org>
+
+pkgname=clblast
+pkgver=1.6.1
+pkgrel=1
+pkgdesc='Tuned OpenCL BLAS library'
+url='https://github.com/CNugteren/CLBlast'
+arch=('loong64' 'x86_64')
+license=('Apache-2.0')
+depends=(
+  ocl-icd
+  opencl-headers
+)
+makedepends=(
+  cmake
+)
+provides=('libclblast.so')
+source=(https://github.com/CNugteren/${pkgname}/archive/${pkgver}/${pkgname}-${pkgver}.tar.gz)
+sha256sums=('e68d026108447cab53cb18d473b4363ab3958d7c8f97c522bbee1651069eec66')
+
+prepare() {
+  cd "CLBlast-${pkgver}"
+  mkdir -p build
+}
+
+build() {
+  cd "CLBlast-${pkgver}/build"
+  cmake .. -DCMAKE_INSTALL_PREFIX="/usr"
+  make
+}
+
+package() {
+  cd "CLBlast-${pkgver}/build"
+  make DESTDIR="${pkgdir}" install
+}
+
+# vim: ts=2 sw=2 et:

@@ -7,7 +7,7 @@ pkgname=(
   iempluginsuite-{standalone,vst3}
 )
 pkgver=1.14.1
-pkgrel=1
+pkgrel=2
 pkgdesc="Plug-in suite including Ambisonic plug-ins up to 7th order"
 arch=(loong64 x86_64)
 url="https://plugins.iem.at"
@@ -53,6 +53,7 @@ _names=(
   DualDelay
   EnergyVisualizer
   FdnReverb
+  GranularEncoder
   MatrixMultiplier
   MultiBandCompressor
   MultiEQ
@@ -79,6 +80,7 @@ prepare() {
     ['DualDelay']="Two delay-lines, which can be configured independently."
     ['EnergyVisualizer']="Visualizes the energy distribution on the sphere of the Ambisonic input signal using a Hammer-Aitoff projection (a spherical projection which is area-preserving)"
     ['FdnReverb']="A Feedback-Delay-Network reverberation."
+    ['GranularEncoder']="An Ambisonic granular synthesis plug-in."
     ['MatrixMultiplier']="Load a configuration which contains a TransformationMatrix object which will be applied to the input signal."
     ['MultiBandCompressor']="Splits an Ambisonic signal into four bands and compresses them individually."
     ['MultiEQ']="A simple multi-channel equalizer, filtering up to 64 audio channels."
@@ -101,6 +103,7 @@ prepare() {
     ['DualDelay']="Delay"
     ['EnergyVisualizer']="Audio Visualizer"
     ['FdnReverb']="Reverb"
+    ['GranularEncoder']="Granular Synthesis"
     ['MatrixMultiplier']="Matrix Transformation"
     ['MultiBandCompressor']="Multiband Compressor"
     ['MultiEQ']="Multichannel Equalizer"
@@ -113,6 +116,9 @@ prepare() {
     ['StereoEncoder']="Ambisonic Encoder"
     ['ToolBox']="Ambisonic Transformation"
   )
+
+  # juce upstream YOLO moved the directory somewhere between 7.0.5 and 7.0.7
+  sed 's|juce_audio_plugin_client/utility|juce_audio_plugin_client/detail|g' -i $_name-v$pkgver/resources/Standalone/MyStandaloneFilterWindow.h
 
   for name in "${_names[@]}"; do
     gendesk -n \

@@ -1,0 +1,77 @@
+diff --git a/awscli/customizations/cloudformation/yamlhelper.py b/awscli/customizations/cloudformation/yamlhelper.py
+index abdc749..ef32415 100644
+--- a/awscli/customizations/cloudformation/yamlhelper.py
++++ b/awscli/customizations/cloudformation/yamlhelper.py
+@@ -92,6 +92,7 @@ def yaml_dump(dict_to_dump):
+     yaml.Representer = FlattenAliasRepresenter
+     _add_yaml_1_1_boolean_resolvers(yaml.Resolver)
+     yaml.Representer.add_representer(OrderedDict, _dict_representer)
++    yaml.Representer.add_representer(dict, _dict_representer)
+ 
+     return dump_yaml_to_str(yaml, dict_to_dump)
+ 
+diff --git a/awscli/customizations/eks/kubeconfig.py b/awscli/customizations/eks/kubeconfig.py
+index 5130f7f..64526a7 100644
+--- a/awscli/customizations/eks/kubeconfig.py
++++ b/awscli/customizations/eks/kubeconfig.py
+@@ -44,7 +44,7 @@ def _get_new_kubeconfig_content():
+         ("contexts", []),
+         ("current-context", ""),
+         ("kind", "Config"),
+-        ("preferences", OrderedDict()),
++        ("preferences", {}),
+         ("users", [])
+     ])
+ 
+@@ -121,7 +121,7 @@ class KubeconfigValidator(object):
+             if (key in config.content and
+                     type(config.content[key]) == list):
+                 for element in config.content[key]:
+-                    if not isinstance(element, OrderedDict):
++                    if not isinstance(element, dict):
+                         raise KubeconfigCorruptedError(
+                             f"Entry in {key} not a {dict}. ")
+ 
+diff --git a/awscli/customizations/eks/ordered_yaml.py b/awscli/customizations/eks/ordered_yaml.py
+index 23834e0..1ea6341 100644
+--- a/awscli/customizations/eks/ordered_yaml.py
++++ b/awscli/customizations/eks/ordered_yaml.py
+@@ -46,8 +46,10 @@ def ordered_yaml_dump(to_dump, stream=None):
+     :type stream: file
+     """
+     yaml = ruamel.yaml.YAML(typ="safe", pure=True)
++    yaml.width = 99999
+     yaml.default_flow_style = False
+     yaml.Representer.add_representer(OrderedDict, _ordered_representer)
++    yaml.Representer.add_representer(dict, _ordered_representer)
+ 
+     if stream is None:
+         return dump_yaml_to_str(yaml, to_dump)
+diff --git a/tests/unit/customizations/cloudformation/test_yamlhelper.py b/tests/unit/customizations/cloudformation/test_yamlhelper.py
+index 9f511b0..29a93a5 100644
+--- a/tests/unit/customizations/cloudformation/test_yamlhelper.py
++++ b/tests/unit/customizations/cloudformation/test_yamlhelper.py
+@@ -139,10 +139,10 @@ class TestYaml(BaseYAMLTest):
+         '    Name: name1\n'
+         )
+         output_dict = yaml_parse(input_template)
+-        expected_dict = OrderedDict([
+-            ('B_Resource', OrderedDict([('Key2', {'Name': 'name2'}), ('Key1', {'Name': 'name1'})])),
+-            ('A_Resource', OrderedDict([('Key2', {'Name': 'name2'}), ('Key1', {'Name': 'name1'})]))
+-        ])
++        expected_dict = {
++            'B_Resource': {'Key2': {'Name': 'name2'}, 'Key1': {'Name': 'name1'}},
++            'A_Resource': {'Key2': {'Name': 'name2'}, 'Key1': {'Name': 'name1'}}
++        }
+         self.assertEqual(expected_dict, output_dict)
+ 
+         output_template = yaml_dump(output_dict)
+@@ -156,7 +156,7 @@ class TestYaml(BaseYAMLTest):
+             <<: *base
+         """
+         output = yaml_parse(test_yaml)
+-        self.assertTrue(isinstance(output, OrderedDict))
++        self.assertTrue(isinstance(output, dict))
+         self.assertEqual(output.get('test').get('property'), 'value')
+ 
+     def test_unroll_yaml_anchors(self):

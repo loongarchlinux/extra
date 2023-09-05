@@ -1,0 +1,75 @@
+From 822a6a40cddca1c89cc06169e42828b86c6f5a80 Mon Sep 17 00:00:00 2001
+From: Wang Zichong <wangzichong@deepin.org>
+Date: Sat, 11 Mar 2023 17:09:08 +0800
+Subject: [PATCH] refactor: use KIconEngine instead
+
+---
+ .../diconproxyengine/diconproxyengine.cpp              |  7 +++++--
+ .../diconproxyengine/diconproxyengine.pro              |  2 +-
+ platformthemeplugin/main.cpp                           | 10 ++++++++--
+ 3 files changed, 14 insertions(+), 5 deletions(-)
+
+diff --git a/iconengineplugins/diconproxyengine/diconproxyengine.cpp b/iconengineplugins/diconproxyengine/diconproxyengine.cpp
+index ccff40aa..cf1fb05d 100644
+--- a/iconengineplugins/diconproxyengine/diconproxyengine.cpp
++++ b/iconengineplugins/diconproxyengine/diconproxyengine.cpp
+@@ -13,6 +13,8 @@
+ #include <QPixmap>
+ #include <QDebug>
+ #include <QDir>
++#include <KIconLoader>
++#include <KIconEngine>
+ 
+ #include <private/qiconloader_p.h>
+ #include <private/qguiapplication_p.h>
+@@ -57,8 +59,9 @@ static QIconEngine *createIconEngineWithKey(const QString &iconName, const QStri
+ 
+ static inline QIconEngine *createXdgProxyIconEngine(const QString &iconName)
+ {
+-    const QString &key(qEnvironmentVariable("D_PROXY_ICON_ENGINE", QLatin1String("XdgIconProxyEngine")));
+-    return createIconEngineWithKey(iconName, key);
++    return new KIconEngine(iconName, KIconLoader::global());
++//    const QString &key(qEnvironmentVariable("D_PROXY_ICON_ENGINE", QLatin1String("XdgIconProxyEngine")));
++//    return createIconEngineWithKey(iconName, key);
+ }
+ 
+ static inline QIconEngine *createDciIconEngine(const QString &iconName)
+diff --git a/iconengineplugins/diconproxyengine/diconproxyengine.pro b/iconengineplugins/diconproxyengine/diconproxyengine.pro
+index d8b00a7e..d2020e9a 100644
+--- a/iconengineplugins/diconproxyengine/diconproxyengine.pro
++++ b/iconengineplugins/diconproxyengine/diconproxyengine.pro
+@@ -7,7 +7,7 @@ SOURCES += main.cpp \
+            diconproxyengine.cpp
+ OTHER_FILES += diconproxyengine.json
+ 
+-QT +=  dtkgui
++QT +=  dtkgui KIconThemes
+ DESTDIR = $$_PRO_FILE_PWD_/../../bin/plugins/iconengines/
+ 
+ unix {
+diff --git a/platformthemeplugin/main.cpp b/platformthemeplugin/main.cpp
+index cc985cfd..4acd0551 100644
+--- a/platformthemeplugin/main.cpp
++++ b/platformthemeplugin/main.cpp
+@@ -5,13 +5,19 @@
+ #include <qpa/qplatformthemeplugin.h>
+ #include "qdeepintheme.h"
+ 
+-#include <private/xdgiconloader/xdgiconloader_p.h>
++//#include <private/xdgiconloader/xdgiconloader_p.h>
++
++#include <QDBusConnection>
++#include <QDBusMessage>
+ 
+ QT_BEGIN_NAMESPACE
+ 
+ void updateXdgIconSystemTheme()
+ {
+-    XdgIconLoader::instance()->updateSystemTheme();
++//    XdgIconLoader::instance()->updateSystemTheme();
++    QDBusMessage message = QDBusMessage::createSignal(QStringLiteral("/KIconLoader"), QStringLiteral("org.kde.KIconLoader"), QStringLiteral("iconChanged"));
++    message << 0;
++    QDBusConnection::sessionBus().send(message);
+ }
+ 
+ class QDeepinThemePlugin : public QPlatformThemePlugin

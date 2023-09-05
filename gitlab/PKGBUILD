@@ -9,7 +9,7 @@
 # Contributor: loqs <bugs-archlinux@entropy-collector.net>
 
 pkgname=gitlab
-pkgver=16.1.2
+pkgver=16.1.4
 pkgrel=1
 pkgdesc='Project management and code hosting application'
 arch=(loong64 x86_64)
@@ -45,6 +45,7 @@ options=(!buildflags !debug)
 source=("git+$url.git#tag=v$pkgver"
         "${url%-foss}/-/commit/b899702f585290b6a64c4762bf2bf2dffbd114c5.patch"
          https://github.com/grpc/grpc/pull/33408/commits/ffd057b399c1f68d43a68b960dd9bdf7a29fdd09.patch
+         bump-pg_query-to-4.2.3-for-glibc-2.38.patch
         "$pkgname-configs.patch"
         "$pkgname-environment"
         "$pkgname-puma.service"
@@ -63,6 +64,7 @@ install=gitlab.install
 sha256sums=('SKIP'
             'e30ba2112a7fe30c8b4644d4f08373987dcdd51c595d07bf03445a9bd093fae5'
             '51b1048cfa90fc9cc58193092837e85d8a81d6e73d52d48608d1e091f114c3f0'
+            'bc69454ce7ce7537085af0628b39c1b238dc533fb119b6cbb139ae71b80dc98b'
             'e6f9c11f7cccc1b7c689af5cd10aa8fdda46c484e5764964da91c9ee4b080fed'
             '8cc4d933743906b4213b8ea8d8c5a62535e27e4073f73581a5dad40078dde000'
             'f1cec302a551de5e06a2651a1d24f9697fa4f8be08eede65af6b4c5774476591'
@@ -85,6 +87,9 @@ prepare() {
 	# Revert downgrade of gprc gem from v1.55.0 to v1.42.0 as the newer version is needed to build with gcc 13
 	# The issue the revert addresses is patched later in build()
 	patch -Rp1 -i ../b899702f585290b6a64c4762bf2bf2dffbd114c5.patch
+
+	# Bump pg_query to 4.2.3 which adds support for glibc 2.38
+	patch -Np0 -i ../bump-pg_query-to-4.2.3-for-glibc-2.38.patch
 
 	# GitLab tries to read its revision information from a file.
 	git rev-parse --short HEAD > REVISION

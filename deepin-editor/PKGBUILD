@@ -1,32 +1,33 @@
 # Maintainer: Felix Yan <felixonmars@archlinux.org>
 
 pkgname=deepin-editor
-pkgver=6.0.3
-_commit=0b1867ecafb4da3bd9b41819f7ff49095ed2bc73
+pkgver=6.0.10
 pkgrel=1
 pkgdesc='Simple editor for Deepin'
 arch=('loong64' 'x86_64')
 url="https://github.com/linuxdeepin/deepin-editor"
 license=('GPL3')
-depends=('deepin-qt5integration' 'deepin-qt-dbus-factory' 'kcodecs' 'polkit-qt5'
-         'syntax-highlighting' 'libchardet' 'uchardet')
+depends=('deepin-qt5integration' 'dtkcore' 'dtkgui' 'dtkwidget' 'deepin-qt-dbus-factory'
+         'gcc-libs' 'icu' 'qt5-base' 'qt5-svg'
+         'kcodecs' 'syntax-highlighting' 'libchardet' 'uchardet')
 makedepends=('git' 'cmake' 'gmock' 'gtest' 'ninja' 'qt5-tools')
 groups=('deepin-extra')
-source=("git+https://github.com/linuxdeepin/deepin-editor.git#commit=$_commit")
-sha512sums=('SKIP')
+source=("$pkgname-$pkgver.tar.gz::https://github.com/linuxdeepin/deepin-editor/archive/refs/tags/$pkgver.tar.gz")
+sha512sums=('f3d41a69cc800c07de0efb243b3d72fa9cb38b71853bfc347e88180c9651c0b097c686835097f688df7f0b383bfad53cc723b667bc07ac89c313a6df07976fa4')
 
 build() {
-  cd deepin-editor
-  cmake -GNinja -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=Release .
+  cd deepin-editor-$pkgver
+  cmake -GNinja -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=Release -DVERSION=$pkgver .
   ninja
 }
 
 check() {
-  cd deepin-editor
-  ninja test || echo "Tests failed"
+  cd deepin-editor-$pkgver
+  # Tests not available unless in debug mode
+  #ninja test || echo "Tests failed"
 }
 
 package() {
-  cd deepin-editor
+  cd deepin-editor-$pkgver
   DESTDIR="$pkgdir" ninja install
 }

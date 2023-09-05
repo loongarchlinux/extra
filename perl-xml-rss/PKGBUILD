@@ -3,7 +3,7 @@
 
 pkgname=perl-xml-rss
 pkgver=1.62
-pkgrel=1
+pkgrel=2
 pkgdesc="Parse or create Rich Site Summaries (RSS)"
 arch=('any')
 url="https://search.cpan.org/dist/XML-RSS"

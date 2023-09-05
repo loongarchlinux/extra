@@ -1,0 +1,53 @@
+diff --git c/Source/MainComponent.cpp w/Source/MainComponent.cpp
+index a25f6074..1f13652b 100644
+--- c/Source/MainComponent.cpp
++++ w/Source/MainComponent.cpp
+@@ -160,9 +160,9 @@ public:
+       // but be careful - it will be called on the audio thread, not the GUI thread.
+    }
+ 
+-   void audioDeviceIOCallbackWithContext(const float** inputChannelData,
++   void audioDeviceIOCallbackWithContext(const float* const* inputChannelData,
+                                          int numInputChannels,
+-                                         float** outputChannelData,
++                                         float* const* outputChannelData,
+                                          int numOutputChannels,
+                                          int numSamples,
+                                          const AudioIODeviceCallbackContext& context) override
+diff --git c/Source/ModularSynth.cpp w/Source/ModularSynth.cpp
+index db64b504..6e2649a4 100644
+--- c/Source/ModularSynth.cpp
++++ w/Source/ModularSynth.cpp
+@@ -1941,7 +1941,7 @@ void ModularSynth::MouseReleased(int intX, int intY, int button, const juce::Mou
+    Prefab::sJustReleasedModule = nullptr;
+ }
+ 
+-void ModularSynth::AudioOut(float** output, int bufferSize, int nChannels)
++void ModularSynth::AudioOut(float* const* output, int bufferSize, int nChannels)
+ {
+    PROFILER(audioOut_total);
+ 
+@@ -2034,7 +2034,7 @@ void ModularSynth::AudioOut(float** output, int bufferSize, int nChannels)
+    Profiler::PrintCounters();
+ }
+ 
+-void ModularSynth::AudioIn(const float** input, int bufferSize, int nChannels)
++void ModularSynth::AudioIn(const float* const* input, int bufferSize, int nChannels)
+ {
+    if (mAudioPaused)
+       return;
+diff --git c/Source/ModularSynth.h w/Source/ModularSynth.h
+index 70fc2a10..14f86480 100644
+--- c/Source/ModularSynth.h
++++ w/Source/ModularSynth.h
+@@ -102,8 +102,8 @@ public:
+    void AddExtraPoller(IPollable* poller);
+    void RemoveExtraPoller(IPollable* poller);
+ 
+-   void AudioOut(float** output, int bufferSize, int nChannels);
+-   void AudioIn(const float** input, int bufferSize, int nChannels);
++   void AudioOut(float* const* output, int bufferSize, int nChannels);
++   void AudioIn(const float* const* input, int bufferSize, int nChannels);
+ 
+    void OnConsoleInput();
+    void ClearConsoleInput();

@@ -1,6 +1,6 @@
 # Maintainer: Sven-Hendrik Haase <svenstaro@archlinux.org>
 pkgname=vncdotool
-pkgver=1.1.0
+pkgver=1.2.0
 pkgrel=1
 pkgdesc='A command line VNC client'
 arch=('any')
@@ -9,7 +9,7 @@ license=('MIT')
 depends=('python-pillow' 'python-twisted' 'python-zope-interface')
 makedepends=('python-setuptools')
 source=($pkgname-$pkgver.tar.gz::https://github.com/sibson/vncdotool/archive/v$pkgver.tar.gz)
-sha512sums=('41b237da92ffad5855bb0806a6e797e8f62a979b283b3c30e6713e591da785a1fad39c3660535cc0498a2a8b3f3d1545bcf90aec6d7b987b18e7abf3bd89d962')
+sha512sums=('88ee299e59e303c77bd82d43bb10ce99d8b2d4257e9f1a0ab5d1460cda23c55246bb8c81d3ee3ea0da56a858cff0fca12c9019c39d7952e2bf7f40048ddf526e')
 
 package() {
     cd $pkgname-$pkgver

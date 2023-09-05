@@ -1,0 +1,38 @@
+# Maintainer: Daniel M. Capella <polyzen@archlinux.org>
+# Contributor: Brody <archfan at brodix dot de>
+
+pkgname=markdownlint-cli2
+pkgver=0.9.0
+pkgrel=1
+pkgdesc='MarkdownLint Command Line Interface'
+arch=('any')
+url=https://github.com/DavidAnson/markdownlint-cli2
+license=('MIT')
+depends=('nodejs')
+makedepends=('git' 'npm')
+source=("git+$url.git#tag=v$pkgver")
+b2sums=('SKIP')
+
+prepare() {
+  cd $pkgname
+  npm ci
+}
+
+check() {
+  cd $pkgname
+  npm test
+}
+
+package() {
+  local _npmdir=/usr/lib/node_modules/$pkgname
+  install -d "$pkgdir"/{usr/bin,$_npmdir}
+  ln -s $_npmdir/$pkgname.js "$pkgdir"/usr/bin/$pkgname
+
+  cd $pkgname
+  npm prune --production
+
+  cp -r {$pkgname,append-to-array,merge-options,resolve-and-require}.js \
+    node_modules package.json "$pkgdir"/$_npmdir
+  install -Dm644 -t "$pkgdir"/usr/share/doc/$pkgname README.md
+  install -Dm644 -t "$pkgdir"/usr/share/licenses/$pkgname LICENSE
+}

@@ -2,12 +2,12 @@
 
 pkgname=python-google-auth
 pkgver=2.18.1
-pkgrel=1
+pkgrel=2
 pkgdesc="Google Authentication Library"
 url="https://github.com/GoogleCloudPlatform/google-auth-library-python"
 license=('Apache')
 arch=('any')
-depends=('python-cachetools' 'python-certifi' 'python-pyasn1-modules' 'python-rsa')
+depends=('python-cachetools' 'python-certifi' 'python-pyasn1-modules' 'python-rsa' 'python-aiohttp')
 makedepends=('python-setuptools')
 checkdepends=('python-pytest' 'python-mock' 'python-requests' 'python-flask'
               'python-oauth2client' 'python-pytest-localserver' 'python-cryptography'

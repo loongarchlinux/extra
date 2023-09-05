@@ -1,8 +1,8 @@
 # Maintainer: Felix Yan <felixonmars@archlinux.org>
 
 pkgname=python-pytest-mock
-pkgver=3.11.0
-_commit=5668efe23e01673af9905febeefd9a9791b023f4
+pkgver=3.11.1
+_commit=d3e73f2e93f7b93eba0a36e17e43bafd969da4fe
 pkgrel=1
 pkgdesc="Thin-wrapper around the mock package for easier use with py.test"
 arch=('any')

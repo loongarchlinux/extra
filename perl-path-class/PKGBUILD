@@ -2,7 +2,7 @@
 
 pkgname=perl-path-class
 pkgver=0.37
-pkgrel=8
+pkgrel=9
 pkgdesc="Cross-platform path specification manipulation"
 arch=(any)
 license=(PerlArtistic GPL)
@@ -11,7 +11,7 @@ depends=('perl')
 makedepends=('perl-module-build')
 url="https://search.cpan.org/dist/Path-Class"
 source=("https://search.cpan.org/CPAN/authors/id/K/KW/KWILLIAMS/Path-Class-${pkgver}.tar.gz")
-md5sums=('13e6db714f6d5a0e62ca1c4a7fc4d0f3')
+sha256sums=('654781948602386f2cb2e4473a739f17dc6953d92aabc2498a4ca2561bc248ce')
 
 build()
 (

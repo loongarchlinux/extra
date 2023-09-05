@@ -2,7 +2,7 @@
 
 pkgname=perl-class-load
 pkgver=0.25
-pkgrel=2
+pkgrel=3
 pkgdesc="a working (require 'Class::Name') and more"
 arch=('any')
 license=('PerlArtistic' 'GPL')

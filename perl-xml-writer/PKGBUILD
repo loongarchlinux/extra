@@ -3,7 +3,7 @@
 
 pkgname=perl-xml-writer
 pkgver=0.900
-pkgrel=1
+pkgrel=2
 pkgdesc="Module for writing XML documents"
 arch=('any')
 url="https://search.cpan.org/dist/XML-Writer"

@@ -4,7 +4,7 @@
 pkgname=perl-module-build-tiny
 _pkgname=Module-Build-Tiny
 pkgver=0.046
-pkgrel=1
+pkgrel=2
 pkgdesc="A tiny replacement for Module::Build"
 arch=('any')
 license=('PerlArtistic' 'GPL')

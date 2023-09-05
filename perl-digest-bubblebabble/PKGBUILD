@@ -4,7 +4,7 @@
 
 pkgname=perl-digest-bubblebabble
 pkgver=0.02
-pkgrel=8
+pkgrel=9
 pkgdesc="Create bubble-babble fingerprints"
 arch=('any')
 license=('PerlArtistic' 'GPL')

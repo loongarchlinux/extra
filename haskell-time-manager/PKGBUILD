@@ -2,23 +2,30 @@
 
 _hkgname=time-manager
 pkgname=haskell-time-manager
-pkgver=0.0.0
-pkgrel=304
+pkgver=0.0.1
+pkgrel=2
 pkgdesc="Scalable timer"
 url="https://github.com/yesodweb/wai"
 license=('MIT')
 arch=('loong64' 'x86_64')
-depends=('ghc-libs' 'haskell-auto-update')
-makedepends=('ghc')
+depends=('ghc-libs' 'haskell-auto-update' 'haskell-unliftio')
+makedepends=('ghc' 'uusi')
 source=(https://hackage.haskell.org/packages/archive/${_hkgname}/${pkgver}/${_hkgname}-${pkgver}.tar.gz)
-sha512sums=('aa8bd9dc9a66ea097fe2d6a6d9e77eff67debc58a588da7ae1d6fc312b6bb371da58b413b58cdba21623e2da26633595f379ac9e0a7a6dc7281ad42353231054')
+sha512sums=('49b2339b814807016ed86ce809c508afe97fe23b389262de69e3ff07533f64bc86af44c098e0e82ddcf9b10cad6766964ea73f2462de12b93272ec8c9cb6772a')
+
+prepare() {
+    cd $_hkgname-$pkgver
+    gen-setup
+}
 
 build() {
     cd $_hkgname-$pkgver    
     
     runhaskell Setup configure -O --enable-shared --enable-executable-dynamic --disable-library-vanilla \
-        --prefix=/usr --docdir=/usr/share/doc/$pkgname --datasubdir=$pkgname --enable-tests \
-        --dynlibdir=/usr/lib --libsubdir=\$compiler/site-local/\$pkgid --ghc-option=-fllvm
+        --prefix=/usr --docdir="/usr/share/doc/$pkgname" --enable-tests \
+        --dynlibdir=/usr/lib --libsubdir=\$compiler/site-local/\$pkgid --ghc-option=-fllvm \
+        --ghc-option=-optl-Wl\,-z\,relro\,-z\,now \
+        --ghc-option='-pie'
     runhaskell Setup build $MAKEFLAGS
     runhaskell Setup register --gen-script
     runhaskell Setup unregister --gen-script

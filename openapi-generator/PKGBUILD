@@ -1,28 +1,35 @@
 # Maintainer: David Runge <dvzrv@archlinux.org>
 
 pkgname=openapi-generator
-pkgver=6.6.0
-pkgrel=1
+pkgver=7.0.0
+pkgrel=2
 pkgdesc="Generation of API client libraries, server stubs, documentation and configuration"
 arch=(any)
 url="https://github.com/openapitools/openapi-generator/"
 license=(Apache)
+_java_version=11
 depends=(
   bash
-  java-runtime=8)
+  java-runtime=$_java_version
+)
 makedepends=(
   maven
-  java-environment=8
+  java-environment=$_java_version
   strip-nondeterminism
 )
 source=(
   $url/archive/v$pkgver/$pkgname-v$pkgver.tar.gz
   $pkgname.sh
 )
-sha512sums=('deafc6e8d858b86f588232f5f4f4ddb04bc35f31faab01fc09333a8afc45bf1f5bd3349b71f6027124156e1e8a4ea6b1d4c36672d8901776021a0e59c30bc251'
-            '0b81955e2da12182b70366c4d8ff48d970a0edee6242a13dc657879b2e1c15205a2bfa01cbef51dd86d90e1176569a211b704d30d19b529e15ead825a89a4e9c')
-b2sums=('81a558c2eedba48baf78f6c036b5f445c71426ccfb79b29886018e306a49056ef8ead1ee89839f2aa1d7792dbded78585f71d920b37c4deff0099640944af163'
-        'd2f38df8fd23a32e95e9e09624283ca4927dce8cf6dbdbfc11547396ae2bd9c6c1ff65082447f1e30caba3654fd6e50558272d524242ca6727df7024729a1123')
+sha512sums=('05f1cb00c41eb6a7727ec69a0007160f13bca86933937b9f31164c0aba37775eb1c2eafaa60f168ac76bc9368fe8cc7748c1de9e7e11159870ac06523a7981a5'
+            '82a21b46b5340108a6cf54350c25e7d9e9fbb97a0837ff68dc74f7cf2b105c12c33a4cc20aa641e8a9e4034de3e62a3f9ca03f6f7e5dc4f37b3827dff41eac46')
+b2sums=('ee749c1efa7159a7057b25efec8ba288e3e5aa90ef825751592490e7022d8025654bb642b4ff1431e9c31e91b6af37b2ae5d5d94d4deec2ea2eef402aec557c2'
+        'c7bf34d415aeceba2816edd6010706a7b9b547c9240344e5431f3280a552c2b578de6fc3fc90b0640d4f91d655cc419aabe615b8946d6c82d71061afa65cc302')
+
+prepare() {
+  # set java version for wrapper script
+  sed "s/JAVA_VERSION/$_java_version/" $pkgname.sh > $pkgname
+}
 
 build() {
   cd $pkgname-$pkgver
@@ -35,6 +42,6 @@ build() {
 package() {
   install -vDm 644 $pkgname-$pkgver/modules/$pkgname-cli/target/openapi-generator-cli.jar -t "$pkgdir/usr/share/java/$pkgname/"
   install -vDm 644 $pkgname-$pkgver/scripts/$pkgname-cli-completion.bash "$pkgdir/usr/share/bash/bash-completion/completions/openapi-generator"
-  install -vDm 755 $pkgname.sh "$pkgdir/usr/bin/$pkgname"
+  install -vDm 755 $pkgname -t "$pkgdir/usr/bin/"
   ln -svf "$pkgname" "$pkgdir/usr/bin/$pkgname-cli"
 }

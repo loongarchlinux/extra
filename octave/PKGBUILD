@@ -1,50 +1,88 @@
-# Maintainer: Ronald van Haren <ronald.archlinux.org>
+# Maintainer: George Rawlinson <grawlinson@archlinux.org>
+# Contributor: Ronald van Haren <ronald.archlinux.org>
 # Contributor : shining <shiningxc.at.gmail.com>
 # Contributor : cyberdune <cyberdune@gmail.com>
 
 pkgname=octave
-pkgver=8.2.0
+pkgver=8.3.0
 pkgrel=2
 pkgdesc="A high-level language, primarily intended for numerical computations"
 arch=('loong64' 'x86_64')
 url="https://www.gnu.org/software/octave/"
 license=('GPL')
-depends=('fftw' 'curl' 'graphicsmagick' 'glpk' 'hdf5' 'qhull' 'arpack' 'glu' 'ghostscript'
- 	   'sundials' 'gl2ps' 'qscintilla-qt5' 'libsndfile' 'qt5-tools' 'qrupdate' 'pcre2')
-makedepends=('gcc-fortran' 'suitesparse' 'texinfo' 'gnuplot' 'fltk' 'portaudio' 'jdk-openjdk' 'rapidjson')
-optdepends=('texinfo: for help-support in octave'
-            'gnuplot: alternative plotting'
-            'portaudio: audio support'
-            'java-runtime: java support'
-            'fltk: FLTK GUI'
-            'texlive-bin: for the publish command')
-source=(https://ftp.gnu.org/gnu/octave/octave-$pkgver.tar.gz{,.sig}
-        https://github.com/gnu-octave/octave/commit/7ea31a1e.patch)
+depends=(
+  'fftw'
+  'curl'
+  'graphicsmagick'
+  'glpk'
+  'hdf5'
+  'qhull'
+  'arpack'
+  'glu'
+  'ghostscript'
+  'sundials'
+  'gl2ps'
+  'qscintilla-qt5'
+  'libsndfile'
+  'qt5-tools'
+  'qrupdate'
+  'pcre2'
+)
+makedepends=(
+  'gcc-fortran'
+  'suitesparse'
+  'texinfo'
+  'gnuplot'
+  'fltk'
+  'portaudio'
+  'jdk-openjdk'
+  'rapidjson'
+)
+optdepends=(
+  'texinfo: for help-support in octave'
+  'gnuplot: alternative plotting'
+  'portaudio: audio support'
+  'java-runtime: java support'
+  'fltk: FLTK GUI'
+  'texlive-bin: for the publish command'
+)
+source=("https://ftp.gnu.org/gnu/octave/octave-$pkgver.tar.gz"{,.sig})
 options=('!emptydirs')
 validpgpkeys=('DBD9C84E39FE1AAE99F04446B05F05B75D36644B')  # John W. Eaton
-sha512sums=('987dac6bd6d41316e1bb12f544a4ed8767639e60a117ad7125f2b299bf3dbdb516b6a657fcce5b597759bcaa1f8e49d91bead7a4c43fac73c16cb4818de9c29d'
-            'SKIP'
-            '761ccbdc5a9b3eeb95a6f57c5264624203ce787436962cabdadcc0f7b4a57f034e42a431ec10e8cef472119a4842f846e54c073714d32d16f4e4fe42fbd7d6e6')
-
-prepare() {
-  patch -d $pkgname-$pkgver -p1 < 7ea31a1e.patch # Fix build with suitesparse 7.1
-}
+sha512sums=('cafdf4d04c34914a945a0bc3d68b63f91402bb0c43b7c545fb7b2fd23906f516f2186f7a5fb49fef1cf988a78957ab0e662d36178d1e83399d855d040bf1e9fd'
+            'SKIP')
 
 build() {
-  cd ${pkgname}-${pkgver}
+  cd "$pkgname-$pkgver"
 
-  ./configure --prefix=/usr --libexecdir=/usr/lib \
-    --enable-shared --disable-static \
+  # suppress warning message below:
+  # egrep: warning: egrep is obsolescent; using grep -E
+  export EGREP="grep -E"
+
+  ./configure \
+    --prefix=/usr \
+    --libexecdir=/usr/lib \
+    --enable-shared \
+    --disable-static \
     --with-quantum-depth=16
+
   make
 }
 
 package(){
-  cd ${pkgname}-${pkgver}
+  cd "$pkgname-$pkgver"
 
-  make DESTDIR="${pkgdir}" install
+  make DESTDIR="$pkgdir" install
 
   # add octave library path to ld.so.conf.d
-  install -d "${pkgdir}/etc/ld.so.conf.d"
-  echo "/usr/lib/${pkgname}/${pkgver}" > "${pkgdir}/etc/ld.so.conf.d/${pkgname}.conf"
+  install -d "$pkgdir/etc/ld.so.conf.d"
+  echo "/usr/lib/$pkgname/$pkgver" > "$pkgdir/etc/ld.so.conf.d/$pkgname.conf"
+
+  # dirty hack to make package reproducible
+  local ARCHIVE_DATE="$(TZ=UTC date --reference=ChangeLog --iso-8601=seconds)"
+  mkdir tmpdir
+  cd tmpdir
+  jar --extract --file="$pkgdir/usr/share/octave/$pkgver/m/java/octave.jar"
+  rm -rf "$pkgdir/usr/share/octave/$pkgver/m/java/octave.jar"
+  jar --create --date="$ARCHIVE_DATE" --file="$pkgdir/usr/share/octave/$pkgver/m/java/octave.jar" ./*
 }

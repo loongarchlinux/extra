@@ -1,13 +1,17 @@
 # Maintainer: George Rawlinson <grawlinson@archlinux.org>
 
 pkgname=reapack
-pkgver=1.2.4.2
-pkgrel=3
+pkgver=1.2.4.3
+pkgrel=1
 pkgdesc='Package manager for the Reaper DAW'
 arch=('loong64' 'x86_64')
 url='https://reapack.com'
 license=('GPL3' 'LGPL3')
 depends=(
+  'glibc'
+  'gcc-libs'
+  'openssl'
+  'zlib'
   'reaper'
   'libxml2'
   'curl'
@@ -17,22 +21,22 @@ makedepends=(
   'git'
   'cmake'
   'boost'
-  'openssl'
-  'zlib'
   'ruby'
   'php'
   'catch2'
 )
 install='reapack.install'
-_commit='daa3346cee146d5eeca806452d26b70e623d5aa7'
+_commit='7ece4e058436959d977ab387aa86bf73ac5b2278'
 source=(
   "$pkgname::git+https://github.com/cfillion/reapack#commit=$_commit"
   'github.com-justinfrankel-wdl::git+https://github.com/justinfrankel/WDL'
   'github.com-justinfrankel-reaper-sdk::git+https://github.com/justinfrankel/reaper-sdk'
+  'ftbfs-gcc13.patch'
 )
 b2sums=('SKIP'
         'SKIP'
-        'SKIP')
+        'SKIP'
+        'f31e2c4cbb7d32092e165687f0acb95591ea1f199234394a3e6d5890bc34fde8b157014c815989f5a0456b8813c2a4a9efa2dfc111a5cee003470c0cf32f3cfe')
 
 pkgver() {
   cd "$pkgname"
@@ -55,6 +59,10 @@ prepare() {
 
   # FTBFS: FS#77178
   git cherry-pick --no-commit f2806c95ba16549e969581429d1fc51616c68796
+
+  # FTBFS: GCC13
+  # https://gcc.gnu.org/gcc-13/porting_to.html
+  patch -p1 -i "$srcdir/ftbfs-gcc13.patch"
 }
 
 build() {

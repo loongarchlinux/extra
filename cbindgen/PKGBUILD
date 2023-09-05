@@ -1,7 +1,7 @@
 # Maintainer: Jan Alexander Steffens (heftig) <heftig@archlinux.org>
 
 pkgname=cbindgen
-pkgver=0.24.6
+pkgver=0.25.0
 pkgrel=1
 pkgdesc="A tool for generating C bindings to Rust code"
 url="https://github.com/eqrion/cbindgen"
@@ -14,10 +14,10 @@ makedepends=(
 )
 checkdepends=(
   cmake
-  cython
+  cython0
   python
 )
-_commit=cbd3541614d03a115c423a683328a78f6935f93d  # tags/v0.24.6^0
+_commit=dd9a550152cd162a3aa01757a55dd22fc56d0d8a  # tags/v0.25.0^0
 source=("git+$url#commit=$_commit")
 b2sums=('SKIP')
 
@@ -51,7 +51,8 @@ check() {
 package() {
   cd cbindgen
   install -Dt "$pkgdir/usr/bin" target/release/cbindgen
-  install -Dt "$pkgdir/usr/share/doc/$pkgname" -m644 README.md
+  install -Dt "$pkgdir/usr/share/doc/$pkgname" -m644 CHANGES \
+    {README,docs,internals}.md
 }
 
 # vim:set sw=2 sts=-1 et

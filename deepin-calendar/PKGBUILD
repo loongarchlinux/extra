@@ -3,31 +3,25 @@
 # Contributor: Xu Fasheng <fasheng.xu[AT]gmail.com>
 
 pkgname=deepin-calendar
-pkgver=5.9.1
+pkgver=5.10.0
 pkgrel=1
 pkgdesc='Calendar for Deepin Desktop Environment'
 arch=('loong64' 'x86_64')
 url="https://github.com/linuxdeepin/dde-calendar"
 license=('GPL3')
-depends=('deepin-qt5integration' 'hicolor-icon-theme')
-makedepends=('cmake' 'gmock' 'gtest' 'ninja' 'qt5-tools')
+depends=('deepin-qt5integration' 'deepin-qt-dbus-factory' 'dtkcore' 'dtkgui' 'dtkwidget'
+         'gcc-libs' 'libical' 'qt5-svg' 'qt5-base')
+makedepends=('cmake' 'ninja' 'qt5-tools')
 groups=('deepin')
-source=("https://github.com/linuxdeepin/dde-calendar/archive/$pkgver/$pkgname-$pkgver.tar.gz"
-        "dde-calendar-icon.patch")
-sha512sums=('d74d759246e3b178f18e932b36c0648269556d5f19132fd43813d1119dea8513a3a0964c474179cd909de9f13f8dd2fbe83907927b04051f03ebf0dc666b0148'
-            '40ffae29fcbd386512dac9b91c39219b420b349f1f5facc254467b9e5407091886c8d0ed0979d566ba79539c093464cbc7719da7268c9745bc30273f9d7db7e2')
-
-prepare() {
-  cd dde-calendar-$pkgver
-
-  # Install the application icon
-  # https://github.com/linuxdeepin/dde-calendar/pull/31
-  # patch -Np1 -i ../dde-calendar-icon.patch
-}
+source=("https://github.com/linuxdeepin/dde-calendar/archive/$pkgver/$pkgname-$pkgver.tar.gz")
+sha512sums=('76a2a54f039f1b60369dfa75f33dbed7e1528e73570e3be7e2b606dd108e3385780d684b70e9ad95eac17c50861ed7b9d13f8e7ea2d15900f8b997fa6f1bd37a')
 
 build() {
   cd dde-calendar-$pkgver
-  cmake -GNinja -DCMAKE_INSTALL_PREFIX=/usr .
+  cmake -GNinja . \
+    -DCMAKE_INSTALL_PREFIX=/usr \
+    -DCMAKE_INSTALL_SYSCONFDIR=/etc \
+    -DVERSION=$pkgver
   ninja
 }
 

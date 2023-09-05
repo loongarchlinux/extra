@@ -1,9 +1,8 @@
 # Maintainer: Antonio Rojas <arojas@archlinux,org>
 
 pkgname=krita
-_pkgver=5.1.5
-pkgver=${_pkgver/-/}
-pkgrel=10
+pkgver=5.1.5
+pkgrel=11
 pkgdesc='Edit and paint images'
 arch=(loong64 x86_64)
 url='https://krita.org'
@@ -16,7 +15,7 @@ optdepends=('poppler-qt5: PDF filter' 'ffmpeg: to save animations'
             'python-pyqt5: for the Python plugins' 'libheif: HEIF filter'
             'kseexpr: SeExpr generator layer' 'kimageformats: PSD support' 'libmypaint: support for MyPaint brushes'
             'krita-plugin-gmic: GMic plugin' 'libjxl: JPEG-XL filter')
-source=(https://download.kde.org/stable/krita/$_pkgver/$pkgname-$_pkgver.tar.gz{,.sig}
+source=(https://download.kde.org/stable/krita/$pkgver/$pkgname-$pkgver.tar.gz{,.sig}
         find-xsimd.patch
         https://invent.kde.org/graphics/krita/-/commit/e9184281.patch
         https://invent.kde.org/graphics/krita/-/commit/bbee5eff.patch
@@ -32,15 +31,16 @@ validpgpkeys=('05D00A8B73A686789E0A156858B9596C722EA3BD'  # Boudewijn Rempt <fou
               '064182440C674D9F8D0F6F8B4DA79EDA231C852B') # Stichting Krita Foundation <foundation@krita.org>
 
 prepare() {
-  patch -d $pkgname-$_pkgver -p1 < find-xsimd.patch
-  patch -d $pkgname-$_pkgver -p1 < e9184281.patch # Fix build with libheif 1.14.1
-  patch -d $pkgname-$_pkgver -p1 < bbee5eff.patch # Fix crash when loading some TIFF files
-  patch -d $pkgname-$_pkgver -p1 < exiv2-0.28.patch # Fix build with exiv2 0.28
+  patch -d $pkgname-$pkgver -p1 < find-xsimd.patch
+  patch -d $pkgname-$pkgver -p1 < e9184281.patch # Fix build with libheif 1.14.1
+  patch -d $pkgname-$pkgver -p1 < bbee5eff.patch # Fix crash when loading some TIFF files
+  patch -d $pkgname-$pkgver -p1 < exiv2-0.28.patch # Fix build with exiv2 0.28
 }
 
 build() {
-  cmake -B build -S $pkgname-$_pkgver \
-    -DBUILD_KRITA_QT_DESIGNER_PLUGINS=ON
+  cmake -B build -S $pkgname-$pkgver \
+    -DBUILD_KRITA_QT_DESIGNER_PLUGINS=ON \
+    -DBUILD_TESTING=OFF
   cmake --build build
 }
 

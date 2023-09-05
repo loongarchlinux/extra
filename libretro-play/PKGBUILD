@@ -1,7 +1,7 @@
 # Maintainer: Maxime Gauduin <alucryd@archlinux.org>
 
 pkgname=libretro-play
-pkgver=7657
+pkgver=7863
 pkgrel=1
 pkgdesc='Sony PlayStation 2 core'
 arch=(loong64 x86_64)
@@ -23,7 +23,7 @@ makedepends=(
   git
   libglvnd
 )
-_commit=8e1cc18be61f5baac0c78b9eeeb2f75d196217a5
+_commit=cdf50b9640da25fa5808f82765e06538889821e2
 source=(
   libretro-play::git+https://github.com/jpd002/Play-.git#commit=${_commit}
   play-CodeGen::git+https://github.com/jpd002/Play--CodeGen.git
@@ -56,32 +56,22 @@ pkgver() {
 
 prepare() {
   cd libretro-play
-
   git config --global protocol.file.allow always
-
   for submodule in deps/{CodeGen,Dependencies,Framework,Nuanceur,libchdr}; do
     git submodule init ${submodule}
     git config submodule.${submodule}.url ../play-${submodule#*/}
-    git submodule update ${submodule}
   done
-
+  git submodule update
   cd deps/Dependencies
-
   git submodule init SDWebImage
   git config submodule.SDWebImage.url ../../../SDWebImage
-  git submodule update SDWebImage
-
   git submodule init ghc_filesystem
   git config submodule.ghc_filesystem.url ../../../filesystem
-  git submodule update ghc_filesystem
-
   git submodule init xxHash
   git config submodule.xxHash.url ../../../xxHash
-  git submodule update xxHash
-
   git submodule init zstd
   git config submodule.zstd.url ../../../zstd
-  git submodule update zstd
+  git submodule update
 }
 
 build() {

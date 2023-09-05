@@ -1,7 +1,7 @@
 # Maintainer: Giancarlo Razzolini <grazzolini@archlinux.org>
 pkgname=dracut
 pkgver=059
-pkgrel=2
+pkgrel=3
 pkgdesc="An event driven initramfs infrastructure"
 arch=('loong64' 'x86_64')
 url="https://github.com/dracutdevs/dracut"
@@ -17,22 +17,26 @@ optdepends=('binutils: --uefi option support'
 provides=('initramfs')
 backup=('etc/dracut.conf')
 source=("${pkgname}-${pkgver}::git+${url}#tag=${pkgver}?signed"
-        dracut-systemd-253.patch)
+        dracut-systemd-253.patch
+        dracut-systemd-254-uki.patch::https://github.com/dracutdevs/dracut/commit/f32e95bcadbc5158843530407adc1e7b700561b1.patch)
 sha512sums=('SKIP'
-            'dfbef5ee06fd0f7b51bfd3571eb284272d7694754eaf232cf1a14f3b2f95a67c87098fabf6d88068ef7e235e717bec26024a3b342c5dba940b8600799cef0791')
+            'dfbef5ee06fd0f7b51bfd3571eb284272d7694754eaf232cf1a14f3b2f95a67c87098fabf6d88068ef7e235e717bec26024a3b342c5dba940b8600799cef0791'
+            '880fa583e02557ca24047960bdf36bd4d02fb01baac9e090cc462a02159dddd1725dc59ca4f09e8c9d9827a51bbd0676c0a60d96080b89c2778a445b36d46f33')
 b2sums=('SKIP'
-        '6386d1caf4765974e6f9fffde43cacc20f55a1ed487f6dba9f6f15318dc6dc593ef01309679c8a7f1deffc5dd66138cde7c11d53a825396971d6be29a9388744')
+        '6386d1caf4765974e6f9fffde43cacc20f55a1ed487f6dba9f6f15318dc6dc593ef01309679c8a7f1deffc5dd66138cde7c11d53a825396971d6be29a9388744'
+        '620aef8362c22f51558010a4fa043448065dc6b3a27f40ed22b8bbdd3623d31759e4eff77f37059f0d91288a95843ea6b3c64292bd548d1aa6147d293cb17b30')
 validpgpkeys=('F66745589DE755B02AD947D71F1139EBBED1ACA9') # Jóhann B. Guðmundsson <johannbg@gmail.com>
 
 prepare() {
   cd "$srcdir/${pkgname}-${pkgver}"
 
   patch -Np1 < ../dracut-systemd-253.patch
+  patch -Np1 < ../dracut-systemd-254-uki.patch
 }
 
 build() {
   local prefix=/usr sysconfdir=/etc
-  
+
   cd "$srcdir/${pkgname}-${pkgver}"
 
   ./configure \

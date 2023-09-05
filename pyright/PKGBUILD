@@ -2,16 +2,16 @@
 # Contributor: Kaizhao Zhang <zhangkaizhao@gmail.com>
 
 pkgname=pyright
-pkgver=1.1.319
+pkgver=1.1.325
 pkgrel=1
 pkgdesc='Type checker for the Python language'
 arch=('any')
-url=https://github.com/microsoft/pyright
+url=https://microsoft.github.io/pyright
 license=('MIT')
 depends=('nodejs')
 makedepends=('npm')
-source=("$url/archive/$pkgver/$pkgname-$pkgver.tar.gz")
-b2sums=('51327d9a837cb60f885e3496937b4377cfc412f7ac4da7cdd0f21a67d74a5940837ecd15062ce8b636f7f4762bc21d6f0b9f71df19959dc4932a055d978d22f2')
+source=("https://github.com/microsoft/pyright/archive/$pkgver/$pkgname-$pkgver.tar.gz")
+b2sums=('16fdce36996b5bf969db05b722b2864e9dfd833b05030249fe998b266464b44a59801de9b0ba19b98afb3874e49fdc92410e65fd140c703fbf39becb05c2c7be')
 
 prepare() {
   cd $pkgname-$pkgver
@@ -23,15 +23,20 @@ build() {
   npm run build
 }
 
+check() {
+  cd $pkgname-$pkgver/packages/$pkgname-internal
+  npm test
+}
+
 package() {
   local _npmdir=/usr/lib/node_modules/$pkgname
-  install -d "$pkgdir"/{usr/bin,$_npmdir,usr/share/doc/$pkgname}
+  install -d "$pkgdir"/{usr/bin,$_npmdir}
   ln -s $_npmdir/index.js "$pkgdir"/usr/bin/$pkgname
   ln -s $_npmdir/langserver.index.js \
     "$pkgdir"/usr/bin/$pkgname-langserver
 
   cd $pkgname-$pkgver
-  cp -r {CONTRIBUTING,README}.md docs "$pkgdir"/usr/share/doc/$pkgname
+  install -Dm644 -t "$pkgdir"/usr/share/doc/$pkgname README.md
   install -Dm644 -t "$pkgdir"/usr/share/licenses/$pkgname LICENSE.txt
 
   cd packages/$pkgname

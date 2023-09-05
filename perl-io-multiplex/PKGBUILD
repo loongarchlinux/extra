@@ -3,13 +3,13 @@
 
 pkgname=perl-io-multiplex
 pkgver=1.16
-pkgrel=8
+pkgrel=9
 pkgdesc="Perl/CPAN Module IO::Multiplex : Manage Input Output on many file handles"
 arch=(any)
 url="https://search.cpan.org/dist/IO-Multiplex/"
 license=("GPL" "PerlArtistic")
 source=("https://search.cpan.org/CPAN/authors/id/B/BB/BBB/IO-Multiplex-$pkgver.tar.gz")
-md5sums=('e5541d1e9f85954b95c8735ed9b19cfa')
+sha256sums=('74d22c44b5ad2e7190e2786e8a17d74bbf4cef89b4d1157ba33598b5a2720dad')
 
 build() {
   cd "$srcdir"/IO-Multiplex-$pkgver

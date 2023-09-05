@@ -2,7 +2,7 @@
 
 pkgname=perl-devel-globaldestruction
 pkgver=0.14
-pkgrel=8
+pkgrel=9
 pkgdesc="Expose the flag which marks global"
 arch=('any')
 url="https://search.cpan.org/dist/Devel-GlobalDestruction"
@@ -10,7 +10,7 @@ license=('PerlArtistic' 'GPL')
 depends=('perl' 'perl-sub-exporter' 'perl-sub-exporter-progressive')
 options=('!emptydirs')
 source=(https://search.cpan.org/CPAN/authors/id/H/HA/HAARG/Devel-GlobalDestruction-$pkgver.tar.gz)
-md5sums=('24221ba322cf2dc46a1fc99b53e2380b')
+sha256sums=('34b8a5f29991311468fe6913cadaba75fd5d2b0b3ee3bb41fe5b53efab9154ab')
 
 build() {
   cd Devel-GlobalDestruction-$pkgver

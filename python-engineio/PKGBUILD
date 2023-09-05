@@ -2,7 +2,7 @@
 
 pkgname=python-engineio
 pkgver=4.4.1
-pkgrel=1
+pkgrel=2
 pkgdesc='Python implementation of the Engine.IO realtime server'
 url='https://github.com/miguelgrinberg/python-engineio'
 arch=('any')
@@ -25,12 +25,12 @@ b2sums=('4ae5dd9887f4d3a70d4983d2a0f0de29b1a54d30961bfc430b8850ff4af73fa1cd9abad
 build() {
   cd ${pkgname}-${pkgver}
   python -m build --wheel --no-isolation
-  make -C docs man text SPHINXBUILD=sphinx-build
+  PYTHONPATH="$PWD/src" make -C docs man text SPHINXBUILD=sphinx-build
 }
 
 check() {
   cd ${pkgname}-${pkgver}
-  PYTHONPATH=build/lib python setup.py test
+  PYTHONPATH=build/lib pytest -v
 }
 
 package() {

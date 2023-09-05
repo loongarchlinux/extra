@@ -1,57 +1,58 @@
+# Maintainer: Daurnimator <daurnimator@archlinux.org>
 # Maintainer: Orhun Parmaksız <orhun@archlinux.org>
 # Contributor: Chocobo1 <chocobo1 AT archlinux DOT net>
 
 pkgname=zls
-pkgver=0.10.0
-_gitcommit=7ef224467ab2f3179058981740e942977892e7b9
-pkgrel=3
+pkgver=0.11.0
+pkgrel=1
 pkgdesc="A language server for Zig"
 arch=('loong64' 'x86_64')
 url="https://github.com/zigtools/zls"
 license=('MIT')
 depends=('zig')
-makedepends=('git')
 source=(
-  "${pkgname}::git+$url#commit=$_gitcommit"
-  "${pkgname}-known-folders::git+https://github.com/ziglibs/known-folders"
-  "${pkgname}-tracy::git+https://github.com/wolfpld/tracy"
-  "pie-opt.patch"
+  "${pkgname}-${pkgver}.tar.gz::https://github.com/zigtools/zls/archive/refs/tags/${pkgver}.tar.gz"
+  # From build.zig.zon
+  "known-folders-fa75e1bc672952efa0cf06160bbd942b47f6d59b.tar.gz::https://github.com/ziglibs/known-folders/archive/fa75e1bc672952efa0cf06160bbd942b47f6d59b.tar.gz"
+  "diffz-90353d401c59e2ca5ed0abe5444c29ad3d7489aa.tar.gz::https://github.com/ziglibs/diffz/archive/90353d401c59e2ca5ed0abe5444c29ad3d7489aa.tar.gz"
+  "binned_allocator-6c3321e0969ff2463f8335da5601986cf2108690.tar.gz::https://gist.github.com/antlilja/8372900fcc09e38d7b0b6bbaddad3904/archive/6c3321e0969ff2463f8335da5601986cf2108690.tar.gz"
 )
-sha256sums=('SKIP'
-            'SKIP'
-            'SKIP'
-            'c8241efa5da3dc263b655acc5ae76d56577802693eb62c0cfb0e0ed8b88af08f')
+sha256sums=('09fee5720fed9f3e1f494236ba88bf9176d3a01304feaa355b9f4726a574431b'
+            '3b7a616c365cee0610997f6be9dbde7e3fdfb072fe49ad87cc65821eaf85c20f'
+            'a7748f06df7f026412b0bc31a99529b6d4a4529eaca46d1d07014801172031a3'
+            '7315c84a2bf85da1797e734b04c16e8d32b88034210a10c63cfc8632239e9ff7')
 
 prepare() {
-  cd "${pkgname}"
-  patch -Np1 -i "../pie-opt.patch"
-  git submodule init
-  git config submodule."src/known-folders".url "${srcdir}/${pkgname}"-known-folders
-  git config submodule."src/tracy".url "${srcdir}/${pkgname}"-tracy
-  git -c protocol.file.allow=always submodule update --init --recursive
+  mkdir -p zig-global-cache/p/
+  mv known-folders-fa75e1bc672952efa0cf06160bbd942b47f6d59b zig-global-cache/p/122048992ca58a78318b6eba4f65c692564be5af3b30fbef50cd4abeda981b2e7fa5
+  mv diffz-90353d401c59e2ca5ed0abe5444c29ad3d7489aa zig-global-cache/p/122089a8247a693cad53beb161bde6c30f71376cd4298798d45b32740c3581405864
+  mv 8372900fcc09e38d7b0b6bbaddad3904-6c3321e0969ff2463f8335da5601986cf2108690 zig-global-cache/p/1220363c7e27b2d3f39de6ff6e90f9537a0634199860fea237a55ddb1e1717f5d6a5
 }
 
 build() {
-  cd "$pkgname"
+  export ZIG_GLOBAL_CACHE_DIR="${srcdir}/zig-global-cache"
+  cd "${pkgname}-${pkgver}"
   DESTDIR="build" zig build \
     --prefix /usr \
     --search-prefix /usr \
     -Dtarget=native-linux.5.15-gnu \
     -Dcpu=baseline \
-    -Drelease-safe \
+    -Doptimize=ReleaseSafe \
     -Dpie=true
 }
 
 check() {
-  cd "$pkgname"
+  export ZIG_GLOBAL_CACHE_DIR="${srcdir}/zig-global-cache"
+  cd "${pkgname}-${pkgver}"
   zig build test \
     -Dtarget=native-linux.5.15-gnu \
     -Dcpu=baseline \
-    -Drelease-safe
+    -Doptimize=ReleaseSafe \
+    -Dpie=true
 }
 
 package() {
-  cd "$pkgname"
+  cd "${pkgname}-${pkgver}"
   cp -a build/* "$pkgdir"
   install -Dm 644 README.md -t "$pkgdir/usr/share/doc/$pkgname"
   install -Dm 644 LICENSE -t "$pkgdir/usr/share/licenses/$pkgname"
