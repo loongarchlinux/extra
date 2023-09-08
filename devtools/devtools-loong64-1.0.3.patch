@@ -62,7 +62,7 @@ index d8962d0..e6990ef 100644
  .PHONY: all binprogs library completion conf man clean install uninstall tag dist upload check
 diff --git a/config/makepkg/loong64.conf b/config/makepkg/loong64.conf
 new file mode 100644
-index 0000000..075e577
+index 0000000..c1b2987
 --- /dev/null
 +++ b/config/makepkg/loong64.conf
 @@ -0,0 +1,162 @@
@@ -108,7 +108,7 @@ index 0000000..075e577
 +
 +#-- Compiler and Linker Flags
 +#CPPFLAGS=""
-+CFLAGS="-mabi=lp64d -march=la464 -O2 -pipe -fno-plt -fexceptions \
++CFLAGS="-mabi=lp64d -march=loongarch64 -mlsx -O2 -pipe -fno-plt -fexceptions \
 +        -Wp,-D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security \
 +        -fstack-clash-protection"
 +CXXFLAGS="$CFLAGS -Wp,-D_GLIBCXX_ASSERTIONS"
@@ -806,6 +806,20 @@ index 108fe81..976848d 100644
  
  declare -a uploads
  declare -a commit_arches
+diff --git a/src/lib/build/build.sh b/src/lib/build/build.sh
+index ecdeaad..533db43 100644
+--- a/src/lib/build/build.sh
++++ b/src/lib/build/build.sh
+@@ -319,6 +319,9 @@ pkgctl_build() {
+ 				BUILD_ARCH=("${_arch[0]}")
+ 			else
+ 				for loop_arch in "${arch[@]}"; do 
++					if in_array "${loop_arch}" "x86_64"; then
++						continue
++					fi
+ 					if in_array "${loop_arch}" "${_arch[@]}"; then
+ 						BUILD_ARCH+=("$loop_arch")
+ 					else
 diff --git a/src/lib/valid-repos.sh b/src/lib/valid-repos.sh
 index 14f90ce..6164a14 100644
 --- a/src/lib/valid-repos.sh
