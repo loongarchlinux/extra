@@ -1,8 +1,8 @@
 diff --git a/Makefile b/Makefile
-index d8962d0..e6990ef 100644
+index d8962d0..518354a 100644
 --- a/Makefile
 +++ b/Makefile
-@@ -25,28 +25,45 @@ COMMITPKG_LINKS = \
+@@ -25,28 +25,41 @@ COMMITPKG_LINKS = \
  	extrapkg \
  	extra-testingpkg \
  	extra-stagingpkg \
@@ -15,9 +15,7 @@ index d8962d0..e6990ef 100644
  	kde-unstablepkg \
 -	gnome-unstablepkg
 +	gnome-unstablepkg \
-+	wine-appspkg \
-+	wine-apps-testingpkg \
-+	wine-apps-stagingpkg
++	wine-appspkg
  
  ARCHBUILD_LINKS = \
 +	core-testing-loong64-build \
@@ -45,13 +43,11 @@ index d8962d0..e6990ef 100644
 -	gnome-unstable-x86_64-build
 +	kde-unstable-loong64-build kde-unstable-x86_64-build \
 +	gnome-unstable-loong64-build gnome-unstable-x86_64-build \
-+	wine-apps-loong64-build \
-+	wine-apps-testing-loong64-build \
-+	wine-apps-staging-loong64-build
++	wine-apps-loong64-build
  
  COMPLETIONS = $(addprefix $(BUILDDIR)/,$(patsubst %.in,%,$(wildcard contrib/completion/*/*)))
  
-@@ -159,7 +176,7 @@ dist:
+@@ -159,7 +172,7 @@ dist:
  	git archive --format=tar --prefix=devtools-$(V)/ v$(V) | gzip > devtools-$(V).tar.gz
  	gpg --detach-sign --use-agent devtools-$(V).tar.gz
  
@@ -821,7 +817,7 @@ index ecdeaad..533db43 100644
  						BUILD_ARCH+=("$loop_arch")
  					else
 diff --git a/src/lib/valid-repos.sh b/src/lib/valid-repos.sh
-index 14f90ce..6164a14 100644
+index 14f90ce..21a03ec 100644
 --- a/src/lib/valid-repos.sh
 +++ b/src/lib/valid-repos.sh
 @@ -7,16 +7,20 @@
@@ -832,7 +828,7 @@ index 14f90ce..6164a14 100644
  	multilib multilib-staging multilib-testing
  	gnome-unstable
  	kde-unstable
-+	wine-apps laur-staging laur-testing
++	wine-apps
  )
  
  # shellcheck disable=2034
@@ -843,13 +839,13 @@ index 14f90ce..6164a14 100644
  	multilib multilib-staging multilib-testing
  	gnome-unstable
  	kde-unstable
-+	wine-apps laur-staging laur-testing
++	wine-apps
  )
 diff --git a/src/lib/valid-tags.sh b/src/lib/valid-tags.sh
-index ca8d7d7..0f6067b 100644
+index ca8d7d7..c2397e2 100644
 --- a/src/lib/valid-tags.sh
 +++ b/src/lib/valid-tags.sh
-@@ -5,21 +5,28 @@
+@@ -5,21 +5,26 @@
  
  # shellcheck disable=2034
  _arch=(
@@ -882,12 +878,10 @@ index ca8d7d7..0f6067b 100644
 -	gnome-unstable-x86_64 gnome-unstable-any
 +	kde-unstable-loong64 kde-unstable-x86_64 kde-unstable-any
 +	gnome-unstable-loong64 gnome-unstable-x86_64 gnome-unstable-any
-+	wine-apps-loong64
-+	wine-apps-testing-loong64
-+	wine-apps-staging-loong64
++	wine-apps-loong64 wine-apps-any
  )
 diff --git a/src/makechrootpkg.in b/src/makechrootpkg.in
-index 2cfd849..796269b 100644
+index 2cfd849..c1b00af 100644
 --- a/src/makechrootpkg.in
 +++ b/src/makechrootpkg.in
 @@ -14,7 +14,7 @@ source /usr/share/makepkg/util/config.sh
@@ -895,7 +889,7 @@ index 2cfd849..796269b 100644
  shopt -s nullglob
  
 -default_makepkg_args=(--syncdeps --noconfirm --log --holdver --skipinteg)
-+default_makepkg_args=(--syncdeps --noconfirm --log --holdver --skipinteg --skippgpcheck --nocheck)
++default_makepkg_args=(--syncdeps --noconfirm --log --holdver --skipinteg --skippgpcheck)
  makepkg_args=("${default_makepkg_args[@]}")
  verifysource_args=()
  chrootdir=
