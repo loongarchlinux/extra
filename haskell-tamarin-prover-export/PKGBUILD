@@ -1,0 +1,50 @@
+# Maintainer: Felix Yan <felixonmars@archlinux.org>
+# Contributor: Arch Haskell Team <arch-haskell@haskell.org>
+
+_hkgname=tamarin-prover-export
+pkgname=haskell-tamarin-prover-export
+pkgver=1.8.0
+pkgrel=1
+pkgdesc="Library for export of processes in the Sapic calculus to the Proverif calculus"
+url="http://www.infsec.ethz.ch/research/software/tamarin"
+license=("GPL")
+arch=('loong64' 'x86_64')
+depends=('ghc-libs' 'haskell-aeson' 'haskell-aeson-pretty' 'haskell-dlist' 'haskell-fclabels'
+         'haskell-hstringtemplate' 'haskell-parallel' 'haskell-safe' 'haskell-uniplate'
+         'haskell-raw-strings-qq' 'haskell-tamarin-prover-utils' 'haskell-tamarin-prover-term'
+         'haskell-tamarin-prover-theory' 'haskell-tamarin-prover-sapic')
+makedepends=('ghc' 'uusi')
+source=("tamarin-prover-$pkgver.tar.gz::https://github.com/tamarin-prover/tamarin-prover/archive/$pkgver.tar.gz")
+sha512sums=('62d8da7a46d521f85fa4544c676b5c7a6d0f26770eb4169fc3aef66e9b1df61753fc1e1fca9531cbe29d971807cc04f7af80c4c9f9c4bb2bae632c6e1fb32662')
+
+prepare() {
+    cd "tamarin-prover-${pkgver}/lib/export"
+    gen-setup
+}
+
+build() {
+    cd "${srcdir}/tamarin-prover-${pkgver}/lib/export"
+    
+    runhaskell Setup configure -O --enable-shared --enable-executable-dynamic --disable-library-vanilla \
+        --prefix=/usr --docdir=/usr/share/doc/$pkgname --datasubdir=$pkgname --enable-tests \
+        --dynlibdir=/usr/lib --libsubdir=\$compiler/site-local/\$pkgid --ghc-option=-fllvm
+    runhaskell Setup build $MAKEFLAGS
+    runhaskell Setup register --gen-script
+    runhaskell Setup unregister --gen-script
+    sed -i -r -e "s|ghc-pkg.*update[^ ]* |&'--force' |" register.sh
+    sed -i -r -e "s|ghc-pkg.*unregister[^ ]* |&'--force' |" unregister.sh
+}
+
+check() {
+    cd "${srcdir}/tamarin-prover-${pkgver}/lib/export"
+    runhaskell Setup test
+}
+
+package() {
+    cd "${srcdir}/tamarin-prover-${pkgver}/lib/export"
+    
+    install -D -m744 register.sh "$pkgdir"/usr/share/haskell/register/$pkgname.sh
+    install -D -m744 unregister.sh "$pkgdir"/usr/share/haskell/unregister/$pkgname.sh
+    runhaskell Setup copy --destdir="$pkgdir"
+    rm -f "$pkgdir"/usr/share/doc/$pkgname/LICENSE
+}

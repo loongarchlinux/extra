@@ -2,7 +2,7 @@
 # Contributor: Daniel Seymour <dannyseeless@gmail.com>
 
 pkgname=emby-server
-pkgver=4.7.13.0
+pkgver=4.7.14.0
 _ffmpeg_ver=2022_05_07
 _skiasharp_ver=2.80.2
 pkgrel=1
@@ -60,6 +60,7 @@ source=(
   https://mediabrowser.github.io/embytools/ffmpeg-${_ffmpeg_ver}.tar.gz
   https://mediabrowser.github.io/embytools/ffdetect-${_ffmpeg_ver}-x64.tar.xz
   https://mediabrowser.github.io/embytools/libskiasharp-${_skiasharp_ver}-x64.tar.xz
+  https://github.com/FFmpeg/FFmpeg/commit/effadce6c756247ea8bae32dc13bb3e6f464f0eb.patch
   emby-server
   emby-server.conf
   emby-server.service
@@ -69,10 +70,11 @@ source=(
 noextract=(license.docx)
 backup=(etc/conf.d/emby-server)
 install=emby-server.install
-b2sums=('b2f4d5eb7e6c8bbc1472aeffef0d5b59945d6f4da6b841d014591fa3d7d76ee9b9ce1d80de0790b3d723548eb2844372b65fbbf28b67ade40352601dea7e0539'
+b2sums=('5bfcaed53983b8ab499907ce816468cd418649a0ab79a4102f4770973f84a27b38d587d4fdc2812b70f6521377e4a9e00e7a7fbb08350199c013ccbd77b41810'
         '0cf98666f22cb08bc02c5a93eb3d73e50648468da8d73edbd1814d2b3ca599532e75f3b597ff770c40712c04a4d1af5ab66b6bb6779b35508dd9e007e66e575d'
         '39dbe0033cf43c77c92ae7e1e6709ae1cb447e8d9654b8b1422658d86994db6e2d04f65311e5f1a9a078bdf533344c37f0ab8e07138bb1eabe7108d87a79c2a0'
         '08ea6a632c7366fb4086d3f42c602e85603bc416ec7e0ea1e7d41814441889fc4858db0128a4e433965ca2d7427f43028864d936b40244b3896fa78102ac38c6'
+        'b1aa3d44eb6e3e1499dbf307979307081dcc431d638f22a26b553ef9f5cc95ce33d841ed906c29fba03fb144f12b748de9b2f252bd7f9766a4c465ad2a7170ff'
         '48c11601d00121e725951fd48ba34137804d4a67aa12528a29ca4d43d301d19311182421e96bef7b7ddbc4929dc9d5b577b1659cb0b716b1c1f6938283465c46'
         '49c2e6a27f36a2e44a6b988573ee7d08bacb036008f5360ad1cb617b3d1577bdcd48a323ebb882e0f9ec4483962a96d8bd9af44385feb5245b49dfc191d73352'
         '11cc26f44f81823bcd50ee16344aff94eb0a64d740a2e489d832bc8d48d11f3065bf683da243409bab8e3d8a201083596a27983cc11a90688128442e0116430c'
@@ -85,6 +87,7 @@ prepare() {
 
 build() {
   cd ffmpeg-${_ffmpeg_ver}_public
+  patch -Np1 -i ../effadce6c756247ea8bae32dc13bb3e6f464f0eb.patch
   ./configure \
     --disable-doc \
     --disable-ffplay \

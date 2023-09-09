@@ -2,7 +2,7 @@
 # Contributor: libertylocked <libertylocked@disroot.org>
 
 pkgname=bitwarden
-pkgver=2023.8.2
+pkgver=2023.8.3
 pkgrel=1
 _electronversion=24
 pkgdesc='A secure and free password manager for all of your devices'

@@ -7,9 +7,9 @@
 
 pkgname=luajit
 # LuaJIT has a "rolling release" where you should follow git HEAD
-_commit=54ef81f864e18729f6dafb6b1c9f9176fcb67bb5
+_commit=41fb94defa8f830ce69a8122b03f6ac3216d392a
 # The patch version is the timestamp of the above git commit, obtain via `git show -s --format=%ct`
-_ct=1692616192
+_ct=1693350652
 pkgver="2.1.${_ct}"
 pkgrel=1
 pkgdesc='Just-in-time compiler and drop-in replacement for Lua 5.1'
@@ -18,20 +18,22 @@ url='https://luajit.org/'
 license=('MIT')
 depends=('gcc-libs')
 source=("LuaJIT-${_commit}.tar.gz::https://repo.or.cz/luajit-2.0.git/snapshot/${_commit}.tar.gz")
-md5sums=('fcb8280cc1d5f92bfa055d913b7b05b4')
-sha256sums=('c0cd956f0d1e54af216b94f797e0b485d5aa1e30b5d405b8b6c2e7602d5f211e')
-b2sums=('2eeadd0112590987bb1146e273d6b07c487571985446d2d64ff794c53a986a868015531b81890441190ae56946b419f727383f4bc41ba9d0df320ae4ff76fa62')
-
-prepare() {
-  cd "luajit-2.0-${_commit::7}"
-
-  echo "${_ct}" > .relver
-}
+md5sums=('1fe40d7b9449c99e8015793b41f818b0')
+sha256sums=('8036b6a7078385f3db5c6280cdcbfa5790189349b542f26a10d8d5ed87adaa58')
+b2sums=('34948ecd0735a78f4fdfd4dea38c1f1f451c58a90a7794a0e6ee2b11e19ac5fce76fc451d13b08424814713f3a846faf516751a97a6fa585b751f19811f608ee')
 
 build() {
   cd "luajit-2.0-${_commit::7}"
+
   # Avoid early stripping
   make amalg PREFIX=/usr BUILDMODE=dynamic TARGET_STRIP=" @:"
+}
+
+check() {
+  cd "luajit-2.0-${_commit::7}"
+
+  # Make sure that _ct was updated
+  test "${_ct}" == "$(cat .relver)"
 }
 
 package() {
@@ -39,6 +41,4 @@ package() {
 
   make install DESTDIR="$pkgdir" PREFIX=/usr
   install -Dm644 COPYRIGHT "$pkgdir/usr/share/licenses/$pkgname/COPYRIGHT"
-
-  ln -sf "luajit-2.1.${_ct}" "$pkgdir/usr/bin/luajit"
 }

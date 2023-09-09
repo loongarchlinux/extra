@@ -4,7 +4,7 @@
 
 pkgname=python-lsp-server
 pkgver=1.7.4
-pkgrel=1
+pkgrel=2
 pkgdesc="Fork of the python-language-server project, maintained by the Spyder IDE team and the community"
 arch=(any)
 url="https://github.com/python-lsp/python-lsp-server"
@@ -50,6 +50,7 @@ sha256sums=('c84254485a4d9431b24ecefd59741d21c00165611bcf6037bd7d54d0ed06a197'
 prepare() {
   cd ${pkgname}-${pkgver}
   patch -p1 -i ../43104e98.patch # support pyflakes 3.1
+  sed 's|jedi>=0.17.2,<0.19.0|jedi>=0.17.2,<0.20.0|' -i pyproject.toml
   sed 's|autopep8>=1.6.0,<1.7.0|autopep8>=1.6.0|' -i pyproject.toml
   sed 's|flake8>=6.1.0,<7|flake8>=6.1.0|' -i pyproject.toml
   sed 's|mccabe>=0.7.0,<0.8.0|mccabe>=0.7.0|' -i pyproject.toml

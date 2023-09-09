@@ -1,0 +1,58 @@
+# Maintainer: kpcyrd <kpcyrd[at]archlinux[dot]org>
+
+pkgname=eza
+pkgver=0.11.0
+pkgrel=2
+pkgdesc="A modern replacement for ls (communty fork of exa)"
+url="https://github.com/eza-community/eza"
+arch=("loong64" "x86_64")
+license=("MIT")
+provides=('exa')
+replaces=('exa')
+conflicts=('exa')
+depends=('libgit2.so')
+makedepends=("cargo" "pandoc")
+source=("${pkgname}-${pkgver}.tar.gz::https://github.com/eza-community/eza/archive/v${pkgver}.tar.gz")
+sha256sums=('fdaaf450cfaaa41d6ea8ae12fbb8e41e955e255b1169022a7675ca29d7d621c0')
+b2sums=('cd9f8a2a1a58acb607c3988e23c1236c2d7098920bb457d303866d750b905dcc439b89381634337f1982bfc7b1ff57a007b7f51ff174cac0b77d299eb60a60fc')
+
+prepare() {
+  cd "${pkgname}-${pkgver}"
+  sed -i 's/"vendored-libgit2"//' Cargo.toml
+  cargo fetch --locked --target "$CARCH-unknown-linux-gnu"
+}
+
+build() {
+  cd "${pkgname}-${pkgver}"
+  cargo build --frozen --release
+  mkdir -p target/man
+  for manpage in eza.1 eza_colors.5 eza_colors-explanation.5; do
+    pandoc --standalone -f markdown -t man "man/${manpage}.md" > "target/man/${manpage}"
+  done
+}
+
+check() {
+  cd "${pkgname}-${pkgver}"
+  cargo test --frozen
+  target/release/eza -la
+}
+
+
+package() {
+  cd "${pkgname}-${pkgver}"
+  install -Dm755 "target/release/${pkgname}" "${pkgdir}/usr/bin/${pkgname}"
+  ln -s eza "${pkgdir}/usr/bin/exa"
+
+  # install completions
+  install -Dm644 "completions/bash/${pkgname}" -t "${pkgdir}/usr/share/bash-completion/completions"
+  install -Dm644 "completions/zsh/_${pkgname}" -t "${pkgdir}/usr/share/zsh/site-functions/"
+  install -Dm644 "completions/fish/${pkgname}.fish" -t "${pkgdir}/usr/share/fish/vendor_completions.d"
+
+  # install man pages
+  install -Dm644 target/man/*.1 -t "${pkgdir}/usr/share/man/man1"
+  install -Dm644 target/man/*.5 -t "${pkgdir}/usr/share/man/man5"
+
+  install -Dm644 LICEN?E "${pkgdir}/usr/share/licenses/${pkgname}/LICENSE"
+}
+
+# vim: ts=2 sw=2 et:

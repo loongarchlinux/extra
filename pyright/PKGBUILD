@@ -2,29 +2,29 @@
 # Contributor: Kaizhao Zhang <zhangkaizhao@gmail.com>
 
 pkgname=pyright
-pkgver=1.1.325
+pkgver=1.1.326
 pkgrel=1
 pkgdesc='Type checker for the Python language'
 arch=('any')
 url=https://microsoft.github.io/pyright
 license=('MIT')
 depends=('nodejs')
-makedepends=('npm')
-source=("https://github.com/microsoft/pyright/archive/$pkgver/$pkgname-$pkgver.tar.gz")
-b2sums=('16fdce36996b5bf969db05b722b2864e9dfd833b05030249fe998b266464b44a59801de9b0ba19b98afb3874e49fdc92410e65fd140c703fbf39becb05c2c7be')
+makedepends=('git' 'npm')
+source=("git+https://github.com/microsoft/pyright.git#tag=$pkgver")
+b2sums=('SKIP')
 
 prepare() {
-  cd $pkgname-$pkgver
+  cd $pkgname
   npm ci
 }
 
 build() {
-  cd $pkgname-$pkgver/packages/$pkgname
+  cd $pkgname/packages/$pkgname
   npm run build
 }
 
 check() {
-  cd $pkgname-$pkgver/packages/$pkgname-internal
+  cd $pkgname/packages/$pkgname-internal
   npm test
 }
 
@@ -35,7 +35,7 @@ package() {
   ln -s $_npmdir/langserver.index.js \
     "$pkgdir"/usr/bin/$pkgname-langserver
 
-  cd $pkgname-$pkgver
+  cd $pkgname
   install -Dm644 -t "$pkgdir"/usr/share/doc/$pkgname README.md
   install -Dm644 -t "$pkgdir"/usr/share/licenses/$pkgname LICENSE.txt
 

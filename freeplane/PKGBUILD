@@ -4,8 +4,8 @@
 pkgname=freeplane
 _majorver=1
 _minorver=11
-_patchver=5
-_updatever=1
+_patchver=6
+_updatever=
 pkgver=${_majorver}.${_minorver}.${_patchver}
 _git_tag=${_majorver}.${_minorver}.${_patchver}
 pkgrel=1
@@ -18,20 +18,10 @@ _jdkver=17
 makedepends=('gradle' "jdk${_jdkver}-openjdk" 'gnu-free-fonts' 'fontconfig' 'unzip')
 depends=("java-runtime>=${_jrever}" "java-runtime<=${_jdkver}")
 source=("https://downloads.sourceforge.net/sourceforge/${pkgname}/${pkgname}_src-${_git_tag}.tar.gz"
-        "freeplane.desktop" "freeplane.run"
-        "0001-Upgrade-ospackage-plugin-to-support-gradle-8.patch::https://github.com/inglor/freeplane/commit/eed47d2a031d802e26ebf8cb9b1488880f865ec3.patch"
-        "0002-Add-dependsOn-for-tasks-which-fail-with-gradle-8.x.patch::https://github.com/inglor/freeplane/commit/14c0323bff8436ec3ea31b99b9daeea6ee0e52cc.patch")
-b2sums=('2ffb6b082249deb298a6973f4913c48ccc3472f4e763b37396c60d09cb0e1213c4981c8a90e261210b875e2613509ec3d154c95f5a28ed85f9f47c0c06016bfc'
+        "freeplane.desktop" "freeplane.run")
+b2sums=('e50cb6c0ab20a0884685e5b8bc5ca1fa68ae35ee7c3b83254c07207858ddf40a42a58956407d68b03a34177465d6a3c909648dae2766c910ef6d8d0fdb04ea3e'
         '87c25331e01823e38668e4b394a51a279c05b24b088f4ffc1482d3783e24018da8f9e51b3ad1a62c5a863f85a6ccb30bbe8999cb861dc1b93d5483019644cfa5'
-        '24ca56b7c7894b9bb38600b4d37973769243e1bdb221f33125b60bf4f878a3b630775710fab9dee97fa45a69319455037e294860ba7fbd608529982c6b0b1538'
-        '9be6499332930904b105b5de510988df727088a343ae3735cda30e7df619bf041125d38ca874a462cd811f552e9c02624ad0ec2ef54524530c1d61d5945309ec'
-        '104ead0a6baa24ed623ea12e25c352e301123bfd2c406610910650e1a02e959b5d998c01b89e270d89bbb70981242b283d52c161943f9fc8fd00d2ab3243ccda')
-
-prepare() {
-  cd "$pkgname-$_git_tag"
-  patch -Np1 < "${srcdir}/0001-Upgrade-ospackage-plugin-to-support-gradle-8.patch"
-  patch -Np1 < "${srcdir}/0002-Add-dependsOn-for-tasks-which-fail-with-gradle-8.x.patch"
-}
+        '24ca56b7c7894b9bb38600b4d37973769243e1bdb221f33125b60bf4f878a3b630775710fab9dee97fa45a69319455037e294860ba7fbd608529982c6b0b1538')
 
 build() {
   cd "$pkgname-${_git_tag}"
@@ -40,7 +30,7 @@ build() {
   /usr/bin/gradle \
     -Dorg.gradle.java.home="/usr/lib/jvm/java-$_jdkver-openjdk" \
     -Dorg.gradle.daemon=false \
-    build dist
+    build binZip
 
   install -dm755 "$srcdir/$pkgname-${_git_tag}/dist"
   unzip -d "$srcdir/$pkgname-${_git_tag}/dist" \

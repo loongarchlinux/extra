@@ -11,7 +11,7 @@
 
 pkgbase=vim
 pkgname=('vim' 'gvim' 'vim-runtime')
-pkgver=9.0.1848
+pkgver=9.0.1882
 _versiondir=90
 pkgrel=1
 pkgdesc='Vi Improved, a highly configurable, improved version of the vi text editor'
@@ -19,33 +19,30 @@ url='https://www.vim.org'
 arch=('loong64' 'x86_64' 'loong64' 'x86_64_v3')
 license=('custom:vim')
 makedepends=('glibc' 'libgcrypt' 'gpm' 'python' 'ruby' 'libxt' 'gtk3' 'lua'
-             'gawk' 'tcl' 'zlib' 'libcanberra')
-source=(https://github.com/vim/vim/archive/v${pkgver}/${pkgbase}-${pkgver}.tar.gz
+             'gawk' 'git' 'tcl' 'zlib' 'libcanberra')
+source=(git+https://github.com/vim/vim.git?signed#tag=v${pkgver}
         vimrc
         archlinux.vim
         vimdoc.hook)
-sha256sums=('c9c2db98a9ab32dbe9341af01666d64783758c4a5e3beb0343227b18fb2cb70e'
+sha256sums=('SKIP'
             'b16e85e457397ab2043a7ee0a3c84307c6b4eac157fd0b721694761f25b3ed5b'
             'cc3d931129854c298eb22e993ec14c2ad86cc1e70a08a64496f5e06559289972'
             '8e9656934d9d7793063230d15a689e10455e6db9b9fe73afa0f294792795d8ae')
-sha512sums=('887eca2dd25beeb0b19cf5d95da5bf96d970322fc23d72defe561d70e8b5db7ac9490ca0a8537b7d96d55c9e926d6a4786923a5ae910138a51c5b69a46c7cfb0'
-            '4b5bed0813f22af9e158ea9aa56a4a9862dd786ba2d201f20159ccf652da6190164aaed0b6b7217d578f7b25c33a8adcc307bfcf3caa8d173a7ff29e2a00fee7'
-            'fe091d289d876f45319c898f6021ef86d6a238b540c225a279c46efc5c36fa7d868cd0cee73a111811c4be90df160f85340bb251be3a437727dbe5c699950363'
-            'a02ad0d66f300160911aeb81d8886c6c558436ac4ee3fcd161dd65c6b1e5d1f41b9005a7f5bb5ba68d57027fc1c8e43daabf055bd6207fb5a216a67f758df8d1')
+validpgpkeys=('4F19708816918E19AAE19DEEF3F92DA383FDDE09') # Christian Brabandt <cb@256bit.org>
 
 prepare() {
-  (cd vim-${pkgver}/src
+  (cd vim/src
     # define the place for the global (g)vimrc file (set to /etc/vimrc)
     sed -E 's|^.*(#define SYS_.*VIMRC_FILE.*").*$|\1|g' -i feature.h
     sed -E 's|^.*(#define VIMRC_FILE.*").*$|\1|g' -i feature.h
     autoconf
   )
-  cp -a vim-${pkgver} gvim-${pkgver}
+  cp -a vim gvim
 }
 
 build() {
   echo "Building vim..."
-  (cd vim-${pkgver}
+  (cd vim
     ./configure \
       --prefix=/usr \
       --localstatedir=/var/lib/vim \
@@ -68,7 +65,7 @@ build() {
   )
 
   echo "Building gvim..."
-  (cd gvim-${pkgver}
+  (cd gvim
     ./configure \
       --prefix=/usr \
       --localstatedir=/var/lib/vim \
@@ -91,10 +88,10 @@ build() {
   )
 }
 
-#check() {
-#  cd vim-${pkgver}
-#  TERM=xterm make -j1 test
-#}
+check() {
+  cd vim
+  TERM=xterm make -j1 test
+}
 
 package_vim-runtime() {
   pkgdesc+=' (shared runtime)'
@@ -103,7 +100,7 @@ package_vim-runtime() {
               'gawk: mve tools upport')
   backup=('etc/vimrc')
 
-  cd vim-${pkgver}
+  cd vim
 
   make -j1 VIMRCLOC=/etc DESTDIR="${pkgdir}" install
   # man and bin files belong to 'vim'
@@ -131,19 +128,17 @@ package_vim-runtime() {
 }
 
 package_vim() {
-  # TODO: move perl back into optdeps after --enable-perlinterp=dynamic
-  #       starts working again (https://github.com/vim/vim/issues/10512)
-  depends=("vim-runtime=${pkgver}-${pkgrel}" 'gpm' 'acl' 'glibc' 'libgcrypt' 'zlib' 'perl')
+  depends=("vim-runtime=${pkgver}-${pkgrel}" 'gpm' 'acl' 'glibc' 'libgcrypt' 'zlib')
   optdepends=('python: Python language support'
               'ruby: Ruby language support'
               'lua: Lua language support'
-              #'perl: Perl language support'
+              'perl: Perl language support'
               'tcl: Tcl language support')
   conflicts=('gvim' 'vim-minimal')
   provides=('xxd' 'vim-minimal' 'vim-plugin-runtime')
   replaces=('vim-minimal')
 
-  cd vim-${pkgver}
+  cd vim
   make -j1 VIMRCLOC=/etc DESTDIR="${pkgdir}" install
 
   # provided by (n)vi in core
@@ -170,19 +165,17 @@ package_vim() {
 
 package_gvim() {
   pkgdesc+=' (with advanced features, such as a GUI)'
-  # TODO: move perl back into optdeps after --enable-perlinterp=dynamic
-  #       starts working again (https://github.com/vim/vim/issues/10512)
   depends=("vim-runtime=${pkgver}-${pkgrel}" 'gpm' 'libxt' 'gtk3' 'glibc' 'libgcrypt'
-           'zlib' 'libcanberra' 'perl')
+           'zlib' 'libcanberra')
   optdepends=('python: Python language support'
               'ruby: Ruby language support'
               'lua: Lua language support'
-              #'perl: Perl language support'
+              'perl: Perl language support'
               'tcl: Tcl language support')
   provides=("vim=${pkgver}-${pkgrel}" "xxd" 'vim-plugin-runtime')
   conflicts=('vim-minimal' 'vim')
 
-  cd gvim-${pkgver}
+  cd gvim
   make -j1 VIMRCLOC=/etc DESTDIR="${pkgdir}" install
 
   # provided by (n)vi in core

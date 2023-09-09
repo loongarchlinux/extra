@@ -1,7 +1,7 @@
 # Maintainer: Jan Alexander Steffens (heftig) <heftig@archlinux.org>
 
 pkgname=srt
-pkgver=1.5.2
+pkgver=1.5.3
 pkgrel=1
 pkgdesc="Secure Reliable Transport library"
 url="https://www.srtalliance.org/"
@@ -16,7 +16,7 @@ makedepends=(
   git
   ninja
 )
-_commit=9448e26fcd7602098b4bf9cd7fe535136e89e10b  # tags/v1.5.2
+_commit=09f35c0f1743e23f514cb41444504a7faeacf89e  # tags/v1.5.3
 source=("git+https://github.com/Haivision/srt#commit=$_commit")
 b2sums=('SKIP')
 

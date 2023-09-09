@@ -3,33 +3,33 @@
 
 _hkgname=http-media
 pkgname=haskell-http-media
-pkgver=0.8.0.0
-pkgrel=186
+pkgver=0.8.1.0
+pkgrel=1
 pkgdesc="Processing HTTP Content-Type and Accept headers"
 url="https://github.com/zmthy/http-media"
 license=("MIT")
 arch=('loong64' 'x86_64')
-depends=('ghc-libs' "haskell-case-insensitive" "haskell-utf8-string")
-makedepends=('ghc')
+depends=('ghc-libs' 'haskell-case-insensitive' 'haskell-utf8-string')
+makedepends=('ghc' 'haskell-quickcheck' 'haskell-tasty' 'haskell-tasty-quickcheck')
 source=("https://hackage.haskell.org/packages/archive/${_hkgname}/${pkgver}/${_hkgname}-${pkgver}.tar.gz")
-sha512sums=('549fa1892c81224e79bad4268993e0cfa324d9d0c9daa0d800ac7cc4eee307405155989672c49adb0e124ca29c2d83cc565ba3c935fd3be4ab4ef0594b012bb5')
-
-prepare() {
-    cd $_hkgname-$pkgver
-    sed -i 's/< *4.13/<5/' $_hkgname.cabal
-}
+sha512sums=('2dbef8ca376ece00d3ce2f8417db9e6b5837ed441911ac88e51c6867b8c6753e41ece3d0ccad18598dee1a9e541090cdd37867ab449e91186a30b9711d379a8f')
 
 build() {
     cd $_hkgname-$pkgver
 
     runhaskell Setup configure -O --enable-shared --enable-executable-dynamic --disable-library-vanilla \
-        --prefix=/usr --docdir=/usr/share/doc/$pkgname --datasubdir=$pkgname \
+        --prefix=/usr --docdir=/usr/share/doc/$pkgname --datasubdir=$pkgname --enable-tests \
         --dynlibdir=/usr/lib --libsubdir=\$compiler/site-local/\$pkgid --ghc-option=-fllvm
     runhaskell Setup build $MAKEFLAGS
     runhaskell Setup register --gen-script
     runhaskell Setup unregister --gen-script
     sed -i -r -e "s|ghc-pkg.*update[^ ]* |&'--force' |" register.sh
     sed -i -r -e "s|ghc-pkg.*unregister[^ ]* |&'--force' |" unregister.sh
+}
+
+check() {
+    cd $_hkgname-$pkgver
+    runhaskell Setup test --show-details=direct
 }
 
 package() {
