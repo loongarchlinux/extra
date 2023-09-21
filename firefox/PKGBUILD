@@ -36,7 +36,12 @@ makedepends=(
   nasm
   nodejs
   python
+  rust
   unzip
+  wasi-compiler-rt
+  wasi-libc
+  wasi-libc++
+  wasi-libc++abi
   xorg-server-xvfb
   yasm
   zip
@@ -60,9 +65,7 @@ source=(
   https://archive.mozilla.org/pub/firefox/releases/$pkgver/source/firefox-$pkgver.source.tar.xz{,.asc}
   $pkgname.desktop
   identity-icons-brand.svg
-  rustup-init::http://public.loongarch.dev/sources/rust/rustup-init/76186f6b42409f14cfbbeeca20bcf928/rustup-init
-  Add-support-for-LoongArch.patch
-  Patch-bindgen-to-work-around-issues-with-some-unsoun.patch
+  0003-LoongArchLinux-Add-support-for-LoongArch.patch
 )
 validpgpkeys=(
   # Mozilla Software Releases <release@mozilla.com>
@@ -73,16 +76,12 @@ sha256sums=('fa524cb9a63334d74ef996f3cbaf1559b5836f6c8ef6e890fa20846029242ac7'
             'SKIP'
             '1f241fdc619f92a914c75aece7c7c717401d7467c9a306458e106b05f34e5044'
             'a9b8b4a0a1f4a7b4af77d5fc70c2686d624038909263c795ecc81e0aec7711e9'
-            'dd1812464cc932e5d5fe47712924e2735b4082ba2e1026faf02955f4fc70306e'
-            'c610efe044269ab68493df1574bb044bef62e8435025ea6f0c9f7d2d04ac04fb'
-            '91f353257e16d05a7e636123e8278c64bd11b008a75f6aa1f8ce385cd6ec4402')
+            '59ff6c235546673eaaf488fdba2586d1a8130fd80e84e7efffabb4b1b838f105')
 b2sums=('748e7ea88f493d449e52e94a268190f9beca671aebba057f7089897dee51d3e8d45c6f9721d38891c787b401cb6b32128d3b3b25073e17326c8fca80fe07d015'
         'SKIP'
         'd07557840097dd48a60c51cc5111950781e1c6ce255557693bd11306c7a9258b2a82548329762148f117b2295145f9e66e0483a18e2fe09c5afcffed2e4b8628'
         '63a8dd9d8910f9efb353bed452d8b4b2a2da435857ccee083fc0c557f8c4c1339ca593b463db320f70387a1b63f1a79e709e9d12c69520993e26d85a3d742e34'
-        '51f4a6f43b427e50e815b2a39ff54e13b11acff8431d2ae6267a1c41c989048f16b4008573664ca18e0c48c88a0e580e6db55e02cde4ed9ce5016b90f275e6bf'
-        '244bde1a249ef50e8013164a4477812130f0bb3507e93686cb7ebecdec122335d2f377d5e07d37bfbac6608211f6111f0dc5e57efe991937fde8b50f15638bcb'
-        '85293f2d40c56df025ee4312669d6b16123c213e5349aeaeddccd7fe6d34179e8ebb93cd79344fa30166699cba7c75ce4f116b01ff326400f8bad6165021da4b')
+        '3a18fe1225028b6ba687e5507333c028de898c3187344548f36d9ec1bc343d6165135094edc61f0555e04d65b4385158e4cd18b9adf4d5d53ff59db5fedabaf7')
 
 # Google API keys (see http://www.chromium.org/developers/how-tos/api-keys)
 # Note: These are for Arch Linux use ONLY. For your own distribution, please
@@ -97,16 +96,10 @@ _google_api_key=AIzaSyDwr302FpOSkGRpLlUpPThNTDPbXcIn_FM
 _mozilla_api_key=e05d56db0a694edc8b5aaebda3f2db6a
 
 prepare() {
-  # Install rust toolchain from upstream
-  ./rustup-init --no-modify-path --default-toolchain=none --profile=minimal -y
-  . $HOME/.cargo/env
-  rustup toolchain install --profile=default nightly
-
   mkdir mozbuild
   cd firefox-$pkgver
 
-  patch -Np1 -i ../Add-support-for-LoongArch.patch
-  patch -Np1 -i ../Patch-bindgen-to-work-around-issues-with-some-unsoun.patch
+  patch -Np1 -i ../0003-LoongArchLinux-Add-support-for-LoongArch.patch
 
   echo -n "$_google_api_key" >google-api-key
   echo -n "$_mozilla_api_key" >mozilla-api-key
@@ -156,6 +149,9 @@ build() {
   export MOZBUILD_STATE_PATH="$srcdir/mozbuild"
   export MOZ_ENABLE_FULL_SYMBOLS=1
   export MACH_BUILD_PYTHON_NATIVE_PACKAGE_SOURCE=pip
+# clang didn't support -mlsx
+  CFLAGS=${CFLAGS/-mlsx /}
+  CXXFLAGS=${CFLAGS/-mlsx /}
 
   # LTO needs more open files
   ulimit -n 4096
