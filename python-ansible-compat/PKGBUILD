@@ -28,8 +28,8 @@ checkdepends=(
   python-pytest-mock
 )
 source=($_name-$pkgver.tar.gz::$url/archive/refs/tags/v$pkgver.tar.gz)
-sha256sums=('3bf3ed62b0a07a5a1c0c49ef573a5359609279deeac3565b02cdd2b6da047b82')
-b2sums=('185662eab10bdc14bcc88ebc710290162f412d576a1490c2897fa3df9a6254bf017f373dceb2e073c95ce049e5dea1c10fb4cc1ee7e130346d304716ab675b19')
+sha256sums=('10c94ccd2673ed72c315c1dfa7d1d953450cb8d5729ab3405107974f3415c58f')
+b2sums=('0261af01129d74b90dfd9927014f10d85dc006c388cbd7b15c8c24e9e2b029010fb9bbdc1d315d37b9403ac5af8771b95c6bedfd0ce3b7f03dcfb1ef6c2abf47')
 
 build() {
   cd $_name-$pkgver
