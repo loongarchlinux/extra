@@ -2,22 +2,38 @@
 # Contributor: Jan de Groot <jgc@archlinux.org>
 
 pkgbase=libgweather-4
-pkgname=(libgweather-4 libgweather-4-docs)
-pkgver=4.2.0
+pkgname=(
+  libgweather-4
+  libgweather-4-docs
+)
+pkgver=4.4.0
 pkgrel=1
 pkgdesc="Location and timezone database and weather-lookup library"
 url="https://wiki.gnome.org/Projects/LibGWeather"
 arch=(loong64 x86_64)
 license=(LGPL)
-depends=(libsoup3 geocode-glib-2 dconf libxml2)
-makedepends=(gobject-introspection vala git gi-docgen meson python-gobject)
+depends=(
+  dconf
+  geocode-glib-2
+  libsoup3
+  libxml2
+)
+makedepends=(
+  gi-docgen
+  git
+  gobject-introspection
+  meson
+  python-gobject
+  vala
+)
 checkdepends=(python-pylint)
-options=(debug)
-_commit=699cfb7e114acba4e066ebda9a51e6820da3daa7  # tags/4.2.0^0
-source=("git+https://gitlab.gnome.org/GNOME/libgweather.git#commit=$_commit"
-        disable-metar-test.diff)
-sha256sums=('SKIP'
-            '42ebd95b2de37ff959a759546473985a86fa1a5488211b303a97540f2b7a8805')
+_commit=04da97b8f86b1d10540f7d907841bfb5fde6bd2d  # tags/4.4.0^0
+source=(
+  "git+https://gitlab.gnome.org/GNOME/libgweather.git#commit=$_commit"
+  disable-metar-test.diff
+)
+b2sums=('SKIP'
+        '3d920f17e3f82bd33791b1e9662242f90a13e3cb3832fea5b900046b0ad90f97c5cf8174a6e5905b134585f280706ab67d3b65c108ed99c8285e3f05293b2b73')
 
 pkgver() {
   cd libgweather
@@ -32,7 +48,11 @@ prepare() {
 }
 
 build() {
-  arch-meson libgweather build -D gtk_doc=true
+  local meson_options=(
+    -D gtk_doc=true
+  )
+
+  arch-meson libgweather build "${meson_options[@]}"
   meson compile -C build
 }
 
@@ -56,4 +76,4 @@ package_libgweather-4-docs() {
   mv doc/* "$pkgdir"
 }
 
-# vim:set sw=2 et:
+# vim:set sw=2 sts=-1 et:

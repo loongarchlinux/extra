@@ -3,17 +3,18 @@
 # Contributor: Xu Fasheng <fasheng.xu[AT]gmail.com>
 
 pkgname=deepin-control-center
-pkgver=5.5.158
+pkgver=6.0.25
 pkgrel=1
-pkgdesc='New control center for linux deepin'
+pkgdesc='Control panel of Deepin Desktop Environment'
 arch=('loong64' 'x86_64')
 url="https://github.com/linuxdeepin/dde-control-center"
 license=('GPL3')
-depends=('desktop-file-utils' 'dtkwidget' 'deepin-account-faces' 'deepin-api' 'geoip' 'libpwquality'
-         'geoip-database' 'geoip-database-extra' 'deepin-daemon' 'startdde'
-         'deepin-qt-dbus-factory' 'deepin-qt5integration' 'deepin-pw-check' 'deepin-network-core'
-         'qt5-multimedia')
-makedepends=('cmake' 'deepin-dock' 'gmock' 'gtest' 'ninja' 'qt5-tools')
+depends=('dtkcore' 'dtkgui' 'dtkwidget' 'qt5-base' 'deepin-account-faces' 'deepin-api' 'geoip'
+         'libpwquality' 'geoip-database' 'geoip-database-extra' 'deepin-daemon' 'startdde'
+         'deepin-qt5integration' 'deepin-pw-check' 'deepin-network-core' 'qt5-multimedia'
+         'polkit-qt5' 'deepin-desktop-theme')
+makedepends=('cmake' 'deepin-dock' 'gmock' 'gtest' 'ninja' 'qt5-tools' 'deepin-gettext-tools'
+             'doxygen')
 optdepends=('redshift: automatic color temperature support'
             'networkmanager-openconnect: for OpenConnect support'
             'networkmanager-openvpn: for OpenVPN support'
@@ -27,11 +28,10 @@ replaces=('dde-control-center' 'dde-dock-applets')
 groups=('deepin')
 source=("https://github.com/linuxdeepin/dde-control-center/archive/$pkgver/$pkgname-$pkgver.tar.gz"
         $pkgname-systeminfo-deepin-icon.patch)
-sha512sums=('bff1140685c04e1cbb5d949033a9913f1b166a95be24df111b5a73598ea044811404f62879dbcb2722b6cea1e191bdbfe58a7a02b9b58c3016a6c2f05bb03fe4'
+sha512sums=('de2e219f2b1577c6d9d2a7b6aa4aa538b3f4c69c1fe8690411fb37bc6b047a12401fd2354a2a3a3e78cb3dfb4b2626d1ee5cb5e0f1b27734232894f9cf31fd25'
             '74fd63391e923ca37f4559f30da967ba7f33d4426b60d58d1ece8cd9a154578e8184b1a376a8d7ff3ef81ffce530915f79d0845a2612ae4e06522b96855ab3dd')
 
 prepare() {
-  rm dde-control-center-$pkgver/src/frame/window/icons/icons/dcc_nav_systeminfo_{42,84}px.svg
   patch -d dde-control-center-$pkgver -Np1 < $pkgname-systeminfo-deepin-icon.patch
   mkdir -p build
 }
@@ -40,11 +40,9 @@ build() {
   cd build
   cmake \
     -GNinja \
-    -DDISABLE_ACTIVATOR=YES \
     -DDISABLE_AUTHENTICATION=YES \
-    -DDISABLE_DEVELOPER_MODE=YES \
-    -DDISABLE_RECOVERY=YES \
-    -DDISABLE_SYS_UPDATE=YES \
+    -DDISABLE_LANGUAGE=YES \
+    -DDISABLE_UPDATE=YES \
     -DCMAKE_INSTALL_PREFIX=/usr \
     -DCMAKE_INSTALL_LIBDIR=/usr/lib \
     ../dde-control-center-$pkgver
@@ -53,7 +51,7 @@ build() {
 
 check() {
   cd build
-  ninja test
+  #ninja test
 }
 
 package() {

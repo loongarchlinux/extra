@@ -1,0 +1,41 @@
+From a0d9942b601cdb3e585f3b38c11c7e62930856e7 Mon Sep 17 00:00:00 2001
+From: anarcat <anarcat@users.noreply.github.com>
+Date: Thu, 2 Mar 2023 22:54:32 -0500
+Subject: [PATCH] adapt to changes in Python 3.10
+
+It looks like the qrencode Python library is currently unusable in
+Debian bookworm. Here's a simple example:
+
+anarcat@angela:paperbackup$ python3 -c 'import qrencode ; version, size, data = qrencode.encode(b"test")'
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+  File "/usr/lib/python3/dist-packages/qrencode/__init__.py", line 47, in encode
+    version, size, data = _encode(data, version, level, hint, True)
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+SystemError: PY_SSIZE_T_CLEAN macro must be defined for '#' formats
+anarcat@angela:paperbackup[1]$
+
+According to a casual search on the web, it looks like the extension
+needs to be recompiled / patched for Python 3.10:
+
+https://stackoverflow.com/a/71019907
+
+Quote:
+
+> On 3.10 any module(s) that use the # variant when parsing arguments
+> need to have a #define PY_SSIZE_T_CLEAN before including Python.h.
+
+I don't actually know what I'm doing here to be real honest, but that fixes the problem on my end.
+---
+ qr_encode.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/qr_encode.c b/qr_encode.c
+index 52f3575..caa93bc 100644
+--- a/qr_encode.c
++++ b/qr_encode.c
+@@ -1,3 +1,4 @@
++#define PY_SSIZE_T_CLEAN
+ #include <Python.h>
+ #include <stdlib.h>
+ #include <qrencode.h>

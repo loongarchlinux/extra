@@ -3,41 +3,27 @@
 # Contributor: Xu Fasheng <fasheng.xu[AT]gmail.com>
 
 pkgname=deepin-system-monitor
-pkgver=6.0.3
-pkgrel=6
+pkgver=6.0.8
+pkgrel=1
 pkgdesc='A more user-friendly system monitor'
 arch=('loong64' 'x86_64')
 url="https://github.com/linuxdeepin/deepin-system-monitor"
 license=('GPL3')
-depends=('deepin-qt5integration' 'deepin-qt-dbus-factory' 'dtkcore' 'dtkgui' 'dtkwidget'
-         'dtkwm' 'dwayland' 'qt5-base' 'qt5-svg' 'gsettings-qt' 'icu' 'dconf' 'libxcb' 'xcb-util-wm'
-         'gcc-libs' 'libnl' 'libcap' 'libpcap' 'systemd-libs')
+depends=('dtkcore' 'dtkgui' 'dtkwidget' 'dwayland' 'qt5-base' 'qt5-svg' 'gsettings-qt'
+         'icu' 'dconf' 'libxcb' 'xcb-util-wm' 'gcc-libs' 'libnl' 'libcap' 'libpcap')
 makedepends=('cmake' 'deepin-gettext-tools' 'gtest' 'ninja' 'qt5-tools' 'deepin-dock')
 groups=('deepin')
 install=deepin-system-monitor.install
-source=("https://github.com/linuxdeepin/deepin-system-monitor/archive/$pkgver/$pkgname-$pkgver.tar.gz"
-        $pkgname-missing-symbol.patch::https://github.com/linuxdeepin/deepin-system-monitor/pull/205.patch
-        a159e571.patch
-        remove-libprocps.patch)
-sha512sums=('189c3283bb3fa88dccb2d3ce6aa542954c196a14d58a638de03f8f9c08573f697844ae4c1343f3034ac351c57ac5026c0bc0c9812c05bd8af346c994e3dbb8b0'
-            'de9e8192eeeed71cf897190b2ebdfbbd0b46b481ecc2d5cf679f85eb2417c45ff0d49598da69b08760da77abf8cabcf15c424da263e4a77f07e9963e6f431b96'
-            'cf0d2dd71fda8bc076531535d3460a8b1114eff5294394ccf03d2813fa02fe046604040add04c9639b68e99fe6056e1fba03b451b06d615a1def6ff3cac24ad0'
-            '08e1dd6d66c0dca161778d007c2072769f4234a418fafdf7416e73f8a17b7769bfbd2ad0f52cbe21127b731f61d5ed4b99769674f3acdcb09b849ee8501ff918')
-
-prepare() {
-  mkdir -p build
-  patch -d deepin-system-monitor-$pkgver -p1 < $pkgname-missing-symbol.patch
-  patch -d $pkgname-$pkgver -p1 < a159e571.patch # Fix missing includes
-  patch -d  $pkgname-$pkgver -p1 < remove-libprocps.patch # Remove libprocps dependency in cmake
-}
+source=("https://github.com/linuxdeepin/deepin-system-monitor/archive/$pkgver/$pkgname-$pkgver.tar.gz")
+sha512sums=('f14f87041a658b4f0dde4058de6b5fa5a0631e1a094f7ee67cf933ef708577d5dc22d0de236ca30f6ac1141ed255eca07c8f11e676718822b3f1c6bf5bc2be34')
 
 build() {
-  cd build
-  cmake ../deepin-system-monitor-$pkgver -GNinja -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_INSTALL_SYSCONFDIR=/etc
+  cd deepin-system-monitor-$pkgver
+  cmake . -GNinja -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_INSTALL_SYSCONFDIR=/etc
   ninja
 }
 
 package() {
-  cd build
+  cd deepin-system-monitor-$pkgver
   DESTDIR="$pkgdir" ninja install
 }

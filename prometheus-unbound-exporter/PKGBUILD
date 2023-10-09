@@ -1,0 +1,68 @@
+# Maintainer: Tim Meusel <tim@bastelfreak.de>
+# Maintainer: Justin Kromlinger <hashworks@archlinux.org>
+# Contributor: George Rawlinson <grawlinson@archlinux.org>
+
+pkgname=prometheus-unbound-exporter
+pkgver=0.4.4
+pkgrel=1
+pkgdesc='Prometheus exporter for Unbound'
+arch=('loong64' 'x86_64')
+url='https://github.com/letsencrypt/unbound_exporter'
+license=('Apache')
+groups=()
+depends=('glibc')
+makedepends=('git' 'go')
+optdepends=('unbound: for local instance')
+options=('!lto')
+source=("${url}/archive/v${pkgver}/unbound_exporter-v${pkgver}.tar.gz" 'prometheus-unbound-exporter.service')
+
+sha256sums=('78d3a7be3f581eb4c4cfc59c65a15026a3ba8a722e326f33d1bc862c32f8a83e'
+            'ab4bfb97e16db7dd389a29e6b7d32b05748af7bf78c2a3ae18f75f0c5645a5aa')
+
+prepare() {
+  cd "unbound_exporter-${pkgver}"
+
+  # create directory for build output
+  mkdir build
+
+  # download dependencies
+  go mod download
+}
+
+build() {
+  cd "unbound_exporter-${pkgver}"
+
+  # set Go flags
+  export CGO_CPPFLAGS="${CPPFLAGS}"
+  export CGO_CFLAGS="${CFLAGS}"
+  export CGO_CXXFLAGS="${CXXFLAGS}"
+
+  go build -v\
+    -trimpath \
+    -buildmode=pie \
+    -mod=readonly \
+    -modcacherw \
+    -ldflags "-linkmode external -extldflags ${LDFLAGS}" \
+    -o "build/${pkgname}" \
+    .
+}
+
+check() {
+  cd "unbound_exporter-${pkgver}"
+
+  go test -v ./...
+}
+
+package() {
+  cd "unbound_exporter-${pkgver}"
+
+  # binary
+  install -vDm755 -t "${pkgdir}/usr/bin" "build/${pkgname}"
+
+  # service
+  install -vDm0644 "${srcdir}/prometheus-unbound-exporter.service" "${pkgdir}/usr/lib/systemd/system/prometheus-unbound-exporter.service"
+
+  # documentation + license
+  install -vDm644 -t "${pkgdir}/usr/share/doc/${pkgname}" README.md
+  install -vDm644 LICENSE "${pkgdir}/usr/share/licenses/${pkgname}/LICENSE"
+}

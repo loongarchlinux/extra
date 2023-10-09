@@ -1,0 +1,37 @@
+# Maintainer: Felix Yan <felixonmars@archlinux.org>
+
+pkgname=xdg-desktop-portal-dde
+pkgver=1.0.5
+pkgrel=5
+pkgdesc='A backend implementation for xdg-desktop-portal on Deepin desktop environment'
+arch=('loong64' 'x86_64')
+url="https://github.com/linuxdeepin/xdg-desktop-portal-dde"
+license=('GPL3')
+depends=('qt5-base' 'wayland' 'dwayland' 'ki18n5' 'knotifications5' 'glibc' 'gcc-libs'
+         'xdg-desktop-portal')
+makedepends=('cmake' 'ninja' 'extra-cmake-modules')
+provides=(xdg-desktop-portal-impl)
+groups=('deepin')
+source=("https://github.com/linuxdeepin/xdg-desktop-portal-dde/archive/$pkgver/$pkgname-$pkgver.tar.gz"
+        dde-portals.conf)
+sha512sums=('e856127e9ed49141a65ea49ddd065566dc60e875dc369846ca2a934b4b74b9bdbe1b1741c620e3f4a7f37a8da8024068b18bc0bbe815038c55c6eda7db3fdfc6'
+            'f2b4e14c14209dd078977908205bea56f010a433d21aa5cff2e975b237b2530418acdf76273d25a0569d3658a69d63e45fed37f53cd3d102d9b9131a7c60f901')
+
+prepare() {
+  cd xdg-desktop-portal-dde-$pkgver
+  sed -i '/Declarative/d;/GBM/d;/EPOXY/d;s/ Wayland::Client/ Wayland::Client)/' src/CMakeLists.txt
+}
+
+build() {
+  cd xdg-desktop-portal-dde-$pkgver
+  cmake . -GNinja -DCMAKE_INSTALL_LIBEXECDIR=lib
+  ninja
+}
+
+package() {
+  cd xdg-desktop-portal-dde-$pkgver
+  DESTDIR="$pkgdir" ninja install
+
+  # fix detection with x-d-p 1.18
+  install -Dm644 ${srcdir}/dde-portals.conf  ${pkgdir}/usr/share/xdg-desktop-portal/dde-portals.conf
+}

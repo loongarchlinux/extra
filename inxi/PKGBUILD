@@ -4,7 +4,7 @@
 # Contributor: Florian Pritz <f-p@gmx.at>
 
 pkgname=inxi
-_pkgver=3.3.29-1
+_pkgver=3.3.30-1
 pkgver=${_pkgver//-/.}
 pkgrel=1
 pkgdesc="Full featured CLI system information tool"
@@ -39,6 +39,7 @@ optdepends=(
     "tree: --debugger 20,21 /sys tree"
     "upower: -sx attached device battery info"
     "usbutils: lsusb: -A usb audio; -J (optional); -N usb networking"
+    "vulkan-tools: vulkaninfo: -G vulkan info"
     "wget: -i (if no dig); -w,-W; -U"
     "wmctrl: -S active window manager (fallback)"
     "xorg-xdpyinfo: xdpyinfo: -G (X) Screen resolution, dpi; -Ga Screen size"
@@ -46,8 +47,8 @@ optdepends=(
     "xorg-xprop: xprop: -S (X) desktop data"
     "xorg-xrandr: xrandr: -G (X) monitors(s) resolution; -Ga monitor data"
 )
-source=("$pkgname-$pkgver.tar.gz::https://github.com/smxi/$pkgname/archive/refs/tags/${_pkgver}.tar.gz")
-b2sums=('176b20b113b3339f27d2ec16681d652e8ccaefed80c220078fa4e625ad7191cd6ebc9ada049197a858475e5c656b5f74f599ca202e1e47d6682e4cd9049eb763')
+source=("$pkgname-$pkgver.tar.gz::https://codeberg.org/smxi/$pkgname/archive/${_pkgver}.tar.gz")
+b2sums=('cfcafc643e7e18261fac622df3614e7ad296ec2233ebf6750243d9490e0ca5e8ba3742286a0630ae948d16ac4d09705ffc1b20df666f48ed2c5331a8320919d7')
 
 package() {
     cd "$pkgname-${_pkgver}"

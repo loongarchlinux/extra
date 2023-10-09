@@ -12,8 +12,8 @@ const fd = fs.openSync("/proc/self/comm", fs.constants.O_WRONLY);
 fs.writeSync(fd, name);
 fs.closeSync(fd);
 
-// Remove first command line argument (/usr/lib/code/code.js). - We call the CLI file first
-process.argv.splice(0, 1);
+// Remove all extra prefix arguments
+process.argv.splice(0, process.argv.findIndex(arg => arg.endsWith('/code.js')));
 
 // Set application paths.
 const appPath = __dirname;
@@ -27,4 +27,3 @@ app.setVersion(packageJson.version);
 
 // Run the application.
 require('module')._load(appPath, module, true);
-

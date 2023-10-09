@@ -3,21 +3,43 @@
 
 pkgname=jupyter-nbconvert
 _name=nbconvert
-pkgver=7.8.0
+pkgver=7.9.2
 pkgrel=1
 pkgdesc='Jupyter Notebook Conversion'
 arch=(any)
 url='https://pypi.python.org/pypi/nbconvert'
 license=(BSD)
-depends=(jupyter-nbformat jupyter-nbclient jupyterlab-pygments
-         python-beautifulsoup4 python-bleach python-defusedxml python-jinja python-pandocfilters
-         python-mistune python-pygments python-traitlets python-tinycss2)
-makedepends=(python-build python-installer python-hatchling)
-checkdepends=(python-pytest python-ipywidgets python-pyppeteer python-flaky)
+depends=(ipython
+         jupyter-nbclient
+         jupyter-nbformat
+         jupyterlab-pygments
+         python
+         python-beautifulsoup4
+         python-bleach
+         python-defusedxml
+         python-importlib-metadata
+         python-jinja
+         python-jupyter-client
+         python-jupyter-core
+         python-markupsafe
+         python-mistune
+         python-packaging
+         python-pandocfilters
+         python-pygments
+         python-tinycss2
+         python-tornado
+         python-traitlets)
+makedepends=(python-build
+             python-hatchling
+             python-installer)
+checkdepends=(python-flaky
+              python-ipywidgets
+              python-pyppeteer
+              python-pytest)
 optdepends=('pandoc: non-html conversion output'
             'python-pyppeteer: for webPDF conversion support')
 source=(https://github.com/jupyter/nbconvert/archive/v$pkgver/$pkgname-$pkgver.tar.gz)
-sha256sums=('92ab31f9c1651de657e28dc45d6208e062a8ef8d5883ba88f28da2cabc570b1d')
+sha256sums=('2566227ce9f15df760bd0a5206d63123634ef3b3feeed37dd7776b6ed2ff2b03')
 
 build() {
   cd nbconvert-$pkgver

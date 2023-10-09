@@ -2,7 +2,7 @@
 
 _name=lsprotocol
 pkgname=python-lsprotocol
-pkgver=2023.0.0a3
+pkgver=2023.0.0b1
 pkgrel=1
 pkgdesc='Python implementation of the Language Server Protocol'
 arch=('any')

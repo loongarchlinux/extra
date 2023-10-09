@@ -4,14 +4,21 @@
 # Contributor: Massimiliano Torromeo <massimiliano dot torromeo at gmail dot com>
 
 pkgname=mattermost
-pkgver=8.1.1
+pkgver=9.0.1
 pkgrel=1
 pkgdesc="Open source Slack-alternative in Golang and React"
 arch=(loong64 x86_64)
 url="https://mattermost.com"
 license=(AGPL Apache)
 depends=(glibc)
-makedepends=(go jq libpng nodejs-lts-gallium npm git python)
+makedepends=(git
+             go
+             jq
+             libpng
+             nodejs-lts-hydrogen # upstream specs 16 (gallium) but Arch's npm min is 18
+             moreutils
+             npm
+             python)
 optdepends=('mariadb: SQL server storage'
             'mmctl: CLI admin tool'
             'percona-server: SQL server storage'
@@ -23,7 +30,7 @@ source=(https://github.com/$pkgname/$pkgname-server/archive/v$pkgver/$_archive.t
         $pkgname.service
         $pkgname.sysusers
         $pkgname.tmpfiles)
-sha256sums=('5b69482ff6004a8c65450fc1b54b35b05d8298cb44fe2e38047b7accf2b27ec6'
+sha256sums=('542c8b982cc8b9f0b35ff44e9d28b279725f7b22195aa2a7ca687d797e3a8ce7'
             '9e73dc5e9ab9a95049352bd504fb4e0d6becbd5c715026d8c1df4f515d258b68'
             'f7bd36f6d7874f1345d205c6dcb79af1804362fc977a658db88951a172d1dfa0'
             '8dfeee28655b91dc75aca2317846284013ac3d5a837d360eba9641e9fbcf3aa2')
@@ -45,6 +52,9 @@ prepare() {
 
     cd ../webapp
 
+    # Arch's NPM is too new to pass build time checks
+    jq 'del(.engines)' package.json | sponge package.json
+
     # Modify npm commands to always use srcdir cache + temporary workaround for OpenSSL3 support
     sed -r -i Makefile \
         -e "/^\tnpm /s!npm!npm --cache '$srcdir/npm-cache' --no-audit --no-fund!" \
@@ -60,6 +70,8 @@ build() {
     export CGO_LDFLAGS="$LDFLAGS"
     export GOFLAGS="-buildmode=pie -trimpath -mod=readonly -modcacherw"
     local _config=github.com/mattermost/mattermost-server/v6/model
+    # https://github.com/mattermost/mattermost/issues/24582
+    make setup-go-work
     go build -v \
          -ldflags "-linkmode external
                    -X \"$_config.BuildNumber=$pkgver-$pkgrel\" \

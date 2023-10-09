@@ -1,33 +1,34 @@
 # Maintainer: Daniel M. Capella <polyzen@archlinux.org>
 
+_name=BLAKE3
 pkgname=b3sum
-pkgver=1.4.1
+pkgver=1.5.0
 pkgrel=1
 pkgdesc='Command line implementation of the BLAKE3 hash function'
 arch=('loong64' 'x86_64')
 url=https://github.com/BLAKE3-team/BLAKE3
 license=('Apache')
 depends=('gcc-libs')
-makedepends=('rust')
-source=("$pkgname-$pkgver.tar.gz::https://crates.io/api/v1/crates/$pkgname/$pkgver/download")
-b2sums=('dac374e4b85530513848cf4e4f1b4730de081d7737e3d39776f4fe5bc955784287dbb2945dfd6c1f7ae82f10686c01577ecfb9c1b05ef419fd701d824c217213')
+makedepends=('git' 'rust')
+source=("git+$url.git#tag=$pkgver")
+b2sums=('SKIP')
 
 prepare() {
-  cd $pkgname-$pkgver
+  cd $_name/$pkgname
   cargo fetch --locked --target "$CARCH-unknown-linux-gnu"
 }
 
 build() {
-  cd $pkgname-$pkgver
+  cd $_name/$pkgname
   cargo build --release --locked --offline
 }
 
 check() {
-  cd $pkgname-$pkgver
+  cd $_name/$pkgname
   cargo test --locked --offline
 }
 
 package() {
-  cd $pkgname-$pkgver
+  cd $_name/$pkgname
   install -Dt "$pkgdir"/usr/bin target/release/$pkgname
 }

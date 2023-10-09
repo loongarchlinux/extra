@@ -1,13 +1,14 @@
 # Maintainer: David Runge <dvzrv@archlinux.org>
 
+# TODO: devendor clap and minizip
 pkgbase=spectmorph
-pkgname=(spectmorph libspectmorph spectmorph-{instruments,lv2,tools,vst})
-pkgver=0.5.2
-pkgrel=4
+pkgname=(spectmorph libspectmorph spectmorph-{clap,instruments,lv2,tools,vst})
+pkgver=0.6.0
+pkgrel=2
 pkgdesc="Analyze samples of musical instruments and combine them (morphing)"
 arch=(loong64 x86_64)
 url="https://spectmorph.org/"
-license=(LGPL3)
+license=(LGPL-2.1-or-later)
 makedepends=(
   cairo
   fftw
@@ -26,14 +27,9 @@ checkdepends=(
   lv2lint
   python
 )
-source=(
-  https://www.spectmorph.org/files/releases/$pkgname-$pkgver.tar.bz2
-  https://spectmorph.org/files/instruments/$pkgname-instruments-$pkgver.tar.xz
-)
-sha512sums=('cf2a6801624d9935b75ab393160e824e2bd4434fa58e7f068fbba463edec1f66438ea07abc4f86bac69fab453d34d0344dfe495349e28e4fd83e7c72b7a2a317'
-            '7c1353be42b04e0b0107a994a0236b4be5ddf387e436786eeca7173751961f4dcf3b887de84c538d43119a3c9fb3b50cab3850afee4d1634e64803a83daef7da')
-b2sums=('f7c1215544b42367735a78c799e0b6e5c164ae8537296291b05f04d08aea7af51c66e74fc751fae5264fa352859c875bf990f18c838ff589d934ebed9cd06937'
-        '213d844979c262af63d78f28cba301a2d255c9b31442c3c31b0ce900ffb56d1d0fd38829b3156c159e476b9321790b2af0279dd1dfbf88dd9c86ed2d0863a979')
+source=(https://github.com/swesterfeld/spectmorph/releases/download/$pkgver/$pkgname-$pkgver.tar.bz2)
+sha512sums=('f25fd15b8d06844dbafb50dfc105a50f744253693d5b2dca9282a9f4a6eeff690f99f7a938e3c9ef2d41cb833d9a2fbdf2ce738fa0bc18ec83250a7f21bc6318')
+b2sums=('17e34772c8ebe5029231183f86adfe645555d61a2a0db8a83057fa306b9cd6957bd550183239801e54a8c40842a911597bb841dc4508a58e9a9637911bd22ebf')
 
 _pick() {
   local p="$1" f d; shift
@@ -53,6 +49,7 @@ prepare() {
 build() {
   local configure_options=(
     --prefix=/usr
+    --with-clap
     --with-lv2
     --with-jack
     --with-qt
@@ -69,15 +66,13 @@ check() {
   make -k check -C $pkgname-$pkgver
 
   cd $pkgname-$pkgver
-  cp -v lv2/.libs/*.so lv2/
-  lv2lint -I lv2/ -Mpack "http://spectmorph.org/plugins/spectmorph"
-  rm -v lv2/*.so
+  LD_LIBRARY_PATH="$PWD/glui/.libs/:$PWD/lib/.libs/:$LD_LIBRARY_PATH" lv2lint -I lv2/ -Mpack "http://spectmorph.org/plugins/spectmorph"
 }
 
 package_spectmorph() {
   depends=(
     libspectmorph
-    spectmorph-{lv2,tools,vst}
+    spectmorph-{clap,lv2,tools,vst}
   )
 
   make DESTDIR="$pkgdir/" install -C $pkgname-$pkgver
@@ -89,6 +84,7 @@ package_spectmorph() {
     _pick lib$pkgbase usr/lib/pkgconfig
     _pick lib$pkgbase usr/share/$pkgbase/templates
 
+    _pick $pkgbase-clap usr/lib/clap
     _pick $pkgbase-instruments usr/share/$pkgbase/instruments
 
     _pick $pkgbase-lv2 usr/lib/lv2
@@ -98,6 +94,25 @@ package_spectmorph() {
 
     _pick $pkgbase-vst usr/lib/vst
   )
+}
+
+package_spectmorph-clap() {
+  pkgdesc+=" - CLAP plugin"
+  groups=(
+    pro-audio
+    clap-plugins
+  )
+  depends=(
+    clap-host
+    gcc-libs
+    glibc
+    libspectmorph
+  )
+  optdepends=(
+    'spectmorph-instruments: for standard instruments'
+  )
+
+  mv -v $pkgname/* "$pkgdir"
 }
 
 package_spectmorph-instruments() {
@@ -130,7 +145,7 @@ package_libspectmorph() {
   )
 
   mv -v $pkgname/* "$pkgdir"
-  install -vDm 644 $pkgbase-$pkgver/{AUTHORS,DESIGN,NEWS,README.md,TODO} -t "$pkgdir/usr/share/doc/$pkgbase/"
+  install -vDm 644 $pkgbase-$pkgver/{AUTHORS,DESIGN,NEWS.md,README.md,TODO} -t "$pkgdir/usr/share/doc/$pkgbase/"
 }
 
 package_spectmorph-lv2() {

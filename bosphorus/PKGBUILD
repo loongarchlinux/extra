@@ -1,0 +1,36 @@
+# Maintainer: Antonio Rojas <arojas@archlinux.org>
+
+pkgname=bosphorus
+pkgver=3.1.0
+pkgrel=2
+pkgdesc='ANF simplifier and solver, and ANF-to-CNF converter'
+arch=(loong64 x86_64)
+url='https://github.com/meelgroup/bosphorus'
+license=(MIT)
+depends=(boost-libs
+         brial
+         cryptominisat
+         gcc-libs
+         glibc
+         m4ri)
+makedepends=(boost
+             cmake)
+source=(https://github.com/meelgroup/bosphorus/archive/$pkgver/$pkgname-$pkgver.tar.gz
+        https://github.com/meelgroup/bosphorus/commit/c44f7d98.patch)
+sha256sums=('f410fb7df79e991900d037a6250d00a6f946228d397d3c7ebfbb4ed5d3f908c7'
+            'a49bbfc13a87371ebccf069db1040790bcc1a8430590dd84628d9a435ff40c8a')
+
+prepare() {
+  patch -d $pkgname-$pkgver -p1 < c44f7d98.patch # Fix build with GCC 13
+}
+
+build() {
+  cmake -B build -S $pkgname-$pkgver \
+    -DCMAKE_INSTALL_PREFIX=/usr
+  cmake --build build
+}
+
+package() {
+  DESTDIR="$pkgdir" cmake --install build
+  install -Dm644 $pkgname-$pkgver/LICENSE* -t "$pkgdir"/usr/share/licenses/$pkgname
+}

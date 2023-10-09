@@ -4,7 +4,7 @@
 _pkgname=httpcore
 pkgname=python-httpcore
 # https://github.com/encode/httpcore/blob/master/CHANGELOG.md
-pkgver=0.17.3
+pkgver=0.18.0
 pkgrel=1
 pkgdesc="A minimal HTTP client"
 arch=('any')
@@ -16,16 +16,17 @@ optdepends=(
   'python-socksio: for SOCKS support'
   'python-trio: for trio backend'
 )
-makedepends=('python-build' 'python-installer' 'python-wheel' 'python-setuptools' 'python-h2')
+makedepends=('python-build' 'python-installer' 'python-hatchling' 'python-hatch-fancy-pypi-readme'
+             'python-h2')
 checkdepends=('python-pytest-httpbin' 'python-pytest-trio' 'python-socksio')
 source=("${pkgname}-${pkgver}.tar.gz::${url}/archive/${pkgver}.tar.gz")
-sha512sums=('41f48d32caa7d7a3456528404392a257927d047f0a1c733e2a68c0fec97c7454c7f8d7d1b6851c5722cfac292dfaa478a4033c656e66d389c81c72dee8e7a7d2')
+sha512sums=('3dc8114bf02226fc4ac87408163e599f4e9f70f9e5663c9eb7dc9a65b2b72861f3b19ed2f87e29ac90a8b85c5dc32a3fffdaf88e83b15df838fcbd89737b1c57')
 
 prepare() {
     cd ${_pkgname}-${pkgver}
 
     # disable -Werror, which often causes failures due to newer dependencies in Arch
-    sed -i '/\berror\b/d' setup.cfg
+    sed -i '/filterwarnings/d' pyproject.toml
 }
 
 build() {

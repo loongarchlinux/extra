@@ -1,54 +1,56 @@
 # Maintainer: David Runge <dvzrv@archlinux.org>
 
 pkgname=repod
-pkgver=0.2.2
-pkgrel=2
+pkgver=0.3.0
+pkgrel=1
 pkgdesc="Tooling to maintain binary package repositories"
 arch=(any)
 url="https://repod.archlinux.page/"
 license=(GPL3)
 depends=(
   pyalpm
+  python
   python-aiofiles
   python-email-validator
   python-jinja
   python-magic
   python-orjson
   python-pydantic
+  python-pydantic-settings
   python-pyxdg
   python-pyzstd
   python-subprocess-tee
   python-tomli
 )
 makedepends=(
-  just
   python-build
   python-installer
-  python-poetry-core
-  python-setuptools
+  python-pdm-backend
   python-sphinx
   python-sphinx-argparse
+  python-sphinx_rtd_theme
   python-sphinxcontrib-programoutput
-  python-wheel
 )
 checkdepends=(python-pytest python-pytest-asyncio python-pytest-lazy-fixture)
 source=(
-  https://files.pythonhosted.org/packages/source/${pkgname::1}/$pkgname/$pkgname-$pkgver.tar.gz
+  https://gitlab.archlinux.org/archlinux/$pkgname/-/archive/$pkgver/$pkgname-$pkgver.tar.gz
 )
-sha256sums=('0d30e17f27402044aaa875b476b81c85f400cf634c543d34bb61d20bf47bc84d')
-b2sums=('e4bee6a48b905e5d58353ec2ce47d01216c35f1c6195d2fae8822a56c6cd49d6b4ae80a0054d9b83679036ffa066573bae114dc24e71177fb2da334cd474f7f7')
+sha256sums=('1d7763d0234aeb64ba21772b9de33e4b05b575ff916c0bcf7055109f06168468')
+b2sums=('ba17d42856ba032d564fe8bdc5083f6524bc2b2d47bb353c68fd10f36a5a55795eba479f10853937772f470abe44dd9c582b49c3d905feea349c363e9249baa0')
 
 build() {
+  export PDM_BUILD_SCM_VERSION=$pkgver
   cd $pkgname-$pkgver
-  just build
+  make build
+  make system-docs
 }
 
 check() {
   cd $pkgname-$pkgver
-  just check
+  make test
 }
 
 package() {
   cd $pkgname-$pkgver
-  just --set destdir "$pkgdir" install
+  DESTDIR="$pkgdir" make install
 }

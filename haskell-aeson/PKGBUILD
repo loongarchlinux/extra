@@ -5,7 +5,7 @@
 pkgname=haskell-aeson
 _hkgname=aeson
 pkgver=2.1.2.1
-pkgrel=7
+pkgrel=13
 pkgdesc="A JSON parsing and encoding library optimized for ease of use and high performance"
 url="https://github.com/haskell/aeson"
 license=("GPL")
@@ -20,8 +20,15 @@ makedepends=('ghc' 'haskell-diff' 'haskell-base-compat' 'haskell-base-orphans'
              'haskell-base16-bytestring' 'haskell-generic-deriving' 'haskell-integer-logarithms'
              'haskell-quickcheck-instances' 'haskell-tasty' 'haskell-tasty-golden'
              'haskell-tasty-hunit' 'haskell-tasty-quickcheck')
-source=("https://hackage.haskell.org/packages/archive/$_hkgname/$pkgver/$_hkgname-${pkgver}.tar.gz")
-sha512sums=('c7e3c5d61ac99b7e66a468cdcd0a20c9d0f42142b2398086aa1a3a992c60814c9d7505e4c15120fb00f0015ab1fb5592d6acdb31995e7af956f2867b95f12a40')
+source=("https://hackage.haskell.org/packages/archive/$_hkgname/$pkgver/$_hkgname-${pkgver}.tar.gz"
+        $pkgname-quickcheck-2.14.3.patch::https://github.com/haskell/aeson/commit/58766a1916b4980792763bab74f0c86e2a7ebf20.patch)
+sha512sums=('c7e3c5d61ac99b7e66a468cdcd0a20c9d0f42142b2398086aa1a3a992c60814c9d7505e4c15120fb00f0015ab1fb5592d6acdb31995e7af956f2867b95f12a40'
+            '68e350f3eb320b6be777ad12f29d461caf68cb4364d58579d62a196e7c5caca8a4498784469925576d6cd7480ccaf6aa54e36eb3165510b10752fd9d77192fad')
+
+prepare() {
+  cd $_hkgname-$pkgver
+  patch -Np1 -i ../$pkgname-quickcheck-2.14.3.patch
+}
 
 build() {
   cd $_hkgname-$pkgver

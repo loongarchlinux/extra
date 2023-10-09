@@ -6,10 +6,44 @@ index fc3021f5..252ea7ee 100644
  set(CMAKE_AUTOMOC TRUE)
  
  # Find other needed libraries
--FIND_PACKAGE(Protobuf REQUIRED)
-+FIND_PACKAGE(Protobuf CONFIG REQUIRED)
-+FIND_PACKAGE(Protobuf REQUIRED) # for the protoc command
+-find_package(Protobuf REQUIRED)
++find_package(Protobuf CONFIG REQUIRED)
++find_package(Protobuf REQUIRED) # for the protoc command
 +set(PROTOBUF_LIBRARIES protobuf::libprotobuf)
- IF(NOT EXISTS "${Protobuf_PROTOC_EXECUTABLE}")
-     MESSAGE(FATAL_ERROR "No protoc command found!")
- ELSE()
+ if(NOT EXISTS "${Protobuf_PROTOC_EXECUTABLE}")
+     message(FATAL_ERROR "No protoc command found!")
+ else()
+diff --git a/common/debug_pb_message.cpp b/common/debug_pb_message.cpp
+index 616957a716..011cbfbf4b 100644
+--- a/common/debug_pb_message.cpp
++++ b/common/debug_pb_message.cpp
+@@ -8,15 +8,6 @@
+ #include <google/protobuf/message.h>
+ #include <google/protobuf/text_format.h>
+ 
+-// google/protobuf/stubs/strutil.h is missing on some systems!
+-namespace google
+-{
+-namespace protobuf
+-{
+-std::string CEscape(const std::string &src);
+-} // namespace protobuf
+-} // namespace google
+-
+ // FastFieldValuePrinter is added in protobuf 3.4, going out of our way to add the old FieldValuePrinter is not worth it
+ #if GOOGLE_PROTOBUF_VERSION > 3004000
+ 
+@@ -43,12 +34,7 @@ void LimitedPrinter::PrintString(const std::string &val,
+                                  ::google::protobuf::TextFormat::BaseTextGenerator *generator) const
+ {
+     auto length = val.length();
+-    if (length > MAX_TEXT_LENGTH) {
+-        generator->PrintString("\"" + ::google::protobuf::CEscape(val.substr(0, MAX_NAME_LENGTH)) + "... ---snip--- (" +
+-                               std::to_string(length) + " bytes total) \"");
+-    } else {
+-        ::google::protobuf::TextFormat::FastFieldValuePrinter::PrintString(val, generator);
+-    }
++    ::google::protobuf::TextFormat::FastFieldValuePrinter::PrintString(val, generator);
+ }
+ 
+ void SafePrinter::PrintString(const std::string & /*val*/,

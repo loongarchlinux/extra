@@ -1,0 +1,29 @@
+# Maintainer: Felix Yan <felixonmars@archlinux.org>
+
+pkgname=deepin-launchpad
+pkgver=0.0.2
+pkgrel=3
+pkgdesc='The "launcher" or "start menu" component for DDE - next generation'
+arch=('loong64' 'x86_64')
+url="https://github.com/linuxdeepin/dde-launchpad"
+license=('GPL3')
+# dtkdeclarative: qml: org.deepin.dtk
+# kitemmodels: qml: org.kde.kitemmodels
+depends=('qt5-base' 'qt5-declarative' 'qt5-quickcontrols2' 'qt5-svg' 'dtkcore' 'dtkgui' 'dtkwidget'
+         'glib2' 'appstream-qt' 'dtkdeclarative' 'kitemmodels5' 'glibc' 'gcc-libs')
+makedepends=('cmake' 'ninja' 'gtest' 'qt5-tools')
+provides=('deepin-launcher')
+conflicts=('deepin-launcher')
+source=("https://github.com/linuxdeepin/dde-launchpad/archive/$pkgver/$pkgname-$pkgver.tar.gz")
+sha512sums=('e06c66d46502b7b5c9962d323f40e257423f532c2603206c5d8884df8a2f7a8c51867b0a4b8d6340a564f2af21d1a3799e7d9adf4c36278ace028946f2e9e066')
+
+build() {
+  cd dde-launchpad-$pkgver
+  cmake . -GNinja -DCMAKE_INSTALL_PREFIX=/usr
+  ninja
+}
+
+package() {
+  cd dde-launchpad-$pkgver
+  DESTDIR="$pkgdir" ninja install
+}

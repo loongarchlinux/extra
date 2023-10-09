@@ -6,8 +6,8 @@ pkgname=(
   webkit2gtk
   webkit2gtk-docs
 )
-pkgver=2.40.5
-pkgrel=2
+pkgver=2.42.1
+pkgrel=1
 pkgdesc="Web content engine for GTK"
 url="https://webkitgtk.org"
 arch=(loong64 x86_64)
@@ -37,6 +37,7 @@ depends=(
   libgl
   libgles
   libjpeg
+  libjxl
   libmanette
   libpng
   libseccomp
@@ -61,11 +62,13 @@ depends=(
   zlib
 )
 makedepends=(
+  clang
   cmake
   gi-docgen
   gobject-introspection
   gperf
   gst-plugins-bad
+  lld
   ninja
   python
   ruby
@@ -75,11 +78,14 @@ makedepends=(
 )
 source=(
   $url/releases/webkitgtk-$pkgver.tar.xz{,.asc}
+  webkitgtk-MiniBrowser-fullscreen.patch::https://github.com/WebKit/WebKit/commit/e07345343415dd2496edc721daa61a3b42703131.patch
 )
-sha256sums=('7de051a263668621d91a61a5eb1c3771d1a7cec900043d4afef06c326c16037f'
-            'SKIP')
-b2sums=('67b8f429af8b746a256ca36c335c33ab4fef92a4699b09b87c38e81d56e0da7b5fb20d9e0dbbc32016025e60ca2c6e44d9032c300bfbdc931f4097d5608bb62f'
-        'SKIP')
+sha256sums=('6f41fac9989d3ee51c08c48de1d439cdeddecbc757e34b6180987d99b16d2499'
+            'SKIP'
+            'a921d6be1303e9f23474971f381886fd291ec5bb1a7ff1e85acede8cfb88bef2')
+b2sums=('c6453cf2d15661507df66c5478e7675217b62d9579cf9b9408cb3e4fa1a8405c5c2608edf0960baed62aafa766e6cdbe2f0c07e8fb728d86c111f12d5a816492'
+        'SKIP'
+        'd440d82c769f1b35caf5464dc850cdf1c896224205c90c17d8b0a44aee62e4b1383e11306936aaca067fde8836770d346d5122d7b05c91a5c7c1741c89c65e2f')
 validpgpkeys=(
   'D7FCF61CF9A2DEAB31D81BD3F3D322D0EC4582C3'  # Carlos Garcia Campos <cgarcia@igalia.com>
   '5AA3BC334FD7E3369E7C77B291C559DBE4C9123B'  # Adrián Pérez de Castro <aperez@igalia.com>
@@ -87,6 +93,8 @@ validpgpkeys=(
 
 prepare() {
   cd webkitgtk-$pkgver
+
+  patch -Np1 < ../webkitgtk-MiniBrowser-fullscreen.patch
 }
 
 build() {
@@ -102,6 +110,15 @@ build() {
     -DENABLE_DOCUMENTATION=ON
     -DENABLE_MINIBROWSER=ON
   )
+
+  # GCC with LTO fails to link libjavascriptcoregtk
+  #     /usr/bin/ld: /tmp/ccXxyWZV.ltrans0.ltrans.o: in function `ipint_table_size_validate':
+  #     <artificial>:(.text+0x49f0f): undefined reference to `ipint_extern_table_size'
+  #     /usr/bin/ld: /tmp/ccXxyWZV.ltrans0.ltrans.o: in function `ipint_table_fill_validate':
+  #     <artificial>:(.text+0x4a019): undefined reference to `ipint_extern_table_fill'
+  #     collect2: error: ld returned 1 exit status
+  export CC=clang CXX=clang++
+  LDFLAGS+=" -fuse-ld=lld"
 
   # Produce minimal debug info: 4.3 GB of debug data makes the
   # build too slow and is too much to package for debuginfod

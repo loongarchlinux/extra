@@ -3,7 +3,7 @@
 # Contributor: pressh <pressh@gmail.com>
 
 pkgname=alacarte
-pkgver=3.44.3
+pkgver=3.50.0
 pkgrel=1
 epoch=1
 pkgdesc="Menu editor for gnome"
@@ -21,7 +21,7 @@ makedepends=(
   git
   libxslt
 )
-_commit=9bfd515525cd82b56c6d2343d0507c9355f4e26b  # tags/3.44.3^0
+_commit=167780e0e9fc5cb26ccd3e5d55e33b32ae15ea44  # tags/3.50.0^0
 source=("git+https://gitlab.gnome.org/GNOME/alacarte.git#commit=$_commit")
 b2sums=('SKIP')
 
@@ -36,8 +36,14 @@ prepare() {
 }
 
 build() {
+  local configure_options=(
+    --prefix=/usr
+    --sysconfdir=/etc
+    --localstatedir=/var
+  )
+
   cd alacarte
-  ./configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var
+  ./configure "${configure_options[@]}"
   make
 }
 

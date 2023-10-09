@@ -10,12 +10,13 @@
 
 pkgname=angband
 pkgver=4.2.5
-pkgrel=1
+pkgrel=2
 pkgdesc='A roguelike dungeon exploration game based on the writings of JRR Tolkien'
 arch=('loong64' 'x86_64')
 url='https://rephial.org/'
 license=('GPL2' 'custom')
 depends=(
+  'glibc'
   'sdl2'
   'sdl2_ttf'
   'sdl2_image'
@@ -24,6 +25,7 @@ depends=(
   'xorg-fonts-misc'
   'xorg-mkfontscale'
   'hicolor-icon-theme'
+  'libx11'
 )
 makedepends=('git' 'python-docutils')
 _commit='69e24dbb001818d5f902215e7a474d122e12202c'
@@ -65,22 +67,4 @@ package() {
 
   # license
   install -vDm644 docs/copying.rst "$pkgdir/usr/share/licenses/$pkgname/COPYING"
-
-
-  # hopefully the following is fixed by next release
-  pushd "$pkgdir/usr/share/angband/icons"
-  # application icons
-  for i in 16 32 128 256 512; do
-    install -vDm644 "att-${i}.png" "$pkgdir/usr/share/icons/hicolor/${i}x${i}/apps/$pkgname.png"
-  done
-  popd
-
-  pushd lib/icons
-  # desktop files
-  rm -vf "$pkgdir/usr/share/applications/angband.desktop"
-  install -vDm644 -t "$pkgdir/usr/share/applications" angband-{x11,sdl2}.desktop
-
-  # metainfo
-  install -vDm644 -t "$pkgdir/usr/share/metainfo" angband.metainfo.xml
-  popd
 }

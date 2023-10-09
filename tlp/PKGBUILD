@@ -6,13 +6,13 @@ pkgname=(
   tlp
   tlp-rdw
 )
-pkgver=1.6.0
+pkgver=1.6.1
 pkgrel=1
 arch=(any)
 url=https://linrunner.de/en/tlp/tlp.html
 license=(GPL2)
 makedepends=(git)
-_tag=f0030129ca89457670ed5c0bb64377b0d12c83d2
+_tag=40c44d108182fd57c2ff44d685a8f908a9c782d3
 source=(git+https://github.com/linrunner/TLP.git#tag=${_tag})
 sha256sums=(SKIP)
 install=tlp.install

@@ -7,10 +7,10 @@ flags_file="${XDG_CONFIG_HOME:-$HOME/.config}/code-flags.conf"
 declare -a codeflags
 
 if [[ -f "${flags_file}" ]]; then
-    mapfile -t < "${flags_file}"
+    mapfile -t < "${flags_file}" CODEMAPFILE
 fi
 
-for line in "${MAPFILE[@]}"; do
+for line in "${CODEMAPFILE[@]}"; do
     if [[ ! "${line}" =~ ^[[:space:]]*#.* ]]; then
         codeflags+=("${line}")
     fi
@@ -23,13 +23,13 @@ flags_file="${XDG_CONFIG_HOME:-$HOME/.config}/${name}-flags.conf"
 declare -a electronflags
 
 if [[ -f "${flags_file}" ]]; then
-    mapfile -t < "${flags_file}"
+    mapfile -t < "${flags_file}" ELECTRONMAPFILE
 fi
 
-for line in "${MAPFILE[@]}"; do
+for line in "${ELECTRONMAPFILE[@]}"; do
     if [[ ! "${line}" =~ ^[[:space:]]*#.* ]]; then
         electronflags+=("${line}")
     fi
 done
 
-ELECTRON_RUN_AS_NODE=1 exec /usr/lib/${name}/electron /usr/lib/code/out/cli.js /usr/lib/code/code.js "${electronflags[@]}" "${codeflags[@]}" "$@"
+ELECTRON_RUN_AS_NODE=1 exec /usr/lib/${name}/electron /usr/lib/code/out/cli.js "${electronflags[@]}" /usr/lib/code/code.js "${codeflags[@]}" "$@"

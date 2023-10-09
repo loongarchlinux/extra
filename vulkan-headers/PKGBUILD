@@ -2,8 +2,8 @@
 
 pkgname=vulkan-headers
 _pkgname=Vulkan-Headers
-pkgver=1.3.262
-pkgrel=1
+pkgver=1.3.264
+pkgrel=2
 epoch=1
 pkgdesc="Vulkan header files"
 arch=(any)
@@ -12,8 +12,10 @@ license=('APACHE')
 makedepends=(cmake git)
 provides=("vulkan-hpp=${pkgver}")
 groups=(vulkan-devel)
-source=("${pkgname}-${pkgver}.tar.gz::https://github.com/KhronosGroup/Vulkan-Headers/archive/v${pkgver}.tar.gz")
-sha256sums=('317e467a5fb2eaa6a18b984ec70fdbfaccd93595a3e6f4bcceca7d3fab280505')
+source=("${pkgname}-${pkgver}.tar.gz::https://github.com/KhronosGroup/Vulkan-Headers/archive/v${pkgver}.tar.gz"
+        vulkan_hpp_macros.hpp)
+sha256sums=('e5d47599b971d8fe223b034019f7da736a97cdd6c3899b83a5d8873ff23e0e62'
+            'f04edce292c8a6971c058ce98015ceae7d1efc184213a468cb679293900e1fe3')
 
 build() {
   cd Vulkan-Headers*
@@ -29,4 +31,5 @@ package() {
   cd Vulkan-Headers*/build
   
   make DESTDIR="${pkgdir}" install
+  install -m655 ${srcdir}/vulkan_hpp_macros.hpp ${pkgdir}/usr/include/vulkan/
 }

@@ -1,8 +1,8 @@
 # Maintainer: Levente Polyak <anthraxx[at]archlinux[dot]org>
 
 pkgname=pwndbg
-pkgver=2023.03.19
-pkgrel=3
+pkgver=2023.07.17
+pkgrel=1
 pkgdesc='Makes debugging with GDB suck less'
 url='https://github.com/pwndbg/pwndbg'
 arch=('any')
@@ -14,8 +14,8 @@ optdepends=('checksec: checksec command support'
             'ropgadget: ropgadget command support'
             'radare2: radare2 command support')
 source=(https://github.com/pwndbg/pwndbg/archive/${pkgver}/${pkgname}-${pkgver}.tar.gz)
-sha512sums=('aa84908f1dee97e04b72d4f789d78c861507a3a842ecfe00a0ab8a073d63652b8319094a28d910c916131dec3d8fd1eced00c9dc4b97220e1dd76da89baaf695')
-b2sums=('9ad84450116b4e8e3e82107fea6d33505c61e81cde52a209865d4fea1620dd8db2e7f395e2764f9ed38e10311ea9bb77e08fb4c087bd3307ad06d3ea3489ec42')
+sha512sums=('d261ed992327d62b0b3e7cc002d3185435748e27cc2ce0085d438848ef1bdb0b3921ae5c1ce19c25e49d52b10f8340eb67c4e05fc197d2adeb888b47e2c158ba')
+b2sums=('e373a7408366090f58385dac8dfcdd13702c475117a35158a1a149d149c9a2cbf5f2702be33aeab537451cfd990b5253e9bc0283fa5ae197c9cceb680e65a724')
 
 prepare() {
   cd ${pkgname}-${pkgver}

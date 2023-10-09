@@ -2,18 +2,17 @@
 
 _gemname='metadata-json-lint'
 pkgname="ruby-${_gemname}"
-pkgver=3.0.2
-pkgrel=2
+pkgver=4.0.0
+pkgrel=1
 pkgdesc='Tool to check the validity of Puppet metadata.json files'
 arch=('any')
 url="https://github.com/voxpupuli/${_gemname}"
 license=('Apache')
-depends=('ruby' 'ruby-json-schema' 'ruby-spdx-licenses' 'ruby-semantic_puppet')
+depends=('ruby' 'ruby-json-schema' 'ruby-spdx-licenses' 'ruby-semantic_puppet' 'ruby-rubocop')
 makedepends=('ruby-rdoc' 'ruby-rake' 'ruby-rspec' 'ruby-bundler')
 options=('!emptydirs')
-source=("${url}/archive/${pkgver}/${_gemname}-${pkgver}.tar.gz" 'disable_rubocop.patch' 'dont_call_msl_via-bundler.patch')
-sha512sums=('fa97ca016707057339921161a4ffff2f648eae86464122a2fd3a20441c7bdff68d78c1a0cc301a9d18657cf96843e924b20319a6647c04966e8620d7c3239038'
-            '479a94337a0d3ec93f017780dedcbfec6173ab1ba3c20c402e889cf51d7309b892bb2c557ee3de4ad8d502742a44cb272420b997c3b90753c22c0a6cd590ca94'
+source=("${url}/archive/${pkgver}/${_gemname}-${pkgver}.tar.gz" 'dont_call_msl_via-bundler.patch')
+sha512sums=('c65bba2d3add6bb209249818cae30a00a706fab79bb1e0e6ddaa60ff7fbb61f138e9602830540579a04da146099a12da9c09b3128f14bb68b7e1fccc44df31a2'
             'ed730430b39554b74586fd47c85581afa289a700a677b5c9189fca06ccedb10b31bdef424f692949ed3fa54b292d7a51bb07d838f80d4bcd1cfe80e6d69e398c')
 
 prepare() {
@@ -25,7 +24,7 @@ prepare() {
   sed --in-place '/add_development_dependency/d' "${_gemname}.gemspec"
 
   # disable rubocop
-  patch --forward --verbose --strip=1 --input=../disable_rubocop.patch
+  # patch --forward --verbose --strip=1 --input=../disable_rubocop.patch
 
   # we build with a release tar ball, not a git archive
   sed --in-place 's|`git ls-files -z`.split("\\x0")|`find`.split("\\n")|' "${_gemname}.gemspec"
@@ -33,9 +32,6 @@ prepare() {
 
   # the tests work through bundle, which doesn't work during *our* build
   patch --forward --verbose --strip=1 --input=../dont_call_msl_via-bundler.patch
-
-  # remove the builbdate from the gemspec to be reproducible
-  sed --in-place '/s.date/d' "${_gemname}.gemspec"
 }
 
 build() {

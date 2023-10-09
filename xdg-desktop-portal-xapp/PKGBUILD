@@ -3,7 +3,7 @@
 
 pkgname=xdg-desktop-portal-xapp
 pkgver=1.0.3
-pkgrel=1
+pkgrel=2
 pkgdesc='A backend implementation for xdg-desktop-portal using GTK and various pieces of Cinnamon/MATE/Xfce4 infrastructure'
 arch=(loong64 x86_64)
 url='https://github.com/linuxmint/xdg-desktop-portal-xapp'
@@ -11,8 +11,10 @@ license=(LGPL-2.1)
 depends=(xdg-desktop-portal xapp)
 makedepends=(meson)
 provides=(xdg-desktop-portal-impl)
-source=(https://github.com/linuxmint/xdg-desktop-portal-xapp/archive/$pkgver/$pkgname-$pkgver.tar.gz)
-sha256sums=('78e42c905b2a023bb0152bbcfa68680a70bf9d5f773c1023703296ed3c8306d0')
+source=(https://github.com/linuxmint/xdg-desktop-portal-xapp/archive/$pkgver/$pkgname-$pkgver.tar.gz
+        xapp-portals.conf)
+sha256sums=('78e42c905b2a023bb0152bbcfa68680a70bf9d5f773c1023703296ed3c8306d0'
+            '86f7bad3112e2bccfe07eb9345e95ed4716c126de5e9397966c6de30ae056c11')
 
 build() {
   arch-meson $pkgname-$pkgver build
@@ -21,4 +23,6 @@ build() {
 
 package() {
   meson install -C build --destdir "$pkgdir"
+  # fix detection with x-d-p 1.18
+  install -Dm644 ${srcdir}/xapp-portals.conf  ${pkgdir}/usr/share/xdg-desktop-portal/xapp-portals.conf
 }

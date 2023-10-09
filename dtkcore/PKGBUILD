@@ -3,7 +3,7 @@
 # Contributor: Xu Fasheng <fasheng.xu[AT]gmail.com>
 
 pkgname=dtkcore
-pkgver=5.6.13
+pkgver=5.6.17
 pkgrel=1
 epoch=1
 pkgdesc='DTK core modules'
@@ -11,10 +11,10 @@ arch=('loong64' 'x86_64')
 url="https://github.com/linuxdeepin/dtkcore"
 license=('LGPL3')
 depends=('deepin-desktop-base' 'dtkcommon' 'gcc-libs' 'glibc' 'gsettings-qt' 'icu' 'libsystemd'
-         'lshw' 'qt5-base' 'uchardet')
+         'lshw' 'qt5-base' 'uchardet' 'spdlog')
 makedepends=('cmake' 'ninja' 'qt5-tools' 'gtest' 'doxygen')
 source=("https://github.com/linuxdeepin/dtkcore/archive/$pkgver/$pkgname-$pkgver.tar.gz")
-sha512sums=('d1b0294e0108c55168ed75d0ed2118e61ad0e62657684799d7a37807fc8ad3cccf4c80f1da704864b303459b48cb302f9e5c644e687aed3f15c0b5c4d1072a14')
+sha512sums=('e07e1c178b0f3feb78762273c7201db40a27926c41571769a0460e07614ced5ddef0539d0bbdf965545bd45720d714d134ae3a04b0f0208c1ce7948315bed68f')
 
 prepare() {
   cd dtkcore-$pkgver
@@ -23,23 +23,25 @@ prepare() {
 
 build() {
   cd dtkcore-$pkgver
-  cmake -GNinja \
+  cmake . -GNinja \
       -DMKSPECS_INSTALL_DIR=lib/qt/mkspecs/modules/ \
+      -DFEATURES_INSTALL_DIR=lib/qt/mkspecs/features/ \
       -DBUILD_DOCS=ON \
-      -DBUILD_EXAMPLES=ON \
+      -DBUILD_TESTING=ON \
       -DBUILD_WITH_SYSTEMD=ON \
       -DQCH_INSTALL_DESTINATION=share/doc/qt \
       -DCMAKE_INSTALL_LIBDIR=lib \
       -DCMAKE_INSTALL_LIBEXECDIR=lib \
       -DCMAKE_INSTALL_PREFIX=/usr \
-      -DDVERSION=$pkgver
+      -DDTK_VERSION=$pkgver
 
   ninja
 }
 
 check() {
   cd dtkcore-$pkgver
-  ninja check || echo "Tests failed"
+  # TODO
+  ninja test || echo "Tests failed"
 }
 
 package() {

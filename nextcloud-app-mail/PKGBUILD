@@ -3,18 +3,22 @@
 
 pkgname=nextcloud-app-mail
 _name=mail
-pkgver=3.2.5
+pkgver=3.4.0
 pkgrel=1
 pkgdesc="An email app for NextCloud"
 arch=(any)
 url="https://github.com/nextcloud/mail"
-license=(AGPL)
-makedepends=(nextcloud yq)
+license=(AGPL-3.0-or-later)
+makedepends=(
+  nextcloud
+  yq
+)
+optdepends=('kitinerary: for kitinerary-extractor')
 groups=(nextcloud-apps)
 options=(!strip)
 source=(https://github.com/nextcloud-releases/mail/releases/download/v$pkgver/$_name-v$pkgver.tar.gz)
-sha512sums=('9bb8b9cb114ceb0c0306c268d2c349684ff751b32b63dbce34b7618d25217b77c4652d8636d88293b20b311c8dd389a040cda939b92cd68ea8241fbd2f77a931')
-b2sums=('55ad482a4b9ac40506d5db60e0badbe7468607387a4258160ff20b6dbc7deeaea91a30c613e164717427a9277a6e8d1cd9b62118b241c65db42972d77d98197e')
+sha512sums=('95b2f80996f5550b7d9248c7df8c3436b2ed2cbebfa3340a51afa4cc5b2347d740b133fca0c6ac7e99ebe7bb64e1400e8f927fb3ee3a45fb0d75486e86aac100')
+b2sums=('99cca12a17d6dcbe1a0b40662ac7ef43c89e53efcd018fdb5c78613b2feebdbdf1d95d6bca9459362c424a8e80104f5bc930e3f1082480073396a67e84b8bc08')
 
 # BEGIN boilerplate nextcloud app version clamping, see also other packages in group
 # 1. Call respective function helpers in check() and package() *after* cd'ing to the source directory
@@ -57,9 +61,10 @@ check() {
 }
 
 package() {
-  # TODO: build usr/share/webapps/nextcloud/apps/mail/vendor/christophwurst/kitinerary-bin/bin/kitinerary-extractor manually!
   install -vdm 755 "$pkgdir/usr/share/webapps/nextcloud/apps/"
   cp -av $_name "$pkgdir/usr/share/webapps/nextcloud/apps/"
+  # replace vendored version of kitinerary-extractor: https://github.com/nextcloud/mail/issues/8867
+  ln -fsv /usr/lib/kf5/kitinerary-extractor "$pkgdir/usr/share/webapps/nextcloud/apps/mail/vendor/christophwurst/kitinerary-bin/bin/kitinerary-extractor"
   cd $_name
   _nextcloud_app_package
 }

@@ -2,17 +2,25 @@
 
 _pyname=ypy_websocket
 pkgname=python-ypy-websocket
-pkgver=0.12.2
+pkgver=0.12.4
 pkgrel=1
 pkgdesc='WebSocket connector for Ypy'
 arch=(any)
 url='https://github.com/y-crdt/ypy-websocket'
 license=(MIT)
-depends=(python-y-py python-anyio python-aiosqlite)
-makedepends=(python-build python-installer python-hatchling)
-checkdepends=(python-pytest-asyncio python-websockets nodejs uvicorn)
+depends=(python
+         python-aiosqlite
+         python-anyio
+         python-y-py)
+makedepends=(python-build
+             python-hatchling
+             python-installer)
+checkdepends=(nodejs
+              python-pytest-asyncio
+              python-websockets
+              uvicorn)
 source=(https://pypi.python.org/packages/source/${_pyname:0:1}/$_pyname/$_pyname-$pkgver.tar.gz)
-sha256sums=('1d0f876e6a586248c54b52735798cc473e5800f8cd4acd050b5d5f20f2ef9bf6')
+sha256sums=('cbbf5fdaa9a301a0b5f9455f1f29478b7c05b62773b2dd2a65c6502b4e10afa1')
 
 build() {
   cd $_pyname-$pkgver

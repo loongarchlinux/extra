@@ -1,0 +1,43 @@
+# Maintainer: Daniel M. Capella <polyzen@archlinux.org>
+# Contributor: Hugo Osvaldo Barrera <hugo@barrera.io>
+
+pkgname=darkman
+pkgver=1.5.4
+pkgrel=2
+pkgdesc='Framework for dark-mode and light-mode transitions on Linux desktop'
+arch=('loong64' 'x86_64')
+url=https://darkman.whynothugo.nl
+license=('ISC')
+makedepends=('git' 'go' 'scdoc')
+optdepends=(
+  "geoclue: to automatically determine the system's location"
+  'xdg-desktop-portal-impl: to expose the current mode via the XDG settings portal D-Bus API'
+)
+source=("git+https://gitlab.com/WhyNotHugo/darkman.git#tag=v$pkgver?signed")
+b2sums=('SKIP')
+validpgpkeys=("1204CA9FC2FFADEEDC2961367880733B9D062837") # Hugo Osvaldo Barrera <hugo@whynothugo.nl>
+
+prepare() {
+  cd $pkgname
+  go mod vendor
+}
+
+build() {
+  cd $pkgname
+  export CGO_CPPFLAGS="$CPPFLAGS"
+  export CGO_CFLAGS="$CFLAGS"
+  export CGO_CXXFLAGS="$CXXFLAGS"
+  export CGO_LDFLAGS="$LDFLAGS"
+  export GOFLAGS="-buildmode=pie -trimpath -ldflags=-linkmode=external -mod=readonly -modcacherw"
+  make build
+}
+
+check() {
+  cd $pkgname
+  go test ./...
+}
+
+package() {
+  cd $pkgname
+  make DESTDIR="$pkgdir" PREFIX=/usr install
+}

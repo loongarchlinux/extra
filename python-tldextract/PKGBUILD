@@ -1,15 +1,16 @@
 # Maintainer: Felix Yan <felixonmars@archlinux.org>
 
 pkgname=python-tldextract
-pkgver=3.4.4
-_commit=b3fe6563657957413b223ed33625a86b3b3a5bd5
+pkgver=3.6.0
+_commit=c92ad1ffc79665a1fbf7b7c429a4b2409081099b
 pkgrel=1
 pkgdesc="Accurately separate the TLD from the registered domain and subdomains of a URL, using the Public Suffix List"
 arch=('any')
 url="https://github.com/john-kurkowski/tldextract"
 license=('BSD')
 depends=('python-idna' 'python-requests' 'python-requests-file' 'python-filelock')
-makedepends=('git' 'python-setuptools-scm')
+makedepends=('git' 'python-build' 'python-installer' 'python-setuptools' 'python-setuptools-scm'
+             'python-wheel')
 checkdepends=('python-pytest' 'python-pytest-mock' 'python-pytest-pylint' 'python-responses'
               'python-isort')
 source=("git+https://github.com/john-kurkowski/tldextract.git#commit=$_commit")
@@ -17,17 +18,17 @@ sha512sums=('SKIP')
 
 build() {
   cd tldextract
-  python setup.py build
+  python -m build -nw
 }
 
 check() {
   cd tldextract
-  python -m pytest --ignore build
+  python -m pytest
 }
 
 package() {
   cd tldextract
-  python setup.py install --root="$pkgdir" --optimize=1 --skip-build
+  python -m installer -d "$pkgdir" dist/*.whl
   install -Dm644 LICENSE -t "$pkgdir"/usr/share/licenses/$pkgname/
 }
 

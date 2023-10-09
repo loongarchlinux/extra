@@ -4,7 +4,7 @@
 # Contributor: Chocobo1 <chocobo1 AT archlinux DOT net>
 
 pkgname=mac
-pkgver=10.18
+pkgver=10.24
 _pkgver="${pkgver//./}"
 pkgrel=1
 pkgdesc='APE codec and decompressor'
@@ -17,10 +17,10 @@ source=(
   "$pkgname-$pkgver.zip::https://monkeysaudio.com/files/MAC_${_pkgver}_SDK.zip"
   "$pkgname-$pkgver-license.html::https://www.monkeysaudio.com/license.html"
 )
-sha512sums=('c0307ed3db0871156589b3e2737066f01420e634493a931f14e3705ab83d55f37ddff44c9278fc19b31cec784bbfe5b9e15a1ad08ac06822279d32ae91489248'
-            '58a6bcd5ce84f7faa465f1ca039bd5f2d1b48db62ca2904a5855b292af53406d556794d429640d0548023721af75d40ce44a805c67bd8675c99c3080ae7223c9')
-b2sums=('621a60883d8c606356c8caface69529aedb099e52bd48054f6e9145913fb3f15b98a49e9bcb26bd11cbc59725613dd0567c2f61a89cc0b96da0bc3bb73363097'
-        'b3092b2b22eb5e5652a81cc0c7ac176dc2849acdfd7cf447b0c0340aa34d9043d4d213b72f19e1432869f06095ac3fb2fa22f6302eae0915b0c136df27d9dcdf')
+sha512sums=('e6e88d14b2bc2b33425fc653e1771709f3cddfbed5441090eab32009365e8770aef52e0a4229ca189180d59b928f4f899302fde9f9b8ac7bfbc5fb15533b26c4'
+            '8c6752b9750971eb7bfdd76f5ad4c150b7cccd38d53d6877fd8196c5eefde9ac867634bc89f11c29d00196d7afb5a595bf8ee7a4475d53dc3de366ff405c1bf7')
+b2sums=('4b22b29cbdaa8d715d985231feafdc4c5a3e85e623b2954bcdfaa3cc868502be8c6aa809264bc3b9d3b096bfa2b34fe22724ec5a072c3c93242834790d08aea7'
+        'ab7f85fa3ade15d4f872ce2443fda1a62ebb0549a7d3041db1fe62ae42ce4645ae4788a79f1b97f8643ec66323a33eaaebe612e3a4ad6bc73fd32f16ad11b9cf')
 
 build() {
   cmake \

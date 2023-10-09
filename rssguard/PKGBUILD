@@ -1,21 +1,26 @@
-# Maintainer: Balló György <ballogyor+arch at gmail dot com>
+# Maintainer: Antonio Rojas <arojas@archlinux.org>
+# Contributor: Balló György <ballogyor+arch at gmail dot com>
 # Contributor: WorMzy Tykashi <wormzy.tykashi@gmail.com>
 # Contributor: Alois Nespor <info@aloisnespor.info>
 # Contributor: speps <speps dot aur dot archlinux dot org>
 
 pkgbase=rssguard
 pkgname=(rssguard{,-lite})
-pkgver=4.5.0
+pkgver=4.5.1
 pkgrel=1
 pkgdesc='Simple (yet powerful) Qt feed reader'
-arch=('loong64' 'x86_64')
+arch=(loong64 x86_64)
 url='https://github.com/martinrotter/rssguard'
-license=('GPL3')
-makedepends=('cmake' 'qt6-tools' 'qt6-multimedia' 'qt6-webengine' 'qt6-5compat')
+license=(GPL3)
+makedepends=(cmake
+             qt6-5compat
+             qt6-multimedia
+             qt6-tools
+             qt6-webengine)
 optdepends=('clang: Support for beautification of message filter scripts'
             'mariadb-libs: Support for MariaDB-based data storage')
-source=("https://github.com/martinrotter/$pkgbase/archive/$pkgver/$pkgbase-$pkgver.tar.gz")
-sha256sums=('0a5bf5858577cfc741164f072e4f06125ece83db505af77eb05ed9faa81ac7f2')
+source=(https://github.com/martinrotter/$pkgbase/archive/$pkgver/$pkgbase-$pkgver.tar.gz)
+sha256sums=('4598f564c3058979472d1e4756ddd35386eb046645871d142c567b949640dcfa')
 
 build() {
   cmake -B build -S $pkgname-$pkgver \
@@ -31,14 +36,27 @@ build() {
 }
 
 package_rssguard() {
-  depends=('qt6-webengine' 'qt6-multimedia' 'qt6-5compat')
+  depends=(gcc-libs
+           glibc
+           qt6-5compat
+           qt6-base
+           qt6-declarative
+           qt6-multimedia
+           qt6-webengine
+           sqlite)
 
   DESTDIR="$pkgdir" cmake --install build
 }
 
 package_rssguard-lite() {
   pkgdesc+=' without WebEngine support'
-  depends=('hicolor-icon-theme' 'qt6-declarative' 'qt6-multimedia' 'qt6-5compat')
+  depends=(gcc-libs
+           glibc
+           qt6-5compat
+           qt6-base
+           qt6-declarative
+           qt6-multimedia
+           sqlite)
   conflicts=(rssguard)
   provides=(rssguard=$pkgver)
   replaces=(rssguard-nowebengine)

@@ -1,35 +1,49 @@
 # Maintainer: David Runge <dvzrv@archlinux.org>
 
 pkgname=arch-release-promotion
-pkgver=0.2.2
-pkgrel=3
+pkgver=0.3.0
+pkgrel=1
 pkgdesc="Promote official releases with signatures and additional artifacts"
 arch=(any)
 url="https://gitlab.archlinux.org/archlinux/arch-release-promotion"
 license=(GPL3)
-depends=(python-dotenv python-email-validator python-gitlab python-orjson
-python-prometheus_client python-pydantic python-pyxdg python-toml
-python-torrentool)
-makedepends=(python-build python-installer python-poetry-core python-setuptools python-wheel)
+depends=(
+  python
+  python-dotenv
+  python-email-validator
+  python-gitlab
+  python-orjson
+  python-prometheus_client
+  python-pydantic
+  python-pydantic-settings
+  python-pyxdg
+  python-torrentool
+)
+makedepends=(
+  python-build
+  python-installer
+  python-pdm-backend
+)
 checkdepends=(python-pytest)
 backup=(etc/$pkgname/projects.toml)
-source=(https://files.pythonhosted.org/packages/source/${pkgname::1}/$pkgname/$pkgname-$pkgver.tar.gz)
-sha256sums=('cfcc473d0805239ed76a8a90d489316af2d64717275827c1cc7b651c4ddfa718')
-b2sums=('2a03da131001897ea8cbed6c0075e3f2e01d40a70e9a4760c4fa65f285b872da8e2b417a7f3f906ca6fab5f220db6a6b6fd6c901b6392763580d5ac32a560ae9')
+source=(https://gitlab.archlinux.org/archlinux/$pkgname/-/archive/$pkgver/$pkgname-$pkgver.tar.gz)
+sha256sums=('139d4cfbee5cc7f15909cff1537a734d785eabb10605ebfc4756f0f390f800a9')
+b2sums=('e41c81eaae36c1506a08fdea6a2fcb343c45b1f6ae190ccf71fe66f2dab2adcab78be2c44263c5e8efa1d349bc18ddf1691f8fc2d097f0d074ee434d7502cc07')
 
 build() {
+  export PDM_BUILD_SCM_VERSION=$pkgver
   cd $pkgname-$pkgver
-  python -m build --wheel --no-isolation
+  make build
 }
 
 check() {
   cd $pkgname-$pkgver
-  pytest -vv
+  make test
 }
 
 package() {
   cd $pkgname-$pkgver
-  python -m installer --destdir="$pkgdir" dist/*.whl
+  DESTDIR="$pkgdir" make install
   install -vDm 644 {examples/example.toml,README.rst} -t "$pkgdir/usr/share/doc/$pkgname/"
   install -vDm 644 examples/projects.toml -t "$pkgdir/etc/$pkgname/"
   install -vDm 644 examples/systemd/*.{service,timer} -t "$pkgdir/usr/lib/systemd/system/"

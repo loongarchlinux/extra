@@ -5,7 +5,7 @@ pkgbase=nix
 pkgname=('nix' 'nix-docs')
 pkgver=2.17.0
 _commit='a212300a1d9f9c7b0daf19c00c87fc50480f54f4'
-pkgrel=3
+pkgrel=4
 pkgdesc='A purely functional package manager'
 arch=('loong64' 'x86_64')
 url='https://nixos.org/nix'
@@ -64,6 +64,16 @@ prepare() {
   cd "$pkgbase"
 
   sed -i "s:\$(bindir):src/nix:g" doc/manual/local.mk
+
+  # 1
+  # https://github.com/NixOS/nix/issues/8737
+  # https://github.com/NixOS/nix/pull/8936
+  # 2
+  # https://github.com/NixOS/nix/issues/8824
+  # https://github.com/NixOS/nix/pull/8825
+  git cherry-pick --no-commit \
+    d0dd37b2a6d2fb6f9f906bdad52f76323d0606fb \
+    b74962c92b2d8d9b957934e0aefcf4983169ae1e
 }
 
 build() {
@@ -84,12 +94,11 @@ build() {
   make
 }
 
-# https://github.com/NixOS/nix/issues/8737
-#check() {
-#  cd "$pkgbase"
-#
-#  make check
-#}
+check() {
+  cd "$pkgbase"
+
+  make check
+}
 
 package_nix() {
   depends=(
@@ -114,14 +123,6 @@ package_nix() {
   backup=("etc/$pkgname/$pkgname.conf")
   install="$pkgname.install"
 
-  # systemd integration
-  install -vDm644 tmpfiles.conf "$pkgdir/usr/lib/tmpfiles.d/$pkgname-daemon.conf"
-  install -vDm644 sysusers.conf "$pkgdir/usr/lib/sysusers.d/$pkgname-daemon.conf"
-  install -vDm644 user.tmpfiles.conf "$pkgdir/usr/share/user-tmpfiles.d/$pkgname-daemon.conf"
-
-  # configuration
-  install -vDm644 nix.conf -t "$pkgdir/etc/$pkgname"
-
   # package
   cd "$pkgbase"
   make DESTDIR="$pkgdir" install
@@ -131,6 +132,14 @@ package_nix() {
     "$pkgdir/etc/init" \
     "$pkgdir/etc/profile.d/nix.sh" \
     "$pkgdir/etc/profile.d/nix.fish"
+
+  # systemd integration - FS#79747
+  install -vDm644 "$srcdir/tmpfiles.conf" "$pkgdir/usr/lib/tmpfiles.d/$pkgname-daemon.conf"
+  install -vDm644 "$srcdir/sysusers.conf" "$pkgdir/usr/lib/sysusers.d/$pkgname-daemon.conf"
+  install -vDm644 "$srcdir/user.tmpfiles.conf" "$pkgdir/usr/share/user-tmpfiles.d/$pkgname-daemon.conf"
+
+  # configuration
+  install -vDm644 "$srcdir/nix.conf" -t "$pkgdir/etc/$pkgname"
 
   # move docs out for nix-docs split-package
   mv "$pkgdir/usr/share/doc" nix-docs

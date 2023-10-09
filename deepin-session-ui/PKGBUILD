@@ -3,40 +3,35 @@
 # Contributor: Xu Fasheng <fasheng.xu[AT]gmail.com>
 
 pkgname=deepin-session-ui
-pkgver=5.6.2
-pkgrel=4
+pkgver=6.0.10
+pkgrel=2
 pkgdesc='Deepin desktop-environment - Session UI module'
 arch=('loong64' 'x86_64')
 url="https://github.com/linuxdeepin/dde-session-ui"
 license=('GPL3')
 groups=('deepin')
-depends=('gsettings-qt' 'deepin-qt5integration' 'qt5-svg' 'deepin-daemon'
-         'deepin-control-center' 'deepin-wallpapers' 'deepin-qt-dbus-factory' 'dtkcore'
-         'dtkgui' 'dtkwidget' 'glib2' 'libxext' 'qt5-base' 'qt5-x11extras' 'systemd-libs'
-         'libxcb' 'xcb-util-wm' 'dconf' 'gcc-libs')
-makedepends=('cmake' 'deepin-gettext-tools' 'gtest' 'ninja')
-source=("https://github.com/linuxdeepin/dde-session-ui/archive/$pkgver/$pkgname-$pkgver.tar.gz")
-sha512sums=('70944d3b0ac17ccbcc3c3d779f89fb26e6bc6b26bcc28696449dcdccaa823c2c07fc630de00ac1af71030617b91accaadf47b90b8373ad17d1fe8b9db104ca61')
+# deepin-daemon: org.deepin.dde.daemon.*
+depends=('gsettings-qt' 'deepin-daemon' 'deepin-wallpapers' 'deepin-pw-check' 'dtkcore' 'dtkgui'
+         'dtkwidget' 'glib2' 'libxext' 'qt5-base' 'qt5-x11extras' 'systemd-libs' 'xcb-util-wm'
+         'libxcrypt' 'glibc' 'gcc-libs' 'hicolor-icon-theme')
+makedepends=('cmake' 'deepin-gettext-tools' 'qt5-tools' 'gtest' 'ninja')
+source=("https://github.com/linuxdeepin/dde-session-ui/archive/$pkgver/$pkgname-$pkgver.tar.gz"
+        $pkgname-ldflags.patch::https://github.com/linuxdeepin/dde-session-ui/pull/340.patch)
+sha512sums=('8bbe71ac8c16d05aa19175d4e525a4464192b02d771055587a881492ba564584e37cc4a2d08df95a37ee923d6bcfecad576466e554c3a76b9697f74466eacf46'
+            'd9c0be00cd7ea91b75364e908f9a6c57bbca9ed5a536ad5116ecaccf2e8a23fe81e09f9ab62ffc89b84ab1aa8ae710484d4d8744c495010674124e237453e154')
 
 prepare() {
-  mkdir -p build
-
   cd dde-session-ui-$pkgver
-  sed -i 's|/usr/share/backgrounds/default_background.jpg|/usr/share/backgrounds/deepin/desktop.jpg|' widgets/*.cpp
+  patch -Np1 -i ../$pkgname-ldflags.patch
 }
 
 build() {
-  cd build
-  cmake -GNinja -DCMAKE_INSTALL_PREFIX=/usr ../dde-session-ui-$pkgver
+  cd dde-session-ui-$pkgver
+  cmake -GNinja -DCMAKE_INSTALL_PREFIX=/usr .
   ninja
 }
 
-check() {
-  cd build
-  # ninja test
-}
-
 package() {
-  cd build
+  cd dde-session-ui-$pkgver
   DESTDIR="$pkgdir" ninja install
 }

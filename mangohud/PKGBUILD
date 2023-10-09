@@ -4,27 +4,23 @@
 # Contributor: Mark Wagie <mark dot wagie at proton dot me>
 _pkgname=MangoHud
 pkgname=mangohud
-_pkgver=0.6.9-1
+_pkgver=0.7.0
 _tarpkgver="${_pkgver%-*}"
 pkgver=${_pkgver//-/.}
-pkgrel=10
+pkgrel=1
 pkgdesc="A Vulkan overlay layer for monitoring FPS, temperatures, CPU/GPU load and more."
 arch=('loong64' 'x86_64')
 url="https://github.com/flightlessmango/MangoHud"
 license=('MIT')
-makedepends=('appstream' 'cmocka' 'glfw-x11' 'glslang' 'libxnvctrl' 'meson' 'nlohmann-json' 'python-mako')
-depends=('dbus' 'fmt' 'gcc-libs' 'glew' 'hicolor-icon-theme' 'libglvnd' 'libx11' 'spdlog' 'vulkan-icd-loader')
+makedepends=('appstream' 'cmocka' 'git' 'glfw-x11' 'glslang' 'libxnvctrl' 'meson' 'nlohmann-json' 'python-mako')
+depends=('dbus' 'fmt' 'gcc-libs' 'glew' 'hicolor-icon-theme' 'libglvnd' 'libx11' 'python' 'python-matplotlib' 'python-numpy' 'spdlog' 'vulkan-icd-loader')
 optdepends=('libxnvctrl: NVIDIA GPU stats by XNVCtrl'
             'glfw-x11: Required for MangoApp'
             'gamescope: Use MangoApp as an overlay within gamescope')
 replaces=("$pkgname-common" "$pkgname-common-wayland" "$pkgname-common-x11" "mangoapp" "$pkgname-x11" "$pkgname-wayland")
 conflicts=("$pkgname-common" "$pkgname-common-wayland" "$pkgname-common-x11" "mangoapp" "$pkgname-x11" "$pkgname-wayland")
-source=("$pkgname-$pkgver.tar.xz::https://github.com/flightlessmango/MangoHud/releases/download/v$_pkgver/$_pkgname-v$_pkgver-Source.tar.xz"
-        "3f8f036ee8773ae1af23dd0848b6ab487b5ac7de-reversed.patch"
-        https://github.com/flightlessmango/MangoHud/commit/5754ca13ee2cdf19a76b4fc79dd914a58d6371f5.patch)
-sha256sums=('30d9336b60cbc7fdc2a1ba86ec62b9fb7f2986a2b0f6196ca347f5c13e583c6d'
-            '244ef8fffb27042d521993f9e9894f852d3061a980345e5c8c6a3f148dd26707'
-            '8ce4dbd1b5d0d8d798c9c9704c10c887252d8c5ffc579a1fd875804638d465ec')
+source=("$pkgname-$pkgver.tar.xz::https://github.com/flightlessmango/MangoHud/releases/download/v$_pkgver/$_pkgname-v$_pkgver-Source.tar.xz")
+b2sums=('469784266ec4b8805bc5e01aa0db8c7d9b1ef1779c087b3e4817e54ae65a8440418be4ef0730859cfa04807f712734cdc2a15fbe7085c7a22f76218429b5cd70')
 
 prepare() {
     cd "$_pkgname-v$_tarpkgver"
@@ -32,11 +28,6 @@ prepare() {
     # Use system cmocka instead of subproject
     sed -i "s/  cmocka = subproject('cmocka')//g" meson.build
     sed -i "s/cmocka_dep = cmocka.get_variable('cmocka_dep')/cmocka_dep = dependency('cmocka')/g" meson.build
-
-    # Fix build with GCC 13
-    patch --forward --reverse --strip=1 --input="$srcdir/3f8f036ee8773ae1af23dd0848b6ab487b5ac7de-reversed.patch"
-    # bakcport https://github.com/flightlessmango/MangoHud/commit/5754ca13ee2cdf19a76b4fc79dd914a58d6371f5
-    patch -Np1 -i "$srcdir/5754ca13ee2cdf19a76b4fc79dd914a58d6371f5.patch"
 }
 
 build() {

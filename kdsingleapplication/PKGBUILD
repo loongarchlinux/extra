@@ -1,0 +1,29 @@
+# Maintainer: Antonio Rojas <arojas@archlinux.org>
+
+pkgname=kdsingleapplication
+pkgver=1.0.0
+pkgrel=1
+pkgdesc="KDAB's helper class for single-instance policy applications"
+arch=(loong64 x86_64)
+url='https://github.com/KDAB/KDSingleApplication'
+license=(MIT)
+depends=(gcc-libs
+         glibc
+         qt6-base)
+makedepends=(cmake)
+source=(https://github.com/KDAB/KDSingleApplication/releases/download/v$pkgver/$pkgname-$pkgver.tar.gz{,.asc})
+sha256sums=('c92355dc10f3ebd39363458458fb5bdd9662e080cf77d91f0437763c4d936520'
+            'SKIP')
+validpgpkeys=(E86C000370B1B9E2A9191AD53DBFB6882C9358FB) # KDAB Products (user for KDAB products) <info@kdab.com>
+
+build() {
+  cmake -B build -S $pkgname-$pkgver \
+    -DCMAKE_INSTALL_PREFIX=/usr \
+    -DKDSingleApplication_QT6=ON
+  cmake --build build
+}
+
+package() {
+  DESTDIR="$pkgdir" cmake --install build
+  install -Dm644 $pkgname-$pkgver/LICENSE.txt -t "$pkgdir"/usr/share/licenses/$pkgname
+}

@@ -6,7 +6,7 @@
 
 pkgname=python-sphinx
 _name=${pkgname#python-}
-pkgver=7.2.5
+pkgver=7.2.6
 pkgrel=1
 pkgdesc='Python documentation generator'
 arch=('any')
@@ -24,7 +24,7 @@ depends=(
   'python-sphinx-alabaster-theme'
   'python-sphinxcontrib-'{{apple,dev,html}help,jsmath,qthelp,serializinghtml}
 )
-makedepends=('python-build' 'python-flit-core' 'python-installer')
+makedepends=('git' 'python-build' 'python-flit-core' 'python-installer')
 checkdepends=(
   'cython'
   'imagemagick' 'librsvg'
@@ -38,11 +38,11 @@ optdepends=(
   'imagemagick: for ext.imgconverter'
   'texlive-latexextra: for generation of PDF documentation'
 )
-source=("https://github.com/$_name-doc/$_name/archive/v$pkgver/$_name-$pkgver.tar.gz")
-b2sums=('27e0c7f8916e36990e214f4c5013434ff0e1e0045513efdf4b16eb56f0865d4cb52db802a41e7f62cc18aae58457d03be6720c129854cc63f35a7537b361ba2d')
+source=("git+https://github.com/$_name-doc/$_name.git#tag=v$pkgver")
+b2sums=('SKIP')
 
 build() {
-  cd "$_name"-$pkgver
+  cd "$_name"
   python -m build --wheel --skip-dependency-check --no-isolation
 
   mkdir -p tempinstall
@@ -51,12 +51,12 @@ build() {
 }
 
 check() {
-  cd "$_name"-$pkgver
+  cd "$_name"
   LC_ALL="en_US.UTF-8" python -X dev -X warn_default_encoding -m pytest -v
 }
 
 package() {
-  cd "$_name"-$pkgver
+  cd "$_name"
   python -m installer --destdir="$pkgdir" dist/*.whl
   install -Dt "$pkgdir"/usr/share/man/man1 doc/_build/man/"$_name"-*.1
 

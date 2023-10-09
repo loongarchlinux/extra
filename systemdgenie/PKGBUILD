@@ -2,30 +2,32 @@
 
 pkgname=systemdgenie
 pkgver=0.99.0
-pkgrel=4
-pkgdesc="Systemd management utility"
+pkgrel=6
+pkgdesc='Systemd management utility'
 arch=(loong64 x86_64)
-url='https://cgit.kde.org/systemdgenie.git/'
+url='https://invent.kde.org/system/systemdgenie'
 license=(GPL)
-depends=(kxmlgui)
+depends=(gcc-libs
+         glibc
+         kauth5
+         kconfigwidgets5
+         kcoreaddons5
+         kcrash5
+         ki18n5
+         kwidgetsaddons5
+         kxmlgui5
+         qt5-base
+         systemd)
 makedepends=(extra-cmake-modules)
-source=("https://download.kde.org/unstable/$pkgname/$pkgname-$pkgver.tar.xz")
+source=(https://download.kde.org/unstable/$pkgname/$pkgname-$pkgver.tar.xz)
 sha256sums=('22ebd9d6da7f03399603e21e3e21d69cbe87ec49695d12a15e9dda6b23703f25')
 
-prepare() {
-  mkdir -p build
-}
-
 build() {
-  cd build
-  cmake ../$pkgname-$pkgver \
-   -DCMAKE_INSTALL_PREFIX=/usr \
-   -DCMAKE_INSTALL_LIBDIR=lib \
+  cmake -B build -S $pkgname-$pkgver \
    -DBUILD_TESTING=OFF
-  make
+  cmake --build build
 }
 
 package() {
-  cd build
-  make DESTDIR="$pkgdir" install
+  DESTDIR="$pkgdir" cmake --install build
 }

@@ -2,7 +2,7 @@
 
 _pkg=filesystem_spec
 pkgname=python-fsspec
-pkgver=2023.6.0
+pkgver=2023.9.2
 pkgrel=1
 pkgdesc="Specification that python filesystems should adhere to."
 arch=(any)
@@ -53,7 +53,7 @@ checkdepends=(git
     jupyter-notebook
 )
 source=(${url}/archive/${pkgver}/${pkgname}-${pkgver}.tar.gz)
-sha256sums=('1417926a9832d82f93c7446bfcae266eade3985bf9d3f8a31917315cbd94fb72')
+sha256sums=('ff662ab7cae5d762645e51f81ccc065655f81f6c33cdbcb2bb4a60787e5724f4')
 
 build() {
   cd ${_pkg}-${pkgver}

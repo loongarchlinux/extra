@@ -3,13 +3,13 @@
 # Contributor: Platon Pronko <platon7pronko@gmail.com>
 
 pkgname=python-lsp-server
-pkgver=1.7.4
-pkgrel=2
+pkgver=1.8.0
+pkgrel=1
 pkgdesc="Fork of the python-language-server project, maintained by the Spyder IDE team and the community"
 arch=(any)
 url="https://github.com/python-lsp/python-lsp-server"
 license=(MIT)
-depends=(python-jedi python-lsp-jsonrpc python-pluggy python-ujson python-setuptools python-websockets python-docstring-to-markdown python-importlib-metadata)
+depends=(python-jedi python-lsp-jsonrpc python-pluggy python-ujson python-setuptools python-websockets python-docstring-to-markdown)
 makedepends=(python-build python-installer python-setuptools-scm python-wheel)
 optdepends=(
     'python-mccabe: complexity checking'
@@ -42,14 +42,11 @@ checkdepends=(
     python-pyqt5
     python-appdirs
 )
-source=(https://files.pythonhosted.org/packages/source/${pkgname::1}/${pkgname}/${pkgname}-${pkgver}.tar.gz
-        https://github.com/python-lsp/python-lsp-server/commit/43104e98.patch)
-sha256sums=('c84254485a4d9431b24ecefd59741d21c00165611bcf6037bd7d54d0ed06a197'
-            '74994a6122dba591b7e95727ae3502c2c5864be65cf399d5ba2cf5e1b4e94ca7')
+source=(https://files.pythonhosted.org/packages/source/${pkgname::1}/${pkgname}/${pkgname}-${pkgver}.tar.gz)
+sha256sums=('807b0347cf83f02cbd9113a68624ac5dbf8b01854a3b11dd03c3bbbdff4e5d89')
 
 prepare() {
   cd ${pkgname}-${pkgver}
-  patch -p1 -i ../43104e98.patch # support pyflakes 3.1
   sed 's|jedi>=0.17.2,<0.19.0|jedi>=0.17.2,<0.20.0|' -i pyproject.toml
   sed 's|autopep8>=1.6.0,<1.7.0|autopep8>=1.6.0|' -i pyproject.toml
   sed 's|flake8>=6.1.0,<7|flake8>=6.1.0|' -i pyproject.toml

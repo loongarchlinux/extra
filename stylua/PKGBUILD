@@ -3,35 +3,35 @@
 
 _name=StyLua
 pkgname=stylua
-pkgver=0.18.1
+pkgver=0.18.2
 pkgrel=1
 pkgdesc='Code formatter for Lua'
 arch=('loong64' 'x86_64')
 url=https://github.com/JohnnyMorganz/StyLua
 license=('MPL2')
 depends=('gcc-libs')
-makedepends=('rust')
-source=("$url/archive/v$pkgver/$_name-$pkgver.tar.gz")
-b2sums=('fa36ccb61229239863b2af27858bc4ffb410e3a9aa6bd502b976fc35b9bae6483eb951f6155f3834dd8f3b63485b82fc3bfa91e46c4ac2d945fdd5126a2d36e6')
+makedepends=('git' 'rust')
+source=("git+$url.git#tag=v$pkgver")
+b2sums=('SKIP')
 
 prepare() {
-  cd $_name-$pkgver
+  cd $_name
   cargo fetch --locked --target "$CARCH-unknown-linux-gnu"
 }
 
 build() {
-  cd $_name-$pkgver
+  cd $_name
   cargo build --release --locked --offline --all-features
 }
 
 check() {
-  cd $_name-$pkgver
+  cd $_name
   cargo test --locked --offline
   cargo test --locked --offline --features luau
   cargo test --locked --offline --features lua52
 }
 
 package() {
-  cd $_name-$pkgver
+  cd $_name
   install -Dt "$pkgdir"/usr/bin target/release/$pkgname
 }

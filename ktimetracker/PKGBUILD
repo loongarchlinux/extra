@@ -2,30 +2,41 @@
 
 pkgname=ktimetracker
 pkgver=5.0.1
-pkgrel=1
+pkgrel=2
 pkgdesc='Todo management and time tracker'
 url='https://userbase.kde.org/KTimeTracker'
 license=(GPL2)
 arch=(loong64 x86_64)
-depends=(kio kcalendarcore kidletime hicolor-icon-theme)
-makedepends=(extra-cmake-modules kdoctools)
-source=("https://download.kde.org/stable/$pkgname/$pkgver/src/$pkgname-$pkgver.tar.xz"{,.sig})
+depends=(gcc-libs
+         glibc
+         kcalendarcore5
+         kconfig5
+         kconfigwidgets5
+         kcoreaddons5
+         kdbusaddons5
+         ki18n5
+         kidletime5
+         kio5
+         kjobwidgets5
+         knotifications5
+         ktextwidgets5
+         kwidgetsaddons5
+         kwindowsystem5
+         kxmlgui5
+         qt5-base)
+makedepends=(extra-cmake-modules
+             kdoctools5)
+source=(https://download.kde.org/stable/$pkgname/$pkgver/src/$pkgname-$pkgver.tar.xz{,.sig})
 sha256sums=('02e8620164357e594e135e20d8efd3987cc9c31a817c25e5555914e0971be64a'
             'SKIP')
 validpgpkeys=(D7A4AE3E9A5A18C98F36477DC7AF5D57818E49C3) # Alexander Potashev <aspotashev@gmail.com>
 
-prepare() {
-  mkdir -p build
-}
-
 build() {
-  cd build
-  cmake ../$pkgname-$pkgver \
+  cmake -B build -S $pkgname-$pkgver \
     -DBUILD_TESTING=OFF
-  make
+  cmake --build build
 }
 
 package() {
-  cd build
-  make DESTDIR="$pkgdir" install
+  DESTDIR="$pkgdir" cmake --install build
 }

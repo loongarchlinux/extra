@@ -1,0 +1,196 @@
+From 049d8f2e41fa73035903d62188b0fbe1b46dfa7c Mon Sep 17 00:00:00 2001
+From: "Daniel M. Capella" <polyzen@archlinux.org>
+Date: Mon, 11 Sep 2023 00:32:06 -0400
+Subject: [PATCH] Most basicest Pydantic V2 support
+
+---
+ pyproject.toml                        | 4 +---
+ scripts-dev/check_pydantic_models.py  | 4 ++--
+ synapse/config/_util.py               | 2 +-
+ synapse/config/workers.py             | 2 +-
+ synapse/events/validator.py           | 2 +-
+ synapse/http/servlet.py               | 4 ++--
+ synapse/rest/client/account.py        | 2 +-
+ synapse/rest/client/devices.py        | 2 +-
+ synapse/rest/client/directory.py      | 2 +-
+ synapse/rest/client/models.py         | 2 +-
+ synapse/rest/models.py                | 2 +-
+ synapse/storage/background_updates.py | 2 +-
+ tests/rest/client/test_models.py      | 2 +-
+ 13 files changed, 15 insertions(+), 17 deletions(-)
+
+diff --git a/pyproject.toml b/pyproject.toml
+index 0591e265c..8172a9057 100644
+--- a/pyproject.toml
++++ b/pyproject.toml
+@@ -203,9 +203,7 @@ ijson = ">=3.1.4"
+ matrix-common = "^1.3.0"
+ # We need packaging.requirements.Requirement, added in 16.1.
+ packaging = ">=16.1"
+-# This is the most recent version of Pydantic with available on common distros.
+-# We are currently incompatible with >=2.0.0: (https://github.com/matrix-org/synapse/issues/15858)
+-pydantic = "^1.7.4"
++pydantic = "^2.3.0"
+ 
+ # This is for building the rust components during "poetry install", which
+ # currently ignores the `build-system.requires` directive (c.f.
+diff --git a/scripts-dev/check_pydantic_models.py b/scripts-dev/check_pydantic_models.py
+index 9f2b7ded5..a6d1561c8 100755
+--- a/scripts-dev/check_pydantic_models.py
++++ b/scripts-dev/check_pydantic_models.py
+@@ -39,8 +39,8 @@ from contextlib import contextmanager
+ from typing import Any, Callable, Dict, Generator, List, Set, Type, TypeVar
+ 
+ from parameterized import parameterized
+-from pydantic import BaseModel as PydanticBaseModel, conbytes, confloat, conint, constr
+-from pydantic.typing import get_args
++from pydantic.v1 import BaseModel as PydanticBaseModel, conbytes, confloat, conint, constr
++from pydantic.v1.typing import get_args
+ from typing_extensions import ParamSpec
+ 
+ logger = logging.getLogger(__name__)
+diff --git a/synapse/config/_util.py b/synapse/config/_util.py
+index acccca413..7c651a46d 100644
+--- a/synapse/config/_util.py
++++ b/synapse/config/_util.py
+@@ -14,7 +14,7 @@
+ from typing import Any, Dict, Type, TypeVar
+ 
+ import jsonschema
+-from pydantic import BaseModel, ValidationError, parse_obj_as
++from pydantic.v1 import BaseModel, ValidationError, parse_obj_as
+ 
+ from synapse.config._base import ConfigError
+ from synapse.types import JsonDict, StrSequence
+diff --git a/synapse/config/workers.py b/synapse/config/workers.py
+index 6567fb6bb..888169202 100644
+--- a/synapse/config/workers.py
++++ b/synapse/config/workers.py
+@@ -18,7 +18,7 @@ import logging
+ from typing import Any, Dict, List, Optional, Union
+ 
+ import attr
+-from pydantic import BaseModel, Extra, StrictBool, StrictInt, StrictStr
++from pydantic.v1 import BaseModel, Extra, StrictBool, StrictInt, StrictStr
+ 
+ from synapse.config._base import (
+     Config,
+diff --git a/synapse/events/validator.py b/synapse/events/validator.py
+index 9278f1a1a..e9311b810 100644
+--- a/synapse/events/validator.py
++++ b/synapse/events/validator.py
+@@ -15,7 +15,7 @@ import collections.abc
+ from typing import Iterable, List, Type, Union, cast
+ 
+ import jsonschema
+-from pydantic import Field, StrictBool, StrictStr
++from pydantic.v1 import Field, StrictBool, StrictStr
+ 
+ from synapse.api.constants import (
+     MAX_ALIAS_LENGTH,
+diff --git a/synapse/http/servlet.py b/synapse/http/servlet.py
+index fc6279362..93e7ef900 100644
+--- a/synapse/http/servlet.py
++++ b/synapse/http/servlet.py
+@@ -29,8 +29,8 @@ from typing import (
+     overload,
+ )
+ 
+-from pydantic import BaseModel, MissingError, PydanticValueError, ValidationError
+-from pydantic.error_wrappers import ErrorWrapper
++from pydantic.v1 import BaseModel, MissingError, PydanticValueError, ValidationError
++from pydantic.v1.error_wrappers import ErrorWrapper
+ from typing_extensions import Literal
+ 
+ from twisted.web.server import Request
+diff --git a/synapse/rest/client/account.py b/synapse/rest/client/account.py
+index 679ab9f26..aa1be69ca 100644
+--- a/synapse/rest/client/account.py
++++ b/synapse/rest/client/account.py
+@@ -18,7 +18,7 @@ import random
+ from typing import TYPE_CHECKING, List, Optional, Tuple
+ from urllib.parse import urlparse
+ 
+-from pydantic import StrictBool, StrictStr, constr
++from pydantic.v1 import StrictBool, StrictStr, constr
+ from typing_extensions import Literal
+ 
+ from twisted.web.server import Request
+diff --git a/synapse/rest/client/devices.py b/synapse/rest/client/devices.py
+index 925f03774..cf9256705 100644
+--- a/synapse/rest/client/devices.py
++++ b/synapse/rest/client/devices.py
+@@ -17,7 +17,7 @@ import logging
+ from http import HTTPStatus
+ from typing import TYPE_CHECKING, List, Optional, Tuple
+ 
+-from pydantic import Extra, StrictStr
++from pydantic.v1 import Extra, StrictStr
+ 
+ from synapse.api import errors
+ from synapse.api.errors import NotFoundError, SynapseError, UnrecognizedRequestError
+diff --git a/synapse/rest/client/directory.py b/synapse/rest/client/directory.py
+index 570bb5274..c7cd59745 100644
+--- a/synapse/rest/client/directory.py
++++ b/synapse/rest/client/directory.py
+@@ -15,7 +15,7 @@
+ import logging
+ from typing import TYPE_CHECKING, List, Optional, Tuple
+ 
+-from pydantic import StrictStr
++from pydantic.v1 import StrictStr
+ from typing_extensions import Literal
+ 
+ from twisted.web.server import Request
+diff --git a/synapse/rest/client/models.py b/synapse/rest/client/models.py
+index 3d7940b0f..23185c4bd 100644
+--- a/synapse/rest/client/models.py
++++ b/synapse/rest/client/models.py
+@@ -13,7 +13,7 @@
+ # limitations under the License.
+ from typing import TYPE_CHECKING, Dict, Optional
+ 
+-from pydantic import Extra, StrictInt, StrictStr, constr, validator
++from pydantic.v1 import Extra, StrictInt, StrictStr, constr, validator
+ 
+ from synapse.rest.models import RequestBodyModel
+ from synapse.util.threepids import validate_email
+diff --git a/synapse/rest/models.py b/synapse/rest/models.py
+index ac39cda8e..25d5d1cb3 100644
+--- a/synapse/rest/models.py
++++ b/synapse/rest/models.py
+@@ -1,4 +1,4 @@
+-from pydantic import BaseModel, Extra
++from pydantic.v1 import BaseModel, Extra
+ 
+ 
+ class RequestBodyModel(BaseModel):
+diff --git a/synapse/storage/background_updates.py b/synapse/storage/background_updates.py
+index ddca0af1d..7a591597c 100644
+--- a/synapse/storage/background_updates.py
++++ b/synapse/storage/background_updates.py
+@@ -31,7 +31,7 @@ from typing import (
+ )
+ 
+ import attr
+-from pydantic import BaseModel
++from pydantic.v1 import BaseModel
+ 
+ from synapse.metrics.background_process_metrics import run_as_background_process
+ from synapse.storage.engines import PostgresEngine
+diff --git a/tests/rest/client/test_models.py b/tests/rest/client/test_models.py
+index 0b8fcb0c4..d45a2b743 100644
+--- a/tests/rest/client/test_models.py
++++ b/tests/rest/client/test_models.py
+@@ -13,7 +13,7 @@
+ # limitations under the License.
+ import unittest as stdlib_unittest
+ 
+-from pydantic import BaseModel, ValidationError
++from pydantic.v1 import BaseModel, ValidationError
+ from typing_extensions import Literal
+ 
+ from synapse.rest.client.models import EmailRequestTokenBody
+-- 
+2.42.0
+

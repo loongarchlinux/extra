@@ -1,20 +1,39 @@
 # Maintainer: Jan Alexander Steffens (heftig) <heftig@archlinux.org>
- 
+
 pkgbase=libportal
-pkgname=(libportal libportal-{gtk3,gtk4,qt5,docs})
-pkgver=0.6
+pkgname=(
+  libportal
+  libportal-gtk3
+  libportal-gtk4
+  libportal-qt5
+  libportal-docs
+)
+pkgver=0.7.1
 pkgrel=1
 pkgdesc="GIO-style async APIs for most Flatpak portals"
 url="https://github.com/flatpak/libportal"
 arch=(loong64 x86_64)
 license=(LGPL3)
-makedepends=(git meson gi-docgen vala gobject-introspection gtk3 gtk4 qt5-base
-             qt5-x11extras gjs)
-checkdepends=(xorg-server-xvfb)
-options=(debug)
-_commit=13df0b887a7eb7b0f9b14069561a41f62e813155  # tags/0.6
+makedepends=(
+  gi-docgen
+  git
+  gjs
+  gobject-introspection
+  gtk3
+  gtk4
+  meson
+  qt5-base
+  qt5-x11extras
+  vala
+)
+checkdepends=(
+  python-dbusmock
+  python-pytest
+  xorg-server-xvfb
+)
+_commit=e9ed3a50cdde321eaf42361212480a66eb94a57a  # tags/0.7.1^0
 source=("git+https://github.com/flatpak/libportal#commit=$_commit")
-sha256sums=('SKIP')
+b2sums=('SKIP')
 
 pkgver() {
   cd libportal
@@ -71,7 +90,10 @@ package_libportal() {
 
 package_libportal-gtk3() {
   pkgdesc+=" - GTK 3 backend"
-  depends=(libportal lib{gdk,gtk}-3.so)
+  depends=(
+    libg{d,t}k-3.so
+    libportal
+  )
   provides=(libportal-gtk3.so)
 
   mv gtk3/* "$pkgdir"
@@ -79,7 +101,10 @@ package_libportal-gtk3() {
 
 package_libportal-gtk4() {
   pkgdesc+=" - GTK 4 backend"
-  depends=(libportal libgtk-4.so)
+  depends=(
+    libgtk-4.so
+    libportal
+  )
   provides=(libportal-gtk4.so)
 
   mv gtk4/* "$pkgdir"
@@ -87,7 +112,11 @@ package_libportal-gtk4() {
 
 package_libportal-qt5() {
   pkgdesc+=" - Qt 5 backend"
-  depends=(libportal qt5-base qt5-x11extras)
+  depends=(
+    libportal
+    qt5-base
+    qt5-x11extras
+  )
   provides=(libportal-qt5.so)
 
   mv qt5/* "$pkgdir"
@@ -99,4 +128,4 @@ package_libportal-docs() {
   mv docs/* "$pkgdir"
 }
 
-# vim:set sw=2 et:
+# vim:set sw=2 sts=-1 et:

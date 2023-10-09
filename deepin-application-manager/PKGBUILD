@@ -1,0 +1,34 @@
+# Maintainer: Felix Yan <felixonmars@archlinux.org>
+
+pkgname=deepin-application-manager
+pkgver=1.0.19
+pkgrel=2
+pkgdesc='App manager of Deepin Desktop Environment'
+arch=('loong64' 'x86_64')
+url="https://github.com/linuxdeepin/dde-application-manager"
+license=('GPL3')
+# startdde: org.deepin.dde.XSettings1
+depends=('qt5-base' 'dtkcore' 'dtkwidget' 'xcb-util-wm' 'glibc' 'libxcb' 'libxres' 'gcc-libs'
+         'libx11' 'glib2' 'gsettings-qt' 'startdde')
+makedepends=('cmake' 'ninja')
+groups=('deepin')
+source=("https://github.com/linuxdeepin/dde-application-manager/archive/$pkgver/$pkgname-$pkgver.tar.gz"
+        $pkgname-fix-crash-on-desktop-file-empty-line.patch::https://github.com/linuxdeepin/dde-application-manager/pull/117.patch)
+sha512sums=('f898d9d7a9c461b097da020ef9a4083bb735108327e3b2d79682d8a052b9532e9a6dc2530c62506a7ac45c8281ec9f3904a31f6849ac0e541a43b0fec825aad9'
+            '6dd973156022635a53adbf04c2b20e9b4635b7d83b046c49e733df4a19335c51f4c6c0af8731ad38f7f7f36f0fee2455a454fc42c59f4afedb3d5bf784f4b2a7')
+
+prepare() {
+  cd dde-application-manager-$pkgver
+  patch -p1 -i ../$pkgname-fix-crash-on-desktop-file-empty-line.patch
+}
+
+build() {
+  cd dde-application-manager-$pkgver
+  cmake . -GNinja -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_INSTALL_SYSCONFDIR=/etc
+  ninja
+}
+
+package() {
+  cd dde-application-manager-$pkgver
+  DESTDIR="$pkgdir" ninja install
+}

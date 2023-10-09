@@ -1,0 +1,79 @@
+# Maintainer: Alexander Epaneshnikov <alex19ep@archlinux.org>
+# Contributor: Moses Narrow <moe_narrow@use.startmail.com>
+# Contributor: Felix Golatofski <contact@xdfr.de>
+# Contributor: MarkWalters.pw <archlinux@markwalters.pw>
+# Contributor: Mark Weiman <mark.weiman@markzz.com>
+# Contributor: Johannes Dewender  arch at JonnyJD dot net
+# Contributor: Tony Lambiris <tony@critialstack.com>
+
+pkgbase=apt
+pkgname=('apt' 'apt-docs')
+_commit=461a344b7a63d7398fe0191cbb555122bc265cee # git rev-parse v${pkgver}
+pkgver=2.7.5
+pkgrel=5
+pkgdesc='Command-line package manager used on Debian-based systems'
+arch=('loong64' 'x86_64')
+url='https://salsa.debian.org/apt-team/apt'
+license=(
+  'BSD-3-Clause'
+  'GPL-2.0-only'
+  'GPL-2.0-or-later'
+  'MIT'
+)
+makedepends=('cmake' 'docbook-xsl' 'doxygen' 'git' 'gtest' 'w3m' 'triehash'
+             'po4a' 'xxhash' 'gnupg' 'db'  'perl-text-wrapi18n' 'perl-locale-gettext'
+             'perl-yaml-tiny' 'perl-syntax-keyword-try' 'dpkg' 'git' 'gnutls'
+             'perl-term-readkey' 'perl-sgmls' 'perl-module-build'
+             'perl-unicode-linebreak' 'perl-pod-parser')
+options=('emptydirs')
+source=("git+https://salsa.debian.org/apt-team/apt.git?signed#tag=${_commit}"
+        "apt-sysusers.conf"
+        "apt-tmpfiles.conf")
+sha256sums=('SKIP'
+            'f4528114112f05ce7e78d5b64e77d20053a6ce29a59588345985be7335cf63d6'
+            '424ca4feab152d7f5ce73a2ddd29bcd3e482cfe1c96cffb969d7542d19da0455')
+validpgpkeys=('AEE1C8AAAAF0B7684019C546021B361B6B031B00') # Julian Andres Klode <jak@debian.org>
+
+build() {
+  # docbook xsl is stored with the version on Arch
+  local docbook_xsl_version="$(pacman -Qi docbook-xsl | sed -n 's/^Version.*: \(.*\)-.*$/\1/p')"
+
+  cmake -B build -S apt \
+    -DCMAKE_BUILD_TYPE='None' \
+    -DCMAKE_INSTALL_PREFIX='/usr' \
+    -DCMAKE_INSTALL_LIBDIR='lib' \
+    -DCMAKE_INSTALL_LIBEXECDIR='lib' \
+    -Wno-dev \
+    -DDOCBOOK_XSL="/usr/share/xml/docbook/xsl-stylesheets-$docbook_xsl_version-nons/"
+
+  make -C build all
+}
+
+package_apt() {
+  depends=('systemd-libs' 'libseccomp' 'perl' 'xxhash' 'dpkg' 'gnutls' 'bzip2'
+           'xz' 'gcc-libs' 'lz4' 'bash' 'zlib' 'zstd' 'db' 'libgcrypt' 'glibc')
+  pkgdesc='Command-line package manager used on Debian-based systems'
+  install=apt.install
+  backup=("etc/apt/apt.conf"
+          "etc/apt/sources.list")
+
+  make -C build DESTDIR="${pkgdir}" install
+  rm -rf "${pkgdir}/usr/share/doc"
+  find "${pkgdir}/usr/share/man" -type d -empty -delete
+  mkdir -pvm 755 "${pkgdir}"/var/log/apt
+  install -Dvpm 644 apt/doc/examples/apt.conf "${pkgdir}"/etc/apt/
+  touch "${pkgdir}"/etc/apt/sources.list
+  install -vDm 644 apt-sysusers.conf "${pkgdir}/usr/lib/sysusers.d/apt.conf"
+  install -vDm 644 apt-tmpfiles.conf "${pkgdir}"/usr/lib/tmpfiles.d/apt.conf
+  install -vDm 644 apt/COPYING -t "${pkgdir}/usr/share/licenses/${pkgname}/"
+}
+
+package_apt-docs() {
+  pkgdesc='Documentation for apt'
+  make -C build DESTDIR="${pkgdir}" install
+  rm -rf "${pkgdir}"/etc \
+         "${pkgdir}"/var \
+         "${pkgdir}"/usr/{bin,include,lib} \
+         "${pkgdir}"/usr/share/{bash-completion,locale,man}
+  install -vDm 644 apt/COPYING -t "${pkgdir}/usr/share/licenses/${pkgname}/"
+}

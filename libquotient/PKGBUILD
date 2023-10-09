@@ -3,7 +3,7 @@
 # Contributor Sefa Eyeoglu <contact@scrumplex.net>
 
 pkgname=libquotient
-pkgver=0.8.1.1
+pkgver=0.8.1.2
 pkgrel=1
 pkgdesc='A Qt library to write cross-platform clients for Matrix'
 license=(LGPL)
@@ -12,7 +12,7 @@ url='https://matrix.org/docs/projects/sdk/quotient'
 depends=(qt5-multimedia qtkeychain-qt5 libolm)
 makedepends=(cmake)
 source=(https://github.com/quotient-im/libQuotient/archive/$pkgver/$pkgname-$pkgver.tar.gz)
-sha256sums=('d1ab944a4b42f68d2d2ebfb2782a3e92eac2b7e056c7f72af2ba3b3ddf2fd735')
+sha256sums=('5e5539fe9616c9f63985b0aabfab1858f1626e3d71a14709eeedd85af0471c7c')
 
 build() {
   cmake -B build -S libQuotient-$pkgver \

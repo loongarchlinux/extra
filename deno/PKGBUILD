@@ -2,21 +2,26 @@
 # Contributor: Metal A-wing <1 at 233 dot email>
 
 pkgname=deno
-pkgver=1.36.4
-_commit=c0617d11f6391f1b1b3afffe0152c73b5989ab80
+pkgver=1.37.1
+_commit=72c276d61a8b43abd3dbcf4f1440a2bf133fe0d2
 pkgrel=1
 pkgdesc="A secure runtime for JavaScript and TypeScript"
 arch=('loong64' 'x86_64')
 url="https://deno.land"
 license=('MIT')
 options=('!lto')
-depends=('gcc-libs' 'protobuf')
-makedepends=('git' 'python' 'rust' 'nodejs' 'cmake')
+depends=('gcc-libs')
+makedepends=('git' 'python' 'rust' 'nodejs' 'cmake' 'protobuf')
 source=("git+https://github.com/denoland/deno.git#commit=$_commit")
 sha512sums=('SKIP')
 
 build() {
   cd $pkgname
+
+  # this uses malloc_usable_size, which is incompatible with fortification level 3
+  export CFLAGS="${CFLAGS/_FORTIFY_SOURCE=3/_FORTIFY_SOURCE=2}"
+  export CXXFLAGS="${CXXFLAGS/_FORTIFY_SOURCE=3/_FORTIFY_SOURCE=2}"
+
   cargo build --release
 }
 

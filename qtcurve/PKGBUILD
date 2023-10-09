@@ -8,13 +8,13 @@ pkgbase=qtcurve
 pkgname=(qtcurve-utils qtcurve-gtk2 qtcurve-qt5 qtcurve-kde)
 epoch=1
 pkgver=1.9
-pkgrel=5
+pkgrel=6
 pkgdesc='A configurable set of widget styles for KDE and Gtk'
 arch=(loong64 x86_64)
 url='https://github.com/KDE/qtcurve/'
 license=(LGPL)
 groups=(qtcurve)
-makedepends=(extra-cmake-modules gtk2 kdelibs4support kdoctools frameworkintegration kdesignerplugin kinit)
+makedepends=(extra-cmake-modules gtk2 kdelibs4support kdoctools5 frameworkintegration5 kdesignerplugin kinit)
 source=(https://download.kde.org/stable/$pkgbase/$pkgbase-$pkgver.tar.xz{,.sig}
         qtcurve-gcc9.patch::"https://invent.kde.org/system/qtcurve/-/commit/ee2228ea.patch"
         qtcurve-qt5.15.patch::"https://invent.kde.org/system/qtcurve/-/commit/44e2a35e.patch")
@@ -43,7 +43,10 @@ build() {
 
 package_qtcurve-utils() {
   pkgdesc='A configurable set of widget styles for KDE and Gtk (shared libraries)'
-  depends=(libx11 gcc-libs)
+  depends=(gcc-libs
+           glibc
+           libx11
+           libxcb)
   DESTDIR="$pkgdir" cmake --install build/lib/utils
 
 # Install translations
@@ -53,21 +56,53 @@ package_qtcurve-utils() {
 
 package_qtcurve-gtk2() {
   pkgdesk='A configurable set of widget styles for Gtk2'
-  depends=(qtcurve-utils gtk2 perl)
+  depends=(cairo
+           gcc-libs
+           gdk-pixbuf2
+           glib2
+           glibc
+           gtk2
+           pango
+           perl
+           qtcurve-utils)
   DESTDIR="$pkgdir" cmake --install build/gtk2
   DESTDIR="$pkgdir" cmake --install build/lib/cairo
 }
 
 package_qtcurve-qt5() {
   pkgdesc='A configurable set of widget styles for Qt5'
-  depends=(qtcurve-utils qt5-svg qt5-x11extras)
+  depends=(gcc-libs
+           glibc
+           qt5-base
+           qt5-svg
+           qt5-x11extras
+           qtcurve-utils)
   groups=()
   DESTDIR="$pkgdir" cmake --install build/qt5
 }
 
 package_qtcurve-kde() {
   pkgdesc='A configurable set of widget styles for Qt5 (with KDE integration)'
-  depends=(qtcurve-utils kdelibs4support frameworkintegration)
+  depends=(frameworkintegration5
+           gcc-libs
+           glibc
+           karchive5
+           kcompletion5
+           kconfig5
+           kcoreaddons5
+           kdelibs4support
+           kconfigwidgets5
+           kguiaddons5
+           ki18n5
+           kiconthemes5
+           kio5
+           kwidgetsaddons5
+           kwindowsystem5
+           kxmlgui5
+           qt5-base
+           qt5-svg
+           qt5-x11extras
+           qtcurve-utils)
   conflicts=(qtcurve-qt5)
   DESTDIR="$pkgdir" cmake --install build-kde/qt5
 }

@@ -5,7 +5,7 @@ pkgname=(
   sof-firmware
   sof-tools
 )
-pkgver=2.2.6
+pkgver=2023.09
 pkgrel=1
 pkgdesc="Sound Open Firmware"
 url="https://www.sofproject.org/"
@@ -14,9 +14,13 @@ license=(
   custom:BSD
   custom:ISC
 )
-_binver=v${pkgver}
-source=(https://github.com/thesofproject/sof-bin/releases/download/$_binver/sof-bin-$_binver.tar.gz)
-b2sums=('8fa0fb97cfdaa13b30f34f46789bbb1700f4a3be994f11a55226bf617c9ade7ccde931eeb2f263448e355e82f281bbb70c66624a71645062cdfb68bd81a9d3a1')
+source=(https://github.com/thesofproject/sof-bin/releases/download/v$pkgver/sof-bin-$pkgver.tar.gz)
+b2sums=('7535559c6833bd19c15c1f6e6bd88ee5c13ed79f93e0772cdc9df335cf4e89938969bd9babdf8c6cc1321af27e6704477f3a3db3c46295879216fd43358cf5b4')
+
+prepare() {
+  cd sof-bin-$pkgver
+  sha256sum -c sha256sum.txt
+}
 
 package_sof-firmware() {
   options+=(!strip)
@@ -24,24 +28,23 @@ package_sof-firmware() {
   local fwdir="$pkgdir/usr/lib/firmware/intel"
   mkdir -p "$fwdir"
 
-  cd sof-bin-$_binver
+  cd sof-bin-$pkgver
 
-  cp -at "$fwdir" sof-$_binver
-  ln -sr "$fwdir"/{sof-$_binver,sof}
-
-  cp -at "$fwdir" sof-tplg-$_binver
-  ln -sr "$fwdir"/{sof-tplg-$_binver,sof-tplg}
+  cp -at "$fwdir" sof*
 
   install -Dt "$pkgdir/usr/share/licenses/$pkgname" -m644 LICENCE* Notice*
 }
 
 package_sof-tools() {
   pkgdesc+=" - tools"
-  depends=(alsa-lib)
+  depends=(
+    alsa-lib
+    python
+  )
 
-  cd sof-bin-$_binver
+  cd sof-bin-$pkgver
 
-  install -Dt "$pkgdir/usr/bin" tools-$_binver/*
+  install -Dt "$pkgdir/usr/bin" tools/*
   install -Dt "$pkgdir/usr/share/licenses/$pkgname" -m644 LICENCE* Notice*
 }
 

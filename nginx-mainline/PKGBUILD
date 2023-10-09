@@ -9,13 +9,11 @@ _pkgbase=nginx
 pkgbase=nginx-mainline
 pkgname=(nginx-mainline nginx-mainline-src)
 pkgver=1.25.2
-pkgrel=1
-pkgdesc='Lightweight HTTP server and IMAP/POP3 proxy server, mainline release'
+pkgrel=2
 arch=('loong64' 'x86_64')
 url='https://nginx.org'
 license=('custom')
-depends=('pcre2' 'zlib' 'openssl' 'geoip' 'mailcap' 'libxcrypt')
-makedepends=(mercurial)
+makedepends=(mercurial pcre2 zlib openssl geoip mailcap libxcrypt)
 checkdepends=(perl perl-gd perl-io-socket-ssl perl-fcgi perl-cache-memcached
               memcached ffmpeg)
 backup=('etc/nginx/fastcgi.conf'
@@ -30,7 +28,7 @@ backup=('etc/nginx/fastcgi.conf'
 install=nginx.install
 source=($url/download/nginx-$pkgver.tar.gz{,.asc}
         hg+https://hg.nginx.org/nginx-tests
-        service
+        nginx.service
         logrotate)
 # https://nginx.org/en/pgp_keys.html
 validpgpkeys=(
@@ -40,13 +38,13 @@ validpgpkeys=(
 sha512sums=('47da46d823f336432aca6c4cd54c76660af60620518d5c518504033a9fd6b411fd6d41e4aac2c8200311a53f96159aa3da8920145e8ed85596c9c2c14e20cb27'
             'SKIP'
             'SKIP'
-            'be2858613d9cca85d80e7b894e9d5fa7892cbddd7a677d2d2f68f419d75fdc1f6802de8014f43ce063b116afd4ff17369873a6adea2dd58ac6f94e617de66fec'
-            '9232342c0914575ce438c5a8ee7e1c25b0befb457a2934e9cb77d1fe9a103634ea403b57bc0ef0cd6cf72248aee5e5584282cea611bc79198aeac9a65d8df5d7')
+            'ca7d8666177d31b6c4924e9ab44ddf3d5b596b51da04d38da002830b03bd176d49354bbdd2a496617d57f44111ad59833296af87d03ffe3fca6b99327a7b4c3c'
+            '2f4dfcfa711b8bcbc5918ba635f5e430ef7132e66276261ade62bb1cba016967432c8dce7f84352cb8b07dc7c6b18f09177aa3eb92c8e358b2a106c8ca142fe9')
 b2sums=('546a74c633400e51f6afded396fc36013574dd9ddc6b5f321bd5379c3a27613954de93957268213bc9724943515cab3d23b3965a384c4f71dfb4c759bba49912'
         'SKIP'
         'SKIP'
-        'b6414f9917fe62cc57556a2927fb404cc839398dac64a0d60c1d45af11a4e6be71bbee5f9bae17ce3604c31ab9247e8c6aec759f86890b54f86267db1fe7c08a'
-        'fe32fb75a7677abca86c4bc3f4ca9bfeccb3cd7afb4dd3c4ec21ab8b53cc0d72ba5330a1131498b5df222c2e517bd01e2df9f67256011ff15241b777a85be6b3')
+        '5aa8dab4d6517fc09a96f2ced5c85a67a44878da4c5cde1031a089609d3d32505d0cb45e6842a1502cc6f09e03eef08ee0ce6826b73bcfdd8087b0b695f0801c'
+        'e1755f61b4eaece83c6c22e48f9e5e316851d1dc35f8d770f837c7d3c8bdc894af1b697c25f1788ac50cd597085c22fb9bf8096a55ecf7659d63185f68ba2d8a')
 
 _common_flags=(
   --with-compat
@@ -61,6 +59,7 @@ _common_flags=(
   --with-http_gunzip_module
   --with-http_gzip_static_module
   --with-http_mp4_module
+  --with-http_random_index_module
   --with-http_realip_module
   --with-http_secure_link_module
   --with-http_slice_module
@@ -106,8 +105,8 @@ build() {
     --http-uwsgi-temp-path=/var/lib/nginx/uwsgi \
     --with-cc-opt="$CFLAGS $CPPFLAGS" \
     --with-ld-opt="$LDFLAGS" \
-    ${_common_flags[@]} \
-    ${_mainline_flags[@]}
+    "${_common_flags[@]}" \
+    "${_mainline_flags[@]}"
 
   make
 }
@@ -118,6 +117,8 @@ check() {
 }
 
 package_nginx-mainline() {
+  pkgdesc='Lightweight HTTP server and IMAP/POP3 proxy server, mainline release'
+  depends=('pcre2' 'zlib' 'openssl' 'geoip' 'mailcap' 'libxcrypt')
   provides=($_pkgbase)
   conflicts=($_pkgbase)
 
@@ -142,13 +143,12 @@ package_nginx-mainline() {
   mv "$pkgdir"/etc/nginx/html/ "$pkgdir"/usr/share/nginx
 
   install -Dm644 ../logrotate "$pkgdir"/etc/logrotate.d/nginx
-  install -Dm644 ../service "$pkgdir"/usr/lib/systemd/system/nginx.service
+  install -Dm644 ../nginx.service "$pkgdir"/usr/lib/systemd/system/nginx.service
   install -Dm644 LICENSE "$pkgdir"/usr/share/licenses/$_pkgbase/LICENSE
 
   rmdir "$pkgdir"/run
 
-  install -d "$pkgdir"/usr/share/man/man8/
-  gzip -9c man/nginx.8 > "$pkgdir"/usr/share/man/man8/nginx.8.gz
+  install -Dm0644 objs/nginx.8 "$pkgdir"/usr/share/man/man8/nginx.8
 
   for i in ftdetect ftplugin indent syntax; do
     install -Dm644 contrib/vim/$i/nginx.vim \
@@ -159,7 +159,7 @@ package_nginx-mainline() {
 package_nginx-mainline-src() {
   pkgdesc="Source code of nginx-mainline $pkgver, useful for building modules"
   conflicts=($_pkgbase-src)
-  depends=()
+
   install -d "$pkgdir/usr/src"
   cp -r $_pkgbase-$pkgver-src "$pkgdir/usr/src/nginx"
 }

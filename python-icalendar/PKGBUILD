@@ -3,35 +3,34 @@
 # Contributor: Sirat18 <aur@sirat18.de>
 # Contributor: Jonas Heinrich <onny@project-insanity.org>
 
-_name=icalendar
 pkgname=python-icalendar
-pkgver=5.0.7
+_name=${pkgname#python-}
+pkgver=5.0.10
 pkgrel=1
 pkgdesc='A parser/generator of iCalendar files (RFC 2445)'
 arch=(any)
 url="https://github.com/collective/icalendar"
 license=(BSD)
 depends=(python-dateutil python-pytz)
-makedepends=(python-build python-installer python-setuptools python-wheel)
+makedepends=(git python-build python-installer python-setuptools python-wheel)
 checkdepends=(python-hypothesis python-pytest)
-source=("https://files.pythonhosted.org/packages/source/${_name::1}/$_name/$_name-$pkgver.tar.gz")
-sha256sums=('e306014a64dc4dcf638da0acb2487ee4ada57b871b03a62ed7b513dfc135655c')
-b2sums=('df45ee6b8c1ad5bfc558195e86e2456aae8f70613724ba16e74093e5454695d8d4ef2e0eb2e312dd2a94c3a12bc6e4febc21174e8380e249f2de906500a1cfc8')
+source=("git+$url.git#tag=v$pkgver")
+b2sums=('SKIP')
 
 build() {
-  cd $_name-$pkgver
+  cd "$_name"
   python -m build --wheel --skip-dependency-check --no-isolation
 }
 
 check() {
-  cd $_name-$pkgver
-  pytest -v src/$_name/tests
+  cd "$_name"
+  pytest -v "src/$_name/tests"
 }
 
 package() {
   local site_packages=$(python -c "import site; print(site.getsitepackages()[0])")
 
-  cd $_name-$pkgver
+  cd "$_name"
   python -m installer --destdir="$pkgdir" dist/*.whl
   install -vDm 644 {CHANGES,CONTRIBUTING,README}.rst -t "$pkgdir/usr/share/doc/$pkgname/"
 

@@ -4,27 +4,25 @@
 
 _gemname=mocha
 pkgname="ruby-${_gemname}"
-pkgver=1.16.1
+pkgver=2.1.0
 pkgrel=1
 pkgdesc='Mocha is a mocking and stubbing library for Ruby'
 arch=('any')
 url='https://github.com/freerange/mocha'
 license=('Custom')
 depends=('ruby')
-checkdepends=('ruby-rake' 'ruby-bundler' 'ruby-introspection' 'ruby-metaclass')
+checkdepends=('ruby-rake' 'ruby-bundler' 'ruby-introspection' 'ruby-metaclass' 'ruby-rubocop')
 makedepends=('ruby-minitest')
 options=('!emptydirs')
-source=("${pkgname}-${pkgver}.tar.gz::https://github.com/freerange/mocha/archive/v${pkgver}.tar.gz"
-        'disable-rubocop.patch')
-sha512sums=('b65cf98ab39334ad86a6f375b648fc906d083e803afa5bd2a62aaed87ac625fcf94ed9b16b21dc1563ff67675e00bf008d43234bde0343604f6fce2841d8b2bb'
-            '17b75309fb7bd2fa6dcd6ac8a0dda1f8a9e4f6c4a89d9500998ffe40cc2651debebbb8362442589a3405c09f5b97fff56cae10c48020f921b5885e2de08f3670')
+source=("${pkgname}-${pkgver}.tar.gz::https://github.com/freerange/mocha/archive/v${pkgver}.tar.gz")
+sha512sums=('8044065ebb2225f7aab117353b0a49c854768fd55f7165ccb5916027f6f8fc843665572ed786e41d5ec6affedf397f4de20fa31a9f9c1582a17a67555662a65e')
 
 prepare() {
   cd "${_gemname}-${pkgver}"
 
   # `git` doesn't work within src dir, because we downloaded an archive
   sed --in-place 's|`git ls-files -z`.split("\\x0")|`find`.split("\\n")|' "${_gemname}.gemspec"
-  patch --forward --verbose --strip=1 --input='../disable-rubocop.patch'
+  rm Gemfile
 }
 
 check() {

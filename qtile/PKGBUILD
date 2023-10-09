@@ -1,11 +1,13 @@
 # Maintainer: David Runge <dvzrv@archlinux.org>
 
 pkgname=qtile
-pkgver=0.22.1
-pkgrel=4
+pkgver=0.23.0
+_commit=951aa6345712b4f798e3e2669f7d905e23690405  # refs/tags/v0.23.0
+pkgrel=1
 pkgdesc="A full-featured, pure-Python tiling window manager"
 arch=(loong64 x86_64)
 url="http://www.qtile.org"
+_url="https://github.com/qtile/qtile"
 license=(MIT)
 depends=(
   gdk-pixbuf2
@@ -16,10 +18,10 @@ depends=(
   python
   python-cairocffi
   python-cffi
-  python-xcffib
   python-gobject
-  wlroots0.15
-  libwlroots.so=10
+  python-pywlroots
+  python-xcffib
+  wlroots
 )
 makedepends=(
   git
@@ -39,7 +41,6 @@ checkdepends=(
   python-dbus-next
   python-gobject
   python-pytest
-  python-pywlroots
   python-xdg
   xorg-server-xephyr
   xorg-server-xvfb
@@ -52,6 +53,7 @@ optdepends=(
   'cmus: for cmus widget'
   'jupyter_console: for interaction with qtile via Jupyter'
   'khal: for khal_calendar widget'
+  'libinput: for Wayland backend'
   'libpulse: for pulse_volume and pulseaudio_ffi widget'
   'lm_sensors: for sensors widget'
   'moc: for moc widget'
@@ -61,13 +63,13 @@ optdepends=(
   'python-keyring: for imapwidget widget'
   'python-mpd2: mpd2widget widget'
   'python-psutil: graph, net and memory widget'
-  'python-pywlroots: for experimental wayland support'
+  'python-pywlroots: for Wayland backend'
   'python-setproctitle: change process name to qtile'
   'python-xdg: launchbar widget'
   'xorg-xwayland: for XWayland support'
 )
 install=$pkgname.install
-source=(git+https://github.com/qtile/qtile#tag=v$pkgver?signed)
+source=("git+$_url#tag=$_commit?signed")
 sha512sums=('SKIP')
 b2sums=('SKIP')
 validpgpkeys=(
@@ -77,10 +79,8 @@ validpgpkeys=(
 )
 
 build() {
-  export CFLAGS="$CFLAGS -I/usr/include/wlroots0.15"
-  export LDFLAGS="$LDFLAGS -L/usr/lib/wlroots0.15"
   cd $pkgname
-  ./scripts/ffibuild
+  PYTHONPATH="$PWD" ./scripts/ffibuild -v
   python -m build --wheel --no-isolation
 }
 
@@ -89,13 +89,6 @@ check() {
     -vv
     --backend x11
     --backend wayland
-    # disable failing tests (for Python 3.11): https://github.com/qtile/qtile/issues/4229
-    --deselect test/widgets/test_statusnotifier.py::test_statusnotifier_defaults[1-x11]
-    --deselect test/widgets/test_statusnotifier.py::test_statusnotifier_defaults[1-wayland]
-    --deselect test/widgets/test_statusnotifier.py::test_statusnotifier_defaults_vertical_bar[1-x11]
-    --deselect test/widgets/test_statusnotifier.py::test_statusnotifier_defaults_vertical_bar[1-wayland]
-    --deselect test/widgets/test_statusnotifier.py::test_statusnotifier_icon_size[1-x11-sni_config0]
-    --deselect test/widgets/test_statusnotifier.py::test_statusnotifier_icon_size[1-wayland-sni_config0]
   )
   local _site_packages=$(python -c "import site; print(site.getsitepackages()[0])")
 

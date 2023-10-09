@@ -5,7 +5,7 @@
 # Contributor: andychu <andy@oilshell.org>
 
 pkgname=oil
-pkgver=0.16.0
+pkgver=0.18.0
 pkgrel=1
 pkgdesc='A new Unix shell'
 arch=('loong64' 'x86_64')
@@ -16,11 +16,13 @@ makedepends=('bash')
 replaces=('osh')
 install=oil.install
 source=("$url/download/oils-for-unix-$pkgver.tar.gz")
-sha256sums=('cc8a49beecd85063dc72eddc03a0f0289625f2efcf8a0406d5155066fa30a462')
-b2sums=('6a6d3439a2c629df137436493bae5b646809250d951729b7c40c3df8beccdb10b71bffa3fdca4d4b6a693c33e57c8a39db880c5ada968d8946ecc92325935af7')
+sha256sums=('f5177ab35bb425f635b90e720b24b269f7a3915ca193f52c3e6223a02d0683f9')
+b2sums=('a3c702f7214f1856864d344038b1c3fc1e1bd7732dbfdca2508a1eca7d18c1c3315fd3ea30bcd2898b96380e0ce76189756bb8741b4feb1f9fde4cff4afb02dc')
+noextract=("oils-for-unix-$pkgver.tar.gz")
 # https://www.oilshell.org/release/latest/
 
 prepare() {
+  # fix: LTO + strip
   mkdir -p path
   cat >path/c++ <<END
 #!/bin/sh
@@ -31,6 +33,10 @@ END
 exec cp -p "\$3" "\$2"
 END
   chmod +x path/*
+
+  # fix: bsdtar choking on hardlinked files pointing to self, e.g.:
+  # _gen/frontend/option.asdl.h: Skipping hardlink pointing to itself: _gen/frontend/option.asdl.h: No such file or directory
+  tar -xf "oils-for-unix-$pkgver.tar.gz"
 }
 
 build() {

@@ -3,7 +3,7 @@
 
 _name=fastapi
 pkgname=python-$_name
-pkgver=0.99.1
+pkgver=0.103.1
 pkgrel=1
 pkgdesc='FastAPI framework, high performance, easy to learn, fast to code, ready for production'
 arch=(any)
@@ -12,8 +12,13 @@ license=(MIT)
 depends=(
   python
   python-anyio  # implicitly required for concurrency
+  python-dirty-equals
   python-pydantic
+  python-pydantic-core
+  python-pydantic-extra-types
+  python-pydantic-settings
   python-starlette
+  python-typing-extensions
 )
 makedepends=(
   python-build
@@ -62,8 +67,8 @@ optdepends=(
   'uvicorn: for Uvicorn as ASGI server'
 )
 source=($_name-$pkgver.tar.gz::$url/archive/$pkgver.tar.gz)
-sha512sums=('b6e23860a8ea98fe28e4f934dc53b55d1250369d59f677c6b23d382c7f05b38784f6a363691c945a8aca299bd734e9fd0c4788f9a96cac33e3d5e1d37ca5a538')
-b2sums=('64b859aa178b9d8e23d86d81347db8001cc9f2c0fe60782a9a316a91d6b834740385f6fa627914be1292510bdc967dc252ce0ee8f42dc68de2d7f216d9c8167f')
+sha512sums=('7aae1d9c5e9171977f55e7a8c7b6d1b750e0c2a6840781d2214bda5b068c3fcf95330071648ba4d7f63a4500216b3ab4691da695fd5804b91f0337114e0487a6')
+b2sums=('9553a770f9d732ef4e228bd4aca0016bee9a6ce767cc24f2944c6fd1631601a2be7acbb497fa2b9fcb260b6f5e1d508e91b8b3e46090586a3892e09c3b31c819')
 
 prepare() {
   cd $_name-$pkgver
@@ -77,20 +82,18 @@ build() {
 }
 
 check() {
-  local _site_packages=$(python -c "import site; print(site.getsitepackages()[0])")
-  local _deselected=(
-    --deselect docs_src/sql_databases/sql_app_py310/tests/test_sql_app.py::test_create_user
-    --deselect docs_src/sql_databases/sql_app_py39/tests/test_sql_app.py::test_create_user
-    --deselect tests/test_generate_unique_id_function.py::test_warn_duplicate_operation_id
-    --deselect tests/test_tutorial/test_async_sql_databases/test_tutorial001.py::test_create_read
+  local site_packages=$(python -c "import site; print(site.getsitepackages()[0])")
+  local pytest_options=(
+    -vv
+    -p no:warnings
     --deselect tests/test_dependency_normal_exceptions.py::test_dependency_gets_exception
   )
 
   cd $_name-$pkgver
   # install to temporary location, as importlib is used
   python -m installer --destdir=test_dir dist/*.whl
-  export PYTHONPATH="test_dir/$_site_packages:$PYTHONPATH"
-  pytest -vv -p no:warnings "${_deselected[@]}"
+  export PYTHONPATH="test_dir/$site_packages:$PYTHONPATH"
+  pytest "${pytest_options[@]}"
 }
 
 package() {

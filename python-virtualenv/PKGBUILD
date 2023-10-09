@@ -4,7 +4,7 @@
 # Contributor: Daniele Paolella <dp@mcrservice.it>
 
 pkgname=python-virtualenv
-pkgver=20.24.3
+pkgver=20.24.5
 pkgrel=1
 pkgdesc='Virtual Python Environment builder'
 arch=('any')
@@ -43,7 +43,7 @@ checkdepends=(
 replaces=('virtualenv')
 conflicts=('virtualenv')
 options=('!makeflags')
-_commit='5b309d2c90efeb2f32364877af56c562cf487b5b'
+_commit='7e50f99e1b749ab02bcfd413c7fd9a43e4be83a6'
 source=("$pkgname::git+https://github.com/pypa/virtualenv#commit=$_commit")
 b2sums=('SKIP')
 

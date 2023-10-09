@@ -3,7 +3,7 @@
 pkgbase=gutenprint
 pkgname=('gutenprint' 'foomatic-db-gutenprint-ppds')
 pkgver=5.3.4
-pkgrel=2
+pkgrel=3
 pkgdesc="Top quality printer drivers for POSIX systems"
 arch=('loong64' 'x86_64')
 license=('GPL')
@@ -11,7 +11,7 @@ url="http://gimp-print.sourceforge.net/" # no https
 makedepends=('gimp' 'gtk2' 'cups' 'ghostscript'
             # for the docs
             'dialog' 'doxygen' 'docbook-utils' 'texi2html' 'texlive-bin')
-options=('!emptydirs' 'debug')
+options=('!emptydirs')
 source=(https://downloads.sourceforge.net/gimp-print/$pkgname-$pkgver.tar.xz)
 sha1sums=('46167d00c2a4fb07c3fd3d62c80cd3fa004629f0')
 sha256sums=('db44a701d2b8e6a8931c83cec06c91226be266d23e5c189d20a39dd175f2023b')
@@ -20,6 +20,12 @@ prepare(){
   cd "${pkgbase}"-${pkgver}
   # sbindir is not properly taken over there
   sed -i "s:cups_sbindir=\"\${cups_exec_prefix}\/sbin\":cups_sbindir=\"\${cups_exec_prefix}\/bin\":" m4local/stp_cups.m4
+
+  # make build reproducible taken from Debian rules
+  # https://sources.debian.org/src/gutenprint/5.3.4.20220624T01008808d602-1/debian/rules/
+  # Remove build directory
+  find -name Makefile.in -exec sed -i 's/$(CURDIR)/BUILDPATH/g' {} +
+
   autoreconf -vfi
 }
 
@@ -36,6 +42,11 @@ build() {
     --enable-translated-cups-ppds \
     --enable-globalized-cups-ppds #--help
 
+  # make build reproducible taken from Debian rules
+  # Remove timestamp and uname output
+  sed -i -e 's,Generated at.*,Generated at REDACTED,g' \
+	 -e 's,uname -a output:.*,uname -a output: REDACTED,g' config.summary
+
   # globalized ppds -> put all translations into one ppd file
   # enable translated cups ppds grows size 9,5MB -> 156MB
   # simplified cups ppds (yes, no, only) - only offer basic paper sizes, not all options 
@@ -48,7 +59,8 @@ build() {
 package_gutenprint() {
   pkgdesc="Top quality printer drivers for POSIX systems"
   install=gutenprint.install
-  depends=('cups' 'cups-filters')
+  depends=('cups' 'cups-filters'
+           'glib2' 'zlib' 'glibc' 'readline')
   optdepends=('gimp:	adds gutenprint plugin to gimp'
             'libusb:	required for drivers that depend on gutenprint52usb backend'
             'foomatic-db-gutenprint-ppds: prebuilt ppd files'
@@ -57,7 +69,7 @@ package_gutenprint() {
   
   cd "${pkgname}"-${pkgver}
   make DESTDIR="${pkgdir}" install
-  
+
   # split out files
   mkdir "$srcdir"/tmp_foomatic-db-gutenprint-ppds
   

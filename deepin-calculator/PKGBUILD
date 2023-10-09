@@ -2,21 +2,29 @@
 
 pkgname=deepin-calculator
 pkgver=5.8.24
-pkgrel=1
+pkgrel=2
 pkgdesc='An easy to use calculator for ordinary users'
 arch=('loong64' 'x86_64')
 url="https://github.com/linuxdeepin/deepin-calculator"
 license=('GPL3')
-depends=('deepin-qt5integration' 'dtkcore' 'dtkgui' 'dtkwidget' 'deepin-qt-dbus-factory'
-         'gcc-libs' 'qt5-base' 'qt5-svg')
+depends=('dtkcore' 'dtkgui' 'dtkwidget' 'glibc' 'gcc-libs' 'hicolor-icon-theme' 'qt5-base' 'qt5-svg')
 makedepends=('cmake' 'ninja' 'qt5-tools')
 groups=('deepin-extra')
-source=("https://github.com/linuxdeepin/deepin-calculator/archive/$pkgver/$pkgname-$pkgver.tar.gz")
-sha512sums=('48ca459ad837e1e5d60f5138a11ad78d8997ed6785525662e010340e0afc07b4d1088588e7ffde0bbe5053bb68870eb78a4a3bc8f268bdf1927d21452244d6fb')
+source=("https://github.com/linuxdeepin/deepin-calculator/archive/$pkgver/$pkgname-$pkgver.tar.gz"
+        $pkgname-ldflags.patch::https://github.com/linuxdeepin/deepin-calculator/pull/82.patch)
+sha512sums=('48ca459ad837e1e5d60f5138a11ad78d8997ed6785525662e010340e0afc07b4d1088588e7ffde0bbe5053bb68870eb78a4a3bc8f268bdf1927d21452244d6fb'
+            '001b9ab4b7a9aac4ded51e9e2c0362824f3e38ad8a80c15c3cbe7cbfeef6ce65e85a4c3aa688fcdd0e396267a108fd6a192adece597e95775aece1c29a8c2a7c')
+
+prepare() {
+  cd deepin-calculator-$pkgver
+  patch -Np1 -i ../$pkgname-ldflags.patch
+  sed -i '/dframeworkdbus/d' CMakeLists.txt tests/CMakeLists.txt
+  sed -i 's/com_deepin_daemon_appearance.h/QCommandLineParser/' src/control/scientifickeypad.h
+}
 
 build() {
   cd deepin-calculator-$pkgver
-  cmake -GNinja -DCMAKE_INSTALL_PREFIX=/usr -DAPP_VERSION=$pkgver -DVERSION=$pkgver .
+  cmake . -GNinja -DCMAKE_INSTALL_PREFIX=/usr -DVERSION=$pkgver
   ninja
 }
 

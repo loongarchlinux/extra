@@ -1,7 +1,7 @@
 # Maintainer: Caleb Maclennan <caleb@alerque.com>
 
 pkgname=xdg-desktop-portal-hyprland
-pkgver=0.5.0
+pkgver=1.2.0
 _protocolver=4d29e48433270a2af06b8bc711ca1fe5109746cd
 pkgrel=1
 pkgdesc='xdg-desktop-portal backend for hyprland'
@@ -14,6 +14,7 @@ depends=(libinih
          pipewire
          qt6-base
          qt6-wayland
+         sdbus-cpp
          xdg-desktop-portal)
 makedepends=(cmake
              meson
@@ -24,19 +25,21 @@ optdepends=('grim: required for the screenshot portal to function'
             'slurp: support for interactive mode for the screenshot portal')
 _archive="$pkgname-$pkgver"
 source=("$url/archive/v$pkgver/v$pkgver.tar.gz"
-        "https://github.com/hyprwm/hyprland-protocols/archive/$_protocolver.tar.gz")
-sha256sums=('d346cbe170e7042d5e364242a715d021d9b8da2078a169771cf84cda13f24e76'
-            '5f6be4d870e94314f05ec7ff9c9c1f028748230ff80a7f89aeaf66c08e5c70e0')
+        "https://github.com/hyprwm/hyprland-protocols/archive/$_protocolver.tar.gz"
+        hyprland-portals.conf)
+sha256sums=('b1fbba55b97966f2e4007c9890587111632ec45777be14ca4d614e3544a0403b'
+            '5f6be4d870e94314f05ec7ff9c9c1f028748230ff80a7f89aeaf66c08e5c70e0'
+            '33b80d588498992c1d4387c32775cab673a9a8dab2d917c0b4b20b59cebaa308')
 
 prepare() {
     cd "$_archive/subprojects"
-    rm -rf hyprland-protocols
+    rm -rf hyprland-protocols sdbus-cpp
     ln -sfT "$srcdir/hyprland-protocols-$_protocolver" hyprland-protocols
 }
 
 build() {
     cd "$_archive"
-    arch-meson -Dsd-bus-provider=libsystemd build
+    arch-meson build
     ninja -C build
     make -C hyprland-share-picker all
 }
@@ -46,4 +49,7 @@ package() {
     DESTDIR="$pkgdir" ninja -C build install
     install -Dm0755 -t "$pkgdir/usr/bin/" hyprland-share-picker/build/hyprland-share-picker
     install -Dm0644 -t "$pkgdir/usr/share/licenses/$pkgname/" LICENSE
+
+    # fix detection with x-d-p 1.18
+    install -Dm644 ${srcdir}/hyprland-portals.conf  ${pkgdir}/usr/share/xdg-desktop-portal/hyprland-portals.conf
 }

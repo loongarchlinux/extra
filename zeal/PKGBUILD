@@ -1,0 +1,54 @@
+# Maintainer:  George Rawlinson <george@rawlinson.net.nz>
+# Contributor: Bartłomiej Piotrowski <bpiotrowski@archlinux.org>
+# Contributor: Oleg Shparber <trollixx+aur@gmail.com>
+# Contributor: Thomas Weißschuh <thomas t-8ch de>
+
+pkgname=zeal
+pkgver=0.7.0
+pkgrel=1
+pkgdesc='Offline API documentation browser'
+arch=('loong64' 'x86_64')
+url='https://zealdocs.org'
+license=('GPL3')
+depends=(
+  'glibc'
+  'gcc-libs'
+  'hicolor-icon-theme'
+  'qt6-webengine'
+  'qt6-base'
+  'qt6-webchannel'
+  'sqlite'
+  'libarchive'
+  'libxcb'
+  'libx11'
+  'xcb-util-keysyms'
+)
+makedepends=(
+  'cmake'
+  'extra-cmake-modules'
+  'git'
+)
+_commit='90ad776e83f182221cafd329f2e58cf0621ea3f1'
+source=("$pkgname::git+https://github.com/zealdocs/zeal#commit=$_commit")
+b2sums=('SKIP')
+
+pkgver() {
+  cd "$pkgname"
+
+  git describe --tags | sed 's/^v//'
+}
+
+build() {
+  cmake \
+    -B build \
+    -S "$pkgname" \
+    -D CMAKE_INSTALL_PREFIX=/usr \
+    -D CMAKE_BUILD_TYPE=Release \
+    -D ZEAL_RELEASE_BUILD=ON
+
+  cmake --build build
+}
+
+package() {
+  DESTDIR="$pkgdir" cmake --install build
+}

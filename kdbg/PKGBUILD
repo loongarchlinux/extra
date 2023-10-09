@@ -6,27 +6,32 @@
 
 pkgname=kdbg
 pkgver=3.0.1
-pkgrel=1
-pkgdesc="A graphical debugger interface"
+pkgrel=2
+pkgdesc='A graphical debugger interface'
 arch=(loong64 x86_64)
-url="http://www.kdbg.org"
+url='http://www.kdbg.org'
 license=(GPL)
-depends=(gdb kxmlgui hicolor-icon-theme)
+depends=(gcc-libs
+         gdb
+         glibc
+         kconfig5
+         kconfigwidgets5
+         kcoreaddons5
+         ki18n5
+         kiconthemes5
+         kwidgetsaddons5
+         kwindowsystem5
+         kxmlgui5
+         qt5-base)
 makedepends=(extra-cmake-modules)
-source=("https://downloads.sourceforge.net/project/kdbg/Source%20Code/$pkgver/kdbg-$pkgver.tar.gz")
+source=(https://downloads.sourceforge.net/project/kdbg/Source%20Code/$pkgver/kdbg-$pkgver.tar.gz)
 sha256sums=('449df80e7c1de05b2ce9c844707f005bfb7e4e833f870ff8b3756b4469375dbd')
 
-prepare() {
-  mkdir -p build
-}
-
 build() {
-  cd build
-  cmake ../$pkgname-$pkgver
-  make
+  cmake -B build -S $pkgname-$pkgver
+  cmake --build build
 }
 
 package() {
-  cd build
-  make DESTDIR="$pkgdir" install
+  DESTDIR="$pkgdir" cmake --install build
 }

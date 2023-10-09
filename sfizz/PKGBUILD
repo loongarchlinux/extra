@@ -8,7 +8,7 @@ pkgname=(
   pd-sfizz
 )
 pkgver=1.2.1
-pkgrel=1
+pkgrel=2
 pkgdesc="SFZ library and LV2 plugin"
 arch=(loong64 x86_64)
 url="https://github.com/sfztools/sfizz"
@@ -41,9 +41,15 @@ checkdepends=(
 )
 source=(
   $url/releases/download/$pkgver/$pkgname-$pkgver.tar.gz
+  https://github.com/sfztools/sfizz-ui/commit/a197e3a7.patch
+  53d796ff.patch
 )
-sha512sums=('933f43a397f717490f9067009a5c6d43391d697d7788f07a68fbd03dd4702fb17a2ebc69fa21775c6ba927bfbed1bf1de2ff49b5816dead1a47fa90eb4372b96')
-b2sums=('a8a6b512a9b001e9d9c4f39fb3576c09aaadb9132cd6852368ed137a06c95a0f3a935ef9731b291c7f0d4175311a9c10aedbe991c53d335d5b23161901d8aa51')
+sha512sums=('933f43a397f717490f9067009a5c6d43391d697d7788f07a68fbd03dd4702fb17a2ebc69fa21775c6ba927bfbed1bf1de2ff49b5816dead1a47fa90eb4372b96'
+            '77853e0c0c3ea6e40ebbbefd62c85365a55f8188359b81f39c5c10b7ba9904b32f2915de771e25aa1fe821757027df957ea6ebf4ff4409c6c4807a9699bcec4b'
+            '1f04ae5df7cf739801a5c796e57ca5eb0d632a61aac56f0aae0f16304a3e776b69d4926e299bbcb1f58e2f5c30602d6485a23aae41935cf7507af2d77c01fd10')
+b2sums=('a8a6b512a9b001e9d9c4f39fb3576c09aaadb9132cd6852368ed137a06c95a0f3a935ef9731b291c7f0d4175311a9c10aedbe991c53d335d5b23161901d8aa51'
+        'b0218d7f60275de638b268e8e8684d8bc8b9fbf360a384892319bec65fc5bb0a4ae8dd41a97dfb8a8a4efd8f127f7927e3bc0564210e2a2a3f9b5f8b129644a2'
+        '8393697e7de9fd59104ec9db73214f8046aa3a3ae4f24beee9284ce19ca7c4a2cb795eccd62ecc3c07c9f671822bead4e67501db38e649c56cbeb173c66b34dd')
 
 _pick() {
   local p="$1" f d; shift
@@ -58,6 +64,10 @@ _pick() {
 prepare() {
   # symlink tests data to top-level location so that tests can get to them (we build out of tree)
   ln -sv $pkgbase-$pkgver/tests .
+
+  # fix build with newer vst3
+  patch -d $pkgbase-$pkgver -p1 < a197e3a7.patch
+  patch -d $pkgbase-$pkgver -p1 < 53d796ff.patch
 }
 
 build() {

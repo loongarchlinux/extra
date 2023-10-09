@@ -1,0 +1,29 @@
+# Maintainer: Daniel M. Capella <polyzen@archlinux.org>
+# Contributor: Eric Bailey <nerflad@gmail.com>
+# Contributor: Bruno Pagani <bruno.n.pagani@gmail.com>
+
+pkgname=toilet
+_commit=3eb9d58037afb0a1baec6dca82caa045fb2217c0
+pkgver=0.3.r155.${_commit:0:7}
+pkgrel=2
+pkgdesc='Free replacement for the FIGlet utility'
+arch=('loong64' 'x86_64')
+url=https://github.com/cacalabs/toilet
+license=('custom:WTFPL')
+depends=('libcaca')
+makedepends=('git')
+source=("git+$url.git#commit=$_commit")
+b2sums=('SKIP')
+
+build() {
+  cd $pkgname
+  ./bootstrap
+  ./configure --prefix=/usr
+  make
+}
+
+package() {
+  cd $pkgname
+  make DESTDIR="$pkgdir" install
+  install -Dm644 -t "$pkgdir"/usr/share/licenses/$pkgname COPYING
+}

@@ -2,25 +2,25 @@
 # Maintainer: Daniel M. Capella <polyzen@archlinux.org>
 
 pkgname=eslint
-pkgver=8.48.0
+pkgver=8.51.0
 pkgrel=1
 pkgdesc='An AST-based pattern checker for JavaScript'
 arch=('any')
 url='https://eslint.org'
 license=('MIT')
 depends=('acorn' 'nodejs')
-makedepends=('npm' 'rsync')
+makedepends=('git' 'npm' 'rsync')
 options=('!emptydirs')
-source=("https://github.com/$pkgname/$pkgname/archive/v$pkgver/$pkgname-$pkgver.tar.gz")
-b2sums=('dcee47d79b527043a4b6428be7bb57cc5d5e4e8da03da2b579827a0bdaa2b85ca821df0d932aed200bd4dfc9b875b3b9386a1bac3cfd6eaca5f406cdfd75c346')
+source=("git+https://github.com/$pkgname/$pkgname.git#tag=v$pkgver")
+b2sums=('SKIP')
 
 prepare() {
-  cd $pkgname-$pkgver
+  cd $pkgname
   npm install
 }
 
 check() {
-  cd $pkgname-$pkgver
+  cd $pkgname
   node Makefile.js mocha
 }
 
@@ -29,11 +29,11 @@ package() {
   install -d "$pkgdir"/usr/bin
   ln -s $_npmdir/bin/$pkgname.js "$pkgdir"/usr/bin/$pkgname
 
-  cd $pkgname-$pkgver
+  cd $pkgname
   npm prune --production
 
   install -Dt "$pkgdir"/$_npmdir/bin bin/$pkgname.js
-  rsync -r --exclude .cache --exclude .package-lock.json conf lib messages \
+  rsync -r --exclude=.cache --exclude=.package-lock.json conf lib messages \
     node_modules package.json "$pkgdir"/$_npmdir
   install -Dm644 -t "$pkgdir"/usr/share/doc/$pkgname README.md
   install -Dm644 -t "$pkgdir"/usr/share/licenses/$pkgname LICENSE

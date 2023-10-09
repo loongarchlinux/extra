@@ -3,42 +3,24 @@
 # Contributor: Xu Fasheng <fasheng.xu[AT]gmail.com>
 
 pkgname=startdde
-pkgver=5.10.1
-pkgrel=1
+pkgver=6.0.10
+pkgrel=4
 pkgdesc="starter of deepin desktop environment"
 arch=('loong64' 'x86_64')
 url="https://github.com/linuxdeepin/startdde"
 license=('GPL3')
-depends=('deepin-daemon' 'deepin-dock' 'deepin-polkit-agent' 'deepin-file-manager'
-         'deepin-session-shell' 'deepin-session-ui' 'libgnome-keyring')
-makedepends=('cmake' 'coffeescript' 'golang-github-linuxdeepin-go-dbus-factory' 'golang-deepin-gir'
-             'golang-deepin-lib' 'golang-deepin-dde-api' 'go' 'git' 'jq'
-             'golang-golang-x-net' 'golang-github-linuxdeepin-go-x11-client'
-             'golang-github-fsnotify-fsnotify' 'golang-github-stretchr-testify'
-             'golang-gopkg-yaml.v3')
-optdepends=('deepin-wm: Legacy 3D window manager'
-            'deepin-metacity: Legacy 2D window manager'
-            'deepin-kwin: Preferred window manager')
-replaces=('deepin-wm-switcher')
+depends=('deepin-daemon' 'deepin-session' 'deepin-polkit-agent' 'deepin-file-manager'
+         'deepin-session-shell' 'deepin-session-ui' 'libgnome-keyring' 'deepin-wloutput-daemon'
+         'deepin-kwin')
+makedepends=('cmake' 'coffeescript' 'go' 'git' 'jq')
 groups=('deepin')
-options=('!lto')
-source=("https://github.com/linuxdeepin/startdde/archive/$pkgver/$pkgname-$pkgver.tar.gz"
-        schema.patch)
-sha512sums=('eaf3c3fbeeac44ac63b761ec55f8a2eec70c80f883eea5207d35e542ff9e86b5d7da944b5b76ff0c6c3fcb25f780af7c097d98493e04e9740c63e2579443d999'
-            'e15ff5b1c649cfc736ba47f7d69ca3d7abeb5593f25ccd71c0965439862204d25833fa7d896cd3073d6c449040b42153d6c6ccbb9e12d5c698603458130d497d')
-
-export GO111MODULE=off
+source=("https://github.com/linuxdeepin/startdde/archive/$pkgver/$pkgname-$pkgver.tar.gz")
+sha512sums=('903801976dd9790c15d16b16f5b12c0ab4d03fd61495913f34d34b483a1a9bec7504cf946225210b043005f232bc25f7a79457b56b8d141444a4e3268a202714')
 
 prepare() {
-  export GOPATH="$srcdir/build:/usr/share/gocode"
-  go get github.com/cryptix/wav golang.org/x/xerrors github.com/godbus/dbus github.com/youpy/go-wav
-
   cd startdde-$pkgver
-  patch -p2 -i ../schema.patch
-
   sed -i 's/sbin/bin/' Makefile
-
-  sed -i 's|/etc/os-version|/etc/uos-version|' vm.go utils.go misc/Xsession.d/00deepin-dde-env
+  sed -i 's|/etc/os-version|/etc/uos-version|' misc/Xsession.d/00deepin-dde-env
 }
 
 build() {

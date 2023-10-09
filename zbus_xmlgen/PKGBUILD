@@ -1,0 +1,50 @@
+# Maintainer: David Runge <dvzrv@archlinux.org>
+
+_project_name=zbus
+_name=zbus-xmlgen
+pkgname=zbus_xmlgen
+pkgver=3.1.1
+pkgrel=1
+pkgdesc="D-Bus XML interface code generator"
+arch=(loong64 x86_64)
+url="https://github.com/dbus2/zbus"
+license=(MIT)
+depends=(
+  gcc-libs
+  glibc
+)
+makedepends=(rust)
+source=(
+  $url/archive/refs/tags/$pkgname-$pkgver.tar.gz
+  Cargo.lock
+)
+sha512sums=('67debf1bfce5aa0872224a8f823668bfd022c66a73cf61ca11954497ef7a4ce9bc60ed7b21e04a9b839f5738cf92ab58ae49b24e2426c518d545a799e7558a26'
+            '32ed52742d4e331ac60504746119efba3260c27bf8bc85b014c47785fc2712426479d5c1234ac9fd5298300d98906b2a12c1cb5cd56ea72e3abeba83bed8b70b')
+b2sums=('6d4dfc7d4c853b14f899b2285a752116ded56cce4394539fe8ded77aa06d2cf5d2b0b1c7a32f681de27fe787039db83b0b0950b8040406567f2b092d02a9f5a8'
+        '040af84b6a304baa5a18e11990c66029f9d8b39e970ae5224458e208e2b54762bb1026a09bd501d887c92dded3c9b5bc2f825ba192624ca51879a0cfd8346868')
+
+prepare() {
+  cp -v -- Cargo.lock $_project_name-$pkgname-$pkgver/
+
+  cd $_project_name-$pkgname-$pkgver/$pkgname
+  export RUSTUP_TOOLCHAIN=stable
+  cargo fetch --locked --target "$CARCH-unknown-linux-gnu"
+}
+
+build() {
+  cd $_project_name-$pkgname-$pkgver/$pkgname
+  export RUSTUP_TOOLCHAIN=stable
+  export CARGO_TARGET_DIR=target
+  cargo build --frozen --release --all-features
+}
+
+check() {
+  cd $_project_name-$pkgname-$pkgver/$pkgname
+  export RUSTUP_TOOLCHAIN=stable
+  cargo test --frozen --all-features
+}
+
+package() {
+  install -vDm 755 $_project_name-$pkgname-$pkgver/$pkgname/target/release/$_name -t "$pkgdir/usr/bin/"
+  install -vDm 644 $_project_name-$pkgname-$pkgver/LICENSE-MIT "$pkgdir/usr/share/licenses/$pkgname/MIT.txt"
+}

@@ -1,27 +1,24 @@
 # Maintainer: Felix Yan <felixonmars@archlinux.org>
 
 pkgname=cryptol
-pkgver=2.13.0
-pkgrel=150
+pkgver=3.0.0
+pkgrel=4
 pkgdesc="The Language of Cryptography"
 url="https://www.cryptol.net"
 license=("BSD")
 arch=('loong64' 'x86_64')
-depends=('ghc-libs' 'z3' 'haskell-arithmoi' 'haskell-async' 'haskell-base-compat' 'haskell-bv-sized'
-         'haskell-cryptohash-sha1' 'haskell-extra' 'haskell-gitrev'
-         'haskell-graphscc' 'haskell-heredoc' 'haskell-libbf' 'haskell-memotrie'
+depends=('ghc-libs' 'z3' 'haskell-ansi-terminal' 'haskell-arithmoi' 'haskell-async'
+         'haskell-base-compat' 'haskell-blaze-html' 'haskell-bv-sized'
+         'haskell-criterion-measurement' 'haskell-cryptohash-sha1' 'haskell-extra' 'haskell-gitrev'
+         'haskell-graphscc' 'haskell-heredoc' 'haskell-hgmp' 'haskell-language-c99'
+         'haskell-language-c99-simple' 'haskell-libbf' 'haskell-libffi' 'haskell-memotrie'
          'haskell-monad-control' 'haskell-monadlib' 'haskell-optparse-applicative'
-         'haskell-parameterized-utils' 'haskell-panic' 'haskell-prettyprinter' 'haskell-sbv'
-         'haskell-simple-smt' 'haskell-strict' 'haskell-temporary' 'haskell-tf-random'
-         'haskell-transformers-base' 'haskell-what4' 'haskell-ansi-terminal' 'haskell-blaze-html')
+         'haskell-panic' 'haskell-parameterized-utils' 'haskell-pretty-show' 'haskell-prettyprinter'
+         'haskell-sbv' 'haskell-simple-smt' 'haskell-strict' 'haskell-temporary' 'haskell-tf-random'
+         'haskell-transformers-base' 'haskell-what4' 'haskell-vector')
 makedepends=('ghc' 'uusi' 'alex' 'happy')
 source=(https://hackage.haskell.org/packages/archive/${pkgname}/${pkgver}/${pkgname}-${pkgver}.tar.gz)
-sha512sums=('a4979ca1a11fbbfb5f2f4741fa15ece50c76c84a194eea44844c4e88b4a371796e245be3b061429966db0f4013ca799b6096e152db7166c9d5833db654dc2121')
-
-prepare() {
-    cd $pkgname-$pkgver
-    uusi -u what4 cryptol.cabal
-}
+sha512sums=('17f5283e2fc68c8a58417c16a77782978e81040666d5ced5d101c6c0530c4e017a84ece48bae6a367b42cd93df8b9a3e1fb402c311837e34f6cf725e4838279d')
 
 build() {
     cd $pkgname-$pkgver
@@ -29,7 +26,7 @@ build() {
     runhaskell Setup configure -O --enable-shared --enable-executable-dynamic --disable-library-vanilla \
         --prefix=/usr --docdir=/usr/share/doc/$pkgname --datasubdir=$pkgname --enable-tests \
         --dynlibdir=/usr/lib --libsubdir=\$compiler/site-local/\$pkgid --ghc-option=-fllvm \
-            -f-static -f-relocatable --ghc-option='-pie'
+            -f-static -f-relocatable -fffi --ghc-option='-pie'
     runhaskell Setup build $MAKEFLAGS
     runhaskell Setup register --gen-script
     runhaskell Setup unregister --gen-script

@@ -2,7 +2,7 @@
 
 _name=findpython
 pkgname=python-findpython
-pkgver=0.3.1
+pkgver=0.4.0
 pkgrel=1
 pkgdesc="A utility to find python versions on your system"
 arch=(any)
@@ -19,13 +19,13 @@ makedepends=(
   python-wheel
 )
 checkdepends=(python-pytest)
-source=(https://files.pythonhosted.org/packages/source/${_name::1}/$_name/$_name-$pkgver.tar.gz)
-sha512sums=('a9931cd305a12302753fc74be24f845242ac1d4a0b0bc4494dfaec4a32cb1edc88cc30f0924b24109db01409e20a4aa8dc3c3e3136cc8e780b00cd3a0eeb9816')
-b2sums=('73be0b8c064f0417c7023b367328c2694e74de4559acd48cf9faac8cb73b1450c15269b0078bc20392275cb032e57615e2345e9b72b5623262816f2ea3901aa0')
+source=($_name-$pkgver.tar.gz::$url/archive/refs/tags/$pkgver.tar.gz)
+sha512sums=('aedde450c8aa19407556f6f15123f9373b903b1ee222006704fde408316a10b871b527ccaafb864520e5f626224e0e369ded980473dc6f1d9cf3412d9a15c8b5')
+b2sums=('de87f82eb8ef55c80bfeade6fd6cec2350a12b0b70409ad44434b4c4ebdced7f6910396365fbffe6dd22ff4ee66958614b150fb4abbe22f0cb58fa672c25628a')
 
 build() {
   cd $_name-$pkgver
-  python -m build --wheel --no-isolation
+  PDM_BUILD_SCM_VERSION=$pkgver python -m build --wheel --no-isolation
 }
 
 check() {

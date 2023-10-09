@@ -1,0 +1,29 @@
+# Maintainer: Sven-Hendrik Haase <svenstaro@archlinux.org>
+pkgname=yamlfmt
+pkgver=0.10.0
+pkgrel=1
+pkgdesc='An extensible command line tool or library to format yaml files.'
+arch=('loong64' 'x86_64')
+url='https://github.com/google/yamlfmt'
+license=('Apache')
+depends=('glibc')
+makedepends=('go')
+source=("$pkgname-$pkgver.tar.gz::https://github.com/google/yamlfmt/archive/refs/tags/v${pkgver}.tar.gz")
+sha512sums=('36688c178aab15b1c258a04f80dc7adf6de365ef1a38fa303cf88bb2c446a75f5e3fea8ce11b3da1d692b0be1684018ecd00f90c061056d1f1e41f1af4b5c34b')
+
+build() {
+  export CGO_CPPFLAGS="${CPPFLAGS}"
+  export CGO_CFLAGS="${CFLAGS}"
+  export CGO_CXXFLAGS="${CXXFLAGS}"
+  export CGO_LDFLAGS="${LDFLAGS}"
+  export GOFLAGS="-buildmode=pie -trimpath -ldflags=-linkmode=external -mod=readonly -modcacherw"
+
+  cd ${pkgname}-${pkgver}
+  go build -o yamlfmt ./cmd/yamlfmt
+}
+
+package() {
+  cd ${pkgname}-${pkgver}
+  install -Dm755 yamlfmt "${pkgdir}/usr/bin/yamlfmt"
+  install -Dm644 LICENSE "${pkgdir}/usr/share/licenses/${pkgname}/LICENSE"
+}

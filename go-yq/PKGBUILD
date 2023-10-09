@@ -3,25 +3,25 @@
 # Contributor: Mario Finelli <mario at finel dot li>
 
 pkgname=go-yq
-pkgver=4.35.1
+pkgver=4.35.2
 pkgrel=1
 pkgdesc='Portable command-line YAML processor'
 arch=('loong64' 'x86_64')
 url=https://github.com/mikefarah/yq
 license=('MIT')
 depends=('glibc')
-makedepends=('go')
+makedepends=('git' 'go')
 conflicts=('yq')
-source=("$url/archive/v$pkgver/yq-$pkgver.tar.gz")
-b2sums=('d1d8763d9b2b2c83ed9ef244ea893bc4c869cc9b69b6b761887be7a56c766393471062b5f3b8fbaf6c498b47f8d74d8b223b3ee8232ea5c60e895e868450212a')
+source=("git+$url.git#tag=v$pkgver")
+b2sums=('SKIP')
 
 prepare() {
-  cd yq-$pkgver
+  cd yq
   go mod vendor
 }
 
 build() {
-  cd yq-$pkgver
+  cd yq
   export CGO_CPPFLAGS="$CPPFLAGS"
   export CGO_CFLAGS="$CFLAGS"
   export CGO_CXXFLAGS="$CXXFLAGS"
@@ -31,12 +31,12 @@ build() {
 }
 
 check() {
-  cd yq-$pkgver
+  cd yq
   go test ./...
 }
 
 package() {
-  cd yq-$pkgver
+  cd yq
   install -Dt "$pkgdir"/usr/bin yq
   install -Dm644 -t "$pkgdir"/usr/share/licenses/$pkgname LICENSE
   install -Dm644 -t "$pkgdir"/usr/share/doc/$pkgname README.md

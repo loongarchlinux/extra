@@ -3,12 +3,12 @@
 
 pkgname=networkmanager-pptp
 pkgver=1.2.12
-pkgrel=1
+pkgrel=3
 pkgdesc="NetworkManager VPN plugin for PPTP"
 url="https://wiki.gnome.org/Projects/NetworkManager"
 arch=(loong64 x86_64)
 license=(GPL)
-_pppver=2.4.9
+_pppver=2.5.0
 depends=(
   libnm
   libsecret
@@ -17,7 +17,6 @@ depends=(
 )
 makedepends=(
   git
-  intltool
   libnma
   libnma-gtk4
   python
@@ -28,7 +27,7 @@ optdepends=(
 )
 _commit=ad5a2951d5f281eeea482404058ace8d15e23f30  # tags/1.2.12^0
 source=("git+https://gitlab.gnome.org/GNOME/NetworkManager-pptp.git#commit=$_commit")
-sha256sums=('SKIP')
+b2sums=('SKIP')
 
 pkgver() {
   cd NetworkManager-pptp
@@ -37,15 +36,22 @@ pkgver() {
 
 prepare() {
   cd NetworkManager-pptp
-  intltoolize --automake --copy
   autoreconf -fvi
 }
 
 build() {
-  cd NetworkManager-pptp
-  ./configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var \
-    --libexecdir=/usr/lib --disable-static --with-gtk4 \
+  local configure_options=(
+    --prefix=/usr
+    --sysconfdir=/etc
+    --localstatedir=/var
+    --libexecdir=/usr/lib
+    --disable-static
+    --with-gtk4
     --with-pppd-plugin-dir=/usr/lib/pppd/$_pppver
+  )
+
+  cd NetworkManager-pptp
+  ./configure "${configure_options[@]}"
   sed -i -e 's/ -shared / -Wl,-O1,--as-needed\0/g' libtool
   make
 }

@@ -6,15 +6,14 @@
 
 pkgname=vsftpd
 pkgver=3.0.3
-pkgrel=8
+pkgrel=9
 pkgdesc='Very Secure FTP daemon'
 url='https://security.appspot.com/vsftpd.html'
 arch=('loong64' 'x86_64')
-license=('GPL2')
+license=('GPL-2.0-only')
 depends=('glibc' 'openssl' 'libcap' 'pam' 'libnsl')
 optdepends=('logrotate')
 backup=('etc/vsftpd.conf'
-        'etc/xinetd.d/vsftpd'
         "etc/logrotate.d/vsftpd")
 source=(https://security.appspot.com/downloads/${pkgname}-${pkgver}.tar.gz{,.asc}
         vsftpd-ssl.socket
@@ -44,7 +43,6 @@ prepare() {
   # build-time config
   sed -e 's|^#undef VSF_BUILD_SSL$|#define VSF_BUILD_SSL|' -i builddefs.h
   sed -e 's|/usr/share/empty|/var/empty|g' -i tunables.c vsftpd.conf.5 INSTALL
-  sed -e 's|/usr/local/sbin/vsftpd|/usr/bin/vsftpd|' -i EXAMPLE/INTERNET_SITE/${pkgname}.xinetd
 
   # fix linking to openssl 1.1
   sed -e 's|SSL_library_init|SSL_CTX_new|' -i vsf_findlibs.sh
@@ -67,7 +65,6 @@ package() {
   install -Dm 644 "${srcdir}"/{*.service,*.socket} -t "${pkgdir}/usr/lib/systemd/system"
 
   install -Dm 644 ${pkgname}.conf -t "${pkgdir}/etc"
-  install -Dm 644 EXAMPLE/INTERNET_SITE/${pkgname}.xinetd "${pkgdir}/etc/xinetd.d/${pkgname}"
   install -Dm 644 RedHat/vsftpd.log "${pkgdir}/etc/logrotate.d/${pkgname}"
   install -Dm 644 RedHat/vsftpd.pam "${pkgdir}/etc/pam.d/${pkgname}"
   # TODO: check pam /etc/ftpusers files from debian and redhat, its linked

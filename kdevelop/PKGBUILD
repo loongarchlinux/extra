@@ -3,7 +3,7 @@
 # Contributor: Giovanni Scafora <giovanni@archlinux.org>
 
 pkgname=kdevelop
-pkgver=23.08.0
+pkgver=23.08.1
 _clangver=16.0.6
 pkgrel=2
 pkgdesc='C++ IDE using KDE technologies'
@@ -14,7 +14,7 @@ depends=(clang=$_clangver libksysguard kitemmodels knotifyconfig ktexteditor gra
 makedepends=(extra-cmake-modules kdoctools kdevelop-pg-qt llvm qt5-tools plasma-framework krunner okteta boost purpose subversion astyle)
 optdepends=('konsole: embedded terminal'
             'git: Git support' 'subversion: SVN support'
-            'gdb: GNU debugger support' 'lldb: LLDB debugger support'
+            'gdb: GNU debugger support' 'lldb-mi: LLDB debugger support'
             'qt5-doc: Qt documentation integration'
             'cmake: cmake integration'
             'kate: for additional plugins'
@@ -30,12 +30,18 @@ optdepends=('konsole: embedded terminal'
 conflicts=(kdevelop-qmljs kdevplatform)
 replaces=(kdevelop-qmljs kdevplatform kdevelop-clang-tidy)
 groups=(kde-applications kdevelop)
-source=(https://download.kde.org/stable/release-service/$pkgver/src/$pkgname-$pkgver.tar.xz{,.sig})
-sha256sums=('307c99359ba435a530ec7ff86d9e80aaff5650c6c0b8ea126d392b46147aee6a'
-            'SKIP')
+source=(https://download.kde.org/stable/release-service/$pkgver/src/$pkgname-$pkgver.tar.xz{,.sig}
+        https://invent.kde.org/kdevelop/kdevelop/-/commit/9e8b3a03.patch)
+sha256sums=('2edbd5e912df8b6d4034d468e14138d9b9c9ae5d8c6ea74d48e0c7c983616227'
+            'SKIP'
+            '232a0831c653111f5e4fa27f18df459385b323cde5cdad842b9c578b3f6321a3')
 validpgpkeys=(CA262C6C83DE4D2FB28A332A3A6A4DB839EAA6D7  # Albert Astals Cid <aacid@kde.org>
               F23275E4BF10AFC1DF6914A6DBD2CE893E2D1C87  # Christoph Feck <cfeck@kde.org>
               D81C0CB38EB725EF6691C385BB463350D6EF31EF) # Heiko Becker <heiko.becker@kde.org>
+
+prepare() {
+  patch -d $pkgname-$pkgver -p1 < 9e8b3a03.patch # Port LLDB support to Python 3
+}
 
 build() {
   cmake -B build -S $pkgname-$pkgver \

@@ -3,7 +3,7 @@
 
 pkgname=jupyter-notebook
 _pipname=notebook
-pkgver=7.0.3
+pkgver=7.0.4
 pkgrel=1
 pkgdesc='The language-agnostic HTML notebook application for Project Jupyter'
 arch=(any)
@@ -14,7 +14,7 @@ makedepends=(python-build python-installer python-hatch-jupyter-builder)
 checkdepends=(python-pytest-jupyter python-pytest-timeout python-requests)
 replaces=(jupyter-retrolab)
 source=(https://pypi.io/packages/source/${_pipname:0:1}/$_pipname/$_pipname-$pkgver.tar.gz)
-sha256sums=('07f3c5062fd0e6e69864437a0347abc485d991aae87a92c47d659699f571b729')
+sha256sums=('0c1b458f72ce8774445c8ef9ed2492bd0b9ce9605ac996e2b066114f69795e71')
 
 build() {
   cd notebook-$pkgver

@@ -4,19 +4,21 @@
 
 pkgname=dictd
 pkgver=1.13.1
-pkgrel=4
+pkgrel=5
 pkgdesc="Online dictionary client and server"
 url="https://sourceforge.net/projects/dict/"
-license=('GPL')
+license=(
+	'GPL-1.0-or-later'
+	'GPL-2.0-or-later'
+)
 arch=('loong64' 'x86_64')
-depends=('sh' 'zlib' 'libmaa')
+depends=('glibc' 'sh' 'zlib' 'libmaa')
 makedepends=('flex')
 optdepends=('xclip: for dict_lookup')
 backup=(etc/dict/dictd.conf
 	etc/dict/dict.conf
 	etc/dict/site.info
 	etc/default/dictd
-	etc/xinetd.d/dictd
 	etc/dict/colorit.conf)
 options=('!emptydirs')
 source=("https://downloads.sourceforge.net/dict/$pkgname-$pkgver.tar.gz"
@@ -25,7 +27,6 @@ source=("https://downloads.sourceforge.net/dict/$pkgname-$pkgver.tar.gz"
 	dictd.confd
 	dictd.service
 	site.info
-	dictd.xinetd
 	colorit.conf)
 sha512sums=('31a2e67feaa672e773b86d16ecb9f41fdcd2d5f907759cc110261af30147b3972a2c7d742b4d61b67eb3b8c84c08e179106b9a30e998a425c9b437ec933b03ea'
             '22fbfd3bf8c4f88801aab848e160f46bf17757086ffe8fe7a4cdb78f983e88f6c923cac8714f78d31ab311957aa860731f663324b742febd0a5039085672aeb5'
@@ -33,7 +34,6 @@ sha512sums=('31a2e67feaa672e773b86d16ecb9f41fdcd2d5f907759cc110261af30147b3972a2
             '640616737c3a3b1d4dd84a3df82b7513c76512cdd773d00037a402070de788b72c5942102b5b0799c65713ac910be095ac86b2467d04294355f6dba0e05cb0d8'
             '0172addccbd1474809acc0eb60ddb98cd5e3f749d425a79dea15f92dad33d0341e9c9c20662b350ea69e61dee122eda687fb3c9e7653fd66cf10fd00102be8c6'
             '74bb341f049acd7d502d9117ae1321bedc499958ba377c02a2591880cc45d451409fd99a76ec3ddcf1846f6d124ef5ae1da40c5c001b67e94c68a895c2dcfd79'
-            'dd82dc6eb300e86b9cf288a9408a00773442c2e1ae167bb1882bbb6bcc6e69591fd789abeb9ad69557697f26ea2d8c70e4d89eecc24bd615f1399584026fd301'
             '5df19904f25f482b4b4c90c26279ba8e8747ecf6a0f0045e456613891bc8447f1ee150d51ab3f36a5f8f8f967a07169dbfda2a6743abb842f6ed1d3fd7f88411')
 
 build() {
@@ -45,7 +45,6 @@ build() {
 package() {
   cd "$srcdir"/$pkgname-$pkgver
   make DESTDIR="$pkgdir" install
-  install -Dm 0644 "$srcdir"/dictd.xinetd "$pkgdir"/etc/xinetd.d/dictd
   install -Dm 0644 "$srcdir"/dictd.conf "$pkgdir"/etc/dict/dictd.conf
   install -Dm 0644 "$srcdir"/dict.conf "$pkgdir"/etc/dict/dict.conf
   install -Dm 0644 "$srcdir"/site.info "$pkgdir"/etc/dict/site.info

@@ -1,8 +1,8 @@
 # Maintainer: George Rawlinson <grawlinson@archlinux.org>
 
 pkgname=furnace
-pkgver=0.6pre7
-pkgrel=3
+pkgver=0.6
+pkgrel=1
 pkgdesc='A multi-system chiptune tracker compatible with DefleMask modules'
 arch=('loong64' 'x86_64')
 url='https://github.com/tildearrow/furnace'
@@ -19,6 +19,7 @@ depends=(
   'fftw'
   'zlib'
   'libglvnd'
+  'portaudio'
 )
 makedepends=(
   'git'
@@ -26,15 +27,13 @@ makedepends=(
   'jack'
 )
 optdepends=('jack: JACK audio support')
-_commit='68f517eb04d1d4198120dfd2b66fa9792ba2590a'
+_commit='fbc34fae02b2751b1ca21d71cac74af5e7aa24dd'
 source=(
   "$pkgname::git+$url#commit=$_commit"
   'github.com-superctr-adpcm::git+https://github.com/superctr/adpcm'
-  'ftbfs-fmt-10.patch'
 )
 b2sums=('SKIP'
-        'SKIP'
-        '7cc16658d7e4330b43fd97b6c2e695f42de02890c34ce4bb8ffcfa317a42ddf7882137533f2b3b68b969a2d3f55a588df73e2cbb2978bd014412d209a9a313c5')
+        'SKIP')
 
 pkgver() {
   cd "$pkgname"
@@ -47,18 +46,8 @@ prepare() {
 
   # prepare git submodules
   git submodule init extern/adpcm
-
   git config submodule.extern/adpcm.url "$srcdir/github.com-superctr-adpcm"
-
   git -c protocol.file.allow=always submodule update
-
-  # FTBFS due to fmt-10
-  # https://bugs.archlinux.org/task/79243
-  # https://github.com/tildearrow/furnace/issues/1294
-  patch -p1 -i "$srcdir/ftbfs-fmt-10.patch"
-  git cherry-pick --no-commit \
-    9d567d8cca6b4a40d61446d7d84839d78d036252 \
-    05d101e42e8c327bf83d51688a6c2d9527970e44
 }
 
 build() {
@@ -67,12 +56,13 @@ build() {
     -B build \
     -D CMAKE_INSTALL_PREFIX=/usr \
     -D BUILD_GUI=ON \
-    -D SYSTEM_RTMIDI=ON \
-    -D SYSTEM_FMT=ON \
-    -D SYSTEM_ZLIB=ON \
-    -D SYSTEM_LIBSNDFILE=ON \
-    -D SYSTEM_SDL2=ON \
     -D SYSTEM_FFTW=ON \
+    -D SYSTEM_FMT=ON \
+    -D SYSTEM_LIBSNDFILE=ON \
+    -D SYSTEM_PORTAUDIO=ON \
+    -D SYSTEM_RTMIDI=ON \
+    -D SYSTEM_ZLIB=ON \
+    -D SYSTEM_SDL2=ON \
     -D WITH_JACK=ON
 
   cmake --build build

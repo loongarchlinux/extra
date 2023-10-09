@@ -2,23 +2,30 @@
 
 _name=link
 pkgname=abletonlink
-pkgver=3.0.6
+pkgver=3.1.0
 pkgrel=1
 pkgdesc="Synchronizes musical beat, tempo, and phase across multiple applications"
 arch=(any)
 url="https://github.com/ableton/link"
-license=(GPL2)
+license=(GPL-2.0-or-later)
 depends=(asio)
-makedepends=(catch2 cmake jack portaudio qt5-tools qt5-quickcontrols)
+makedepends=(
+  catch2
+  cmake
+  jack
+  portaudio
+  qt5-tools
+  qt5-quickcontrols
+)
 source=(
   $pkgname-$pkgver.tar.gz::https://github.com/Ableton/$_name/archive/Link-$pkgver.tar.gz
   $pkgname-3.0.5-devendor_asio_and_catch2.patch
   $pkgname-3.0.5-cmake_system_paths.patch
 )
-sha512sums=('7dd811d3b7792722a8754cd0875777b8cf4902a0babff2822a6fd997137eb5feac576263169c71fca24358189e56b5106a32ae1313b33fb6148eb845691a6438'
+sha512sums=('4c62357b74ed8bed21455d977504787ff4c11a862a0ee583c491742c93f6f4bc44b98df2a35f7811584277456b7580835098bc7b9afdd57caf7bd91f9462d202'
             'e6f5dd22dd3c6cc770aa7b4408b3bbf3e80a5fc2fb813494e5e63aa28480d8190bec66de09a3fe5d9ef14019f5de60de8f211c58b4275394c46150747079fd27'
             '826a6e83b6ad859197475551b82f8391844d8d3717a1f2df4a7b16d77d47a1a557ce4c7231a68fa11b7d1112a10746e23875d387efa50af8735df150bb26a6cd')
-b2sums=('7267712fd935a5faff65dd9e9a4137b381991007d1392fca4caa79760c74dcfad692832e0f1150678a5ffb4c3bb5b5a42445d78891bac528b704b848f5c7a9c6'
+b2sums=('ded1037c32f19b5c27450d48d465b387697d8de35c747e7ef5f12ae3adbf3737bb71896c79dbe93cd04d2e893c2b4ccf36dd4b06bfa068b0a359548ef2b0755e'
         '47fa7fbded04df629e83859e2f8732ac1ae368ea563171c59e4a356899d1f6bd0899780ccc508dfcd059ff33bd48fa160b0b7f000fb21f89dd666bf895977fea'
         '63c23dddf60ebe055f9087f7fe5c7519773a3af055059025d283bb02581a25d3fd0ffec8be2aecde43fb1427400bdaadaee9d8387364d81725484ea5f38bd13a')
 
@@ -35,13 +42,17 @@ prepare() {
 }
 
 build() {
-  cmake -DCMAKE_INSTALL_PREFIX=/usr \
-        -DLINK_BUILD_ASIO=ON \
-        -DLINK_BUILD_JACK=ON \
-        -DLINK_BUILD_QT_EXAMPLES=ON \
-        -W no-dev \
-        -B build \
-        -S $_name-Link-$pkgver
+  local cmake_options=(
+    -B build
+    -D CMAKE_INSTALL_PREFIX=/usr
+    -D LINK_BUILD_ASIO=ON
+    -D LINK_BUILD_JACK=ON
+    -D LINK_BUILD_QT_EXAMPLES=ON
+    -S $_name-Link-$pkgver
+    -W no-dev
+  )
+
+  cmake "${cmake_options[@]}"
   cmake --build build --verbose
 }
 

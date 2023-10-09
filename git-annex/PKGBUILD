@@ -3,8 +3,8 @@
 # Contributor: Arch Haskell Team <arch-haskell@haskell.org>
 
 pkgname=git-annex
-pkgver=10.20230626
-pkgrel=30
+pkgver=10.20230926
+pkgrel=8
 pkgdesc="Manage files with git, without checking their contents into git"
 url="https://git-annex.branchable.com/"
 license=("AGPL3")
@@ -12,18 +12,18 @@ arch=('loong64' 'x86_64')
 depends=('git' 'lsof' 'rsync' 'ghc-libs' 'haskell-aeson' 'haskell-ansi-terminal' 'haskell-async'
          'haskell-aws' 'haskell-blaze-builder' 'haskell-bloomfilter' 'haskell-byteable'
          'haskell-case-insensitive' 'haskell-clientsession' 'haskell-concurrent-output'
-         'haskell-cryptonite' 'haskell-crypton-connection' 'haskell-conduit' 'haskell-criterion'
-         'haskell-crypto-api' 'haskell-data-default' 'haskell-dav' 'haskell-dbus'
-         'haskell-disk-free-space' 'haskell-dlist' 'haskell-edit-distance' 'haskell-fdo-notify'
-         'haskell-feed' 'haskell-filepath-bytestring' 'haskell-git-lfs' 'haskell-hinotify'
-         'haskell-http-client' 'haskell-http-client-restricted' 'haskell-http-client-tls'
-         'haskell-http-conduit' 'haskell-http-types' 'haskell-ifelse' 'haskell-magic'
-         'haskell-memory' 'haskell-microlens' 'haskell-monad-control' 'haskell-monad-logger'
-         'haskell-mountpoints' 'haskell-network' 'haskell-network-info' 'haskell-network-multicast'
-         'haskell-network-uri' 'haskell-old-locale' 'haskell-optparse-applicative'
-         'haskell-path-pieces' 'haskell-persistent' 'haskell-persistent-sqlite' 'haskell-quickcheck'
-         'haskell-random' 'haskell-regex-tdfa' 'haskell-resourcet' 'haskell-safesemaphore'
-         'haskell-sandi' 'haskell-securemem' 'haskell-shakespeare' 'haskell-socks' 'haskell-split'
+         'haskell-crypton' 'haskell-conduit' 'haskell-criterion' 'haskell-crypto-api'
+         'haskell-data-default' 'haskell-dav' 'haskell-dbus' 'haskell-disk-free-space'
+         'haskell-dlist' 'haskell-edit-distance' 'haskell-fdo-notify' 'haskell-feed'
+         'haskell-filepath-bytestring' 'haskell-git-lfs' 'haskell-hinotify' 'haskell-http-client'
+         'haskell-http-client-restricted' 'haskell-http-client-tls' 'haskell-http-conduit'
+         'haskell-http-types' 'haskell-ifelse' 'haskell-magic' 'haskell-memory' 'haskell-microlens'
+         'haskell-monad-control' 'haskell-monad-logger' 'haskell-mountpoints' 'haskell-network'
+         'haskell-network-info' 'haskell-network-multicast' 'haskell-network-uri'
+         'haskell-old-locale' 'haskell-optparse-applicative' 'haskell-path-pieces'
+         'haskell-persistent' 'haskell-persistent-sqlite' 'haskell-quickcheck' 'haskell-random'
+         'haskell-regex-tdfa' 'haskell-resourcet' 'haskell-safesemaphore' 'haskell-sandi'
+         'haskell-securemem' 'haskell-shakespeare' 'haskell-socks' 'haskell-split'
          'haskell-stm-chans' 'haskell-tagsoup' 'haskell-tasty' 'haskell-tasty-hunit'
          'haskell-tasty-quickcheck' 'haskell-tasty-rerun' 'haskell-torrent' 'haskell-unix-compat'
          'haskell-unliftio-core' 'haskell-unordered-containers' 'haskell-utf8-string' 'haskell-uuid'
@@ -37,11 +37,8 @@ prepare() {
   cd git-annex
 
   # persistent-template was merged into persistent
-  uusi -d persistent-template -r connection:crypton-connection -u unix-compat git-annex.cabal
+  uusi -d persistent-template git-annex.cabal
   sed -i 's/MIN_VERSION_persistent_template/MIN_VERSION_persistent/' Database/ContentIdentifier.hs Database/Export.hs Database/Fsck.hs Database/Keys/SQL.hs
-
-  # unix-compat 0.7 removed System.PosixCompat.User
-  sed -i 's/System.PosixCompat.User/System.Posix.User/' Utility/UserInfo.hs Build/DesktopFile.hs
 }
 
 build() {

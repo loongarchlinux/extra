@@ -3,7 +3,7 @@
 _name=PyMuPDF
 pkgname=python-pymupdf
 pkgver=1.22.5
-pkgrel=1
+pkgrel=2
 pkgdesc="Python bindings for MuPDF's rendering library"
 arch=(loong64 x86_64)
 url="https://github.com/pymupdf/PyMuPDF"
@@ -39,21 +39,32 @@ optdepends=(
 )
 source=(
   https://files.pythonhosted.org/packages/source/${_name::1}/$_name/$_name-$pkgver.tar.gz
+  mupdf-1.23.patch
+  https://github.com/pymupdf/PyMuPDF/commit/6055efa6.patch
 )
-sha512sums=('683b713dd1db45c387de205700185722634fd6fdf499007927710a14c037f11be8dffa12843620bfe12d8cd93efa4b3289ff216f27eed49099851d5595f28d85')
-b2sums=('c6e460a25cf60aba95ff8336d9712f1ccea72b258d935f625413821a841da348022bcbafae6dc05a47aef497ffc808db9f92ba620cc039b4836ad8d2d81dfa81')
+sha512sums=('683b713dd1db45c387de205700185722634fd6fdf499007927710a14c037f11be8dffa12843620bfe12d8cd93efa4b3289ff216f27eed49099851d5595f28d85'
+            '8a1400faa8560c5a5dd666e8a9026a9fe681c6192aab362aed28c79ff4ed6c6fe42f882d1669d4b0b1df02a0a64b05c7c336772a35c8477c7d1ad9faf0cbf7ae'
+            '6b54b5cf9aa495bf6fbe2cce4da72589dbf0479293bda01df7ea7d3185a69ed6eb307c8ea5177fb07568a738755f37ca4cbd39b440301894e8233a354e00c4cb')
+b2sums=('c6e460a25cf60aba95ff8336d9712f1ccea72b258d935f625413821a841da348022bcbafae6dc05a47aef497ffc808db9f92ba620cc039b4836ad8d2d81dfa81'
+        '2e87b91c0ae18779b17a2eac43c60cb33f68010acdc723171f67662617e98a9a178385db5fe455c99e4e03fda8a93ac2270df1e7df4aeb5b6eae88831ffb22ba'
+        '994b2cb5dcbf70d32aee12193ff2be36d163abccdc5723558c353b056aff2411d06b10fd469114dfd999e2525050c56dc7b0cd61f34a73347ca7b0d6c88e319f')
 
 prepare() {
   # remove bundled mupdf sources
   rm -frv $pkgname/*.tgz
   # we package swig and don't need python-swig
   sed -e 's/, "swig"//' -i $_name-$pkgver/pyproject.toml
+  # fix build with mupdf 1.23
+  patch -d $_name-$pkgver -p1 < mupdf-1.23.patch
+  # fix tests with mupdf 1.23
+  patch -d $_name-$pkgver -p1 < 6055efa6.patch
 }
 
 build() {
   cd $_name-$pkgver
   # NOTE: build against system libmupdf
   export PYMUPDF_SETUP_MUPDF_BUILD=""
+  export PYMUPDF_SETUP_MUPDF_THIRD=0
   python -m build --wheel --no-isolation
 }
 

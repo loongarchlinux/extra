@@ -7,7 +7,7 @@
 
 pkgname=mattermost-desktop
 pkgver=5.4.0
-pkgrel=3
+pkgrel=4
 pkgdesc='Mattermost Desktop application'
 arch=(loong64 x86_64)
 url="https://github.com/${pkgname/-//}"
@@ -15,28 +15,22 @@ license=(Apache)
 _electron=electron24
 depends=($_electron
          libxcrypt-compat)
-makedepends=(gendesk
-             git
+makedepends=(git
              jq
              moreutils
              node-gyp
              npm)
 _archive="${pkgname#*-}-$pkgver"
 source=("$pkgname-$pkgver.tar.gz::$url/archive/v$pkgver.tar.gz"
-        "$pkgname.sh")
-sha256sums=('3dda3865597182c23ed30ed2791614ff10a0f0660636adc64d6a2e3d83ff7793'
-            '1c2bf48b6397d04a5a536c5c9f4960db53249c838c380f03f808c612b00ba4c6')
+        "$pkgname.sh"
+        "$pkgname.desktop")
+sha256sums=('7d2db86669775aa063299cbbc21fb0a348c68e338006ae2acad683cb87d8c410'
+            '1c2bf48b6397d04a5a536c5c9f4960db53249c838c380f03f808c612b00ba4c6'
+            '27c798af15d6aefbd41da5aacb9f9b15438349c649e9c05658387981760fd3b7')
 
 _npmargs="--cache '$srcdir/npm-cache' --no-audit --no-fund"
 
 prepare() {
-	gendesk -q -f -n \
-		--pkgname "$pkgname" \
-		--pkgdesc "$pkgdesc" \
-		--name Mattermost \
-		--categories 'Network;InstantMessaging;' \
-		--mimetypes 'x-scheme-handler/mattermost;' \
-		--custom StartupWMClass="$pkgname"
 	cd "$_archive"
 	sed -i -e "s/git rev-parse --short HEAD/echo $pkgver/" webpack.config.base.js
 	sed -e "s/@ELECTRON@/$_electron/" "../$pkgname.sh" > "$pkgname.sh"
@@ -69,5 +63,5 @@ package() {
 	install -Dm0644 -t "$pkgdir/usr/share/licenses/$pkgname/" LICENSE.txt
 	install -Dm0644 src/assets/linux/app_icon.png "$pkgdir/usr/share/icons/$pkgname.png"
 	install -Dm0755 "$pkgname.sh" "$pkgdir/usr/bin/$pkgname"
-	install -Dm0644 -t "$pkgdir/usr/share/applications/" "../$pkgname.desktop"
+	install -Dm0644 -t "$pkgdir/usr/share/applications/" "$srcdir/$pkgname.desktop"
 }

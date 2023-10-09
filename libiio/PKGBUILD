@@ -3,13 +3,19 @@
 # NOTE: dependents need rebuild on minor release
 
 pkgbase=libiio
-pkgname=(libiio python-pylibiio)
-pkgver=0.24
-pkgrel=3
+pkgname=(
+  libiio
+  python-pylibiio
+)
+pkgver=0.25
+pkgrel=2
 pkgdesc="Interface to the Linux Industrial Input/Output (IIO) Subsystem"
 arch=(loong64 x86_64)
 url="https://github.com/analogdevicesinc/libiio"
-license=(LGPL2.1)
+license=(
+  GPL-2.0-or-later
+  LGPL-2.1-or-later
+)
 makedepends=(
   avahi
   cmake
@@ -19,9 +25,14 @@ makedepends=(
   libxml2
   python-setuptools
 )
-source=($url/archive/v$pkgver/$pkgname-v$pkgver.tar.gz)
-sha512sums=('4e7b54870e986e6ba5860ccd8ad6ece4808c21e27a9d3975065f096bac0b035e65bbc68931023c19e69b72006294c3863bfb7272853b5fb1401b77eec88a89fd')
-b2sums=('cd8dce7af7bbafcb10c08722871d3d9abe089cb22fc3a0ada97905a1c5f96c55905980b8511178d662e9316b7ffdada6e84c29b5cbf1ca92b2d53b02d1ac8cfe')
+source=(
+  $url/archive/v$pkgver/$pkgname-v$pkgver.tar.gz
+  0001-Install-man-pages-to-the-correct-chapter-directories.patch
+)
+sha512sums=('e0f2f5545b4c78d1f0f56b037db6e363aab01aad69af3a095b3546af74dab6effe0b00f5c336ef799a739f76c5f16ab76a6b8e823508861edd2745a9d3fd2599'
+            '4703e37584fba0824c6c93bf5289edd258d9ebe3b6d84fa608cad455346130be982176a2da2523d9bddfb3e3468c8ba992a088ae855868a612446a9d36251b3b')
+b2sums=('9b3190b5c69fc9fc624f4b0c686cace828fc34219a986a306ffba6b4c2a4f3b8c60cd8d5c67c350033d83ecdaeb010559318bbf76f0b0565bdbcbe119d85e097'
+        '2149bad4cd0b4048cb7d37d0592896b55be4e7ddd80f7322fa42a45b0369226f831d6f7869a5c0d7fdea356d43f7e9fe1538c94962fd6360399c121a5c4a22cf')
 
 _pick() {
   local p="$1" f d; shift
@@ -31,6 +42,11 @@ _pick() {
     mv "$f" "$d"
     rmdir -p --ignore-fail-on-non-empty "$(dirname "$f")"
   done
+}
+
+prepare() {
+  # fix installation directory for man pages: https://github.com/analogdevicesinc/libiio/pull/1057
+  patch -Np1 -d $pkgname-$pkgver -i ../0001-Install-man-pages-to-the-correct-chapter-directories.patch
 }
 
 build() {

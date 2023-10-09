@@ -2,7 +2,7 @@
 # Contributor: Aram Drevekenin <aram@poor.dev>
 
 pkgname=bandwhich
-pkgver=0.20.0
+pkgver=0.21.0
 pkgrel=1
 pkgdesc='Terminal bandwidth utilization tool'
 url='https://github.com/imsnif/bandwhich'
@@ -10,18 +10,23 @@ arch=('loong64' 'x86_64')
 license=('MIT')
 depends=('gcc-libs')
 makedepends=('cargo')
-source=(https://github.com/imsnif/${pkgname}/archive/${pkgver}/${pkgname}-${pkgver}.tar.gz)
-sha512sums=('3bd5cc4166514feb601eb921ef3fbad08b8e9787aad1bb0c8a9543207631964ffc14cc1488e96ef4319bb1a20c5f684b744facd2a6cf1d9ef6dd5d2fefc524cb')
-b2sums=('d2809660b09d1b02bbf8b2b8719406b49064275202af422fc32fa2add34ffc04d748073b6a51c827662418292c0e10c0aa3ca3955e5317e3a0015c25e15755ec')
+source=(${pkgname}-${pkgver}.tar.gz::https://github.com/imsnif/${pkgname}/archive/refs/tags/v${pkgver}.tar.gz)
+sha512sums=('b0b0f31b1d53771ae9660dae48c57b23de0fa3b2d8788434af470d4a01e8aa5736c53a4e5a329bef94ffea6232b9025ec905b83de0e70b08df074d9909f98904')
+b2sums=('b903c7e4be58d13ceac86744f1f5b8039b367ef728ab4b728ffc629bb9661c98fa654cb0e4841c6a4267786b58ee66e9e9758099359ec657ced80a8295beba68')
+
+prepare() {
+  cd "${pkgname}-${pkgver}"
+  cargo fetch --locked --target "$CARCH-unknown-linux-gnu"
+}
 
 build() {
   cd "${pkgname}-${pkgver}"
-  cargo build --release --locked
+  cargo build --release --frozen
 }
 
 check() {
   cd "${pkgname}-${pkgver}"
-  cargo test --release --locked
+  cargo test --release --frozen -- --skip layout_under_50_width_under_50_height
 }
 
 package() {

@@ -1,7 +1,7 @@
 # Maintainer: Felix Yan <felixonmars@archlinux.org>
 
 pkgname=deepin-draw
-pkgver=6.0.6
+pkgver=6.0.8
 pkgrel=1
 pkgdesc="A lightweight drawing tool for Linux Deepin"
 arch=('loong64' 'x86_64')
@@ -11,11 +11,14 @@ depends=('deepin-qt5integration' 'dtkcore' 'dtkgui' 'dtkwidget' 'qt5-base' 'qt5-
          'gcc-libs' 'deepin-picker' 'adobe-source-han-sans-otc-fonts')
 makedepends=('cmake' 'qt5-tools')
 groups=('deepin-extra')
-source=("https://github.com/linuxdeepin/deepin-draw/archive/$pkgver/$pkgname-$pkgver.tar.gz")
-sha512sums=('f5e0c2f1f2f5f4e171e3252c5a1fd2ddbca62de7b0b68080aa5f5a743207f49032088c636c3ca06f59cce6f0c41bc6b968e483136ed08bf283dd7fe22c53c4c3')
+source=("https://github.com/linuxdeepin/deepin-draw/archive/$pkgver/$pkgname-$pkgver.tar.gz"
+        $pkgname-missing-include.patch::https://github.com/linuxdeepin/deepin-draw/pull/83.patch)
+sha512sums=('ffd8d1081e56069247952c3fae7255d0102f255fb1966eb6d0828ff086f30a132bacd9ff4abc67ac7a4dfc0cf8a5477557b33de18e9ada02715f5087e7831f18'
+            '1c80d45d3d54902693a29ccf691cdfe1c961872a75b764b2de65455c09647c149e82c9e0aec5bc9444422285ac699da7600ffef71536a4532e40dfc4ab044f6d')
 
 prepare() {
   cd deepin-draw-$pkgver
+  patch -p1 -i ../$pkgname-missing-include.patch
   sed -e '/set(CMAKE_CXX_FLAGS/d' -e '/set(CMAKE_C_FLAGS/d' -e '/SET(CMAKE_EXE_LINKER_FLAGS/d' \
       -i src/CMakeLists.txt
 }

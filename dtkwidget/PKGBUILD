@@ -3,9 +3,9 @@
 # Contributor: Xu Fasheng <fasheng.xu[AT]gmail.com>
 
 pkgname=dtkwidget
-pkgver=5.6.12
+pkgver=5.6.17
 pkgrel=1
-pkgdesc='Deepin graphical user interface library'
+pkgdesc='Deepin base graphical widgets library'
 arch=('loong64' 'x86_64')
 url="https://github.com/linuxdeepin/dtkwidget"
 license=('LGPL3')
@@ -15,10 +15,11 @@ depends=('dtkcore' 'dtkgui' 'gcc-libs' 'glibc' 'gsettings-qt' 'libx11' 'libxcb' 
 makedepends=('cmake' 'ninja' 'qt5-tools' 'gtest' 'doxygen')
 replaces=('deepin-tool-kit')
 source=("https://github.com/linuxdeepin/dtkwidget/archive/$pkgver/$pkgname-$pkgver.tar.gz")
-sha512sums=('674ddb51c7c06a9b3dd33286771d0138b28081ba1009ef4b971b23582d5e3cbe60fe4d533e106cf3323693d68469b1e3bd90c8193c9c21f5e81985c93b6620e5')
+sha512sums=('706e7aa2ef4ed490fa74ff405c59a19c636c43387dd78eb7efd05134117763481247113fd41df1018ff63d72ef21c85e8f1d9f07d8d3b3c31e6cb6aac3f3075c')
 
 build() {
   cd dtkwidget-$pkgver
+  # Disable plugins because they are not going to be installed
   cmake . -GNinja \
       -DMKSPECS_INSTALL_DIR=lib/qt/mkspecs/modules/ \
       -DBUILD_DOCS=ON \
@@ -26,9 +27,15 @@ build() {
       -DQCH_INSTALL_DESTINATION=share/doc/qt \
       -DCMAKE_INSTALL_LIBDIR=lib \
       -DCMAKE_INSTALL_PREFIX=/usr \
-      -DVERSION=$pkgver \
+      -DDTK_VERSION=$pkgver \
       -DCMAKE_BUILD_TYPE=None
   ninja
+}
+
+check() {
+  cd dtkwidget-$pkgver
+  # TODO
+  # ninja test || echo "Tests failed"
 }
 
 package() {

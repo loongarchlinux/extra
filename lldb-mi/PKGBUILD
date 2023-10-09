@@ -1,0 +1,31 @@
+# Maintainer: Antonio Rojas <arojas@archlinux.org>
+
+pkgname=lldb-mi
+pkgver=0.0.1
+pkgrel=1
+pkgdesc="LDB's machine interface driver"
+url='https://lldb.llvm.org/'
+arch=(loong64 x86_64)
+license=(Apache)
+depends=(
+        gcc-libs
+        glibc
+        lldb
+        llvm-libs
+        )
+makedepends=(
+            cmake
+            llvm
+            )
+source=(https://github.com/lldb-tools/lldb-mi/archive/$pkgver/$pkgname-$pkgver.tar.gz)
+sha256sums=('75f5b2dab1ffa85ced54eb9c856d8e748660425712cc29138f26f13e9d06a8aa')
+
+build() {
+  cmake -B build -S $pkgname-$pkgver \
+    -DCMAKE_INSTALL_PREFIX=/usr
+  cmake --build build
+}
+
+package() {
+  DESTDIR="$pkgdir" cmake --install build
+}

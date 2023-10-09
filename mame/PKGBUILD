@@ -4,21 +4,39 @@
 # Contributor: JJDaNiMoTh <jjdanimoth@gmail.com>
 
 pkgbase=mame
-pkgname=(mame mame-tools)
-pkgver=0.258
+pkgname=(mame
+         mame-tools)
+pkgver=0.259
 pkgrel=1
 pkgdesc='Port of the popular Multiple Arcade Machine Emulator using SDL with OpenGL support'
 url='https://mamedev.org/'
 license=(GPL2)
 arch=(loong64 x86_64)
-makedepends=(nasm python asio rapidjson glm libxinerama sdl2_ttf qt5-base lua libutf8proc pugixml portmidi portaudio flac libpulse)
+makedepends=(asio
+             flac
+             glm
+             libpulse
+             libutf8proc
+             libxinerama
+             lua
+             nasm
+             portaudio
+             portmidi
+             pugixml
+             python
+             qt5-base
+             rapidjson
+             sdl2_ttf)
 source=(https://github.com/mamedev/mame/archive/mame${pkgver/./}.tar.gz
-        mame.sh mame.desktop mame.svg)
-sha256sums=('aca1365f3e1a1c8fe1638206f1c6176da08cbe686586c55355068179c023096b'
-            'ee1c59bafc5e5441e99fa4c58108a3e18048e60672f34de865c8a5a976094dba'
+        mame.desktop
+        mame.sh
+        mame.svg)
+sha256sums=('46baf431079a3373ffe8d984b3ba5d62ad5b1d5e356d1f60cf60f6ad03d4cec6'
             '0e5e93f84673c2d17a1bf7a6b256cfa54ef89a086a828df19bc054c12776d821'
+            'ee1c59bafc5e5441e99fa4c58108a3e18048e60672f34de865c8a5a976094dba'
             '17c442c933d764175e4ce1de50a80c0c2ddd5d733caf09c3cd5e6ba697ac43f4')
-options=(!debug !lto) # debug build fails
+options=(!debug
+         !lto) # debug build fails
 
 prepare() {
   cd mame-mame${pkgver/./}
@@ -42,7 +60,26 @@ build() {
 }
 
 package_mame() {
-  depends=(sdl2_ttf qt5-base lua libutf8proc pugixml portmidi portaudio flac libpulse hicolor-icon-theme)
+  depends=(expat
+           flac
+           fontconfig
+           gcc-libs
+           glibc
+           libglvnd
+           libjpeg-turbo
+           libpulse
+           libutf8proc
+           libx11
+           libxi
+           lua
+           portaudio
+           portmidi
+           pugixml
+           qt5-base
+           sdl2
+           sdl2_ttf
+           sqlite
+           zlib)
   conflicts=(sdlmame)
   replaces=(sdlmame) 
 
@@ -80,11 +117,30 @@ package_mame() {
 
 package_mame-tools() {
   pkgdesc='Port of the popular Multiple Arcade Machine Emulator using SDL with OpenGL support (tools)'
-  depends=(sdl2 libutf8proc flac)
+  depends=(flac
+           gcc-libs
+           glibc
+           libutf8proc
+           sdl2
+           zlib)
 
   cd mame-mame${pkgver/./}
-  for _i in castool chdman floptool imgtool jedutil ldresample ldverify nltool nlwav pngcmp regrep romcmp \
-            split srcclean testkeys unidasm; do
+  for _i in castool \
+            chdman \
+            floptool \
+            imgtool \
+            jedutil \
+            ldresample \
+            ldverify \
+            nltool \
+            nlwav \
+            pngcmp \
+            regrep \
+            romcmp \
+            split \
+            srcclean \
+            testkeys \
+            unidasm; do
     install -Dm755 $_i -t "$pkgdir"/usr/bin
   done
   mv "$pkgdir"/usr/bin/{,mame-}split # Fix conflicts

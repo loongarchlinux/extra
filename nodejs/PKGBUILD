@@ -8,8 +8,8 @@
 # Contributor: TIanyi Cui <tianyicui@gmail.com>
 
 pkgname=nodejs
-pkgver=20.6.0
-_commit=9700344c02b8bb927184b0ff4a108ac23bf2be4d
+pkgver=20.8.0
+_commit=a86c2caea9c329442bbbd8eeec6d5385b594b7ca
 pkgrel=1
 pkgdesc='Evented I/O for V8 javascript'
 arch=('loong64' 'x86_64')
@@ -24,6 +24,10 @@ sha512sums=('SKIP')
 
 build() {
   cd node
+
+  # /usr/lib/libnode.so uses malloc_usable_size, which is incompatible with fortification level 3
+  export CFLAGS="${CFLAGS/_FORTIFY_SOURCE=3/_FORTIFY_SOURCE=2}"
+  export CXXFLAGS="${CXXFLAGS/_FORTIFY_SOURCE=3/_FORTIFY_SOURCE=2}"
 
   ./configure \
     --prefix=/usr \

@@ -2,7 +2,7 @@
 # Contributor: Jan de Groot <jgc@archlinux.org>
 
 pkgname=gnome-mahjongg
-pkgver=3.40.0
+pkgver=3.40.0+r35+g96668c5
 pkgrel=1
 pkgdesc="Disassemble a pile of tiles by removing matching pairs"
 url="https://wiki.gnome.org/Apps/Mahjongg"
@@ -22,7 +22,7 @@ makedepends=(
   yelp-tools
 )
 groups=(gnome-extra)
-_commit=9bd0a49f97371d0cb1f2c0ecea94da407ed5c965  # tags/3.40.0^0
+_commit=96668c52afaec1636d1df4af17ef6decb04149a8  # master
 source=("git+https://gitlab.gnome.org/GNOME/gnome-mahjongg.git#commit=$_commit")
 b2sums=('SKIP')
 

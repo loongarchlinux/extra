@@ -3,18 +3,23 @@
 
 _hkgname=bifunctors
 pkgname=haskell-bifunctors
-pkgver=5.5.15
+pkgver=5.6
 pkgrel=9
 pkgdesc="Bifunctors"
 url="https://github.com/ekmett/bifunctors/"
 license=("BSD")
 arch=('loong64' 'x86_64')
-depends=('ghc-libs' 'haskell-base-orphans' 'haskell-comonad' 'haskell-tagged'
+depends=('ghc-libs' 'haskell-comonad' 'haskell-foldable1-classes-compat' 'haskell-tagged'
          'haskell-th-abstraction')
-makedepends=('ghc')
+makedepends=('ghc' 'uusi')
 checkdepends=('haskell-hspec' 'haskell-quickcheck')
 source=("https://hackage.haskell.org/packages/archive/${_hkgname}/${pkgver}/${_hkgname}-${pkgver}.tar.gz")
-sha512sums=('59977c7eec1d1e66c99becc90c29715f90c309ab1ace8e1021d512bf58cb8781e3b3ee5e7de16735fd3cd844b4d918d5f0f6d5afbf1a4da75fa854915356192f')
+sha512sums=('05854dba4b20eb51dbba2ae7c1c294065f0e85d5aa883a1b2cb484af7d7f1a31d60a4e6d1c8386a5639d0191b1d3a2c02a8de49224be3e4bb83b963bd406ca43')
+
+prepare() {
+    cd $_hkgname-$pkgver
+    uusi -d bifunctor-classes-compat $_hkgname.cabal
+}
 
 build() {
     cd $_hkgname-$pkgver
@@ -28,7 +33,7 @@ build() {
     runhaskell Setup configure -O --enable-shared --enable-executable-dynamic --disable-library-vanilla \
         --prefix=/usr --docdir=/usr/share/doc/$pkgname --datasubdir=$pkgname "${_opts[@]}" \
         --dynlibdir=/usr/lib --libsubdir=\$compiler/site-local/\$pkgid --ghc-option=-fllvm \
-            -ftagged -f-semigroups
+            -ftagged
     runhaskell Setup build $MAKEFLAGS
     runhaskell Setup register --gen-script
     runhaskell Setup unregister --gen-script

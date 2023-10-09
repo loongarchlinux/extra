@@ -2,20 +2,19 @@
 # Contributor: justforlxz <justforlxz@gmail.com>
 
 pkgname=dwayland
-pkgver=5.24.3.deepin.1.4
-_tag=5.24.3-deepin.1.4
+pkgver=5.25.0
 pkgrel=1
 pkgdesc='Qt-style Client and Server library wrapper for the Wayland libraries'
 arch=(loong64 x86_64)
 license=(LGPL)
 url="https://github.com/linuxdeepin/dwayland"
-depends=(qt5-wayland)
+depends=(glibc gcc-libs libglvnd qt5-base qt5-wayland wayland)
 makedepends=(extra-cmake-modules doxygen qt5-tools qt5-doc wayland-protocols deepin-wayland-protocols ninja)
-source=("https://github.com/linuxdeepin/dwayland/archive/$_tag/$pkgname-$_tag.tar.gz")
-sha256sums=('1216e62e57fcf0d3634fbad34d56e188626947f667e327e3c9165a9cec449eae')
+source=("https://github.com/linuxdeepin/dwayland/archive/$pkgver/$pkgname-$pkgver.tar.gz")
+sha256sums=('72cc608174e9bbf0944feb1bbd492ff9631c3c8dc8b84e082be53c5da0406b60')
 
 build() {
-  cmake -G Ninja -B build -S $pkgname-$_tag \
+  cmake -G Ninja -B build -S $pkgname-$pkgver \
     -DCMAKE_INSTALL_LIBEXECDIR=lib \
     -DBUILD_TESTING=OFF \
     -DBUILD_QCH=ON
@@ -24,4 +23,5 @@ build() {
 
 package() {
   DESTDIR="$pkgdir" cmake --install build
+  sed -i 's/KF5/DWayland/' "$pkgdir"/usr/lib/cmake/DWayland/DWaylandTargets.cmake
 }

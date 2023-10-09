@@ -2,24 +2,25 @@
 # Contributor: Platon Pronko <platon7pronko@gmail.com>
 
 pkgname=python-lsp-jsonrpc
-pkgver=1.0.0
-pkgrel=4
+pkgver=1.1.2
+pkgrel=1
 pkgdesc="Fork of the python-jsonrpc-server project, maintained by the Spyder IDE team and the community"
 arch=("any")
 url="https://github.com/python-lsp/python-lsp-jsonrpc"
 license=(MIT)
 depends=(python-ujson)
-makedepends=(python-setuptools)
+makedepends=(python-build python-installer python-setuptools-scm python-wheel)
 source=($pkgname-$pkgver.targz::https://github.com/python-lsp/python-lsp-jsonrpc/archive/v${pkgver}.tar.gz)
-sha256sums=('058f21fa9e5c49fbb978c3f92c4b0ed84f3a859dc6568632cb69ddec2bcb38c0')
+sha256sums=('68c19efd2968210903e3164e6940cfc08772b287e387046a6531bef23bf14a8e')
 
 build() {
-  cd "${srcdir}/python-lsp-jsonrpc-${pkgver}"
-  python setup.py build
+  cd python-lsp-jsonrpc-${pkgver}
+  SETUPTOOLS_SCM_PRETEND_VERSION=${pkgver} \
+  python -m build --wheel --no-isolation
 }
 
 package() {
-  cd "${srcdir}/python-lsp-jsonrpc-${pkgver}"
-  python setup.py install --root="$pkgdir" --optimize=1 --skip-build
+  cd python-lsp-jsonrpc-${pkgver}
+  python -m installer --destdir="$pkgdir" dist/*.whl
   install -Dm644 LICENSE "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
 }

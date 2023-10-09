@@ -6,12 +6,13 @@
 
 pkgname=bash-bats
 pkgver=1.10.0
-pkgrel=1
+pkgrel=2
 pkgdesc="Bash Automated Testing System"
 arch=("any")
 url="https://github.com/bats-core/bats-core"
 license=("MIT")
 depends=('bash')
+optdepends=('parallel: run tests in parallel')
 source=($pkgname-$pkgver.tar.gz::$url/archive/v$pkgver.tar.gz)
 sha256sums=('a1a9f7875aa4b6a9480ca384d5865f1ccf1b0b1faead6b47aa47d79709a5c5fd')
 

@@ -3,12 +3,17 @@
 # Contributor: Juergen Hoetzel <juergen@archlinux.org>
 
 pkgname=snd
-pkgver=23.6
+pkgver=23.7
 pkgrel=1
 pkgdesc="An advanced sound editor"
 arch=(loong64 x86_64)
 url="https://ccrma.stanford.edu/software/snd/"
-license=(custom:free)
+license=(
+  'BSD-2-Clause'
+  'GPL-2.0-or-later OR GL2PS'
+  'LLGPL'
+  'TCL'
+)
 groups=(pro-audio)
 depends=(
   glibc
@@ -49,11 +54,20 @@ optdepends=(
   'vorbis-tools: For OGG support'
   'wavpack: For wav support'
 )
-source=(https://sourceforge.net/projects/$pkgname/files/$pkgname/$pkgver/$pkgname-$pkgver.tar.gz)
-sha512sums=('2b878d86e62dcd781968ab16f032bc867a4bdd8779ae067d212b9d4e3d9577dc4ac8e0686ad2499ea985a178055a506d0ed4a20dc134ae267a00ebad19f6eb66')
-b2sums=('dd95f29d5fec02614ef92820bc8812a6e2024aefeb3fdbf09f6dadbe6f178b7c7fc69b0995b4539c358365f217e504de44f53039f57c5b042898a172a9283f63')
+source=(
+  https://sourceforge.net/projects/$pkgname/files/$pkgname/$pkgver/$pkgname-$pkgver.tar.gz
+  GL2PS.txt
+  LLGPL.txt
+)
+sha512sums=('ae79009bf2743072e9579907dc80d933dec43d04633726d5a5d70eebd70b84911b4b4ebf7120bc0bf6e6f82468b08625775ff6a948357ca288d24bbb64fa9c40'
+            'b4d26fb150cdce132138e080599e5690cde980ab7c687a2d4cb690a8ec9489588de8cd763cfb93a5617f017f438fcde827be71611aa9e460c5f0612d112e76cd'
+            'c69c0548eefa5b5566e491c2be968baf7fd40baa8dec36a75548180cbf6c253f07f68852a2c15a55cb5e59da8bdbb74fb32f68b8c066a523da662eee6b1e1aa9')
+b2sums=('a823597f64da0dee31a3ff9ad864dbeb4114532f239324573964017ae57bbc5491b2af94847268d896faac3229371b47d87b5b46ef66246f7cc7719f0803fd37'
+        'c4afa4f44d97eca049002d7fa2c1b20547b550800fe7133625d3c75b24f39005f0f846f7412ef366d820ebb01c82f60c484d1559d31766ab8f6b37514f439a3c'
+        '80f0149a353f29060454a00cd385c6c60c62c1d2c76d1ec2ae435e22307c4a729bfac2a5f9ecf00227a101b1968b925bc3e0e5c16961f45daff6c98ba64c0fcb')
 
 prepare() {
+  head -n 25 $pkgname-$pkgver/sndins/sndins.h tail -n 22 | sed 's/\* //g;s/\*//g' > BSD-2-Clause.txt
   gendesk -f -n \
           --pkgname "edu.stanford.ccrma.$pkgname-s7" \
           --name "$pkgname (s7)" \
@@ -112,7 +126,10 @@ package() {
   # XDG desktop integration
   install -vDm 644 *.desktop -t "$pkgdir/usr/share/applications/"
   # license
-  install -vDm 644 $pkgname-$pkgver/COPYING -t "$pkgdir/usr/share/licenses/$pkgname"
+  install -vDm 644 $pkgname-$pkgver/COPYING "$pkgdir/usr/share/licenses/$pkgname/TCL.txt"
+  install -vDm 644 BSD-2-Clause.txt -t "$pkgdir/usr/share/licenses/$pkgname/"
+  install -vDm 644 LLGPL.txt -t "$pkgdir/usr/share/licenses/$pkgname/"
+  install -vDm 644 GL2PS.txt -t "$pkgdir/usr/share/licenses/$pkgname/"
   # docs
   install -vDm 644 $pkgname-$pkgver/{{HISTORY,README}.Snd,NEWS} -t "$pkgdir/usr/share/doc/$pkgname/"
   install -vDm 644 $pkgname-$pkgver/*.html -t "$pkgdir/usr/share/doc/$pkgname/html"

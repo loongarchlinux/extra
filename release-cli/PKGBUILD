@@ -1,7 +1,7 @@
 # Maintainer: David Runge <dvzrv@archlinux.org>
 
 pkgname=release-cli
-pkgver=0.15.0
+pkgver=0.16.0
 pkgrel=1
 pkgdesc="Gitlab Release CLI"
 arch=(loong64 x86_64)
@@ -9,10 +9,9 @@ url="https://gitlab.com/gitlab-org/release-cli"
 license=(MIT)
 depends=(glibc)
 makedepends=(go)
-options=(debug)
 source=($pkgname-$pkgver.tar.gz::https://gitlab.com/gitlab-org/$pkgname/-/archive/v$pkgver/$pkgname-v$pkgver.tar.gz)
-sha512sums=('4665cc7607cb7ee752fd012390778d28f41789f540c09a3afb25884ac3d3911f1db49d99ea161f91f1ca77b46489f7bb1f4657b7eb0cf1b64edf3c3f0b429628')
-b2sums=('6eeb6e1bd8838445248bfd57b8ff522e9d5790c02356cad64d095be484278d83cab988333c0270a42822e8864eb2d33f489a338a9fd0a613856676020c2c3ace')
+sha512sums=('b66f23f783a612ed96839241d612baa5277065e2e512c09d62c6b772f1d670dab366aa71b1645a288580ef37ecb8e080f95ac735116c393b1255cfb0b3696e11')
+b2sums=('451cf5e6aca31388e57daf6a8d78b8cf66fd377e144b432f6fe108faf7d42f0d2e676bbdb3e5971eb1c17a89d2cba889f8bbc7df1d83263b9e5814065c020673')
 
 prepare() {
   mkdir -vp $pkgname-v$pkgver/build
@@ -24,9 +23,10 @@ build() {
   export CGO_CFLAGS="${CFLAGS}"
   export CGO_CXXFLAGS="${CXXFLAGS}"
   export CGO_LDFLAGS="${LDFLAGS}"
-  export GOFLAGS="-buildmode=pie -trimpath -ldflags=-linkmode=external -mod=readonly -modcacherw"
+  export GOPATH="${srcdir}"
+  export GOFLAGS="-buildmode=pie  -mod=readonly -modcacherw"
 
-  go build -o build/$pkgname ./cmd/$pkgname
+  go build -ldflags "-compressdwarf=false -linkmode=external" -o build/$pkgname ./cmd/$pkgname
 }
 
 package() {

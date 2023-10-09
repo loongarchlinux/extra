@@ -2,7 +2,7 @@
 
 pkgname=python-openapi-core
 _pipname=openapi_core
-pkgver=0.18.0
+pkgver=0.18.1
 pkgrel=1
 pkgdesc='Client-side and server-side support for the OpenAPI Specification v3'
 arch=(any)
@@ -11,7 +11,7 @@ license=(BSD)
 depends=(python-openapi-spec-validator python-werkzeug python-isodate python-more-itertools)
 makedepends=(python-build python-installer python-poetry-core)
 source=(https://pypi.io/packages/source/${_pipname:0:1}/$_pipname/$_pipname-$pkgver.tar.gz)
-sha256sums=('ede9fe3a2b0a7f8870249c085b2d7e64b7bb169b46ceeaa3b812cceff2b05548')
+sha256sums=('63fa13d9af226ac00119b0531ac9929e3dbb4cbe00216770784473fa6a03bc27')
 
 build() {
   cd $_pipname-$pkgver

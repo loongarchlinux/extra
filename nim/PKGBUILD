@@ -6,14 +6,14 @@
 
 pkgname=nim
 _pkgname=Nim
-pkgver=1.6.10
-_csourcesver=561b417c65791cd8356b5f73620914ceff845d10
+pkgver=2.0.0
+_csourcesver=86742fb02c6606ab01a532a0085784effb2e753e
 pkgrel=2
 pkgdesc='Imperative, multi-paradigm, compiled programming language'
 url='https://nim-lang.org/'
 arch=('loong64' 'x86_64')
 license=('MIT')
-depends=('bash')
+depends=('bash' 'gcc')
 makedepends=('git')
 provides=('nimble')
 conflicts=('nimble')
@@ -26,15 +26,15 @@ backup=(
   etc/nim/rename.rules.cfg
 )
 source=(https://github.com/nim-lang/Nim/archive/v${pkgver}/${pkgname}-${pkgver}.tar.gz
-        "git+https://github.com/nim-lang/csources_v1.git#commit=${_csourcesver}")
-sha256sums=('09a5f707c9681ee6d712c749dc1d4b68000ccf07db35635050c1fc4e9114bfb8'
+        "git+https://github.com/nim-lang/csources_v2.git#commit=${_csourcesver}")
+sha256sums=('2d33e3a75fe6d26726de432eb236657b3eadef5727e9c08101a91e06cb0c2dc5'
             'SKIP')
-b2sums=('9b11bf63ecc806255340256e565efc11efa1bda97fbb7b791736558f8db847f3c391468f44bcb290c649c4bc847ea168d4e0402b93b528a6b978400d30de411d'
+b2sums=('a02910cfcf53dabb52d1d086f5fc934ebce7343c2b4e524d38dd95fd0e5d38e1e037b770491ee98cd02a0cade74f88e4ab42d1c405bc1d897aa83f4e122bffae'
         'SKIP')
 
 prepare() {
   cd ${_pkgname}-${pkgver}
-  cp -r ../csources_v1/* .
+  cp -r ../csources_v2/* .
   rm bin/empty.txt
   for nimcfg in {compiler,config}/nim.cfg; do
     echo "gcc.options.always %= \"\${gcc.options.always} ${CFLAGS:-} ${CPPFLAGS}\"" >> "${nimcfg}"
@@ -77,7 +77,7 @@ package() {
   install -d "${pkgdir}/usr/lib"
   cp -a lib "${pkgdir}/usr/lib/nim"
   cp -a compiler "${pkgdir}/usr/lib/nim"
-  install -Dm 644 compiler.nimble "${pkgdir}/usr/lib/nim/compiler"
+  install -Dm 644 nim.nimble "${pkgdir}/usr/lib/nim/compiler"
   install -m 755 lib/libnimrtl.so "${pkgdir}/usr/lib/libnimrtl.so"
 
   install -Dm 644 config/* -t "${pkgdir}/etc/nim"
@@ -91,6 +91,9 @@ package() {
   ln -s /usr/share/nim/doc "${pkgdir}/usr/lib/nim/doc"
   install -d "${pkgdir}/usr/share/nim/doc"
   cp -a doc/* "${pkgdir}/usr/share/nim/doc"
+
+  # Fix wrong path for system.nim https://github.com/nim-lang/Nim/issues/22369
+  ln -s /usr/lib/nim "$pkgdir"/usr/lib/nim/lib
 
   install -Dm 644 copying.txt -t "${pkgdir}/usr/share/licenses/${pkgname}"
 

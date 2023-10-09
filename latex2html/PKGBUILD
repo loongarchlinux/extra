@@ -1,31 +1,39 @@
-# Maintainer:
+# Maintainer: Caleb Maclennan <caleb@alerque.com>
 # Contributor: Ronald van Haren <ronald.archlinux.org>
 # Contributor: Jochem Kossen <j.kossen@home.nl>
 # Contributor: Jason Chu <jason.archlinux.org>
 
 pkgname=latex2html
-pkgver=2023
+pkgver=2023.2
 pkgrel=1
-pkgdesc="a convertor written in Perl that converts LaTeX documents to HTML."
-arch=('any')
-url="https://www.ctan.org/pkg/latex2html/"
-depends=('perl' 'ghostscript' 'texlive-core' 'libpng' 'giflib' 'netpbm')
-license=('GPL2')
-source=($pkgname-$pkgver.tar.gz::https://github.com/latex2html/latex2html/archive/v$pkgver.tar.gz)
-sha256sums=('71935a850b44f7db76ff3d0d8e3d06e43f34b7edebf7905e684ef3361dc6974b')
+pkgdesc='a convertor written in Perl that converts LaTeX documents to HTML'
+arch=(any)
+url="https://www.ctan.org/pkg/$pkgname"
+_url="https://github.com/$pkgname/$pkgname"
+depends=(ghostscript
+         giflib
+         libpng
+         netpbm
+         perl
+         texlive-basic)
+license=(GPL2)
+_archive="$pkgname-$pkgver"
+source=("$_url/archive/v$pkgver/$_archive.tar.gz")
+sha256sums=('2a3f50621a71c9c0c425fb6709ae69bb2cf4df4bfe72ac661c2ea302e5aba185')
 
 build() {
-  cd $pkgname-$pkgver
-    ./configure --prefix=/usr \
-      --shlibdir=/usr/lib/$pkgname \
-      --with-texpath=/usr/share/texmf/tex/latex/html \
-      --enable-gif \
-      --enable-png
+	cd $pkgname-$pkgver
+	./configure \
+		--prefix=/usr \
+		--shlibdir="/usr/lib/$pkgname" \
+		--with-texpath=/usr/share/texmf/tex/latex/html \
+		--enable-gif \
+		--enable-png
 
-  make
+	make
 }
 
 package() {
-  cd $pkgname-$pkgver
-  make DESTDIR="${pkgdir}" install
+	cd $pkgname-$pkgver
+	make DESTDIR="$pkgdir" install
 }

@@ -1,24 +1,33 @@
 # Maintainer: David Runge <dvzrv@archlinux.org>
 
-_name=zopfli
+_name=py-zopfli
 pkgname=python-zopfli
-pkgver=0.2.2
-pkgrel=2
+pkgver=0.2.3
+pkgrel=1
 pkgdesc="Python bindings to zopfli"
 arch=(loong64 x86_64)
-url="https://github.com/obp/py-zopfli"
+url="https://github.com/fonttools/py-zopfli"
 license=(Apache)
-depends=(python)
-makedepends=(python-build python-installer python-setuptools python-setuptools-scm python-wheel)
+depends=(
+  glibc
+  python
+  zopfli libzopfli.so libzopflipng.so
+)
+makedepends=(
+  python-build
+  python-installer
+  python-setuptools
+  python-setuptools-scm
+  python-wheel
+)
 checkdepends=(python-pytest)
-source=(https://files.pythonhosted.org/packages/source/${_name::1}/$_name/$_name-$pkgver.zip)
-sha512sums=('5fd26039ce0bd910714fc4706a72d04bb5cf794957547943174ef12efe089c932802cc6bef4840a532f24d93fa726c0c23b0b1c2e6ec9eb3209c2f54b0eb8ba0')
-b2sums=('30bc3ed16c82e9527e5445b0fd758bf841ae970f4b10b6ebe3d88db5cf085a5b8e560e39282cfaacb6074184b08da7c142da330f7ba582fe35b5c1fdbdb0bd51')
+source=($_name-$pkgver.tar.gz::$url/archive/refs/tags/v$pkgver.tar.gz)
+sha512sums=('071e897270a5af893670a3744d5bec9557cc80ea3ad29dd7bf44e990e8db8a9d1eaa6b8e8bfab38094cfba00d18ee3ff393f729aa95242a52bdfac3535097efb')
+b2sums=('c6c352a3ac81b3b5097da038502f73c51778ad0914a8f9e4a3a8fdd7d0ebfc3523fbad87d6527981b3607f898a43f0455f4dd9ac7cd37db9fd80d8a39c76e743')
 
 build() {
   cd $_name-$pkgver
-  export PDM_PEP517_SCM_VERSION=$pkgver
-  python -m build --wheel --no-isolation
+  SETUPTOOLS_SCM_PRETEND_VERSION=$pkgver USE_SYSTEM_ZOPFLI=true python -m build --wheel --no-isolation
 }
 
 check() {

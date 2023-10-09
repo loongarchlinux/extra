@@ -3,16 +3,26 @@
 
 pkgname=python-qrencode
 pkgver=1.2
-pkgrel=12
+pkgrel=13
 pkgdesc='Simple wrapper for the C qrencode library'
 url='https://pypi.python.org/pypi/qrencode/'
 arch=('loong64' 'x86_64')
 license=('MIT')
 depends=('python' 'python-pillow' 'qrencode' 'glibc')
-source=(https://pypi.org/packages/source/q/qrencode/qrencode-${pkgver}.tar.gz)
-sha512sums=('e6ebf0c2d2081408ef3d4f4a2a44712e86f70019e34da5de49c1a31a26d69cafac07afb501be24bc95a2525e038a47a74f02279981ade1d33b3e96d3dbb5ce5f')
+source=(https://pypi.org/packages/source/q/qrencode/qrencode-${pkgver}.tar.gz
+        python-3.10.patch)
+sha512sums=('e6ebf0c2d2081408ef3d4f4a2a44712e86f70019e34da5de49c1a31a26d69cafac07afb501be24bc95a2525e038a47a74f02279981ade1d33b3e96d3dbb5ce5f'
+            '862e99e857cf6863a16d7b13467cbfb05b5f2b61008ebc20f36ae58258fa728195df2fea8585e6f1043ade1b9e9eaa28641c3dfd31b6be29b8681289b2c94cab')
 
-package_python-qrencode() {
+prepare() {
+  cd qrencode-${pkgver}
+  # Python 3.10 compatibility
+  # https://bugs.archlinux.org/task/73372
+  # https://github.com/Arachnid/pyqrencode/pull/14
+  patch -Np1 -i ../python-3.10.patch
+}
+
+package() {
   cd qrencode-${pkgver}
   python setup.py install --prefix=/usr --root="${pkgdir}" -O1
 }

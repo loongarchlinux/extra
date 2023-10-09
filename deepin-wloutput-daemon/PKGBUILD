@@ -1,0 +1,38 @@
+# Maintainer: Felix Yan <felixonmars@archlinux.org>
+
+pkgname=deepin-wloutput-daemon
+pkgver=2.0.3
+pkgrel=1
+pkgdesc='Daemon for display settings in the DDE KWayland desktop environment'
+arch=('loong64' 'x86_64')
+url="https://github.com/linuxdeepin/dde-wloutput-daemon"
+license=('GPL3')
+depends=('qt5-base' 'dwayland' 'dtkcore' 'glibc' 'gcc-libs')
+makedepends=('cmake' 'ninja' 'extra-cmake-modules')
+groups=('deepin')
+source=("https://github.com/linuxdeepin/dde-wloutput-daemon/archive/$pkgver/$pkgname-$pkgver.tar.gz"
+        $pkgname-build-fix.patch::https://github.com/linuxdeepin/dde-wloutput-daemon/commit/b323bdd89fc2bbdf06b92090d19299f02c53e473.patch
+        $pkgname-dont-override-ldflags.patch::https://github.com/linuxdeepin/dde-wloutput-daemon/pull/26.patch)
+sha512sums=('b988f909693b76cf0baca0c722086015dabf718a014a67523b916db13d8ca8ba4cae19796ac520ff1b37478131aca05a7774ef8e290ca07130a29dd87109298f'
+            '62358918442fc78726830f90797e1bd20878a19c0ff81d7d371492f647a969ca530a548efa4aece6feffbe0ef537dce603720b668dda979126dece542abca06c'
+            'c5552b98aab4f0be380ae1bad3283a90b3f2956b4934a27c0a7c6fcae0c33b445985bfee0e5d208335f3fd450828ddbf9e64c2e991966224d53cb5a6053508d1')
+
+prepare() {
+  cd dde-wloutput-daemon-$pkgver
+  patch -Np1 -i ../$pkgname-build-fix.patch
+  patch -Np1 -i ../$pkgname-dont-override-ldflags.patch
+  sed -i 's/DtkGui/DtkCore/' src/CMakeLists.txt
+}
+
+build() {
+  cd dde-wloutput-daemon-$pkgver
+  cmake . -GNinja
+  ninja
+}
+
+package() {
+  cd dde-wloutput-daemon-$pkgver
+  # DESTDIR="$pkgdir" ninja install
+  install -Dm755 src/dde-wloutput-daemon -t "$pkgdir/usr/bin/"
+  install -Dm644 misc/org.deepin.dde.KWayland1.service -t "$pkgdir/usr/share/dbus-1/services/"
+}

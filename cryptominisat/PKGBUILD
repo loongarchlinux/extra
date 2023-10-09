@@ -1,0 +1,62 @@
+# Maintainer: Antonio Rojas <arojas@archlinux.org>
+# Contributor: Kyle Keen <keenerd@gmail.com>
+
+pkgname=cryptominisat
+pkgver=5.11.14
+pkgrel=1
+pkgdesc='A modern, multi-threaded, feature-rich, simplifying SAT solver'
+arch=(loong64 x86_64)
+url='https://github.com/msoos/cryptominisat/'
+license=(MIT)
+depends=(boost-libs
+         bosphorus
+         gcc-libs
+         glibc
+#         m4ri
+         zlib)
+makedepends=(boost
+             cmake
+             help2man
+             python-build
+             python-installer
+             python-setuptools
+             python-toml
+             python-wheel
+             vim)
+optdepends=('python: python module')
+conflicts=(cryptominisat5)
+provides=(cryptominisat5)
+replaces=(cryptominisat5)
+source=(https://github.com/msoos/cryptominisat/archive/$pkgver/$pkgname-$pkgver.tar.gz)
+sha256sums=('c7c50083693abcc7da528baa16e328ac0f09b5a83092ebe38d426e918200d7f3')
+
+prepare() {
+  sed -e 's|, \"toml\", \"pathlib\"||' -i $pkgname-$pkgver/pyproject.toml
+}
+
+build() {
+  cmake -B build -S $pkgname-$pkgver \
+    -DCMAKE_INSTALL_PREFIX=/usr \
+    -DNOBOSPHORUS=OFF
+  # -DNOM4RI=OFF https://github.com/msoos/cryptominisat/issues/729
+  cmake --build build
+
+  cd $pkgname-$pkgver
+  python -m build --wheel --no-isolation
+}
+
+check() {
+  cd $pkgname-$pkgver
+  _pythonpath=`echo build/lib.*`
+  PYTHONPATH="$PWD/$_pythonpath" python python/tests/test_pycryptosat.py
+}
+
+package() {
+  DESTDIR="$pkgdir" cmake --install build
+  install -Dm644 $pkgname-$pkgver/LICENSE.txt "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
+
+  cd cryptominisat-$pkgver
+  python -m installer --destdir="$pkgdir" dist/*.whl
+# Remove stray source files
+  rm -r "$pkgdir"/usr/lib/python*/site-packages/{msvc,oracle,picosat}
+}

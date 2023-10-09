@@ -3,15 +3,22 @@
 
 pkgname=arp-scan
 pkgver=1.10.0
-pkgrel=2
+pkgrel=3
 pkgdesc="A tool that uses ARP to discover and fingerprint IP hosts on the local network"
 arch=('loong64' 'x86_64')
 url="https://github.com/royhills/arp-scan"
 license=('GPL')
 depends=('libpcap' 'perl-libwww')
 backup=('etc/arp-scan/mac-vendor.txt')
-source=(https://github.com/royhills/$pkgname/archive/$pkgver/$pkgname-$pkgver.tar.gz)
-sha256sums=('204b13487158b8e46bf6dd207757a52621148fdd1d2467ebd104de17493bab25')
+source=(https://github.com/royhills/$pkgname/archive/$pkgver/$pkgname-$pkgver.tar.gz
+        arp-scan-eacces.patch)
+sha256sums=('204b13487158b8e46bf6dd207757a52621148fdd1d2467ebd104de17493bab25'
+            '25b433fdbffadadb007fe07ea10daeb68b5e27f1f5d469634a093aee69de8da7')
+
+prepare() {
+    cd "$srcdir"/$pkgname-$pkgver
+    patch -p1 -i ../arp-scan-eacces.patch
+}
 
 build() {
     cd "$srcdir"/$pkgname-$pkgver

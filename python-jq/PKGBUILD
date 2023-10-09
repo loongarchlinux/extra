@@ -3,7 +3,7 @@
 
 _name=jq.py
 pkgname=python-jq
-pkgver=1.5.0
+pkgver=1.6.0
 pkgrel=1
 pkgdesc='Python bindings for jq'
 arch=('loong64' 'x86_64')
@@ -19,23 +19,13 @@ makedepends=(
   'python-wheel'
 )
 checkdepends=('python-pytest')
-source=(
-  "git+$url.git#tag=$pkgver"
-  'jq-py-setup.patch'
-)
-b2sums=('SKIP'
-        'ea5061ea7d4bad240c0df82dec3a430a583f1596685a8b4b36f1a0ee6bcae745586f5b1abf3985a8bb0e13523ef084bd6e05f9f430df247c2a6ec2044f99017a')
-
-# Devendor
-prepare() {
-  cd $_name
-  patch --forward --input=../jq-py-setup.patch
-}
+source=("git+$url.git#tag=$pkgver")
+b2sums=('SKIP')
 
 build() {
   cd $_name
   cython -3 jq.pyx
-  python -m build --wheel --skip-dependency-check --no-isolation
+  JQPY_USE_SYSTEM_LIBS=1 python -m build --wheel --skip-dependency-check --no-isolation
 }
 
 check() {

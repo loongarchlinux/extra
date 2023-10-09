@@ -4,7 +4,7 @@
 
 pkgname=network-manager-sstp
 pkgver=1.3.1
-pkgrel=2
+pkgrel=3
 pkgdesc="SSTP support for NetworkManager"
 arch=('loong64' 'x86_64')
 url="https://gitlab.gnome.org/GNOME/network-manager-sstp"
@@ -14,8 +14,15 @@ optdepends=('ppp'
             'libnma: GUI support (GTK 3)'
             'libnma-gtk4: GUI support (GTK 4)')
 makedepends=('gtk3' 'gtk4' 'libnma' 'libnma-gtk4' 'intltool' 'ppp' 'python')
-source=("https://gitlab.gnome.org/GNOME/network-manager-sstp/-/archive/release-$pkgver/network-manager-sstp-release-$pkgver.tar.bz2")
-sha256sums=('20ff1422a8779b5825ea0198e0d4232a27ac9b15f2dcafc04124f26bef7864d6')
+source=("https://gitlab.gnome.org/GNOME/network-manager-sstp/-/archive/release-$pkgver/network-manager-sstp-release-$pkgver.tar.bz2"
+        $pkgname-ppp-2.5.0.patch::https://gitlab.gnome.org/GNOME/network-manager-sstp/-/commit/4cd0ec66174011925c93aa04edccca92b4d1387f.patch)
+sha256sums=('20ff1422a8779b5825ea0198e0d4232a27ac9b15f2dcafc04124f26bef7864d6'
+            'a4169948edf380d08b15b738024bad669f14e0c671de35ea16359577ef68aef7')
+
+prepare() {
+  cd network-manager-sstp-release-$pkgver
+  patch -Np1 -i ../$pkgname-ppp-2.5.0.patch
+}
 
 build() {
   pppd_version=(`pppd --version 2>&1 | awk '{print $3}'`)

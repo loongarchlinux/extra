@@ -1,9 +1,10 @@
 # Maintainer: Johannes Löthberg <johannes@kyriasis.com>
+# Maintainer: Robin Candau <antiz@archlinux.org>
 # Contributor: Sergej Pupykin <arch+pub@sergej.pp.ru>
 # Contributor: Gilbert Kennen <gilbert firewatcher org>
 
 pkgname=elixir
-pkgver=1.15.0
+pkgver=1.15.6
 pkgrel=1
 
 pkgdesc="a functional meta-programming aware language built on top of the Erlang VM"
@@ -16,14 +17,15 @@ depends=('erlang-nox')
 checkdepends=('git')
 
 source=("$pkgname-$pkgver.tar.gz::https://github.com/elixir-lang/elixir/archive/v$pkgver.tar.gz"
-        https://github.com/elixir-lang/elixir/commit/73b65eca5af294a8afbed5bc73c178da18f0055c.patch)
-sha256sums=('0f4df7574a5f300b5c66f54906222cd46dac0df7233ded165bc8e80fd9ffeb7a'
-            'b0b0b4dc662da103de35f63c29d7805fd7fef6d7996c15edcd53c26c22fe9739')
+	"address_tests_on_Erlang_26.1.patch::https://github.com/elixir-lang/elixir/commit/60efbf751d3bedbe1851ac8c701a807d66fe340d.patch")
+sha256sums=('385fc1958bcf9023a748acf8c42179a0c6123c89744396840bdcd661ee130177'
+            '84a92ae228ea90c441821d896a02b392fa7e58715b9084a19a36b53f4bc3a615')
 
 prepare() {
   cd elixir-"$pkgver"
-  # https://github.com/elixir-lang/elixir/issues/12677
-  patch -Np1 < "../73b65eca5af294a8afbed5bc73c178da18f0055c.patch"
+  # Temporary patch to fix tests
+  # https://github.com/elixir-lang/elixir/issues/12975
+  patch -Np1 < "${srcdir}/address_tests_on_Erlang_26.1.patch"
 }
 
 build() {

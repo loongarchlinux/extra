@@ -4,7 +4,7 @@
 pkgname=python-moto
 _pkgname=moto
 # https://github.com/spulec/moto/blob/master/CHANGELOG.md
-pkgver=4.1.14
+pkgver=4.2.4
 pkgrel=1
 pkgdesc='Moto is a library to mock out the boto library.'
 arch=(any)
@@ -21,7 +21,7 @@ depends=(python python-boto3 python-botocore python-cryptography python-requests
          python-urllib3)
 makedepends=(python-build python-installer python-setuptools python-wheel)
 # See reqquirements-test.txt, excluding pytest-cov
-checkdepends=(python-pytest python-pytest-ordering python-sure python-freezegun)
+checkdepends=(python-pytest python-pytest-ordering python-freezegun)
 # Check extras_require in upstream `setup.cfg` for optional dependencies.
 # Note that ecdsa is excluded as it is pinned for jose and not used by moto.
 optdepends=(
@@ -38,26 +38,38 @@ optdepends=(
   'python-sshpubkeys: for cloudformation, directoryservice, ebs, ec2, efs, eks and route53resolver'
   'python-pyparsing: for glue and cloudformation'
   'python-py-partiql-parser: for cloudformation and s3'
+  'python-crc32c: for s3'
   'python-flask: for moto_server'
   'python-flask-cors: for moto_server'
 )
 checkdepends+=(python-yaml python-jose python-openapi-spec-validator python-docker
                python-graphql-core python-jsondiff python-aws-xray-sdk
                python-cfn-lint python-sshpubkeys python-pyparsing python-py-partiql-parser
+               python-crc32c
                python-flask python-flask-cors)
-source=("https://files.pythonhosted.org/packages/source/m/moto/moto-${pkgver}.tar.gz"
-        "fix-tests.diff")
-sha256sums=('545afeb4df94dfa730e2d7e87366dc26b4a33c2891f462cbb049f040c80ed1ec'
-            '21305cdf3d650ced1acb1d0f7dde8760b26e32a94c56a5571e798d6b6976cf5a')
+source=("https://github.com/getmoto/moto/archive/refs/tags/$pkgver/$pkgname-$pkgver.tar.gz"
+        "fix-tests.diff"
+        "typing-extensions.diff"
+        "add-requires_docker.diff")
+sha256sums=('95944c5030bead54743e68ed4618198d5296816b94039f954db4837e94631a95'
+            '21305cdf3d650ced1acb1d0f7dde8760b26e32a94c56a5571e798d6b6976cf5a'
+            '8406f4c68b8b43c3666fe5a153de1321a9bc9f02ad19910c6078d8189d8cb24f'
+            '353c77431377ebafef1d433b3a433646117d882aa413a9079e5fceb98d90e3ad')
 
 prepare() {
   cd $_pkgname-$pkgver
 
   patch -Np1 -i ../fix-tests.diff
+  patch -Np1 -i ../typing-extensions.diff
+  patch -Np0 -i ../add-requires_docker.diff
 }
 
 build() {
   cd $_pkgname-$pkgver
+
+  # Update versions in setup.cfg and moto/__init__.py, following upstream release pipeline
+  # https://github.com/getmoto/moto/blob/master/.github/workflows/release.yml
+  python update_version_from_git.py $pkgver
 
   python -m build --wheel --no-isolation
 }

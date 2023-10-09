@@ -3,47 +3,48 @@
 
 pkgname=('dark-reader' 'firefox-dark-reader' 'thunderbird-dark-reader')
 pkgbase=dark-reader
-pkgver=4.9.65
+_name=${pkgbase/-}
+pkgver=4.9.67
 pkgrel=1
 pkgdesc='Inverts brightness of web pages and aims to reduce eyestrain while browsing the web'
 arch=('any')
 url=https://darkreader.org/
 license=('MIT')
-makedepends=('npm')
-source=("https://github.com/darkreader/darkreader/archive/v$pkgver/darkreader-$pkgver.tar.gz")
-b2sums=('3f6ea2b8d4d754fbdabd3c18e90ff1147dd45cdb0fba7b9da83a93a805c2ec32260d2c46b6200f75e7a3228b43252cf9c1ec7318212defce70be75d538039f62')
+makedepends=('git' 'npm')
+source=("git+https://github.com/$_name/$_name.git#tag=v$pkgver")
+b2sums=('SKIP')
 
 prepare() {
-  cd darkreader-$pkgver
+  cd "$_name"
   npm ci
 }
 
 build() {
-  cd darkreader-$pkgver
+  cd "$_name"
   npm run build
 }
 
 check() {
-  cd darkreader-$pkgver
+  cd "$_name"
   npm test
 }
 
 package_dark-reader() {
   pkgdesc+=' (unpacked webextension)'
-  cd darkreader-$pkgver/build/release/chrome
+  cd "$_name"/build/release/chrome
   install -d "$pkgdir"/usr/lib/$pkgbase
   cp -r -- * "$pkgdir"/usr/lib/$pkgbase
 }
 
 package_firefox-dark-reader() {
   groups=('firefox-addons')
-  cd darkreader-$pkgver/build/release
-  install -Dm644 darkreader-firefox.xpi \
-    "$pkgdir"/usr/lib/firefox/browser/extensions/addon@darkreader.org.xpi
+  cd "$_name"/build/release
+  install -Dm644 "$_name"-firefox.xpi \
+    "$pkgdir"/usr/lib/firefox/browser/extensions/addon@"$_name".org.xpi
 }
 
 package_thunderbird-dark-reader() {
-  cd darkreader-$pkgver/build/release
-  install -Dm644 darkreader-thunderbird.xpi \
-    "$pkgdir"/usr/lib/thunderbird/extensions/addon@darkreader.org.xpi
+  cd "$_name"/build/release
+  install -Dm644 "$_name"-thunderbird.xpi \
+    "$pkgdir"/usr/lib/thunderbird/extensions/addon@"$_name".org.xpi
 }

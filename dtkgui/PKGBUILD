@@ -1,7 +1,7 @@
 # Maintainer: Felix Yan <felixonmars@archlinux.org>
 
 pkgname=dtkgui
-pkgver=5.6.12
+pkgver=5.6.17
 pkgrel=1
 epoch=1
 pkgdesc='Deepin Toolkit, gui module for DDE look and feel'
@@ -11,19 +11,26 @@ license=('LGPL3')
 depends=('dtkcore' 'freeimage' 'libraw' 'libqtxdg' 'librsvg' 'qt5-base' 'glib2' 'libx11' 'gcc-libs')
 makedepends=('cmake' 'ninja' 'qt5-tools' 'gtest' 'doxygen')
 source=("https://github.com/linuxdeepin/dtkgui/archive/$pkgver/$pkgname-$pkgver.tar.gz")
-sha512sums=('4f86cf32660c210c7f6530495d4ce42ff23ae939e2a889e651fd0027761879094cb6d2b3f660306ec651bcfb4f93881a88662a6b83d00a9bcc38a8da55fd3b76')
+sha512sums=('647d9d63f74e278d6ea416a3c57340456d7850024110283d622d75c55e84ac6f722f81f0c42672b2e848959a9066b2b7167e178a7176757dfdf34c913c839ed9')
 
 build() {
   cd dtkgui-$pkgver
   cmake . -GNinja \
     -DMKSPECS_INSTALL_DIR=lib/qt/mkspecs/modules/ \
     -DBUILD_DOCS=ON \
+    -DBUILD_TESTING=ON \
     -DQCH_INSTALL_DESTINATION=share/doc/qt \
     -DCMAKE_INSTALL_LIBEXECDIR=lib \
     -DCMAKE_INSTALL_LIBDIR=lib \
     -DCMAKE_INSTALL_PREFIX=/usr \
-    -DDVERSION=$pkgver
+    -DDTK_VERSION=$pkgver
   ninja
+}
+
+check() {
+  cd dtkgui-$pkgver
+  # TODO
+  ninja test || echo "Tests failed"
 }
 
 package() {

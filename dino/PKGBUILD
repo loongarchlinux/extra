@@ -3,7 +3,7 @@
 
 pkgname=dino
 pkgver=0.4.3
-pkgrel=1
+pkgrel=2
 pkgdesc="Modern XMPP (Jabber) chat client written in Vala"
 arch=(loong64 x86_64)
 url="https://dino.im"
@@ -19,10 +19,16 @@ validpgpkeys=(A32134DD19952FB12EC43E4501FABCC83FEA225E)
 
 build() {
   cmake -G Ninja -B build -S ${pkgname}-${pkgver} \
+    -DBUILD_TESTS='ON' \
     -DCMAKE_BUILD_TYPE='None' \
     -DCMAKE_INSTALL_PREFIX='/usr' \
     -Wno-dev
   ninja -C build
+}
+
+check() {
+  build/xmpp-vala-test
+  build/signal-protocol-vala-test
 }
 
 package() {

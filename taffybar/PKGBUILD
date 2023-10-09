@@ -1,8 +1,8 @@
 # Maintainer: Felix Yan <felixonmars@archlinux.org>
 
 pkgname=taffybar
-pkgver=4.0.0
-pkgrel=143
+pkgver=4.0.1
+pkgrel=11
 pkgdesc="A desktop bar similar to xmobar, but with more GUI"
 url="https://github.com/taffybar/taffybar"
 license=("BSD")
@@ -21,11 +21,14 @@ depends=('ghc-libs' 'haskell-configfile' 'haskell-hstringtemplate' 'haskell-x11'
          'haskell-transformers-base' 'haskell-tuple' 'haskell-utf8-string' 'haskell-xdg-basedir'
          'haskell-xdg-desktop-entry' 'haskell-xml' 'haskell-xml-helpers' 'xmonad' 'gtk3')
 makedepends=('ghc' 'uusi')
-source=("https://hackage.haskell.org/packages/archive/$pkgname/$pkgver/$pkgname-$pkgver.tar.gz")
-sha256sums=('8f8b38f406f6fb8fb0518c0fbb887dee1a0b67fa70f54be4137e754c65c891e7')
+source=("https://hackage.haskell.org/packages/archive/$pkgname/$pkgver/$pkgname-$pkgver.tar.gz"
+        $pkgname-ghc-9.0-break.patch::https://github.com/taffybar/taffybar/commit/b57006885d35cee63244b1559813ca4b5990e04c.patch)
+sha256sums=('88739d1a5a42f39df0c864e6578ff42681d6a2d8cc5658802c86c9af6a8c7b51'
+            'e7557dd2ed13335b9231c387e35545227e6bd1fce6d264b7fccd9daa16c13501')
 
 prepare() {
   cd $pkgname-$pkgver
+  patch -Rp1 -i ../$pkgname-ghc-9.0-break.patch
   uusi -u scotty $pkgname.cabal
 }
 

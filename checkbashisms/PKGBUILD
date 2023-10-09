@@ -2,7 +2,7 @@
 # Contributor: Eli Schwartz <eschwartz@archlinux.org>
 
 pkgname=checkbashisms
-pkgver=2.22.2
+pkgver=2.23.6
 pkgrel=1
 pkgdesc='Debian script that checks for bashisms'
 arch=('any')
@@ -10,8 +10,8 @@ url='https://tracker.debian.org/pkg/devscripts'
 license=('GPL')
 depends=('perl')
 source=("https://salsa.debian.org/debian/devscripts/-/archive/v$pkgver/devscripts-v$pkgver.tar.gz")
-sha512sums=('9c08b7f2d4e386bafdab12443ba621204e2ee543f660bd574ad5f8dbfe33c889157dfa6fdf0616528f0735ee79885f67af5cea2da6e3aea6858ce945735251aa')
-b2sums=('c2e2d0cf322c3e31d3b4acc55683ed0a83d93ac8113de30d25f37a17700470d8ef1aeed00ad169ae4569f99bf4b710010e4ab4e06d4b9e198a1b42dfd9ebe9fd')
+sha512sums=('45887bba7797e920a7e525ad2462b9ad409bd6a435413b8e5c8f68ab37591a6b5469248619d4eebe286dee1f37030fe6f4b4b280c5883893a9e4293bd262c6b6')
+b2sums=('1ffd2c1a940227c7dbacd79230e6dd238408be5af5b28d6702c85e1fe17f515880816bcdda2a8d90edfe48d40056c827ebda5b17603a7dabc078adc2931b9cdb')
 
 prepare() {
   cd "devscripts-v$pkgver/scripts"

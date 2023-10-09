@@ -4,15 +4,15 @@
 pkgname=sile
 pkgdesc='The SILE Typesetter, a modern typesetting system inspired by LaTeX, customizable in Lua'
 pkgver=0.14.11
-pkgrel=1
+pkgrel=2
 arch=(loong64 x86_64)
 url=https://www.sile-typesetter.org
 _url="https://github.com/sile-typesetter/$pkgname"
 license=(MIT)
-_luadeps=(bit32
-          cassowary
+_luadeps=(cassowary
           cldr
           cliargs
+          compat53 # Not needed for Lua 5.3+, LuaJIT is 5.1(ish)
           cosmo
           expat
           filesystem
@@ -36,8 +36,8 @@ depends=(glibc
          git
          icu
          libpng # this goes with libtexpdf if ever split out to a library package
-         lua
-         "${_luadeps[@]/#/lua-}"
+         luajit
+         "${_luadeps[@]/#/lua51-}"
          zlib)
 depends+=(libfreetype.so
           libharfbuzz.so
@@ -52,6 +52,7 @@ optdepends=('libertinus-font: default math font'
             'ttf-hack: default mono font')
 checkdepends=(poppler)
 provides=(libtexpdf.so)
+replaces=("$pkgname-luajit")
 _archive="$pkgname-$pkgver"
 source=("$_url/releases/download/v$pkgver/$_archive.tar.xz")
 sha256sums=('25796088ad57c996527b9417cf4eb3c0402755886221986121a0667f1020452e')
@@ -60,6 +61,7 @@ build () {
 	cd "$_archive"
 	./configure \
 		--prefix /usr \
+		--with-luajit \
 		--with-system-luarocks
 	make all
 }

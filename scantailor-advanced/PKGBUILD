@@ -3,7 +3,7 @@
 
 pkgname=scantailor-advanced
 pkgver=1.0.19
-pkgrel=1
+pkgrel=2
 pkgdesc="An interactive post-processing tool for scanned pages."
 arch=("loong64" "x86_64")
 url="https://github.com/ScanTailor-Advanced/scantailor-advanced"
@@ -14,6 +14,11 @@ conflicts=("scantailor")
 replaces=("scantailor")
 source=("https://github.com/ScanTailor-Advanced/scantailor-advanced/archive/v$pkgver/$pkgname-$pkgver.tar.gz")
 sha256sums=('db41c3a1ba0ecfc00a40a4efe2bcc9d2abb71ecb77fdc873ae6553b07a228370')
+
+prepare() {
+# Don't build with march=native
+  sed -e '/native/d' -i $pkgname-$pkgver/CMakeLists.txt
+}
 
 build() {
     cmake -B build -S $pkgname-$pkgver \

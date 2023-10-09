@@ -2,20 +2,27 @@
 
 pkgname=python-itemadapter
 pkgver=0.8.0
-pkgrel=1
+pkgrel=2
 pkgdesc="Common interface for data container classes"
 url="https://github.com/scrapy/itemadapter"
 license=('BSD')
 arch=('any')
 depends=('python')
-makedepends=('python-setuptools')
+makedepends=('python-build' 'python-installer' 'python-setuptools' 'python-wheel')
 checkdepends=('python-attrs' 'python-pydantic' 'python-pytest' 'scrapy')
-source=("https://github.com/scrapy/itemadapter/archive/v$pkgver/$pkgname-$pkgver.tar.gz")
-sha512sums=('86c688bef2d0add3f5ea2bd119689b076c5bc9f92edefb6f5d8faaf88023355e7d2ba5d683ce8f6acd24a2954c5a798902b30d0a70ca31dc32eb5245ad57953f')
+source=("https://github.com/scrapy/itemadapter/archive/v$pkgver/$pkgname-$pkgver.tar.gz"
+        pydantic-2.patch)
+sha512sums=('86c688bef2d0add3f5ea2bd119689b076c5bc9f92edefb6f5d8faaf88023355e7d2ba5d683ce8f6acd24a2954c5a798902b30d0a70ca31dc32eb5245ad57953f'
+            '9f071b29069b8cb7a28c5024fa45e746b082eb7d0ce36f7775509f4e7672124e33ca3c2c9992d936f34dca2cb50795cb717a102fa63ca6fcaff78ba99d47c99d')
+
+prepare() {
+  cd itemadapter-$pkgver
+  patch -Np1 -i ../pydantic-2.patch
+}
 
 build() {
   cd itemadapter-$pkgver
-  python setup.py build
+  python -m build --wheel --no-isolation
 }
 
 check() {
@@ -25,7 +32,7 @@ check() {
 
 package() {
   cd itemadapter-$pkgver
-  python setup.py install --root="$pkgdir" --optimize=1
+  python -m installer --destdir="$pkgdir" dist/*.whl
 
   install -Dm644 LICENSE -t "$pkgdir"/usr/share/licenses/$pkgname/
 }

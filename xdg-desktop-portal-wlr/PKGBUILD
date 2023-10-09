@@ -4,7 +4,7 @@
 
 pkgname=xdg-desktop-portal-wlr
 pkgver=0.7.0
-pkgrel=1
+pkgrel=2
 pkgdesc='xdg-desktop-portal backend for wlroots'
 url="https://github.com/emersion/xdg-desktop-portal-wlr"
 arch=('loong64' 'x86_64')
@@ -17,10 +17,10 @@ optdepends=(
     'wofi: to choose which output to screencast using wofi'
     'bemenu: to choose which output to screencast using bemenu'
 )
-source=(
-    "${pkgname}-${pkgver}::https://github.com/emersion/xdg-desktop-portal-wlr/archive/v${pkgver}.tar.gz"
-)
-sha512sums=('238fbcb5b4cab92ee1ec79a56491e8d426d9d1127660dfc8cbe688ed27af5019b54fde09d6181e28d4e2c66e2709386537d042a00da05c9a29f77e4ccfc5b4b2')
+source=("${pkgname}-${pkgver}::https://github.com/emersion/xdg-desktop-portal-wlr/archive/v${pkgver}.tar.gz"
+        wlr-portals.conf)
+sha512sums=('238fbcb5b4cab92ee1ec79a56491e8d426d9d1127660dfc8cbe688ed27af5019b54fde09d6181e28d4e2c66e2709386537d042a00da05c9a29f77e4ccfc5b4b2'
+            '71f3383c3f62100dc669c519d107614a4566e808deddf66a179dd2bf175dc272a2390965cf38cd11dc4f0db0dc5cc7104712805034b9bced5874d62b03a579c2')
 
 build() {
     cd "${pkgname}-${pkgver}"
@@ -32,4 +32,7 @@ package() {
     cd "${pkgname}-${pkgver}"
     DESTDIR="${pkgdir}" ninja -C build install
     install -Dm644 -t "$pkgdir/usr/share/licenses/${pkgname}" LICENSE
+
+    # fix detection with x-d-p 1.18
+    install -Dm644 ${srcdir}/wlr-portals.conf  ${pkgdir}/usr/share/xdg-desktop-portal/wlr-portals.conf
 }

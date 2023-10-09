@@ -2,12 +2,13 @@
 
 pkgbase=geonkick
 pkgname=(geonkick geonkick-{common,lv2,standalone})
-pkgver=2.9.2
+pkgver=2.10.1
 pkgrel=1
 pkgdesc="A free software percussion synthesizer"
 arch=(loong64 x86_64)
-url="https://github.com/free-sm/geonkick"
-license=(GPL3)
+url="https://geonkick.org/"
+_url="https://gitlab.com/Geonkick-Synthesizer/geonkick"
+license=(GPL-3.0-or-later)
 makedepends=(
   cairo
   cmake
@@ -18,14 +19,16 @@ makedepends=(
   libsndfile
   libx11
   lv2
+  openssl
   rapidjson
+  vst3sdk
 )
 checkdepends=(lv2lint)
 # issues with visible symbols during check() if LTO is enabled: https://github.com/free-sm/geonkick/issues/164
 options=(!lto)
-source=($url/archive/v$pkgver/$pkgname-v$pkgver.tar.gz)
-sha512sums=('c0c29837ca7a5978b7ad7816542212a19fe70ec1f544e384f226975eb9776ad55d9a4bb1dd91aee8f6300bb4d94d5df87b5c1e514f27407de478a88e4da3fc04')
-b2sums=('ee693c72f2fd6ced488da072d216c77297091defe806d64e58fe2f3ea7eee7bab3c0627eef0429ef41ad3bf90a504b2edec8ad6374a8c758b84e7e1ceb809177')
+source=($_url/-/archive/v$pkgver/$pkgname-v$pkgver.tar.gz)
+sha512sums=('bb1e6bba313d3bfc58e74e805ecfcf81aa78dd100187ec024ca5a99b895af0ac63034552845df654dfa6f1a812c80c68991f52ad1b9fec3734713ecd62994789')
+b2sums=('9543f60730db32bfca6588f46495832149439f8b92e2effe6727b788e463fc4289144d89cb10d342f02701e72c08fc207b36e02a34ab997031377d3c360f8f36')
 
 _pick() {
   local p="$1" f d; shift
@@ -42,7 +45,10 @@ build() {
     -B build
     -D CMAKE_BUILD_TYPE=None
     -D CMAKE_INSTALL_PREFIX=/usr
-    -S $pkgname-$pkgver
+    # vst3 plugin build broken: https://gitlab.com/Geonkick-Synthesizer/geonkick/-/issues/2
+    # -D GKICK_VST3=ON
+    # -D VST3_SDK_PATH=/usr/src/vst3sdk
+    -S $pkgname-v$pkgver
     -W no-dev
   )
 
@@ -51,9 +57,9 @@ build() {
 }
 
 check() {
-  cp -av build/plugin/lv2/*.so $pkgname-$pkgver/plugin/lv2/$pkgname.lv2/
-  lv2lint -Mpack -I $pkgname-$pkgver/plugin/lv2/$pkgname.lv2/ "http://geontime.com/geonkick"
-  rm -v $pkgname-$pkgver/plugin/lv2/$pkgname.lv2/*.so
+  cp -av build/src/plugin/lv2/*.so $pkgname-v$pkgver/src/plugin/lv2/$pkgname.lv2/
+  lv2lint -Mpack -I $pkgname-v$pkgver/src/plugin/lv2/$pkgname.lv2/ "http://geontime.com/geonkick"
+  rm -v $pkgname-v$pkgver/src/plugin/lv2/$pkgname.lv2/*.so
 }
 
 package_geonkick() {
@@ -63,8 +69,8 @@ package_geonkick() {
   )
 
   DESTDIR="$pkgdir" cmake --install build
-  install -vDm 644 $pkgname-$pkgver/data/$pkgname.desktop -t "$pkgdir/usr/share/applications/"
-  install -vDm 644 $pkgname-$pkgver/README.md -t "$pkgdir/usr/share/doc/$pkgname/"
+  install -vDm 644 $pkgname-v$pkgver/data/$pkgname.desktop -t "$pkgdir/usr/share/applications/"
+  install -vDm 644 $pkgname-v$pkgver/README.md -t "$pkgdir/usr/share/doc/$pkgname/"
 
   (
     cd "$pkgdir"
@@ -98,6 +104,7 @@ package_geonkick-lv2() {
     libsndfile
     libx11
     lv2-host
+    openssl
   )
   
   mv -v $pkgname/* "$pkgdir"
@@ -115,6 +122,7 @@ package_geonkick-standalone() {
     jack
     libsndfile
     libx11
+    openssl
   )
   
   mv -v $pkgname/* "$pkgdir"

@@ -1,35 +1,29 @@
 # Maintainer: Felix Yan <felixonmars@archlinux.org>
 
 pkgname=deepin-qt5integration
-pkgver=5.6.11
+pkgver=5.6.17
 pkgrel=1
 pkgdesc='Qt platform theme integration plugins for DDE'
 arch=('loong64' 'x86_64')
 url="https://github.com/linuxdeepin/qt5integration"
 license=('GPL3')
-depends=('dtkcore' 'dtkgui' 'dtkwidget' 'kiconthemes' 'libqtxdg' 'deepin-qt5platform-plugins'
-         'qt5-x11extras' 'qt5-base' 'libx11' 'gcc-libs')
-makedepends=('xcb-util-renderutil' 'gtest')
+depends=('dtkcore' 'dtkgui' 'dtkwidget' 'libqtxdg' 'qt5-x11extras' 'qt5-base' 'libx11' 'glibc'
+         'gcc-libs')
+makedepends=('cmake' 'ninja' 'qt5-tools' 'xcb-util-renderutil' 'gtest')
 groups=('deepin')
-source=("https://github.com/linuxdeepin/qt5integration/archive/$pkgver/$pkgname-$pkgver.tar.gz"
-        kiconengine.patch)
-sha512sums=('e18cb3fe7b9c60545d984506586efb2344b2cc274dbbf37ca528a3ab8190100b3d539d5e9cf40e5144a84c2f71f4f87f045488d9d7478320cc1324f97c154cd5'
-            'f8a5d6e7bd9169dc90224ae79bf77068eadaadc9a94e4252907157d108816e4871efbbe8d9825ee03054a8fef94418cab6a0a17381928c6a11313fbcd0f4f835')
-
-prepare() {
-  cd qt5integration-$pkgver
-  # Use kiconthemes to correctly load dsvg plugins
-  # https://github.com/linuxdeepin/qt5integration/pull/129
-  patch -p1 < $srcdir/kiconengine.patch
-}
+source=("https://github.com/linuxdeepin/qt5integration/archive/$pkgver/$pkgname-$pkgver.tar.gz")
+sha512sums=('2e431fbe3e64d4d032cd75701dec2b5520c6cfc1a9eba9168ddc997566cbed438f88622c096b1a3af8d3bca14aee2c5efbfd7de1d47c19ffeb6e9ee2413e79f3')
 
 build() {
   cd qt5integration-$pkgver
-  qmake-qt5 PREFIX=/usr
-  make
+  cmake . -GNinja \
+		-DCMAKE_INSTALL_LIBDIR=lib \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+    -DPLUGIN_INSTALL_BASE_DIR=lib/qt/plugins
+  ninja
 }
 
 package() {
   cd qt5integration-$pkgver
-  make INSTALL_ROOT="$pkgdir" install
+  DESTDIR="$pkgdir" ninja install
 }

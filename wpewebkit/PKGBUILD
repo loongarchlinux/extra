@@ -5,14 +5,14 @@ pkgname=(
   wpewebkit
   wpewebkit-docs
 )
-pkgver=2.40.5
-pkgrel=2
+pkgver=2.42.1
+pkgrel=1
 pkgdesc="Embeddable web content engine"
 url="https://wpewebkit.org"
 arch=(loong64 x86_64)
 license=(custom)
 depends=(
-  at-spi2-atk
+  at-spi2-core
   atk
   bubblewrap
   cairo
@@ -30,6 +30,7 @@ depends=(
   libepoxy
   libgcrypt
   libjpeg
+  libjxl
   libpng
   libseccomp
   libsoup3
@@ -50,11 +51,13 @@ depends=(
   zlib
 )
 makedepends=(
+  clang
   cmake
   gi-docgen
   gobject-introspection
   gperf
   gst-plugins-bad
+  lld
   ninja
   python
   ruby
@@ -65,9 +68,9 @@ makedepends=(
 source=(
   $url/releases/wpewebkit-$pkgver.tar.xz{,.asc}
 )
-sha256sums=('4c658d3049c50e98b12fd6623ec42772f25a99cc1c05b5347a10a8633c266733'
+sha256sums=('18a2cf547a503420f4cb8f523a2f4c24b4dc2773abbe74c7d585e6d23cb27bac'
             'SKIP')
-b2sums=('289212bdc2fb1c9890a84266642eb4665d8896319bafb7e5cb98ccb93064d027778562f0fce05136af312112e2e616c8c1e3e36753db677dcfd0e2acf53bf514'
+b2sums=('12e8d0fb662e36c68f4e029d948de0b4bed4d9087d622d0b940726f3bb958572699cbe3d943408e9526d254a0b355b474281a432a38a7a19efbced4031dc7e6e'
         'SKIP')
 validpgpkeys=(
   'D7FCF61CF9A2DEAB31D81BD3F3D322D0EC4582C3'  # Carlos Garcia Campos <cgarcia@igalia.com>
@@ -91,6 +94,15 @@ build() {
     -DENABLE_DOCUMENTATION=ON
     -DENABLE_MINIBROWSER=ON
   )
+
+  # GCC with LTO fails to link jsc
+  #     /usr/bin/ld: /tmp/ccXxyWZV.ltrans0.ltrans.o: in function `ipint_table_size_validate':
+  #     <artificial>:(.text+0x49f0f): undefined reference to `ipint_extern_table_size'
+  #     /usr/bin/ld: /tmp/ccXxyWZV.ltrans0.ltrans.o: in function `ipint_table_fill_validate':
+  #     <artificial>:(.text+0x4a019): undefined reference to `ipint_extern_table_fill'
+  #     collect2: error: ld returned 1 exit status
+  export CC=clang CXX=clang++
+  LDFLAGS+=" -fuse-ld=lld"
 
   # Produce minimal debug info: 4.3 GB of debug data makes the
   # build too slow and is too much to package for debuginfod

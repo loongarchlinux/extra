@@ -4,9 +4,8 @@
 # Contributor: Cristian Porras <porrascristian@gmail.com>
 # Contributor: Matthew Bentley <matthew@mtbentley.us>
 
-pkgbase=godot
-pkgname=(godot)
-pkgver=4.1.1
+pkgname=godot
+pkgver=4.1.2
 pkgrel=1
 pkgdesc='Advanced cross-platform 2D and 3D game engine'
 url='https://godotengine.org/'
@@ -18,18 +17,18 @@ depends=(embree3 freetype2 graphite harfbuzz harfbuzz-icu libglvnd libspeechd
          libxinerama libxrandr mbedtls2 miniupnpc pcre2)
 optdepends=('pipewire-alsa: for audio support'
             'pipewire-pulse: for audio support')
-source=("$pkgbase-$pkgver.tar.gz::https://github.com/godotengine/godot/archive/$pkgver-stable.tar.gz")
-sha256sums=('206476d3bbd11c8a1bf554f4c5160bd644808d1d9225a5d300b5fb2dc67df9ed')
-b2sums=('42b2077400af311a6c84fe9ee74464fa3bdd461da55eafbe32548ab6488f04f19e7323d3a0316ca6e5b8400979abae8452d8c40691d551316e62420a03099314')
+source=("$pkgname-$pkgver.tar.gz::https://github.com/godotengine/godot/archive/$pkgver-stable.tar.gz")
+sha256sums=('790ff4f364f8421597a970f16041e86007f4c522bd427b3d7d14679026e58d40')
+b2sums=('91e10a8c448bc8c0a6c42b9a0e921d28f7e36f0576c00a960e52586fd7a03f00198e8e3de68cdba2ab2fc0bbd18932b0540af6075a9149a8a7b22a51427e7169')
 
 prepare() {
   # Update the MIME info, ref FS#77810
   sed -i 's,xmlns="https://specifications.freedesktop.org/shared-mime-info-spec",xmlns="http://www.freedesktop.org/standards/shared-mime-info",g' \
-    $pkgbase-$pkgver-stable/misc/dist/linux/org.godotengine.Godot.xml
+    $pkgname-$pkgver-stable/misc/dist/linux/org.godotengine.Godot.xml
 }
 
 build() {
-  cd $pkgbase-$pkgver-stable
+  cd $pkgname-$pkgver-stable
   export BUILD_NAME=arch_linux
   # Not unbundled (yet):
   #  enet (contains no upstreamed IPv6 support)
@@ -74,8 +73,8 @@ build() {
     werror=no
 }
 
-package_godot() {
-  cd $pkgbase-$pkgver-stable
+package() {
+  cd $pkgname-$pkgver-stable
   install -Dm644 misc/dist/linux/org.godotengine.Godot.desktop \
     "$pkgdir/usr/share/applications/godot.desktop"
   install -Dm644 icon.svg "$pkgdir/usr/share/pixmaps/godot.svg"

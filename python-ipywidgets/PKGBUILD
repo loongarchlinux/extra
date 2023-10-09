@@ -3,7 +3,7 @@
 
 pkgname=python-ipywidgets
 _pipname=ipywidgets
-pkgver=8.1.0
+pkgver=8.1.1
 pkgrel=1
 pkgdesc='IPython HTML widgets for Jupyter'
 arch=(any)
@@ -14,7 +14,7 @@ makedepends=(python-build python-installer python-setuptools python-wheel)
 optdepends=('jupyterlab-widgets: widgets for Jupyter lab')
 checkdepends=(python-pytest python-pytz python-ipykernel)
 source=(https://pypi.io/packages/source/${_pipname:0:1}/$_pipname/$_pipname-$pkgver.tar.gz)
-sha256sums=('ce97dd90525b3066fd00094690964e7eac14cf9b7745d35565b5eeac20cce687')
+sha256sums=('40211efb556adec6fa450ccc2a77d59ca44a060f4f9f136833df59c9f538e6e8')
 
 build() {
   cd ipywidgets-$pkgver

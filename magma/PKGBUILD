@@ -8,7 +8,7 @@ _pkgname=magma
 pkgbase=$_pkgname
 pkgname=(magma-cuda magma-hip)
 pkgver=2.7.1
-pkgrel=8
+pkgrel=9
 _pkgdesc="Matrix Algebra on GPU and Multicore Architectures"
 arch=('loong64' 'x86_64')
 url="https://icl.utk.edu/magma/"
@@ -38,7 +38,7 @@ build() {
     -Bbuild \
     -GNinja \
     -DCMAKE_BUILD_TYPE=Release \
-    -DCMAKE_INSTALL_PREFIX=/usr \
+    -DCMAKE_INSTALL_PREFIX=/opt/cuda/targets/x86_64-linux \
     -DBUILD_SHARED_LIBS=ON \
     -DGPU_TARGET="sm_52 sm_53 sm_60 sm_61 sm_62 sm_70 sm_72 sm_75 sm_80 sm_86 sm_87 sm_89 sm_90"
   ninja -C build
@@ -53,7 +53,7 @@ build() {
     -GNinja \
     -DCMAKE_CXX_COMPILER=/opt/rocm/bin/hipcc \
     -DCMAKE_BUILD_TYPE=Release \
-    -DCMAKE_INSTALL_PREFIX=/usr \
+    -DCMAKE_INSTALL_PREFIX=/opt/rocm \
     -DBUILD_SHARED_LIBS=ON \
     -DMAGMA_ENABLE_HIP=ON \
     -DGPU_TARGET="gfx803 gfx900 gfx906:xnack- gfx908:xnack- gfx90a:xnack+ gfx90a:xnack- gfx1010 gfx1012 gfx1030 gfx1100 gfx1101 gfx1102"
@@ -64,33 +64,34 @@ build() {
 _package() {
   DESTDIR="${pkgdir}" ninja -Cbuild install
 
-  install -d "${pkgdir}"/usr/share/magma/example
-  cp -r "${srcdir}"/magma-${pkgver}/example/* "${pkgdir}"/usr/share/magma/example/
-  install -d "${pkgdir}"/usr/share/magma/testing
-  cp -r "${srcdir}"/magma-${pkgver}/testing/* "${pkgdir}"/usr/share/magma/testing/
-  install -Dm644 "${srcdir}"/magma-${pkgver}/COPYRIGHT "${pkgdir}"/usr/share/licenses/magma/LICENSE
+  local _prefix="$1"
+  install -d "${pkgdir}/${_prefix}"/share/magma/example
+  cp -r "${srcdir}"/magma-${pkgver}/example/* "${pkgdir}/${_prefix}"/share/magma/example/
+  install -d "${pkgdir}/${_prefix}"/share/magma/testing
+  cp -r "${srcdir}"/magma-${pkgver}/testing/* "${pkgdir}/${_prefix}"/share/magma/testing/
+  install -Dm644 "${srcdir}"/magma-${pkgver}/COPYRIGHT "${pkgdir}"/usr/share/licenses/${pkgname}/LICENSE
+  echo "${_prefix}/lib" > "${pkgname}.conf"
+  install -Dm644 "${pkgname}.conf" "${pkgdir}"/etc/ld.so.conf.d/"${pkgname}.conf"
 }
 
 package_magma-cuda() {
   pkgdesc="${_pkgdesc} (with CUDA)"
   depends+=(cuda)
-  conflicts=(magma magma-hip)
   provides=(magma)
   replaces=(magma)
 
   cd "${srcdir}/${_pkgname}-${pkgver}-cuda"
-  _package
+  _package "/opt/cuda"
 }
 
 package_magma-hip() {
   pkgdesc="${_pkgdesc} (with ROCm/HIP)"
   depends+=(hip-runtime-amd hipblas hipsparse)
-  conflicts=(hipmagma magma magma-cuda)
   provides=(hipmagma)
   replaces=(hipmagma)
 
   cd "${srcdir}/${_pkgname}-${pkgver}-hip"
-  _package
+  _package "/opt/rocm"
 }
 
 # vim:set ts=2 sw=2 et:

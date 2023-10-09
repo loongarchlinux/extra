@@ -2,7 +2,7 @@
 # Contributor: Ionut Biru <ibiru@archlinux.org>
 
 pkgname=gnome-user-docs
-pkgver=44.3
+pkgver=44.5
 pkgrel=1
 pkgdesc="User documentation for GNOME"
 url="https://gitlab.gnome.org/GNOME/gnome-user-docs"
@@ -14,7 +14,7 @@ makedepends=(
   yelp-tools
 )
 groups=(gnome)
-_commit=e0edb4ec782ded29f8fed20c17919bb2ffc12dc0  # tags/44.3^0
+_commit=451f2b5ccb0a3c0507fe66582caf20a253f66c3d  # tags/44.5^0
 source=("git+https://gitlab.gnome.org/GNOME/gnome-user-docs.git#commit=$_commit")
 b2sums=('SKIP')
 

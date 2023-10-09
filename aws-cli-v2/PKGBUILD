@@ -4,7 +4,7 @@
 
 pkgname=aws-cli-v2
 # https://github.com/aws/aws-cli/raw/v2/CHANGELOG.rst
-pkgver=2.13.15
+pkgver=2.13.21
 pkgrel=1
 pkgdesc='Unified command line interface for Amazon Web Services (version 2)'
 arch=(any)
@@ -23,14 +23,16 @@ source=("https://awscli.amazonaws.com/awscli-$pkgver.tar.gz"{,.sig}
         fix-env.diff
         "$pkgname-tz-fix.patch::https://github.com/aws/aws-cli/commit/95aa5ccc7bfaeafc0373e8472c8459030ac18920.patch"
         "${pkgname}-fix-zsh-completions.patch::https://github.com/aws/aws-cli/commit/006957ebf258e39fd1692151166a1d245e06a32f.patch"
+        "${pkgname}-ruamel-yaml-0.17.22.patch::https://github.com/aws/aws-cli/commit/96c855c44a6bd05e52cf98fa3c8e00db637f0a7b.patch"
         ruamel-yaml-0.17.32.patch)
-sha256sums=('ac63e8f42c7f8775edccdc004921420159420de9185cf011952dba8fda5895ff'
+sha256sums=('d33b6e0906dda2d1f2ff4e4bd8ec7001ff63e12f57d33802536f5b3fa928cf77'
             'SKIP'
             '0267e41561ab2c46a97ebfb024f0b047aabc9e6b9866f204b2c1a84ee5810d63'
             '893d61d7e958c3c02bfa1e03bf58f6f6abd98849d248cc661f1c56423df9f312'
             '4fc614b8550d7363bb2d578c6b49326c9255203eb2f933fd0551f96ed5fb1f30'
             '0e4064c45e8f987fd8aaa48e1b289de413d96168fc14432c2072a03068358742'
-            '0f37f599a75ef6010b657e49badaf05b26228c4cf555b77a8b86e1167a8e130a')
+            '12f9aacb46e5754ea3935b29e07033285cdf66047fc39520d9f716b33edb5a7e'
+            '4a245036c6e45328667d46e179751188bc6606bb715f3072ac45105e443e14e9')
 validpgpkeys=(
   'FB5DB77FD5C118B80511ADA8A6310ACC4672475C'  # the key mentioned on https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html
 )
@@ -53,6 +55,10 @@ prepare() {
   # Make zsh completions automatically enabled
   # From https://github.com/aws/aws-cli/pull/2708 (unmerged)
   patch -Np1 -i ../${pkgname}-fix-zsh-completions.patch
+
+  # Fix tests with ruamel.yaml >= 0.17.22
+  # https://github.com/aws/aws-cli/pull/8072 (unmerged)
+  patch -Np1 -i ../${pkgname}-ruamel-yaml-0.17.22.patch
 
   # Fix compatibility with ruamel.yaml >= 0.17.30
   # The patch is from Fedora https://src.fedoraproject.org/rpms/awscli2/blob/rawhide/f/ruamel-yaml-0.17.32.patch

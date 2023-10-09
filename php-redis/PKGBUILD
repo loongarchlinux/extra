@@ -3,20 +3,30 @@
 _name=redis
 _upstream=phpredis
 pkgbase=php-redis
-pkgname=(php-redis php-legacy-redis)
-pkgver=5.3.7
-pkgrel=2
+pkgname=(
+  php-redis
+  php-legacy-redis
+)
+pkgver=6.0.1
+pkgrel=1
 pkgdesc="An API for communicating with the Redis key-value store"
 arch=(loong64 x86_64)
 url="https://github.com/phpredis/phpredis/"
-license=(PHP)
+license=(PHP-3.01)
 depends=(glibc)
-makedepends=(liblzf php-igbinary php-legacy-igbinary)
-checkdepends=(lsof redis)
+makedepends=(
+  liblzf
+  php-igbinary
+  php-legacy-igbinary
+)
+checkdepends=(
+  lsof
+  redis
+)
 optdepends=('redis: use a local redis instance')
-source=("$pkgname-$pkgver.tar.gz::https://github.com/${_upstream}/${_upstream}/archive/${pkgver}.tar.gz")
-sha512sums=('394ad0d5a45e2f985a1622ab9ceca55fb0b8e5ee0631a8dd763984611260e55de43bea308710569fa360ee88e02791e9b28ecaea26f2b770dc168a82a2afb4b3')
-b2sums=('32fbc8e716078ad8f08f3383042e7877aad50e7232425fb2fdae8e397e8750d2a06cc7311bd7962e6df39f3a5caf5748953dcf70de4f919ec58cd9d3ec4390a3')
+source=("$pkgname-$pkgver.tar.gz::$url/archive/${pkgver}.tar.gz")
+sha512sums=('7ff7e363a58150ee783ed914213f45f1cb895f4759185d2fed4c25754fadbb36b3b181ee35e34afb4fcc9c4e2ea3ef61726339b20c9020e501773de6825ae5a2')
+b2sums=('4ccb7a0f9f0f53bc587bde3f1a9a8b57ce87b5a6f06c25fce3850c69f7f30281ae88a8d4073a2148b32bd96ced6805ced6b5d812c8cae7a9d4c038e8a47116de')
 
 prepare() {
   mv -v "${_upstream}-${pkgver}" "$pkgbase-$pkgver"
@@ -40,20 +50,21 @@ prepare() {
 }
 
 build() {
+  local configure_options=(
+    --prefix=/usr
+    --enable-redis-igbinary
+    --enable-redis-lzf
+    --with-liblzf=/usr/lib/
+  )
+
   (
     cd "$pkgname-$pkgver"
-    ./configure --prefix=/usr \
-                --enable-redis-igbinary \
-                --enable-redis-lzf \
-                --with-liblzf=/usr/lib/
+    ./configure "${configure_options[@]}"
     make
   )
   (
     cd "${pkgname[1]}-$pkgver"
-    ./configure --prefix=/usr \
-                --enable-redis-igbinary \
-                --enable-redis-lzf \
-                --with-liblzf=/usr/lib/
+    ./configure "${configure_options[@]}"
     make
   )
 }
@@ -88,7 +99,7 @@ package_php-redis() {
   cd "$pkgname-$pkgver"
   make INSTALL_ROOT="$pkgdir/" install
   install -vDm 644 "${_name}.ini" -t "${pkgdir}/etc/php/conf.d/"
-  install -vDm 644 {{README,arrays,cluster}.markdown,CREDITS} -t "${pkgdir}/usr/share/doc/${pkgname}/"
+  install -vDm 644 {{CHANGELOG,README,arrays,cluster}.md,CREDITS} -t "${pkgdir}/usr/share/doc/${pkgname}/"
 }
 
 package_php-legacy-redis() {
@@ -98,5 +109,5 @@ package_php-legacy-redis() {
   cd "$pkgname-$pkgver"
   make INSTALL_ROOT="$pkgdir/" install
   install -vDm 644 "${_name}.ini" -t "${pkgdir}/etc/php-legacy/conf.d/"
-  install -vDm 644 {{README,arrays,cluster}.markdown,CREDITS} -t "${pkgdir}/usr/share/doc/${pkgname}/"
+  install -vDm 644 {{CHANGELOG,README,arrays,cluster}.md,CREDITS} -t "${pkgdir}/usr/share/doc/${pkgname}/"
 }

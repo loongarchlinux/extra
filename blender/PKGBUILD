@@ -7,8 +7,8 @@
 # fine with them.
 
 pkgname=blender
-pkgver=3.6.2
-pkgrel=4
+pkgver=3.6.4
+pkgrel=1
 epoch=17
 pkgdesc="A fully integrated 3D graphics creation suite"
 arch=('loong64' 'x86_64')
@@ -17,11 +17,11 @@ url="https://www.blender.org"
 depends=('libpng' 'libtiff' 'openexr' 'python' 'desktop-file-utils' 'python-requests' 'potrace'
          'shared-mime-info' 'hicolor-icon-theme' 'xdg-utils' 'glew' 'openjpeg2' 'python-numpy'
          'freetype2' 'openal' 'ffmpeg' 'fftw' 'boost-libs' 'opencollada' 'alembic' 'openxr'
-         'openimageio' 'libsndfile' 'jack' 'opencolorio' 'openshadinglanguage' 'openimagedenoise'
+         'openimageio' 'libsndfile' 'jack' 'opencolorio' 'openimagedenoise'
          'jemalloc' 'libspnav' 'ptex' 'opensubdiv' 'openvdb' 'sdl2' 'embree' 'libharu'
          'draco' 'openpgl' 'level-zero-loader' 'libxkbcommon' 'libepoxy'
          'intel-oneapi-compiler-shared-runtime-libs' 'intel-oneapi-compiler-dpcpp-cpp-runtime-libs')
-makedepends=('cmake' 'boost' 'mesa' 'git' 'svn' 'llvm15' 'cuda' 'ninja' 'wayland-protocols' 'libxkbcommon'
+makedepends=('cmake' 'boost' 'mesa' 'git' 'svn' 'llvm' 'cuda' 'ninja' 'wayland-protocols' 'libxkbcommon'
              'libdecor' 'hip-runtime-amd' 'level-zero-headers' 'intel-oneapi-dpcpp-cpp'
              'intel-oneapi-compiler-shared-runtime' 'intel-compute-runtime')
 optdepends=('cuda: Cycles renderer CUDA support'
@@ -30,12 +30,11 @@ optdepends=('cuda: Cycles renderer CUDA support'
 # We're using !buildflags here as otherwise we get stuff such as FS#77557
 # It'd be better to figure out exactly which of the flags is the culprit which I attempted but without any success.
 options=('!buildflags')
-_commit=ffe93138751e
-source=("git+https://projects.blender.org/blender/blender.git#commit=$_commit"
+source=("git+https://projects.blender.org/blender/blender.git#tag=v$pkgver"
         https://developer.download.nvidia.com/redist/optix/v7.6/OptiX-7.6-Include.zip
         force-draco1.patch
         force-draco2.patch
-	blender-new-sycl.patch)
+        blender-new-sycl.patch)
 sha512sums=('SKIP'
             'dfe86de395dd298fb9feae73bff06a26742efa06a25bb5a4f78ffb1ba4c78f555d1af927efea98af281715cce01db219aa2adfd6bd323bf0d766c1c70ce03532'
             'e239da4f3906f1b54265435181cf770bae3d269c8d915df9a73861e6ee71ec70bf2339426e7c81a91e5a567273b3b3742d7a99feefd3398d821b26e1ff3a56d0'
@@ -66,16 +65,18 @@ build() {
   echo 'set(CYCLES_CUDA_BINARIES_ARCH sm_52 sm_53 sm_60 sm_61 sm_62 sm_70 sm_72 sm_75 sm_80 sm_86 sm_87 sm_89 compute_89 CACHE STRING "CUDA architectures to build binaries for" FORCE)' > precache
   echo 'mark_as_advanced(CYCLES_CUDA_BINARIES_ARCH)' >> precache
 
+  # Disable OSL until it's built with LLVM 16
   cmake \
     -Bbuild \
     -GNinja \
     -Cbuild_files/cmake/config/blender_release.cmake \
     -C precache \
     -DCUDA_HOST_COMPILER=/usr/bin/gcc-12 \
-    -DLLVM_VERSION=15 \
+    -DLLVM_VERSION=16 \
     -DPYTHON_VERSION=$PYTHON_VER \
     -DHIP_ROOT_DIR=/opt/rocm \
     -DOPTIX_ROOT_DIR="$srcdir" \
+    -DWITH_CYCLES_OSL=NO \
     -DCMAKE_INSTALL_PREFIX=/usr \
     -DCMAKE_BUILD_TYPE=Release \
     -DWITH_INSTALL_PORTABLE=OFF \

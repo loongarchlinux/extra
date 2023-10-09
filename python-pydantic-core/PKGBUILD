@@ -2,8 +2,10 @@
 
 _name=pydantic-core
 pkgname=python-pydantic-core
-pkgver=2.2.0
+# WARNING: this package is pinned down to the patch-level version in python-pydantic and should only be updated in lock-step with it
+pkgver=2.6.3
 pkgrel=1
+epoch=1
 pkgdesc="Core validation logic for pydantic written in rust "
 arch=(loong64 x86_64)
 url="https://github.com/pydantic/pydantic-core"
@@ -23,20 +25,19 @@ checkdepends=(
   python-dirty-equals
   python-hypothesis
   python-pytest
+  python-pytest-benchmark
   python-pytest-examples
   python-pytest-mock
   python-pytest-timeout
 )
 options=(!lto)
 source=($pkgname-$pkgver.tar.gz::$url/archive/refs/tags/v$pkgver.tar.gz)
-sha512sums=('b8deb54086579b8b7470e25c95047278101b57867474fa47e32fcaa879744e85238da45bccb06cf37563bfa758b582d5a57f5a6d401fabb81a15a20e8c24f7ac')
-b2sums=('1aad6b24faba50e1b9934e8ed281f8a8a229982e2bcd910106e02da9dd94611f24ddf90886438cb65d26f56e41e9b3c26bb851d2a8f71d2e796c8ef896b7b25a')
+sha512sums=('3d983911ae96966b0d7fc8dfc473f3fb32c21f339d710d344e36f6232447ffd4e838bcffccb821664cc3d9835f96bfb744a917f41c530cb719e6473638060d55')
+b2sums=('c854e28ad625485f4a399d2c28f4458c71f340f5d717a14ca49e911e9f5b9b372715ea92adfae1d679ae987b0c692d3aa4253613b98084f7c2ce8dc96f057224')
 
 prepare() {
   # we don't support version pinning
   sed -e 's/,!=4.7.0//g' -i $_name-$pkgver/pyproject.toml
-  # remove pytest benchmark options
-  sed -e '/benchmark/d' -i $_name-$pkgver/pyproject.toml
 }
 
 build() {
@@ -47,8 +48,6 @@ build() {
 check() {
   local pytest_options=(
     -vv
-    --ignore tests/benchmarks  # don't run benchmark tests
-    --deselect tests/test_hypothesis.py::test_recursive  # recursion error?!
   )
   local site_packages=$(python -c "import site; print(site.getsitepackages()[0])")
 

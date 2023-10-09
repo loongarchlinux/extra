@@ -2,25 +2,40 @@
 # Contributor: Kuba Serafinowski <zizzfizzix(at)gmail(dot)com>
 
 pkgname=owncloud-client
-pkgver=4.2.0.11670
-pkgrel=1
+pkgver=5.0.0.12278
+pkgrel=2
 pkgdesc='ownCloud client based on mirall'
 arch=(loong64 x86_64)
 url='http://owncloud.org/'
 license=(GPL2)
-depends=(qtkeychain hicolor-icon-theme libcloudproviders)
-makedepends=(extra-cmake-modules python-sphinx qt5-tools doxygen kio libre-graph-api)
-optdepends=('python-nautilus: integration with Nautilus' 'nemo-python: integration with Nemo' 'python-caja: integration with Caja')
+depends=(gcc-libs
+         glibc
+         kdsingleapplication
+         libre-graph-api
+         qt6-base
+         qtkeychain-qt6
+         sqlite
+         zlib)
+makedepends=(doxygen
+             extra-cmake-modules
+             python-sphinx
+             qt6-tools)
+             # kio - reenable with KF6
+optdepends=('nemo-python: integration with Nemo'
+            'python-caja: integration with Caja'
+            'python-nautilus: integration with Nautilus')
 backup=('etc/ownCloud/sync-exclude.lst')
 source=(https://download.owncloud.com/desktop/ownCloud/stable/$pkgver/source/ownCloud-$pkgver.tar.xz{,.asc})
-sha256sums=('e82a17ad3b85d68dfaf7a0e1d1f9b099885afd8d1429f50dbca4aac2fa1f4ecf'
+sha256sums=('64d5fad4060d3805aede4d98f4e7a08842de69e00548b163016164cd8e6cea29'
             'SKIP')
 validpgpkeys=(F05F7DD7953A07DF36579DAA498C45EBE94E7B37) # ownCloud Client Team (Signing Key) <info@owncloud.com>
 
 build() {
   cmake -B build -S ownCloud-$pkgver \
     -DCMAKE_INSTALL_PREFIX=/usr \
-    -DDATADIR=share
+    -DCMAKE_SKIP_INSTALL_RPATH=ON \
+    -DBUILD_TESTING=OFF \
+    -DKDE_INSTALL_SYSCONFDIR=/etc
   cmake --build build
 }
 

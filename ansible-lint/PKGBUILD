@@ -1,20 +1,19 @@
 # Maintainer: Jelle van der Waa <jelle@archlinux.org>
 # Maintainer: Frederik Schwan <freswa at archlinux dot org>
+# Maintainer: Robin Candau <antiz@archlinux.org>
 # Contributor: Sander Boom <sanderboom@gmail.com>
 
+_commit=82ab7c447614837c94fa8a9b5f667b8662aa055f
 pkgname=ansible-lint
-# past 6.15.0 because upstream broke ansible-lint with ansible-compat changes:
-# https://github.com/ansible/ansible-lint/issues/3393
-_commit=2fca3fed958702a2b40dd454511ea1b9f624c740
-pkgver=6.15.0.r45.g2fca3fe
-pkgrel=2
+pkgver=6.20.3
+pkgrel=1
 pkgdesc="Checks playbooks for practices and behaviour that could potentially be improved."
 arch=('any')
 url="https://github.com/ansible/ansible-lint"
 license=('GPL3')
 depends=(python ansible-core git yamllint
   python-{ansible-compat,black,enrich,filelock,jsonschema,pyaml,packaging,rich,ruamel-yaml,wcmatch})
-makedepends=(git python-{build,installer,setuptools,setuptools-scm,wheel})
+makedepends=(python-{build,installer,setuptools,setuptools-scm,wheel})
 checkdepends=(mypy python-jmespath python-pylint python-pytest python-pytest-mock)
 optdepends=('ansible: check official ansible collections')
 source=(git+https://github.com/ansible/ansible-lint.git#commit=$_commit
@@ -29,11 +28,6 @@ prepare() {
   # use pkg version
   #sed -i "s/dynamic = \[\"version\"\]/version = \"${pkgver}\"/" pyproject.toml
   rm .git_archival.txt
-}
-
-pkgver() {
-  cd $pkgname
-  git describe --tags --long --abbrev=7 | sed 's/^v//g;s/\([^-]*-g\)/r\1/;s/-/./g'
 }
 
 build() {

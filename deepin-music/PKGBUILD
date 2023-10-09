@@ -3,24 +3,33 @@
 # Contributor: Xu Fasheng <fasheng.xu[AT]gmail.com>
 
 pkgname=deepin-music
-pkgver=6.2.30
-pkgrel=1
+pkgver=7.0.3
+pkgrel=2
 pkgdesc='Awesome music player with brilliant and tweakful UI Deepin-UI based.'
 arch=('loong64' 'x86_64')
 url="https://github.com/linuxdeepin/deepin-music"
 license=('GPL3')
-depends=('deepin-qt5integration' 'deepin-qt-dbus-factory' 'qtdbusextended' 'dtkcore' 'dtkgui'
-         'dtkwidget' 'qt5-base' 'glib2' 'gcc-libs' 'icu' 'libpulse' 'kcodecs' 'qt5-multimedia'
-         'qtmpris' 'ffmpeg' 'taglib' 'udisks2-qt5' 'vlc')
+# ffmpeg, vlc: dlopen
+# dtkdeclarative: qml: org.deepin.dtk
+depends=('dtkcore' 'dtkgui' 'dtkwidget' 'dtkdeclarative' 'qt5-base' 'qt5-declarative' 'glibc'
+         'gcc-libs' 'kcodecs5' 'qt5-multimedia' 'qtmpris' 'ffmpeg' 'taglib' 'udisks2-qt5' 'vlc')
 makedepends=('cmake' 'ninja' 'qt5-tools')
 groups=('deepin-extra')
-options=('!lto')
-source=("https://github.com/linuxdeepin/deepin-music/archive/$pkgver/$pkgname-$pkgver.tar.gz")
-sha512sums=('576d03b2847a93fca0e68bdfa999a0802f7905c66b2010fab13c5ce8908e036fa0986b6d05b30aa0bb6dbf08af60766a71a77d9f573d29b5060bad54d7b48247')
+source=("https://github.com/linuxdeepin/deepin-music/archive/$pkgver/$pkgname-$pkgver.tar.gz"
+        $pkgname-ldflags.patch::https://github.com/linuxdeepin/deepin-music/pull/422.patch)
+sha512sums=('2ddaf0a5562a2e0f1c242a9e0b26887fae66a949313525ce5247089737c85d6b79ef01b2a1295fe8682d28231379169f756c834bab69df55a9055d756b33c1cc'
+            '7c90a9d5662f5de99d9a086576c8fbe1633596cc7f8819a5e83224e97a5171243a53fbf8d66053f76c67b19697fa2d33ca3072c9831b7821a9bcfbead4b6cd17')
+
+prepare() {
+  cd deepin-music-$pkgver
+  patch -Np1 -i ../$pkgname-ldflags.patch
+  sed -i 's/-fPIE//' CMakeLists.txt
+  sed -i '/INSTALL_RPATH/d' src/music-player/CMakeLists.txt
+}
 
 build() {
   cd deepin-music-$pkgver
-  cmake -GNinja -DCMAKE_INSTALL_PREFIX=/usr -DVERSION=$pkgver .
+  cmake . -GNinja -DCMAKE_INSTALL_PREFIX=/usr -DVERSION=$pkgver
   ninja
 }
 
