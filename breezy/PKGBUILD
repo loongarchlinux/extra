@@ -37,22 +37,23 @@ provides=(bzr)
 conflicts=(bzr)
 replaces=(bzr)
 _tag=d206a54af4040025561cc9159fa5559c14a7ef46
-source=(git+https://github.com/breezy-team/breezy.git#tag=${_tag})
-sha256sums=(SKIP)
+source=(git+https://github.com/breezy-team/breezy.git#tag=${_tag}
+breezy-fix-install.patch)
+sha256sums=('SKIP'
+            '1e778eae61605bd8a99d57ce97da4ac9ca74fe1b86c371fd55805e96aeb347e8')
 
 pkgver() {
   cd breezy
   git describe --tags | sed 's/brz-//; s/-/./g'
 }
 
+prepare() {
+  cd breezy
+	patch -p1 -i "$srcdir/breezy-fix-install.patch"
+}
+
 build() {
   cd breezy
-  find -name Cargo.lock -exec rm -f {} \;
-  mkdir -p .cargo
-  cat > .cargo/config.toml <<EOF
-[source.crates-io]
-registry = "https://gitee.com/yetist/crates.io-index"
-EOF
   python setup.py build
 }
 
