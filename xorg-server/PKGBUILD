@@ -20,7 +20,9 @@ makedepends=('xorgproto' 'pixman' 'libx11' 'mesa' 'mesa-libgl' 'xtrans'
 source=(https://xorg.freedesktop.org/releases/individual/xserver/${pkgbase}-${pkgver}.tar.xz{,.sig}
         xvfb-run # with updates from FC master
         xvfb-run.1
+        10-modeset.conf
         xephyr_Dont_check_for_SeatId_anymore.patch
+        0001-modesetting-match-against-Multimedia-Video-Controlle.patch
         0001-present-Send-a-PresentConfigureNotify-event-for-dest.patch
 )
 validpgpkeys=('3C2C43D9447D5938EF4551EBE23B7E70B467F0BF'  # Peter Hutterer (Who-T) <office@who-t.net>
@@ -30,7 +32,9 @@ sha512sums=('6104b3620ed2e1e27d9a8e963388bbe8785a764585b1bc03dbf5d719a92894773dd
             'SKIP'
             '672375cb5028ba9cda286e317d17bd8c9a9039483e7f79c21f223fd08ba07655729e9f59a082f4b8f5d8de45a77a9e9affce1002fb8c6657e26ef1a490654e49'
             'de5e2cb3c6825e6cf1f07ca0d52423e17f34d70ec7935e9dd24be5fb9883bf1e03b50ff584931bd3b41095c510ab2aa44d2573fd5feaebdcb59363b65607ff22'
+            '1aa711f4948cd1557d77bd47a64ea92be55cf737b8204214c6c3ae2ecd00dc6928fd7a789d1aa5faaff5d6162f895a41efd332e8f1710d0a7c9b33326b057ec5'
             '34de52147054535256f35143d321e4d5e189baae502afca2bd3291094946dbead0829b1f196ae2a4d23bd6d0e1e04b65a387dee43f12dee55d247e37aec419d7'
+            '0e55cc994dd8f1309c6ea40cb1f5b2d763d850a466c9d30bd8619fd68ce369b19f098d28ab684db1bd2758a6402654cf93188651e863f0e1be4eed8cf9b40e14'
             'bc7d054bef2b4550d067b3abb14eb7c534e5022ba0b0e59e14687886fe204914757b014c31150bce705baed5d8cb1be87e8624da43cb1fe874b138ced00ee18b')
 
 prepare() {
@@ -40,6 +44,8 @@ prepare() {
   patch -Np1 -i ../xephyr_Dont_check_for_SeatId_anymore.patch
   # upstream fix (merged)
   patch -Np1 -i ../0001-present-Send-a-PresentConfigureNotify-event-for-dest.patch
+  # fix modesetting driver for loongson and gsgpu
+  patch -Np1 -i ../0001-modesetting-match-against-Multimedia-Video-Controlle.patch
 }
 
 build() {
@@ -59,6 +65,7 @@ build() {
     -D xephyr=true \
     -D glamor=true \
     -D udev=true \
+    -D udev_kms=true \
     -D dtrace=false \
     -D systemd_logind=true \
     -D suid_wrapper=true \
@@ -120,6 +127,7 @@ package_xorg-server() {
 
   # distro specific files must be installed in /usr/share/X11/xorg.conf.d
   install -m755 -d "${pkgdir}/etc/X11/xorg.conf.d"
+  install -m644 -Dt "${pkgdir}/usr/share/X11/xorg.conf.d" 10-modeset.conf
 
   # license
   install -m644 -Dt "${pkgdir}/usr/share/licenses/${pkgname}" "${pkgbase}-${pkgver}"/COPYING
