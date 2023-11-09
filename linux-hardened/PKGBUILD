@@ -4,7 +4,9 @@
 # Contributor: Thomas Baechler <thomas@archlinux.org>
 
 pkgbase=linux-hardened
-pkgver=6.5.6.hardened1
+_ver=6.6.0
+_rdate=20231013
+pkgver=${_ver}.hardened1
 pkgrel=1
 pkgdesc='Security-Hardened Linux'
 url='https://github.com/anthraxx/linux-hardened'
@@ -31,10 +33,10 @@ options=('!strip')
 _srcname=linux-${pkgver%.*}
 _srctag=${pkgver%.*}-${pkgver##*.}
 source=(
-  https://cdn.kernel.org/pub/linux/kernel/v${pkgver%%.*}.x/${_srcname}.tar.{xz,sign}
-  ${url}/releases/download/${_srctag}/${pkgbase}-${_srctag}.patch{,.sig}
-  config  # the main kernel config file
+  https://github.com/loongarchlinux/linux/releases/download/v${_rdate}/linux-${_ver}-${_rdate}.tar.xz
+  config         # the main kernel config file
   config.la64
+  remove_shm_align_mask.diff
 )
 validpgpkeys=(
   ABAF11C65A2970B130ABE3C479BE3E4300411886  # Linus Torvalds
@@ -42,17 +44,14 @@ validpgpkeys=(
   E240B57E2C4630BA768E2F26FC1B547C8D8172C8  # Levente Polyak
 )
 # https://www.kernel.org/pub/linux/kernel/v6.x/sha256sums.asc
-sha256sums=('78e36d4214547051c24df2140f4ce09428d6c515ad9a71b38b28e8094a95d2f6'
-            'SKIP'
-            'ef3923fa2bbc2e39a52c9e9cddae769381ff92ee8e9e1084112a45a117bcbb8b'
-            'SKIP'
-            '77272c9a1a1a50ea637f13f4dfa079cdf2db36d712e675a694c843b354bedf23')
-b2sums=('6fec33a0ee1700694c43c2271263d23408f3ad53f71200717ebd3843dd0aecb5235a058439e63e304da276978f1e4148ae1aac78a22166b2ca236b137a406c0f'
-        'SKIP'
-        '3ff4378e4f6eff5bfd7bfab3c47527bf074143ea37cd97a14a64fbaf04da1c1a22c3408871f56c62d0c783ee141040109cad66e14f824f8c25828589a32b6e27'
-        'SKIP'
+sha256sums=('5f92d37f6b00df86642b251cf8c98e14326712825e71b69b4531bed6abb48d52'
+            '77272c9a1a1a50ea637f13f4dfa079cdf2db36d712e675a694c843b354bedf23'
+            '8c32b233a16d437dc7ae6f1551256375090ecc7b18ec2151714b6bfb731f5cbf'
+            'c625401b90b1fad013ac800116bb7b7a320be7ab5fdf39f7f70be5a23de9ad34')
+b2sums=('1ce30a8105b5e73eb3c5c2e5cfb2b09a5fdb57515d244145dda80defb1634bcdc9fb649ecc9bebc4dcbcd7ced09c110c0a6432a984f76ccb861517ae14c7be56'
         '2e43bf488f84d8211bafa23bc46c798caec4c735b1fd8927e38953d089a5f986ff10bafdeecf935e51e94789eb0a9b39d74abcf15dd4d213a34eb8e9a85a531a'
-        'b67de2027e1dc2ddbf4f694401ca8447064b80bc3bffb66427697bf3e0c62e94d7282e4358b5ae115713fc57995d094253ad66f0d48ac4f2fd632cf71ab2ebc5')
+        'f5a3cfa497b4631427b936871669a6bd674df3569059bfcf488d6be097d035fdaf6de2cac006252b379a00235d501c35815f0c49fc79c0a57cc53c171cd25e20'
+        'b1ef46cc74704a995c7252d655817f1b54d67ea6b23705e42df9db5941de6bd269e5958cf1747163b9b43f4c6a1d56797c4ed2117ac5490f99fbc7aa8a45ed66')
 
 export KBUILD_BUILD_HOST=archlinux
 export KBUILD_BUILD_USER=$pkgbase
@@ -74,6 +73,7 @@ prepare() {
     echo "Applying patch $src..."
     patch -Np1 < "../$src"
   done
+  patch -R -p1 -i $srcdir/remove_shm_align_mask.diff
 
   echo "Setting config..."
   cp ../config.la64 .config
@@ -130,7 +130,7 @@ _package() {
     DEPMOD=/doesnt/exist modules_install  # Suppress depmod
 
   # remove build and source links
-  rm "$modulesdir"/{source,build}
+  rm -f "$modulesdir"/{source,build}
 }
 
 _package-headers() {
