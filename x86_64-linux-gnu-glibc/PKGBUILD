@@ -2,7 +2,7 @@
 
 _target=x86_64-linux-gnu
 pkgname=$_target-glibc
-pkgver=2.37
+pkgver=2.38
 pkgrel=1
 pkgdesc='GNU C Library x86_64 target'
 arch=(any)
@@ -12,62 +12,113 @@ depends=($_target-gcc $_target-linux-api-headers)
 groups=(x86)
 makedepends=(python)
 options=(!buildflags !strip staticlibs)
-source=(https://ftp.gnu.org/gnu/libc/glibc-$pkgver.tar.xz{,.sig})
-sha256sums=('2257eff111a1815d74f46856daaf40b019c1e553156c69d48ba0cbfc1bb91a43'
-            'SKIP')
+source=(https://ftp.gnu.org/gnu/libc/glibc-$pkgver.tar.xz{,.sig}
+        sdt.h sdt-config.h
+        reenable_DT_HASH.patch
+	)
+sha256sums=('fb82998998b2b29965467bc1b69d152e9c307d2cf301c9eafb4555b770ef3fd2'
+            'SKIP'
+            '774061aff612a377714a509918a9e0e0aafce708b87d2d7e06b1bd1f6542fe70'
+            'cdc234959c6fdb43f000d3bb7d1080b0103f4080f5e67bcfe8ae1aaf477812f0'
+            'cf9fe494f7ec69752a63d1b0a9ad689aa620888ae9b902b6383a6fbc7c1726a7')
 validpgpkeys=(7273542B39962DF7B299931416792B4EA25340F8  # "Carlos O'Donell <carlos@systemhalted.org>"
               BC7C7372637EC10C57D7AA6579C43DFBF1CF2187) # Siddhesh Poyarekar
 
 prepare() {
-  mkdir -p glibc-build
+  mkdir -p glibc-build lib32-glibc-build
+  cd glibc-$pkgver
+  patch -Np1 -i "${srcdir}"/reenable_DT_HASH.patch
 }
 
 build() {
-  cd glibc-build
-
-  echo 'slibdir=/lib' >> configparms
-  echo 'rtlddir=/lib' >> configparms
-  echo 'sbindir=/bin' >> configparms
-  echo 'rootsbindir=/bin' >> configparms
-
   # remove hardening options for building libraries
   export CFLAGS="-U_FORTIFY_SOURCE -O2"
   export CPPFLAGS="-U_FORTIFY_SOURCE -O2"
   unset LD_LIBRARY_PATH
 
   export BUILD_CC=gcc
-  export CC=${_target}-gcc
-  export CXX=${_target}-g++
   export AR=${_target}-ar
   export RANLIB=${_target}-ranlib
 
-  ../glibc-$pkgver/configure \
-      --prefix=/usr \
-      --target=$_target \
-      --host=$_target \
-      --build=$CHOST \
-      --includedir=/include \
-      --libdir=/lib \
-      --libexecdir=/lib \
-      --with-headers=/usr/$_target/include \
-      --with-bugurl=https://bugs.archlinux.org/ \
-      --enable-add-ons \
-      --enable-kernel=2.6.32 \
-      --enable-bind-now \
-      --disable-profile \
-      --enable-stackguard-randomization \
-      --enable-lock-elision \
-      --enable-multi-arch \
+  local _configure_flags=(
+      --prefix=/usr
+      --target=$_target
+      --host=$_target
+      --build=$CHOST
+      --with-headers=/include
+      --with-headers=/usr/$_target/include
+      --with-bugurl=https://bugs.archlinux.org/
+      --enable-bind-now
+      --enable-cet
+      --enable-fortify-source
+      --enable-kernel=4.4
+      --enable-multi-arch
+      --enable-stack-protector=strong
+      --disable-nscd
+      --disable-profile
       --disable-werror
+  )
 
-  echo 'build-programs=no' >> configparms
-  make
+  (
+    cd glibc-build
+    export CC=${_target}-gcc
+    export CXX=${_target}-g++
+
+    echo 'slibdir=/lib' >> configparms
+    echo 'rtlddir=/lib' >> configparms
+    echo 'sbindir=/bin' >> configparms
+    echo 'rootsbindir=/bin' >> configparms
+    echo 'build-programs=no' >> configparms
+
+    # Credits @allanmcrae
+    # https://github.com/allanmcrae/toolchain/blob/f18604d70c5933c31b51a320978711e4e6791cf1/glibc/PKGBUILD
+    # remove fortify for building libraries
+    # CFLAGS=${CFLAGS/-Wp,-D_FORTIFY_SOURCE=2/}
+
+    "${srcdir}"/glibc-$pkgver/configure \
+        --libdir=/lib \
+        --libexecdir=/lib \
+        "${_configure_flags[@]}"
+
+    make -O
+  )
+
+#  (
+#    cd lib32-glibc-build
+#    export CC="${_target}-gcc -m32 -mstackrealign"
+#    export CXX="${_target}-g++ -m32 -mstackrealign"
+#
+#    echo "slibdir=/lib32" >> configparms
+#    echo "rtlddir=/lib32" >> configparms
+#    echo "sbindir=/bin" >> configparms
+#    echo "rootsbindir=/bin" >> configparms
+#    echo 'build-programs=no' >> configparms
+#
+#    "${srcdir}"/glibc-$pkgver/configure \
+#        --host=i686-pc-linux-gnu \
+#        --libdir=/lib32 \
+#        --libexecdir=/lib32 \
+#        "${_configure_flags[@]}"
+#
+#    make -O
+#  )
 }
 
 package() {
   cd glibc-build
 
   make install_root="$pkgdir"/usr/$_target install
+#  make -C glibc-build DESTDIR="${pkgdir}" install
+  install -Dm644 "${srcdir}"/sdt.h "${pkgdir}"/usr/$_target/include/sys/sdt.h
+  install -Dm644 "${srcdir}"/sdt-config.h "${pkgdir}"/usr/$_target/include/sys/sdt-config.h
+#  cd lib32-glibc-build
+
+#  make install_root="$pkgdir"/usr/$_target install
+#  make DESTDIR="${pkgdir}" install
+
+#  # Dynamic linker
+#  install -d "${pkgdir}"/usr/lib
+#  ln -s ../lib32/ld-linux.so.2 "${pkgdir}"/usr/lib/
 
   rm -r "$pkgdir"/usr/$_target/{etc,usr/share,var}
 }
