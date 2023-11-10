@@ -70,9 +70,11 @@ source=(
   wpewebkit-la64.patch
 )
 sha256sums=('18a2cf547a503420f4cb8f523a2f4c24b4dc2773abbe74c7d585e6d23cb27bac'
-            'SKIP')
+            'SKIP'
+            'df3f2865f39bb76321a37d9c4255214d032c9b8d25a40e9d8bb69b5b6f6c3279')
 b2sums=('12e8d0fb662e36c68f4e029d948de0b4bed4d9087d622d0b940726f3bb958572699cbe3d943408e9526d254a0b355b474281a432a38a7a19efbced4031dc7e6e'
-        'SKIP')
+        'SKIP'
+        'b7b91bc37751390dacf568e75a368e8ea160490359f329f867eee43f69c6c7338b5d5970330bb2f04758beadeb089face0a26443d9127174841a465c8d1fdee9')
 validpgpkeys=(
   'D7FCF61CF9A2DEAB31D81BD3F3D322D0EC4582C3'  # Carlos Garcia Campos <cgarcia@igalia.com>
   '5AA3BC334FD7E3369E7C77B291C559DBE4C9123B'  # Adrián Pérez de Castro <aperez@igalia.com>
@@ -104,7 +106,13 @@ build() {
   #     <artificial>:(.text+0x4a019): undefined reference to `ipint_extern_table_fill'
   #     collect2: error: ld returned 1 exit status
   export CC=clang CXX=clang++
-  LDFLAGS+=" -fuse-ld=lld"
+#  LDFLAGS+=" -fuse-ld=lld"
+# clang didn't support -mlsx
+  CFLAGS=${CFLAGS/-mlsx /}
+  CXXFLAGS=${CXXFLAGS/-mlsx /}
+  CFLAGS=${CFLAGS/-fstack-clash-protection/}
+  CXXFLAGS=${CXXFLAGS/-fstack-clash-protection/}
+
 
   # Produce minimal debug info: 4.3 GB of debug data makes the
   # build too slow and is too much to package for debuginfod
