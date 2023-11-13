@@ -12,8 +12,10 @@ depends=('runc' 'containerd')
 makedepends=('git' 'go')
 options=('!lto')
 _commit='567a99433ca23402d5e9b9f9124005d2e59b8861'
-source=("$pkgname::git+$url.git#commit=$_commit")
-b2sums=('SKIP')
+source=("$pkgname::git+$url.git#commit=$_commit"
+0001-add-loongarch64-support.patch)
+b2sums=('SKIP'
+        '633f1e8e9e66c38f3a21a6c3af14721efd6a2cc6c0201e8492d333a86461a5783eec2c144edfe1ef17ee8385fa29588f30e88d26cf49ce8b477480be3e5459be')
 
 pkgver() {
   cd "$pkgname"
@@ -28,6 +30,7 @@ prepare() {
   # fix paths in systemd unit files
   sed -i 's:/usr/local:/usr:' \
     examples/systemd/{system,user}/*.service
+  patch -p1 -i $srcdir/0001-add-loongarch64-support.patch
 
   # create directory for build output
   mkdir build
@@ -46,7 +49,7 @@ build() {
   export CGO_CXXFLAGS="${CXXFLAGS}"
   export GOPATH="${srcdir}"
 
-  go mod edit -replace=golang.org/x/sys=github.com/golang/sys@v0.0.0-20220622161953-175b2fd9d664
+  go mod edit -replace=golang.org/x/sys=github.com/golang/sys@v0.13.0
   go mod edit -replace=go.etcd.io/bbolt=go.etcd.io/bbolt@v1.3.7-0.20221114114133-eedea6cb26ef
   go mod tidy
 
