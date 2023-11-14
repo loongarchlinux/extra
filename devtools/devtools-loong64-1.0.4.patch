@@ -1,5 +1,5 @@
 diff --git a/Makefile b/Makefile
-index d8962d0..518354a 100644
+index bfe80a8..20c3152 100644
 --- a/Makefile
 +++ b/Makefile
 @@ -25,28 +25,41 @@ COMMITPKG_LINKS = \
@@ -669,10 +669,10 @@ index 818b0ca..d1e277b 100644
 +#git tag --sign --message="Package release ${pkgver}" "$gittag" || abort
 +#git push --tags --set-upstream origin main || abort
 diff --git a/src/commitpkg.in b/src/commitpkg.in
-index 108fe81..976848d 100644
+index f979d61..0b1226f 100644
 --- a/src/commitpkg.in
 +++ b/src/commitpkg.in
-@@ -127,17 +127,17 @@ for key in "${validpgpkeys[@]}"; do
+@@ -128,17 +128,17 @@ for key in "${validpgpkeys[@]}"; do
  done
  
  # assert that they really are controlled by git
@@ -701,19 +701,18 @@ index 108fe81..976848d 100644
  
  
  server=${PACKAGING_REPO_RELEASE_HOST}
-@@ -175,53 +175,53 @@ for _arch in "${arch[@]}"; do
+@@ -176,51 +176,51 @@ for _arch in "${arch[@]}"; do
  done
  
  # check for PKGBUILD standards
 -check_pkgbuild_validity
--
--# auto generate .SRCINFO if present
--if [[ -f .SRCINFO ]]; then
--	stat_busy 'Generating .SRCINFO'
--	makepkg --printsrcinfo > .SRCINFO
--	git add .SRCINFO
--	stat_done
--fi
++#check_pkgbuild_validity
+ 
+ # auto generate .SRCINFO
+-stat_busy 'Generating .SRCINFO'
+-write_srcinfo_content > .SRCINFO
+-git add --force .SRCINFO
+-stat_done
 -
 -if [[ -n $(git status --porcelain --untracked-files=no) ]]; then
 -	stat_busy 'Staging files'
@@ -752,15 +751,10 @@ index 108fe81..976848d 100644
 -		stat_done
 -	fi
 -fi
-+#check_pkgbuild_validity
-+
-+## auto generate .SRCINFO if present
-+#if [[ -f .SRCINFO ]]; then
-+#	stat_busy 'Generating .SRCINFO'
-+#	makepkg --printsrcinfo > .SRCINFO
-+#	git add .SRCINFO
-+#	stat_done
-+#fi
++#stat_busy 'Generating .SRCINFO'
++#write_srcinfo_content > .SRCINFO
++#git add --force .SRCINFO
++#stat_done
 +
 +#if [[ -n $(git status --porcelain --untracked-files=no) ]]; then
 +#	stat_busy 'Staging files'
@@ -803,7 +797,7 @@ index 108fe81..976848d 100644
  declare -a uploads
  declare -a commit_arches
 diff --git a/src/lib/build/build.sh b/src/lib/build/build.sh
-index ecdeaad..533db43 100644
+index a5a272d..ec7af1a 100644
 --- a/src/lib/build/build.sh
 +++ b/src/lib/build/build.sh
 @@ -319,6 +319,9 @@ pkgctl_build() {
