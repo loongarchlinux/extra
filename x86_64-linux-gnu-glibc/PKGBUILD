@@ -3,7 +3,7 @@
 _target=x86_64-linux-gnu
 pkgname=$_target-glibc
 pkgver=2.38
-pkgrel=1
+pkgrel=2
 pkgdesc='GNU C Library x86_64 target'
 arch=(any)
 url='https://www.gnu.org/software/libc/'
@@ -37,25 +37,25 @@ build() {
   unset LD_LIBRARY_PATH
 
   export BUILD_CC=gcc
-  export AR=${_target}-ar
-  export RANLIB=${_target}-ranlib
 
   local _configure_flags=(
       --prefix=/usr
       --target=$_target
       --host=$_target
       --build=$CHOST
-      --with-headers=/include
+      --includedir=/include
       --with-headers=/usr/$_target/include
       --with-bugurl=https://bugs.archlinux.org/
-      --enable-bind-now
-      --enable-cet
       --enable-fortify-source
-      --enable-kernel=4.4
-      --enable-multi-arch
-      --enable-stack-protector=strong
+      --enable-cet
       --disable-nscd
+      --enable-kernel=4.4
+      --enable-add-ons
+      --enable-bind-now
       --disable-profile
+      --enable-stackguard-randomization
+      --enable-lock-elision
+      --enable-multi-arch
       --disable-werror
   )
 
@@ -63,6 +63,8 @@ build() {
     cd glibc-build
     export CC=${_target}-gcc
     export CXX=${_target}-g++
+    export AR=${_target}-ar
+    export RANLIB=${_target}-ranlib
 
     echo 'slibdir=/lib' >> configparms
     echo 'rtlddir=/lib' >> configparms
