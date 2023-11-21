@@ -44,7 +44,6 @@ pkgver() {
 
 prepare() {
   cd librsvg
-  sed -i 's/--locked//' Makefile.am
   NOCONFIGURE=1 ./autogen.sh
 }
 
@@ -64,12 +63,6 @@ build() {
 
   cd librsvg
   ./configure "${configure_options[@]}"
-#  find -name Cargo.lock -exec rm -f {} \;
-#  mkdir .cargo
-#  cat > .cargo/config.toml <<EOF
-#[source.crates-io]
-#registry = "https://gitee.com/yetist/crates.io-index"
-#EOF
   sed -i -e 's/ -shared / -Wl,-O1,--as-needed\0 /g' libtool
   make
 }
