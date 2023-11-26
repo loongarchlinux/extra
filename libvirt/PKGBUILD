@@ -7,7 +7,7 @@
 pkgname=(libvirt libvirt-storage-gluster libvirt-storage-iscsi-direct)
 epoch=1
 pkgver=9.7.0
-pkgrel=1
+pkgrel=2
 pkgdesc="API for controlling virtualization engines (openvz,kvm,qemu,virtualbox,xen,etc)"
 arch=('loong64' 'x86_64')
 url="https://libvirt.org/"
@@ -82,13 +82,16 @@ backup=(
 )
 source=(
   "https://libvirt.org/sources/$pkgname-$pkgver.tar.xz"{,.asc}
+  libvirt-loongarch.patch
 )
 sha256sums=('d8c758fe7db640f572489caa8ea6dd8262d169a4372326c23a3a013cdc40b8ce'
-            'SKIP')
+            'SKIP'
+            'f0562941282b157e2ebba9d203c33f4f9c0f3f93562129448f7de6e5df0575fc')
 validpgpkeys=('453B65310595562855471199CA68BE8010084C9C') # Jiří Denemark <jdenemar@redhat.com>
 
 prepare() {
   cd "$pkgname-$pkgver"
+  patch -Np1 -i ../libvirt-loongarch.patch
 
   sed -i 's|/sysconfig/|/conf.d/|g' \
     src/remote/libvirtd.service.in \
