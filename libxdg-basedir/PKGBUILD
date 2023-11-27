@@ -1,32 +1,47 @@
-# Maintainer: Ronald van Haren <ronald.archlinux.org>
+# Maintainer: George Rawlinson <grawlinson@archlinux.org>
+# Contributor: Ronald van Haren <ronald.archlinux.org>
 # Contributor: Ondrej Martinak <omartinak@gmail.com>
 
 pkgname=libxdg-basedir
 pkgver=1.2.3
-pkgrel=1
-pkgdesc="An implementation of the XDG Base Directory specifications."
+pkgrel=2
+pkgdesc='An implementation of the XDG Base Directory specification'
 arch=('loong64' 'x86_64')
-#url="http://n.ethz.ch/student/nevillm/download/libxdg-basedir"
-url="https://github.com/devnev/$pkgname"
+url='https://github.com/devnev/libxdg-basedir'
 license=('MIT')
 depends=('glibc')
-source=(https://github.com/devnev/$pkgname/archive/$pkgname-$pkgver.tar.gz
-        'LICENSE')
-sha512sums=('e672da0d9cd3c27c9113f6053b79127e615e5d84bde81305242f506e930869d8492304aac26a0296528d5a32530e4a743acecb6a25f58372ac597af284429f7c'
-            '772afb3c9aefe6ed6b941faf582ea74582c3e7042237701f7e02d4f237d3e4ec528ebc7caf5adb2c1a0adc398fae52e172c009ad962de0620b0376123d76b2d6')
+makedepends=('git')
+_commit='b978568d1b3ee04e8197f23ca4e3abdd372f85e1'
+source=("$pkgname::git+$url#commit=$_commit")
+b2sums=('SKIP')
+
+pkgver() {
+  cd "$pkgname"
+
+  git describe --tags | sed 's/^libxdg-basedir-//'
+}
 
 build() {
-   cd ${pkgname}-${pkgname}-${pkgver}
-   ./autogen.sh
-   ./configure --prefix=/usr
-   make
+  cd "$pkgname"
+
+  ./autogen.sh
+
+  ./configure --prefix=/usr
+
+  make
+}
+
+check() {
+  cd "$pkgname"
+
+  make check
 }
 
 package() {
-   cd ${pkgname}-${pkgname}-${pkgver}
-   make DESTDIR="${pkgdir}" install
+  cd "$pkgname"
 
-   # Install MIT license
-   install -Dm644 "${srcdir}"/LICENSE "${pkgdir}"/usr/share/licenses/${pkgname}/LICENSE
+  DESTDIR="$pkgdir" make install
+
+  # license
+  install -vDm644 -t "$pkgdir/usr/share/licenses/$pkgname" COPYING
 }
-

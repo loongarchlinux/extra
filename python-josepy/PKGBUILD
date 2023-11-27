@@ -2,8 +2,8 @@
 # Contributor: Felix Yan <felixonmars@archlinux.org>
 
 pkgname=python-josepy
-pkgver=1.13.0
-pkgrel=4
+pkgver=1.14.0
+pkgrel=1
 pkgdesc='JOSE protocol implementation in Python'
 arch=('any')
 url='https://github.com/certbot/josepy'
@@ -17,13 +17,16 @@ makedepends=(
   'git'
   'python-build'
   'python-installer'
-  'python-setuptools'
-  'python-wheel'
+  'python-poetry-core'
 )
 checkdepends=('python-pytest')
-_commit='10e2e3a1c09974d41097cc4c08f836421ce39f1b'
-source=("$pkgname::git+$url#commit=$_commit")
-b2sums=('SKIP')
+_commit='a6861675bc943026e8c0d5c550e17eba23289547'
+source=(
+  "$pkgname::git+$url#commit=$_commit"
+  'no-thanks-poetry.patch'
+)
+b2sums=('SKIP'
+        'b7bf362e953247424fadea853b3c7be9977021b7d109d240ced847b9271c739e6dfcf8025efbdd9bb746dc42e21905cb1c9c93982d4e39dab60354ab06c6e76a')
 
 pkgver() {
   cd "$pkgname"
@@ -34,16 +37,10 @@ pkgver() {
 prepare() {
   cd "$pkgname"
 
-  # thou shalt not enforce coverage in distro packaging
-  # https://github.com/certbot/josepy/issues/34
-  rm pytest.ini
-
-  # nuke setuptools from orbit ^W install_requires
-  sed \
-    -e '/setuptools>=/d' \
-    -i setup.py
+  # poetry strikes again
+  # https://github.com/certbot/josepy/issues/172
+  patch -p1 -i "$srcdir/no-thanks-poetry.patch"
 }
-
 build() {
   cd "$pkgname"
 
@@ -53,7 +50,10 @@ build() {
 check() {
   cd "$pkgname"
 
-  PYTHONPATH="$(pwd)/build/lib" pytest -v
+  # install to temporary location
+  python -m installer --destdir=test_dir dist/*.whl
+  local site_packages=$(python -c "import site; print(site.getsitepackages()[0])")
+  PYTHONPATH="test_dir/$site_packages:$PYTHONPATH" pytest -v
 }
 
 package() {

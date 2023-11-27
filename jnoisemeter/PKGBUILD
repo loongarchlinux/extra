@@ -1,34 +1,41 @@
-# Maintainer: David Runge <dave@sleepmap.de>
+# Maintainer: David Runge <dvzrv@archlinux.org>
+
 pkgname=jnoisemeter
-pkgver=0.2.2
-pkgrel=2
+pkgver=0.4.1
+pkgrel=1
 pkgdesc="Measure audio test signals and in particular noise signals"
-arch=('loong64' 'x86_64')
+arch=(loong64 x86_64)
 url="https://kokkinizita.linuxaudio.org/linuxaudio/"
-license=('GPL2')
-groups=('pro-audio')
-depends=('clthreads' 'clxclient' 'jack')
-source=("https://kokkinizita.linuxaudio.org/linuxaudio/downloads/$pkgname-$pkgver.tar.bz2")
-sha512sums=('f7a1af765cea9b600d1d5320fd4ec6bdbdd1d7df54c441bd12f0086ce6fb994b5050db4c9438ec189c234440d992a5acdca42dd3d2c588c934a5b4cec763ce21')
+license=(GPL-2.0-or-later)
+groups=(pro-audio)
+depends=(
+  clthreads
+  clxclient
+  gcc-libs
+  glibc
+  jack
+  libx11
+)
+source=(https://kokkinizita.linuxaudio.org/linuxaudio/downloads/$pkgname-$pkgver.tar.bz2)
+sha512sums=('875bf049fc6d22fbe7fafc64490e6f4c4d38f74389ddcd0911c2d1f9165e3e3136d00157a3f05b632ff92942035810c22b719eecb7cd76ed5f51b329f7dcf2c8')
+b2sums=('c889fcf3f804772725474c9650767761730cbb706f5fa077cb48fada1643095c0b62bfde5ef94c462650e74caed0b855220f078c6a018f9e1269b8e94e1e55f1')
 
 prepare() {
-  cd "$pkgname-$pkgver"
+  cd $pkgname-$pkgver
   # remove optimization
-  sed -e '/march=native/d' \
-      -i source/Makefile
+  sed -e '/march=native/d' -i source/Makefile
 }
 
 build() {
-  cd "$pkgname-$pkgver/source"
+  cd $pkgname-$pkgver/source
   make
 }
 
 package() {
-  cd "$pkgname-$pkgver/source"
+  cd $pkgname-$pkgver/source
   make PREFIX=/usr DESTDIR="$pkgdir/" install
 
   # doc
-  install -vDm 644 ../{AUTHORS,README} \
-    -t "${pkgdir}/usr/share/doc/${pkgname}"
+  install -vDm 644 ../{AUTHORS,README} -t "$pkgdir/usr/share/doc/$pkgname/"
 }
 

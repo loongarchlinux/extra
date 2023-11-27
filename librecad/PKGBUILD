@@ -1,11 +1,12 @@
 # Maintainer: Christian Hesse <mail@eworm.de>
+# Maintainer: Caleb Maclennan <caleb@alerque.com>
 # Contributor: mickele <mimocciola at yahoo dot com> (librecad-git PKGBUILD)
 # Contributor: Ilmari Repo <ilmari at gmail dot com> (librecad-svn PKGBUILD)
 # Contributor: GazJ Gary James <garyjames82 at gmail dot com> (CADuntu PKGBUILD)
 
 pkgname=librecad
 pkgver=2.2.0.2
-pkgrel=1
+pkgrel=2
 pkgdesc='A 2D CAD drawing tool based on the community edition of QCad'
 arch=('loong64' 'x86_64')
 url='https://www.librecad.org/'
@@ -62,5 +63,13 @@ package() {
 	# resources
 	mkdir -p "${pkgdir}/usr/share/librecad/"
 	cp -r unix/resources/{library,patterns,fonts,qm} "${pkgdir}/usr/share/librecad/"
+
+	# plugins
+	mkdir -p "${pkgdir}/usr/share/librecad/plugins"
+	mkdir -p "${pkgdir}/usr/lib/librecad"
+	cp -r unix/resources/plugins "${pkgdir}/usr/lib/librecad/"
+	for plugin in "${pkgdir}/usr/lib/librecad/"*.so; do
+		ln -sf "../../../lib/librecad/$(basename $plugin)" "${pkgdir}/usr/share/librecad/plugins/"
+	done
 }
 

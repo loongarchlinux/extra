@@ -1,0 +1,45 @@
+# Maintainer: Maxime Gauduin <alucryd@archlinux.org>
+# Contributor: Emmanuel Gil Peyrot <linkmauve@linkmauve.fr>
+
+pkgname=ctrtool
+pkgver=1.2.0
+pkgrel=1
+pkgdesc="A tool to read/extract Nintendo 3DS files"
+arch=(loong64 x86_64)
+url=https://github.com/3DSGuy/Project_CTR
+license=(MIT)
+depends=(
+  gcc-libs
+  glibc
+)
+makedepends=(git)
+_tag=7e645b2b17f153bb1c2b9d4269f727cce659be5c
+source=(
+  git+https://github.com/3DSGuy/Project_CTR.git#tag=${_tag}
+  ctrtool-flags.patch
+)
+b2sums=('SKIP'
+        '6db2c9d99ab289f50a7a60f2296dbb2a2d8179f4b2c10552a78f7b02da657baa38fc191c2653b7a78af8b15a523d12f4c4425baa222908a68d9039c794c6ed19')
+
+prepare() {
+  cd Project_CTR
+  patch -Np1 -i ../ctrtool-flags.patch
+}
+
+pkgver() {
+  cd Project_CTR
+  git describe --tags | sed 's/^ctrtool-v//'
+}
+
+build() {
+  cd Project_CTR/ctrtool
+  make deps
+  make
+}
+
+package() {
+  install -Dm 755 Project_CTR/ctrtool/bin/ctrtool -t "${pkgdir}"/usr/bin/
+  install -Dm 644 Project_CTR/makerom/LICENSE -t "${pkgdir}"/usr/share/licenses/ctrtool/
+}
+
+# vim: ts=2 sw=2 et:

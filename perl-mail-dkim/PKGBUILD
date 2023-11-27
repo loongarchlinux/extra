@@ -1,22 +1,22 @@
-# Maintainer: Florian Pritz <bluewind@xinu.at>
+# Maintainer: Florian Pritz <bluewind@archlinux.org>
 # Contributor: Sergej Pupykin <pupykin.s+arch@gmail.com>
 # Contributor: Francois Charette <firmicus@gmx.net>
 
 pkgname=perl-mail-dkim
-pkgver=1.20230212
-pkgrel=2
+pkgver=1.20230911
+pkgrel=1
 pkgdesc='Signs/verifies Internet mail with DKIM/DomainKey signatures'
 arch=(any)
 license=(PerlArtistic GPL)
 options=(!emptydirs)
-depends=(perl-crypt-openssl-rsa perl-mail-authenticationresults perl-mailtools
-         perl-net-dns)
+depends=(perl-crypt-openssl-rsa perl-cryptx perl-mail-authenticationresults
+         perl-mailtools perl-net-dns)
 checkdepends=('perl>=5.6' perl-net-dns perl-net-dns-resolver-mock
               perl-test-requiresinternet perl-yaml-libyaml)
 url=https://metacpan.org/release/Mail-DKIM
 source=("https://cpan.metacpan.org/authors/id/M/MB/MBRADSHAW/Mail-DKIM-$pkgver.tar.gz")
-md5sums=(aac5c1ee0482b2f6eb465ef6e633f288)
-sha512sums=(b34ee931f121104c93973f5cacf551f7583947c82fd272197b970852ac37d910f69d2fd44a4d4614162ee38b54205bb93e0138fdf48cc2c43ab2606040f18d3b)
+md5sums=(2a141454c7ee5199116302600ca3bbdb)
+sha512sums=(d89a4412e6352602d5eec9ca435b2c13dd06aa5c639fd357608f8788b9ba8b2dafe0c064bc48928ac040e19d144a48cedd07cecf7c0caa623b0d39845133ee80)
 _ddir="Mail-DKIM-$pkgver"
 
 build()

@@ -11,7 +11,7 @@
 # Contributor: Adrian Insaurralde
 
 pkgname=freecad
-pkgver=0.21.1
+pkgver=0.21.2
 pkgrel=2
 pkgdesc='Feature based parametric 3D CAD modeler'
 arch=(loong64 x86_64)
@@ -27,8 +27,14 @@ makedepends=(boost cgns cmake eigen git libharu liblas ninja openvdb openvr
              qt5-webengine shiboken2 swig utf8cpp nlohmann-json)
 optdepends=('graphviz: dependency graph support'
             'openscad: OpenSCAD support')
-source=("git+https://github.com/$pkgname/$pkgname#commit=f6708547a9bb3f71a4aaade12109f511a72c207c") # tag: 0.21.1
-b2sums=('SKIP')
+source=("git+https://github.com/$pkgname/$pkgname#tag=$pkgver"
+        freecad-vtk9.3.patch) # tag: 0.21.1
+b2sums=('SKIP'
+        'f0b5a4648eb4befabb2339bae4e42044e436aa50ad1c2a25b243c965272a217b2c1c69c34d0d20bd01c573008de10f733b74857ffecac502b8558a7095e305e5')
+
+prepare() {
+  patch -d freecad -Np1 -i "$srcdir"/freecad-vtk9.3.patch
+}
 
 build() {
   cmake \

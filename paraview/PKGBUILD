@@ -7,8 +7,8 @@ _pkg=paraview
 _mpi=openmpi
 pkgname=${_pkg}
 #-${_mpi}
-pkgver=5.11.1
-pkgrel=8
+pkgver=5.11.2
+pkgrel=4
 pkgdesc="Parallel Visualization application using VTK (${_mpi} version)"
 arch=(loong64 x86_64)
 url="https://www.paraview.org"
@@ -29,10 +29,15 @@ replaces=(paraview-opt)
 source=(${url}/files/v${pkgver%.*}/ParaView-v${pkgver/R/-R}.tar.xz
         paraview-wrapper.sh
         template.sh
-      )
-sha256sums=('5cc2209f7fa37cd3155d199ff6c3590620c12ca4da732ef7698dec37fa8dbb34'
+        47ceab32.patch
+        fdb93d3e9.patch
+        trunc-5055371e.patch)
+sha256sums=('5c5d2f922f30d91feefc43b4a729015dbb1459f54c938896c123d2ac289c7a1e'
             'd1cdb4a81db280d6b21bee3d9e5f8fc3a87f00a909d33850a1964c72091ec138'
-            '844d44a14817c656ba8d6998298785125a98f03f7b5ece58d966c226db1e0d83')
+            '844d44a14817c656ba8d6998298785125a98f03f7b5ece58d966c226db1e0d83'
+            'd9e9eb9ebadd3ca066729732165f4420b0df10759defc17458a1b0b71255b36e'
+            '79eae9ff919a36f79ba91916fdc8b2c7312713ad13a6972a6d38220f229b1887'
+            'fda145052b10f197cccbc2d02a3bba24b1aa7b512b72f4713f7d9cb0230bf8c9')
 
 prepare() {
   # Specify python version in wrapper
@@ -42,6 +47,10 @@ prepare() {
   cd ParaView-v${pkgver/R/-R}
   # We have a patched libharu
   sed -i "s|2.4.0|2.3.0|" VTK/ThirdParty/libharu/CMakeLists.txt
+  # Fix build with adios2 2.9
+  patch -d VTK/ThirdParty/fides/vtkfides -p1 < ../47ceab32.patch
+  patch -d VTK -p1 < ../fdb93d3e9.patch
+  patch -d VTK -p1 -i "$srcdir"/trunc-5055371e.patch # Fix link to PDAL 2.6
 }
 
 build() {
@@ -88,8 +97,8 @@ package() {
   install -Dm755 paraview-wrapper.sh "${pkgdir}"/usr/bin/paraview-wrapper
   for binary in paraview "${pkgdir}"/opt/paraview/bin/pv*
   do
-      install -Dm755 template.sh "${pkgdir}"/usr/bin/${binary##*/}
-      sed -i "s|@BINARY@|${binary##*/}|" "${pkgdir}"/usr/bin/${binary##*/}
+    install -Dm755 template.sh "${pkgdir}"/usr/bin/${binary##*/}
+    sed -i "s|@BINARY@|${binary##*/}|" "${pkgdir}"/usr/bin/${binary##*/}
   done
 
   # Install licenses, shortcuts, icons

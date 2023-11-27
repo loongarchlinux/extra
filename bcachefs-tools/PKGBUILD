@@ -1,0 +1,49 @@
+# Maintainer: Frederik Schwan <freswa at archlinux dot org>
+# Contributor: Jelle van der Waa <jelle@archlinux.org>
+
+pkgname=bcachefs-tools
+epoch=3
+pkgver=1.3.3
+pkgrel=1
+pkgdesc='BCacheFS filesystem utilities'
+arch=('loong64' 'x86_64')
+url='https://bcachefs.org/'
+license=('GPL2')
+depends=(
+  bash
+  fuse3
+  gcc-libs
+  libaio.so libaio
+  libblkid.so libuuid.so util-linux-libs
+  libkeyutils.so keyutils
+  libsodium.so libsodium
+  liburcu
+  libz.so zlib
+  libzstd.so zstd
+  lz4
+  libudev.so systemd-libs
+)
+makedepends=(
+  cargo
+  clang
+  llvm
+  pkgconf
+  valgrind
+)
+source=(
+  "${pkgname}-${pkgver}.tar.gz"::https://github.com/koverstreet/bcachefs-tools/archive/refs/tags/v${pkgver}.tar.gz
+)
+b2sums=('887d46264f7425966374679288dfeaff48b8db658ef44f0bd65d782a6cea92e2f824cf474dc74e99a338676a3c67158fe03b60b88172cc310094a84135e91474')
+
+build() {
+  cd ${pkgname}-${pkgver}
+  BCACHEFS_FUSE=1 make
+}
+
+package() {
+  cd ${pkgname}-${pkgver}
+  make DESTDIR="$pkgdir" PREFIX="/usr" ROOT_SBINDIR="/usr/bin" \
+       INITRAMFS_DIR="/etc/initcpio" install
+  # remove initcpio hooks that seems incompatible with mkinitcpio
+  rm -rf "${pkgdir}"/etc
+}

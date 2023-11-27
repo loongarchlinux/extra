@@ -14,7 +14,7 @@ pkgname=(
  aspnet-targeting-pack
  dotnet-source-built-artifacts
 )
-pkgver=7.0.11.sdk111
+pkgver=7.0.13.sdk113
 pkgrel=1
 arch=(loong64 x86_64)
 url=https://www.microsoft.com/net/core
@@ -45,7 +45,7 @@ options=(
   !lto
   staticlibs
 )
-_tag=06c8b346e488025d42d9cb905b47f4b3c3015ae3
+_tag=e24ee34c8ea5d0c17c95868396b2529194ecec2f
 source=(
   dotnet-installer::git+https://github.com/dotnet/installer.git#tag=${_tag}
   https://github.com/dotnet/runtime/commit/31e4f404c218eae7ba999c4df5346d30f971451c.patch
@@ -86,6 +86,10 @@ build() {
   export COMPlus_LTTng=0
   export VERBOSE=1
   export OPENSSL_ENABLE_SHA1_SIGNATURES=1
+
+  # this uses malloc_usable_size, which is incompatible with fortification level 3
+  CFLAGS="${CFLAGS/_FORTIFY_SOURCE=3/_FORTIFY_SOURCE=2}"
+  CXXFLAGS="${CXXFLAGS/_FORTIFY_SOURCE=3/_FORTIFY_SOURCE=2}"
 
   CFLAGS=$(echo $CFLAGS  | sed -e 's/-fstack-clash-protection//' )
   CXXFLAGS=$(echo $CXXFLAGS  | sed -e 's/-fstack-clash-protection//' )

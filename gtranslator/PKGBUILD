@@ -1,24 +1,36 @@
 # Maintainer: Jaroslav Lichtblau <svetlemodry@archlinux.org>
 # Maintainer: Alexander Rødseth <rodseth@gmail.com>
+# Contributor: Fabian Bornschein <fabiscafe-at-mailbox-dot-org>
 # Contributor: Hugo Doria <hugo@archlinux.org>
 # Contributor: Christer Solskogen (solskogen@carebears.mine.nu)
 
 pkgname=gtranslator
-pkgver=42.0
+pkgver=45.3
 pkgrel=1
 pkgdesc='An enhanced gettext po file editor for the GNOME desktop environment'
 arch=('loong64' 'x86_64')
 url='https://projects.gnome.org/gtranslator/'
 license=('GPL3')
-depends=('gtksourceview4' 'gspell' 'gettext' 'libgda6' 'iso-codes'
-         'hicolor-icon-theme' 'libdazzle' 'libhandy')
-makedepends=('meson' 'gobject-introspection' 'gtk-doc' 'yelp-tools')
+depends=(
+  'gettext'
+  'gtksourceview5'
+  'hicolor-icon-theme'
+  'iso-codes'
+  'libadwaita'
+  'libgda6'
+  'libspelling'
+)
+makedepends=(
+  'gobject-introspection'
+  'meson'
+  'yelp-tools'
+)
 source=(https://download.gnome.org/sources/$pkgname/${pkgver%.*}/$pkgname-$pkgver.tar.xz)
-sha256sums=('2a67bcbfe643061b0696d89a10847d50bf35905ff3361b9871357d3e3422f13b')
+sha256sums=('3010204df5c7a5ae027f5a30b1544d6977d417f0e4bb9de297f0ad1a80331873')
 
 build() {
-  arch-meson $pkgname-$pkgver build -Dgtk_doc=true
-  ninja -C build
+  arch-meson $pkgname-$pkgver build
+  meson compile -C build
 }
 
 check() {
@@ -26,5 +38,5 @@ check() {
 }
 
 package() {
-  DESTDIR="${pkgdir}" meson install -C build
+  meson install -C build --destdir "$pkgdir"
 }

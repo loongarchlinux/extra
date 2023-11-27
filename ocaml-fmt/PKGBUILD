@@ -1,0 +1,30 @@
+# Maintainer: Jürgen Hötzel <juergen@archlinux.org>
+
+_pkgname=fmt
+pkgname=ocaml-${_pkgname}
+pkgver=0.9.0
+pkgrel=1
+pkgdesc="OCaml Format pretty-printer combinators"
+arch=('loong64' 'x86_64')
+url="https://erratique.ch/software/fmt"
+license=('ISC')
+depends=('ocaml' 'ocaml-cmdliner')
+makedepends=('ocaml-findlib' 'ocamlbuild' 'ocaml-topkg' 'opam')
+options=('!strip')
+source=("https://erratique.ch/software/${_pkgname}/releases/${_pkgname}-${pkgver}.tbz")
+sha256sums=('f1fb20805a22dd75a137d72704a370e7789cf6bdf63948e6817d1c226c141261')
+
+build() {
+  cd "${srcdir}/${_pkgname}-${pkgver}"
+  ocaml pkg/pkg.ml build --dev-pkg false --with-base-unix true --with-cmdliner true
+}
+
+package() {
+  cd "${srcdir}/${_pkgname}-${pkgver}"
+  opam-installer --prefix="$pkgdir/usr" --libdir='lib/ocaml' --docdir='share/doc'
+
+  mv "${pkgdir}/usr/share/doc/${_pkgname}" "${pkgdir}/usr/share/doc/${pkgname}"
+
+  install -dm755 "$pkgdir/usr/share/licenses/$pkgname"
+  ln -sf "/usr/share/doc/$pkgname/LICENSE.md" "$pkgdir/usr/share/licenses/$pkgname/LICENSE.md"
+}

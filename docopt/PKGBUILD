@@ -1,8 +1,9 @@
 # Maintainer: Alexander F. Rødseth <xyproto@archlinux.org>
+# Contributor: loqs <bugs-archlinux@entropy-collector.net>
 
 pkgname=docopt
 pkgver=0.6.3
-pkgrel=3
+pkgrel=4
 pkgdesc='Command line arguments parser for C++11 and later'
 arch=(loong64 x86_64)
 url='https://github.com/docopt/docopt.cpp/'
@@ -15,6 +16,8 @@ b2sums=('SKIP'
 
 prepare() {
   setconf docopt.pc Version "$pkgver"
+  cd docopt.cpp
+  git cherry-pick -n 6d3b803d2b0e4bf8703bbfa51a67f378d6bd59f6 # only build one target, use BUILD_SHARED_LIBS where appropriate
 }
 
 build() {
@@ -22,6 +25,7 @@ build() {
     -D CMAKE_BUILD_TYPE=Release \
     -D CMAKE_INSTALL_PREFIX=/usr \
     -D CMAKE_INSTALL_LIBDIR=lib \
+    -D BUILD_SHARED_LIBS=ON \
     -G Ninja \
     -S docopt.cpp/
   ninja -C build

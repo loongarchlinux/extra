@@ -3,19 +3,23 @@
 
 _pyname=jupyterlab_pygments
 pkgname=${_pyname/_/-}
-pkgver=0.2.2
+pkgver=0.3.0
 pkgrel=1
 pkgdesc='Pygments theme using JupyterLab CSS variables'
 arch=(any)
 url='https://github.com/jupyterlab/jupyterlab_pygments'
 license=(BSD)
 depends=(python-pygments)
-makedepends=(python-build python-installer python-jupyter-packaging)
+makedepends=(python-build
+             python-hatch-jupyter-builder
+             python-hatch-nodejs-version
+             python-hatchling
+             python-installer)
 conflicts=(jupyterlab_pygments)
 provides=(jupyterlab_pygments)
 replaces=(jupyterlab_pygments)
 source=(https://pypi.io/packages/source/${_pyname:0:1}/$_pyname/$_pyname-$pkgver.tar.gz)
-sha256sums=('7405d7fde60819d905a9fa8ce89e4cd830e318cdad22a0030f7a901da705585d')
+sha256sums=('721aca4d9029252b11cfa9d185e5b5af4d54772bb8072f9b7036f4170054d35d')
 
 build() {
   cd $_pyname-$pkgver

@@ -2,7 +2,7 @@
 # Maintainer: Orhun Parmaksız <orhun@archlinux.org>
 
 pkgname=cargo-crev
-pkgver=0.25.0
+pkgver=0.25.5
 pkgrel=1
 pkgdesc="Scalable, social, Code REView and recommendation system that we desperately need"
 url="https://github.com/crev-dev/cargo-crev"
@@ -11,23 +11,28 @@ makedepends=('cargo' 'clang')
 arch=('loong64' 'x86_64')
 license=('MPL' 'Apache' 'MIT')
 options=('!lto')
-source=("${pkgname}-${pkgver}.tar.gz::https://github.com/crev-dev/cargo-crev/archive/v${pkgver}.tar.gz")
-sha512sums=('258c00dd29700fb28528c57f0f77264edc986e331aa976648e8c1150360471a5bdcc57e862c44b75005bfe7d749f64e6a661fa81edea785a2495b807c5955507')
-b2sums=('cdcd7738fa19f0c1957cd8b00f79a7e00bfc09a265f30a15d6da01efcc4b53fb7e7bda2ba105c11050564ba652a13a56d504fade932f575c8ca45127dcad76df')
+source=("${pkgname}-${pkgver}.tar.gz::https://github.com/crev-dev/cargo-crev/archive/v${pkgver}.tar.gz"
+        "index-guix-dep.patch")
+sha512sums=('621447b0f5e32ed11af3d4e985d77986e94ceb6d6e0359880e70c20120698fb685b64062824fbd0bfffd9de565a6d5894788996c74637444d7bbdb47ed8e3807'
+            '7e1b4dfe843bd1b349598cdb9d6dae66b940a3f71f77965c45f976b9cc259385bd0832d3cdafeef90d5e2dee494e9d13785abaa0626790acc45ba8939b47e5b2')
+b2sums=('da2bb5518d1bc9205f8a39827a85e07ada793262ac3050e44cef181629360eb4c6db6db17cdabe35eda0ca3926c1ae2bcd19905559322d11df560612681f1cf0'
+        '16279527f28cf5e2b0d48c697e3e4d8219ed671f5a0d08601d1b8b0b1b94ea6cc6198bb8a635beac0d24e0a95ec5b683b3f452c1688b2dfbbb3e56d5311c541e')
 
 prepare() {
   cd "${pkgname}-${pkgver}"
-  cargo fetch --locked --target "$CARCH-unknown-linux-gnu"
+  # https://github.com/crev-dev/cargo-crev/issues/690
+  patch -Np1 -i "$srcdir/index-guix-dep.patch"
+  cargo fetch --target "$CARCH-unknown-linux-gnu" # --locked
 }
 
 build() {
   cd "${pkgname}-${pkgver}"
-  LIBSSH2_SYS_USE_PKG_CONFIG=1 cargo build --frozen --release --no-default-features
+  LIBSSH2_SYS_USE_PKG_CONFIG=1 cargo build -p "$pkgname" --frozen --release --no-default-features
 }
 
 check() {
   cd "${pkgname}-${pkgver}"
-  LIBSSH2_SYS_USE_PKG_CONFIG=1 cargo test --frozen --no-default-features
+  LIBSSH2_SYS_USE_PKG_CONFIG=1 cargo test -p "$pkgname" --frozen --no-default-features
 }
 
 package() {

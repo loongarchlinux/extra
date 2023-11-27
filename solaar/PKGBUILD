@@ -5,41 +5,64 @@
 _name=Solaar
 pkgname=solaar
 pkgver=1.1.10
-pkgrel=1
+_commit=eafaf333bf5e1d517a8099ead2a1228596477fb1  # refs/tags/1.1.10
+pkgrel=2
 pkgdesc="Linux device manager for a wide range of Logitech devices"
 url="https://pwr-solaar.github.io/Solaar/"
-license=('GPL2')
-arch=('any')
+_url="https://github.com/pwr-Solaar/Solaar"
+license=(GPL-2.0-or-later)
+arch=(any)
 depends=(
-  gtk3 libnotify
-  python-{dbus,evdev,gobject,hid-parser,psutil,pyudev,xlib,yaml}
+  gobject-introspection-runtime
+  gtk3
+  hicolor-icon-theme
+  libnotify
+  python
+  python-dbus
+  python-evdev
+  python-gobject
+  python-hid-parser
+  python-psutil
+  python-pyudev
+  python-xlib
+  python-yaml
 )
-makedepends=(git python-build python-installer python-setuptools python-wheel)
+makedepends=(
+  git
+  python-build
+  python-installer
+  python-setuptools
+  python-wheel
+)
 optdepends=('libayatana-appindicator: Display tray icon')
-source=("git+https://github.com/pwr/${_name}.git#tag=${pkgver}?signed")
+source=("git+$_url.git#tag=$_commit?signed")
 sha512sums=('SKIP')
 validpgpkeys=('2FF2ACA9D97FF7B42CF8494A1E32E75672D6A196') # Peter F. Patel-Schneider (key generated for github) <pfpschneider@gmail.com>
 
+pkgver() {
+  cd $_name
+  git describe --tags | sed 's/\([^-]*-g\)/r\1/;s/-/./g'
+}
+
 prepare() {
-  cd ${_name}
+  cd $_name
+  git cherry-pick -n 15f4733032b77ee164f22d5a76081af35da1fe06  # https://gitlab.archlinux.org/archlinux/packaging/packages/solaar/-/issues/1
   tools/po-compile.sh
 }
 
 build() {
-  cd ${_name}
+  cd $_name
   python -m build --wheel --no-isolation
 }
 
 package() {
-  cd ${_name}
+  cd $_name
   python -m installer --destdir="$pkgdir" dist/*.whl
 
   # udev
-  rm -rf "${pkgdir}/etc"
-  install -vDm 644 rules.d/42-logitech-unify-permissions.rules \
-    -t "${pkgdir}/usr/lib/udev/rules.d/"
+  rm -rf "$pkgdir/etc"
+  install -vDm 644 rules.d/42-logitech-unify-permissions.rules -t "$pkgdir/usr/lib/udev/rules.d/"
   # docs
-  install -vDm 644 {ChangeLog.md,README.md} \
-    -t "${pkgdir}/usr/share/doc/${pkgname}/"
+  install -vDm 644 {ChangeLog.md,README.md} -t "$pkgdir/usr/share/doc/$pkgname/"
 }
 # vim:set ts=2 sw=2 et:

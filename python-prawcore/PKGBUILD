@@ -1,26 +1,30 @@
 # Maintainer: Felix Yan <felixonmars@archlinux.org>
 
 pkgname=python-prawcore
-pkgver=2.3.0
-pkgrel=4
+pkgver=2.4.0
+pkgrel=1
 pkgdesc="Low-level communication layer for PRAW 4+."
 arch=('any')
 license=('BSD')
 url="https://github.com/praw-dev/prawcore"
 depends=('python-requests')
-makedepends=('python-setuptools')
-checkdepends=('python-mock' 'python-betamax-matchers' 'python-betamax-serializers'
-              'python-testfixtures')
+makedepends=('python-build' 'python-installer' 'python-flit-core')
+checkdepends=('python-betamax' 'python-pytest' 'python-urllib3')
 source=("$pkgname-$pkgver.tar.gz::https://github.com/praw-dev/prawcore/archive/v$pkgver.tar.gz")
-sha512sums=('e6330ed370d987720c257913ca521ddd9129aea857792e9a17b9864c275034b795b2a577f4c2235877b165df91f0898bd8e4372b59224d6eb36d5efaa4a2d3f6')
+sha512sums=('6b7464e80d612de9e9cf118fa21abcca61d160150a422175353895efe89757a3e4d417122af2956c0b5aebc59de855866ea4db6af5162c8ad9ec66971edab80c')
+
+build() {
+  cd prawcore-$pkgver
+  python -m build -nw
+}
 
 check() {
   cd prawcore-$pkgver
-  python setup.py test
+  pytest
 }
 
 package() {
   cd prawcore-$pkgver
-  python setup.py install --root="$pkgdir" --optimize=1
-  install -Dm644 LICENSE.txt "$pkgdir"/usr/share/licenses/$pkgname/LICENSE.txt
+  python -m installer -d "$pkgdir" dist/*.whl
+  install -Dm644 LICENSE.txt -t "$pkgdir"/usr/share/licenses/$pkgname/
 }

@@ -1,0 +1,47 @@
+# Maintainer: Justin Kromlinger <hashworks@archlinux.org>
+# Contributor: Hao Long <imlonghao@archlinuxcn.org>
+# Contributor: Daniel M. Capella <polycitizen@gmail.com>
+
+pkgname=gitleaks
+pkgver=8.18.1
+pkgrel=1
+pkgdesc='Audit Git repos for secrets and keys'
+url=https://github.com/gitleaks/gitleaks
+arch=('loong64' 'x86_64' 'i686')
+replaces=('gitleaks-bin')
+license=('MIT')
+depends=('glibc')
+makedepends=('go')
+checkdepends=('git')
+source=("${pkgname}-${pkgver}.tar.gz::${url}/archive/refs/tags/v${pkgver}.tar.gz")
+b2sums=('8fb07c51eaf053de77ddba93a03925b5ed168432ad47e04a5103caddd21357ffe3ab39a7859f23a697e8cd071a0df3e0808089ad89e3a740f3f0612870032e54')
+
+build() {
+  cd "${pkgname}-$pkgver"
+  export CGO_CPPFLAGS="${CPPFLAGS}"
+  export CGO_CFLAGS="${CFLAGS}"
+  export CGO_CXXFLAGS="${CXXFLAGS}"
+  export CGO_LDFLAGS="${LDFLAGS}"
+  export GOFLAGS="-buildmode=pie -trimpath -ldflags=-linkmode=external -mod=readonly -modcacherw"
+  go build -ldflags "-X=github.com/zricethezav/gitleaks/v8/cmd.Version=${pkgver}" .
+}
+
+check() {
+  cd "${pkgname}-$pkgver"
+  go test -v ./... .
+}
+
+package() {
+  cd "${pkgname}-$pkgver"
+  install -Dm644 README.md "${pkgdir}/usr/share/doc/${pkgname}/README.md"
+  install -Dm644 LICENSE "${pkgdir}/usr/share/licenses/${pkgname}/LICENSE"
+  install -Dm755 "${pkgname}" "${pkgdir}/usr/bin/${pkgname}"
+  ./gitleaks completion bash --no-descriptions |
+    install -Dm644 /dev/stdin "${pkgdir}/usr/share/bash-completion/completions/${pkgname}"
+  ./gitleaks completion zsh --no-descriptions |
+    install -Dm644 /dev/stdin "${pkgdir}/usr/share/zsh/site-functions/_${pkgname}"
+  ./gitleaks completion fish --no-descriptions |
+    install -Dm644 /dev/stdin "${pkgdir}/usr/share/fish/vendor_completions.d/${pkgname}.fish"
+}
+
+# vim:set ts=2 sw=2 et:

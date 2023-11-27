@@ -2,12 +2,12 @@
 
 _name=cookiecutter
 pkgname=python-cookiecutter
-pkgver=2.4.0
+pkgver=2.5.0
 pkgrel=1
 pkgdesc="A command-line utility that creates projects from project templates"
 arch=(any)
 url="https://github.com/cookiecutter/cookiecutter"
-license=(BSD)
+license=(BSD-3-Clause)
 depends=(
   python
   python-arrow
@@ -32,8 +32,8 @@ checkdepends=(
   python-pytest-mock
 )
 source=($url/archive/$pkgver/$_name-$pkgver.tar.gz)
-sha512sums=('c0e1ab6bed36bc57bd56becc8d7f7f3526a7257a95ed37819a8814152f2d06fe4bd5dafab66c508be4cd14fb191fd59ffbf559513c55ff84c4b51131771bc4e6')
-b2sums=('bd45803a8f232bd9453afc7f9f43170624d130b788e6cb055cfc31b3e58f097032838e65a5807c71b6ebf740e239e26b51edabaff0353152f7e8f4d008ce56d0')
+sha512sums=('87ab0d21d6bb98c96cad420a52e08aeebe9a47ee34801a423339453e0099c4eb35950e0180af94dd5dd9373a0292a23c6a5c3bde23d3345c06b059da1294c374')
+b2sums=('8f294d39a385909cf9c23511eae2ad28783ff8da767e31744ded45e4ce15857039d913f5449523a20945328547263f4887d73d44a951b4b29b628fc1dc25c229')
 
 prepare() {
   # we do not care about code coverage in pytest runs

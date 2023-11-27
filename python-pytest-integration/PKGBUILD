@@ -1,0 +1,32 @@
+# Maintainer: Justin Kromlinger <hashworks@archlinux.org>
+
+pkgname=python-pytest-integration
+pkgver=0.2.3
+pkgrel=1
+pkgdesc="Organizing test by unit test, quick integration or slow integration"
+arch=('any')
+url="https://pypi.org/project/pytest-integration"
+license=('MIT')
+depends=('python-pytest' 'python-pytest-timeout' 'python-pytest-cov')
+makedepends=('python-setuptools' 'python-build' 'python-installer' 'python-wheel' 'git')
+_commit=16d61c365140db20aa2783986138fce2ab5605b3
+source=("$pkgname::git+https://github.com/jbwdevries/pytest-integration#commit=$_commit")
+sha256sums=('SKIP')
+
+pkgver() {
+  cd "$pkgname"
+  git describe --tags | sed 's/^v//;s/-/+/g'
+}
+
+build() {
+  cd "$pkgname"
+  python -m build --wheel --no-isolation
+}
+
+package() {
+  cd "$pkgname"
+  python -m installer --destdir="$pkgdir" dist/*.whl
+
+  install -Dm644 LICENSE "${pkgdir}/usr/share/licenses/${pkgname}/LICENSE"
+  install -Dm644 README.md "$pkgdir/usr/share/doc/$pkgname/README.md"
+}

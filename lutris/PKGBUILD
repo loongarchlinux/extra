@@ -1,10 +1,11 @@
 # Maintainer: Filipe Laíns (FFY00) <lains@archlinux.org>
 # Maintainer: Maxime Gauduin <alucryd@archlinux.org>
+# Maintainer: Robin Candau <antiz@archlinux.org>
 # Contributor: Frederik “Freso” S. Olesen <freso.dk@gmail.com>
 
 pkgname=lutris
-pkgver=0.5.13
-pkgrel=6
+pkgver=0.5.14
+pkgrel=1
 pkgdesc='Open Gaming Platform'
 arch=(any)
 url=https://lutris.net
@@ -51,6 +52,9 @@ checkdepends=(
   wine
   xorg-server-xvfb
   xterm
+  fluidsynth
+  vulkan-tools
+  pciutils
 )
 optdepends=(
   'gamemode: Allows games to request a temporary set of optimisations'
@@ -66,13 +70,23 @@ optdepends=(
   'wine: Windows support'
   'xorg-xgamma: Restore gamma on game exit'
 )
-_tag=8241e2c3a71a7decb9670031ee6ceedd0d33e7ac
-source=(git+https://github.com/lutris/lutris.git#tag=${_tag})
-b2sums=(SKIP)
+_tag=ba9c0aea5a9db54dca2bc39dc7e9bad5c6a566b5
+source=(git+https://github.com/lutris/lutris.git#tag=${_tag}
+        fix-scummvm-tests.patch::https://github.com/lutris/lutris/commit/7efc304f595a9547bb4f01a823250d95b7722506.patch)
+b2sums=('SKIP'
+        'ace0ada78a15e6b1f0540f6a9da83d272eb3810761ada8a0ed77b92cf86da1730e5d51aef9234e3103751aa48bb262fe3812c033cd68e483050459ce98bdcf20')
 
 pkgver() {
   cd lutris
   git describe --tags | sed 's/^v//'
+}
+
+prepare() {
+  cd lutris
+
+  # The scummvm tests would fail on a system where scummvm is not available, because https://github.com/K900/lutris/blob/7efc304f595a9547bb4f01a823250d95b7722506/lutris/runners/scummvm.py#L487 attempted to access an element from an empty list. Fix that by propagating the empty list, and use mocks to ensure we test both cases.
+  # https://github.com/lutris/lutris/pull/5086
+  patch -Np1 <${srcdir}/fix-scummvm-tests.patch
 }
 
 build() {

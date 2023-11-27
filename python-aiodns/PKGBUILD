@@ -2,7 +2,7 @@
 
 pkgname=python-aiodns
 _name=${pkgname#python-}
-pkgver=3.1.0
+pkgver=3.1.1
 pkgrel=1
 pkgdesc='Simple DNS resolver for asyncio'
 arch=('any')

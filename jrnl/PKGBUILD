@@ -1,19 +1,18 @@
 # Maintainer: Felix Yan <felixonmars@archlinux.org>
 
 pkgname=jrnl
-pkgver=4.0.1
+pkgver=4.1
 pkgrel=1
 pkgdesc="Collect your thoughts and notes without leaving the command line"
 arch=('any')
 url="https://jrnl.sh/"
 license=('GPL3')
-depends=('python-ansiwrap' 'python-colorama' 'python-cryptography' 'python-keyring'
-         'python-parsedatetime' 'python-dateutil' 'python-pyxdg' 'python-rich' 'python-ruamel-yaml'
-         'python-tzlocal')
+depends=('python-colorama' 'python-cryptography' 'python-keyring' 'python-parsedatetime'
+         'python-dateutil' 'python-pyxdg' 'python-rich' 'python-ruamel-yaml' 'python-tzlocal')
 makedepends=('python-build' 'python-installer' 'python-poetry-core')
 checkdepends=('python-pytest' 'python-pytest-bdd' 'python-pytest-xdist' 'python-toml')
 source=("https://github.com/jrnl-org/jrnl/archive/v$pkgver/$pkgname-$pkgver.tar.gz")
-sha512sums=('b116b380e32654b33a2c5d211096df675476f25c788a7943cc0e580cda0dae5f9a9123a17f1c06a20e35360bd737a83f1e998469ee002824dbec112ebaed2f57')
+sha512sums=('c5e17b8dd863cdf251f5622099e07645d65ecb27a4b765df6b6c6f89a482e73b800e4906f14ffffc9567b3f9620f87f98fcc0b5ae355a22368f90a3279718252')
 
 build() {
   cd jrnl-$pkgver

@@ -1,12 +1,12 @@
 # Maintainer: David Runge <dvzrv@archlinux.org>
 
 pkgname=virt-firmware
-pkgver=23.9
+pkgver=23.10
 pkgrel=1
 pkgdesc="Collection of tools for edk2 firmware images"
 arch=(any)
 url="https://gitlab.com/kraxel/virt-firmware"
-license=(GPL2)
+license=(GPL-2.0-or-later)
 depends=(
   python
   python-crc32c  # undeclared runtime dependency: https://gitlab.com/kraxel/virt-firmware/-/issues/4
@@ -20,19 +20,19 @@ makedepends=(
   python-wheel
 )
 checkdepends=(python-pytest)
-source=(https://files.pythonhosted.org/packages/source/${pkgname::1}/$pkgname/$pkgname-$pkgver.tar.gz)
-sha512sums=('18a77b551831bcc0e9c838137c52ce7678c0be00a708c7390b6b9369a3412f01112234ca7f1b56f0c428f78f39eed785ac4df4b85d9caf7eab6ab4c1b52cb43f')
-b2sums=('ec9d596135a82d551f0b38f03917a13d69fd020b78419cfd37c7af3249f8e1bdd6f227e0dd7f9375377f51491b0788998546f20d547d12430121c6d2cbb711d1')
+source=($url/-/archive/v$pkgver/$pkgname-v$pkgver.tar.gz)
+sha512sums=('e23824a429b337166891d3d08aac6f99394d554e9631e7c23a95e24b8b9ad8d8addb8a6cdb59029776679f1fc4bdbb2608dd0dc2a1edaa4be634adf1f3dd9cd8')
+b2sums=('09cd5f19a860427f63256e8eb3445cce19e079f38f64b9cb1f4187acb9d4f8fab3f4d5862c22580ec457b615e245690fce91748e76d84e44156e0b71543a71cd')
 
 build() {
-  cd $pkgname-$pkgver
+  cd $pkgname-v$pkgver
   python -m build --wheel --no-isolation
 }
 
 check() {
   local _site_packages=$(python -c "import site; print(site.getsitepackages()[0])")
 
-  cd $pkgname-$pkgver
+  cd $pkgname-v$pkgver
   python -m installer --destdir=test_dir dist/*.whl
   export PYTHONPATH="test_dir/$_site_packages:$PYTHONPATH"
 
@@ -40,7 +40,7 @@ check() {
 }
 
 package() {
-  cd $pkgname-$pkgver
+  cd $pkgname-v$pkgver
   python -m installer --destdir="$pkgdir" dist/*.whl
   install -vDm 644 man/virt-*.1 -t "$pkgdir/usr/share/man/man1/"
   install -vDm 644 README.md -t "$pkgdir/usr/share/doc/$pkgname/"

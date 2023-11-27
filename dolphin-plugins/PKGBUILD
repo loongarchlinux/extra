@@ -3,22 +3,28 @@
 # Contributor: Andrea Scarpino <andrea@archlinux.org>
 
 pkgname=dolphin-plugins
-pkgver=23.08.1
-pkgrel=1
+pkgver=23.08.3
+pkgrel=2
 pkgdesc='Extra Dolphin plugins'
 arch=(loong64 x86_64)
 url='https://apps.kde.org/dolphin_plugins/'
 license=(LGPL)
 depends=(dolphin)
-makedepends=(extra-cmake-modules ktexteditor)
-optdepends=('ktexteditor: Mercurial plugin')
+makedepends=(extra-cmake-modules ktexteditor5)
+optdepends=('ktexteditor5: Mercurial plugin')
 groups=(kde-applications kdesdk)
-source=(https://download.kde.org/stable/release-service/$pkgver/src/$pkgname-$pkgver.tar.xz{,.sig})
-sha256sums=('992f429f3b80d6eeb0304a2f38b475868bf86e7929cedcbf5728fe79853a0b55'
-            'SKIP')
+source=(https://download.kde.org/stable/release-service/$pkgver/src/$pkgname-$pkgver.tar.xz{,.sig}
+        https://invent.kde.org/sdk/dolphin-plugins/-/commit/aec8511a.patch)
+sha256sums=('094dfe8e674e6a0c01ee4415f47ae6312eb39df11ae18c86ec096bf056b1a768'
+            'SKIP'
+            'f60800c763e570b411e587e03e65af85af4cca1e627e09e9e1fd68b21606e2ef')
 validpgpkeys=(CA262C6C83DE4D2FB28A332A3A6A4DB839EAA6D7  # Albert Astals Cid <aacid@kde.org>
               F23275E4BF10AFC1DF6914A6DBD2CE893E2D1C87  # Christoph Feck <cfeck@kde.org>
               D81C0CB38EB725EF6691C385BB463350D6EF31EF) # Heiko Becker <heiko.becker@kde.org>
+
+prepare() {
+  patch -d $pkgname-$pkgver -p1 < aec8511a.patch # Fix mount ISO plugin with shared-mime-info 2.3
+}
 
 build() {
   cmake -B build -S $pkgname-$pkgver \

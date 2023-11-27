@@ -2,26 +2,31 @@
 # Maintainer: Filipe Laíns (FFY00) <lains@archlinux.org>
 
 pkgname=radamsa
-pkgver=0.6
-pkgrel=2
+pkgver=0.7
+pkgrel=1
 pkgdesc='General purpose mutation based fuzzer'
 url='https://gitlab.com/akihe/radamsa'
 arch=('loong64' 'x86_64')
 license=('MIT')
 depends=('glibc')
 makedepends=('git' 'owl-lisp')
-source=(https://gitlab.com/akihe/radamsa/-/archive/v${pkgver}/${pkgname}-v${pkgver}.tar.gz)
-sha256sums=('a68f11da7a559fceb695a7af7035384ecd2982d666c7c95ce74c849405450b5e')
-sha512sums=('4724454d28abc1fb5ab4485d685dd0f9a514146bba14e48159237306c984a694f8d5656191756edabb984ee6c3e53f317dea2fe1bac41d1625abf8d6877172bc')
+source=(https://gitlab.com/akihe/radamsa/-/archive/v${pkgver}/${pkgname}-v${pkgver}.tar.gz
+        owl-lisp-hex::git+https://gitlab.com/owl-lisp/hex.git#commit=e95ebd38e4f7ef8e3d4e653f432e43ce0a804ca6)
+sha256sums=('d9a6981be276cd8dfc02a701829631c5a882451f32c202b73664068d56f622a2'
+            'SKIP')
+sha512sums=('9c19c5ca3cce651c4adc0346cc1fa57a426c9f330584191a754ab51050899f6d272e2dfd5ab9ea619c5ef72596239bcbc5eeb41451e06bb951c33fa82de69da3'
+            'SKIP')
 
 prepare() {
   cd ${pkgname}-v${pkgver}
   sed -e 's/| gzip -9//' -e 's/radamsa.1.gz/radamsa.1/' -i Makefile
+  mkdir -p lib
+  mv "$srcdir"/owl-lisp-hex lib/hex
 }
 
 build() {
   cd ${pkgname}-v${pkgver}
-  make build_radamsa
+  make build_radamsa CFLAGS="${CFLAGS} ${CPPFLAGS}"
 }
 
 package() {

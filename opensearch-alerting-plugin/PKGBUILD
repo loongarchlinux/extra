@@ -1,9 +1,9 @@
 # Maintainer: Justin Kromlinger <hashworks@archlinux.org>
 
 pkgname=opensearch-alerting-plugin
-pkgver=2.9.0.0
+pkgver=2.11.0.0
 pkgrel=1
-_opensearchver=2.9.0
+_opensearchver=2.11.0
 _jdkver=11
 pkgdesc="OpenSearch Alerting Plugin"
 arch=('loong64' 'x86_64')
@@ -14,7 +14,7 @@ makedepends=("java-environment=${_jdkver}" 'unzip')
 source=(
   "${pkgname}-${pkgver}.tar.gz::https://github.com/opensearch-project/alerting/archive/${pkgver}.tar.gz"
 )
-sha256sums=('6dd5598466083e18d127d5ce5b626aa58be6215b018bb6a07dc2e68d7d2630ac')
+sha256sums=('f37c71f5ccaa42a174773a71d6fa5f7cd6b66a5a9fc7f07282cfcbb970216af0')
 
 build() {
   cd "alerting-${pkgver}"
@@ -23,6 +23,7 @@ build() {
   export GRADLE_OPTS="-Dbuild.snapshot=false -Dopensearch.version=${_opensearchver}"
   # alertingBwcCluster and integTest (Reaper) requires JDK 14
   ./gradlew build \
+    --exclude-task ":alerting:forbiddenApisTest" \
     --exclude-task ":alerting:alertingBwcCluster#fullRestartClusterTask" \
     --exclude-task ":alerting:alertingBwcCluster#mixedClusterTask" \
     --exclude-task ":alerting:alertingBwcCluster#oldVersionClusterTask0" \

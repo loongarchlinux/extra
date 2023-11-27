@@ -8,7 +8,7 @@
 
 pkgname=mlt
 pkgver=7.20.0
-pkgrel=1
+pkgrel=2
 pkgdesc='An open source multimedia framework'
 arch=(loong64 x86_64)
 url='https://www.mltframework.org'
@@ -72,8 +72,14 @@ makedepends=(cmake
              sdl_image
              swig
              vid.stab)
-source=(https://github.com/mltframework/mlt/releases/download/v$pkgver/mlt-$pkgver.tar.gz)
-sha256sums=('7472372b31f76b2eb0ac66c756391be7cb859a3a779c97ccb7dcf7086ac9d816')
+source=(https://github.com/mltframework/mlt/releases/download/v$pkgver/mlt-$pkgver.tar.gz
+        https://github.com/mltframework/mlt/commit/80946f7a.patch)
+sha256sums=('7472372b31f76b2eb0ac66c756391be7cb859a3a779c97ccb7dcf7086ac9d816'
+            '6bedc2178a7906d9030af98fe7ad1e22ade491dc073afab18eb0e6911bbf84fb')
+
+prepare() {
+  patch -d $pkgname-$pkgver -p1 < 80946f7a.patch # Support rtaudio 6
+}
 
 build() {
   cmake -B build -S $pkgname-$pkgver \

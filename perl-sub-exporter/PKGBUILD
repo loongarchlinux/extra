@@ -2,8 +2,8 @@
 # Contributor: Justin Davis <jrcd83@gmail.com>
 
 pkgname=perl-sub-exporter
-pkgver=0.990
-pkgrel=2
+pkgver=0.991
+pkgrel=1
 pkgdesc="A sophisticated exporter for custom-built routines"
 arch=('any')
 license=('PerlArtistic' 'GPL')
@@ -11,7 +11,7 @@ options=('!emptydirs')
 depends=('perl' 'perl-data-optlist' 'perl-params-util' 'perl-sub-install')
 url="https://metacpan.org/release/Sub-Exporter"
 source=(https://search.cpan.org/CPAN/authors/id/R/RJ/RJBS/Sub-Exporter-$pkgver.tar.gz)
-sha512sums=('49cc16efe0e44a5d8d1aa49bd2f35ebb43640ce27030d480e1acae1da13444a877007f7eb924d6e3743691222505d646744cc651fbd09850cd965673fac2d92b')
+sha512sums=('7829bbca1eb332156ba33dd0cbde7f57c178ad56cc03e76c1b7d5327c94ce15bb5172894eeef011e12e472071a7d7a07f514a1121535d96ae05ed0ef6734b329')
 
 build() {
   ( export PERL_MM_USE_DEFAULT=1 PERL5LIB="" \

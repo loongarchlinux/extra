@@ -1,7 +1,7 @@
 # Maintainer: George Rawlinson <grawlinson@archlinux.org>
 
 pkgname=opensnitch
-pkgver=1.6.3
+pkgver=1.6.4
 pkgrel=1
 pkgdesc='A GNU/Linux application firewall'
 arch=('loong64' 'x86_64')
@@ -42,7 +42,7 @@ backup=(
   'etc/opensnitchd/system-fw.json'
 )
 options=('!lto')
-_commit='79ac6306a53778efcd61983c5c9b14ac0709c355'
+_commit='c3dc1fcc4a6722ad4ab8137b4cc3222879bd4037'
 source=(
   "$pkgname::git+$url#commit=$_commit"
   'fix-systemd-service.patch'
@@ -59,9 +59,9 @@ b2sums=('SKIP'
         'a632dc8cc86a96e569a990ae1f869c3d03766828d7bfd672f2376bc0a5e8eacea8c09e3e889307ccc6138485dbde8a3e154103646cbaa80ffa4d9010abcc426d'
         '680aa7bf1470fac5c009cc5c8ea0f88dec7a8d5224be1239fcc1bbd041d724cc9e0d9389b95c4879cf16e80dc3ff7d09e472ee3c5c1585b8d6490d455df2500f'
         'd9ced1c2fd01d2d8f13c9173c7f0d70359d58cd9f9849c45b188117fd47722c8a0dbb65f6068c3e8d23cb19e6de496f845783b2ae35cb889f49b0558927e0a62'
-        '5b506c7b08b82f039710f22a8d4ec169cedf5d82a63d269b743c86fcdf07a7bfe85d995de5eb685d1a4c373bbfa1515e4cfa9c6d68a227c11979aeb419fd161d'
+        '88f7d6a4cacffd0694a7346ceef5e7e81234bc7ef7c4870cd6f73c810a8f6e807134f798d8934458bdf011354adc79397a3b53654fd606a97bbef83d0dfadf5f'
         '5b1ed289ccfb6598941667065a4e533631f374a43793765044ee9f655ac2331595670e383821cf6b7a4114f117905de4895ba2bb430408011cc384821d53355c'
-        '29d5a39c4619ff906ea2aad4d57f79fb0796c25f0b3c9ccd1f74636112899cfb67ecfe139a0f25489d37415a668d97c75d2a1139fdc7f88eca1b459fc613ee2e'
+        'c2d2642c5de8b50aee3923dce09faedbe4db63ec2369894efceb8bc4237759190c8ea4cade375262623153c13d814b4196915687cd33886b22e0b33cc501b09d'
         'f92122e9df08b720b63dbf023e81c1b0f660ff88149174efab8603ebabd5913dc4056a19b3e43202e1e4e68431ce52bee9eee2b0b32b8a22d327358deaf87a27'
         '093ecf4398ffcd9f4077b41174e93707ba90cef717fa7e35a44557a52969d356216b08f6a4ce38fc93a7ba4e8cb14c7c2a4368ba0b023527d1ee93879728b30d'
         '81dbb6ba72d5bf5a0d9fa3dea33b87f03604c1a2537a4ca47b45923ab186e68d5c24b043691a857948ae404409dc3cc66a7ef004ee20dc2451aa5190fe6479bb')
@@ -107,6 +107,11 @@ prepare() {
   # version strings are currently out of date
   # template-ify version strings for easier sed invocation (1/2)
   #patch -p1 -i "$srcdir/template-version-strings.patch"
+
+  # download dependencies
+  cd daemon
+  export GOPATH="${srcdir}"
+  go mod download
 }
 
 build() {

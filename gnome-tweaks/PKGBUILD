@@ -2,25 +2,29 @@
 # Contributor: Ionut Biru <ibiru@archlinux.org>
 
 pkgname=gnome-tweaks
-pkgver=42beta+r14+g2d9d76c
-pkgrel=3
+pkgver=45.0
+pkgrel=1
 pkgdesc="Graphical interface for advanced GNOME 3 settings (Tweak Tool)"
 url="https://wiki.gnome.org/Apps/Tweaks"
 arch=(any)
 license=(GPL)
-depends=(gnome-settings-daemon python-gobject libhandy)
-makedepends=(git meson)
-provides=("gnome-tweak-tool=$pkgver")
-conflicts=(gnome-tweak-tool)
-replaces=(gnome-tweak-tool)
+depends=(
+  gnome-settings-daemon
+  libhandy
+  python-gobject
+)
+makedepends=(
+  git
+  meson
+)
 groups=(gnome-extra)
-_commit=2d9d76c614ba3f6464855aeb4193b100df66d95c  # master
+_commit=c86eaca0e9eeb6052006761a73176302e099f96f  # tags/45.0^0
 source=("git+https://gitlab.gnome.org/GNOME/gnome-tweaks.git#commit=$_commit")
-sha256sums=('SKIP')
+b2sums=('SKIP')
 
 pkgver() {
   cd $pkgname
-  git describe --tags | sed 's/\.beta/beta/;s/[^-]*-g/r&/;s/-/+/g'
+  git describe --tags | sed 's/[^-]*-g/r&/;s/-/+/g'
 }
 
 prepare() {
@@ -39,3 +43,5 @@ check() {
 package() {
   meson install -C build --destdir "$pkgdir"
 }
+
+# vim:set sw=2 sts=-1 et:

@@ -3,15 +3,28 @@
 
 pkgname=normaliz
 pkgver=3.10.1
-pkgrel=1
+pkgrel=2
 pkgdesc='A tool for computations in affine monoids, vector configurations, lattice polytopes, and rational cones'
 arch=(loong64 x86_64)
 url='https://www.normaliz.uni-osnabrueck.de/'
 license=(GPL)
-depends=(e-antic)
-makedepends=(nauty)
-source=(https://github.com/Normaliz/Normaliz/releases/download/v$pkgver/Normaliz-$pkgver.tar.gz)
-sha256sums=('365e1d1e2a338dc4df1947a440e606bb66dd261307e617905e8eca64eaafcf6e')
+depends=(flint
+         gcc-libs
+         glibc
+         gmp
+         e-antic)
+makedepends=(boost
+             nauty)
+source=(https://github.com/Normaliz/Normaliz/releases/download/v$pkgver/Normaliz-$pkgver.tar.gz
+        flint-3.patch)
+sha256sums=('365e1d1e2a338dc4df1947a440e606bb66dd261307e617905e8eca64eaafcf6e'
+            'adff63047e42a66aaf0801c3e01ff6bc5721f0e8da2f66391e88940e8cc44b81')
+
+prepare() {
+  cd $pkgname-$pkgver
+  patch -p1 -i ../flint-3.patch # Fix build with flint 3
+  autoreconf -if
+}
 
 build() {
   cd $pkgname-$pkgver
@@ -20,6 +33,11 @@ build() {
   sed -i -e 's/ -shared / -Wl,-O1,--as-needed\0/g' libtool
 
   make
+}
+
+check() {
+  cd $pkgname-$pkgver
+  make check
 }
 
 package() {

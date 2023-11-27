@@ -1,0 +1,31 @@
+# Maintainer: Jürgen Hötzel <juergen@archlinux.org>
+
+_pkgname=logs
+pkgname=ocaml-${_pkgname}
+pkgver=0.7.0
+pkgrel=1
+pkgdesc="Logging infrastructure for OCaml "
+arch=('loong64' 'x86_64')
+url="https://erratique.ch/software/logs"
+license=('ISC')
+depends=('ocaml' 'ocaml-fmt' 'ocaml-cmdliner')
+makedepends=('ocaml-findlib' 'ocamlbuild' 'ocaml-topkg' 'opam')
+options=('!strip')
+source=("https://erratique.ch/software/${_pkgname}/releases/${_pkgname}-${pkgver}.tbz")
+sha256sums=('86f4a02807eb1a297aae44977d9f61e419c31458a5d7b23c6f55575e8e69d5ca')
+
+
+build() {
+  cd "${srcdir}/${_pkgname}-${pkgver}"
+  ocaml pkg/pkg.ml build --dev-pkg false --with-js_of_ocaml false --with-lwt false
+}
+
+package() {
+  cd "${srcdir}/${_pkgname}-${pkgver}"
+
+  opam-installer --prefix="$pkgdir/usr" --libdir='lib/ocaml' --docdir='share/doc'
+  mv "${pkgdir}/usr/share/doc/${_pkgname}" "${pkgdir}/usr/share/doc/${pkgname}"
+
+  install -dm755 "$pkgdir/usr/share/licenses/$pkgname"
+  ln -sf "/usr/share/doc/$pkgname/LICENSE.md" "$pkgdir/usr/share/licenses/$pkgname/LICENSE.md"
+}

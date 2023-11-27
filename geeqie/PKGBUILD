@@ -4,7 +4,7 @@
 
 pkgname=geeqie
 pkgver=2.1
-pkgrel=2
+pkgrel=3
 pkgdesc='Lightweight image viewer'
 arch=('loong64' 'x86_64')
 url="http://www.geeqie.org/"
@@ -24,7 +24,7 @@ makedepends=('meson'
              'vim' 'evince'
              'libwmf' 'imagemagick'
              'fbida' 'gawk' 'perl-image-exiftool'
-             'webp-pixbuf-loader' 'libwebp'
+             'libwebp'
              # for the docs
              'doxygen' 'yelp-tools' 'graphviz'
              'pandoc-cli'
@@ -37,18 +37,20 @@ optdepends=('librsvg: SVG rendering'
             'gphoto2: command-line tools for various (plugin) operations'
             'imagemagick: command-line tools for various (plugin) operations'
             'evince: for print preview'
-            'webp-pixbuf-loader: for WebP image format')
+            'libwebp: for WebP image format')
 source=(#"http://www.geeqie.org/${pkgname}-${pkgver}.tar.xz"{,.asc}
         https://github.com/BestImageViewer/geeqie/releases/download/v${pkgver}/${pkgname}-${pkgver}.tar.xz{,.asc}
         exiv2-0.28.0_1.patch::https://github.com/BestImageViewer/geeqie/commit/c45cca777aa3477eaf297db99f337e18d9683c61.patch
         exiv2-0.28.0_2.patch::https://github.com/BestImageViewer/geeqie/commit/b04f7cd0546976dc4f7ea440648ac0eedd8df3ce.patch
         geeqie-2.1-lua.patch
+        geeqie-2.1-webp-pixbuf-loader.patch
 )
 sha256sums=('d0511b7840169d37e457880d1ab2a787c52b609a0ab8fa1a8a391e841fdd2dde'
             'SKIP'
-            'SKIP'
-            'SKIP'
-            '135d82097edac120c63fc895f720d84e23a1ed8c19e5e1523c181ea6cde5f247')
+            '8349ad93bc06b970412b2e7a7e9cae0cceca1f1273e322eb656d1747dcdade65'
+            'cfd3cbd0acf71718cca00da8d00a916e4e870a607e67e47c53fcf2c4e7ec16f0'
+            '135d82097edac120c63fc895f720d84e23a1ed8c19e5e1523c181ea6cde5f247'
+            'de8139f11eb0e6910f54adfbd73aa7279836ea023ce30a64056e39fec7d33e8d')
 validpgpkeys=('91EC400226201276E2ADCEC7D0DA6F44C936D1DA') # "Colin Clark <colin.clark@cclark.uk>"
 
 # main repo: http://www.geeqie.org/cgi-bin/gitweb.cgi?p=geeqie.git
@@ -63,6 +65,9 @@ prepare(){
   # fix build with lua
   # https://github.com/BestImageViewer/geeqie/pull/1130
   patch -Np1 -i ../geeqie-2.1-lua.patch
+  # fix webp images showing up as black
+  # https://github.com/BestImageViewer/geeqie/commit/4b159311f17c666c51ceca994b63b12eee841a23
+  patch -Np1 -i ../geeqie-2.1-webp-pixbuf-loader.patch
 }
 
 build() {

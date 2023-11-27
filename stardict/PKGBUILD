@@ -5,28 +5,25 @@
 # Contributor: Cravix < dr dot neemous at gmail dot com >
 
 pkgname=stardict
-pkgver=3.0.6.2
+pkgver=3.0.7
 pkgrel=1
 pkgdesc='International dictionary software'
 arch=('loong64' 'x86_64')
 url='http://stardict-4.sourceforge.net/'
 license=('GPL')
-depends=('gtk2' 'libsigc++')
-makedepends=('enchant' 'espeak-ng' 'mariadb-libs' 'gnome-common')
+depends=('gtk3' 'libsigc++' 'libcanberra')
+makedepends=('enchant' 'espeak-ng' 'mariadb-libs' 'pcre' 'yelp-tools' 'gnome-common')
 optdepends=('enchant: spell checker plugin'
             'espeak-ng: text to speech plugin')
 options=('!emptydirs')
-source=("https://downloads.sourceforge.net/project/stardict-4/$pkgver/$pkgname-$pkgver-github-2.tar.xz"
-        'glib2.patch'
+source=("https://downloads.sourceforge.net/project/stardict-4/$pkgver/$pkgname-$pkgver-2-src.7z"
         'mariadb.patch')
-sha256sums=('05ff1644497e8f9c5f4199d9ae1198fcc571052286b4707c4b61ed9d349cccbc'
-            '5be4d0468f6089b760924a5d25030110ca62869b4611afb46a411cd4eb59b832'
+sha256sums=('d766f4efb1ae868855a47f39b2def66dd7a3232ca54c651c9cb3327b1bec50ea'
             'f66b916c358bddf48fcb91a7d0190a7109fe92a1388ec982c47dfa9ac1ee69cf')
 
 prepare() {
   cd "${srcdir}/${pkgname}-${pkgver}"
 
-  patch -p1 -i ../glib2.patch
   patch -p1 -i ../mariadb.patch
 
   sed -i 's/, enchant/, enchant-2/' dict/configure.ac
@@ -42,7 +39,6 @@ prepare() {
 build() {
   cd "${srcdir}/${pkgname}-${pkgver}"
 
-  CXXFLAGS+=" -std=gnu++11"
   ./configure \
     --prefix=/usr \
     --sysconfdir=/etc \

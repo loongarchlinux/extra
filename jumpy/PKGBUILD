@@ -2,17 +2,19 @@
 # Contributor: kleintux <reg-archlinux AT klein DOT tuxli DOT ch>
 
 pkgname=jumpy
-pkgver=0.7.0
+pkgver=0.8.2
 pkgrel=1
 pkgdesc="Tactical 2D shooter in fishy pixels style"
 arch=('loong64' 'x86_64')
-url="https://fishfight.org"
+url="https://fishfolk.org/games/jumpy"
 license=('MIT' 'Apache')
 depends=('pkg-config' 'mesa-libgl' 'alsa-lib' 'systemd-libs' 'libudev.so')
 makedepends=('cargo' 'systemd')
 replaces=('fishfight')
-source=("$pkgname-$pkgver.tar.gz::https://github.com/fishfight/jumpy/archive/v$pkgver.tar.gz")
-sha512sums=('17ac4cf7f56d06053f849980f1021d3d14bced08ce090dcad80964ca206f0eff7b29644d25faaa810397467ede0cbd7e15acf0e346903d22ad4221808bfee868')
+source=("$pkgname-$pkgver.tar.gz::https://github.com/fishfight/jumpy/archive/v$pkgver.tar.gz"
+        "$pkgname.sh")
+sha512sums=('492cd8945eb8b487152c635884618a7004fa09e1628f3bbc86f04faa096daab231aef278fd21cf4779caf5240e1e6fb940a7c802c3d917c905860080abb76d96'
+            '182567c5b24c2a10a233d6b5e17ef9a0c28893e966f5f9536fb5b64acbae68312e96867f3648d4b694d011d020d8e25e2616d699df5c3dbd8d66d5902eaafbe7')
 options=('!lto')
 
 prepare() {
@@ -32,11 +34,10 @@ check() {
 
 package() {
   cd "$pkgname-$pkgver"
-  mkdir -p "$pkgdir/opt/$pkgname"
-  install -Dm 755 "target/release/$pkgname" -t "$pkgdir/opt/$pkgname"
-  mkdir -p "$pkgdir/usr/bin"
-  ln -s "/opt/$pkgname/$pkgname" "$pkgdir/usr/bin/$pkgname"
+  install -Dm 755 "target/release/$pkgname" -t "$pkgdir/usr/lib"
+  install -Dm 755 "$srcdir/$pkgname.sh" "$pkgdir/usr/bin/$pkgname"
 
+  mkdir -p "$pkgdir/opt/$pkgname"
   cp -r "assets" "$pkgdir/opt/$pkgname/"
   find "$pkgdir/opt/$pkgname/assets/music/" -type f -exec chmod 444 {} \;
   find "$pkgdir/opt/$pkgname/assets/player/sounds/" -type f -exec chmod 444 {} \;

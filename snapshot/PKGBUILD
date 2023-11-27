@@ -1,0 +1,56 @@
+# Maintainer: Fabian Bornschein <fabiscafe@archlinux.org>
+
+pkgname=snapshot
+pkgver=45.0
+pkgrel=2
+pkgdesc="Take pictures and videos"
+arch=(loong64 x86_64)
+url="https://apps.gnome.org/Snapshot"
+license=(GPL3)
+groups=(gnome)
+depends=(
+  dconf
+  glib2
+  graphene
+  gst-plugin-pipewire
+  gst-plugins-bad-libs
+  gst-plugins-base
+  gst-plugins-base-libs
+  gst-plugins-good
+  gstreamer
+  gtk4
+  hicolor-icon-theme
+  libadwaita
+)
+makedepends=(
+  git
+  meson
+  rust
+)
+_commit=9fa1cf5d0ba15d06602a1ad9f54f452df4d57d67 # tags/45.0^0
+source=("git+https://gitlab.gnome.org/GNOME/snapshot.git#commit=$_commit")
+sha256sums=('SKIP')
+
+prepare() {
+  cd ${pkgname}
+  # Fixup missing tag
+  git tag -f 45.0 9fa1cf5d0ba15d06602a1ad9f54f452df4d57d67
+}
+
+pkgver() {
+  cd ${pkgname}
+  git describe --tags | sed 's/[^-]*-g/r&/;s/-/+/g'
+}
+
+build() {
+  arch-meson ${pkgname} build
+  meson compile -C build
+}
+
+check() {
+  meson test -C build --print-errorlogs --no-rebuild
+}
+
+package() {
+  meson install -C build --destdir "$pkgdir" --no-rebuild
+}

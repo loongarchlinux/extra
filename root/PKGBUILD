@@ -6,8 +6,8 @@
 
 pkgbase=root
 pkgname=('root' 'root-cuda')
-pkgver=6.28.04
-pkgrel=2
+pkgver=6.28.08
+pkgrel=1
 pkgdesc='C++ data analysis framework and interpreter from CERN'
 arch=('loong64' 'x86_64')
 url='https://root.cern'
@@ -22,6 +22,7 @@ makedepends=(
     'cuda'
     'cudnn'
     'gcc-fortran'
+    'gcc12-fortran'
     'git'
     'go'
     'libxml2'
@@ -100,12 +101,12 @@ source=(
     'nbman-for-arch.patch'
     'thisroot.fail'
 )
-b2sums=('17e5714216dfbfece0e901abf6ed4c986c9efb3e63a57dd214d04af3851b3af8b58a5dffa89320a9a1061c506c71ad1091f358d83c352585c0f48f33eb5613ec'
+b2sums=('1fa0ea4d214aa021403f5111df9719aa3b22780420e121a74b740f89d4924d3ff7ae50563d7f08147e57b082885b7bb9707e389324919150382ec6dd2b70cf50'
         '5da6218a171ee0fbd7b03518dde22787bb0e478a18dcf227eea4e65598c0a0bb299747c6503ad3026804e1a4dbcf4d2b674b83e6ed6e482dd3d14ceb4646dee8'
         'b5defce795dbfeee75dab0cc4c20ac84fe55cb11e9acdd5e75831b6db98e6190621867a65427ab44d93b6fe30398db6fd191defb029a6dcd0af087c1e5115451'
         '5e4c589fd9e226fcf7ff9ab880687c10ff0f7b7c03fdf12fc477622d6ec291e2dc62e7f5ce7b68856bccf37b64b2f4331f46788548d39fdca57fd832d1f3b437'
-        'fb7879d5961a4714ef2cbd33a4872d88dc0938ee87935c39b89b5973b75847413d941cfcb1af1669cb62b262ba5ab54f233dc0afd3e35c85b958622edfacd114'
-        '36c3543d008eda4b0200b730d3ca795de5dca0fee0ba6f98f1e1edfc820a92dfd1352a558c1593f2f8590b3febabfb74857ca59211a71090106ce292e399dd09'
+        'ccca1ff2bfa3eacafcd4bee1991bdeffa0d87c7c9745e5e39562c0849e591f214c93add14be411aecde5935da326b56dc13a67defe2679697226a7922ddd9917'
+        '51976712d41a2dd641e7ea65d8a49f9105e2f3b6c02c24d132ca2bdad68340a43bb7e511a474519258d2932fb62ff1195794618bb411b478029492e5637f8cb9'
         '47a7b4491f1455ddb02c3793c7fbaf05184dba9a5fc9d7378608727e69c778dd5832c49f11f4d2c8204dcffc86fc4786b5616fb381c4e3e629d78db9c86913c5'
         'ec89007c4441d0010c0bfa90ca81e78ceeeb97bacaae2cc4814bd9a781062add80eaa6e4b8cf59c1a61e89ca8a14f3af6f1163766550f6db4154f671e5176d39'
         '3501c944e8cab13fe9f5c8ab75a7cdb4b59bc5b00df4bf45ad246ab8cd6cb1ebde19369bc688458c97ff5f5acd4e86fc19b4c8f57ab4cb422d0a5eacac081138')
@@ -173,6 +174,9 @@ build() {
     mkdir -p "${srcdir}/build-cuda"
     cd "${srcdir}/build-cuda"
 
+    CC=/usr/bin/gcc-12 \
+    CXX=/usr/bin/g++-12 \
+    FC=/usr/bin/f95-12 \
     cmake -C "${srcdir}/settings-cuda.cmake" \
         ${CUSTOM_CMAKE_FLAGS} \
         ${CUSTOM_CUDA_ARCH} \
@@ -291,6 +295,6 @@ package_root-cuda() {
     provides=('root')
     conflicts=('root')
     depends+=('cuda' 'cudnn')
-    optdepends+=('gcc-fortran: Enable the Fortran components of ROOT')
+    optdepends+=('gcc12-fortran: Enable the Fortran components of ROOT')
     _package build-cuda
 }

@@ -3,10 +3,10 @@
 # Maintainer: Robin Candau <antiz@archlinux.org>
 # Contributor: Sander Boom <sanderboom@gmail.com>
 
-_commit=82ab7c447614837c94fa8a9b5f667b8662aa055f
+_commit=4113104583a59ba2d1f04fee3b049c5f43f6578c
 pkgname=ansible-lint
-pkgver=6.20.3
-pkgrel=1
+pkgver=6.22.0
+pkgrel=3
 pkgdesc="Checks playbooks for practices and behaviour that could potentially be improved."
 arch=('any')
 url="https://github.com/ansible/ansible-lint"
@@ -25,13 +25,12 @@ prepare() {
   cd ${pkgname}
   # stop ansible-lint from calling home every 24h to check for a new version
   patch -Np1 < "${srcdir}"/disable_version_check.patch
-  # use pkg version
-  #sed -i "s/dynamic = \[\"version\"\]/version = \"${pkgver}\"/" pyproject.toml
-  rm .git_archival.txt
 }
 
 build() {
   cd ${pkgname}
+  # use pkg version
+  export SETUPTOOLS_SCM_PRETEND_VERSION=${pkgver}
   python -m build --wheel --skip-dependency-check --no-isolation
 }
 

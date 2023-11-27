@@ -1,0 +1,39 @@
+# Maintainer: Antonio Rojas <arojas@archlinux.org>
+
+pkgname=skladnik
+pkgver=0.5.0
+pkgrel=1
+pkgdesc='An implementation of the Japanese warehouse keeper game Sokoban'
+url='https://apps.kde.org/skladnik/'
+arch=(loong64 x86_64)
+license=(GPL LGPL FDL)
+groups=(kde-applications kde-games)
+depends=(gcc-libs
+         glibc
+         kconfig5
+         kconfigwidgets5
+         kcoreaddons5
+         ki18n5
+         kio5
+         kwidgetsaddons5
+         kxmlgui5
+         libkdegames
+         qt5-base)
+makedepends=(extra-cmake-modules
+             kdoctools5)
+groups=(kde-applications
+        kde-games)
+source=(https://download.kde.org/stable/$pkgname/$pkgver/src/$pkgname-$pkgver.tar.xz{,.sig})
+sha256sums=('03b770ca520e1720b2365e383909c54a51a496cdafe48ae32d33480343c4c17c'
+            'SKIP')
+validpgpkeys=(E6EBD6EB0518FE5BCCA5F6A76AACDD263C2CEFD4) # Friedrich W. H. Kossebau <kossebau@kde.org>
+
+build() {
+  cmake -B build -S $pkgname-$pkgver \
+    -DBUILD_TESTING=OFF
+  cmake --build build
+}
+
+package() {
+  DESTDIR="$pkgdir" cmake --install build
+}

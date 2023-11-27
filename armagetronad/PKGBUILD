@@ -4,37 +4,39 @@
 # Contributor: Filippo 'JoeyrS' Civiletti <joeyrs@gmail.com>
 
 pkgname=armagetronad
-pkgver=0.2.9.1.0
-pkgrel=4
+pkgver=0.2.9.1.1
+pkgrel=2
 pkgdesc='A Tron Clone in 3D'
 arch=('loong64' 'x86_64')
 url='http://armagetronad.net/'
 license=('GPL')
+# Disable build flags to fix FS#80060
+options=('!buildflags')
 depends=('sdl_image' 'libxml2' 'sdl_mixer' 'ftgl' 'hicolor-icon-theme')
-source=("https://github.com/ArmagetronAd/armagetronad/releases/download/v$pkgver/armagetronad-$pkgver.tbz")
-sha256sums=('59b6c7c01ce3f8cca5437e33f974a637529541a11aa4f52c1a5c17499e26f6a1')
+source=("https://launchpad.net/armagetronad/0.2.9/${pkgver}/+download/armagetronad-${pkgver}.tbz")
+sha256sums=('f617de700ecf1dd11f75e2932ee74796729112352d5cabaa2bc479add7dffd32')
 
 prepare() {
-     cd "$srcdir/armagetronad-$pkgver"
-     sed -i -r '/desktop-id/ s/(<!-- )|(org.armagetronad.)|( -->)//g' desktop/armagetronad.appdata.xml.in
+  cd "$srcdir/armagetronad-$pkgver"
+  sed -i -r '/desktop-id/ s/(<!-- )|(org.armagetronad.)|( -->)//g' desktop/armagetronad.appdata.xml.in
 }
 
 build() {
-     cd "$srcdir/armagetronad-$pkgver"
-     ./configure --prefix=/usr \
-        --sysconfdir=/etc \
-        --mandir=/usr/share/man \
-        --disable-games \
-        --enable-automakedefaults \
-        --disable-uninstall
-     make
+  cd "$srcdir/armagetronad-$pkgver"
+  ./configure --prefix=/usr \
+    --sysconfdir=/etc \
+    --mandir=/usr/share/man \
+    --disable-games \
+    --enable-automakedefaults \
+    --disable-uninstall
+  make
 }
 
 package() {
-     cd "$srcdir/armagetronad-$pkgver"
-     DESTDIR="$pkgdir" make -j1 install
-     install -Dm644 "desktop/armagetronad.desktop" "$pkgdir/usr/share/applications/armagetronad.desktop"
-     for f in 16x16 32x32 48x48; do
-       ln -s /usr/share/armagetronad/desktop/icons/$f/armagetronad.png "$pkgdir/usr/share/icons/hicolor/$f/apps/armagetronad.png"
-     done
+  cd "$srcdir/armagetronad-$pkgver"
+  DESTDIR="$pkgdir" make -j1 install
+  install -Dm644 "desktop/armagetronad.desktop" "$pkgdir/usr/share/applications/armagetronad.desktop"
+  for f in 16x16 32x32 48x48; do
+    ln -s /usr/share/armagetronad/desktop/icons/$f/armagetronad.png "$pkgdir/usr/share/icons/hicolor/$f/apps/armagetronad.png"
+  done
 }

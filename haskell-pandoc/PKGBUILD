@@ -4,8 +4,8 @@
 
 _hkgname=pandoc
 pkgname=haskell-pandoc
-pkgver=3.1.2
-pkgrel=45
+pkgver=3.1.6
+pkgrel=1
 pkgdesc='Conversion between markup formats'
 url='https://pandoc.org'
 license=('GPL')
@@ -21,20 +21,26 @@ depends=('ghc-libs' 'haskell-glob' 'haskell-juicypixels' 'haskell-sha' 'haskell-
          'haskell-pretty-show' 'haskell-random' 'haskell-safe' 'haskell-scientific'
          'haskell-skylighting' 'haskell-skylighting-core' 'haskell-split' 'haskell-syb'
          'haskell-tagsoup' 'haskell-temporary' 'haskell-texmath' 'haskell-text-conversions'
-         'haskell-unicode-collation' 'haskell-unicode-transforms' 'haskell-xml'
-         'haskell-xml-conduit' 'haskell-xml-types' 'haskell-yaml' 'haskell-zip-archive'
-         'haskell-zlib')
+         'haskell-typst' 'haskell-unicode-collation' 'haskell-unicode-transforms' 'haskell-vector'
+         'haskell-xml' 'haskell-xml-conduit' 'haskell-xml-types' 'haskell-yaml'
+         'haskell-zip-archive' 'haskell-zlib')
 optdepends=('pandoc-crossref: for numbering figures, equations, tables and cross-references to them with pandoc-crossref filter'
-            'texlive-core: for pdf output')
+            'texlive-context: for pdf output using context engine'
+            'groff: for pdf output using pdfroff engine'
+            'python-weasyprint: for pdf output using weasyprint engine'
+            'typst: for pdf output using typst engine'
+            'tectonic: for pdf output using tectonic engine'
+            'texlive-fontsrecommended: for pdf output using latex or xelatex engines'
+            'texlive-latex: for pdf output using pdflatex engine'
+            'texlive-xetex: for pdf output using xelatex engine')
 makedepends=('ghc' 'uusi' 'haskell-diff' 'haskell-tasty' 'haskell-tasty-golden'
              'haskell-tasty-hunit' 'haskell-tasty-quickcheck')
 source=("https://hackage.haskell.org/packages/archive/${_hkgname}/${pkgver}/${_hkgname}-${pkgver}.tar.gz")
-sha512sums=('4172f2101248983dc15753e1c6dafb34442996a1b14754626142491c56bae548bbe16b39ecbbd5ffe60c5fd44eb8227ff595bbf519558de98c548e9315e3dbc2')
+sha512sums=('37923e4e42e37cb5953ddf1e658fac3d231d8efc7f951db57d95f536ae4b9412f20b61fbefcd7534b33e1d42cfeaa1b885b60dbeb1835a39d1844d0226ef16b5')
 
 prepare() {
     cd $_hkgname-$pkgver
     gen-setup
-    uusi -r connection:crypton-connection $_hkgname.cabal
     # TODO: find a better solution
     sed -i "s|let env' = dynlibEnv ++ |let env' = dynlibEnv ++ [(\"LD_LIBRARY_PATH\", \"$PWD/dist/build\")] ++ |" test/Tests/Command.hs
 }

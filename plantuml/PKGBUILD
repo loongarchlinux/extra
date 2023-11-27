@@ -3,17 +3,17 @@
 # Contributor : Jingbei Li <i@jingbei.li>
 
 pkgname=plantuml
-pkgver=1.2023.6
-pkgrel=2
+pkgver=1.2023.11
+pkgrel=1
 pkgdesc="Component that allows to quickly write uml diagrams"
 arch=(any)
 url="https://plantuml.com/"
 license=('GPL')
 depends=("java-runtime>=8" "bash")
-makedepends=("apache-ant" "java-environment>=8")
-source=("https://downloads.sourceforge.net/project/$pkgname/$pkgver/$pkgname-$pkgver.tar.gz"
+makedepends=("gradle" "java-environment>=8")
+source=("https://github.com/plantuml/plantuml/archive/v$pkgver/$pkgname-$pkgver.tar.gz"
         "$pkgname.run")
-sha256sums=('92b9284317f06ee09d6ca634ab13d55df23c068184f8de8a5ac52733be45239c'
+sha256sums=('70dc0b2fcb738abd7d2c7012085a04d34e7d90e64a517afbc09ebf26ef1c112a'
             'a3fb528f4c719cfd0ff6154c60fd54ce341011d132caf950cc30af4989f6aac8')
 optdepends=('plantuml-ascii-math: allow use AsciiMath or JLaTeXMath notation'
             'ditaa: allow use ditaa notation'
@@ -25,8 +25,7 @@ prepare(){
 
 build() {
   cd "$srcdir/$pkgname-$pkgver"
-  # assume ant defaults to UTF8 encoding.
-  ant dist
+  gradle jar
 }
 
 package() {
@@ -34,5 +33,5 @@ package() {
   install -m 755 -D "$pkgname.run" "$pkgdir/usr/bin/$pkgname"
 
   cd "$srcdir/$pkgname-$pkgver"
-  install -m 644 -D "$pkgname.jar" "$pkgdir/usr/share/java/$pkgname/$pkgname.jar"
+  install -m 644 -D "build/libs/$pkgname-$pkgver.jar" "$pkgdir/usr/share/java/$pkgname/$pkgname.jar"
 }

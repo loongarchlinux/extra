@@ -2,17 +2,27 @@
 # Contributor: Kyle Keen <keenerd@gmail.com>
 
 pkgname=jupyter-nbclient
-pkgver=0.8.0
+pkgver=0.9.0
 pkgrel=1
 pkgdesc='A tool for running Jupyter Notebooks in different execution contexts'
 arch=(any)
 url='https://github.com/jupyter/nbclient'
 license=(BSD)
-depends=(python-traitlets python-jupyter-client jupyter-nbformat python-testpath)
-makedepends=(python-build python-installer python-hatchling)
-checkdepends=(python-pytest-asyncio python-xmltodict jupyter-nbconvert python-ipywidgets python-flaky)
+depends=(jupyter-nbformat
+         python
+         python-jupyter-client
+         python-jupyter-core
+         python-traitlets)
+makedepends=(python-build
+             python-hatchling
+             python-installer)
+checkdepends=(jupyter-nbconvert
+              python-flaky
+              python-ipywidgets
+              python-pytest-asyncio
+              python-xmltodict)
 source=(https://github.com/jupyter/nbclient/archive/v$pkgver/$pkgname-$pkgver.tar.gz)
-sha256sums=('b61e04d8aa226804fc9e2c24d84958c4a2ae0946c43350db149c126e9c7c8e54')
+sha256sums=('05f3769d496d67d70f937a4a158aa0cb50fddb3576542b9e8f2a3865832b871c')
 
 build() {
   cd nbclient-$pkgver

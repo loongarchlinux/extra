@@ -2,19 +2,32 @@
 # Maintainer: Felix Yan <felixonmars@archlinux.org>
 
 pkgbase=qt6-multimedia
-pkgname=(qt6-multimedia qt6-multimedia-gstreamer qt6-multimedia-ffmpeg)
-_qtver=6.5.3
+pkgname=(qt6-multimedia
+         qt6-multimedia-ffmpeg
+         qt6-multimedia-gstreamer)
+_qtver=6.6.0
 pkgver=${_qtver/-/}
 pkgrel=1
 arch=(loong64 x86_64)
 url='https://www.qt.io'
 license=(GPL3 LGPL3 FDL custom)
 pkgdesc='Classes for audio, video, radio and camera functionality'
-makedepends=(cmake ninja qt6-declarative qt6-shadertools gst-plugins-base libpulse ffmpeg qt6-quick3d libxrandr)
+depends=(gcc-libs
+         glibc
+         libpulse
+         qt6-base)
+makedepends=(cmake
+             ffmpeg
+             gst-plugins-base
+             libxrandr
+             ninja
+             qt6-declarative
+             qt6-quick3d
+             qt6-shadertools)
 groups=(qt6)
 _pkgfn=${pkgname/6-/}-everywhere-src-$_qtver
 source=(https://download.qt.io/official_releases/qt/${pkgver%.*}/$_qtver/submodules/$_pkgfn.tar.xz)
-sha256sums=('ed64f3d2bb98c20cd12df19dbf84dc0233d9fcb2078fea812adf42eef9a0ff27')
+sha256sums=('ba4b236ca3ec118841b7f5ba87797e24a8c5cbef9ba973fe219fbfc310d38782')
 
 build() {
   cmake -B build -S $_pkgfn -G Ninja \
@@ -24,7 +37,7 @@ build() {
 }
 
 package_qt6-multimedia() {
-  depends=(qt6-base qt6-multimedia-backend)
+  depends+=(qt6-multimedia-backend)
   optdepends=('qt6-declarative: QML bindings'
               'qt6-quick3d: for QtQuick3DAudio')
 
@@ -39,7 +52,14 @@ package_qt6-multimedia() {
 
 package_qt6-multimedia-gstreamer() {
   pkgdesc='Gstreamer backend for qt6-multimedia'
-  depends=(qt6-multimedia gst-plugins-base)
+  depends=(gcc-libs
+           glib2
+           glibc
+           gst-plugins-base
+           gstreamer
+           libglvnd
+           qt6-base
+           qt6-multimedia)
   provides=(qt6-multimedia-backend)
   groups=()
   optdepends=('gst-plugins-good: camera support, additional plugins'
@@ -52,7 +72,15 @@ package_qt6-multimedia-gstreamer() {
 
 package_qt6-multimedia-ffmpeg() {
   pkgdesc='FFMpeg backend for qt6-multimedia'
-  depends=(qt6-multimedia ffmpeg libva libxrandr)
+  depends=(ffmpeg
+           gcc-libs
+           glibc
+           libglvnd
+           libx11
+           libxext
+           libxrandr
+           qt6-base
+           qt6-multimedia)
   provides=(qt6-multimedia-backend)
   groups=()
 

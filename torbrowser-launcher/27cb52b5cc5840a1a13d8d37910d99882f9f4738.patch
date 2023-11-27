@@ -1,0 +1,55 @@
+From 27cb52b5cc5840a1a13d8d37910d99882f9f4738 Mon Sep 17 00:00:00 2001
+From: kpcyrd <git@rxv.cc>
+Date: Fri, 27 Oct 2023 19:07:37 +0200
+Subject: [PATCH] Writing to /etc from data_files is not allowed anymore
+
+---
+ setup.py | 23 -----------------------
+ 1 file changed, 23 deletions(-)
+
+diff --git a/setup.py b/setup.py
+index 1151a35f..2bd7546a 100644
+--- a/setup.py
++++ b/setup.py
+@@ -28,15 +28,11 @@
+ 
+ import os
+ import sys
+-import distro
+ import subprocess
+ from distutils.core import setup
+ 
+ SHARE = "share"
+ 
+-# detect linux distribution
+-distro = distro.linux_distribution()[0]
+-
+ 
+ def file_list(path):
+     files = []
+@@ -74,25 +70,6 @@ def create_mo_files():
+     if files:
+         datafiles.append((root, [os.path.join(root, f) for f in files]))
+ 
+-# disable shipping apparmor profiles until they work in ubuntu (#128)
+-if distro != "Ubuntu":
+-    if not hasattr(sys, "real_prefix"):
+-        # we're not in a virtualenv, so we can probably write to /etc
+-        datafiles += [
+-            (
+-                "/etc/apparmor.d/",
+-                ["apparmor/torbrowser.Browser.firefox", "apparmor/torbrowser.Tor.tor"],
+-            ),
+-            (
+-                "/etc/apparmor.d/local/",
+-                [
+-                    "apparmor/local/torbrowser.Browser.firefox",
+-                    "apparmor/local/torbrowser.Tor.tor",
+-                ],
+-            ),
+-            ("/etc/apparmor.d/tunables/", ["apparmor/tunables/torbrowser"]),
+-        ]
+-
+ datafiles += [(os.path.dirname(f), [f]) for f in create_mo_files()]
+ 
+ setup(

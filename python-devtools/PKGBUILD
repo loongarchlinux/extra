@@ -1,9 +1,8 @@
 # Maintainer: David Runge <dvzrv@archlinux.org>
 
-_name=devtools
 pkgname=python-devtools
-pkgver=0.11.0
-pkgrel=2
+pkgver=0.12.2
+pkgrel=1
 pkgdesc="Dev tools for Python"
 arch=(any)
 url="https://github.com/samuelcolvin/python-devtools"
@@ -33,12 +32,12 @@ optdepends=(
   'python-pytest: for pytest plugin'
   'python-sqlalchemy: for pretty-display of sqlalchemy objects'
 )
-source=(https://files.pythonhosted.org/packages/source/${_name::1}/$_name/$_name-$pkgver.tar.gz)
-sha512sums=('64ba9be69fa0ac9605a2a9056c41a74d82dab77d53cb19f7f526f2b9d021dd17ceb38379b08550a476bb4ad60a8d972ca28afab0e0ce96030a0a0d36f8d9daeb')
-b2sums=('363e98c673643ee0e185c434cbf5bc78e0d76de3fda3bd02b0d8fc336eefd9ae1037630600394d75f8b5390f9268475779d627687f34c3d20b32f08b0fcdc8ca')
+source=($pkgname-$pkgver.tar.gz::$url/archive/refs/tags/v$pkgver.tar.gz)
+sha512sums=('7d7c2f1b6aeafae60c48f171179b29a304bf9231f7325c8bd19cd2249ad343d4c550af92a4e71b3d5a6660228449dd4c3f42b42b4ed2edd862be444fa2235ce5')
+b2sums=('ec059bba343da3a4727170e809db2f5d78a1c336371d3affcd862d22441e979de40434c02b57e69934d2d600d52d282f793ad52f3ce93594b637fe31f9be7c98')
 
 build() {
-  cd $_name-$pkgver
+  cd $pkgname-$pkgver
   python -m build --wheel --no-isolation
 }
 
@@ -46,20 +45,17 @@ check() {
   local pytest_options=(
     -vv
     # https://github.com/samuelcolvin/python-devtools/issues/132
-    --deselect tests/test_insert_assert.py::test_insert_assert_no_pretty
-    --deselect tests/test_insert_assert.py::test_insert_assert_black
-    --deselect tests/test_insert_assert.py::test_insert_assert_print
     --deselect tests/test_insert_assert.py::test_insert_assert
     --deselect tests/test_insert_assert.py::test_deep
     --deselect tests/test_insert_assert.py::test_enum
   )
 
-  cd $_name-$pkgver
+  cd $pkgname-$pkgver
   pytest "${pytest_options[@]}"
 }
 
 package() {
-  cd $_name-$pkgver
+  cd $pkgname-$pkgver
   python -m installer --destdir="$pkgdir" dist/*.whl
   install -vDm 644 LICENSE -t "$pkgdir/usr/share/licenses/$pkgname/"
   install -vDm 644 README.md -t "$pkgdir/usr/share/doc/$pkgname/"

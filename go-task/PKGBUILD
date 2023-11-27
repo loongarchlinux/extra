@@ -1,0 +1,71 @@
+# Maintainer: George Rawlinson <grawlinson@archlinux.org>
+
+pkgname=go-task
+pkgver=3.31.0
+pkgrel=2
+pkgdesc='A task runner written in Go'
+arch=('loong64' 'x86_64')
+url='https://taskfile.dev'
+license=('MIT')
+depends=('glibc')
+makedepends=('git' 'go')
+conflicts=('task')
+options=('!lto')
+_commit='6177376e5045696bc12dcc083873b27f7c0da5f1'
+source=("$pkgname::git+https://github.com/go-task/task#commit=$_commit")
+b2sums=('SKIP')
+
+pkgver() {
+  cd "$pkgname"
+
+  git describe --tags | sed 's/^v//'
+}
+
+prepare() {
+  cd "$pkgname"
+
+  # download dependencies
+  export GOPATH="${srcdir}"
+  go mod download
+}
+
+build() {
+  cd "$pkgname"
+
+  # set Go flags
+  export CGO_CPPFLAGS="${CPPFLAGS}"
+  export CGO_CFLAGS="${CFLAGS}"
+  export CGO_CXXFLAGS="${CXXFLAGS}"
+  export GOPATH="${srcdir}"
+
+  go build -v \
+    -buildmode=pie \
+    -mod=readonly \
+    -modcacherw \
+    -ldflags "-compressdwarf=false \
+    -linkmode external \
+    -extldflags ${LDFLAGS} \
+    -X github.com/go-task/task/v3/internal/version.version=${pkgver}" \
+    ./cmd/task
+}
+
+check() {
+  cd "$pkgname"
+
+  go test -v ./...
+}
+
+package() {
+  cd "$pkgname"
+
+  # binary
+  install -vDm755 -t "$pkgdir/usr/bin" task
+
+  # shell completions
+  install -vDm644 completion/bash/task.bash "$pkgdir/usr/share/bash-completion/completions/task"
+  install -vDm644 completion/fish/task.fish "$pkgdir/usr/share/fish/vendor_completions.d/task.fish"
+  install -vDm644 completion/zsh/_task "$pkgdir/usr/share/zsh/site-functions/_task"
+
+  # license
+  install -vDm644 -t "$pkgdir/usr/share/licenses/$pkgname" LICENSE
+}

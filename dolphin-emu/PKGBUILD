@@ -2,9 +2,13 @@
 # Maintainer: Maxime Gauduin <alucryd@archlinux.org>
 # Contributor: Jeremy Newton (Mystro256) <alexjnewt@gmail.com>
 
-pkgname=dolphin-emu
+pkgbase=dolphin-emu
+pkgname=(
+  dolphin-emu
+  dolphin-emu-tool
+)
 pkgver=5.0.r19870.032c77b462
-pkgrel=3
+pkgrel=4
 epoch=1
 pkgdesc='A Gamecube / Wii / Triforce emulator'
 arch=(loong64 x86_64)
@@ -13,6 +17,7 @@ license=(GPL2)
 depends=(
   alsa-lib
   bluez-libs
+  bzip2
   enet
   gcc-libs
   glibc
@@ -25,10 +30,10 @@ depends=(
   #libfmt.so
   libgl
   #libmgba
-  libminiupnpc.so
   libpulse
   libsfml-network.so
   libsfml-system.so
+  libspng.so
   libswscale.so
   libudev.so
   libusb-1.0.so
@@ -36,19 +41,22 @@ depends=(
   libxi
   libxrandr
   lzo
-  #mbedtls
-  minizip-ng
+  mbedtls2
+  #minizip-ng
   pugixml
-  qt6-base
-  qt6-svg
   sfml
-  zlib
+  speexdsp
+  xz
+  zstd
 )
 makedepends=(
   cmake
   git
+  miniupnpc
   ninja
   python
+  qt6-base
+  qt6-svg
 )
 optdepends=('pulseaudio: PulseAudio backend')
 options=(!emptydirs !lto)
@@ -57,7 +65,6 @@ source=(
   dolphin-emu::git+https://github.com/dolphin-emu/dolphin.git#commit=${_commit}
   git+https://github.com/mozilla/cubeb.git
   git+https://github.com/epezent/implot.git
-  git+https://github.com/randy408/libspng.git
   git+https://github.com/mgba-emu/mgba.git
   git+https://github.com/RetroAchievements/rcheevos.git
   git+https://github.com/arsenm/sanitizers-cmake.git
@@ -73,12 +80,11 @@ b2sums=('SKIP'
         'SKIP'
         'SKIP'
         'SKIP'
-        'SKIP'
         'SKIP')
 
 prepare() {
   cd dolphin-emu
-  for submodule in Externals/{cubeb/cubeb,implot/implot,libspng/libspng,mGBA/mgba,rcheevos/rcheevos,spirv_cross/SPIRV-Cross,VulkanMemoryAllocator,zlib-ng/zlib-ng}; do
+  for submodule in Externals/{cubeb/cubeb,implot/implot,mGBA/mgba,rcheevos/rcheevos,spirv_cross/SPIRV-Cross,VulkanMemoryAllocator,zlib-ng/zlib-ng}; do
     git submodule init ${submodule}
     git config submodule.${submodule}.url ../${submodule##*/}
     git -c protocol.file.allow=always submodule update ${submodule}
@@ -95,21 +101,34 @@ pkgver() {
 }
 
 build() {
+  export CFLAGS+=' -I/usr/include/mbedtls2'
+  export CXXFLAGS+=' -I/usr/include/mbedtls2'
+  export LDFLAGS+=' -L/usr/lib/mbedtls2'
   cmake -S dolphin-emu -B build -G Ninja \
     -DCMAKE_BUILD_TYPE=None \
     -DCMAKE_INSTALL_PREFIX=/usr \
     -DDISTRIBUTOR=archlinux.org \
     -DENABLE_TESTS=OFF \
     -DUSE_MGBA=ON \
-    -DUSE_SHARED_ENET=ON \
     -Wno-dev
   cmake --build build
 }
 
-package() {
+package_dolphin-emu() {
+  depends+=(
+    hicolor-icon-theme
+    libminiupnpc.so
+    qt6-base
+    qt6-svg
+  )
+
   DESTDIR="${pkgdir}" cmake --install build
   install -Dm 644 dolphin-emu/Data/51-usb-device.rules -t "${pkgdir}"/usr/lib/udev/rules.d/
-  rm -rf "${pkgdir}"/usr/{include,lib/libdiscord-rpc.a}
+  rm -rf "${pkgdir}"/usr/{bin/dolphin-tool,include,lib/libdiscord-rpc.a}
+}
+
+package_dolphin-emu-tool() {
+  install -Dm 755 build/Binaries/dolphin-tool -t "${pkgdir}"/usr/bin/
 }
 
 # vim: ts=2 sw=2 et:

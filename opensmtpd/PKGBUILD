@@ -5,30 +5,40 @@
 # Contributor: parchd <parchd@archlinux.info>
 
 pkgname=opensmtpd
-pkgver=7.3.0p2
+pkgver=7.4.0p1
 pkgrel=1
 pkgdesc="Free implementation of the server-side SMTP protocol"
 arch=(loong64 x86_64)
 url="https://www.opensmtpd.org/"
 license=(custom)
-depends=(libevent openssl pam libxcrypt zlib)
+depends=(libevent libxcrypt openssl pam systemd zlib)
 optdepends=('opensmtpd-filter-rspamd: rspamd integration')
+makedepends=(signify)
 provides=(smtp-server smtp-forwarder)
 conflicts=(smtp-server smtp-forwarder)
 backup=(etc/smtpd/smtpd.conf etc/smtpd/aliases)
 options=(emptydirs)
 source=("https://www.opensmtpd.org/archives/${pkgname}-${pkgver}.tar.gz"
+        ${pkgname}-${pkgver}.signify::"${url}/archives/${pkgname}-${pkgver}.sum.sig"
+        opensmtpd-20181026.pub
         opensmtpd.sysusers
         smtpd.service
         smtpd.socket)
-sha256sums=('fccdfbc5b98d150012bf9ccdef51752c18a862ed10888b56289826b83a2b5a4e'
-            'b38b64f1457b7227d55585edc711cce525e089516d16b093e6c44387380e6b13'
+sha256sums=('9e82a2ec9419e181d4ca27d8e3ebe5d129fded5ba84022ff4d11a73f8edb70b5'
+            '5099518cc33926cf112ecd1e182644f0b38830ae058adbc39094326faaca9899'
+            'b74dca53567cd5070905a0a1acd77041805b6c0c4a0e1285830ea13654e1dcd5'
+            '5a6e0e2f1ceb4f6fe69aaa7871291af3b4ee1c55a96a667e72a309f961c8bd2d'
             'abf5baeb2a87c60d668ad18ea41cc08cab7a4f76339dd6df05de15cdaadaf922'
             '32d46de5562d01de445d04c93bcc9f94bf103539b676e449c32e3603a3866cf8')
-install=${pkgname}.install
 
 prepare() {
-  sed -ri 's,/etc/mail,/etc/smtpd,g' ${pkgname}-${pkgver}/usr.sbin/smtpd/smtpd.conf
+  signify -Cp ${pkgname}-20181026.pub \
+           -x ${pkgname}-${pkgver}.signify \
+              ${pkgname}-${pkgver}.tar.gz
+
+  cd ${pkgname}-${pkgver}
+  sed -ri 's,/etc/mail,/etc/smtpd,g' usr.sbin/smtpd/smtpd.conf
+  autoreconf -vfi
 }
 
 build() {
@@ -39,7 +49,7 @@ build() {
     --sysconfdir=/etc/smtpd \
     --sbindir=/usr/bin \
     --libexecdir=/usr/lib/smtpd \
-    --with-bundled-libtls \
+    --without-libbsd \
     --with-path-mbox=/var/spool/mail \
     --with-path-empty=/var/empty \
     --with-path-socket=/run \
@@ -62,7 +72,7 @@ package() {
   ln -s /usr/bin/smtpctl "${pkgdir}"/usr/bin/newaliases
   ln -s /usr/bin/smtpctl "${pkgdir}"/usr/bin/makemap
 
-  install -Dm644 etc/aliases -t  "${pkgdir}"/etc/smtpd/
+  install -Dm644 etc/aliases -t "${pkgdir}"/etc/smtpd/
 
   install -Dm644 LICENSE -t "${pkgdir}"/usr/share/licenses/${pkgname}/
 

@@ -6,32 +6,47 @@
 # Contributor: Dominik Ryba <domryba@post.pl>
 
 pkgname=hugin
-pkgver=2022.0.0
-pkgrel=11
+pkgver=2023.0.0
+pkgrel=1
 pkgdesc="Panorama photo stitcher"
 arch=(loong64 x86_64)
 url="http://hugin.sourceforge.net/"
 license=(GPL)
-depends=(wxwidgets-gtk3 boost-libs libtiff libpano13 libjpeg libpng openexr vigra
-         exiv2 glew sqlite lcms2 lapack fftw glu libxi libxmu python
-         lensfun enblend-enfuse)
-makedepends=(cmake boost tclap mesa swig)
-optdepends=('perl-image-exiftool: GPano tags support'
+depends=(boost-libs
+         enblend-enfuse
+         exiv2
+         fftw
+         glew
+         glu
+         lapack
+         lcms2
+         lensfun
+         libjpeg
+         libpano13
+         libpng
+         libtiff
+         libxi
+         libxmu
+         openexr
+         python
+         sqlite
+         vigra
+         wxwidgets-gtk3)
+makedepends=(boost
+             cmake
+             mesa
+             swig
+             tclap)
+optdepends=('darktable: RAW import using darktable'
             'dcraw: RAW import using dcraw'
-            'darktable: RAW import using darktable'
+            'perl-image-exiftool: GPano tags support'
             'rawtherapee: RAW import using rawtherapee')
-source=(https://downloads.sourceforge.net/${pkgname}/${pkgname}-${pkgver}.tar.bz2
-        exiv2-0.28.patch)
-sha256sums=('97c8562a0ba9a743e0b955a43dfde048b1c60cd9e5f2ee2b69de1a81646e05a7'
-            '1c94a89448c6d5d105602234ab82aa37e5ceb96304cbad14b7c77680788e1541')
-
-prepare() {
-# Fix build with exiv2 0.28
-  patch -d $pkgname-$pkgver -p1 < exiv2-0.28.patch
-}
+_archive="$pkgname-$pkgver"
+source=("https://downloads.sourceforge.net/$pkgname/$_archive.tar.bz2")
+sha256sums=('04a39fccc6017e0544c639bd22309472c574d35b3455cbade1fc3870e631632b')
 
 build() {
-  cmake -B build -S ${pkgname}-${pkgver} \
+  cmake -B build -S "$_archive" \
     -DCMAKE_INSTALL_PREFIX=/usr \
     -DENABLE_LAPACK=yes \
     -DBUILD_HSI=ON \
@@ -40,5 +55,5 @@ build() {
 }
 
 package() {
-  make -C build DESTDIR="${pkgdir}" install
+  make -C build DESTDIR="$pkgdir" install
 }

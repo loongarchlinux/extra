@@ -1,8 +1,8 @@
 # Maintainer: Felix Yan <felixonmars@archlinux.org>
 
 pkgname=python-semver
-pkgver=3.0.1
-_commit=c2680608bc9b080a1f34161a36971e8331a19056
+pkgver=3.0.2
+_commit=ec9348aefd8e9f287f451fcf2e837621a40e3ca4
 pkgrel=1
 pkgdesc="Python helper for Semantic Versioning"
 url="https://github.com/python-semver/python-semver"

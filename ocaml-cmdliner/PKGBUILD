@@ -1,0 +1,28 @@
+# Maintainer: Jürgen Hötzel <juergen@archlinux.org>
+
+_pkgname=cmdliner
+pkgname=ocaml-${_pkgname}
+pkgver=1.2.0
+pkgrel=1
+pkgdesc="Declarative definition of command line interfaces for OCaml"
+arch=('loong64' 'x86_64')
+url="https://erratique.ch/software/cmdliner"
+license=('ISC')
+depends=('ocaml')
+makedepends=('ocaml-findlib' 'ocamlbuild' 'ocaml-topkg' 'dune')
+options=('!strip')
+source=("https://erratique.ch/software/${_pkgname}/releases/${_pkgname}-${pkgver}.tbz")
+sha256sums=('afed10589028394fd6f64e97b1c617e2be70de6d35ee47e04235da31a9dd0078')
+
+build() {
+  cd "${srcdir}/${_pkgname}-${pkgver}"
+  dune build --profile release
+}
+
+package() {
+  cd "${srcdir}/${_pkgname}-${pkgver}"
+  DESTDIR="${pkgdir}" dune install --prefix "/usr" --libdir "/usr/lib/ocaml" --docdir "/usr/share/doc"
+
+  install -dm755 "${pkgdir}/usr/share/licenses/${pkgname}"
+  mv "${pkgdir}/usr/share/doc/$_pkgname/LICENSE.md" "${pkgdir}/usr/share/licenses/${pkgname}/LICENSE.md"
+}

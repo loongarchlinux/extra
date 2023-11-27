@@ -3,7 +3,7 @@
 # Contributor: Ekin Dursun <ekindursun@gmail.com>
 
 pkgname=python-mpv
-pkgver=1.0.4
+pkgver=1.0.5
 pkgrel=1
 pkgdesc='Python interface to the awesome mpv media player'
 arch=('any')
@@ -11,6 +11,7 @@ url=https://github.com/jaseg/python-mpv
 license=('GPL' 'LGPL')
 depends=('mpv' 'python')
 makedepends=(
+  'git'
   'python-build'
   'python-installer'
   'python-setuptools'
@@ -18,21 +19,22 @@ makedepends=(
 )
 checkdepends=('python-pytest' 'python-pyvirtualdisplay' 'xorg-server-xvfb')
 optdepends=('python-pillow: for raw screenshot support')
-source=("$url/archive/v$pkgver/$pkgname-$pkgver.tar.gz")
-b2sums=('cb3b9042648ffd0472093f84116084f255893ab7068379a01011e8153da9c60c525c9b701e8f0be29ebbfaca9da9b4fd0024741e7b243b13c3b9e69f597dede8')
+source=("git+$url.git#tag=v$pkgver?signed")
+b2sums=('SKIP')
+validpgpkeys=('E36F75307F0A0EC2D145FF5CED7A208EEEC76F2D') # python-mpv Release Signing Key <python-mpv@jaseg.de>
 
 build() {
-  cd $pkgname-$pkgver
+  cd $pkgname
   python -m build --wheel --skip-dependency-check --no-isolation
 }
 
 check() {
-  cd $pkgname-$pkgver
+  cd $pkgname
   pytest
 }
 
 package() {
-  cd $pkgname-$pkgver
+  cd $pkgname
   python -m installer --destdir="$pkgdir" dist/*.whl
   install -Dm644 -t "$pkgdir"/usr/share/doc/$pkgname README.rst
 }

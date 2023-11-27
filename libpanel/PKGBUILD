@@ -1,15 +1,23 @@
+# Maintainer: Fabian Bornschein <fabiscafe-at-mailbox-dot-org>
 # Maintainer: Jan Alexander Steffens (heftig) <heftig@archlinux.org>
 
 pkgbase=libpanel
-pkgname=(libpanel libpanel-docs)
-pkgver=1.2.0
+pkgname=(
+  libpanel
+  libpanel-docs
+)
+pkgver=1.4.0
 pkgrel=1
 pkgdesc="Dock/panel library for GTK 4"
 url="https://gitlab.gnome.org/GNOME/libpanel"
 arch=(loong64 x86_64)
 license=(LGPL)
 depends=(
+  cairo
+  glib2
+  graphene
   gtk4
+  hicolor-icon-theme
   libadwaita
 )
 makedepends=(
@@ -19,12 +27,12 @@ makedepends=(
   meson
   vala
 )
-_commit=2757c49ed68507f38f14aca244eef5ec90ae00ee  # tags/1.2.0^0
+_commit=3719f5d044d0ba068b525d14f8366d7e43297c89  # tags/1.4.0^0
 source=("git+https://gitlab.gnome.org/GNOME/libpanel.git#commit=$_commit")
 b2sums=('SKIP')
 
 pkgver() {
-  cd $pkgname
+  cd $pkgbase
   git describe --tags | sed 's/[^-]*-g/r&/;s/-/+/g'
 }
 
@@ -33,7 +41,7 @@ build() {
     -D install-examples=true
   )
 
-  arch-meson $pkgname build "${meson_options[@]}"
+  arch-meson $pkgbase build "${meson_options[@]}"
   meson compile -C build
 }
 

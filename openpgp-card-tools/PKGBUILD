@@ -1,7 +1,7 @@
 # Maintainer: David Runge <dvzrv@archlinux.org>
 
 pkgname=openpgp-card-tools
-pkgver=0.9.4
+pkgver=0.9.5
 pkgrel=1
 pkgdesc="CLI tool to inspect, manage and use OpenPGP cards"
 arch=(loong64 x86_64)
@@ -21,8 +21,8 @@ makedepends=(
   pcsclite
 )
 source=($pkgname-$pkgver.tar.gz::$url/archive/v$pkgver.tar.gz)
-sha512sums=('ba446e3c99a1b09a978d9718aab6df43715fe13e573400c8ccfb2f839330782fb10386cd570c9e273b240ddda4b7573beb9913a6662d3b78abba3e21b5e1c125')
-b2sums=('ce0d45892e741a635429507f1538c7ab1b1f8efa4e08a547e6a338dd0374b250ae43886bcb60fe7eba29f75384bccd23dafd4964b3fc378530085eabe123435c')
+sha512sums=('25a8cdd496e4a3292096db94bd4ecb35f693a73ad2b6f8407084537350fdec5fc9ce8a88b12b8d8c3f82aff3c2e63dfc9c3130ec9c9bcf1ee5bf6100a7e8e998')
+b2sums=('1fc6e02038d7cd9ba561c00f0c9b11cd27f282931b1fa70cb2436917224a1fd63c0e130e0d1c9c68f9db082ac596380741b7dac164e4ab7d58a54ad70157e3d9')
 
 prepare() {
   cd $pkgname
@@ -33,7 +33,9 @@ build() {
   cd $pkgname
   export RUSTUP_TOOLCHAIN=stable
   export CARGO_TARGET_DIR=target
-  cargo build --frozen --release --bin opgpcard
+  cargo build --frozen --release
+  OCT_MANPAGE_OUTPUT_DIR="$PWD/../man/" cargo run
+  OCT_COMPLETION_OUTPUT_DIR="$PWD/../completion/" cargo run
 }
 
 check() {
@@ -53,4 +55,8 @@ package() {
   install -vDm 755 target/release/opgpcard -t "$pkgdir/usr/bin/"
   install -vDm 644 {scripting,README}.md -t "$pkgdir/usr/share/doc/$pkgname/"
   install -vDm 644 LICENSES/MIT.txt -t "$pkgdir/usr/share/licenses/$pkgname/"
+  install -vDm 644 ../man/*.1 -t "$pkgdir/usr/share/man/man1/"
+  install -vDm 644 ../completion/opgpcard.bash "$pkgdir/usr/share/bash-completion/completions/opgpcard"
+  install -vDm 644 ../completion/_opgpcard -t "$pkgdir/usr/share/zsh/site-functions/"
+  install -vDm 644 ../completion/opgpcard.fish -t "$pkgdir/usr/share/fish/vendor_completions.d/"
 }

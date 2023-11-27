@@ -3,7 +3,7 @@
 # Contributor: Xu Fasheng <fasheng.xu[AT]gmail.com>
 
 pkgname=deepin-daemon
-pkgver=6.0.22
+pkgver=6.0.28
 pkgrel=1
 pkgdesc='Daemon handling the DDE session settings'
 arch=('loong64' 'x86_64')
@@ -39,6 +39,8 @@ depends=('deepin-desktop-schemas' 'deepin-api' 'deepin-app-services' 'deepin-wlo
          'libnl'
          # keybinding
          'gvfs'
+         # keybinding/default-terminal
+         'deepin-application-manager'
          # misc
          'librsvg'
          # network
@@ -61,14 +63,18 @@ groups=('deepin')
 install="$pkgname.install"
 source=("https://github.com/linuxdeepin/dde-daemon/archive/$pkgver/$pkgname-$pkgver.tar.gz"
         $pkgname-fix-vanilla-libinput.patch
-        'deepin-daemon.sysusers')
-sha512sums=('b44d43fc0de310159566b13ec03ddd171cf02bdd80037d4e7cfceb8778a7890e26b45c32a5234a0248cd0fecca08690ae5c112a9673f12945913545dc8b27a35'
+        'deepin-daemon.sysusers'
+        ddcutil-2.patch)
+sha512sums=('d6fa66ace16088e1ab37f5daa37836b0099d75ce0785c7d8c26b58fb5835ff29f609dfae4a8684fa4d8820ae2ef649aee18d662b890707bcf96d721a1efefeba'
             '944b0ae6cf7f613fd00884593c5e5f43aaf0efe4ea7aaa546a06b4367b8da4f2bc486dca640f77743bd1b7b9e4aacf741afe5c5e3ee219c2fdd4cc891ab3d367'
-            '808c02d4fec4cbbb01119bbb10499090199e738b7dd72c28a57dde098eef6132723f3434c151f79e21d9f788c7f7bae8046573ac93ba917afe0e803fbffa6d5a')
+            '808c02d4fec4cbbb01119bbb10499090199e738b7dd72c28a57dde098eef6132723f3434c151f79e21d9f788c7f7bae8046573ac93ba917afe0e803fbffa6d5a'
+            '337ac528ff09c32bce2830e6711a7f7a6454c5ce076586057508720414fa2b8414db277d5d6871a6bd2e0d9a00e487c544391d0e56940cc3d1e9677234611e95')
 
 prepare() {
   cd dde-daemon-$pkgver
   patch -p1 -i ../$pkgname-fix-vanilla-libinput.patch
+  # Fix build with ddcutils 2
+  patch -p1 -i ../ddcutil-2.patch
 
   # https://github.com/linuxdeepin/developer-center/discussions/3327
   sed -i 's#/usr/libexec#/usr/lib#' keybinding/shortcuts/system_shortcut.go

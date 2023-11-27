@@ -5,7 +5,7 @@
 # Contributor: Erik Mank <erik@braindisorder.org>
 
 pkgname=tt-rss
-pkgver=r11545.718af52a1
+pkgver=r11654.1fe1132a1
 pkgrel=1
 epoch=2
 pkgdesc='Web-based news feed (RSS/Atom) aggregator'
@@ -19,7 +19,7 @@ optdepends=('mysql'
             'postgresql'
             'php-gd-interpreter: for coloured feed badges')
 makedepends=('git')
-_commit=718af52a1b1c3a1d890e7faee0d97af8617c337b
+_commit=1fe1132a1a68bd0fedc313823b942130167fad86
 # periodic releases are over https://srv.tt-rss.org/oldforum/viewtopic.php@f=10&t=3262.html
 source=(git+https://gitlab.tt-rss.org/tt-rss/tt-rss.git#commit=$_commit
        tt-rss.service)
@@ -49,7 +49,8 @@ build() {
 check() {
   cd tt-rss
   # See https://gitlab.tt-rss.org/ci/ci-templates/-/blob/master/.ci-lint-common.yml
-  php ./vendor/bin/phpunit
+  # Skip integration tests as those need a running TT-RSS server
+  php ./vendor/bin/phpunit --exclude integration
   php -d memory_limit=-1 ./vendor/bin/phpstan --memory-limit=2G
 }
 

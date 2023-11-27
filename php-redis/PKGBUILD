@@ -7,7 +7,7 @@ pkgname=(
   php-redis
   php-legacy-redis
 )
-pkgver=6.0.1
+pkgver=6.0.2
 pkgrel=1
 pkgdesc="An API for communicating with the Redis key-value store"
 arch=(loong64 x86_64)
@@ -24,23 +24,23 @@ checkdepends=(
   redis
 )
 optdepends=('redis: use a local redis instance')
-source=("$pkgname-$pkgver.tar.gz::$url/archive/${pkgver}.tar.gz")
-sha512sums=('7ff7e363a58150ee783ed914213f45f1cb895f4759185d2fed4c25754fadbb36b3b181ee35e34afb4fcc9c4e2ea3ef61726339b20c9020e501773de6825ae5a2')
-b2sums=('4ccb7a0f9f0f53bc587bde3f1a9a8b57ce87b5a6f06c25fce3850c69f7f30281ae88a8d4073a2148b32bd96ced6805ced6b5d812c8cae7a9d4c038e8a47116de')
+source=($pkgname-$pkgver.tar.gz::$url/archive/$pkgver.tar.gz)
+sha512sums=('4c04b76f67e19185a0da3bcd55ce74e97b10258aa0866f8bcdd1586778d93f2113c0af9c7c71784b5ee83337a34d525e92c1b50c4b96727ce7516af8e632419e')
+b2sums=('6e081838b7f66a96811848b3a4b71a76b1ad08088e698ba235badb9922c663b3acd23020403fd8a790125c2f39dc1d34050fc4bf564ff4a7196eccfe30fa68c0')
 
 prepare() {
-  mv -v "${_upstream}-${pkgver}" "$pkgbase-$pkgver"
+  mv -v $_upstream-$pkgver $pkgbase-$pkgver
   # tempfile is non-standard, Debian only
-  sed -e 's/tempfile/mktemp/g' -i  "$pkgname-$pkgver/tests/mkring.sh"
+  sed -e 's/tempfile/mktemp/g' -i  $pkgname-$pkgver/tests/mkring.sh
   # the kill after shutdown of redis makes it exit with status code 1
-  sed -e '/kill -9/d' -i "$pkgname-$pkgver/tests/mkring.sh"
+  sed -e '/kill -9/d' -i $pkgname-$pkgver/tests/mkring.sh
   # disable the extension by default
   echo -e "; this extension requires igbinary to be activated as well\n;extension=${_name}" > "$pkgname-$pkgver/${_name}.ini"
 
-  cp -av "$pkgbase-$pkgver" "${pkgname[1]}-$pkgver"
+  cp -av $pkgbase-$pkgver "${pkgname[1]}-$pkgver"
 
   (
-    cd "$pkgbase-$pkgver"
+    cd $pkgbase-$pkgver
     phpize
   )
   (
@@ -58,7 +58,7 @@ build() {
   )
 
   (
-    cd "$pkgname-$pkgver"
+    cd $pkgname-$pkgver
     ./configure "${configure_options[@]}"
     make
   )
@@ -74,7 +74,7 @@ check() {
   # https://github.com/phpredis/phpredis/issues/1593
   (
     export TEST_PHP_EXECUTABLE=/usr/bin/php
-    export TEST_PHP_ARGS="-d extension=igbinary -d extension=${srcdir}/${pkgbase}-${pkgver}/modules/redis.so"
+    export TEST_PHP_ARGS="-d extension=igbinary -d extension=$srcdir/$pkgbase-$pkgver/modules/redis.so"
     cd "$pkgname-$pkgver"
     tests/mkring.sh start
     $TEST_PHP_EXECUTABLE $TEST_PHP_ARGS tests/TestRedis.php --class Redis
@@ -83,7 +83,7 @@ check() {
   )
   (
     export TEST_PHP_EXECUTABLE=/usr/bin/php-legacy
-    export TEST_PHP_ARGS="-d extension=igbinary -d extension=${srcdir}/${pkgname[1]}-${pkgver}/modules/redis.so"
+    export TEST_PHP_ARGS="-d extension=igbinary -d extension=$srcdir/${pkgname[1]}-$pkgver/modules/redis.so"
     cd "${pkgname[1]}-$pkgver"
     tests/mkring.sh start
     $TEST_PHP_EXECUTABLE $TEST_PHP_ARGS tests/TestRedis.php --class Redis
@@ -94,20 +94,20 @@ check() {
 
 package_php-redis() {
   depends+=(liblzf.so php-igbinary)
-  backup=("etc/php/conf.d/${_name}.ini")
+  backup=(etc/php/conf.d/$_name.ini)
 
-  cd "$pkgname-$pkgver"
+  cd $pkgname-$pkgver
   make INSTALL_ROOT="$pkgdir/" install
-  install -vDm 644 "${_name}.ini" -t "${pkgdir}/etc/php/conf.d/"
-  install -vDm 644 {{CHANGELOG,README,arrays,cluster}.md,CREDITS} -t "${pkgdir}/usr/share/doc/${pkgname}/"
+  install -vDm 644 $_name.ini -t "$pkgdir/etc/php/conf.d/"
+  install -vDm 644 {{CHANGELOG,README,arrays,cluster}.md,CREDITS} -t "$pkgdir/usr/share/doc/$pkgname/"
 }
 
 package_php-legacy-redis() {
   depends+=(liblzf.so php-legacy-igbinary)
-  backup=("etc/php-legacy/conf.d/${_name}.ini")
+  backup=(etc/php-legacy/conf.d/$_name.ini)
 
   cd "$pkgname-$pkgver"
   make INSTALL_ROOT="$pkgdir/" install
-  install -vDm 644 "${_name}.ini" -t "${pkgdir}/etc/php-legacy/conf.d/"
-  install -vDm 644 {{CHANGELOG,README,arrays,cluster}.md,CREDITS} -t "${pkgdir}/usr/share/doc/${pkgname}/"
+  install -vDm 644 $_name.ini -t "$pkgdir/etc/php-legacy/conf.d/"
+  install -vDm 644 {{CHANGELOG,README,arrays,cluster}.md,CREDITS} -t "$pkgdir/usr/share/doc/$pkgname/"
 }

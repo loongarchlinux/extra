@@ -2,8 +2,9 @@
 # Contributor: Rafael Fontenelle <rafaelff@gnome.org>
 
 pkgname=python-pytest-env
-pkgver=1.0.1
-pkgrel=1
+# https://github.com/pytest-dev/pytest-env/releases
+pkgver=1.1.1
+pkgrel=2
 pkgdesc='pytest plugin to set environment variables in pytest.ini or pyproject.toml file'
 arch=(any)
 url='https://github.com/pytest-dev/pytest-env'
@@ -11,7 +12,7 @@ license=(MIT)
 depends=(python python-pytest)
 makedepends=(python-build python-installer python-hatchling python-hatch-vcs)
 source=($pkgname-$pkgver.tar.gz::https://github.com/pytest-dev/pytest-env/archive/$pkgver/$pkgname-$pkgver.tar.gz)
-sha256sums=('904164ff65cbd15062c0a067205d46e69f3c14644857dd03feb442bc18681012')
+sha256sums=('2710adbd8409e1609d1bb610a3e28fb6a8992004c2c54dacbc228f1dcb1cc6f5')
 
 export SETUPTOOLS_SCM_PRETEND_VERSION=$pkgver
 

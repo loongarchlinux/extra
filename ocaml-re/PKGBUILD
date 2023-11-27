@@ -1,0 +1,32 @@
+# Maintainer: Jürgen Hötzel <juergen@archlinux.org>
+
+_pkgname=re
+pkgname=ocaml-${_pkgname}
+pkgver=1.11.0
+pkgrel=1
+pkgdesc="A regular expression library for OCaml"
+arch=('loong64' 'x86_64')
+url="https://github.com/ocaml/ocaml-re"
+license=('LGPL2.1')
+depends=('ocaml')
+makedepends=('dune')
+options=('!strip')
+source=("${url}/archive/${pkgver}/${_pkgname}-${pkgver}.tar.gz" "${pkgname}-remove-seq.patch")
+sha256sums=('e32660b6068b78a8588ca065a6a2b01ae7339584d8261356beac0e26dbc5f854'
+            '0ce7abf08c22c3bb23ee78ec57a65ef53875c325a3c16db0dd506cd572e12bba')
+
+prepare() {
+	cd "${pkgname}-${pkgver}"
+	patch -p1 -i "${srcdir}/${pkgname}-remove-seq.patch"
+}
+
+build() {
+  cd ${pkgname}-$pkgver
+  dune build --profile release -p $_pkgname
+}
+
+package() {
+  cd ${pkgname}-$pkgver
+
+  DESTDIR="${pkgdir}" dune install --prefix '/usr' --libdir '/usr/lib/ocaml' '--docdir' '/usr/share/doc' --release
+}

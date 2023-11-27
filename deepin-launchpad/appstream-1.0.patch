@@ -1,0 +1,38 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index b3d4533..bb00ac4 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -22,9 +22,9 @@ include(GNUInstallDirs)
+ 
+ find_package(Qt5 REQUIRED COMPONENTS Core Gui Concurrent Qml Svg Quick QuickCompiler QuickControls2 LinguistTools)
+ find_package(Dtk REQUIRED COMPONENTS Core Gui)
+-find_package(AppStreamQt REQUIRED)
++find_package(AppStreamQt5 REQUIRED)
+ 
+-set_package_properties(AppStreamQt PROPERTIES
++set_package_properties(AppStreamQt5 PROPERTIES
+     DESCRIPTION "Library that lists Appstream resources"
+     URL "https://www.freedesktop.org"
+     TYPE REQUIRED)
+diff --git a/desktopintegration.cpp b/desktopintegration.cpp
+index 7d78443..cf5bd02 100644
+--- a/desktopintegration.cpp
++++ b/desktopintegration.cpp
+@@ -11,7 +11,7 @@
+ #include <appinfo.h>
+ #include <appmgr.h>
+ 
+-#include <AppStreamQt/pool.h>
++#include <AppStreamQt5/pool.h>
+ 
+ #include "appwiz.h"
+ #include "ddedock.h"
+@@ -59,7 +59,7 @@ bool DesktopIntegration::appIsCompulsoryForDesktop(const QString &desktopId)
+     // qDebug() << pool.flags() << currentDE;
+     pool.load();
+ 
+-    const QList<AppStream::Component> components = pool.componentsByLaunchable(AppStream::Launchable::KindDesktopId, desktopId);
++    const QList<AppStream::Component> components = pool.componentsByLaunchable(AppStream::Launchable::KindDesktopId, desktopId).toList();
+     for (const AppStream::Component & component : components) {
+         return component.compulsoryForDesktops().contains(currentDE);
+     }

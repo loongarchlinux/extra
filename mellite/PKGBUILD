@@ -3,33 +3,38 @@
 _name=Mellite
 _app_name=de.sciss.mellite.Mellite
 pkgname=mellite
-pkgver=3.13.7
+pkgver=3.13.10
 pkgrel=1
 pkgdesc="An environment for creating experimental computer-based music and sound art"
 arch=(any)
 url="https://www.sciss.de/mellite/"
-license=(AGPL3)
+_url=https://codeberg.org/sciss/Mellite
+license=(AGPL-3.0-or-later)
 groups=(pro-audio)
+_java_version=17
 depends=(
   hicolor-icon-theme
-  'java-environment>=16'
+  java-runtime=$_java_version
   sh
   supercollider
 )
 makedepends=(
   gendesk
+  java-environment=$_java_version
   sbt
 )
 source=(
-  $pkgname-$pkgver.tar.gz::https://github.com/Sciss/$pkgname/archive/refs/tags/v$pkgver.tar.gz
+  $pkgname-$pkgver.tar.gz::$_url/archive/v$pkgver.tar.gz
   $pkgname.sh
 )
-sha512sums=('011a59c57eb3ae6708f4595996d9e167ec5318a620b639525bb1d11e656e8291070f084f055096891545f9aed0e28dbdfdef5874b01294e87c861fcf47f11008'
-            '1a6a572b4c365cdad87930bef805afa229b329cb2ceefb6b9ce42b233ab86f768ae3e3d5fd7cac1129786878c38fd891015aaf6637d9bd7b5ce3b2ef5fe9d30b')
-b2sums=('f0984d21ac6098eb62bb5a871f2a87ef8be160317b61179a42dd1c580dd44afb4fb71cb8c201dae2f22dc6746278ed77bb3c685a307bd9efe7155b69f76731ea'
-        '4f1fd83d7cf5561e76f746860e5436e7dfab9bd50ad103f499b82de99a67034122f0e8e99e6a58574d6611585d63b2976e5d31979c7233294464683c86cce3ea')
+sha512sums=('e94c1002ee1c67c1df5c41940fd2a5a91d05043e38e589b190207a9ff95978a3596e6a75e4e6f61a6b69e4747cbb47e89b5c596f203d9d5575994a2625d12243'
+            'a4d046463774393fdbe2ff10d545d0a46ff62761effdca9e1beb7e7f8d43aebe7ee4dc48602c951b59dfa0c4add517c1c8b58284f5c10c751969826ff512529a')
+b2sums=('f18a3a5f0e1a947bb83e683db6a95438429bad6db69cbe0366002a451ee3fb08c21e549241dc5b0c1f831ee5c0a355828ae6f586d5a217dd99241932efb86d9e'
+        '6ca9fa81baf35d0c93ac4d192c591320858e70bc7f981f5fed0a100bcc99d3595c7fbfba177747f7dd2e93e9e399ecb26041937eabacab2654b247df6f4827b9')
 
 prepare() {
+  sed "s/JAVA_VERSION/$_java_version/" $pkgname.sh > $pkgname/$pkgname
+
   gendesk -n \
           --pkgname "$_app_name" \
           --name "Mellite" \
@@ -41,15 +46,15 @@ prepare() {
 }
 
 build() {
-  cd $_name-$pkgver
+  cd $pkgname
   sbt +mellite-app/test +mellite-app/assembly
 }
 
 package() {
-  install -vDm 644 $_name-$pkgver/app/$_name.jar -t "$pkgdir/usr/share/scala/$pkgname"
-  install -vDm 644 $_name-$pkgver/icons/application.png "$pkgdir/usr/share/icons/hicolor/256x256/apps/de.sciss.mellite.Mellite.png"
-  install -vDm 644 $_name-$pkgver/icons/application.svg "$pkgdir/usr/share/icons/hicolor/scalable/apps/de.sciss.mellite.Mellite.svg"
+  install -vDm 644 $pkgname/app/$_name.jar -t "$pkgdir/usr/share/scala/$pkgname"
+  install -vDm 644 $pkgname/icons/application.png "$pkgdir/usr/share/icons/hicolor/256x256/apps/de.sciss.mellite.Mellite.png"
+  install -vDm 644 $pkgname/icons/application.svg "$pkgdir/usr/share/icons/hicolor/scalable/apps/de.sciss.mellite.Mellite.svg"
 
-  install -vDm 755 $pkgname.sh "$pkgdir/usr/bin/$pkgname"
-  install -vDm 644 *.desktop -t "$pkgdir/usr/share/applications/"
+  install -vDm 755 $pkgname/$pkgname -t "$pkgdir/usr/bin/"
+  install -vDm 644 ./*.desktop -t "$pkgdir/usr/share/applications/"
 }

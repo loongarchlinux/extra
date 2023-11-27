@@ -1,0 +1,33 @@
+# Maintainer: Evangelos Foutras <foutrelis@archlinux.org>
+
+pkgname=libxfce4windowing
+pkgver=4.19.2
+pkgrel=1
+pkgdesc="Windowing concept abstraction library for X11 and Wayland"
+arch=('loong64' 'x86_64')
+url="https://docs.xfce.org/xfce/libxfce4windowing/start"
+license=('LGPL2.1')
+depends=('gdk-pixbuf2' 'glib2' 'gtk3' 'libwnck3' 'libx11' 'wayland')
+makedepends=('gobject-introspection' 'gtk-doc')
+source=(https://archive.xfce.org/src/xfce/$pkgname/${pkgver%.*}/$pkgname-$pkgver.tar.bz2)
+sha256sums=('3d50eeb5b01f0911a8cd5fbd19dbfc93c58a2909fb3ab051a0c0579b753bee66')
+
+build() {
+  cd $pkgname-$pkgver
+
+  ./configure \
+    --prefix=/usr \
+    --sysconfdir=/etc \
+    --enable-gtk-doc \
+    --enable-wayland \
+    --enable-x11 \
+    --disable-debug
+  make
+}
+
+package() {
+  cd $pkgname-$pkgver
+  make DESTDIR="$pkgdir" install
+}
+
+# vim:set ts=2 sw=2 et:

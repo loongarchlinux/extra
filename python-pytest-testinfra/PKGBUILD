@@ -6,7 +6,7 @@
 
 _name=pytest-testinfra
 pkgname=python-pytest-testinfra
-pkgver=9.0.0
+pkgver=10.0.0
 pkgrel=1
 pkgdesc='Testinfra test your infrastructures'
 arch=(any)
@@ -42,8 +42,8 @@ optdepends=(
   'salt: for tests using saltstack'
 )
 source=($_name-$pkgver.tar.gz::$url/archive/refs/tags/$pkgver.tar.gz)
-sha512sums=('92faa7d8bac702876514e7d0566db8d04ed69325dd74b0a0a8b66c0a514450a8815b8ac3b8f67ed7c17bd39349a2363f73627cb88700a194be496cfcf7f15973')
-b2sums=('2e506a9a41dc403f9b9a9c667ced5c905a47da63f9155da436f210871aefb85a477dd35fd1931c123cfa4f9c7e608aef8daecb0a4051ef31eb8ea83950177c7b')
+sha512sums=('8720420c4c19daf8584666289e3dda8fd9f1ff1c93eae59bf95d7c2959273d992968968b7c867b9c88e98fbcc394ee9dcca2b341bd82ffeaf98e8604144b11a3')
+b2sums=('08e1c511acd2ad00c76d18eea05d240f45a393de16c80deaf49552920bace5dbc9210034224a48830132e46d1630cc73e6f33e069d1ece83c8104cf46ed8cfa6')
 
 build() {
   export SETUPTOOLS_SCM_PRETEND_VERSION="$pkgver"

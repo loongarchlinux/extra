@@ -1,9 +1,10 @@
+# Maintainer: Fabian Bornschein <fabiscafe-at-mailbox-dot-org>
 # Maintainer: Jan Alexander Steffens (heftig) <heftig@archlinux.org>
 # Contributor: Jan de Groot <jgc@archlinux.org>
 # Contributor: William Rea <sillywilly@gmail.com>
 
 pkgname=orca
-pkgver=44.1
+pkgver=45.1
 pkgrel=1
 pkgdesc="Screen reader for individuals who are blind or visually impaired"
 url="https://wiki.gnome.org/Projects/Orca"
@@ -12,13 +13,20 @@ license=(LGPL)
 depends=(
   at-spi2-core
   brltty
+  gobject-introspection-runtime
   gsettings-desktop-schemas
+  gstreamer
   gst-plugins-base # playbin, audiotestsrc, basic decoders
   gst-plugins-good # pulsesink, more decoders
   gtk3
+  hicolor-icon-theme
   liblouis
   libwnck3
+  pango
+  python
   python-atspi
+  python-cairo
+  python-gobject
   python-setproctitle
   speech-dispatcher
   xorg-xkbcomp
@@ -30,7 +38,7 @@ makedepends=(
   yelp-tools
 )
 groups=(gnome)
-_commit=687c24492a26244e4520816ac2b66010f13e92cb  # tags/ORCA_44_1^0
+_commit=9e77d1baf9bd24b78d7499ad9b2e8bb80c9a0c81  # tags/ORCA_45_1^0
 source=("git+https://gitlab.gnome.org/GNOME/orca.git#commit=$_commit")
 b2sums=('SKIP')
 

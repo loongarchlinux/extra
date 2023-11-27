@@ -2,8 +2,8 @@
 
 _name=pywlroots
 pkgname=python-pywlroots
-pkgver=0.16.5
-pkgrel=1
+pkgver=0.16.6
+pkgrel=2
 pkgdesc="Python binding to the wlroots library using cffi"
 arch=(loong64 x86_64)
 url="https://github.com/flacjacket/pywlroots"
@@ -14,7 +14,7 @@ depends=(
   python-cffi
   python-pywayland
   python-xkbcommon
-  wlroots
+  wlroots0.16
 )
 makedepends=(
   python-build
@@ -27,10 +27,12 @@ provides=(pywlroots)
 conflicts=(pywlroots)
 replaces=(pywlroots)
 source=($_name-$pkgver.tar.gz::$url/archive/refs/tags/v$pkgver.tar.gz)
-sha512sums=('891da30ed9949a0535cca6e12787258f689cdba1314853d2e5665a040e67a9f45036d500526ce247dda260355b573e8260b67e115700af0df5cb1e760307de9b')
-b2sums=('8ee637b4900590b17c0ee4dc07659ed2f6b44d087fabe29f0e74075a9be1be6cc3a71876bfc0333266b0484b463fc14d243c4189b4c40dd468e3f9f2cf7c91b0')
+sha512sums=('21d58dbb1c17bbc25ce9bb6d8265fb90e61ab41f1c8e6e32c99e7a2827139fa848589f35df9467a6a9ea1b5212af1007388549167b9c63bf09f5262aac6fc7f8')
+b2sums=('0752c0511b1a9530d67c868e337bb2aba556111693a2c8e494d23d1e0ef1fcd9c08e4caf03bcc6a1029af5e9bb8059d037a08d726f611f72f065d1c38ab30226')
 
 build() {
+  export CFLAGS="$CFLAGS -I/usr/include/wlroots0.16"
+  export LDFLAGS="$LDFLAGS -L/usr/lib/wlroots0.16"
   cd $_name-$pkgver
   python wlroots/ffi_build.py
   python -m build --wheel --no-isolation
@@ -46,6 +48,7 @@ check() {
 }
 
 package() {
+  depends+=(libwlroots.so=11)
   cd $_name-$pkgver
   python -m installer --destdir="$pkgdir" dist/*.whl
   install -vDm 644 README.rst -t "$pkgdir/usr/share/doc/$pkgname"

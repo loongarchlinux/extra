@@ -2,13 +2,13 @@
 
 _name=pynitrokey
 pkgname=python-pynitrokey
-_commit=33264f882a8b40cfc8d24b39a57af1fab606cbfa  # v0.4.39
-pkgver=0.4.39
+_commit=12c69c369048f78acb8b8225b5eb1267416dcecc  # v0.4.41
+pkgver=0.4.41
 pkgrel=1
 pkgdesc="A command line interface for the Nitrokey FIDO2 and Nitrokey Start"
 arch=(any)
 url="https://github.com/Nitrokey/pynitrokey"
-license=(Apache)
+license=('Apache-2.0 OR MIT')
 depends=(
   libnitrokey  # NOTE: libnitrokey is required for udev rules
   python
@@ -22,6 +22,7 @@ depends=(
   python-fido2
   python-frozendict
   python-intelhex
+  python-nethsm
   python-nkdfu
   python-protobuf
   python-pyserial
@@ -32,7 +33,6 @@ depends=(
   python-tlv8
   python-tqdm
   python-typing-extensions
-  python-urllib3
 )
 makedepends=(
   git

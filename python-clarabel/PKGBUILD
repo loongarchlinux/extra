@@ -1,0 +1,35 @@
+# Maintainer: Antonio Rojas <arojas@archlinux.org>
+
+_pyname=clarabel
+pkgname=python-$_pyname
+pkgver=0.6.0
+pkgrel=2
+pkgdesc='Interior-point solver for convex conic optimisation problems'
+arch=(loong64 x86_64)
+url='https://github.com/oxfordcontrol/Clarabel.rs'
+license=(Apache)
+depends=(gcc-libs
+         glibc)
+makedepends=(python-build
+             python-installer
+             python-maturin
+             rust)
+source=(https://pypi.python.org/packages/source/${_pyname:0:1}/$_pyname/$_pyname-$pkgver.tar.gz)
+sha256sums=('ef909a393e72981ca10b1d866d9cc7fb6295ece20ae035def764338894961184')
+
+prepare() {
+  cd $_pyname-$pkgver
+  cargo fetch --locked --target "$CARCH-unknown-linux-gnu"
+}
+
+build() {
+  cd $_pyname-$pkgver
+  python -m build --wheel --no-isolation
+}
+
+package() {
+  cd $_pyname-$pkgver
+  python -m installer --destdir="$pkgdir" dist/*.whl
+
+  install -Dm644 LICENSE.md -t "$pkgdir"/usr/share/licenses/$pkgname
+}

@@ -2,7 +2,7 @@
 
 _name=libtmux
 pkgname=python-libtmux
-pkgver=0.23.2
+pkgver=0.25.0
 pkgrel=1
 pkgdesc="Python api for tmux"
 arch=(any)
@@ -27,13 +27,13 @@ checkdepends=(
 )
 optdepends=('python-pytest: for pytest plugin')
 source=($_name-$pkgver.tar.gz::https://github.com/tmux-python/libtmux/archive/refs/tags/v$pkgver.tar.gz)
-sha512sums=('f8952cffa94fcf9b345275d3d5e59ea0a164bbcb93aacbd2820c8127b34526635d7b9a25f5684cd385744b1de626b8bce19d2c735579c2bdffed6a17c9f8f394')
-b2sums=('a5e7aece4d7160f87c48c2c02371c6d6b423aad979d91683561b1d8a7f750c626b522af5d1d97157c536adfd612948750433e77faaeb633343af37648bc9bf01')
+sha512sums=('72cf2a24af0407baa775f1be13490c45b573cfaabc6803b57d77cc0eac5de0ef9b8c3a8923437163d1b6b9486a86b71076df40761f302d3534d36d94c68bd6bb')
+b2sums=('ac9da378491acbb91eb8e67e47ef213206d77f618a35fd6cba1014435c70b82eca712f764ccc4f2fa14f4027001678e31743ade9b28ffbc9e5509e2592afab48')
 
 prepare() {
   cd $_name-$pkgver
-  # remove unknown pytest option: https://github.com/tmux-python/libtmux/issues/496
-  sed 's/doctest-docutils-modules/doctest-modules/' -i setup.cfg
+  # we do not want to package python-gp-libs: https://github.com/tmux-python/libtmux/issues/496
+  sed '/addopts/d' -i pyproject.toml
 }
 
 build() {
@@ -42,12 +42,16 @@ build() {
 }
 
 check() {
+  local pytest_options=(
+    --deselect tests/test_pane.py::test_capture_pane_start
+    -vv
+  )
   local _site_packages=$(python -c "import site; print(site.getsitepackages()[0])")
 
   cd $_name-$pkgver
   python -m installer --destdir=test_dir dist/*.whl
   export PYTHONPATH="$PWD/test_dir/$_site_packages"
-  pytest -vv tests
+  pytest "${pytest_options[@]}" tests
 }
 
 package() {

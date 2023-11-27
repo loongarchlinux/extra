@@ -2,7 +2,7 @@
 # Maintainer: Daniel M. Capella <polyzen@archlinux.org>
 
 pkgname=eslint
-pkgver=8.51.0
+pkgver=8.54.0
 pkgrel=1
 pkgdesc='An AST-based pattern checker for JavaScript'
 arch=('any')
@@ -25,19 +25,19 @@ check() {
 }
 
 package() {
-  local _npmdir=/usr/lib/node_modules/$pkgname
+  local mod_dir=/usr/lib/node_modules/$pkgname
   install -d "$pkgdir"/usr/bin
-  ln -s $_npmdir/bin/$pkgname.js "$pkgdir"/usr/bin/$pkgname
+  ln -s $mod_dir/bin/$pkgname.js "$pkgdir"/usr/bin/$pkgname
 
   cd $pkgname
   npm prune --production
 
-  install -Dt "$pkgdir"/$_npmdir/bin bin/$pkgname.js
+  install -Dt "$pkgdir"/$mod_dir/bin bin/$pkgname.js
   rsync -r --exclude=.cache --exclude=.package-lock.json conf lib messages \
-    node_modules package.json "$pkgdir"/$_npmdir
+    node_modules package.json "$pkgdir"/$mod_dir
   install -Dm644 -t "$pkgdir"/usr/share/doc/$pkgname README.md
   install -Dm644 -t "$pkgdir"/usr/share/licenses/$pkgname LICENSE
 
   # Experimental dedup
-  rm -r "$pkgdir"/$_npmdir/node_modules/acorn
+  rm -r "$pkgdir"/$mod_dir/node_modules/acorn
 }

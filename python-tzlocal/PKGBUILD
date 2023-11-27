@@ -7,7 +7,7 @@
 
 pkgname=python-tzlocal
 _name=${pkgname#python-}
-pkgver=5.1
+pkgver=5.2
 pkgrel=1
 epoch=1
 pkgdesc="Tzinfo object for the local timezone"
@@ -41,7 +41,7 @@ build() {
 check() {
   cd "$_name"
   export PYTHONPATH="build:$PYTHONPATH"
-  pytest -v -k 'not test_conflicting and not test_noconflict'
+  pytest -v
 }
 
 package() {

@@ -3,27 +3,29 @@
 
 _hkgname=Agda
 pkgname=agda
-pkgver=2.6.3
-pkgrel=26
+pkgver=2.6.4
+pkgrel=2
 pkgdesc="A dependently typed functional programming language and proof assistant"
 url="https://wiki.portal.chalmers.se/agda/"
 license=("custom")
 arch=('loong64' 'x86_64')
-depends=('ghc-libs' 'ghc' 'haskell-stmonadtrans' 'haskell-aeson' 'haskell-async'
-         'haskell-blaze-html' 'haskell-boxes' 'haskell-case-insensitive' 'haskell-cpphs'
-         'haskell-data-hash' 'haskell-dlist' 'haskell-edit-distance' 'haskell-equivalence'
-         'haskell-gitrev' 'haskell-hashable' 'haskell-monad-control' 'haskell-murmur-hash'
-         'haskell-parallel' 'haskell-regex-tdfa' 'haskell-split' 'haskell-strict'
-         'haskell-time-compat' 'haskell-unordered-containers' 'haskell-uri-encode' 'haskell-vector'
-         'haskell-vector-hashtables' 'haskell-zlib')
+depends=('ghc-libs' 'ghc' 'haskell-stmonadtrans' 'haskell-aeson' 'haskell-ansi-terminal'
+         'haskell-async' 'haskell-blaze-html' 'haskell-boxes' 'haskell-case-insensitive'
+         'haskell-cpphs' 'haskell-data-hash' 'haskell-dlist' 'haskell-edit-distance'
+         'haskell-equivalence' 'haskell-gitrev' 'haskell-hashable' 'haskell-monad-control'
+         'haskell-murmur-hash' 'haskell-parallel' 'haskell-peano' 'haskell-regex-tdfa'
+         'haskell-split' 'haskell-strict' 'haskell-time-compat' 'haskell-unordered-containers'
+         'haskell-uri-encode' 'haskell-vector' 'haskell-vector-hashtables' 'haskell-zlib'
+         'haskell-text-icu')
 optdepends=('agda-stdlib: for standard library')
-makedepends=('alex' 'happy' 'ghc')
+makedepends=('uusi' 'alex' 'happy' 'ghc')
 source=("https://hackage.haskell.org/packages/archive/$_hkgname/$pkgver/$_hkgname-$pkgver.tar.gz")
-sha512sums=('005152c19b05d858a54d146b75c9a88bf87e7d1cbcaee237ea92f273c8c59e9cf7177d6d553ddf6246a74c7ab318ceac909c0bb981599fc5bb156a7b79d1234d')
+sha512sums=('09b278dfb299779b02358e68a91f9d10e25083447810363ef0dbefdcdfc16070207c8c7272d2cb842ee77e67f1bd5d13007e3121c3f021107b4f6b6c4a82313a')
 
 prepare() {
     cd $_hkgname-$pkgver
     sed -i '/fno-warn-overlapping-patterns/a \        , "-dynamic"' src/full/Agda/Compiler/MAlonzo/Compiler.hs
+    uusi -u split $_hkgname.cabal
 }
 
 build() {
@@ -34,7 +36,7 @@ build() {
     runhaskell Setup configure -O --enable-shared --enable-executable-dynamic --disable-library-vanilla \
         --prefix=/usr --docdir=/usr/share/doc/$pkgname --datasubdir=$pkgname \
         --dynlibdir=/usr/lib --libsubdir=\$compiler/site-local/\$pkgid --ghc-option=-fasm \
-            -fcpphs -f-debug -f-enable-cluster-counting
+            -f-debug -fenable-cluster-counting -foptimise-heavily
     LC_CTYPE=en_US.UTF-8 runhaskell Setup build $MAKEFLAGS
     runhaskell Setup register --gen-script
     runhaskell Setup unregister --gen-script

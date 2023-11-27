@@ -1,7 +1,7 @@
 # Maintainer:
 
 pkgname=jellyfin-web
-pkgver=10.8.11
+pkgver=10.8.12
 pkgrel=1
 pkgdesc='Web client for Jellyfin'
 arch=('any')
@@ -9,7 +9,7 @@ url='https://jellyfin.org'
 _url='https://github.com/jellyfin/jellyfin-web'
 license=('GPL2')
 makedepends=('git' 'nodejs' 'npm')
-_commit='1e1af1c67fd42ed6a9497734fbc32de452a37be0'
+_commit='4b6bbcfe2671b21a79e347241eed3c70acaad9e3'
 source=("$pkgname::git+$_url#commit=$_commit")
 b2sums=('SKIP')
 

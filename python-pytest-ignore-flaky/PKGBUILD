@@ -1,7 +1,7 @@
 # Maintainer: Felix Yan <felixonmars@archlinux.org>
 
 pkgname=python-pytest-ignore-flaky
-pkgver=2.0.0
+pkgver=2.1.0
 pkgrel=1
 pkgdesc="Ignore failures from flaky tests (pytest plugin)"
 arch=('any')
@@ -10,7 +10,7 @@ url="https://github.com/schettino72/pytest-ignore-flaky/"
 depends=('python-pytest')
 makedepends=('python-setuptools')
 source=("https://github.com/schettino72/pytest-ignore-flaky/archive/$pkgver/$pkgname-$pkgver.tar.gz")
-sha512sums=('1ec45d083e990ab85e9011d4c0cbf4ffc1d0d26526e1363efd82605d415e27bc63cd3826f34880bdf2965eb6e12b3fae4ebe460e4508260635101173c34f1707')
+sha512sums=('250413f4ca8c67c1280dacee679e7ea91b3408d6076b7dd7f4aadd7d3294229b34f5794747b7658bb08b043ba547a48af053c5c328b74e229db357025f52b839')
 
 build() {
   cd pytest-ignore-flaky-$pkgver

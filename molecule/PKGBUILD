@@ -1,8 +1,9 @@
 # Maintainer: David Runge <dvzrv@archlinux.org>
+# Maintainer: Robin Candau <antiz@archlinux.org>
 
 pkgname=molecule
 pkgver=6.0.2
-pkgrel=1
+pkgrel=2
 pkgdesc="Aids in the development and testing of Ansible roles"
 arch=(any)
 url="https://github.com/ansible-community/molecule"
@@ -50,8 +51,8 @@ optdepends=(
   'python-pytest-testinfra: for the testinfra verifier'
 )
 source=($pkgname-$pkgver.tar.gz::$url/archive/refs/tags/v$pkgver.tar.gz)
-sha512sums=('7868a99e31e88d7264e2dc73bfe6c2ccf35ecc97e26d95f531135fb0638c74fd5a2eab809c79f80d5a670e3bf893334439b8274dacb472581a20dd8621adb24c')
-b2sums=('fabc15b17cc950bc0cb776ebc39dfea04b5867b95f5991ff03ba1089195077531c72e3b7786976cec7fac23a7abb5c179b46faaf28abb2bdd467b546399f08a2')
+sha512sums=('384e8f24f23cf50c0579cc6e35bf79840a6565ac82546c2108bca6037161cc43c26aef490c06bf0e9b96012ba88df28933f08c302f867d20bb77aea7f3b11e59')
+b2sums=('b30a0aa0b3d322c3df4e027f1766e9f6f9d8f83d3334f2d5cd8362b673f849a58f6fd56e9f3212e5fe8a421ee72d54b362d08d09f39a8b8469e9e57533fb5bb1')
 
 build() {
   cd $pkgname-$pkgver

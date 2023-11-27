@@ -1,9 +1,10 @@
+# Maintainer: Fabian Bornschein <fabiscafe-at-mailbox-dot-org>
 # Maintainer: Jan Alexander Steffens (heftig) <heftig@archlinux.org>
 # Contributor: Jan de Groot <jgc@archlinux.org>
 
 pkgname=gnome-music
-pkgver=44.0
-pkgrel=2
+pkgver=45.0
+pkgrel=1
 epoch=1
 pkgdesc="Music player and management application"
 url="https://wiki.gnome.org/Apps/Music"
@@ -34,7 +35,7 @@ optdepends=(
   'gst-plugins-ugly: Extra media codecs'
 )
 groups=(gnome)
-_commit=11fa1a75fc1377a4afdbffe60c8890fdfe713a3f  # tags/44.0^0
+_commit=2f34438a1609ccd51bc054c154e845627156689f  # tags/45.0^0
 source=("git+https://gitlab.gnome.org/GNOME/gnome-music.git#commit=$_commit")
 b2sums=('SKIP')
 

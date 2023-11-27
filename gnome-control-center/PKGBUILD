@@ -1,8 +1,9 @@
+# Maintainer: Fabian Bornschein <fabiscafe-at-mailbox-dot-org>
 # Maintainer: Jan Alexander Steffens (heftig) <heftig@archlinux.org>
 # Contributor: Jan de Groot <jgc@archlinux.org>
 
 pkgname=gnome-control-center
-pkgver=44.4
+pkgver=45.1
 pkgrel=1
 pkgdesc="GNOME's main interface to configure various aspects of the desktop"
 url="https://gitlab.gnome.org/GNOME/gnome-control-center"
@@ -11,29 +12,50 @@ arch=(loong64 x86_64)
 depends=(
   accountsservice
   bolt
+  cairo
   colord-gtk4
   cups-pk-helper
+  dconf
+  fontconfig
   gcr
+  gdk-pixbuf2
+  glib2
   gnome-bluetooth-3.0
   gnome-color-manager
   gnome-desktop-4
   gnome-online-accounts
   gnome-settings-daemon
-  gnome-shell
+  gnutls
   gsettings-desktop-schemas
   gsound
+  gtk3
   gtk4
+  hicolor-icon-theme
+  krb5
   libadwaita
-  libgnomekbd
+  libcolord
+  libcups
+  libepoxy
+  libgoa
   libgtop
   libgudev
   libibus
   libmalcontent
   libmm-glib
+  libnm
   libnma-gtk4
+  libpulse
   libpwquality
+  libsecret
+  libwacom
+  libx11
+  libxi
+  libxml2
+  pango
+  polkit
   smbclient
   sound-theme-freedesktop
+  tecla
   udisks2
   upower
 )
@@ -52,6 +74,12 @@ checkdepends=(
 optdepends=(
   'fwupd: device security panel'
   'gnome-remote-desktop: screen sharing'
+
+  # Cannot be a depend because when gnome-shell checkdepends on
+  # gnome-control-center depends on gnome-shell depends on libmutter-12.so, it
+  # makes building gnome-shell against libmutter-13.so impossible
+  'gnome-shell: multitasking panel'
+
   'gnome-user-share: WebDAV file sharing'
   'malcontent: application permission control'
   'networkmanager: network settings'
@@ -61,7 +89,7 @@ optdepends=(
   'system-config-printer: printer settings'
 )
 groups=(gnome)
-_commit=abc71ea659f7c3efece766edb0365c78cc4b3df5  # tags/44.4^0
+_commit=a95ab55060e30ee10fa3037b0fce0e241ba90fbd  # tags/45.1^0
 source=(
   "git+https://gitlab.gnome.org/GNOME/gnome-control-center.git#commit=$_commit"
   "git+https://gitlab.gnome.org/GNOME/libgnome-volume-control.git"
@@ -69,7 +97,7 @@ source=(
 )
 b2sums=('SKIP'
         'SKIP'
-        '2a73d860ee17a40d847f9afc0e4be7f54b3bf8b67c133b6b61bffe83ca58de6542aea0ed96c8e4e104ee80e6089fb8c493048b95c6dae68f115826ce4984f315')
+        'a133d524de9e8a2a27b61dd68b95238fa916c30d60e092f7ed3a371edb1e4ca233f46941d004dbfa2b8c13f464dab2e2729bb023ddd0e8c4d7e147b11e8e82ef')
 
 pkgver() {
   cd $pkgname
@@ -99,7 +127,8 @@ build() {
 }
 
 check() {
-  GTK_A11Y=none meson test -C build --print-errorlogs
+  GTK_A11Y=none dbus-run-session xvfb-run -s '-nolisten local +iglx -noreset' \
+    meson test -C build --print-errorlogs
 }
 
 package() {

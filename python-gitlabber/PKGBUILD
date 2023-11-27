@@ -1,0 +1,63 @@
+# Maintainer: Justin Kromlinger <hashworks@archlinux.org>
+
+pkgname=python-gitlabber
+pkgver=1.1.9
+pkgrel=1
+pkgdesc='Clones or pulls entire groups tree from GitLab'
+arch=('any')
+license=('MIT')
+url='https://github.com/ezbz/gitlabber'
+depends=(
+  'python-importlib-metadata'
+  # https://github.com/ezbz/gitlabber/blob/master/requirements.txt
+  'python-anytree'
+  'python-gitpython'
+  'python-gitlab'
+  'python-globre'
+  'python-pyyaml'
+  'python-tqdm'
+  'python-docopt'
+)
+makedepends=(
+  'python-setuptools'
+  'git'
+)
+checkdepends=(
+  'python-pytest-cov'
+  'python-pytest-integration'
+)
+_commit=6849af22aaa12cf7a435e407056daa0cf0d53f71
+source=("$pkgname::git+${url}#commit=$_commit")
+sha256sums=('SKIP')
+
+pkgver() {
+  cd "$pkgname"
+  git describe --tags | sed 's/^v//;s/-/+/g'
+}
+
+prepare() {
+  cd "$pkgname"
+
+  sed -i '/optional arguments/d' tests/test_integration.py
+}
+
+build() {
+  cd "$pkgname"
+
+  python setup.py build
+}
+
+check() {
+  cd "$pkgname"
+
+  python -m pytest
+}
+
+package() {
+  cd "$pkgname"
+
+  python setup.py install --root="$pkgdir" --optimize=1
+
+  install -Dm644 LICENSE.txt "${pkgdir}/usr/share/licenses/${pkgname}/LICENSE.txt"
+  install -Dm644 README.rst "$pkgdir/usr/share/doc/$pkgname/README.rst"
+}

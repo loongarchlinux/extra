@@ -4,18 +4,29 @@
 # Contributor: Giulio Bai <giulio@hewle.com>
 
 pkgname=accerciser
-pkgver=3.40.0
-pkgrel=2
+pkgver=3.42.0
+pkgrel=1
 pkgdesc="Interactive Python accessibility explorer for the GNOME desktop"
-arch=(any)
 url="https://wiki.gnome.org/Apps/Accerciser"
+arch=(any)
 license=(BSD)
-depends=(python gtk3 python-atspi ipython libwnck3 python-cairo python-xlib)
-makedepends=(appstream-glib yelp-tools git)
+depends=(
+  gtk3
+  ipython
+  libwnck3
+  python
+  python-atspi
+  python-cairo
+)
+makedepends=(
+  appstream-glib
+  git
+  yelp-tools
+)
 groups=(gnome-extra)
-_commit=3c7c127830cd8dc0bc69a8f88448d25674df1d80  # tags/3.40.0^0
+_commit=e36f30841dd85faff6ff5156f6c15fecbbf020ca  # tags/3.42.0^0
 source=("git+https://gitlab.gnome.org/GNOME/accerciser.git#commit=$_commit")
-sha256sums=('SKIP')
+b2sums=('SKIP')
 
 pkgver() {
   cd $pkgname
@@ -28,8 +39,15 @@ prepare() {
 }
 
 build() {
+  local configure_options=(
+    --prefix=/usr
+    --sysconfdir=/etc
+    --localstatedir=/var
+    --disable-schemas-compile
+  )
+
   cd $pkgname
-  ./configure --prefix=/usr --sysconfdir=/etc --disable-schemas-compile
+  ./configure "${configure_options[@]}"
   make
 }
 
@@ -38,3 +56,5 @@ package() {
   make DESTDIR="$pkgdir" install
   install -Dt "$pkgdir/usr/share/licenses/$pkgname" -m644 COPYING
 }
+
+# vim:set sw=2 sts=-1 et:

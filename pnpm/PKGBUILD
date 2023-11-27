@@ -3,13 +3,13 @@
 # Contributor: Tomasz Jakub Rup <tomasz.rup@gmail.com>
 
 pkgname=pnpm
-pkgver=8.8.0
+pkgver=8.11.0
 pkgrel=1
 pkgdesc='Fast, disk space efficient package manager'
 arch=('any')
 url=https://pnpm.io
 license=('MIT')
-depends=("nodejs")
+depends=('node-gyp')
 makedepends=('git' 'pnpm')
 source=("git+https://github.com/$pkgname/$pkgname.git#tag=v$pkgver?signed")
 b2sums=('SKIP')
@@ -22,14 +22,14 @@ build() {
 }
 
 package() {
-  local _npmdir=/usr/lib/node_modules/$pkgname
-  install -d "$pkgdir"/{usr/bin,$_npmdir/dist}
-  ln -s $_npmdir/bin/$pkgname.cjs "$pkgdir"/usr/bin/$pkgname
-  ln -s $_npmdir/bin/pnpx.cjs "$pkgdir"/usr/bin/pnpx
+  local mod_dir=/usr/lib/node_modules/$pkgname
+  install -d "$pkgdir"/{usr/bin,$mod_dir/dist}
+  ln -s $mod_dir/bin/$pkgname.cjs "$pkgdir"/usr/bin/$pkgname
+  ln -s $mod_dir/bin/pnpx.cjs "$pkgdir"/usr/bin/pnpx
 
   cd $pkgname/$pkgname
-  cp -r bin package.json "$pkgdir"/$_npmdir
+  cp -r bin package.json "$pkgdir"/$mod_dir
   install -Dt "$pkgdir"/usr/share/licenses/$pkgname LICENSE
   cd dist
-  cp -r $pkgname.cjs pnpmrc scripts worker.js "$pkgdir"/$_npmdir/dist
+  cp -r $pkgname.cjs pnpmrc scripts worker.js "$pkgdir"/$mod_dir/dist
 }

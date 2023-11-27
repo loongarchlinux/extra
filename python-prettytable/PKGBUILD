@@ -4,8 +4,8 @@
 # Contributor: Emmanuel Gil Peyrot <linkmauve@linkmauve.fr>
 
 pkgname=python-prettytable
-pkgver=3.8.0
-_commit=f0271f36de1a0897b89a3dabc12c66a482307258
+pkgver=3.9.0
+_commit=cfd6b4500e5d0db15abff68f11dca6ccbcc2c897
 pkgrel=1
 pkgdesc="A simple Python library for easily displaying tabular data"
 url="https://github.com/jazzband/prettytable"

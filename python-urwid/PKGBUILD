@@ -5,12 +5,8 @@
 
 _name=urwid
 pkgname=python-urwid
-pkgver=2.1.2.r63.g3c21a42
-# somewhere past 2.1.2 as there has not been a release in years to have Python 3.11 support without bricking dependents
-# https://github.com/urwid/urwid/issues/511
-# https://github.com/urwid/urwid/issues/548
-# https://github.com/urwid/urwid/issues/550
-_commit=3c21a429d7275aa79069c7a331fdb3de9138d2b2
+pkgver=2.2.3
+_commit=fd35a007e8e43c770b7514114f707d3cc0036096
 pkgrel=1
 pkgdesc='Curses-based user interface library'
 url='https://urwid.org/'
@@ -26,7 +22,17 @@ makedepends=(
   'python-build'
   'python-installer'
   'python-setuptools'
+  'python-setuptools-scm'
   'python-wheel'
+)
+checkdepends=(
+  'python-pytest'
+  'python-pytest-cov'
+  'python-twisted'
+  'python-tornado'
+  'python-trio'
+  'python-pyzmq'
+  'python-gobject'
 )
 source=(
   git+https://github.com/$_name/$_name.git#commit=$_commit
@@ -36,7 +42,7 @@ sha512sums=('SKIP')
 
 pkgver() {
   cd $_name
-  git describe --long --abbrev=7 | sed 's/^release-//;s/\([^-]*-g\)/r\1/;s/-/./g'
+  git describe --tags | sed 's/^release-//;s/\([^-]*-g\)/r\1/;s/-/./g'
 }
 
 build() {
@@ -46,13 +52,12 @@ build() {
 
 check() {
   cd $_name
-  python -m unittest discover -vs $_name/tests
+  pytest -v
 }
 
 package() {
   cd $_name
   python -m installer --destdir="$pkgdir" dist/*.whl
-  rm -rv "${pkgdir}"/usr/lib/python*/site-packages/urwid/tests
 }
 
 # vim: ts=2 sw=2 et:

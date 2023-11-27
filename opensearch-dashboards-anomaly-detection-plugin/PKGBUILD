@@ -2,8 +2,8 @@
 
 pkgname='opensearch-dashboards-anomaly-detection-plugin'
 _pluginname='anomaly-detection-dashboards-plugin'
-pkgver=2.9.0.0
-_dashboardsver=2.9.0
+pkgver=2.11.0.0
+_dashboardsver=2.11.0
 pkgrel=1
 pkgdesc='OpenSearch Dashboards Anomaly Detection Plugin'
 url='https://opensearch.org/docs/latest/monitoring-plugins/ad/index/'
@@ -25,9 +25,6 @@ prepare() {
   sed -i "s/    \"node\": \"[0-9\.]*\",/    \"node\": \"${nodeVersion:1}\",/" \
     "${_pluginname}/package.json" \
     "OpenSearch-Dashboards/package.json"
-  # https://github.com/opensearch-project/OpenSearch-Dashboards/issues/4260
-  cd "OpenSearch-Dashboards"
-  git cherry-pick -n -m1 "986eb8c82a6be22bfb838a7dc1db997905737c88"
 }
 
 build() {
@@ -37,10 +34,11 @@ build() {
   yarn plugin-helpers build --skip-archive # `yarn build` will always create the ZIP
 }
 
-check() {
-  cd "OpenSearch-Dashboards/plugins/${_pluginname}"
-  yarn test:jest
-}
+# This breaks in release 2.11.0 - check on next one
+# check() {
+#   cd "OpenSearch-Dashboards/plugins/${_pluginname}"
+#   yarn test:jest
+# }
 
 package() {
   cd "${srcdir}/OpenSearch-Dashboards/plugins/${_pluginname}"

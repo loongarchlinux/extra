@@ -1,24 +1,41 @@
 # Maintainer: kpcyrd <kpcyrd[at]archlinux[dot]org>
 
 pkgname=monero
-pkgver=0.18.2.2
-_commit=e06129bb4d1076f4f2cebabddcee09f1e9e30dcc
-pkgrel=3
+pkgver=0.18.3.1
+_commit=2656cdf5056c07684741c4425a051760b97025b0
+pkgrel=4
 pkgdesc="Monero: the secure, private, untraceable peer-to-peer currency"
 license=('BSD')
 arch=('loong64' 'x86_64')
 url="https://getmonero.org/"
-depends=('boost-libs' 'libunwind' 'openssl' 'readline' 'zeromq' 'pcsclite' 'hidapi' 'protobuf' 'libusb' 'libudev.so' 'libunbound.so')
-makedepends=('boost' 'cmake' 'git' 'python')
+depends=(
+  'libboost_program_options.so'
+  'libhidapi-libusb.so'
+  'libreadline.so'
+  'libsodium.so'
+  'libssl.so'
+  'libunbound.so'
+  'libunwind'
+  'libusb'
+  'libzmq.so'
+  'pcsclite'
+  'protobuf'
+)
+makedepends=(
+  'boost'
+  'cmake'
+  'git'
+  'python'
+)
 source=(
-    "${pkgname}"::"git+https://github.com/monero-project/monero?signed#commit=${_commit}"
-    "git+https://github.com/monero-project/supercop.git"
-    "git+https://github.com/miniupnp/miniupnp.git"
-    "git+https://github.com/Tencent/rapidjson.git"
-    "git+https://github.com/trezor/trezor-common.git"
-    "git+https://github.com/tevador/randomx.git"
-    "monero.sysusers"
-    "monero.tmpfiles"
+  "${pkgname}"::"git+https://github.com/monero-project/monero?signed#commit=${_commit}"
+  "git+https://github.com/miniupnp/miniupnp.git"
+  "git+https://github.com/Tencent/rapidjson.git"
+  "git+https://github.com/trezor/trezor-common.git"
+  "git+https://github.com/tevador/RandomX.git"
+  "git+https://github.com/monero-project/supercop.git"
+  "monero.sysusers"
+  "monero.tmpfiles"
 )
 sha512sums=('SKIP'
             'SKIP'
@@ -37,11 +54,11 @@ validpgpkeys=(
 prepare() {
   cd "${pkgname}"
   git submodule init
-  git config submodule.external/supercop.url "$srcdir/supercop"
   git config submodule.external/miniupnp.url "$srcdir/miniupnp"
   git config submodule.external/rapidjson.url "$srcdir/rapidjson"
   git config submodule.external/trezor-common.url "$srcdir/trezor-common"
-  git config submodule.external/randomx.url "$srcdir/randomx"
+  git config submodule.external/randomx.url "$srcdir/RandomX"
+  git config submodule.external/supercop.url "$srcdir/supercop"
   git -c protocol.file.allow=always submodule update
 
 # Fix build with GCC 13
@@ -52,9 +69,8 @@ prepare() {
 
 build() {
   cd "${pkgname}"
-  mkdir -p build && cd build
-  cmake -D CMAKE_BUILD_TYPE=release -D ARCH=default ../
-  make
+  cmake -B build -D ARCH="default" -D CMAKE_BUILD_TYPE=Release
+  make -C build
 }
 
 package() {

@@ -1,3 +1,4 @@
+# Maintainer: Daurnimator <daurnimator@archlinux.org>
 # Maintainer: Sven-Hendrik Haase <svenstaro@archlinux.org>
 
 # Careful when upgrading this package! It usually breaks ABI without bumping
@@ -10,18 +11,17 @@
 # upstream releases a compatible version of spirv-tools, then updating the
 # spriv-tools system package and only then building glslang against that.
 pkgname=glslang
-pkgver=13.0.0
-pkgrel=1
+pkgver=13.1.1
+pkgrel=2
 pkgdesc='OpenGL and OpenGL ES shader front end and validator'
 arch=('loong64' 'x86_64')
 url='https://github.com/KhronosGroup/glslang'
 license=('BSD')
-depends=('gcc-libs')
-makedepends=('cmake' 'ninja' 'git' 'spirv-tools' 'spirv-headers' 'python')
+depends=('gcc-libs' 'spirv-tools')
+makedepends=('cmake' 'ninja' 'spirv-headers' 'python')
 options=('staticlibs')
-# Get the commits from known_good.json for every release
 source=(${pkgname}-${pkgver}.tar.gz::https://github.com/KhronosGroup/glslang/archive/${pkgver}.tar.gz)
-sha256sums=('bcda732434f829aa74414ea0e06d329ec8ac28637c38a0de45e17c8fd25a4715')
+sha256sums=('1c4d0a5a38c8aaf89a2d7e6093be734320599f5a6775b2726beeb05b0c054e66')
 
 
 build() {
@@ -34,6 +34,7 @@ build() {
     -GNinja \
     -DCMAKE_INSTALL_PREFIX=/usr \
     -DCMAKE_BUILD_TYPE=None \
+    -DALLOW_EXTERNAL_SPIRV_TOOLS=ON \
     -DBUILD_SHARED_LIBS=ON
   ninja -Cbuild-shared
   cmake \
@@ -41,6 +42,7 @@ build() {
     -GNinja \
     -DCMAKE_INSTALL_PREFIX=/usr \
     -DCMAKE_BUILD_TYPE=None \
+    -DALLOW_EXTERNAL_SPIRV_TOOLS=ON \
     -DBUILD_SHARED_LIBS=OFF
   ninja -Cbuild-static
 }

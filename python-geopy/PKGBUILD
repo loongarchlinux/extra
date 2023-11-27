@@ -2,8 +2,8 @@
 
 _name=geopy
 pkgname=python-geopy
-_commit=e61648db147c522a167c1f0935c9b4bf7dff623c  # refs/tags/2.4.0
-pkgver=2.4.0
+_commit=b93ffa7ae48eccb99565812f2a82a774c0d8a720  # refs/tags/2.4.1
+pkgver=2.4.1
 pkgrel=1
 pkgdesc="Geocoding library for Python"
 arch=(any)

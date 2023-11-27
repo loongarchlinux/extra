@@ -3,9 +3,9 @@
 
 pkgbase=nix
 pkgname=('nix' 'nix-docs')
-pkgver=2.17.0
-_commit='a212300a1d9f9c7b0daf19c00c87fc50480f54f4'
-pkgrel=4
+pkgver=2.19.1
+_commit='455aca36e4e99b418f22146614883c1ab0dc418b'
+pkgrel=1
 pkgdesc='A purely functional package manager'
 arch=('loong64' 'x86_64')
 url='https://nixos.org/nix'
@@ -64,22 +64,12 @@ prepare() {
   cd "$pkgbase"
 
   sed -i "s:\$(bindir):src/nix:g" doc/manual/local.mk
-
-  # 1
-  # https://github.com/NixOS/nix/issues/8737
-  # https://github.com/NixOS/nix/pull/8936
-  # 2
-  # https://github.com/NixOS/nix/issues/8824
-  # https://github.com/NixOS/nix/pull/8825
-  git cherry-pick --no-commit \
-    d0dd37b2a6d2fb6f9f906bdad52f76323d0606fb \
-    b74962c92b2d8d9b957934e0aefcf4983169ae1e
 }
 
 build() {
   cd "$pkgbase"
 
-  ./bootstrap.sh
+  autoreconf -vfi
 
   ./configure \
     --prefix=/usr \
@@ -106,19 +96,19 @@ package_nix() {
     'gcc-libs'
     'aws-sdk-cpp'
     'aws-crt-cpp'
-    'boost-libs'
-    'brotli'
-    'curl'
-    'editline'
+    'boost-libs' 'libboost_context.so'
+    'brotli' 'libbrotlienc.so' 'libbrotlidec.so'
+    'curl' 'libcurl.so'
+    'editline' 'libeditline.so'
     'gc'
-    'libarchive'
-    'libcpuid'
-    'lowdown'
-    'libseccomp'
-    'libsodium'
+    'libarchive' 'libarchive.so'
+    'libcpuid' 'libcpuid.so'
+    'lowdown' 'liblowdown.so'
+    'libseccomp' 'libseccomp.so'
+    'libsodium' 'libsodium.so'
     'nix-busybox'
-    'openssl'
-    'sqlite'
+    'openssl' 'libcrypto.so'
+    'sqlite' 'libsqlite3.so'
   )
   backup=("etc/$pkgname/$pkgname.conf")
   install="$pkgname.install"

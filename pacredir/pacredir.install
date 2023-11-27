@@ -1,9 +1,10 @@
 #!/bin/sh
 
 message_server_error_limit() {
-	echo ' > With its latest release `pacman` now supports a server error limit,'
-	echo ' > which breaks `pacredir`. Rebuild `pacman` with that feature disabled'
-	echo ' > or install from this repository:'
+	echo ' > With its 6.x release `pacman` now supports a server error limit,'
+	echo ' > which breaks `pacredir`. But `pacman` 7.x will fix that with support'
+	echo ' > for cache servers. Install `pacman` with that features backported'
+	echo ' > from this repository:'
 	echo ' >   [pacredir]'
 	echo ' >   Server = https://pkgbuild.com/~eworm/$repo/$arch/'
 }
@@ -14,11 +15,8 @@ post_install() {
 }
 
 post_upgrade() {
-	# nothing is stored by pacredir, so restarting is safe
-	systemctl try-restart pacredir.service
-
-	# return if old package version greater 0.4.4-0...
-	(( $(vercmp $2 '0.4.4-0') > 0 )) && return
+	# return if old package version greater 0.4.7-0...
+	(( $(vercmp $2 '0.4.7-0') > 0 )) && return
 
 	message_server_error_limit
 }

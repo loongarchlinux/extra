@@ -2,13 +2,13 @@
 
 pkgbase=zam-plugins
 pkgname=(zam-plugins{,-{clap,ladspa,lv2,standalone,vst,vst3}})
-pkgver=4.1
-_commit=f04276002b91eb63c3fbf6348290ea905f462f85  # refs/tags/4.0
-pkgrel=3
+pkgver=4.2
+_commit=87bf2cdebb901c22ad8e63835ec57f5eb8e966c6  # refs/tags/4.2
+pkgrel=1
 pkgdesc="Collection of audio plugins for high-quality processing"
 arch=(loong64 x86_64)
 url="https://github.com/zamaudio/zam-plugins"
-license=(GPL2)
+license=(GPL-2.0-or-later)
 makedepends=(
   gcc-libs
   glibc
@@ -23,7 +23,7 @@ makedepends=(
   zita-convolver
 )
 source=(
-  $pkgname::git+https://github.com/zamaudio/$pkgname.git#tag=$_commit?signed
+  "git+$url#tag=$_commit?signed"
   git+https://github.com/distrho/dpf.git
   distrho-pugl::git+https://github.com/distrho/pugl.git
   $pkgname.directory
@@ -162,6 +162,10 @@ package_zam-plugins() {
   cd $pkgname
   make DESTDIR="$pkgdir/" PREFIX=/usr install
 
+  # have find-libdeps resolve dependencies properly:
+  # https://gitlab.archlinux.org/archlinux/devtools/-/issues/102
+  find "$pkgdir" -type f \( -iname "*.clap" -or -iname "*.so" \) -exec chmod +x {} +
+
   (
     cd "$pkgdir"
     _pick zam-plugins-clap usr/lib/clap
@@ -190,7 +194,6 @@ package_zam-plugins-clap() {
 
   mv -v $pkgname/* "$pkgdir"
   install -vDm 644 $pkgbase/{README.md,changelog} -t "$pkgdir/usr/share/doc/$pkgname/"
-  find "$pkgdir" -type f -iname "*.clap" -exec chmod +x {} +
 }
 
 package_zam-plugins-standalone() {
@@ -209,7 +212,7 @@ package_zam-plugins-standalone() {
   )
 
   mv -v $pkgname/* "$pkgdir"
-  install -vDm 644 *.desktop -t "$pkgdir/usr/share/applications"
+  install -vDm 644 ./*.desktop -t "$pkgdir/usr/share/applications"
   install -vDm 644 $pkgbase.menu -t "$pkgdir/etc/xdg/menus/applications-merged/"
   install -vDm 644 $pkgbase.directory -t "$pkgdir/usr/share/desktop-directories/"
   install -vDm 644 $pkgbase/{README.md,changelog} -t "$pkgdir/usr/share/doc/$pkgname/"
@@ -226,7 +229,6 @@ package_zam-plugins-ladspa() {
 
   mv -v $pkgname/* "$pkgdir"
   install -vDm 644 $pkgbase/{README.md,changelog} -t "$pkgdir/usr/share/doc/$pkgname/"
-  find "$pkgdir" -type f -iname "*.so" -exec chmod +x {} +
 }
 
 package_zam-plugins-lv2() {
@@ -246,7 +248,6 @@ package_zam-plugins-lv2() {
 
   mv -v $pkgname/* "$pkgdir"
   install -vDm 644 $pkgbase/{README.md,changelog} -t "$pkgdir/usr/share/doc/$pkgname/"
-  find "$pkgdir" -type f -iname "*.so" -exec chmod +x {} +
 }
 
 package_zam-plugins-vst() {
@@ -266,7 +267,6 @@ package_zam-plugins-vst() {
 
   mv -v $pkgname/* "$pkgdir"
   install -vDm 644 $pkgbase/{README.md,changelog} -t "$pkgdir/usr/share/doc/$pkgname/"
-  find "$pkgdir" -type f -iname "*.so" -exec chmod +x {} +
 }
 
 package_zam-plugins-vst3() {

@@ -9,7 +9,7 @@
 # Contributor: loqs <bugs-archlinux@entropy-collector.net>
 
 pkgname=gitlab
-pkgver=16.1.4
+pkgver=16.5.2
 pkgrel=1
 pkgdesc='Project management and code hosting application'
 arch=(loong64 x86_64)
@@ -26,7 +26,8 @@ depends=(git
          perl-image-exiftool
          re2
          redis
-         ruby2.7)
+         ruby
+         ruby-bundler)
 makedepends=(cmake
              go
              nodejs
@@ -39,13 +40,11 @@ backup=("etc/webapps/$pkgname/database.yml"
         "etc/webapps/$pkgname/gitlab.yml"
         "etc/webapps/$pkgname/resque.yml"
         "etc/webapps/$pkgname/puma.rb"
+        "etc/webapps/$pkgname/cable.yml"
         "etc/webapps/$pkgname/smtp_settings.rb"
         "etc/logrotate.d/$pkgname")
 options=(!buildflags !debug)
 source=("git+$url.git#tag=v$pkgver"
-        "${url%-foss}/-/commit/b899702f585290b6a64c4762bf2bf2dffbd114c5.patch"
-         https://github.com/grpc/grpc/pull/33408/commits/ffd057b399c1f68d43a68b960dd9bdf7a29fdd09.patch
-         bump-pg_query-to-4.2.3-for-glibc-2.38.patch
         "$pkgname-configs.patch"
         "$pkgname-environment"
         "$pkgname-puma.service"
@@ -62,15 +61,12 @@ conflicts=(gitlab-workhorse)
 replaces=(gitlab-workhorse)
 install=gitlab.install
 sha256sums=('SKIP'
-            'e30ba2112a7fe30c8b4644d4f08373987dcdd51c595d07bf03445a9bd093fae5'
-            '51b1048cfa90fc9cc58193092837e85d8a81d6e73d52d48608d1e091f114c3f0'
-            'bc69454ce7ce7537085af0628b39c1b238dc533fb119b6cbb139ae71b80dc98b'
-            'e6f9c11f7cccc1b7c689af5cd10aa8fdda46c484e5764964da91c9ee4b080fed'
+            'b3a6147df04d1297d5266bf2c5e8918a98e45ba5eca6aa69094fe21f99f4a889'
             '8cc4d933743906b4213b8ea8d8c5a62535e27e4073f73581a5dad40078dde000'
-            'f1cec302a551de5e06a2651a1d24f9697fa4f8be08eede65af6b4c5774476591'
-            '5531cf40d749dd039eb358c19563a4b4aa9829887c6cb0bacaab9e5a3260d7cf'
-            'ae6617b3a0d0808684cb1fff9cfbfa46f6f847baba61fdfa7ebf458cb2890e6f'
-            'ff4496eaff0fb47aa0fa10ca08a08257291566a8dbe0566570f493053da04f6b'
+            'f99499116f5d7cf59ccb7bfabd2d1ba68fbf83040571c607f7b0b50e6f50cbcf'
+            '2e5d83b3ff8166094ca35dfc58d9e591bc3127a66d9515d344753a622a22aa8a'
+            'ac6a1e34943d6ea97c8027ba63986d5b2656e317ef4ed7e0d94f5fa33e74b588'
+            '552526e2fb75a9ebf9cc71d1d6dcfaf6fd47768f4355461823795106ab728bd0'
             '7581d07e650c112a06af4a52ab9cf3bf0deb11564d734d5adabcdb537140f1c0'
             '869b3e682e9fb26551a19c0cd0b200a6fdb594396f325e237d58e1a8a8a96f73'
             '6c96a5d20c03bd626d9408cb1e41ab131d67610be586475af17c1e52e27ec697'
@@ -84,24 +80,20 @@ _logdir=/var/log/gitlab
 
 prepare() {
 	cd gitlab-foss
-	# Revert downgrade of gprc gem from v1.55.0 to v1.42.0 as the newer version is needed to build with gcc 13
-	# The issue the revert addresses is patched later in build()
-	patch -Rp1 -i ../b899702f585290b6a64c4762bf2bf2dffbd114c5.patch
-
-	# Bump pg_query to 4.2.3 which adds support for glibc 2.38
-	patch -Np0 -i ../bump-pg_query-to-4.2.3-for-glibc-2.38.patch
 
 	# GitLab tries to read its revision information from a file.
 	git rev-parse --short HEAD > REVISION
 
 	patch -p1 -i ../$pkgname-configs.patch
+
 	# '/home/git' path in the config files indicates a default path that need to be adjusted
-	grep -FqR '/home/git' config || exit 1
+	! grep -FqR '/home/git' config
 
 	cp config/gitlab.yml.example config/gitlab.yml
 	cp config/database.yml.postgresql config/database.yml
 	cp config/puma.rb.example config/puma.rb
 	cp config/resque.yml.example config/resque.yml
+	cp config/cable.yml.example config/cable.yml
 	cp config/initializers/smtp_settings.rb.sample config/initializers/smtp_settings.rb
 
 	echo "Setting up systemd service files ..."
@@ -117,12 +109,11 @@ build() {
 
 	echo "Fetching bundled gems..."
 	# Gems will be installed into vendor/bundle
-	bundle-2.7 config build.gpgme --use-system-libraries # See https://bugs.archlinux.org/task/63654
-	bundle-2.7 config force_ruby_platform true # some native gems are not available for newer ruby
-	BUNDLER_CHECKSUM_VERIFICATION_OPT_IN=1 bundle-2.7 install --jobs=$(nproc) --no-cache --deployment --without development test aws kerberos
-
-	# https://github.com/grpc/grpc/issues/33283
-	patch -Np1 -i "${srcdir}"/ffd057b399c1f68d43a68b960dd9bdf7a29fdd09.patch -d vendor/bundle/ruby/2.7.0/gems/grpc-1.55.0
+	bundle config --local build.gpgme --use-system-libraries # See https://bugs.archlinux.org/task/63654
+	bundle config --local force_ruby_platform true # some native gems are not available for newer ruby
+	bundle config --local deployment true
+	bundle config --local without 'development test aws kerberos'
+	BUNDLER_CHECKSUM_VERIFICATION_OPT_IN=0 bundle install --jobs=$(nproc) --no-cache
 
 	export CGO_CPPFLAGS="${CPPFLAGS}"
 	export CGO_CFLAGS="${CFLAGS}"
@@ -132,8 +123,8 @@ build() {
 	make -C workhorse
 
 	yarn install --production --pure-lockfile
-	bundle-2.7 exec rake gettext:compile RAILS_ENV=production NODE_ENV=production USE_DB=false SKIP_STORAGE_VALIDATION=true NODE_OPTIONS="--max_old_space_size=3584"
-	bundle-2.7 exec rake gitlab:assets:compile RAILS_ENV=production NODE_ENV=production USE_DB=false SKIP_STORAGE_VALIDATION=true NODE_OPTIONS="--max_old_space_size=3584"
+	bundle exec rake gettext:compile RAILS_ENV=production NODE_ENV=production USE_DB=false SKIP_STORAGE_VALIDATION=true NODE_OPTIONS="--max_old_space_size=3584"
+	bundle exec rake gitlab:assets:compile RAILS_ENV=production NODE_ENV=production USE_DB=false SKIP_STORAGE_VALIDATION=true NODE_OPTIONS="--max_old_space_size=3584"
 }
 
 package() {
@@ -187,7 +178,7 @@ package() {
 	ln -fs /etc/webapps/gitlab-shell/secret "${pkgdir}${_appdir}/.gitlab_shell_secret"
 
 	# Install config files
-	for config_file in gitlab.yml database.yml puma.rb resque.yml; do
+	for config_file in gitlab.yml database.yml puma.rb resque.yml cable.yml; do
 		mv "config/${config_file}" "${pkgdir}${_etcdir}/"
 		# TODO: configure rails app to use configs right from /etc
 		ln -fs "${_etcdir}/${config_file}" "${pkgdir}${_appdir}/config/"

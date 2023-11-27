@@ -1,0 +1,41 @@
+# Maintainer: Justin Kromlinger <hashworks@archlinux.org>
+# Contributor: Mark Wagie <mark dot wagie at proton dot me>
+# Contributor: Jan Alexander Steffens (heftig) <jan.steffens@gmail.com>
+
+pkgname=python-anytree
+pkgver=2.12.1
+pkgrel=1
+pkgdesc="Simple, lightweight and extensible Tree data structure."
+arch=('any')
+url="https://anytree.readthedocs.io/"
+license=('Apache')
+depends=('python-six')
+makedepends=('python-build' 'python-installer' 'python-poetry-core' 'python-wheel' 'git')
+checkdepends=('python-pytest' 'graphviz')
+_commit=65a5d09ce0a592a80918f094ec3fa48b7faca250
+source=("$pkgname::git+https://github.com/c0fec0de/anytree#commit=$_commit")
+sha256sums=('SKIP')
+
+pkgver() {
+  cd "$pkgname"
+  git describe --tags | sed 's/^v//;s/-/+/g'
+}
+
+build() {
+  cd "$pkgname"
+  python -m build --wheel --no-isolation
+}
+
+check() {
+  cd "$pkgname"
+
+  python -m pytest
+}
+
+package() {
+  cd "$pkgname"
+  python -m installer --destdir="$pkgdir" dist/*.whl
+
+  install -Dm644 LICENSE "${pkgdir}/usr/share/licenses/${pkgname}/LICENSE"
+  install -Dm644 README.rst "$pkgdir/usr/share/doc/$pkgname/README.rst"
+}

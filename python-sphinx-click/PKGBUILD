@@ -2,7 +2,7 @@
 
 _name=sphinx-click
 pkgname=python-sphinx-click
-pkgver=5.0.1
+pkgver=5.1.0
 pkgrel=1
 pkgdesc="Sphinx plugin to automatically document click-based applications"
 arch=(any)
@@ -25,13 +25,13 @@ checkdepends=(
   python-pytest
   python-click
 )
-source=(https://files.pythonhosted.org/packages/source/${_name::1}/$_name/$_name-$pkgver.tar.gz)
-sha512sums=('3b20eaa66a23b1f0d2d5419eada2ef2badf86e05759669c27aa5b34d5988494750d3027d8ee16f2f559213efc20ae00d3620d69ed91d61020c77a07246af1f44')
-b2sums=('fc9f95a70d939cb68aec760f394a91ef8d4f5b76f024f7029766a4a9393331ee5ad5520bfcb6915c1291213d8b167b4ba8ef590cef9164af31f836c1d0450391')
+source=($_name-$pkgver.tar.gz::$url/archive/refs/tags/$pkgver.tar.gz)
+sha512sums=('0e6d93c052692874e39e01b6dea5bae7730d9d86a24a1b2811d4bbf1030d1640a1deba7a52cf002bbaa2f81155df119da91153a2f9f0487163b0276c3c8e0f8f')
+b2sums=('16ff01887348ad4f7cda90e63dd5f614b7020010c49428f0d5da8c29528cab8b66607c95e124bb7a171c482f53309eb673ee87dd0495b24e84f158b46b4fbd3c')
 
 build() {
   cd $_name-$pkgver
-  python -m build --wheel --no-isolation
+  PBR_VERSION=$pkgver python -m build --wheel --no-isolation
 }
 
 check() {
@@ -42,7 +42,7 @@ check() {
 package() {
   cd $_name-$pkgver
   python -m installer --destdir="$pkgdir" dist/*.whl
-  install -vDm 644 {AUTHORS,ChangeLog,README.rst} -t "$pkgdir/usr/share/doc/$pkgname/"
+  install -vDm 644 README.rst -t "$pkgdir/usr/share/doc/$pkgname/"
   install -vDm 644 docs/*.rst -t "$pkgdir/usr/share/doc/$pkgname/docs/"
   install -vDm 644 LICENSE -t "$pkgdir/usr/share/licenses/$pkgname/"
 }

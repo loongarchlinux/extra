@@ -1,19 +1,34 @@
 # Maintainer: David Runge <dvzrv@archlinux.org>
 
-pkgname=prrte
-pkgver=3.0.0
+pkgbase=prrte
+pkgname=(prrte{,-docs})
+pkgver=3.0.2
 pkgrel=1
 pkgdesc="PMIx Reference RunTime Environment"
 arch=(loong64 x86_64)
 url="https://github.com/openpmix/prrte"
-license=(BSD)
-depends=(glibc hwloc libevent openpmix)
-makedepends=(perl)
-provides=(libprrte.so)
-options=(debug)
-source=($pkgname-$pkgver.tar.gz::https://github.com/openpmix/$pkgname/releases/download/v$pkgver/$pkgname-$pkgver.tar.gz)
-sha512sums=('3400f666092531f0f55054fefe0f28aaa94b177f170ad038f3f87a9c62b1fe4139fdde480030afb7eb0147b4775fdd83742424ccb4306234343e244f089935d6')
-b2sums=('d4899e08c5ee2766d61fa56d53cd9ecdc9e3c16cb9328476c1d18e7bb65058b57a9d243f5540e15057b1fb6fb4c5d097c869c778a69f525441b6b63778a17038')
+license=(BSD-3-Clause)
+makedepends=(
+  glibc
+  hwloc
+  libevent
+  openpmix
+  perl
+)
+conflicts=(putty)  # putty also provides a pterm: https://gitlab.archlinux.org/archlinux/packaging/packages/prrte/-/issues/1
+source=($pkgname-$pkgver.tar.gz::$url/releases/download/v$pkgver/$pkgname-$pkgver.tar.gz)
+sha512sums=('0b46704afedf2c1fb05f1556c78f5dfd68d79ee81cb90d6eb37117761f67c62cad651747da568aaafedfa0b6ac0c8eaed7683cb442d533ce6274094b324c9e09')
+b2sums=('2df4041b84508cfa7573b823d8e82d7d033ec396e880069230711990bc2ac7d0f72f0078cbceab6567e228a801abdf1245993ec3a4b797a2dba04b20079c692a')
+
+_pick() {
+  local p="$1" f d; shift
+  for f; do
+    d="$srcdir/$p/${f#$pkgdir/}"
+    mkdir -p "$(dirname "$d")"
+    mv "$f" "$d"
+    rmdir -p --ignore-fail-on-non-empty "$(dirname "$f")"
+  done
+}
 
 prepare() {
   cd $pkgname-$pkgver
@@ -34,9 +49,29 @@ check() {
   make -k check -C $pkgname-$pkgver
 }
 
-package() {
-  depends+=(libpmix.so)
+package_prrte() {
+  depends+=(
+    glibc
+    hwloc
+    libevent
+    openpmix libpmix.so
+  )
+  optdepends=(
+    'prrte-docs: for documentation'
+  )
+  provides=(libprrte.so)
 
   make DESTDIR="$pkgdir" install -C $pkgname-$pkgver
+  (
+    cd "$pkgdir"
+    _pick $pkgbase-docs usr/share/{doc,prte/rst}
+  )
   install -vDm 644 $pkgname-$pkgver/LICENSE -t "$pkgdir/usr/share/licenses/$pkgname/"
+}
+
+package_prrte-docs() {
+  pkgdesc=" - documentation"
+
+  mv -v $pkgname/* "$pkgdir"
+  install -vDm 644 $pkgbase-$pkgver/LICENSE -t "$pkgdir/usr/share/licenses/$pkgname/"
 }

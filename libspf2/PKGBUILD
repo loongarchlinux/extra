@@ -9,15 +9,46 @@
 
 pkgname=libspf2
 pkgver=1.2.11
-pkgrel=1
+pkgrel=2
 pkgdesc="Sender Policy Framework record checking library"
 arch=('loong64' 'x86_64')
 url="https://www.libspf2.org/"
 license=('LGPL')
 depends=('glibc' 'libnsl')
 makedepends=('libmilter' 'git')
-source=("$pkgname::git+https://github.com/shevek/libspf2#commit=8131fe140704eaae695e76b5cd09e39bd1dd220b")
-sha512sums=('SKIP')
+source=(
+  "$pkgname::git+https://github.com/shevek/libspf2#commit=8131fe140704eaae695e76b5cd09e39bd1dd220b"
+  "$pkgname-remove-libreplace.patch::https://src.fedoraproject.org/rpms/libspf2/raw/rawhide/f/0001-remove-libreplace-unneeded-on-Linux.patch"
+	"$pkgname-add-include-string.patch::https://src.fedoraproject.org/rpms/libspf2/raw/rawhide/f/0002-add-include-string-for-memset.patch"
+  "$pkgname-CVE-2023-42118.patch::https://src.fedoraproject.org/rpms/libspf2/raw/rawhide/f/CVE-2023-42118-and-other-fixes.patch"
+)
+sha512sums=('SKIP'
+            'f5a8b9fb55f6d9aec13f7abd77b99a46e08ab8498829ae1f9b00f8676e6652ece17ade6272a1e4b558dba53b7094fe28b83433db1103f80858a858e054c1ed6a'
+            '88361c8166797ccf388f84d23574585f531a4a6305091724fbbeeea544559e3f54f76872f12f3df56aae2be9cc1810dbe48f49eac6742f2d442a95b54bfa9e6c'
+            '30571d6c0d45b60977bcd16891127d3b5b1619cbb1a1e36cd0e88d810e42d5f1bca46cbd1483a246d31b0f06b616be86647c21f462b47899935e0214eb1d7fba')
+b2sums=('SKIP'
+        '00b373147820ab2bcfc96f03648cc0ecc6a05f034db76cadeeb3557e7e9378358546eda258f83680c8ac6a1dc51039ed631eb4c4cac3675062da9e53c04a921c'
+        '930090dd8163c11a2ad4a588ff02623be564247b606b71dd3144b0c0dc69bd0ea21671e13ef01244f07be0cbb5072e3cf2f0b86b368fcb43241665af2ead0819'
+        '554a952c8fb23bc0dbdd4fe9650e27bd7d769f5b36a22fa2865883d03a9992e7548fb0cc37332a62c130160aa7203884003c0465857887bb69f03d3690c43483')
+
+prepare() {
+  cd "$pkgname"
+
+  # FTBFS due to glibc
+  # https://github.com/shevek/libspf2/issues/39
+  patch -p1 -i "$srcdir/$pkgname-remove-libreplace.patch"
+
+  # FTBFS due to GCC13
+  # https://github.com/shevek/libspf2/issues/41
+  patch -p1 -i "$srcdir/$pkgname-add-include-string.patch"
+
+  # CVE-2023-42118
+  # https://github.com/shevek/libspf2/pull/44
+  # https://github.com/shevek/libspf2/pull/47
+  patch -p1 -i "$srcdir/$pkgname-CVE-2023-42118.patch"
+
+  autoreconf -vfi
+}
 
 build() {
   cd "$pkgname"

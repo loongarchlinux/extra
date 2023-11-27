@@ -1,0 +1,51 @@
+# Maintainer: Fabian Bornschein <fabiscafe-at-mailbox-dot-org>
+# Maintainer: Jan Alexander Steffens (heftig) <heftig@archlinux.org>
+
+pkgname=tecla
+pkgver=45.0
+pkgrel=1
+pkgdesc="Keyboard layout viewer"
+url="https://gitlab.gnome.org/GNOME/tecla"
+arch=(loong64 x86_64)
+license=(GPL3)
+depends=(
+  glib2
+  gtk4
+  hicolor-icon-theme
+  libadwaita
+  libxkbcommon
+  pango
+  wayland
+)
+makedepends=(
+  git
+  meson
+)
+groups=(gnome)
+_commit=c1291d6fe170ff22925933ab1c0085598d9c34db  # tags/45.0^0
+source=("git+https://gitlab.gnome.org/GNOME/tecla.git#commit=$_commit")
+b2sums=('SKIP')
+
+pkgver() {
+  cd tecla
+  git describe --tags | sed 's/[^-]*-g/r&/;s/-/+/g'
+}
+
+prepare() {
+  cd tecla
+}
+
+build() {
+  arch-meson tecla build
+  meson compile -C build
+}
+
+check() {
+  meson test -C build --print-errorlogs
+}
+
+package() {
+  meson install -C build --destdir "$pkgdir"
+}
+
+# vim:set sw=2 sts=-1 et:

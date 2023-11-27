@@ -2,35 +2,25 @@
 # Contributor: Fangrui Song <i at maskray.me>
 
 pkgname=ccls
-pkgver=0.20220729
-pkgrel=4
+pkgver=0.20230717
+pkgrel=1
 pkgdesc='C/C++/ObjC language server supporting cross references, hierarchies, completion and semantic highlighting'
 arch=('loong64' 'x86_64')
 url='https://github.com/MaskRay/ccls'
 license=('Apache')
 depends=('clang' 'llvm-libs' 'rapidjson')
-makedepends=("cmake" "llvm")
+makedepends=('cmake' 'ninja' 'llvm')
 conflicts=('ccls-git')
-source=("https://github.com/MaskRay/$pkgname/archive/$pkgver/$pkgname-$pkgver.tar.gz"
-        $pkgname-llvm16.patch::https://github.com/MaskRay/ccls/commit/6dc564f2a860.patch
-        $pkgname-fix-gmodule-crash.patch::https://github.com/MaskRay/ccls/commit/8bc3959537ad.patch)
-sha512sums=('63cb4eace1700118f9c8c4d2f4be40aac948f9c658485c8e3f49dcc863ce7bdd8b6de810b95ec8f46c943b65c8aa5fa643b110a6b981a2e43f57569d897d36c1'
-            '2d2ac37c6636c6a7882c2376fa0ecd699de6681cc7f0fca6b1e6e5563ad5b9a26c85608989cb68d0510b056b780db537b77c3daa0c2584ad6e0cb4765780d37d'
-            'a2309591f988c72371b21787b598dfc401de2cc4a326b5d628e65e0c46f10cfd84b660799d0fc8c18842c918c09e4f866a04d323f632098400b0e5fd266a4f1d')
-
-prepare() {
-  cd $pkgname-$pkgver
-  patch -Np1 -i ../$pkgname-llvm16.patch
-  patch -Np1 -i ../$pkgname-fix-gmodule-crash.patch
-}
+source=("https://github.com/MaskRay/$pkgname/archive/$pkgver/$pkgname-$pkgver.tar.gz")
+sha512sums=('f0fe31877151b76cabc17aa2ef8d3d87038805fbe43ca807e2e0824e90d952b1f5767f151788480aedf58e2ff569b72978fceeaca6b741b00c643d73f6afb445')
 
 build() {
   cd $pkgname-$pkgver
-  cmake -H. -Bbuild -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_CXX_COMPILER=clang++ -DCLANG_LINK_CLANG_DYLIB=1
+  cmake . -GNinja -Bbuild -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_CXX_COMPILER=clang++ -DCLANG_LINK_CLANG_DYLIB=1
   cmake --build build
 }
 
 package() {
   cd $pkgname-$pkgver/build
-  make DESTDIR="$pkgdir" install
+  DESTDIR="$pkgdir" ninja install
 }

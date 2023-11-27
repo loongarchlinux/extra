@@ -3,7 +3,7 @@
 pkgname=qtile
 pkgver=0.23.0
 _commit=951aa6345712b4f798e3e2669f7d905e23690405  # refs/tags/v0.23.0
-pkgrel=1
+pkgrel=2
 pkgdesc="A full-featured, pure-Python tiling window manager"
 arch=(loong64 x86_64)
 url="http://www.qtile.org"
@@ -21,7 +21,7 @@ depends=(
   python-gobject
   python-pywlroots
   python-xcffib
-  wlroots
+  wlroots0.16
 )
 makedepends=(
   git
@@ -79,6 +79,8 @@ validpgpkeys=(
 )
 
 build() {
+  export CFLAGS="$CFLAGS -I/usr/include/wlroots0.16"
+  export LDFLAGS="$LDFLAGS -L/usr/lib/wlroots0.16"
   cd $pkgname
   PYTHONPATH="$PWD" ./scripts/ffibuild -v
   python -m build --wheel --no-isolation
@@ -101,6 +103,7 @@ check() {
 }
 
 package() {
+  depends+=(libwlroots.so=11)
   cd $pkgname
   python -m installer --destdir="$pkgdir" dist/*.whl
   # license

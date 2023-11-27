@@ -1,0 +1,33 @@
+# Maintainer: Justin Kromlinger <hashworks@archlinux.org>
+# Contributor: GI_Jack <GI_Jack@hackermail.com>
+
+pkgname=python-globre
+pkgver=0.1.5
+pkgrel=3
+pkgdesc="A glob matching library, providing an interface similar to the "re" module."
+arch=('any')
+url="https://pypi.org/project/globre/"
+license=('GPL3')
+depends=('python')
+makedepends=('python-setuptools' 'python-build' 'python-installer' 'python-wheel' 'git')
+_commit=d4b0ffb352b0b7d5e221d2357d4094e390d4fbeb
+source=("$pkgname::git+https://github.com/metagriffin/globre#commit=$_commit")
+sha256sums=('SKIP')
+
+pkgver() {
+  cd "$pkgname"
+  git describe --tags | sed 's/^v//;s/-/+/g'
+}
+
+build() {
+  cd "$pkgname"
+  python -m build --wheel --no-isolation
+}
+
+package() {
+  cd "$pkgname"
+  python -m installer --destdir="$pkgdir" dist/*.whl
+
+  install -Dm644 LICENSE.txt "${pkgdir}/usr/share/licenses/${pkgname}/LICENSE.txt"
+  install -Dm644 README.rst "$pkgdir/usr/share/doc/$pkgname/README.rst"
+}

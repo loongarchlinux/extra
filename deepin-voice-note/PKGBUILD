@@ -1,7 +1,7 @@
 # Maintainer: Felix Yan <felixonmars@archlinux.org>
 
 pkgname=deepin-voice-note
-pkgver=6.0.11
+pkgver=6.0.14
 pkgrel=1
 pkgdesc='A lightweight memo tool to make text notes and voice recordings'
 arch=('loong64' 'x86_64')
@@ -14,7 +14,13 @@ depends=('deepin-qt5integration' 'deepin-qt-dbus-factory' 'dtkcore' 'dtkgui' 'dt
 makedepends=('cmake' 'gmock' 'gtest' 'ninja' 'qt5-tools')
 groups=('deepin-extra')
 source=("https://github.com/linuxdeepin/deepin-voice-note/archive/$pkgver/$pkgname-$pkgver.tar.gz")
-sha512sums=('72500a40ea68489d337365dcb7946cbce021b306c797cbdda0f366ee19ebdabf530b6f956bbe1a557e6ce9eb7cb88249926b036c2b6f314883d34ecf957ea8c6')
+sha512sums=('252548330b8e00cc28b60538b5d6b4ff17b9c569a8e9e29b166bc29ea678df1d16dc49face676520c7f9204f8dd56866cc07e10bc3333e408af0773e84b64c57')
+
+prepare() {
+  cd deepin-voice-note-$pkgver
+  sed -i '/include <QSurfaceFormat>/a #include <QStandardPaths>' src/main.cpp
+  sed -i '/include <QMimeData>/a #include <QStandardPaths>\n#include <QThreadPool>' src/views/middleview.cpp
+}
 
 build() {
   cd deepin-voice-note-$pkgver

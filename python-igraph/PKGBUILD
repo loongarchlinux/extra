@@ -1,21 +1,30 @@
 # Maintainer: Antonio Rojas <arojas@archlinux.org>
 # Contributor: Lukasz Pozarlik <lpozarlik@gmail.com>
 
-pkgname=python-igraph
-pkgver=0.10.8
+_pyname=igraph
+pkgname=python-$_pyname
+pkgver=0.11.3
 pkgrel=1
 url='https://igraph.org/python/'
 license=(GPL)
 arch=(loong64 x86_64)
 pkgdesc='Python bindings for the igraph library'
-depends=(python-texttable igraph)
-makedepends=(python-setuptools)
-source=(python-igraph-$pkgver::https://files.pythonhosted.org/packages/source/i/igraph/igraph-$pkgver.tar.gz)
-sha256sums=('d3b7893573060d117917e4f2121e524ed849bbf9f9a63a082001e1a4c5225b46')
+depends=(glibc
+         igraph
+         python
+         python-numpy
+         python-texttable)
+makedepends=(python-build
+             python-installer
+             python-setuptools
+             python-wheel)
+source=(https://github.com/igraph/python-igraph/releases/download/$pkgver/$_pyname-$pkgver.tar.gz)
+sha256sums=('e55df60f882a51b8e8c1c5e7e940c5f90685d75634ea6df63bebcc983397adfa')
 
 build() {
   cd igraph-$pkgver
-  python setup.py build --use-pkg-config
+  IGRAPH_USE_PKG_CONFIG=1 \
+  python -m build --wheel --no-isolation
 }
 
 check() {
@@ -25,5 +34,5 @@ check() {
 
 package() {
   cd igraph-$pkgver
-  python setup.py install --skip-build --root="$pkgdir" --optimize=1 
+  python -m installer --destdir="$pkgdir" dist/*.whl 
 }

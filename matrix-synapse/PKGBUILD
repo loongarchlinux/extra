@@ -3,8 +3,8 @@
 # Contributor: Ivan Shapovalov <intelfx@intelfx.name>
 
 pkgname=matrix-synapse
-_tag=8e0fc89d5cbf952bd27ffffd1c2d912229a4af42
-pkgver=1.92.1
+_tag=5fa1309c2cf78d6fc2b53e0bc5a6777be807037a
+pkgver=1.95.1
 pkgrel=1
 pkgdesc="Matrix reference homeserver"
 url="https://github.com/matrix-org/synapse"
@@ -31,7 +31,8 @@ optdepends=('perl: sync_room_to_group.pl'
             'python-pyjwt: jwt'
             'python-txredisapi: redis'
             'python-hiredis'
-            'python-pyicu: Improve user search for international display names')
+            'python-pyicu: Improve user search for international display names'
+            'python-authlib: OpenID SSO support')
 source=("$pkgname::git+https://github.com/matrix-org/synapse.git#tag=$_tag"
         'generic_worker.yaml.example'
         'synapse.service'
@@ -39,8 +40,7 @@ source=("$pkgname::git+https://github.com/matrix-org/synapse.git#tag=$_tag"
         'synapse-worker@.service'
         'sysusers-synapse.conf'
         'tmpfiles-synapse.conf'
-        'override-hardened.conf'
-        '0001-Most-basicest-Pydantic-V2-support.patch')
+        'override-hardened.conf')
 sha256sums=('SKIP'
             'f67334856609997eac26939d77cfc520e78e98d3755543ab730d83a0f362a35e'
             '74af0bc2f57e5ced1a44f2438922d420cbb7defedae784cac02ef125f276a2ed'
@@ -48,8 +48,7 @@ sha256sums=('SKIP'
             'c9657c201ad89985c8c915bfa0ea7517a412071736b4d9545d8f6474fddc44e2'
             'aadfdd78fe73e6eb325ee4299b8db8b97bfa2f4e7df953aa8477f442598a7ec5'
             '65588c8c64dfb84cab831cd8d028a295d753cf7322dd63053e8488466047b45f'
-            'd8e6b2a43a8a7d8f09c643f32e789a7ffeeb2d20bb07ee88ddc6923e1ab3b0e6'
-            '4520c50b2b1d4d8243f955e946c0e0680a7f603f63289236095258d783b72b12')
+            'd8e6b2a43a8a7d8f09c643f32e789a7ffeeb2d20bb07ee88ddc6923e1ab3b0e6')
 backup=('etc/synapse/log_config.yaml')
 install=synapse.install
 validpgpkeys=('02450A9EDDFEE3E0C730B786A7E4A57880C3A4A9'
@@ -65,9 +64,8 @@ validpgpkeys=('02450A9EDDFEE3E0C730B786A7E4A57880C3A4A9'
 prepare() {
 	cd $pkgname
 	# allow any poetry-core to be used
-	sed 's/poetry-core>=1.1.0,<=1.6.0/poetry-core>=1.0.0/' -i pyproject.toml
+	sed 's/poetry-core>=1.1.0,<=1.7.0/poetry-core>=1.0.0/' -i pyproject.toml
 	sed 's/setuptools_rust>=1.3,<=1.6.0/setuptools_rust>=1.3.0/' -i pyproject.toml
-	patch --forward --strip=1 --input=../0001-Most-basicest-Pydantic-V2-support.patch
 }
 
 build() {

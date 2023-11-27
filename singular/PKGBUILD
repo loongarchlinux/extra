@@ -3,7 +3,7 @@
 
 pkgname=singular
 _majver=4-3-2
-_patchver=p8
+_patchver=p10
 _pkgver=${_majver}${_patchver}
 pkgver=${_majver//-/.}${_patchver/p/.p}
 pkgrel=1
@@ -17,16 +17,20 @@ depends=(bash
          gcc-libs
          glibc
          gmp
-         mpfr
          ntl
          readline)
 provides=(singular-factory)
 source=(ftp://jim.mathematik.uni-kl.de/pub/Math/Singular/SOURCES/$_majver/singular-${_pkgver//-/.}.tar.gz)
-sha256sums=('8f157d2c582614482285838345ed7a3629ad6dd0bfbbc16eed7cbee0ff69d072')
+sha256sums=('28c2c9fcfee954e00dfa56eb1a7d418d5b1de67c4398d25a0f2b8f73e71552a8')
 options=(!zipman)
 
 build() {
   cd singular-${_majver//-/.}
+
+  # this uses malloc_usable_size, which is incompatible with fortification level 3
+  export CFLAGS="${CFLAGS/_FORTIFY_SOURCE=3/_FORTIFY_SOURCE=2}"
+  export CXXFLAGS="${CXXFLAGS/_FORTIFY_SOURCE=3/_FORTIFY_SOURCE=2}"
+
   ./configure \
     --prefix=/usr \
     --libexecdir=/usr/lib \
@@ -37,12 +41,17 @@ build() {
     --enable-gfanlib-module \
     --enable-polymake-module
 # https://bugzilla.gnome.org/show_bug.cgi?id=655517
-  sed -i -e 's/ -shared / -Wl,-O1,--as-needed\0/g' libtool
+  sed -e 's/ -shared / -Wl,-O1,--as-needed\0/g' -i libtool -i */libtool
   make
 }
 
 check() {
   cd singular-${_majver//-/.}
+
+  # this uses malloc_usable_size, which is incompatible with fortification level 3
+  export CFLAGS="${CFLAGS/_FORTIFY_SOURCE=3/_FORTIFY_SOURCE=2}"
+  export CXXFLAGS="${CXXFLAGS/_FORTIFY_SOURCE=3/_FORTIFY_SOURCE=2}"
+
   make check
 }
   

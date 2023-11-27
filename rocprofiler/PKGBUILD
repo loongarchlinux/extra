@@ -1,23 +1,25 @@
 # Maintainer: Torsten Keßler <tpkessler at archlinux dot org>
 # Contributor: acxz <akashpatel2008 at yahoo dot com>
 pkgname=rocprofiler
-pkgver=5.6.1
-pkgrel=2
+pkgver=5.7.1
+pkgrel=1
 pkgdesc="ROC profiler library. Profiling with perf-counters and derived metrics."
 arch=('loong64' 'x86_64')
 url='https://rocm.docs.amd.com/projects/rocprofiler/en/latest/rocprof.html'
 license=('MIT')
-depends=('hip' 'python-lxml' 'hsa-amd-aqlprofile')
+depends=('hip' 'python' 'python-lxml' 'hsa-amd-aqlprofile')
 makedepends=('cmake' 'rocm-llvm' 'hsa-rocr' 'rocm-dbgapi' 'gtest' 'rocm-smi-lib'
              'python-cppheaderparser' 'python-yaml' 'python-barectf')
 _git='https://github.com/ROCm-Developer-Tools/rocprofiler'
 _roctracer='https://github.com/ROCm-Developer-Tools/roctracer'
 source=("$pkgname-$pkgver.tar.gz::$_git/archive/refs/tags/rocm-$pkgver.tar.gz"
         "$pkgname-roctracer-$pkgver.tar.gz::$_roctracer/archive/refs/tags/rocm-$pkgver.tar.gz"
-        "$pkgname-stdint.patch")
-sha256sums=('3e5eecce216418e61ffee893cbc8611e38305ee472d0e10d579eb74e287c8e1b'
-            '007c498be25b067ad9a7631a2b0892f9129150ee9714e471a921225875d45e69'
-            '97b099051f13f5d631e466abf849cb2eb1f5a3a801890de9654268488b6baa8f')
+        "$pkgname-stdint.patch"
+        "$pkgname-disable-tests.patch")
+sha256sums=('2fb7158592d89312ba419a272d907d8849373c0a676a83dd03c32b9942dfd27a'
+            'ec0453adac7e62b142eb0df1e1e2506863aac4c3f2ce9d117c3184c08c0c6b48'
+            '4265fa55b298846404be4e047eafc938e45043e0dd38b2b1d19ba810c5a4562d'
+            '104871e46ba8ebb41b3fbc5c879ace6163cfdb9195c5c0240ea5860290dfd630')
 options=(!lto)
 _dirname="$(basename "$_git")-$(basename "${source[0]}" ".tar.gz")"
 _dirtracer="$(basename "$_roctracer")-$(basename "${source[1]}" ".tar.gz")"
@@ -25,6 +27,7 @@ _dirtracer="$(basename "$_roctracer")-$(basename "${source[1]}" ".tar.gz")"
 prepare() {
     cd "$_dirname"
     patch -Np1 -i "$srcdir/$pkgname-stdint.patch"
+    patch -Np1 -i "$srcdir/$pkgname-disable-tests.patch"
 }
 
 build() {
@@ -34,8 +37,8 @@ build() {
     -B build \
     -S "$_dirname" \
     -DCMAKE_INSTALL_PREFIX=/opt/rocm \
-    -DHIP_ROOT_DIR=/opt/rocm/hip \
     -DCMAKE_BUILD_TYPE=None \
+    -DGPU_TARGETS="gfx803 gfx900 gfx906 gfx908 gfx90a gfx940 gfx941 gfx942 gfx1030 gfx1100 gfx1101 gfx1102" \
     -DPROF_API_HEADER_PATH="$srcdir/$_dirtracer/inc/ext"
   cmake --build build
 }

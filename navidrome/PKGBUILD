@@ -1,0 +1,98 @@
+# Maintainer: George Rawlinson <grawlinson@archlinux.org>
+# Contributor: Thorben Günther <echo YWRtaW5AeGVucm94Lm5ldAo= | base64 -d>
+
+pkgname=navidrome
+pkgver=0.50.1
+pkgrel=1
+pkgdesc='A web-based music collection server and streamer'
+arch=('loong64' 'x86_64')
+url='https://www.navidrome.org'
+license=('GPL3')
+depends=(
+  'glibc'
+  'gcc-libs'
+  'zlib'
+  'ffmpeg'
+  'taglib'
+)
+makedepends=(
+  'git'
+  'go'
+  'npm'
+  'nodejs'
+)
+backup=('etc/navidrome/navidrome.toml')
+options=('!lto')
+_commit='f69c27d14681e31b7a46ceef7c2cbe9de4a1ae45'
+source=(
+  "$pkgname::git+https://github.com/navidrome/navidrome#commit=$_commit"
+  'systemd.service'
+  'sysusers.conf'
+  'tmpfiles.conf'
+  'config.toml'
+)
+b2sums=('SKIP'
+        'e274f0c9ac104981b2e8b2a43143e680f417e0cc22135bbe527cd66151e8fea24cd00187f4b404c641f7eade671ebe635666cc1c2a693f1a53588545585df8b0'
+        '0bc712d7d9ac570fd2f4a92ba84276ef1d2bdea28e628f781de8cb73dfdca8f8763ebc99be0a2a682351d4e478f5612675e203de76dc71ae0c44b91b45c658ba'
+        'f0b2c04e069801cf6c30b9d9116cf8470d52b50aa18497a449aff5bd379e3f95369a287f207c347aa5cb75f22cc682b5d1ca9717b333fba8662563806508279c'
+        '3fdae76022dfc81d0d2fb2f975cca128fe018bd730a1acbf7ff5cfbd0faa3a147e8306520951a954b60f81c68982fc5518e6e1ed3c51bf328f5eeba7b271b6be')
+
+pkgver() {
+  cd "$pkgname"
+
+  git describe --tags | sed 's/^v//'
+}
+
+prepare() {
+  cd "$pkgname"
+
+  # create directory for build output
+  mkdir build
+
+  # download dependencies
+  export GOPATH="${srcdir}"
+  go mod download
+}
+
+build() {
+  cd "$pkgname"
+
+  # frontend
+  pushd ui
+  npm install
+  npm run build
+  popd
+
+  # backend
+
+  # set Go flags
+  export CGO_CPPFLAGS="${CPPFLAGS}"
+  export CGO_CFLAGS="${CFLAGS}"
+  export CGO_CXXFLAGS="${CXXFLAGS}"
+  export GOPATH="${srcdir}"
+
+  go build -v \
+    -buildmode=pie \
+    -mod=readonly \
+    -modcacherw \
+    -ldflags "-compressdwarf=false \
+    -linkmode external \
+    -extldflags ${LDFLAGS} \
+    -X github.com/navidrome/navidrome/consts.gitSha=$_commit \
+    -X github.com/navidrome/navidrome/consts.gitTag=$pkgver" \
+    -o build \
+    .
+}
+
+package() {
+  # systemd integration
+  install -vDm644 systemd.service "$pkgdir/usr/lib/systemd/system/$pkgname.service"
+  install -vDm644 sysusers.conf "$pkgdir/usr/lib/sysusers.d/$pkgname.conf"
+  install -vDm644 tmpfiles.conf "$pkgdir/usr/lib/tmpfiles.d/$pkgname.conf"
+
+  # configuration
+  install -vDm644 config.toml "$pkgdir/etc/$pkgname/$pkgname.toml"
+
+  # binary
+  install -vDm755 -t "$pkgdir/usr/bin" "$pkgname/build/$pkgname"
+}

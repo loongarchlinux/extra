@@ -12,7 +12,7 @@ pkgname=(
  aspnet-targeting-pack-6.0
  dotnet-source-built-artifacts-6.0
 )
-pkgver=6.0.22.sdk122
+pkgver=6.0.25.sdk125
 pkgrel=1
 arch=(loong64 x86_64)
 url=https://www.microsoft.com/net/core
@@ -43,7 +43,7 @@ options=(
   !lto
   staticlibs
 )
-_tag=dc5a76ad5c4ed1292be9d96e40d3baa5cdc6b4ef
+_tag=e898a826c2b7f66602c8962134ef165fb9e6d44b
 source=(
   dotnet-installer::git+https://github.com/dotnet/installer.git#tag=${_tag}
   dotnet.sh
@@ -86,6 +86,10 @@ build() {
   export COMPlus_LTTng=0
   export VERBOSE=1
   export OPENSSL_ENABLE_SHA1_SIGNATURES=1
+
+  # this uses malloc_usable_size, which is incompatible with fortification level 3
+  CFLAGS="${CFLAGS/_FORTIFY_SOURCE=3/_FORTIFY_SOURCE=2}"
+  CXXFLAGS="${CXXFLAGS/_FORTIFY_SOURCE=3/_FORTIFY_SOURCE=2}"
 
   CFLAGS=$(echo $CFLAGS  | sed -e 's/-fstack-clash-protection//' )
   CXXFLAGS=$(echo $CXXFLAGS  | sed -e 's/-fstack-clash-protection//' )

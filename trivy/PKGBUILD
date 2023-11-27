@@ -2,7 +2,7 @@
 # Contributor: Hao Long <imlonghao@archlinuxcn.org>
 
 pkgname=trivy
-pkgver=0.45.1
+pkgver=0.47.0
 pkgrel=1
 pkgdesc='A Simple and Comprehensive Vulnerability Scanner for Containers, Suitable for CI'
 arch=('loong64' 'x86_64')
@@ -14,7 +14,7 @@ makedepends=('go' 'btrfs-progs')
 provides=('trivy')
 conflicts=('trivy')
 source=("${pkgname}-${pkgver}.tar.gz::${url}/archive/v${pkgver}.tar.gz")
-b2sums=('7145330e04035ca6fe6f9d43f8e0be559e78ade24c46243fffb6730fcf2f36adb7641b866063ad14ea0caae798503250f1e958af8f30242f87d0932e8062b837')
+b2sums=('ad199ea751ac6f237b373e692d4fe835f96b67c5eacefdc12665a2f64cb50821e576c2ff399fd5f91d18ce2b80cc1f3667dbddf0cb2e303fd5b3d453976bf7bb')
 
 prepare() {
   cd ${pkgname}-${pkgver}
@@ -41,6 +41,10 @@ package() {
 
   install -Dm644 LICENSE "${pkgdir}/usr/share/licenses/${pkgname}/LICENSE"
   install -Dm755 "cmd/trivy/${pkgname}" "${pkgdir}/usr/bin/${pkgname}"
+
+  "$pkgdir/usr/bin/${pkgname}" completion bash | install -Dm644 /dev/stdin "$pkgdir/usr/share/bash-completion/completions/${pkgname}"
+  "$pkgdir/usr/bin/${pkgname}" completion zsh | install -Dm644 /dev/stdin "$pkgdir/usr/share/zsh/site-functions/_${pkgname}"
+  "$pkgdir/usr/bin/${pkgname}" completion fish | install -Dm644 /dev/stdin "$pkgdir/usr/share/fish/vendor_completions.d/${pkgname}.fish"
 
   mkdir -p "${pkgdir}/usr/share/doc"
   cp -r docs "${pkgdir}/usr/share/doc/${pkgname}"

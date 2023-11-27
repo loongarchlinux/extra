@@ -3,18 +3,33 @@
 # Contributor: Specter119 <specter119 AT gmail DOT com>
 # Contributor: xantares
 
-pkgname=python-ipyparallel
-_pyname=${pkgname#python-}
+_pyname=ipyparallel
+pkgname=python-$_pyname
 pkgver=8.6.1
-pkgrel=2
+pkgrel=3
 pkgdesc='Interactive Parallel Computing in Python'
 url='https://pypi.org/project/ipyparallel/'
 arch=(any)
 license=(BSD)
 source=(https://files.pythonhosted.org/packages/source/${_pyname::1}/$_pyname/$_pyname-$pkgver.tar.gz)
-depends=(jupyterlab python-psutil)
-makedepends=(python-build python-installer python-hatchling)
-checkdepends=(python-pytest-tornado python-pytest-asyncio python-tqdm)
+depends=(ipython
+         python
+         python-dateutil
+         python-decorator
+         python-entrypoints
+         python-ipykernel
+         python-jupyter-client
+         python-jupyter-core
+         python-psutil
+         python-pyzmq
+         python-tornado
+         python-tqdm
+         python-traitlets)
+makedepends=(python-build
+             python-hatchling
+             python-installer)
+checkdepends=(python-pytest-asyncio
+              python-pytest-tornado)
 optdepends=('openmpi: to use the MPI Launchers in ipcluster command')
 sha256sums=('a39aa5ef9560170bf0e9afedca9ff045e1b9c1832c49303377edcc91cea9fb77')
 
@@ -36,4 +51,5 @@ package() {
   python -m installer --destdir="$pkgdir" dist/*.whl
   install -Dm644 COPYING.md "$pkgdir"/usr/share/licenses/$pkgname/LICENSE
   mv "$pkgdir"/{usr/,}etc
+  rm -r "$pkgdir"/usr/lib/python*/site-packages/ipyparallel/tests
 }

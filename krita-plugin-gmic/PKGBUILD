@@ -2,22 +2,37 @@
 
 pkgname=krita-plugin-gmic
 pkgver=3.2.4.1
-pkgrel=3
+pkgrel=5
+_gmicver=3.3.1
 pkgdesc='GMic plugin for Krita'
 arch=(loong64 x86_64)
 url='https://github.com/amyspark/gmic'
 license=(custom:CeCILL)
-depends=(krita)
-makedepends=(extra-cmake-modules qt5-tools)
+depends=(fftw
+         gcc-libs
+         glibc
+         gmic
+         kcoreaddons5
+         krita
+         libx11
+         qt5-base
+         zlib)
+makedepends=(extra-cmake-modules
+             qt5-tools)
 source=(https://github.com/amyspark/gmic/releases/download/v$pkgver/gmic-$pkgver-patched.tar.xz{,.asc})
 sha256sums=('06659fe05f7735827a93d637de2267512efb28bb0d55ce573495fecb59172604'
             'SKIP')
 validpgpkeys=(4894424D2412FEE5176732A3FC00108CFD9DBF1E) # https://github.com/amyspark.gpg
 
+prepare() {
+# Remove bundled gmic, make sure to use system one
+  rm -r gmic-$pkgver-patched/src
+}
+
 build() {
   cmake -B build -S gmic-$pkgver-patched/gmic-qt \
     -DCMAKE_INSTALL_PREFIX=/usr \
-    -DENABLE_SYSTEM_GMIC=OFF \
+    -DENABLE_SYSTEM_GMIC=ON \
     -DGMIC_QT_HOST=krita-plugin
   cmake --build build
 }

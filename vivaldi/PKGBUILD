@@ -2,8 +2,8 @@
 # Contributor: TZ86
 
 pkgname=vivaldi
-_rpmversion=6.2.3105.58-1
-pkgver=6.2.3105.58
+_rpmversion=6.4.3160.44-1
+pkgver=6.4.3160.44
 pkgrel=1
 pkgdesc='An advanced browser made with the power user in mind.'
 url="https://vivaldi.com"
@@ -18,7 +18,7 @@ optdepends=(
 )
 source=("https://downloads.vivaldi.com/stable/vivaldi-stable-${_rpmversion}.x86_64.rpm"
         '0001-add-support-for-user-flags.patch')
-sha512sums=('f73652801b091e7b850ce2cafb6f0f976a0be1bc671b303d362ee475c3aec43856a2ddec70bfabe8efff8f2416f50ee99d0d53382c9387e0bf84528faac23270'
+sha512sums=('9bd63a96cdab49e3dc38080926e2119d41f71cf36c0d5569a1444490b23a8a577a2bedc6c74893ce8ff65bd419830c3f3a72132e956c86210bee8197528b3a9b'
             '334db2056114fdbf07407b1cee24284f019df7a15acd711ed016bab1a1ab211abf3884ed848f3496486e7c78056108ccf1e88547e22b787bc4f548c6785f64d2')
 
 package() {
@@ -31,10 +31,16 @@ package() {
     # suid sandbox
     chmod 4755 "$pkgdir/opt/$pkgname/vivaldi-sandbox"
 
+    install -dm755 "$pkgdir/usr/bin"
+
     # make /usr/bin/vivaldi-stable available
     binf="$pkgdir/usr/bin/vivaldi-stable"
     if [[ ! -e "$binf" ]] && [[ ! -f "$binf" ]] && [[ ! -L "$binf" ]]; then
-        install -dm755 "$pkgdir/usr/bin"
+        ln -s /opt/vivaldi/vivaldi "$binf"
+    fi
+    # make /usr/bin/vivaldi available
+    binf="$pkgdir/usr/bin/vivaldi"
+    if [[ ! -e "$binf" ]] && [[ ! -f "$binf" ]] && [[ ! -L "$binf" ]]; then
         ln -s /opt/vivaldi/vivaldi "$binf"
     fi
 

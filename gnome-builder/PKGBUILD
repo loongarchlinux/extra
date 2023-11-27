@@ -1,35 +1,50 @@
+# Maintainer: Fabian Bornschein <fabiscafe-at-mailbox-dot-org>
 # Maintainer: Jan Alexander Steffens (heftig) <heftig@archlinux.org>
-# Contributor: Fabian Bornschein <fabiscafe-cat-mailbox-dog-org>
 
 pkgname=gnome-builder
-pkgver=44.2
-pkgrel=5
+pkgver=45.0
+pkgrel=1
 pkgdesc="An IDE for writing GNOME-based software"
 url="https://wiki.gnome.org/Apps/Builder"
 arch=(loong64 x86_64)
 license=(GPL3)
 depends=(
   autoconf-archive
+  cairo
   clang
   cmark
   ctags
   d-spy
+  dconf
   desktop-file-utils
   devhelp
   editorconfig-core-c
+  enchant
+  flatpak
   flatpak-builder
+  gdk-pixbuf2
   gjs
   glib2
+  gobject-introspection-runtime
+  gtk4
   gtksourceview5
+  hicolor-icon-theme
+  icu
+  json-glib
   jsonrpc-glib
   libadwaita
   libdex
+  libgirepository
   libgit2-glib
   libpanel
-  libpeas
+  libpeas-2
+  libportal
   libportal-gtk4
+  libsoup3
+  libxml2
   meson
-  python-gobject
+  pango
+  python
   python-lxml
   python-sphinx
   sysprof
@@ -49,7 +64,7 @@ makedepends=(
   yelp-tools
 )
 checkdepends=(weston)
-_commit=abc6bbd213df29f156514e40d3f9cdfee57f8c01  # tags/44.2^0
+_commit=82b055c8cc4dbcf171f8236e2a7d15cd19225fe1  # tags/45.0^0
 source=("git+https://gitlab.gnome.org/GNOME/gnome-builder.git#commit=$_commit")
 b2sums=('SKIP')
 
@@ -72,9 +87,10 @@ build() {
 }
 
 check() (
-  export XDG_RUNTIME_DIR="$PWD/runtime-dir" WAYLAND_DISPLAY=wayland-5
-
+  export XDG_RUNTIME_DIR="$PWD/runtime-dir"
   mkdir -p -m 700 "$XDG_RUNTIME_DIR"
+
+  export WAYLAND_DISPLAY=wayland-5
   weston --backend=headless-backend.so --socket=$WAYLAND_DISPLAY --idle-time=0 &
   _w=$!
 

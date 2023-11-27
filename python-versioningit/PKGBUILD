@@ -3,17 +3,32 @@
 # Contributor:
 
 pkgname=python-versioningit
-pkgver=2.2.1
+pkgver=2.3.0
 pkgrel=1
 pkgdesc='Versioning It with your Version In Git'
 arch=('any')
 url='https://github.com/jwodder/versioningit'
 license=('MIT')
-depends=('python-packaging' 'python-tomli')
-makedepends=('python-setuptools' 'python-build' 'python-installer' 'python-wheel')
-checkdepends=('git' 'mercurial' 'python-pytest' 'python-tox')
+depends=(
+  'python'
+  'python-packaging'
+  'python-tomli'
+)
+makedepends=(
+  'python-build'
+  'python-installer'
+  'python-setuptools'
+  'python-wheel'
+)
+checkdepends=(
+  'git'
+  'mercurial'
+  'python-hatchling'
+  'python-pytest'
+  'python-pytest-mock'
+)
 source=("${pkgname#*n-}-${pkgver}.tar.gz::${url}/releases/download/v${pkgver}/${pkgname#*n-}-${pkgver}.tar.gz")
-sha256sums=('0e58242d7abda61ae63596a5494ae9ed631ac85d8bb3cc8e176e3253ca4bcbb5')
+sha256sums=('1d0d71cfa3c2bc4f8dfb3d4a15c144eb8aa6a09d9da98923d410994a2ef826ea')
 
 build() {
   cd ${pkgname#*n-}-${pkgver}
@@ -21,8 +36,18 @@ build() {
 }
 
 check() {
+  local pytest_options=(
+    -vv
+    -c /dev/null
+    --deselect test/test_end2end.py::test_editable_mode
+  )
+  local site_packages=$(python -c "import site; print(site.getsitepackages()[0])")
+
   cd ${pkgname#*n-}-${pkgver}
-  tox -e py311
+  # install to temporary location, as importlib is used
+  python -m installer --destdir=test_dir dist/*.whl
+  export PYTHONPATH="$PWD/test_dir/$site_packages:$PYTHONPATH"
+  pytest "${pytest_options[@]}"
 }
 
 package() {

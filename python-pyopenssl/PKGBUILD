@@ -1,37 +1,49 @@
-# Maintainer : Felix Yan <felixonmars@archlinux.org>
+# Maintainer: George Rawlinson <grawlinson@archlinux.org>
+# Contributor: Felix Yan <felixonmars@archlinux.org>
 # Contributor: Ionut Biru <ibiru@archlinux.org>
 # Contributor: Sergej Pupykin <pupykin.s+arch@gmail.com>
 
 pkgname=python-pyopenssl
-pkgver=23.2.0
+pkgver=23.3.0
 pkgrel=1
+pkgdesc='Python wrapper around the OpenSSL library'
 arch=('any')
-pkgdesc="Python3 wrapper module around the OpenSSL library"
-url='https://github.com/pyca/pyopenssl'
+url='https://pyopenssl.org/'
 license=('Apache')
-depends=('python-cryptography')
-makedepends=('python-setuptools')
+depends=('python' 'python-cryptography')
+makedepends=(
+  'git'
+  'python-build'
+  'python-installer'
+  'python-setuptools'
+  'python-wheel'
+)
 checkdepends=('python-pytest' 'python-pretend' 'python-flaky')
-source=(https://github.com/pyca/pyopenssl/archive/$pkgver/$pkgname-$pkgver.tar.gz)
-sha512sums=('cd64872d828c05df6db4b11e6c7dc3d34f31ec4d0be1e665b3d96e8c08c1226518fe252d80642fe9597c822b33ad0c6f3e83874001ab984eb81b159bef109983')
+_commit='5ba8ce10ed7c318e57516a7ec8447cbb5626d3f9'
+source=("$pkgname::git+https://github.com/pyca/pyopenssl#commit=$_commit")
+b2sums=('SKIP')
 
-prepare() {
-  export LC_CTYPE=en_US.UTF-8
+pkgver() {
+  cd "$pkgname"
+
+  git describe --tags | sed 's/^v//'
 }
 
 build() {
-  cd pyopenssl-$pkgver
-  python setup.py build
+  cd "$pkgname"
+
+  python -m build --wheel --no-isolation
 }
 
 check() {
-  cd pyopenssl-$pkgver
-  PYTHONPATH="$PWD"/build/lib pytest
+  cd "$pkgname"
+
+  PYTHONPATH="$PWD"/build/lib pytest -v
 }
 
 package() {
-  cd pyopenssl-$pkgver
-  python setup.py install --root="$pkgdir" --optimize=1 --skip-build
-}
+  cd "$pkgname"
 
+  python -m installer --destdir="$pkgdir" dist/*.whl
+}
 # vim: ts=2 sw=2 et:

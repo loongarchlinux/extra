@@ -2,20 +2,19 @@
 
 pkgbase=orbiton
 pkgname=(orbiton orbiton-gtk3 orbiton-nano)
-pkgver=2.65.1
+pkgver=2.65.6
 pkgrel=1
 pkgdesc='Fast and configuration-free text editor and IDE limited by VT100'
 arch=(loong64 x86_64)
 url='https://orbiton.zip'
 license=(BSD)
 makedepends=(git go vte3)
-source=("git+https://github.com/xyproto/orbiton#commit=c8138224777241f4c3860d3dd4c4b0490d1a3da5") # tag: v2.65.1
+source=("git+https://github.com/xyproto/orbiton#commit=931973a9f00f8c3dbd6fff634384010fd675067d") # tag: v2.65.6
 options=(!lto)
 b2sums=('SKIP')
 
 build() {
-  CXXFLAGS="$CXXFLAGS -Wl,--as-needed,--strip-all,--sort-common,-z,relro,-z,now" \
-    make -C $pkgbase o gui
+  CXXFLAGS="$CXXFLAGS -Wl,--as-needed,--strip-all,--sort-common,-z,relro,-z,now" make -C $pkgbase o gui
 }
 
 package_orbiton() {
@@ -62,15 +61,13 @@ package_orbiton() {
               'tidy: for formatting HTML'
               'yasm: for compiling Assembly'
               'zig: for compiling and formatting Zig')
-  DESTDIR="$pkgdir" \
-    make -C $pkgbase install symlinks easteregg license
+  DESTDIR="$pkgdir" make -C $pkgbase install symlinks easteregg license
 }
 
 package_orbiton-gtk3() {
   pkgdesc='Fast and configuration-free text editor and IDE limited by VT100 (GTK3/VTE3)'
   depends=(orbiton vte3)
-  DESTDIR="$pkgdir" PROJECT=$pkgname \
-    make -C $pkgbase gui-install gui-symlinks license
+  DESTDIR="$pkgdir" PROJECT=$pkgname make -C $pkgbase gui-install gui-symlinks license
 }
 
 package_orbiton-nano() {
@@ -79,6 +76,5 @@ package_orbiton-nano() {
   conflicts=(nano)
   provides=(nano)
   install -d "$pkgdir/usr/bin"
-  DESTDIR="$pkgdir" PROJECT=$pkgname \
-    make -C $pkgbase nano-symlink
+  DESTDIR="$pkgdir" PROJECT=$pkgname make -C $pkgbase nano-symlink license
 }

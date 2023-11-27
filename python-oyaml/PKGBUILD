@@ -4,18 +4,28 @@
 
 pkgname=python-oyaml
 _pkgname="${pkgname#python-}"
-pkgver=1.0
-pkgrel=5
-pkgdesc="A drop-in replacement for PyYAML which preserves dict ordering"
+pkgver=1.1
+pkgrel=1
+pkgdesc='A drop-in replacement for PyYAML which preserves dict ordering'
 arch=('any')
-url="https://github.com/wimglenn/oyaml"
+url='https://github.com/wimglenn/oyaml'
 license=('MIT')
 depends=('python' 'python-yaml')
-makedepends=('git' 'python-setuptools')
+makedepends=(
+  'git'
+  'python-build'
+  'python-installer'
+  'python-setuptools'
+  'python-wheel'
+)
 checkdepends=('python-pytest')
-_commit='45bef7ee676e30a68a122fbac9801727e0064aab' # v1.0
-source=("$pkgname::git+$url.git#commit=$_commit")
-b2sums=('SKIP')
+_commit='d0195070d26bd982f1e4e604bded5510dd035cd7'
+source=(
+  "$pkgname::git+$url.git#commit=$_commit"
+  'update-version.patch'
+)
+b2sums=('SKIP'
+        '4412e680fa64152410b92eaa4b3cc590e4c2359e8134efecfc89e2e0de0a065570fcf7d0ed701b4ed8974106662894f8cc4785a8d9f3aa4f01e471b6199c6342')
 
 pkgver() {
   cd "$pkgname"
@@ -26,30 +36,33 @@ pkgver() {
 prepare() {
   cd "$pkgname"
 
-  # backport usage of yaml's safe_load function
-  git cherry-pick --no-commit 7381373cec378a464e1cf4ca8b03c6cb8493469b
+  # ensure library has the correct version
+  patch -p1 -i "$srcdir/update-version.patch"
 }
 
 build() {
   cd "$pkgname"
 
-  python setup.py build
+  python -m build --wheel --no-isolation
 }
 
 check() {
   cd "$pkgname"
 
-  pytest 
+  pytest -v
 }
 
 package() {
   cd "$pkgname"
 
-  python setup.py install --root="$pkgdir" --optimize=1
+  python -m installer --destdir="$pkgdir" dist/*.whl
 
   # documentation
   install -vDm644 -t "$pkgdir/usr/share/doc/$pkgname" README.rst
 
-  # license
-  install -vDm644 -t "$pkgdir/usr/share/licenses/$pkgname" LICENSE
+  # symlink license file
+  local site_packages=$(python -c "import site; print(site.getsitepackages()[0])")
+  install -d "$pkgdir/usr/share/licenses/$pkgname"
+  ln -s "$site_packages/${pkgname#python-}-$pkgver.dist-info/LICENSE" \
+    "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
 }

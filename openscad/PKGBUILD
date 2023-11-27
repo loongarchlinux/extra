@@ -6,7 +6,7 @@
 
 pkgname=openscad
 pkgver=2021.01
-pkgrel=9
+pkgrel=10
 pkgdesc='The programmers solid 3D CAD modeller'
 arch=('loong64' 'x86_64')
 url='https://openscad.org'
@@ -33,7 +33,7 @@ depends=(
   'libzip'
   'qt5-multimedia'
   'libspnav'
-  'lib3mf-1'
+  'lib3mf'
   'nettle'
   'mpfr'
   'hicolor-icon-theme'
@@ -100,6 +100,11 @@ prepare() {
 build() {
   cd "$pkgname"
 
+  # https://github.com/openscad/openscad/commit/426e71260e2ac178289c30eb1a228912d07c5b16
+  export LIB3MF_INCLUDEPATH="/usr/include/lib3mf/Bindings/Cpp"
+
+  # cmake scripts have no install instructions as of ver 2021.01,
+  # so let's wait until using cmake for building
   qmake-qt5 PREFIX="/usr"
 
   make

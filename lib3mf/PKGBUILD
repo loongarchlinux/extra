@@ -1,0 +1,63 @@
+# Maintainer: George Rawlinson <grawlinson@archlinux.org>
+# Contributor: Jonas Witschel <diabonas@archlinux.org>
+
+pkgname=lib3mf
+pkgver=2.2.0
+pkgrel=1
+pkgdesc='Implementation of the 3D Manufacturing Format file standard'
+arch=('loong64' 'x86_64')
+url='https://github.com/3MFConsortium/lib3mf'
+license=('BSD')
+depends=(
+  'gcc-libs'
+  'glibc'
+  'libzip'
+  'util-linux-libs'
+  'zlib'
+)
+makedepends=('git' 'cmake')
+checkdepends=('gtest')
+replaces=('lib3mf-1')
+options=('!lto')
+_commit='00bababcc968c1b4eeac51af636b88b6182c72b8'
+source=("$pkgname::git+$url#commit=$_commit")
+b2sums=('SKIP')
+
+pkgver() {
+  cd "$pkgname"
+
+  git describe --tags | sed 's/^v//'
+}
+
+build() {
+  cmake \
+    -B build \
+    -S "$pkgname" \
+    -D CMAKE_BUILD_TYPE=None \
+    -D CMAKE_INSTALL_PREFIX=/usr \
+    -D CMAKE_INSTALL_INCLUDEDIR=include/lib3mf \
+    -D CMAKE_INSTALL_LIBDIR=lib \
+    -D USE_INCLUDED_ZLIB=OFF \
+    -D USE_INCLUDED_LIBZIP=OFF \
+    -D USE_INCLUDED_GTEST=OFF \
+    -D USE_INCLUDED_SSL=OFF \
+    -D LIB3MF_TESTS=OFF
+
+  cmake --build build
+}
+
+# NOTE: gtests needs C++14 and with it tests fail
+# -D LIB3MF_TESTS=OFF
+#check() {
+#  ctest --test-dir build --output-on-failure
+#}
+
+package() {
+  DESTDIR="$pkgdir" cmake --install build
+
+  # some packages expect lib3MF.pc instead of lib3mf.pc
+  ln -s lib3mf.pc "$pkgdir"/usr/lib/pkgconfig/lib3MF.pc
+
+  # license
+  install -vDm644 -t "$pkgdir/usr/share/licenses/$pkgname" "$pkgname/LICENSE"
+}

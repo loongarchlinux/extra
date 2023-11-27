@@ -4,15 +4,22 @@
 
 pkgname=libnids
 pkgver=1.26
-pkgrel=3
+pkgrel=5
 pkgdesc="An implementation of an E-component of Network Intrusion Detection System."
 arch=('loong64' 'x86_64')
 url="http://libnids.sourceforge.net/"
 license=('GPL')
 depends=('libnet' 'libpcap' 'glib2' 'libnsl')
 makedepends=('pkgconfig')
-source=(https://github.com/MITRECND/libnids/archive/$pkgver/$pkgname-$pkgver.tar.gz)
-sha256sums=('3f3e9f99a83cd37bc74af83d415c5e3a7505f5b190dfaf456b0849e0054f6733')
+source=(https://github.com/MITRECND/libnids/archive/$pkgver/$pkgname-$pkgver.tar.gz
+        https://github.com/MITRECND/libnids/commit/38336d55.patch)
+sha256sums=('3f3e9f99a83cd37bc74af83d415c5e3a7505f5b190dfaf456b0849e0054f6733'
+            'dfc3b35cbc44c18d92dbb0970ed40b395e31229edad3acf1a4384ca73f42bd9f')
+
+prepare() {
+  cd $pkgname-$pkgver
+  patch -p1 -i ../38336d55.patch # Honor LDFLAGS
+}
 
 build() {
   cd $pkgname-$pkgver
@@ -25,5 +32,4 @@ package() {
   cd $pkgname-$pkgver
 
   make install_prefix="$pkgdir" install
-  ln -s libnids.so.1.24 "$pkgdir"/usr/lib/libnids.so.1
 }

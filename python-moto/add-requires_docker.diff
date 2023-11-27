@@ -1,20 +1,10 @@
-diff --git tests/test_awslambda/test_lambda_layers_invoked.py tests/test_awslambda/test_lambda_layers_invoked.py
-index fc181e5a3..49e2971a7 100644
---- tests/test_awslambda/test_lambda_layers_invoked.py
-+++ tests/test_awslambda/test_lambda_layers_invoked.py
-@@ -5,6 +5,7 @@ from moto import mock_lambda
- from uuid import uuid4
- 
- from .utilities import get_role_name, _process_lambda
-+from ..markers import requires_docker
- 
- PYTHON_VERSION = "python3.11"
- _lambda_region = "us-west-2"
-@@ -20,6 +21,7 @@ def lambda_handler(event, context):
-     return _process_lambda(pfunc)
- 
- 
+--- tests/test_batch/test_batch_jobs.py	2023-11-19 16:28:35.154464263 +0800
++++ tests/test_batch/test_batch_jobs.py	2023-11-19 16:28:52.380960286 +0800
+@@ -409,6 +409,7 @@
+ @mock_ecs
+ @mock_iam
+ @mock_batch
 +@requires_docker
- @mock_lambda
- def test_invoke_local_lambda_layers():
-     conn = boto3.client("lambda", _lambda_region)
+ def test_cancel_pending_job():
+     ec2_client, iam_client, _, _, batch_client = _get_clients()
+     _, _, _, iam_arn = _setup(ec2_client, iam_client)

@@ -1,0 +1,44 @@
+# Maintainer: Caleb Maclennan <caleb@alerque.com>
+# Contributor: Hoream <hoream@qq.com>
+# Contributor: Asuka Minato
+
+# https://github.com/ekzhang/sshx/issues/50
+_sha=bd81c86d52f35c6056cf8c2bf560e71573290244
+
+pkgname=sshx
+pkgver=0.2.0
+pkgrel=1
+pkgdesc='A secure web-based, collaborative terminal'
+url="https://github.com/ekzhang/$pkgname"
+license=(MIT)
+arch=(loong64 x86_64 aarch64)
+depends=(gcc-libs
+         glibc)
+makedepends=(cargo
+             protobuf)
+options=(!lto) # https://github.com/briansmith/ring/issues/1444
+_archive="$pkgname-$_sha"
+source=("$url/archive/$_sha/$_archive.tar.gz")
+sha256sums=('5773c2c65dea72ec4b98d22b0c0534b745c2c536ea5b1267ced5c668b3a6736f')
+
+prepare() {
+	cd "$_archive"
+	cargo fetch --locked --target "$CARCH-unknown-linux-gnu"
+}
+
+build() {
+	cd "$_archive"
+	# export CFLAGS+=" -ffat-lto-objects"
+	cargo build --frozen --release
+}
+
+check() {
+	cd "$_archive"
+	cargo test --frozen
+}
+
+package() {
+	cd "$_archive"
+	install -Dm0755 -t "$pkgdir/usr/bin/" "target/release/$pkgname"{,-server}
+	install -Dm0644 -t "$pkgdir/usr/share/licenses/$pkgname/" LICENSE
+}

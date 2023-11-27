@@ -2,38 +2,31 @@
 # Contributor: Kritoke <typeolinux@yahoo.com>
 
 pkgname=gnumeric
-pkgver=1.12.55
-pkgrel=3
+pkgver=1.12.56
+pkgrel=1
 pkgdesc="A GNOME Spreadsheet Program"
 arch=('loong64' 'x86_64')
 url="http://www.gnumeric.org/"
 license=('GPL')
 depends=('goffice')
 makedepends=('intltool' 'psiconv' 'pygobject-devel' docbook-xml
-             'gobject-introspection' 'python-gobject' gtk-doc autoconf-archive git yelp-tools)
+             'gobject-introspection' 'python-gobject' gtk-doc yelp-tools)
 optdepends=('python-gobject: for python plugin support'
             'perl: for perl plugin support'
             'psiconv: for Psion 5 file support'
             'yelp: for viewing the help manual')
-_commit=aea59b387be8bd5dc509ba75820cd9377e1e34a7
-source=("git+https://gitlab.gnome.org/GNOME/gnumeric.git#commit=$_commit"
+source=(https://download.gnome.org/sources/gnumeric/1.12/gnumeric-$pkgver.tar.xz
         revert-warnings.patch)
-sha256sums=('SKIP'
+sha256sums=('51a38f35ac5b0f71defa8b9e20bf2e08563798f1cb33379a9a17726fb1e3e1b2'
             'bcafca016b809000c2a5bf911e2e3dfa4de28f9e541d9964574cac5c7ce09e53')
 
-pkgver() {
-  cd $pkgname
-  git describe --tags | sed 's/^GNUMERIC_//;s/_/./g;s/-/+/g'
-}
-
 prepare() {
-  cd $pkgname
+  cd $pkgname-$pkgver
   patch -Np0 -i ../revert-warnings.patch
-  NOCONFIGURE=1 ./autogen.sh
 }
 
 build() {
-  cd $pkgname
+  cd $pkgname-$pkgver
   ./configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var \
     --disable-schemas-compile --enable-introspection --disable-silent-rules
 
@@ -42,6 +35,6 @@ build() {
 }
 
 package() {
-  cd $pkgname
+  cd $pkgname-$pkgver
   make DESTDIR="${pkgdir}" install
 }

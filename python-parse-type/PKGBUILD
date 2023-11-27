@@ -1,21 +1,21 @@
 # Maintainer: Felix Yan <felixonmars@archlinux.org>
 
 pkgname=python-parse-type
-pkgver=0.6.0
-pkgrel=3
+pkgver=0.6.2
+pkgrel=1
 pkgdesc="Simplifies to build parse types based on the parse module"
 url="https://github.com/jenisys/parse_type"
-license=('BSD')
+license=('MIT')
 arch=('any')
 depends=('python-parse' 'python-six')
-makedepends=('python-setuptools')
+makedepends=('python-build' 'python-installer' 'python-setuptools' 'python-wheel')
 checkdepends=('python-pytest' 'python-pytest-html')
 source=("https://github.com/jenisys/parse_type/archive/v$pkgver/$pkgname-$pkgver.tar.gz")
-sha512sums=('ace12b013306d5d330ffecca2f929667169da24b6593f86c13820ff34628fb00ef045c37f5c8b6ddc1094d5a8ed6fb929918871b1d0493ef6719d2bb3d2293de')
+sha512sums=('6fe55d97b7f875e21c5c4192affa64be3155e821dcec5b8688eef2b20b1f9ab7836f80927330662c0f2eda4cab0b9907e0b258001aecb80a8796610b18ded1b5')
 
 build() {
   cd parse_type-$pkgver
-  python setup.py build
+  python -m build -nw
 }
 
 check() {
@@ -25,7 +25,6 @@ check() {
 
 package() {
   cd parse_type-$pkgver
-  python setup.py install --root="$pkgdir" --optimize=1
-
+  python -m installer -d "$pkgdir" dist/*.whl
   install -Dm644 LICENSE -t "$pkgdir"/usr/share/licenses/$pkgname/
 }

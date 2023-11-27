@@ -1,0 +1,38 @@
+# Maintainer: Robin Candau <antiz@archlinux.org>
+# Contributor: HurricanePootis <hurricanepootis@protonmail.com>
+
+pkgname=goverlay
+pkgver=0.9.1
+pkgrel=3
+pkgdesc="A GUI to help manage Vulkan/OpenGL overlays"
+arch=('loong64' 'x86_64')
+url="https://github.com/benjamimgois/goverlay"
+license=('GPL3')
+depends=('glu' 'qt5pas' 'mangohud')
+makedepends=('git' 'lazarus')
+checkdepends=('appstream' 'desktop-file-utils')
+optdepends=('vkbasalt: Configure vkBasalt'
+            'mesa-utils: OpenGL preview'
+            'vulkan-tools: Vulkan preview'
+            'git: Clone reshade repository'
+            'replay-sorcery: Instant replay solution'
+	    'breeze: For Breeze theme'
+	    'ttf-dejavu: recommended font'
+            'ttf-ubuntu-font-family: recommended font')
+source=("${pkgname}-${pkgver}.tar.gz::${url}/archive/${pkgver}.tar.gz")
+sha256sums=('1210098a37157c7e11f44f1d450849c2204019266e7bfa4c74f6433d4010fcd3')
+
+build() {
+	cd "${pkgname}-${pkgver}"
+	make LAZBUILDOPTS=--lazarusdir=/usr/lib/lazarus
+}
+
+check() {
+	cd "${pkgname}-${pkgver}"
+	make tests
+}
+
+package() {
+	cd "${pkgname}-${pkgver}"
+	make prefix=/usr libexecdir=/lib DESTDIR="${pkgdir}" install
+}

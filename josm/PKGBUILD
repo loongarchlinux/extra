@@ -2,8 +2,8 @@
 # Contributor: Michele Schäuble <mschaeuble@swissonline.ch>
 
 pkgname=josm
-pkgver=18721
-pkgrel=1
+pkgver=18822
+pkgrel=2
 pkgdesc="An editor for OpenStreetMap written in Java"
 arch=('any')
 url="https://josm.openstreetmap.de/"
@@ -16,8 +16,8 @@ source=(https://josm.openstreetmap.de/download/$pkgname-snapshot-$pkgver.jar
         $pkgname.conf.d
         $pkgname::svn+https://josm.openstreetmap.de/svn/trunk#revision=$pkgver)
 noextract=($pkgname-snapshot-$pkgver.jar)
-sha256sums=('9dcea2b686e50333f4eb8c534c5f2af7dd138915f7fb37f9ba4f9e9d2f82e49a'
-            '67005ab4f4095ac012380995b3c544b27ad1c914fa6ebf6714d33a6e42a1096b'
+sha512sums=('656dd9eab09b4785137dd4394e33128fc1f4741754219291c2461978a7bff12f7653ea7678db464365f5057a03a44ad0b798046a77cd290edcc03f36feaecf66'
+            'd69e681a679378915f980ebafe204c548e0d76778962e4aa33afe8f83a1e6fe4438c7729a92634e02b195349a52a388f8933959c6b81c01ecc602d061ff7c8df'
             'SKIP')
 
 package() {
@@ -47,11 +47,14 @@ package() {
   # Load our custom josm config at /etc/conf.d/josm (will append this to line 4 of the start script)
   sed -i '4 a[ -f /etc/conf.d/josm ] && . /etc/conf.d/josm' "${pkgdir}/usr/bin/josm"
 
+  # Add arch env vars to top of josm script
+  # We do this to have a sane default in case the config file gets deleted.
+  sed -i '4 aJOSM_PATH="/usr/share/java/josm/josm.jar"' "${pkgdir}/usr/bin/josm"
+
   # This is a hack -- Arch puts the JavaFX modules in with the rest of the JVM
   # modules, but the JVM doesn't automatically load them.
   # Otherwise, we could remove the module-path for JAVAFX_HOME in the start
   # script.
   # sed -i 's/--module-path ${JAVAFX_HOME} //' "${pkgdir}/usr/bin/josm"
-  # TODO this does not yet work correct, we need to discuss if it is needed. https://bugs.archlinux.org/task/72953
-  #sed -i '5 aJAVAFX_HOME="$(ls /usr/lib/jvm/default-runtime/lib/javafx*.jar | tr "\n" ":" | sed '"'"'s/.$//'"'"')"' "${pkgdir}/usr/bin/josm"
+  sed -i '5 aJAVAFX_HOME="$(shopt -s nullglob && echo /usr/lib/jvm/default-runtime/lib/javafx*.jar | tr " " ":")"' "${pkgdir}/usr/bin/josm"
 }

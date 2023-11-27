@@ -1,0 +1,68 @@
+# Maintainer: Antonio Rojas <arojas@archlinux.org>
+
+pkgname=polymake
+pkgver=4.11
+pkgrel=1
+_perlver=`perl -e '$v = $^V->{version}; print $v->[0].".".($v->[1]).".".($v->[2]);'`
+pkgdesc='Open source software for research in polyhedral geometry'
+arch=(loong64 x86_64)
+url='https://polymake.org/'
+license=(GPL)
+depends=(bliss
+         cddlib
+         e-antic
+         flint
+         gcc-libs
+         glibc
+         gmp
+         lrs
+         mpfr
+         normaliz
+         perl=$_perlver
+         perl-json
+         perl-term-readkey
+         perl-term-readline-gnu
+         perl-xml-libxml
+         perl-xml-libxslt
+         perl-xml-writer
+         ppl
+         scip
+         singular
+         sympol
+         zlib)
+makedepends=(ant
+             boost
+             jdk-openjdk
+             libnsl
+             nauty
+             ninja
+             permlib
+             soplex)
+optdepends=('java-runtime: java module')
+source=(https://polymake.org/lib/exe/fetch.php/download/polymake-${pkgver/.r/r}-minimal.tar.bz2)
+sha256sums=('5df6f0acd700119bd0c4b5766762852ffbd857765b5dcc88802ff5d2108add23')
+
+prepare() {
+  sed -e 's|-lgmp|-lgmp -lmpfr|g' -i polymake-$pkgver/bundled/soplex/support/configure.pl # Fix soplex linking
+}
+
+build() {
+  cd polymake-$pkgver
+  ./configure \
+    --prefix=/usr \
+    --without-native \
+    --with-cdd=/usr \
+    --with-lrs=/usr \
+    --with-permlib=/usr \
+    --with-soplex=/usr \
+    --with-sympol=/usr
+  make
+}
+
+package() {
+  cd polymake-$pkgver
+  make DESTDIR="$pkgdir" install
+
+# Executables are installed in mode 555, which breaks strip
+  find "$pkgdir" -exec chmod u+w {} +
+}

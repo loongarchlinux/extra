@@ -4,7 +4,8 @@
 
 pkgname=python-s3transfer
 # https://github.com/boto/s3transfer/blob/develop/CHANGELOG.rst
-pkgver=0.6.2
+# UPDATE_BLOCKED: blocked as python-botocore is blocked
+pkgver=0.7.0
 pkgrel=1
 pkgdesc='Amazon S3 Transfer Manager for Python'
 arch=('any')
@@ -18,7 +19,7 @@ optdepends=(
   'python-awscrt'
 )
 source=($pkgname-$pkgver.tar.gz::$url/archive/$pkgver.tar.gz)
-sha256sums=('c40c2791111a19f7c6db32671cc924daf67fd577557f3bee6ec40912155d69e4')
+sha256sums=('933dfea024fd0b6b397885c46988e3811c214feecc50cb6ec9c9bbcc5b3e1455')
 
 build() {
   cd s3transfer-$pkgver

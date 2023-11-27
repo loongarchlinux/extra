@@ -2,37 +2,34 @@
 # Maintainer: kmaster <kmaster12@sasktel.net>
 
 pkgname=uudeview
-pkgver=0.5.20
-pkgrel=17
+pkgver=20230502
+pkgrel=3
+_commit=186f9543e6c7d3fa17ac13906b130cbab8ee9aea
 pkgdesc="UUDeview helps transmitting & receiving binary files using mail or newsgroups. Includes library files."
 arch=('loong64' 'x86_64')
-url="http://www.fpx.de/fp/Software/UUDeview/"
+url="https://github.com/hannob/uudeview"
 license=('GPL')
+makedepends=('git')
 optdepends=('tk: for GUI')
-options=('staticlibs')
-source=(http://www.fpx.de/fp/Software/UUDeview/download/$pkgname-$pkgver.tar.gz)
-md5sums=('0161abaec3658095044601eae82bbc5b')
-sha256sums=('e49a510ddf272022af204e96605bd454bb53da0b3fe0be437115768710dae435')
+source=("git+https://github.com/hannob/uudeview.git#commit=${_commit}")
+sha256sums=('SKIP')
 
-build() {
-  cd "$srcdir"/uudeview-$pkgver/uulib
-  autoreconf
-  cd "$srcdir"/$pkgname-$pkgver
-  autoreconf
-  ./configure --prefix=/usr --mandir=/usr/share/man CFLAGS="-ffat-lto-objects"
+prepare() {
+  cd "$srcdir"/$pkgname
+  autoreconf -fi
+}
+
+build(){
+  cd "$srcdir"/$pkgname
+  CFLAGS="$CFLAGS -ffat-lto-objects"
+  ./configure --prefix=/usr --mandir=/usr/share/man
   make
 }
 
 package() {
-  cd "$srcdir"/$pkgname-$pkgver
-  make prefix="$pkgdir"/usr MANDIR="$pkgdir"/usr/share/man install
-  install -d "$pkgdir"/usr/lib/uudeview
+  cd "$srcdir"/$pkgname
+  make DESTDIR="$pkgdir" install
+  install -Dm0644 uulib/libuu.a "$pkgdir"/usr/lib/libuu.a
   install -d "$pkgdir"/usr/include/uudeview
-
-  cd "$srcdir"/uudeview-$pkgver/uulib
-  ./configure --prefix=/usr
-  make
-  cp -v *.o "$pkgdir"/usr/lib/uudeview
-  cp -v *.a "$pkgdir"/usr/lib/uudeview
-  cp -v *.h "$pkgdir"/usr/include/uudeview
+  cp -v uulib/*.h "$pkgdir"/usr/include/uudeview
 }

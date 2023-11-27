@@ -5,7 +5,7 @@
 
 pkgname=i3blocks
 pkgver=1.5
-pkgrel=3
+pkgrel=4
 pkgdesc='Define blocks for your i3bar status line'
 arch=('loong64' 'x86_64')
 groups=('i3')
@@ -13,11 +13,18 @@ url="https://github.com/vivien/i3blocks"
 license=('GPL3')
 makedepends=('git')
 depends=('glibc')
-source=("${pkgname}-${pkgver}::git+https://github.com/vivien/${pkgname}#tag=${pkgver}?signed")
-sha512sums=('SKIP')
+source=("${pkgname}-${pkgver}::git+https://github.com/vivien/${pkgname}#tag=${pkgver}?signed"
+	"i3blocks-1.5-fix-Makefile-bash-completion-dependency.patch")
+sha512sums=('SKIP'
+            'd3d21b200f71559156c994f94f2e05f92c61b807e7d4916f474730ad8e8769b813ecc1073b6cf7ab8ee5e6b13eed12c9d94d7d23d3c3bbb44943ebea28e504fd')
 backup=('etc/i3blocks.conf')
 validpgpkeys=('44C919BDF206CFDC49C7101A66C63FBDFD79670A')
 install=i3blocks.install
+
+prepare () {
+  cd "${pkgname}-${pkgver}"
+  patch -Np1 -i ${srcdir}/i3blocks-1.5-fix-Makefile-bash-completion-dependency.patch
+}
 
 build () {
   cd "${pkgname}-${pkgver}"

@@ -1,3 +1,4 @@
+# Maintainer: Fabian Bornschein <fabiscafe-at-mailbox-dot-org>
 # Maintainer: Jan Alexander Steffens (heftig) <heftig@archlinux.org>
 # Contributor: Jan de Groot <jgc@archlinux.org>
 
@@ -6,7 +7,7 @@ pkgname=(
   evince
   evince-lib-docs
 )
-pkgver=44.3
+pkgver=45.0
 pkgrel=1
 pkgdesc="Document viewer (PDF, PostScript, XPS, djvu, dvi, tiff, cbr, cbz, cb7, cbt)"
 url="https://wiki.gnome.org/Apps/Evince"
@@ -28,6 +29,7 @@ depends=(
   libsecret
   libspectre
   libsynctex
+  libxml2
   poppler-glib
 )
 makedepends=(
@@ -39,7 +41,7 @@ makedepends=(
   texlive-bin
   yelp-tools
 )
-_commit=3761d17243f64ee230378d71e05972cda7ed565b  # tags/44.3^0
+_commit=80b393cac6468561664810d5e4a0f1897507062b  # tags/45.0^0
 source=("git+https://gitlab.gnome.org/GNOME/evince.git#commit=$_commit")
 b2sums=('SKIP')
 

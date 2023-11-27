@@ -1,7 +1,7 @@
 # Maintainer: Jonas Witschel <diabonas@archlinux.org>
 pkgname=python-python-socks
-pkgver=2.4.2
-_tag=92d9c090295b59f486a47d7d2e4f9f33f8d29136 # git rev-parse "v$pkgver"
+pkgver=2.4.3
+_tag=298d27f26676b0914360754de71e6d344c272ae2 # git rev-parse "v$pkgver"
 pkgrel=1
 pkgdesc='Core proxy client (SOCKS4, SOCKS5, HTTP) functionality for Python'
 arch=('any')

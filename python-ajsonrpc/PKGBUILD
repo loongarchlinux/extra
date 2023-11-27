@@ -1,0 +1,54 @@
+# Maintainer: George Rawlinson <grawlinson@archlinux.org>
+
+pkgname=python-ajsonrpc
+pkgver=1.2.0
+pkgrel=3
+pkgdesc='Async JSON-RPC 2.0 protocol + server'
+arch=('any')
+url='https://github.com/pavlov99/ajsonrpc'
+license=('MIT')
+depends=('python')
+makedepends=(
+  'git'
+  'python-build'
+  'python-installer'
+  'python-setuptools'
+  'python-wheel'
+)
+_commit='fed50857336f4e88897eb9d15049d66958045117'
+source=("$pkgname::git+$url#commit=$_commit")
+b2sums=('SKIP')
+
+pkgver() {
+  cd "$pkgname"
+
+  git describe --tags | sed 's/^v//'
+}
+
+build() {
+  cd "$pkgname"
+
+  # See ajsonrpcs github actions
+  # https://github.com/pavlov99/ajsonrpc/commit/e6e4f1c4bbe7e88f920833c03dd97f12e0a1ee6c
+  echo "__version__ = \"$pkgver\"" >> ajsonrpc/__init__.py
+
+  python -m build --wheel --no-isolation
+}
+
+check() {
+  cd "$pkgname"
+
+  python -m unittest
+}
+
+package() {
+  cd "$pkgname"
+
+  python -m installer --destdir="$pkgdir" dist/*.whl
+
+  # symlink license file
+  local site_packages=$(python -c "import site; print(site.getsitepackages()[0])")
+  install -d "$pkgdir/usr/share/licenses/$pkgname"
+  ln -s "$site_packages/${pkgname#python-}-$pkgver.dist-info/LICENSE.txt" \
+    "$pkgdir/usr/share/licenses/$pkgname/LICENSE.txt"
+}

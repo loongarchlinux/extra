@@ -4,30 +4,37 @@ pkgname=soapyaudio
 pkgver=0.1.1
 _pkgname=SoapyAudio
 _gitver=soapy-audio-$pkgver
-pkgrel=3
+pkgrel=4
 pkgdesc='Soapy SDR plugin for Audio devices'
 arch=('loong64' 'x86_64')
 url='https://github.com/pothosware/SoapyAudio'
-license=('GPL3')
-depends=('soapysdr' 'rtaudio' 'hamlib')
+license=('MIT')
+depends=('gcc-libs' 'glibc' 'hamlib' 'rtaudio' 'soapysdr')
 makedepends=('cmake')
-source=("$pkgname-$pkgver.tar.gz::$url/archive/$_gitver.tar.gz")
-sha512sums=('de0b8d653b71a8927265828549bef6b655dc10146270fc8c49f30004ec2dbf52d8fb0dd6dbbf9cf3d2c7bfb47df66c60d57943d9b0f7c2e16ec5c8db52426a0b')
+source=("$pkgname-$pkgver.tar.gz::$url/archive/$_gitver.tar.gz"
+         rtaudio-6.patch)
+sha512sums=('de0b8d653b71a8927265828549bef6b655dc10146270fc8c49f30004ec2dbf52d8fb0dd6dbbf9cf3d2c7bfb47df66c60d57943d9b0f7c2e16ec5c8db52426a0b'
+            'dbfc8743baf5c22c2ef9fb7731dd0012cdbc90432296abe2d07300b267bf57798f90ab811bea0aba2d6f5b96a26e181c1d64098069e407fc75c53f362939974e')
+
+prepare() {
+  patch -d $_pkgname-$_gitver -p1 < rtaudio-6.patch # Support rtaudio 6
+}
 
 build() {
-  mkdir -p $_pkgname-$_gitver/build
-  cd $_pkgname-$_gitver/build
+  local cmake_options=(
+    -B build
+    -D CMAKE_INSTALL_PREFIX=/usr
+    -D CMAKE_BUILD_TYPE=None
+    -S $_pkgname-$_gitver
+    -W no-dev
+  )
 
-  cmake .. \
-    -DCMAKE_INSTALL_PREFIX=/usr \
-    -DCMAKE_BUILD_TYPE=Release
-
-  make
+  cmake "${cmake_options[@]}"
+  cmake --build build --verbose
 }
 
 package() {
-  cd $_pkgname-$_gitver/build
-
-  make DESTDIR="$pkgdir" install
+  DESTDIR="$pkgdir" cmake --install build
+  install -vDm 644 $_pkgname-$_gitver/LICENSE.txt -t "$pkgdir/usr/share/licenses/$pkgname/"
 }
 

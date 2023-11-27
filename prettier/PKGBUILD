@@ -3,39 +3,39 @@
 # Maintainer: Daniel M. Capella <polyzen@archlinux.org>
 
 pkgname=prettier
-pkgver=3.0.3
+pkgver=3.1.0
 pkgrel=1
 pkgdesc="An opinionated code formatter for JS, JSON, CSS, YAML and much more"
 arch=("any")
 url="https://prettier.io/"
 license=("MIT")
 depends=("nodejs")
-makedepends=("yarn")
-checkdepends=("git" "npm")
-source=("https://github.com/$pkgname/$pkgname/archive/$pkgver/$pkgname-$pkgver.tar.gz")
-sha256sums=('378ef7188718a64218c487a72155cf83e75295db948deda0ccd5bb4a38fe6b10')
+makedepends=("git" "yarn")
+checkdepends=("npm")
+source=("git+https://github.com/$pkgname/$pkgname.git#tag=$pkgver")
+b2sums=('SKIP')
 
 prepare() {
-    cd "$pkgname-$pkgver"
+    cd "$pkgname"
     yarn --frozen-lockfile
 }
 
 build() {
-    cd "$pkgname-$pkgver"
+    cd "$pkgname"
     yarn build
 }
 
 check() {
-    cd "$pkgname-$pkgver"
+    cd "$pkgname"
     yarn test:dist
 }
 
 package() {
-    local _npmdir=/usr/lib/node_modules/$pkgname
-    install -d "$pkgdir"/{usr/bin,usr/share/licenses/$pkgname,$_npmdir}
-    ln -s "$_npmdir/bin/$pkgname.cjs" "$pkgdir/usr/bin/$pkgname"
-    ln -s "$_npmdir/LICENSE" "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
+    local mod_dir=/usr/lib/node_modules/$pkgname
+    install -d "$pkgdir"/{usr/bin,usr/share/licenses/$pkgname,$mod_dir}
+    ln -s "$mod_dir/bin/$pkgname.cjs" "$pkgdir/usr/bin/$pkgname"
+    ln -s "$mod_dir/LICENSE" "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
 
-    cd "$pkgname-$pkgver"
-    cp -a dist/* "$pkgdir"/$_npmdir
+    cd "$pkgname"
+    cp -a dist/* "$pkgdir"/$mod_dir
 }

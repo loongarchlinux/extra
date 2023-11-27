@@ -1,14 +1,14 @@
-# Maintainer: David Runge <dvzrv@archlinux.org>
 # Maintainer: Brett Cornwall <ainola@archlinux.org>
+# Contributor: David Runge <dvzrv@archlinux.org>
 
 pkgname=cage
 pkgver=0.1.5
-pkgrel=1
+pkgrel=2
 pkgdesc="A kiosk compositor for Wayland"
 arch=(loong64 x86_64)
 url="https://www.hjdskes.nl/projects/cage/"
 license=(MIT)
-depends=(glibc wayland wlroots)
+depends=(glibc wayland wlroots0.16)
 makedepends=(git libxkbcommon meson pixman scdoc wayland-protocols
 xorg-server-xwayland)
 optdepends=(
@@ -24,6 +24,7 @@ validpgpkeys=(
 )
 
 build() {
+  export PKG_CONFIG_PATH='/usr/lib/wlroots0.16/pkgconfig'
   arch-meson -Dxwayland=true build "$pkgname"
   ninja -C build
 }
@@ -33,7 +34,7 @@ check() {
 }
 
 package() {
-  depends+=(libwlroots.so libxkbcommon.so libpixman-1.so)
+  depends+=(libwlroots.so=11 libxkbcommon.so libpixman-1.so)
 
   DESTDIR="${pkgdir}" meson install -C build
   install -vDm 644 "$pkgname/README.md" -t "${pkgdir}/usr/share/doc/${pkgname}"

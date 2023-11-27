@@ -1,1 +1,2 @@
-export PATH=$PATH:/usr/lib/rustup/bin
+append_path '/usr/lib/rustup/bin'
+export PATH

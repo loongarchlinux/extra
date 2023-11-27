@@ -1,0 +1,43 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Florian=20M=C3=BCllner?= <fmuellner@gnome.org>
+Date: Tue, 7 Nov 2023 15:45:55 +0100
+Subject: [PATCH] window-list: Only initialize preview visibility on map
+
+The check whether the window overlaps with the monitor the actor
+is on requires the actor to be added to the stage first, so delay
+the initial visibility update that was added in commit f576f1b1b6.
+
+Fixes: f576f1b1 ("window-list: Initialize preview visibility")
+---
+ extensions/window-list/workspaceIndicator.js | 7 ++++++-
+ 1 file changed, 6 insertions(+), 1 deletion(-)
+
+diff --git a/extensions/window-list/workspaceIndicator.js b/extensions/window-list/workspaceIndicator.js
+index 64e2071fad97..51f6404b9fe8 100644
+--- a/extensions/window-list/workspaceIndicator.js
++++ b/extensions/window-list/workspaceIndicator.js
+@@ -43,18 +43,23 @@ class WindowPreview extends St.Button {
+             },
+             'notify::minimized', this._updateVisible.bind(this),
+             this);
+-        this._updateVisible();
+ 
+         global.display.connectObject('notify::focus-window',
+             this._onFocusChanged.bind(this), this);
+         this._onFocusChanged();
+     }
+ 
+     // needed for DND
+     get metaWindow() {
+         return this._window;
+     }
+ 
++    vfunc_map() {
++        super.vfunc_map();
++        // initialize visibility after being added to the stage
++        this._updateVisible();
++    }
++
+     _onFocusChanged() {
+         if (global.display.focus_window === this._window)
+             this.add_style_class_name('active');

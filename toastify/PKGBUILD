@@ -1,29 +1,29 @@
 # Maintainer: Daniel M. Capella <polyzen@archlinux.org>
 
 pkgname=toastify
-pkgver=0.5.2
+pkgver=0.5.4
 pkgrel=1
 pkgdesc='Commandline tool that shows desktop notifications using notify-rust'
 arch=('loong64' 'x86_64')
 url=https://github.com/hoodie/toastify
 license=('Apache' 'MIT')
 depends=('dbus')
-makedepends=('rust')
-source=("$url/archive/v$pkgver/$pkgname-$pkgver.tar.gz")
-b2sums=('73dc40a9baa2cc6ea839f2aa1c005b850d642b2327ee52d4b5b481d3a9bf293801402ece2f3826def259a4b30c614b78df32222442df9206cf8b408c4dd036b2')
+makedepends=('git' 'rust')
+source=("git+$url.git#tag=v$pkgver")
+b2sums=('SKIP')
 
 prepare() {
-  cd $pkgname-$pkgver
+  cd $pkgname
   cargo fetch --locked --target "$CARCH-unknown-linux-gnu"
 }
 
 build() {
-  cd $pkgname-$pkgver
+  cd $pkgname
   cargo build --release --locked --offline
 }
 
 package() {
-  cd $pkgname-$pkgver
+  cd $pkgname
   install -Dt "$pkgdir"/usr/bin target/release/$pkgname
   install -Dm644 -t "$pkgdir"/usr/share/licenses/$pkgname LICENSE-MIT
 }

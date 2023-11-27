@@ -1,36 +1,24 @@
 # Maintainer: Felix Yan <felixonmars@archlinux.org>
 
 pkgname=python-ziamath
-pkgver=0.7
-pkgrel=2
+pkgver=0.8
+pkgrel=1
 pkgdesc="Render MathML and LaTeX Math to SVG without Latex installation"
 url="https://ziamath.readthedocs.io/"
 license=('MIT')
 arch=('any')
-depends=('python-ziafont')
-optdepends=('python-latex2mathml: for latex support')
-makedepends=('python-setuptools')
-checkdepends=('python-latex2mathml' 'python-nbval' 'python-pytest-runner')
-source=("$pkgname-$pkgver.tar.gz::https://bitbucket.org/cdelker/ziamath/get/$pkgver.tar.bz2")
-sha512sums=('ff7b46fa5485bdf053a128da5acb9e973391eb3528b03251ddaa3574726821f8b38892a8d412e3a2f05aa95558e2ee8f1f07fb43fc89602677d398db26419732')
-
-prepare() {
-  mv cdelker-ziamath-* ziamath-$pkgver
-}
+depends=('python-ziafont' 'python-latex2mathml')
+makedepends=('python-build' 'python-installer' 'python-setuptools' 'python-wheel')
+source=("$pkgname-$pkgver.tar.gz::https://github.com/cdelker/ziamath/archive/$pkgver.tar.gz")
+sha512sums=('6f11203407c84b160c449f758bdd865c1247298c8f4f9e94b5a38fe1d39ede80fe0522316f686f21423cfc93b6f66b0697002992544734da9ed8d851b937a5c2')
 
 build() {
   cd ziamath-$pkgver
-  python setup.py build
-}
-
-check() {
-  cd ziamath-$pkgver
-  python setup.py pytest --addopts --nbval || echo "Tests failed"
+  python -m build -nw
 }
 
 package() {
   cd ziamath-$pkgver
-  python setup.py install --root="$pkgdir" --optimize=1
-
+  python -m installer -d "$pkgdir" dist/*.whl
   install -Dm644 LICENSE.txt -t "$pkgdir"/usr/share/licenses/$pkgname/
 }

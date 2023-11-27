@@ -4,7 +4,7 @@
 
 pkgname=python-boto3
 # UPDATE_BLOCKED: blocked as python-botocore is blocked
-pkgver=1.28.25
+pkgver=1.28.64
 pkgrel=1
 pkgdesc='The AWS SDK for Python'
 arch=('any')
@@ -14,7 +14,7 @@ depends=('python' 'python-botocore' 'python-jmespath' 'python-s3transfer')
 makedepends=('python-build' 'python-installer' 'python-setuptools' 'python-wheel')
 checkdepends=('python-pytest' 'python-pytest-xdist')
 source=("$pkgname-$pkgver.tar.gz::https://github.com/boto/boto3/archive/$pkgver.tar.gz")
-sha512sums=('2e47027c035338a9d70027b32c93db04ac859a8cfe6c9f962df33c1139df5ba1562e9e0bb32670825a93c29fa2b231779221c6b54c5b2bb498c5e19667763306')
+sha512sums=('ca0042e173c4a35dc9d6ab8ed362d3308753d3722bb4cf25302fd0018c5d94e66a2ea288610192ad5a353ca54f0ab8f1942224269935b1fe3444b2e70842da13')
 
 build() {
   cd boto3-$pkgver

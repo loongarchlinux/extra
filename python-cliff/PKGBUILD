@@ -2,8 +2,8 @@
 # Contributor: Daniel Wallace <danielwallace at gtmanfred dot com>
 
 pkgname=python-cliff
-pkgver=4.3.0
-_commit=72e81d7d846a8e306fd8d98e2f15270a8a537620
+pkgver=4.4.0
+_commit=3ee0725a094b0f80fa72f6bfc8bc97fe20b8fde8
 pkgrel=1
 pkgdesc="Command Line Interface Formulation Framework"
 arch=('any')

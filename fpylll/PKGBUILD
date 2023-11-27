@@ -2,20 +2,40 @@
 
 pkgbase=fpylll
 pkgname=python-fpylll
-pkgver=0.5.9
-pkgrel=2
+pkgver=0.6.0
+pkgrel=1
 pkgdesc='A Python interface for fplll'
 arch=(loong64 x86_64)
 url='https://github.com/fplll/fpylll'
 license=(GPL2)
-depends=(fplll python-numpy python-cysignals)
-makedepends=(cython python-build python-installer python-setuptools python-wheel)
+depends=(fplll
+         gcc-libs
+         glibc
+         gmp
+         mpfr
+         python
+         python-cysignals
+         python-numpy
+         qd)
+makedepends=(cython
+             python-build
+             python-installer
+             python-setuptools
+             python-wheel)
+checkdepends=(python-pytest)
 source=(https://github.com/fplll/fpylll/releases/download/$pkgver/$pkgbase-$pkgver.tar.gz)
-sha256sums=('5652ce92ead07ebf402d6b85af228df106cd4c24f0c7f6cf50004722c436a248')
+sha256sums=('0f2764e3c3e861024af7c3bc0afdb0de2ad98e5430315afb229a98c91e66e1d2')
 
 build() {
   cd $pkgbase-$pkgver
   python -m build --wheel --no-isolation
+}
+
+check() {
+  cd $pkgbase-$pkgver
+  python -m venv --system-site-packages test-env
+  test-env/bin/python -m installer dist/*.whl
+  test-env/bin/python -m pytest -v
 }
 
 package_python-fpylll() {

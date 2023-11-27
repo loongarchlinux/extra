@@ -2,8 +2,8 @@
 # Contributor: Brody <archfan at brodix dot de>
 
 pkgname=markdownlint-cli2
-pkgver=0.10.0
-pkgrel=2
+pkgver=0.11.0
+pkgrel=1
 pkgdesc='Fast, flexible, configuration-based command-line interface for linting Markdown/CommonMark files with the markdownlint library'
 arch=('any')
 url=https://github.com/DavidAnson/markdownlint-cli2
@@ -16,26 +16,25 @@ b2sums=('SKIP')
 prepare() {
   cd $pkgname
   npm install
-
-  # https://github.com/DavidAnson/markdownlint-cli2/issues/215
-  git cherry-pick --no-commit 15d39ccc30f41e1202b85fdd4618afb8bb91b213
 }
 
-check() {
-  cd $pkgname
-  npm test
-}
+# Test failures due to deprecation warnings
+# https://github.com/markdown-it/markdown-it/issues/967
+#check() {
+#  cd $pkgname
+#  npm test
+#}
 
 package() {
-  local _npmdir=/usr/lib/node_modules/$pkgname
-  install -d "$pkgdir"/{usr/bin,$_npmdir}
-  ln -s $_npmdir/$pkgname.js "$pkgdir"/usr/bin/$pkgname
+  local mod_dir=/usr/lib/node_modules/$pkgname
+  install -d "$pkgdir"/{usr/bin,$mod_dir}
+  ln -s $mod_dir/$pkgname.js "$pkgdir"/usr/bin/$pkgname
 
   cd $pkgname
   npm prune --production
 
   cp -r {$pkgname,append-to-array,merge-options,resolve-and-require}.js \
-    node_modules package.json "$pkgdir"/$_npmdir
+    node_modules package.json "$pkgdir"/$mod_dir
   install -Dm644 -t "$pkgdir"/usr/share/doc/$pkgname README.md
   install -Dm644 -t "$pkgdir"/usr/share/licenses/$pkgname LICENSE
 }

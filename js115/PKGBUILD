@@ -1,8 +1,8 @@
 # Maintainer: Jan Alexander Steffens (heftig) <heftig@archlinux.org>
 
 pkgname=js115
-pkgver=115.3.1
-pkgrel=1
+pkgver=115.4.0
+pkgrel=2
 pkgdesc="JavaScript interpreter and libraries - Version 115"
 url="https://spidermonkey.dev/"
 arch=(loong64 x86_64)
@@ -31,7 +31,7 @@ _relver=${pkgver}esr
 source=(
   https://archive.mozilla.org/pub/firefox/releases/$_relver/source/firefox-$_relver.source.tar.xz{,.asc}
 )
-b2sums=('ad5ec24361e94d9185eed210f681c50159f5be3e6046d79200b5e2586107f1ed98ebe7935f1e266afadd570fc1aa6a1aec81fe3b7fb86efb48afe82514f26c68'
+b2sums=('81b3d9e4fa45ef012d726b502d6f86323b509fb25a6c20be42fc37936357df5b661d53a1326a7662bab704aad85db14dd804d5375cb6100a02dc226908039b90'
         'SKIP')
 validpgpkeys=(
   # Mozilla Software Releases <release@mozilla.com>
@@ -60,7 +60,6 @@ ac_add_options --disable-bootstrap
 ac_add_options --disable-debug
 ac_add_options --disable-jemalloc
 ac_add_options --disable-strip
-ac_add_options --disable-unified-build
 
 # System libraries
 ac_add_options --with-system-zlib
@@ -84,6 +83,10 @@ build() {
   # malloc_usable_size is used in various parts of the codebase
   CFLAGS="${CFLAGS/_FORTIFY_SOURCE=3/_FORTIFY_SOURCE=2}"
   CXXFLAGS="${CXXFLAGS/_FORTIFY_SOURCE=3/_FORTIFY_SOURCE=2}"
+
+  # Greatly reduce size of relocation tables
+  # https://gitlab.archlinux.org/archlinux/rfcs/-/blob/master/rfcs/0023-pack-relative-relocs.rst
+  LDFLAGS+=" -Wl,-z,pack-relative-relocs"
 
   # Do 3-tier PGO
   echo "Building instrumented JS..."

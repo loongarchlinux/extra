@@ -1,8 +1,9 @@
-# Maintainer: Brad Fanella <cesura@archlinux.org>
+# Maintainer: Alexander Epaneshnikov <alex19ep@archlinux.org>
+# Contributor: Brad Fanella <cesura@archlinux.org>
 # Contributor: Martin Wimpress <code@flexion.org>
 
 pkgname=mate-desktop
-pkgver=1.26.1
+pkgver=1.26.2
 pkgrel=1
 pkgdesc="Library with common API for various MATE modules"
 url="http://mate-desktop.org"
@@ -14,7 +15,7 @@ groups=('mate')
 conflicts=('mate-desktop-gtk3' 'mate-desktop-schemas')
 replaces=('mate-desktop-gtk3' 'mate-desktop-schemas')
 source=("https://pub.mate-desktop.org/releases/${pkgver%.*}/${pkgname}-${pkgver}.tar.xz")
-sha256sums=('12d1668a27ac1abd60935381d3f39821bb808467a7b8acf9ef45885d7c80a211')
+sha256sums=('5ed03f7c52d7b7ece49ca1e736aa766aefeb5c639eab3e68c7090c530d02376a')
 
 build() {
 	cd "$pkgname-$pkgver"

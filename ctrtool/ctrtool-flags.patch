@@ -1,0 +1,31 @@
+diff '--color=auto' -rupN Project_CTR.orig/ctrtool/makefile Project_CTR/ctrtool/makefile
+--- Project_CTR.orig/ctrtool/makefile	2023-11-01 23:07:02.291056290 +0100
++++ Project_CTR/ctrtool/makefile	2023-11-01 23:08:28.615322508 +0100
+@@ -108,8 +108,9 @@ else ifeq ($(PROJECT_PLATFORM), MACOS)
+ endif
+ 
+ # Compiler Flags
+-CXXFLAGS = -std=c++11 $(INC) $(WARNFLAGS) $(ARCHFLAGS) -fPIC
+-CFLAGS = -std=c11 $(INC) $(WARNFLAGS) $(ARCHFLAGS) -fPIC
++CXXFLAGS += -std=c++11 $(INC) $(WARNFLAGS) $(ARCHFLAGS) -fPIC
++CFLAGS += -std=c11 $(INC) $(WARNFLAGS) $(ARCHFLAGS) -fPIC
++LDFLAGS +=
+ 
+ # Object Files
+ SRC_OBJ = $(foreach dir,$(PROJECT_SRC_SUBDIRS),$(subst .cpp,.o,$(wildcard $(dir)/*.cpp))) $(foreach dir,$(PROJECT_SRC_SUBDIRS),$(subst .cc,.o,$(wildcard $(dir)/*.cc))) $(foreach dir,$(PROJECT_SRC_SUBDIRS),$(subst .c,.o,$(wildcard $(dir)/*.c)))
+@@ -165,7 +166,7 @@ shared_lib: $(SRC_OBJ) create_binary_dir
+ # Build Program
+ program: $(SRC_OBJ) create_binary_dir
+ 	@echo LINK $(PROJECT_BIN_PATH)/$(PROJECT_NAME)
+-	@$(CXX) $(ARCHFLAGS) $(SRC_OBJ) $(LIB) -o "$(PROJECT_BIN_PATH)/$(PROJECT_NAME)"
++	@$(CXX) $(LDFLAGS) $(ARCHFLAGS) $(SRC_OBJ) $(LIB) -o "$(PROJECT_BIN_PATH)/$(PROJECT_NAME)"
+ 
+ # Build Test Program
+ test_program: $(TESTSRC_OBJ) $(SRC_OBJ) create_binary_dir
+@@ -194,4 +195,4 @@ deps:
+ 
+ .PHONY: clean_deps
+ clean_deps:
+-	@$(foreach lib,$(PROJECT_DEPEND_LOCAL_DIR), cd "$(ROOT_PROJECT_DEPENDENCY_PATH)/$(lib)" && $(MAKE) clean && cd "$(PROJECT_PATH)";)
+\ No newline at end of file
++	@$(foreach lib,$(PROJECT_DEPEND_LOCAL_DIR), cd "$(ROOT_PROJECT_DEPENDENCY_PATH)/$(lib)" && $(MAKE) clean && cd "$(PROJECT_PATH)";)

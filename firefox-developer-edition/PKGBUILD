@@ -2,7 +2,7 @@
 # Contributor: Jan Alexander Steffens (heftig) <heftig@archlinux.org>
 
 pkgname=firefox-developer-edition
-pkgver=119.0b6
+pkgver=121.0b3
 pkgrel=1
 pkgdesc="Developer Edition of the popular Firefox web browser"
 arch=('loong64' 'x86_64')
@@ -50,7 +50,7 @@ source=(https://archive.mozilla.org/pub/firefox/releases/$pkgver/source/firefox-
         firefox-install-dir.patch
         "$pkgname".desktop
         identity-icons-brand.svg)
-b2sums=('f3f872440236439ce144980a5e50da3fb384c8587a37f69bf998d308cef0d454cb290feeba7a1748a17facb1085485395d34055265a86c5592cfa3a3374a79e8'
+b2sums=('6169e922d40e509f321dbe91e6bbacb19f069864ce14aa30c76a312299ea07e79ce0ff8b48e7e2e46ce39377462170014389350e2c2530c3a6e5973d47483e14'
         'SKIP'
         'eb61793257458b20bc7ab5598240bc1901666d7fb7e971941af99ac706d387859642d8fba3130fa31789546b9123c7500edbe6373701ce9fc7d65aef3974c90c'
         'dfb74f902b5b7e4533c6dd91bcade3de809751d2c6d991b5c57c831be3d42759e0d416fc90a71977f17036db5f8b49775b483f5f4032d3022533b8b81f8c9e65'
@@ -126,6 +126,10 @@ build() {
   export MOZBUILD_STATE_PATH="$srcdir/mozbuild"
   export MOZ_ENABLE_FULL_SYMBOLS=1
   export MACH_BUILD_PYTHON_NATIVE_PACKAGE_SOURCE="pip"
+
+  # malloc_usable_size is used in various parts of the codebase
+  CFLAGS="${CFLAGS/_FORTIFY_SOURCE=3/_FORTIFY_SOURCE=2}"
+  CXXFLAGS="${CXXFLAGS/_FORTIFY_SOURCE=3/_FORTIFY_SOURCE=2}"
 
   # LTO needs more open files
   ulimit -n 4096

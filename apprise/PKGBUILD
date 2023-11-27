@@ -1,0 +1,51 @@
+# Maintainer: Daniel M. Capella <polyzen@archlinux.org>
+# Contributor: AlphaJack <alphajack at tuta dot io>
+# Contributor: Pieter Goetschalckx <3.14.e.ter <at> gmail <dot> com>
+
+pkgname=apprise
+pkgver=1.6.0
+pkgrel=3
+pkgdesc='Push Notifications that work with just about every platform'
+arch=('any')
+url=https://github.com/caronc/apprise
+license=('BSD')
+depends=(
+  'python-certifi'
+  'python-click'
+  'python-markdown'
+  'python-requests-oauthlib'
+  'python-yaml'
+)
+makedepends=(
+  'git'
+  'python-babel'
+  'python-build'
+  'python-installer'
+  'python-setuptools'
+  'python-wheel'
+)
+checkdepends=('dbus-python' 'python-paho-mqtt' 'python-pytest-mock')
+optdepends=(
+  'dbus-python: for Linux DBus Notifications'
+  'python-gobject: for Linux DBus Notifications'
+  'python-paho-mqtt: for MQTT support'
+)
+provides=("python-$pkgname")
+conflicts=("python-$pkgname")
+source=("git+$url.git#tag=v$pkgver")
+b2sums=('SKIP')
+
+build(){
+ cd $pkgname
+ python -m build --wheel --no-isolation
+}
+
+check(){
+ cd $pkgname
+ PYTHONPATH="$pwd/$pkgname:$PYTHONPATH" pytest
+}
+
+package(){
+ cd $pkgname
+ python -m installer --destdir="$pkgdir" dist/*.whl
+}

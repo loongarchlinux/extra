@@ -4,7 +4,7 @@
 # Contributor: loqs <bugs-archlinux@entropy-collector.net>
 
 pkgname=gitlab-gitaly
-pkgver=16.2.0
+pkgver=16.5.1
 pkgrel=1
 pkgdesc='Speed up Git access using caching'
 arch=(loong64 x86_64)
@@ -23,14 +23,15 @@ _archive="gitaly-v$pkgver"
 source=("$url/-/archive/v$pkgver/$_archive.tar.gz"
         "$pkgname-configs.patch"
         "$pkgname.service")
-sha256sums=('8cb7e2e90daa72fa39a2dbec673bea2fe89ce40ff3e2202cd6c69f5dacb8659e'
-            '90f9bf6baae8386f2800797703f7e7f6cb70401e2391cbff3c3cdf9018517d35'
+sha256sums=('c68c209849f7be814f0c18c308d7d11f151f0cc0eebd2cf59b7ebe7e90180818'
+            '4257f8fa0c1ca58e25db037ae8ba3bfd83e87e6346e8a4758be21bb87f3cc65d'
             'a047c82481ccbaa3b00ba1bb769135934fa4fa939eb6506d09c77f3a7aec08cd')
 
 prepare() {
 	cd "$_archive"
 	patch -p1 -i ../$pkgname-configs.patch
-	# At this point the config file should not contain any references to '/home/git'
+	# The patched config should contain no references to '/home/git', URL encoded or otherwise
+	grep -vqzE 'home.{1,3}git' config.toml.example
 }
 
 build() {

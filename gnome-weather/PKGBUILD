@@ -1,7 +1,8 @@
+# Maintainer: Fabian Bornschein <fabiscafe-at-mailbox-dot-org>
 # Maintainer: Jan Alexander Steffens (heftig) <heftig@archlinux.org>
 
 pkgname=gnome-weather
-pkgver=44.0
+pkgver=45.0
 pkgrel=1
 pkgdesc="Access current weather conditions and forecasts"
 url="https://wiki.gnome.org/Apps/Weather"
@@ -21,7 +22,7 @@ makedepends=(
   meson
 )
 groups=(gnome)
-_commit=120d816ee05a466555a63eb0cad762b960e8f425  # tags/44.0^0
+_commit=15ee3492b8e8c20cf1e63d7cbe962571ea98d0ca  # tags/45.0^0
 source=("git+https://gitlab.gnome.org/GNOME/gnome-weather.git#commit=$_commit")
 b2sums=('SKIP')
 

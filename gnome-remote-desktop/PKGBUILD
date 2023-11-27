@@ -1,8 +1,8 @@
+# Maintainer: Fabian Bornschein <fabiscafe-at-mailbox-dot-org>
 # Maintainer: Jan Alexander Steffens (heftig) <heftig@archlinux.org>
-# Contributor: Fabian Bornschein <fabiscafe-cat-mailbox-dog-org>
 
 pkgname=gnome-remote-desktop
-pkgver=44.2
+pkgver=45.1
 pkgrel=1
 pkgdesc="GNOME Remote Desktop server"
 url="https://wiki.gnome.org/Projects/Mutter/RemoteDesktop"
@@ -15,9 +15,11 @@ depends=(
   fuse3
   glib2
   libdrm
+  libei
   libepoxy
   libfdk-aac
   libnotify
+  libpipewire
   libsecret
   libvncserver
   libxkbcommon
@@ -32,13 +34,15 @@ makedepends=(
   meson
 )
 checkdepends=(
+  dbus-broker
+  libegl
   mutter
   python-dbus
   python-gobject
   wireplumber
 )
 groups=(gnome)
-_commit=9d1ee9c9458636dbe4d3326dceec81dfefef56dd  # tags/44.2^0
+_commit=df66c0e99a749058e0ee7dcee36bd97e018a3bb8  # tags/45.1^0
 source=("git+https://gitlab.gnome.org/GNOME/gnome-remote-desktop.git#commit=$_commit")
 b2sums=('SKIP')
 
@@ -60,38 +64,8 @@ build() {
   meson compile -C build
 }
 
-_check() (
-  export XDG_CONFIG_HOME="$PWD/config-dir" XDG_RUNTIME_DIR="$PWD/runtime-dir"
-  mkdir -p -m 700 "$XDG_CONFIG_HOME" "$XDG_RUNTIME_DIR"
-
-  export GSETTINGS_SCHEMA_DIR="$PWD/build/src" GSETTINGS_BACKEND=keyfile
-  glib-compile-schemas "$GSETTINGS_SCHEMA_DIR"
-
-  openssl req -new -newkey rsa:4096 -days 720 -nodes -x509 \
-    -subj /C=DE/ST=NONE/L=NONE/O=GNOME/CN=gnome.org \
-    -keyout tls.key -out tls.crt
-
-  gsettings set org.gnome.desktop.remote-desktop.rdp tls-cert "$PWD/tls.crt"
-  gsettings set org.gnome.desktop.remote-desktop.rdp tls-key "$PWD/tls.key"
-  gsettings set org.gnome.desktop.remote-desktop.rdp screen-share-mode extend
-  gsettings set org.gnome.desktop.remote-desktop.rdp enable true
-  gsettings set org.gnome.desktop.remote-desktop.vnc enable true
-
-  pipewire &
-  _p1=$!
-
-  wireplumber &
-  _p2=$!
-
-  trap "kill $_p1 $_p2; wait" EXIT
-
-  export TCTI=tabrmd:bus_type=session
-
-  meson test -C build --print-errorlogs -t 3
-)
-
 check() {
-  dbus-run-session bash -c "$(declare -f _check); _check"
+  meson test -C build --print-errorlogs -t 3
 }
 
 package() {

@@ -1,31 +1,34 @@
 # Maintainer: Alexander F. Rødseth <xyproto@archlinux.org>
 # Contributor: Matt Harrison <matt@harrison.us.com>
 
-pkgbase=ollama
-pkgname=(ollama ollama-cuda)
+pkgname=ollama
 pkgdesc='Create, run and share large language models (LLMs)'
-pkgver=0.1.1
-pkgrel=2
+pkgver=0.1.10
+pkgrel=1
 arch=(loong64 x86_64)
 url='https://github.com/jmorganca/ollama'
 license=(MIT)
-makedepends=(cmake cuda git go setconf)
-_ollamacommit=1852755154a8f82cc2dcb01c37159340a55347ca # tag: v0.1.1
+makedepends=(cmake git go setconf)
+_ollamacommit=41434a7cdcf33918ae2d37eb23d819ef7361e843 # tag: v0.1.10
 # The git submodule commit hashes are here:
-# https://github.com/jmorganca/ollama/tree/v0.1.1/llm/llama.cpp
+# https://github.com/jmorganca/ollama/tree/v0.1.10/llm/llama.cpp
 _ggmlcommit=9e232f0234073358e7031c1b8d7aa45020469a3b
-_ggufcommit=bc9d3e3971e5607a10ff4c24e39568ce1ac87271
+_ggufcommit=9e70cc03229df19ca2d28ce23cc817198f897278
 source=(git+$url#commit=$_ollamacommit
         ggml::git+https://github.com/ggerganov/llama.cpp#commit=$_ggmlcommit
         gguf::git+https://github.com/ggerganov/llama.cpp#commit=$_ggufcommit
-        gotest.patch::https://github.com/xyproto/ollama/commit/f17499967e997e10986d8e246344ef706bd9857f.patch)
+        sysusers.conf
+        tmpfiles.d
+        ollama.service)
 b2sums=('SKIP'
         'SKIP'
         'SKIP'
-        '32fee3699a866165dd522095620dfb68082ec69c90d6fb09a16e50c5c2de51066b67bc4ceae34672c89990cf11e0d85bd7bb1f1ffa55b1163aedf93ed45095b2')
+        '3aabf135c4f18e1ad745ae8800db782b25b15305dfeaaa031b4501408ab7e7d01f66e8ebb5be59fc813cfbff6788d08d2e48dcf24ecc480a40ec9db8dbce9fec'
+        'c890a741958d31375ebbd60eeeb29eff965a6e1e69f15eb17ea7d15b575a4abee176b7d407b3e1764aa7436862a764a05ad04bb9901a739ffd81968c09046bb6'
+        'a773bbf16cf5ccc2ee505ad77c3f9275346ddf412be283cfeaee7c2e4c41b8637a31aaff8766ed769524ebddc0c03cf924724452639b62208e578d98b9176124')
 
 prepare() {
-  cd $pkgbase
+  cd $pkgname
 
   rm -frv llm/llama.cpp/gg{ml,uf}
 
@@ -36,51 +39,27 @@ prepare() {
   # Do not git clone when "go generate" is being run.
   sed -i 's,git submodule,true,g' llm/llama.cpp/generate_linux.go
 
-  # Fix go test ./...
-  patch -p1 -i ../gotest.patch
-
-  # Set the correct version number
+  # Set the version number
   setconf version/version.go 'var Version string' "\"$pkgver\""
-
-  cd ..
-
-  # Copy the sources to an ollama-cuda directory.
-  cp -r $pkgbase ${pkgbase}-cuda
-
-  # Disable CUDA for the regular ollama package (it is enabled by default).
-  sed -i 's,DLLAMA_CUBLAS=on,DLLAMA_CUBLAS=off,g' $pkgbase/llm/llama.cpp/generate_linux.go
 }
 
 build() {
+  cd $pkgname
   export CGO_CFLAGS="$CFLAGS" CGO_CPPFLAGS="$CPPFLAGS" CGO_CXXFLAGS="$CXXFLAGS" CGO_LDFLAGS="$LDFLAGS"
-
-  # without CUDA support (LLAMA_CUBLAS=off)
-  cd $pkgbase
-  go generate ./...
-  go build -buildmode=pie -trimpath -mod=readonly -modcacherw -ldflags=-linkmode=external -ldflags=-buildid=''
-
-  # with CUDA support (LLAMA_CUBLAS=on)
-  cd ../${pkgbase}-cuda
   go generate ./...
   go build -buildmode=pie -trimpath -mod=readonly -modcacherw -ldflags=-linkmode=external -ldflags=-buildid=''
 }
 
 check() {
-  cd $pkgbase
+  cd $pkgname
   go test ./...
 }
 
-package_ollama() {
-  cd $pkgname
-  install -Dm755 $pkgbase "$pkgdir/usr/bin/$pkgbase"
-  install -Dm644 LICENSE "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
-}
-
-package_ollama-cuda() {
-  depends=(cuda)
-  provides=(ollama)
-  conflicts=(ollama)
-  cd $pkgname
-  install -Dm755 $pkgbase "$pkgdir/usr/bin/$pkgbase"
-  install -Dm644 LICENSE "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
+package() {
+  install -Dm755 $pkgname/$pkgname "$pkgdir/usr/bin/$pkgname"
+  install -dm700 "$pkgdir/var/lib/ollama"
+  install -Dm644 ollama.service "$pkgdir/usr/lib/systemd/system/ollama.service"
+  install -Dm644 sysusers.conf "$pkgdir/usr/lib/sysusers.d/ollama.conf"
+  install -Dm644 tmpfiles.d "$pkgdir/usr/lib/tmpfiles.d/ollama.conf"
+  install -Dm644 $pkgname/LICENSE "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
 }

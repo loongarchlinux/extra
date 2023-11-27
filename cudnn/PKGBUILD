@@ -4,7 +4,7 @@
 # Contributor: Yunhui Fu <yhfdev@gmail.com>
 
 pkgname=cudnn
-pkgver=8.9.2.26
+pkgver=8.9.6.50
 _cudaver=12
 pkgrel=1
 pkgdesc="NVIDIA CUDA Deep Neural Network library"
@@ -18,9 +18,10 @@ options=(!strip staticlibs)
 # or make an NVIDIA Developer account.
 # Alternatively, check https://github.com/pytorch/builder/blob/master/common/install_cuda.sh
 # or https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/x86_64/
+# or https://developer.download.nvidia.com/compute/cudnn/redist/cudnn/linux-x86_64/
 source=("https://developer.download.nvidia.com/compute/cudnn/redist/cudnn/linux-x86_64/cudnn-linux-x86_64-${pkgver}_cuda${_cudaver}-archive.tar.xz"
         "NVIDIA_SLA+cuDNN_Supp_Feb2017_release.pdf")
-b2sums=('77fd3b6bb60ee11d9e876548c8641b9a6eb347b7864048145d40533918b480c6515701416607760c102308c9b1f59e04adc19ef58c7ecde31a5ad16c8b30cf98'
+b2sums=('5b2e052c81d1b06fc3fa7d8a75cfbc115808003cdb48a0d703daa5d3badb4d6f9efffbf4399f12f7ba35296b08ff184e2a18316b483e5ea2aaa59d30a77f0f55'
         '222e3d3640808a130dfc339fa8e48ea396f784af77d09d90fae1e5550de8272e643d9a765d832b3d950234a3f7a8706a12191d49717f732cff190e5fd920ed52')
 
 package() {

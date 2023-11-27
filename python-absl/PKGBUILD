@@ -1,7 +1,7 @@
 # Maintainer: Sven-Hendrik Haase <svenstaro@archlinux.org>
 pkgname=python-absl
-pkgver=1.4.0
-pkgrel=3
+pkgver=2.0.0
+pkgrel=1
 pkgdesc="Abseil Python Common Libraries"
 arch=('any')
 url='https://github.com/abseil/abseil-py'
@@ -11,7 +11,7 @@ replaces=('absl-py')
 license=('APACHE')
 makedepends=(python-{build,installer,wheel} python-setuptools)
 source=("https://pypi.io/packages/source/a/absl-py/absl-py-$pkgver.tar.gz")
-sha512sums=('ebdd8c14308862112367118170f0309335e4b633999d1a02ee9abf1b8be33cb9d8cde33a4980e106b240ecb07766c1c78fd981305ffcc0dee252deaf68a2e47a')
+sha512sums=('42ccf14c4bc695cdefbbd2311d1c86c39362122ec6c7f473a2c6b33568abfffe864b45bf83c018642898eb8d9df3c66718baf8a30a3c33854efcd2bd3f8731c6')
 
 build() {
   cd "$srcdir/absl-py-$pkgver"

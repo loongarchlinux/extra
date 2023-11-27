@@ -7,13 +7,13 @@ pkgname=mangohud
 _pkgver=0.7.0
 _tarpkgver="${_pkgver%-*}"
 pkgver=${_pkgver//-/.}
-pkgrel=1
+pkgrel=2
 pkgdesc="A Vulkan overlay layer for monitoring FPS, temperatures, CPU/GPU load and more."
 arch=('loong64' 'x86_64')
 url="https://github.com/flightlessmango/MangoHud"
 license=('MIT')
 makedepends=('appstream' 'cmocka' 'git' 'glfw-x11' 'glslang' 'libxnvctrl' 'meson' 'nlohmann-json' 'python-mako')
-depends=('dbus' 'fmt' 'gcc-libs' 'glew' 'hicolor-icon-theme' 'libglvnd' 'libx11' 'python' 'python-matplotlib' 'python-numpy' 'spdlog' 'vulkan-icd-loader')
+depends=('dbus' 'fmt' 'gcc-libs' 'glew' 'hicolor-icon-theme' 'libglvnd' 'libx11' 'python' 'python-matplotlib' 'python-numpy' 'vulkan-icd-loader')
 optdepends=('libxnvctrl: NVIDIA GPU stats by XNVCtrl'
             'glfw-x11: Required for MangoApp'
             'gamescope: Use MangoApp as an overlay within gamescope')
@@ -32,7 +32,6 @@ prepare() {
 
 build() {
     arch-meson "$_pkgname-v$_tarpkgver" build \
-        -Duse_system_spdlog=enabled \
         -Dmangoapp=true \
         -Dmangohudctl=true \
         -Dmangoapp_layer=true
@@ -43,7 +42,6 @@ build() {
 package() {
     depends+=(
         vulkan-icd-loader libvulkan.so
-        spdlog libspdlog.so
     )
     meson install -C build --destdir "$pkgdir"
 

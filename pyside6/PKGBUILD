@@ -2,30 +2,60 @@
 # Maintainer: Felix Yan <felixonmars@archlinux.org>
 
 pkgbase=pyside6
-pkgname=(shiboken6 pyside6 pyside6-tools)
-_qtver=6.5.2
+pkgname=(pyside6
+         pyside6-tools
+         shiboken6)
+_qtver=6.6.0
 _clangver=16.0.6
 pkgver=${_qtver/-/}
-pkgrel=2
+pkgrel=3
 arch=(loong64 x86_64)
 url='https://www.qt.io'
 license=(LGPL)
-makedepends=(cmake ninja clang llvm python-setuptools vulkan-headers python-numpy
-             qt6-tools qt6-svg qt6-3d qt6-scxml qt6-datavis3d qt6-charts qt6-multimedia qt6-quick3d
-             qt6-location qt6-positioning qt6-networkauth qt6-remoteobjects qt6-sensors qt6-serialbus qt6-serialport
-             qt6-connectivity qt6-webchannel qt6-webengine qt6-websockets qt6-shadertools qt6-speech qt6-httpserver)
+makedepends=(clang
+             cmake
+             llvm
+             ninja
+             python-numpy
+             python-setuptools
+             qt6-3d
+             qt6-charts
+             qt6-connectivity
+             qt6-datavis3d
+             qt6-graphs
+             qt6-httpserver
+             qt6-location
+             qt6-multimedia
+             qt6-networkauth
+             qt6-positioning
+             qt6-quick3d
+             qt6-remoteobjects
+             qt6-scxml
+             qt6-sensors
+             qt6-serialbus
+             qt6-serialport
+             qt6-shadertools
+             qt6-speech
+             qt6-svg
+             qt6-tools
+             qt6-webchannel
+             qt6-webengine
+             qt6-websockets)
 _pkgfn=pyside-setup-everywhere-src-$_qtver
 source=(https://download.qt.io/official_releases/QtForPython/pyside6/PySide6-$pkgver-src/${_pkgfn}.tar.xz
-        designer-plugin-install-dir.patch)
-sha256sums=('90dbf1d14fcd41c98a7cbea44b8a4951e10d0b798e154749756e4946654d1ba8'
-            '66e895e07d5b01c64a94092353854c946fd7fc445b6181068dca290b5a3887e0')
+        fix-build.patch
+        fix-install-paths.patch::https://code.qt.io/cgit/pyside/pyside-setup.git/patch/?id=d509e486)
+sha256sums=('2dd002db8851a87173354f38aa8c6ec42d0ff1fac99ea422b29e2dfce52d1638'
+            '77b83cb164ea87d826259864f6a81fb33199510e1948d6daaf5c8d5ab55735a7'
+            'f0d339723e74f7213897a3ec6268833749bc6e8bedc3162a64a391a3ccc4d655')
 
 prepare() {
-  patch -d $_pkgfn -p1 < designer-plugin-install-dir.patch # Fix designer plugin install dir
+  patch -d ${_pkgfn%.*} -p1 < fix-install-paths.patch # Fix designer plugin and QtAsyncio install dirs
+  patch -d ${_pkgfn%.*} -p1 < fix-build.patch
 }
 
 build() {
-  cmake -B build -S $_pkgfn -G Ninja \
+  cmake -B build -S ${_pkgfn%.*} -G Ninja \
     -DCMAKE_INSTALL_PREFIX=/usr \
     -DCMAKE_BUILD_TYPE=None \
     -DSHIBOKEN_PYTHON_LIBRARIES=`pkgconf python3-embed --libs` \
@@ -37,7 +67,14 @@ build() {
 
 package_shiboken6() {
   pkgdesc='Generates bindings for C++ libraries using CPython source code'
-  depends=(clang=$_clangver llvm libxslt qt6-base)
+  depends=(clang=$_clangver
+           gcc-libs
+           glibc
+           libxml2
+           libxslt
+           llvm
+           python
+           qt6-base)
   optdepends=('python: Python bindings')
 
   DESTDIR="$pkgdir" cmake --install build/sources/shiboken6
@@ -45,7 +82,7 @@ package_shiboken6() {
 # Install egg-info
   export PATH="/usr/lib/qt6/bin:$PATH"
   export SETUPTOOLS_USE_DISTUTILS=stdlib
-  cd $_pkgfn
+  cd ${_pkgfn%.*}
   python setup.py egg_info --build-type=shiboken6
   python setup.py egg_info --build-type=shiboken6-generator
   _pythonpath=`python -c "from sysconfig import get_path; print(get_path('platlib'))"`
@@ -54,31 +91,41 @@ package_shiboken6() {
 
 package_pyside6() {
   pkgdesc='Enables the use of Qt6 APIs in Python applications'
-  depends=(qt6-declarative shiboken6)
-  optdepends=('qt6-tools: QtHelp, QtUiTools bindings'
-              'qt6-svg: QtSvg bindings'
-              'qt6-3d: Qt3D bindings'
-              'qt6-quick3d: QtQuick3D bindings'
-              'qt6-scxml: QtScxml bindings'
-              'qt6-datavis3d: QtDataVisualization bindings'
+  depends=(gcc-libs
+           glibc
+           python
+           qt6-base
+           qt6-declarative
+           shiboken6)
+  optdepends=('qt6-3d: Qt3D bindings'
               'qt6-charts: QtCharts bindings'
+              'qt6-connectivity: QtBluetooth and QtNfc bindings'
+              'qt6-datavis3d: QtDataVisualization bindings'
+              'qt6-graphs: QtGraphs bindings'
               'qt6-httpserver: QtHttpServer bindings'
               'qt6-location: QtLocation bindings'
               'qt6-multimedia: QtMultimedia bindings'
+              'qt6-networkauth: QtNetworkAuth bindings'
+              'qt6-positioning: QtPositioning bindings'
+              'qt6-quick3d: QtQuick3D bindings'
+              'qt6-remoteobjects: QtRemoteObjects bindings'
+              'qt6-scxml: QtScxml bindings'
+              'qt6-sensors: QtSensors bindings'
               'qt6-serialbus: QtSerialBus bindings'
               'qt6-serialport: QtSerialPort bindings'
               'qt6-speech: QtTextToSpeech bindings'
+              'qt6-svg: QtSvg bindings'
+              'qt6-tools: QtHelp, QtUiTools bindings'
+              'qt6-webchannel: QtWebChannel bindings'
               'qt6-webengine: QtWebEngine bindings'
-              'qt6-remoteobjects: QtRemoteObjects bindings'
-              'qt6-sensors: QtSensors bindings'
-              'qt6-websockets: QtWebSockets bindings'
-              'qt6-networkauth: QtNetworkAuth bindings')
+              'qt6-websockets: QtWebSockets bindings')
+  provides=(qt6-python-bindings)
 
   DESTDIR="$pkgdir" cmake --install build/sources/pyside6
 
 # Install egg-info
   export PATH="/usr/lib/qt6/bin:$PATH"
-  cd $_pkgfn
+  cd ${_pkgfn%.*}
   python setup.py egg_info --build-type=pyside6
   _pythonpath=`python -c "from sysconfig import get_path; print(get_path('platlib'))"`
   cp -r PySide6.egg-info "$pkgdir"/$_pythonpath
@@ -89,7 +136,9 @@ package_pyside6() {
 
 package_pyside6-tools() {
   pkgdesc='Tools for pyside6'
-  depends=(pyside6)
+  depends=(pyside6
+           python)
+  optdepends=('nuitka: for deploy.py')
 
   DESTDIR="$pkgdir" cmake --install build/sources/pyside-tools
 

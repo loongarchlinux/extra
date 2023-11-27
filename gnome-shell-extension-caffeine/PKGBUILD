@@ -1,0 +1,29 @@
+# Maintainer: Balló György <ballogyor+arch at gmail dot com>
+# Contributor: Robin Candau <antiz@archlinux.org>
+
+pkgname=gnome-shell-extension-caffeine
+_uuid=caffeine@patapon.info
+pkgver=50
+pkgrel=1
+pkgdesc='Extension for GNOME Shell to disable screensaver and auto suspend'
+arch=('any')
+url='https://github.com/eonpatapon/gnome-shell-extension-caffeine'
+license=('GPL2')
+depends=('gnome-shell')
+source=("https://github.com/eonpatapon/$pkgname/archive/v$pkgver/$pkgname-$pkgver.tar.gz")
+sha256sums=('ff4a3e938165e032e04a28d4430a85eec3f5c4c9ae0000dc24a2cc4e16da980a')
+
+build() {
+  cd $pkgname-$pkgver
+  make build
+}
+
+package() {
+  cd $pkgname-$pkgver
+  install -dm755 "$pkgdir/usr/share/gnome-shell/extensions/$_uuid"
+  bsdtar -xf $_uuid.zip -C "$pkgdir/usr/share/gnome-shell/extensions/$_uuid" --no-same-owner
+  mkdir -p "$pkgdir/usr/share/glib-2.0"
+  mv "$pkgdir"/usr/share/gnome-shell/extensions/*/schemas "$pkgdir/usr/share/glib-2.0"
+  rm "$pkgdir/usr/share/glib-2.0/schemas/gschemas.compiled"
+  mv "$pkgdir"/usr/share/gnome-shell/extensions/*/locale "$pkgdir/usr/share"
+}

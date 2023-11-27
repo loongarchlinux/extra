@@ -1,0 +1,38 @@
+diff --git a/Streaming.cpp b/Streaming.cpp
+index 2ab31cd..57cbd50 100644
+--- a/Streaming.cpp
++++ b/Streaming.cpp
+@@ -227,6 +227,20 @@ int SoapyAudio::activateStream(
+     resetBuffer = true;
+     bufferedElems = 0;
+ 
++#if RTAUDIO_VERSION_MAJOR >= 6
++#ifndef _MSC_VER
++    opts.priority = sched_get_priority_max(SCHED_FIFO);
++#endif
++    //    opts.flags = RTAUDIO_MINIMIZE_LATENCY;
++    opts.flags = RTAUDIO_SCHEDULE_REALTIME;
++
++    sampleRateChanged.store(false);
++    dac.openStream(NULL, &inputParameters, RTAUDIO_FLOAT32, sampleRate, &bufferLength, &_rx_callback, (void *) this, &opts);
++    if (dac.startStream()) {
++        throw std::runtime_error("RtAudio init error '" + dac.getErrorText());
++    }
++    streamActive = true;
++#else
+     try {
+ #ifndef _MSC_VER
+         opts.priority = sched_get_priority_max(SCHED_FIFO);
+@@ -237,11 +251,11 @@ int SoapyAudio::activateStream(
+         sampleRateChanged.store(false);
+         dac.openStream(NULL, &inputParameters, RTAUDIO_FLOAT32, sampleRate, &bufferLength, &_rx_callback, (void *) this, &opts);
+         dac.startStream();
+-
+         streamActive = true;
+     } catch (RtAudioError& e) {
+         throw std::runtime_error("RtAudio init error '" + e.getMessage());
+     }
++#endif
+     
+     return 0;
+ }

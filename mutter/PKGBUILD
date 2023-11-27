@@ -7,7 +7,7 @@ pkgname=(
   mutter
   mutter-docs
 )
-pkgver=44.5
+pkgver=45.1
 pkgrel=1
 pkgdesc="Window manager and compositor for GNOME"
 url="https://gitlab.gnome.org/GNOME/mutter"
@@ -23,6 +23,8 @@ depends=(
   iio-sensor-proxy
   lcms2
   libcanberra
+  libdisplay-info
+  libei
   libgudev
   libinput
   libsm
@@ -46,11 +48,12 @@ makedepends=(
   xorg-server-xvfb
 )
 checkdepends=(
+  gnome-session
   python-dbusmock
   wireplumber
   zenity
 )
-_commit=1511e6e1cdc8fa1a84f6fbbb169777ac26ba7f44  # tags/44.5^0
+_commit=c71a119de06d8937930e4d1adf06ff0c2b259653  # tags/45.1^0
 source=(
   "git+https://gitlab.gnome.org/GNOME/mutter.git#commit=$_commit"
 )
@@ -63,11 +66,6 @@ pkgver() {
 
 prepare() {
   cd mutter
-
-  # Unbreak tests with Mesa 23.1
-  # https://gitlab.gnome.org/GNOME/mutter/-/issues/2848
-  # https://gitlab.gnome.org/GNOME/mutter/-/merge_requests/3047
-  git cherry-pick -n '5a83e8ef8250526a40e8e69c^..d65883e0d7d70987e3888b86'
 }
 
 build() {
@@ -75,6 +73,7 @@ build() {
     -D docs=true
     -D egl_device=true
     -D installed_tests=false
+    -D libdisplay_info=true
     -D wayland_eglstream=true
   )
 
@@ -85,26 +84,18 @@ build() {
   meson compile -C build
 }
 
-_check() (
+check() (
   export XDG_RUNTIME_DIR="$PWD/rdir" GSETTINGS_SCHEMA_DIR="$PWD/build/data"
   mkdir -p -m 700 "$XDG_RUNTIME_DIR"
   glib-compile-schemas "$GSETTINGS_SCHEMA_DIR"
 
-  pipewire &
-  _p1=$!
+  export NO_AT_BRIDGE=1 GTK_A11Y=none
+  export MUTTER_DEBUG_DUMMY_MODE_SPECS="800x600@10.0"
 
-  wireplumber &
-  _p2=$!
-
-  trap "kill $_p1 $_p2; wait" EXIT
-
-  meson test -C build --print-errorlogs -t 3
+  xvfb-run -s '-nolisten local +iglx -noreset' \
+    mutter/src/tests/meta-dbus-runner.py --launch=pipewire --launch=wireplumber \
+    meson test -C build --print-errorlogs -t 5 --setup plain
 )
-
-check() {
-  dbus-run-session xvfb-run -s '-nolisten local +iglx -noreset' \
-    bash -c "$(declare -f _check); _check"
-}
 
 _pick() {
   local p="$1" f d; shift
@@ -117,7 +108,7 @@ _pick() {
 }
 
 package_mutter() {
-  provides=(libmutter-12.so)
+  provides=(libmutter-13.so)
 
   meson install -C build --destdir "$pkgdir"
 

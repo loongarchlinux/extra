@@ -4,16 +4,16 @@
 # Contributor: Ian Ker-Seymer <i.kerseymer@gmail.com>
 
 pkgname=neovim-qt
-pkgver=0.2.17
-pkgrel=2
+pkgver=0.2.18
+pkgrel=1
 pkgdesc='GUI for Neovim'
 arch=(loong64 x86_64)
 url='https://github.com/equalsraf/neovim-qt'
 license=(ISC)
 depends=(neovim qt5-svg hicolor-icon-theme)
-makedepends=(cmake git ninja)
+makedepends=(cmake git)
 checkdepends=(ttf-dejavu xorg-server-xvfb)
-source=("git+$url#commit=3f05de82ecb5c1a24a7572081ae59e419eb059b8") # tag: v0.2.17
+source=("git+$url#commit=1854bdc2b481a90a7845c2f17e5da0519bf16f48") # tag: v0.2.18
 b2sums=('SKIP')
 
 build() {
@@ -26,16 +26,15 @@ build() {
     -D CMAKE_INSTALL_LIBDIR=lib \
     -D CMAKE_INSTALL_PREFIX=/usr \
     -D USE_SYSTEM_MSGPACK=on \
-    -G Ninja \
     -S $pkgname
-  ninja -C build
+  make -C build
 }
 
 check() {
-  xvfb-run ninja -v -C build test
+  xvfb-run make -v -C build test
 }
 
 package() {
-  DESTDIR="$pkgdir" ninja -C build install
+  DESTDIR="$pkgdir" make -C build install
   install -Dm644 -t "$pkgdir/usr/share/licenses/$pkgname" "$pkgname/LICENSE"
 }

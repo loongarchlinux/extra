@@ -2,7 +2,7 @@
 # Contributor: Knut Ahlers <knut at ahlers dot me>
 
 pkgname=yggdrasil
-pkgver=0.4.7
+pkgver=0.5.3
 pkgrel=1
 pkgdesc="An experiment in scalable routing as an encrypted IPv6 overlay network"
 arch=('loong64' 'x86_64')
@@ -12,28 +12,39 @@ depends=('glibc')
 makedepends=('go')
 source=("${pkgname}-${pkgver}.tar.gz::https://github.com/yggdrasil-network/yggdrasil-go/archive/v${pkgver}.tar.gz"
         'yggdrasil.sysusers')
-sha512sums=('954e511001b509ae95348f18e489aed98dfa9ac079c007e3c054d00163e224389fdb6ae293be507cba5ae5182612a466a9d8878e7e2d762289ad4429920246e8'
-            'b78d1f5efeeba184588ba7bdb2249d976aec160daa59742e032983da1aedad062d15c7c97cba3eba69412a0f7904ee123d98b58f859892d71188c25624295c32')
-b2sums=('eb56702dc95a9bb3bc5a48073d3e2241eb076299262fbeb5e001f2af0da5407796f0978295ae3ecf7b347f2a322c45bfb8d623e0c9271f092288f79ab5ad1040'
+sha256sums=('024fb3714f8ce170ed464a8d1972520fe67b89f8e4d0304ce55db45b7a9ab08f'
+            '233f436a5b4ff62f3da66f871ae9b49ed2b4a13572a83f057a07232627c4b3fd')
+b2sums=('bced67d7212b9acccbd69b262d72dadbc61445e8d5349f2668efc58445b380f39cc9f53f2f8a35a0b093ea0563c8159648eec4ccbc2865546f6c3237fd8c65b8'
         '3cf5bfb3c09908f841b39f7206bb472e50e60f10d1b87ab6def97a7212e27627f1e795bbaffd964d2d27a80fbbd1a3be63d63c59793ec1967c02f48b8462c08b')
 
 build() {
   cd "${pkgname}-go-${pkgver}"
-  PKGNAME="${pkgname}" PKGVER="${pkgver}" \
-    CGO_LDFLAGS="${LDFLAGS}" \
-    GOFLAGS="-trimpath -buildmode=pie -mod=readonly" \
-    ./build -l "-linkmode external -extldflags \"${LDFLAGS}\""
+  for bin in yggdrasil yggdrasilctl; do
+    go build \
+      -trimpath \
+      -buildmode=pie \
+      -mod=readonly \
+      -modcacherw \
+      -ldflags "-linkmode external -extldflags \"${LDFLAGS}\"
+-X github.com/yggdrasil-network/yggdrasil-go/src/version.buildName=yggdrasil
+-X github.com/yggdrasil-network/yggdrasil-go/src/version.buildVersion=${pkgver}
+" \
+      "./cmd/${bin}"
+  done
 }
 
 package() {
   cd "${pkgname}-go-${pkgver}"
-  install -Dm755 "yggdrasil" "${pkgdir}/usr/bin/yggdrasil"
-  install -Dm755 "yggdrasilctl" "${pkgdir}/usr/bin/yggdrasilctl"
-  install -Dm644 LICENSE -t "${pkgdir}/usr/share/licenses/${pkgname}"
+  install -Dm755 -t "${pkgdir}/usr/bin" \
+    yggdrasil \
+    yggdrasilctl
+
   install -Dm644 -t "${pkgdir}/usr/lib/systemd/system" \
     contrib/systemd/yggdrasil.service \
     contrib/systemd/yggdrasil-default-config.service
   install -Dm644 "${srcdir}/yggdrasil.sysusers" "${pkgdir}/usr/lib/sysusers.d/yggdrasil.conf"
+
+  install -Dm644 LICENSE -t "${pkgdir}/usr/share/licenses/${pkgname}"
 }
 
 # vim: ts=2 sw=2 et:

@@ -3,16 +3,27 @@
 
 pkgname=mat2
 pkgver=0.13.4
-pkgrel=1
+pkgrel=2
 pkgdesc='Metadata removal tool, supporting a wide range of commonly used file formats'
 url='https://0xacab.org/jvoisin/mat2'
 arch=('any')
 license=('LGPL3')
-depends=('python' 'python-mutagen' 'python-cairo' 'python-gobject' 'gdk-pixbuf2' 'poppler-glib' 'librsvg' 'perl-image-exiftool' 'mailcap')
+depends=(
+  'gdk-pixbuf2'
+  'librsvg'
+  'mailcap'
+  'perl-image-exiftool'
+  'poppler-glib'
+  'python'
+  'python-cairo'
+  'python-gobject'
+  'python-mutagen'
+)
 makedepends=('python-setuptools')
 optdepends=(
   'ffmpeg: video support'
   'bubblewrap: sandboxing support'
+  'kdialog: dolphin file browser integration'
 )
 checkdepends=('ffmpeg')
 source=(https://0xacab.org/jvoisin/mat2/-/archive/${pkgver}/mat2-${pkgver}.tar.gz
@@ -38,6 +49,7 @@ package() {
   cd ${pkgname}-${pkgver}
   python setup.py install --skip-build -O1 --root="${pkgdir}"
   install -Dm 644 dolphin/mat2.desktop -t "${pkgdir}/usr/share/kservices5/ServiceMenus"
+  install -Dm 644 data/mat2.svg -t "${pkgdir}/usr/share/icons/hicolor/scalable/apps"
   install -Dm 644 doc/mat2.1 -t "${pkgdir}/usr/share/man/man1"
   install -Dm 644 doc/*.md -t "${pkgdir}/usr/share/doc/${pkgname}"
 }

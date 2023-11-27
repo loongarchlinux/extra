@@ -1,7 +1,7 @@
 # Maintainer: Bruno Pagani <archange@archlinux.org>
 
 pkgname=jami-qt
-pkgver=20230619
+pkgver=20231030
 pkgrel=1
 pkgdesc="Free and universal communication platform which preserves the users’ privacy and freedoms (Qt client)"
 arch=(loong64 x86_64)
@@ -14,7 +14,7 @@ depends=(jami-daemon glib2 gdk-pixbuf2 libnm libnotify qrencode
 makedepends=(git cmake python qt6-networkauth qt6-tools)
 replaces=(jami-gnome jami-libclient)
 conflicts=(jami-gnome jami-libclient)
-_commit=b948646cbd201b023b18c9d5cc3d6cca45bba00c
+_commit=a433974340d4700a251b4e1278ff767341185d26
 _sfpmcommit=a2a0c72e4db38e1c5478bd3e0f67ff99fae11f00
 _md4ccommit=e9ff661ff818ee94a4a231958d9b6768dc6882c9
 _tidycommit=d08ddc2860aa95ba8e301343a30837f157977cba
@@ -22,12 +22,14 @@ source=(git+https://git.jami.net/savoirfairelinux/jami-client-qt.git#commit=${_c
         git+https://github.com/atraczyk/SortFilterProxyModel#commit=${_sfpmcommit}
         git+https://github.com/mity/md4c#commit=${_md4ccommit}
         git+https://github.com/htacg/tidy-html5#commit=${_tidycommit}
-        drop-qt-version-check.patch)
+        drop-qt-version-check.patch
+        qt-6.6.patch)
 sha256sums=('SKIP'
             'SKIP'
             'SKIP'
             'SKIP'
-            'd0118269d637b984f13755a5c3548b2509215789aeda2c3b9ac7850c2bd7cf3e')
+            'd0118269d637b984f13755a5c3548b2509215789aeda2c3b9ac7850c2bd7cf3e'
+            '61d7ca804ed18650274f233cd60a811518859b4c6739ecc246414c35c4b8d906')
 
 pkgver() {
   cd jami-client-qt
@@ -37,6 +39,8 @@ pkgver() {
 prepare() {
   # Drop strict Qt version check. Qt is ABI stable and jami is not using any private API
   patch -p1 -d jami-client-qt < drop-qt-version-check.patch
+  # Workaround for running with Qt 6.6 https://git.jami.net/savoirfairelinux/jami-client-qt/-/issues/1397
+  patch -p1 -d jami-client-qt < qt-6.6.patch
 
   cd jami-client-qt
   rm -r 3rdparty/{SortFilterProxyModel,md4c,tidy-html5}

@@ -8,7 +8,7 @@
 
 pkgname=gperftools
 pkgver=2.13
-pkgrel=1
+pkgrel=2
 pkgdesc='Fast, multi-threaded malloc and nifty performance analysis tools'
 arch=('loong64' 'x86_64')
 url='https://github.com/gperftools/gperftools'
@@ -16,8 +16,14 @@ license=('BSD')
 depends=('gcc-libs' 'glibc' 'libunwind')
 optdepends=('graphviz: pprof graph generation'
             'perl: pprof and pprof-symbolize commands')
-source=("https://github.com/gperftools/gperftools/releases/download/$pkgname-$pkgver/$pkgname-$pkgver.tar.gz")
-sha256sums=('4882c5ece69f8691e51ffd6486df7d79dbf43b0c909d84d3c0883e30d27323e7')
+source=("https://github.com/gperftools/gperftools/releases/download/$pkgname-$pkgver/$pkgname-$pkgver.tar.gz"
+         https://github.com/gperftools/gperftools/commit/c48d4f14.patch)
+sha256sums=('4882c5ece69f8691e51ffd6486df7d79dbf43b0c909d84d3c0883e30d27323e7'
+            '0ba3ce58cd064fee8e50ad6c583af9edd39e09231f6291007415ddc0a662e65d')
+
+prepare() {
+  patch -d $pkgname-$pkgver -p1 < c48d4f14.patch # Fix segfaults
+}
 
 build() {
   cd $pkgname-$pkgver

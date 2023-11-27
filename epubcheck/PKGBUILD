@@ -1,0 +1,48 @@
+# Maintainer: David Runge <dvzrv@archlinux.org>
+
+pkgname=epubcheck
+pkgver=5.1.0
+pkgrel=3
+pkgdesc="The conformance checker for EPUB publications"
+arch=(any)
+url="https://github.com/w3c/epubcheck"
+license=(BSD-3-Clause)
+_java_version=21
+depends=(
+  bash
+  java-runtime=$_java_version
+)
+makedepends=(maven)
+source=(
+  $pkgname-$pkgver.tar.gz::$url/archive/refs/tags/v$pkgver.tar.gz
+  $pkgname.sh
+)
+sha512sums=('b577e98416f696d124166fc42427b178dc238a0d0fccd1ca61974ad5f4e95ed29d1ff234b52a51114dead8a89f8195261f7c6527a597306770ae9b7a50d7dad3'
+            'bbb278800c7729c8c99f25b90b4138b489e65d6f8556fb09f50e3c49b33458838ff0e29c98aa767f0e838c9de7a677e7198d2d78cc89d09aa8c3fee4a11531c8')
+b2sums=('42a999aa1e1f98b384d538743cef4f2905d4b6b3412a1b34d032c14b7a4c63a8dd2bba3d3040410518b2d285c76b43b92a14918405ac312bcae6351d7a5d514b'
+        'da868aa7f6dfefd788d1d3378ca1107025ee0ea0b915fe0238f9c3777af40916817b0497e791379e96b3a7c2f19523be71fc248dfc491733bfe77fea473a19fc')
+
+prepare() {
+  sed -e "s/JAVA_VERSION/$_java_version/" $pkgname.sh > $pkgname
+}
+
+build() {
+  local maven_options=(
+    clean
+    package
+    -D maven.test.skip=true  # tests fail on trying to use deprecated features
+    -D maven.repo.local="./"
+  )
+
+  cd $pkgname-$pkgver
+  mvn "${maven_options[@]}"
+}
+
+package() {
+  cd $pkgname-$pkgver
+  install -vDm 755 "../$pkgname" -t "$pkgdir/usr/bin/"
+  install -vDm 644 target/$pkgname.jar -t "$pkgdir/usr/share/java/$pkgname/"
+  install -vDm 644 target/lib/*.jar -t "$pkgdir/usr/share/java/$pkgname/lib/"
+  install -vDm 644 {CHANGELOG,README}.md -t "$pkgdir/usr/share/doc/$pkgname/"
+  install -vDm 644 LICENSE.md -t "$pkgdir/usr/share/licenses/$pkgname/"
+}

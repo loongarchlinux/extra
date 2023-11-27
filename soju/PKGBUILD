@@ -2,7 +2,7 @@
 
 pkgname=soju
 pkgver=0.6.2
-pkgrel=3
+pkgrel=4
 pkgdesc='A user-friendly IRC bouncer'
 arch=('loong64' 'x86_64')
 url='https://soju.im'
@@ -71,7 +71,9 @@ build() {
     -modcacherw \
     -ldflags "-compressdwarf=false \
     -linkmode external \
-    -extldflags ${LDFLAGS}" \
+    -extldflags ${LDFLAGS} \
+    -X git.sr.ht/~emersion/soju/config.DefaultPath=/etc/soju/config \
+    -X git.sr.ht/~emersion/soju/config.DefaultUnixAdminPath=/run/soju/admin" \
     -tags 'libsqlite3' \
     -o build \
     ./cmd/... \
@@ -109,7 +111,7 @@ package() {
   install -vDm644 "$srcdir/tmpfiles.conf" "$pkgdir/usr/lib/tmpfiles.d/$pkgname.conf"
 
   # binaries
-  install -vDm755 -t "$pkgdir/usr/bin" build/soju{,ctl,-migrate-db,-migrate-logs,-znc-import}
+  install -vDm755 -t "$pkgdir/usr/bin" build/soju{,db,ctl,-migrate-db,-migrate-logs,-znc-import}
   install -vDm755 contrib/casemap-logs.sh "$pkgdir/usr/bin/soju-casemap-logs"
 
   # man page

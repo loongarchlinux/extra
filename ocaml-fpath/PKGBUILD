@@ -1,0 +1,29 @@
+# Maintainer: Jürgen Hötzel <juergen@archlinux.org>
+
+_pkgname=fpath
+pkgname=ocaml-${_pkgname}
+pkgver=0.7.3
+pkgrel=1
+pkgdesc="OCaml module for handling file system paths with POSIX and Windows conventions"
+arch=('loong64' 'x86_64')
+url="https://erratique.ch/software/fpath"
+license=('ISC')
+depends=('ocaml' 'ocaml-astring')
+makedepends=('ocaml-findlib' 'ocamlbuild' 'ocaml-topkg' 'opam')
+options=('!strip')
+source=("https://erratique.ch/software/fpath/releases/${_pkgname}-${pkgver}.tbz")
+sha256sums=('12b08ff192d037d9b6d69e9ca19d1d385184f20b3237c27231e437ac81ace70f')
+
+build() {
+  cd "${srcdir}/${_pkgname}-${pkgver}"
+  ocaml pkg/pkg.ml build --dev-pkg false
+}
+
+package() {
+  cd "${srcdir}/${_pkgname}-${pkgver}"
+  opam-installer --prefix="$pkgdir/usr" --libdir='lib/ocaml' --docdir='share/doc'
+
+  mv "${pkgdir}/usr/share/doc/${_pkgname}" "${pkgdir}/usr/share/doc/${pkgname}"
+  install -dm755 "$pkgdir/usr/share/licenses/$pkgname"
+  ln -sf "/usr/share/doc/$pkgname/LICENSE.md" "$pkgdir/usr/share/licenses/$pkgname/LICENSE.md"
+}

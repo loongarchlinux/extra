@@ -1,21 +1,27 @@
-commit e081b38ba9c918db344bf9a86b2672f7e175f3df
-Author: Anatol Pomozov <anatol.pomozov@gmail.com>
-Date:   Tue May 26 00:01:38 2020 -0700
+From f9a24eb07e1b316142852d4bbe5736aeea1ddabe Mon Sep 17 00:00:00 2001
+From: Caleb Maclennan <caleb@alerque.com>
+Date: Thu, 26 Oct 2023 00:03:08 +0300
+Subject: [PATCH] Patch config files with Arch Linux specific locations
 
-    Patch config files with Arch Linux specific locations
-    
-    Arch uses upstream's default config files as a base for its configs.
-    But directory structure at Arch is completely different from the default
-    one specified by gitlab project.
-    We used to have a lot of seds expressions to adjust the files but as
-    complexity of configs grew 'sed' makes it easy to miss a changed/added
-    option.
-    
-    Track set of diffs as a patch. If upstream modifies config file then it
-    will cause a conflict that needs to be reviewed manually.
+Arch uses upstream's default config files as a base for its configs.
+But directory structure at Arch is completely different from the default
+one specified by gitlab project. We used to have a lot of seds
+expressions to adjust the files but as complexity of configs grew 'sed'
+makes it easy to miss a changed/added option.
+
+Track set of diffs as a patch. If upstream modifies config file then it
+will cause a conflict that needs to be reviewed manually.
+
+Co-authored-by: Caleb Maclennan <caleb@alerque.com>
+Signed-off-by: Caleb Maclennan <caleb@alerque.com>
+---
+ config/database.yml.postgresql | 79 +---------------------------------
+ config/gitlab.yml.example      | 68 ++++++++++++++---------------
+ config/puma.rb.example         | 16 +++----
+ 3 files changed, 44 insertions(+), 119 deletions(-)
 
 diff --git a/config/database.yml.postgresql b/config/database.yml.postgresql
-index b210b9c412b..19c33fdd1f5 100644
+index da9f458ff09..78b0dedae79 100644
 --- a/config/database.yml.postgresql
 +++ b/config/database.yml.postgresql
 @@ -6,7 +6,7 @@ production:
@@ -97,8 +103,8 @@ index b210b9c412b..19c33fdd1f5 100644
      password: "secure password"
      host: localhost
  
-@@ -106,28 +59,3 @@ test: &test
-     prepared_statements: false
+@@ -107,31 +60,3 @@ test: &test
+     reaping_frequency: nil
      variables:
        statement_timeout: 15s
 -  ci:
@@ -110,6 +116,7 @@ index b210b9c412b..19c33fdd1f5 100644
 -    password:
 -    host: localhost
 -    prepared_statements: false
+-    reaping_frequency: nil
 -    variables:
 -      statement_timeout: 15s
 -  geo:
@@ -119,6 +126,7 @@ index b210b9c412b..19c33fdd1f5 100644
 -    username: postgres
 -    password:
 -    host: localhost
+-    reaping_frequency: nil
 -  embedding:
 -    adapter: postgresql
 -    encoding: unicode
@@ -126,8 +134,9 @@ index b210b9c412b..19c33fdd1f5 100644
 -    username: postgres
 -    password:
 -    host: localhost
+-    reaping_frequency: nil
 diff --git a/config/gitlab.yml.example b/config/gitlab.yml.example
-index 7968d46dad4..ab76b169d55 100644
+index 5002e9e24bf..030fcc6a3cd 100644
 --- a/config/gitlab.yml.example
 +++ b/config/gitlab.yml.example
 @@ -91,7 +91,7 @@ production: &base
@@ -164,7 +173,7 @@ index 7968d46dad4..ab76b169d55 100644
      # When a user clicks e.g. 'Download zip' on a project, a temporary zip file is created in the following directory.
      # The default is 'shared/cache/archive/' relative to the root of the Rails app.
 -    # repository_downloads_path: shared/cache/archive/
-+    repository_downloads_path: /var/lib/gitlab/shared/cache/archive
++    repository_downloads_path: /var/lib/gitlab/shared/cache/archive/
  
      ## Impersonation settings
      impersonation_enabled: true
@@ -213,6 +222,15 @@ index 7968d46dad4..ab76b169d55 100644
      object_store:
        enabled: false
        remote_directory: lfs-objects # Bucket name
+@@ -363,7 +363,7 @@ production: &base
+   ## Uploads (attachments, avatars, etc...)
+   uploads:
+     # The location where uploads objects are stored (default: public/).
+-    # storage_path: public/
++    storage_path: /var/lib/gitlab/public/
+     # base_dir: uploads/-/system
+     object_store:
+       enabled: false
 @@ -384,7 +384,7 @@ production: &base
      enabled: true
      dpkg_deb_path: /usr/bin/dpkg-deb
@@ -240,6 +258,15 @@ index 7968d46dad4..ab76b169d55 100644
      object_store:
        enabled: false
        remote_directory: terraform # The bucket name
+@@ -439,7 +439,7 @@ production: &base
+   ## CI Secure Files
+   ci_secure_files:
+     enabled: true
+-    # storage_path: shared/ci_secure_files
++    storage_path: /var/lib/gitlab/shared/ci_secure_files
+     object_store:
+       enabled: false
+       remote_directory: ci-secure-files # The bucket name
 @@ -458,7 +458,7 @@ production: &base
      enabled: false
      access_control: false
@@ -258,7 +285,7 @@ index 7968d46dad4..ab76b169d55 100644
      object_store:
        enabled: false
        remote_directory: pages # The bucket name
-@@ -663,7 +663,7 @@ production: &base
+@@ -667,7 +667,7 @@ production: &base
      # port: 5005
      # api_url: http://localhost:5000/ # internal address to the registry, will be used by GitLab to directly communicate with API
      # key: config/registry.key
@@ -267,16 +294,16 @@ index 7968d46dad4..ab76b169d55 100644
      # issuer: gitlab-issuer
      # notification_secret: '' # only set it when you use Geo replication feature without built-in Registry
  
-@@ -714,7 +714,7 @@ production: &base
+@@ -718,7 +718,7 @@ production: &base
      # Default project notifications settings:
  
      # The location where build traces are stored (default: builds/). Relative paths are relative to Rails.root
 -    # builds_path: builds/
-+    builds_path: /var/lib/gitlab/builds
++    builds_path: /var/lib/gitlab/builds/
  
    #
    # 3. Auth settings
-@@ -1167,7 +1167,7 @@ production: &base
+@@ -1171,7 +1171,7 @@ production: &base
  
    # Shared file storage settings
    shared:
@@ -285,7 +312,7 @@ index 7968d46dad4..ab76b169d55 100644
  
    # Encrypted Settings configuration
    encrypted_settings:
-@@ -1192,14 +1192,14 @@ production: &base
+@@ -1196,14 +1196,14 @@ production: &base
      # real path not the symlink.
      storages: # You must have at least a `default` storage path.
        default:
@@ -304,13 +331,13 @@ index 7968d46dad4..ab76b169d55 100644
      # archive_permissions: 0640 # Permissions for the resulting backup.tar file (default: 0600)
      # keep_time: 604800   # default: 0 (forever) (in seconds)
      # pg_schema: public     # default: nil, it means that all schemas will be backed up
-@@ -1234,12 +1234,12 @@ production: &base
+@@ -1238,12 +1238,12 @@ production: &base
  
    ## GitLab Shell settings
    gitlab_shell:
 -    path: /home/git/gitlab-shell/
 -    authorized_keys_file: /home/git/.ssh/authorized_keys
-+    path: /usr/share/webapps/gitlab-shell
++    path: /usr/share/webapps/gitlab-shell/
 +    authorized_keys_file: /var/lib/gitlab/.ssh/authorized_keys
  
      # File that contains the secret key for verifying access for gitlab-shell.
@@ -320,7 +347,7 @@ index 7968d46dad4..ab76b169d55 100644
  
      # Git over HTTP
      upload_pack: true
-@@ -1254,13 +1254,13 @@ production: &base
+@@ -1258,13 +1258,13 @@ production: &base
    workhorse:
      # File that contains the secret key for verifying access for gitlab-workhorse.
      # Default is '.gitlab_workhorse_secret' relative to Rails.root (i.e. root of the GitLab app).
@@ -336,17 +363,30 @@ index 7968d46dad4..ab76b169d55 100644
  
      # The URL to the external KAS API (used by the Kubernetes agents)
      # external_url: wss://kas.example.com
-@@ -1278,7 +1278,7 @@ production: &base
+@@ -1278,17 +1278,17 @@ production: &base
+   suggested_reviewers:
+     # File that contains the secret key for verifying access to GitLab internal API for Suggested Reviewers.
+     # Default is '.gitlab_suggested_reviewers_secret' relative to Rails.root (i.e. root of the GitLab app).
+-    # secret_file: /home/git/gitlab/.gitlab_suggested_reviewers_secret
++    # secret_file: /var/lib/gitlab/.gitlab_suggested_reviewers_secret
+ 
+   zoekt:
+     # Files that contain username and password for basic auth for Zoekt
+     # Default is '.gitlab_zoekt_username' and '.gitlab_zoekt_password' in Rails.root
+-    # username_file: /home/git/gitlab/.gitlab_zoekt_username
+-    # password_file: /home/git/gitlab/.gitlab_zoekt_password
++    # username_file: /var/lib/gitlab/.gitlab_zoekt_username
++    # password_file: /var/lib/gitlab/.gitlab_zoekt_password
  
    ## GitLab Elasticsearch settings
    elasticsearch:
 -    indexer_path: /home/git/gitlab-elasticsearch-indexer/
-+    indexer_path: /var/lib/gitlab/elasticsearch-indexer
++    indexer_path: /var/lib/gitlab/elasticsearch-indexer/
  
    ## Git settings
    # CAUTION!
 diff --git a/config/puma.rb.example b/config/puma.rb.example
-index 07a6f6a2501..32a6763c01a 100644
+index 65c817bb2d8..52012b50e0d 100644
 --- a/config/puma.rb.example
 +++ b/config/puma.rb.example
 @@ -5,11 +5,11 @@
@@ -379,7 +419,7 @@ index 07a6f6a2501..32a6763c01a 100644
  
  on_restart do
    # Signal application hooks that we're about to restart
-@@ -74,7 +74,7 @@ worker_timeout 60
+@@ -74,14 +74,14 @@ worker_timeout 60
  wait_for_less_busy_worker ENV.fetch('PUMA_WAIT_FOR_LESS_BUSY_WORKER', 0.001).to_f
  
  # Use json formatter
@@ -388,3 +428,14 @@ index 07a6f6a2501..32a6763c01a 100644
  
  json_formatter = Gitlab::PumaLogging::JSONFormatter.new
  log_formatter do |str|
+   json_formatter.call(str)
+ end
+ 
+-require_relative "/home/git/gitlab/lib/gitlab/puma/error_handler"
++require_relative "/usr/share/webapps/gitlab/lib/gitlab/puma/error_handler"
+ 
+ error_handler = Gitlab::Puma::ErrorHandler.new(ENV['RAILS_ENV'] == 'production')
+ 
+-- 
+2.42.0
+

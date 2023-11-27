@@ -3,7 +3,7 @@
 
 pkgname=python-openapi-schema-validator
 # https://github.com/p1c2u/openapi-schema-validator/releases
-pkgver=0.6.1
+pkgver=0.6.2
 pkgrel=1
 pkgdesc="OpenAPI schema validation for Python"
 url="https://github.com/p1c2u/openapi-schema-validator"
@@ -13,7 +13,7 @@ depends=('python' 'python-jsonschema' 'python-jsonschema-specifications' 'python
 makedepends=('python-build' 'python-installer' 'python-poetry-core')
 checkdepends=('python-pytest')
 source=("https://github.com/p1c2u/openapi-schema-validator/archive/$pkgver/$pkgname-$pkgver.tar.gz")
-sha256sums=('1d70ad3322051d5bb140923ca609dae7b44a367ba158aa0841f08087ebaf14b9')
+sha256sums=('db0215a89bc1f65d69b2e122142a122feb868339748fc12c72be72292f432638')
 
 prepare() {
   cd openapi-schema-validator-$pkgver

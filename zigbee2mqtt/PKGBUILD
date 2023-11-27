@@ -1,36 +1,60 @@
 # Maintainer: Jelle van der Waa <jelle@archlinux.org>
+# Maintainer: George Rawlinson <grawlinson@archlinux.org>
 # Contributor: Sebastian Zwierzchowski <seba@angrysoft.ovh>
 
 pkgname=zigbee2mqtt
-pkgver=1.33.1
+pkgver=1.33.2
 pkgrel=1
 pkgdesc='A Zigbee to MQTT bridge'
 arch=('loong64' 'x86_64')
 url='https://www.zigbee2mqtt.io'
 license=('GPL3')
 depends=('nodejs-lts-hydrogen') # FS#75807
-makedepends=('typescript' 'npm')
+makedepends=('git' 'typescript' 'npm')
 backup=('etc/zigbee2mqtt/configuration.yaml')
 optdepends=('mosquitto: MQTT broker')
 options=(!emptydirs)
-source=(${pkgname}-${pkgver}.tar.gz::"https://github.com/Koenkk/${pkgname}/archive/${pkgver}.tar.gz" 'zigbee2mqtt.service'
-  	'zigbee2mqtt.sysusers' 'zigbee2mqtt.tmpfiles')
-sha256sums=('d8b1d3477caff2e49bb7bcdfb8962327d77b11a023ebbce98e0917189a682dda'
+_commit='9996c931e25a0a3e72d9bb1aa89ed9c36eec8a89'
+source=(
+  "${pkgname}::git+https://github.com/Koenkk/zigbee2mqtt#commit=${_commit}"
+  'zigbee2mqtt.service'
+  'zigbee2mqtt.sysusers'
+  'zigbee2mqtt.tmpfiles'
+)
+sha256sums=('SKIP'
             '04d58763942cc598ac858f003b174316b695c2a542b2788e50751c3077adf106'
             '3a86716e9036e97d885e9b5f37c7f87d9c2872435e4acf9fc4c9157264cf387b'
             'b8cb53b06176abb09e74e68daee702263f3d471b249c51b1b32d693fc7354fd8')
 
-build() {
-  cd "${pkgname}-${pkgver}"
+pkgver() {
+  cd "${pkgname}"
+
+  git describe --tags | sed 's/^v//'
+}
+
+prepare() {
+  cd "${pkgname}"
+
   npm install
+}
+
+build() {
+  cd "${pkgname}"
+
   NODE_ENV=production npm run build
+
   npm prune --production
 }
 
 package() {
-  cd "${pkgname}-${pkgver}"
+  cd "${pkgname}"
+
   install -m0755 -d "${pkgdir}/usr/share/webapps/${pkgname}"
   cp -a node_modules dist "${pkgdir}/usr/share/webapps/${pkgname}"
+
+  # FS#80123
+  # https://github.com/Koenkk/zigbee2mqtt/blob/51f15bd306db1249e02b0d4fd433d06173ac0e04/docker/Dockerfile#L31
+  echo "${_commit}" > "${pkgdir}/usr/share/webapps/${pkgname}/dist/.hash"
 
   install -m0644 cli.js -t "${pkgdir}/usr/share/webapps/${pkgname}"
   install -m0644 index.js -t "${pkgdir}/usr/share/webapps/${pkgname}"

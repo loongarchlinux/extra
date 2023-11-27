@@ -2,13 +2,13 @@
 # Contributor: Federico Cuello <fedux@fedux.com.ar>
 
 pkgname=redmine
-pkgver=5.0.5
+pkgver=5.0.6
 pkgrel=1
 pkgdesc="A flexible project management web application written using Ruby on Rails framework."
 arch=('loong64' 'x86_64')
 url="https://www.redmine.org"
 license=('GPL2')
-depends=('ruby2.7' 'imagemagick' 'libxml2' 'libxslt')
+depends=('ruby' 'imagemagick' 'libxml2' 'libxslt')
 makedepends=('mariadb-libs' 'postgresql-libs' 'sqlite' 'systemd')
 optdepends=('apache: A supported application server'
             'nginx: A supported application server'
@@ -18,30 +18,28 @@ optdepends=('apache: A supported application server'
 source=("$url/releases/$pkgname-$pkgver.tar.gz"
 	"Gemfile.local"
 	"redmine.service")
-sha512sums=('95b7926008ac3ed53b091a05793ad2372a5e9a5194629811f3cefe38c3b550971f0eb424fb5f7eb9fec0c014632c694d90859945544cadae987f7ddff31d6ce4'
+sha512sums=('fa0b56ba2b24db9a752ae3cc977f2ef56c33ee4fe99154bfd2c5a449c3bc5f926f000002f23426ae4578a11d8f30121ae8707e39800168379baf546c5224e5ee'
             '1943883fdc5479f8acb4c256108b6ae054360eb7298b696bc3e16995dac0e51529b4a9f4c8e9158645a15d7b90fdcdaedb4502986a8a6dc4015671fae6861b6e'
             '0e2ebbe34e096935977ad72448b345a8c4b050fbee24ad035cbab872447cad24efd24240a4e0ae5f9ee0bd098b5737305162affa91431ffa28d1bc86b334a3f9')
 
 build() {
     cd "$srcdir"/redmine-$pkgver
 
-    export PATH=/opt/ruby2.7/bin:$PATH
-
     cp "${srcdir}"/Gemfile.local Gemfile.local
-    bundle-2.7 config set force_ruby_platform true
-    bundle-2.7 config build.nokogiri --use-system-libraries
-#    bundle-2.7 config set without 'development test'
-#    bundle-2.7 config set no-cache 'true'
-#    bundle-2.7 config set deployment 'true'
-    bundle-2.7 lock
-    bundle-2.7 install --no-cache --deployment --without development test
+    bundle config set force_ruby_platform true
+    bundle config build.nokogiri --use-system-libraries
+#    bundle config set without 'development test'
+#    bundle config set no-cache 'true'
+#    bundle config set deployment 'true'
+    bundle lock
+    bundle install --no-cache --deployment --without development test
 }
 
 package() {
     install -dm 755 "$pkgdir"/usr/share/webapps/
 
-    rm "$srcdir"/redmine-$pkgver/vendor/bundle/ruby/2.7.0/extensions/*/*/*/{mkmf.log,gem_make.out}
-    rm -rf "$srcdir"/redmine-$pkgver/vendor/bundle/ruby/2.7.0/gems/*/ext/
+    rm "$srcdir"/redmine-$pkgver/vendor/bundle/ruby/3*/extensions/*/*/*/{mkmf.log,gem_make.out}
+    rm -rf "$srcdir"/redmine-$pkgver/vendor/bundle/ruby/3*/gems/*/ext/
 
     cp -a --no-preserve=ownership "$srcdir"/redmine-$pkgver "$pkgdir"/usr/share/webapps/redmine
 

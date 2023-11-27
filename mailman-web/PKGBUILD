@@ -1,15 +1,27 @@
 # Maintainer: David Runge <dvzrv@archlinux.org>
 
 pkgname=mailman-web
-pkgver=0.0.6
-_commit=fd605ed417c88e078c5c6e35e97b50b3e28efc73  # refs/tags/0.0.6
-pkgrel=3
+pkgver=0.0.8
+_commit=5c1af3175f879afa0c38b6b7b7621ede332ea1c8  # refs/tags/0.0.8
+pkgrel=1
 pkgdesc="The web interface for Mailman 3"
 arch=(any)
 url="https://gitlab.com/mailman/mailman-web"
-license=(GPL3)
-depends=(hyperkitty postorius python-django python-whoosh)
-makedepends=(git python-build python-installer python-setuptools-scm python-wheel)
+license=(GPL-3.0-or-later)
+depends=(
+  hyperkitty
+  postorius
+  python
+  python-django
+  python-whoosh
+)
+makedepends=(
+  git
+  python-build
+  python-installer
+  python-setuptools-scm
+  python-wheel
+)
 optdepends=(
   'mailman3: for interacting with a local mailman instance'
   'uwsgi-plugin-python: for running inside uwsgi'
@@ -20,14 +32,14 @@ backup=(
 )
 options=()
 source=(
-  git+https://gitlab.com/mailman/mailman-web#tag=$_commit?signed
+  "git+$url#tag=$_commit?signed"
   $pkgname-qcluster.service
   settings.py
   $pkgname.sysusers
   $pkgname.tmpfiles
   $pkgname.uwsgi
   $pkgname-0.0.5-fhs.patch
-  drop-django-version-requirement.patch
+  $pkgname-0.0.8-remove_django_versioned_dependency.patch
 )
 sha512sums=('SKIP'
             '5440c170f50cbc4c95e0cf4c9d2c8a03759e0d13c2f9c604a6eaedfde9abcc4ae6cc9845d53d58cd4ee06373bab166f3115a59ebac3b77fe1d33ab7054c7c5d7'
@@ -36,7 +48,7 @@ sha512sums=('SKIP'
             '07aa2af5f72dccdfe32f3f220d798e5e6d57ed6875566e33ad610a05a063861a84aa6bb6d4c9a172711862855e7eae68a19fd6dcd098893f4a365579bd29cf57'
             '744a0f0af9c5683b50bf43816262917edeb47e954aba1ac7c9d831eddf3c5e63e307811e35161ac3a717b08f7d9c3dface0a2703a7c2a0f6d3a9882ce445109f'
             '311b968255435f20ee3c9d4c88e7c4f122b93b6fef8b586896e5cd3bf63e95fae1b4a770cacb3e6eb35859b5a69f26f98c3cd9ca44fcfb509ef676556f2fb67e'
-            'b26b154c3a6f45a7beb2b0d14a3b5016f6c56ad97690dc6e519d25f9978fa66678e4a4582894c21087ab4cfb9d59b4e8ddbc94a15e349046b7f310d21c31c03e')
+            '628df1008bcdb3579d26a22c90b9f47dfefa44a26ed8ff082e94ed984e6b6cab477e95dcf85b929ec0f9d1833143e7d1a2e0c7625194f874f60c20a91ba163be')
 b2sums=('SKIP'
         '48d65925bbbe4f17c1d4a656eb533621904fbffee06ff0ce09fbc9ad69cd947269998f31a9a172645d9389d98caf8395e4a3d9fbaafeedbf52b774725d446e29'
         '40c2583cf72597fbcdfeecabb8aa10cb2fe1e5f9b60669bdc933e4884899325f70ba4ab9f27dc702aacf26f0b0de400b26245c7770a9b3e8cc0b0641478028d6'
@@ -44,7 +56,7 @@ b2sums=('SKIP'
         '80ca9c95c9bb3ce42bd4e3efbea59bc6cbbdabd35c504ee5c7414b8c657d863119921577fb618e0709631d05704d24698a2575f12aed81cf1cf16cd8ce116ed9'
         '7f39c6752f54048e1268c94010fa2fbdc6cc7db0c931c616469068ba835330b9cb8ec183978f2047fd8e0aff88b25de7437cbb112dbdad25f795e25f2419f809'
         '7c176a0ae2ea3cb266b08e821c971ff00d39c2cb3de2b93de6b69e4c38e4647b1b42df468bb0d8ac72f02b069d34969d29e586093f7183a19371d83cabdd3fc7'
-        '3405776ddc59b47250470a4fe34e9abef185016aa12d0e8a8319a3b39c057f657f61accb24205cc31c5ea5c78394e54c4d00a84cd828c3e0b676e4cbf92bd42a')
+        'b46727b1bc5b1fee394961a962de0ed16cd6f42f42fd6ba4978cf9138cab6fc64a385d61ede029110e043e0dea6c9c616243d7d17d67f238146606c0c142b60b')
 validpgpkeys=('541EA0448453394FF77A0ECC9D9B2BA061D0A67C') # Abhilash Raj <raj.abhilash1@gmail.com>
 
 pkgver() {
@@ -57,7 +69,7 @@ prepare() {
   patch -Np1 -d $pkgname -i ../$pkgname-0.0.5-fhs.patch
 
   # Drop the install_requires django version requirement
-  patch -Np1 -d $pkgname -i ../drop-django-version-requirement.patch
+  patch -Np1 -d $pkgname -i ../$pkgname-0.0.8-remove_django_versioned_dependency.patch
 }
 
 build() {

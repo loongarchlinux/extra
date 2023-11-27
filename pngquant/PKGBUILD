@@ -1,27 +1,21 @@
 # Maintainer: Massimiliano Torromeo <massimiliano.torromeo@gmail.com>
 # Contributor: Hannes Graeuler <hgraeule @ uos dot de>
 
-# this is needed only for building the imagequant-sys crate
-_libver=4.2.1
-
 pkgname=pngquant
-pkgver=3.0.1
-pkgrel=5
+pkgver=3.0.3
+pkgrel=2
 pkgdesc="Command-line utility to quantize PNGs down to 8-bit paletted PNGs"
 arch=('loong64' 'x86_64')
 url="https://pngquant.org/"
 license=('BSD')
-depends=('libpng' 'lcms2' 'libimagequant')
+depends=('libpng' 'lcms2')
 makedepends=('cargo')
-source=("https://github.com/kornelski/$pkgname/archive/$pkgver/$pkgname-$pkgver.tar.gz"
-        "https://github.com/ImageOptim/libimagequant/archive/$_libver/libimagequant-$_libver.tar.gz")
-sha256sums=('488e4587c27c7515427b231530cc070a6b123727137b32c501658cff3f8a3451'
-            '14193219fa194d6baee4347bd13bd01fd46d09fe3b59ae35c89b698da96d1198')
+source=("https://github.com/kornelski/$pkgname/archive/$pkgver/$pkgname-$pkgver.tar.gz")
+sha256sums=('ddd8889a9c269ba454d0c5e4f7167948d55d77c4570b23f671809fd3a68b6822')
 
 prepare() {
     cd "$srcdir/$pkgname-$pkgver"
-    rm -rf lib
-    ln -s ../libimagequant-$_libver lib
+    sed -i 's|, path = "lib/imagequant-sys"||' Cargo.toml
     cargo fetch --target "$CARCH-unknown-linux-gnu"
 }
 
