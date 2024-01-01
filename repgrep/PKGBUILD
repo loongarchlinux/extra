@@ -1,8 +1,9 @@
 # Maintainer: Orhun Parmaksız <orhun@archlinux.org>
+# Maintainer: Caleb Maclennan <caleb@alerque.com>
 
 pkgname=repgrep
 _pkgname=rgr
-pkgver=0.14.3
+pkgver=0.15.0
 pkgrel=1
 pkgdesc="An interactive command line replacer for ripgrep"
 arch=('loong64' 'x86_64')
@@ -11,11 +12,11 @@ license=('MIT' 'Apache' 'Unlicense')
 depends=('gcc-libs' 'ripgrep')
 makedepends=('cargo' 'asciidoctor')
 source=("$pkgname-$pkgver.tar.gz::$url/archive/$pkgver.tar.gz")
-sha512sums=('15848e1db1ef4dbd46c1ae1ff1ce29b8bf13adffdd81e0b6648fe200dd6b22fe9e8fb9706770cae4639d2df76d8b0143c1ce79fd9e5565b9983b1b1371c234b9')
+sha512sums=('dbd56387ee9c1269c000c4992449b71b29942b987ce7f032ee8b556bf2e7f3f81da7a081aa610075c366f5b8447bab39312ebf1375100348c9532ddb75a6b90a')
 
 prepare() {
   cd "$pkgname-$pkgver"
-  cargo fetch --locked --target "$CARCH-unknown-linux-gnu"
+  cargo fetch --locked --target "$(rustc -vV | sed -n 's/host: //p')"
 }
 
 build() {
@@ -28,16 +29,27 @@ check() {
   cargo test --frozen
 }
 
+# Upstream v0.15.0 started cheating and stopped generating their own completions and
+# started just repackaging `rg`'s completions using these sed incantations in CI.
+# https://github.com/acheronfail/repgrep/commit/fae1ed5fe9a464fbc7367e441ccc0a2999a72e70
+_reuse_rg_completions () {
+  echo 'complete -F _rg rgr' |
+    install -Dm 644 /dev/stdin "$pkgdir/usr/share/bash-completion/completions/$_pkgname"
+  echo 'compdef $_comps[rg] rgr' |
+    install -Dm 644 /dev/stdin "$pkgdir/usr/share/zsh/site-functions/_$_pkgname"
+  rg --generate complete-fish |
+    sed -e 's/-c rg/-c rgr/' |
+    install -Dm 644 /dev/stdin "$pkgdir/usr/share/fish/vendor_completions.d/$_pkgname.fish"
+}
+
 package() {
   cd "$pkgname-$pkgver"
   install -Dm 755 "target/release/$_pkgname" -t "$pkgdir/usr/bin"
   install -Dm 644 README.md -t "$pkgdir/usr/share/doc/$pkgname"
   install -Dm 644 LICENSE-MIT -t "$pkgdir/usr/share/licenses/$pkgname"
   out_dir=$(find target -name repgrep-stamp -print0 | xargs -0 ls -t | head -n1 | xargs dirname)
-  install -Dm 644 "$out_dir/$_pkgname.bash" "$pkgdir/usr/share/bash-completion/completions/$_pkgname"
-  install -Dm 644 "$out_dir/$_pkgname.fish" "$pkgdir/usr/share/fish/vendor_completions.d/$_pkgname.fish"
-  install -Dm 644 "$out_dir/_$_pkgname" "$pkgdir/usr/share/zsh/site-functions/_$_pkgname"
   install -Dm 644 "$out_dir/$_pkgname.1" -t "$pkgdir/usr/share/man/man1"
+  _reuse_rg_completions
 }
 
 # vim: ts=2 sw=2 et:

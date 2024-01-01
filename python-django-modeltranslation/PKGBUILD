@@ -2,7 +2,7 @@
 
 pkgname=python-django-modeltranslation
 pkgver=0.18.12
-pkgrel=1
+pkgrel=2
 pkgdesc='Translates Django models using a registration approach'
 arch=(any)
 url=https://github.com/deschler/django-modeltranslation
@@ -10,7 +10,10 @@ license=(BSD)
 depends=(python-django)
 makedepends=(
   git
+  python-build
+  python-installer
   python-setuptools
+  python-wheel
 )
 _tag=32956264dad1a0817e055ad1cd36cd7b54578f74
 source=(git+https://github.com/deschler/django-modeltranslation.git#tag=${_tag})
@@ -18,21 +21,17 @@ sha256sums=(SKIP)
 
 pkgver() {
   cd django-modeltranslation
-
   git describe --tags | sed 's/^v//'
 }
 
 build() {
   cd django-modeltranslation
-
-  python setup.py build
+  python -m build --wheel --no-isolation
 }
 
 package() {
-  cd django-modeltranslation
-
-  python setup.py install --root="${pkgdir}" --optimize=1 --skip-build
-  install -Dm 644 LICENSE.txt -t "${pkgdir}"/usr/share/licenses/python-django-modeltranslation/
+  python -m installer --destdir="${pkgdir}" django-modeltranslation/dist/*.whl
+  install -Dm 644 django-modeltranslation/LICENSE.txt -t "${pkgdir}"/usr/share/licenses/python-django-modeltranslation/
 }
 
 # vim: ts=2 sw=2 et:

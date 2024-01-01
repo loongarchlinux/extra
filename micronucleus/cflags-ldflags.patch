@@ -1,0 +1,29 @@
+diff --git a/commandline/Makefile b/commandline/Makefile
+index f912461..461cf56 100644
+--- a/commandline/Makefile
++++ b/commandline/Makefile
+@@ -55,8 +55,8 @@ else # Windows
+ 	OSFLAG = -D WIN
+ endif
+ 
+-LIBS    = $(USBLIBS)
+-CFLAGS  = $(USBFLAGS) -Ilibrary -O -g $(OSFLAG)
++LIBS     = $(shell libusb-config --libs)
++CFLAGS  += $(shell libusb-config --cflags) -Ilibrary $(OSFLAG)
+ 
+ LWLIBS = micronucleus_lib littleWire_util
+ 
+@@ -69,11 +69,11 @@ library: $(LWLIBS)
+ 
+ %.o: ./library/%.c
+ 	@echo Building library: $<...
+-	$(CC) $(CFLAGS) -c $<
++	$(CC) $(CFLAGS) -c $< $(LDFLAGS)
+ 
+ micronucleus: $(addsuffix .o, $(LWLIBS))
+ 	@echo Building command line tool: $@$(EXE_SUFFIX)...
+-	$(CC) $(CFLAGS) -o $@$(EXE_SUFFIX) $@.c $^ $(LIBS)
++	$(CC) $(CFLAGS) -o $@$(EXE_SUFFIX) $@.c $^ $(LIBS) $(LDFLAGS)
+ 
+ clean:
+ 	rm -f micronucleus *.o *.exe

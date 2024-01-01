@@ -8,8 +8,8 @@
 # fine with them.
 
 pkgname=blender
-pkgver=4.0.1
-pkgrel=5
+pkgver=4.0.2
+pkgrel=6
 epoch=17
 pkgdesc="A fully integrated 3D graphics creation suite"
 arch=('loong64' 'x86_64')
@@ -22,7 +22,7 @@ depends=('libpng' 'libtiff' 'openexr' 'python' 'desktop-file-utils' 'python-requ
          'jemalloc' 'libspnav' 'ptex' 'opensubdiv' 'openvdb' 'sdl2' 'embree' 'libharu'
          'draco' 'openpgl' 'level-zero-loader' 'libxkbcommon' 'libepoxy' 'usd' 'openshadinglanguage'
          'intel-oneapi-compiler-shared-runtime-libs' 'intel-oneapi-compiler-dpcpp-cpp-runtime-libs')
-makedepends=('cmake' 'boost' 'mesa' 'git' 'svn' 'llvm' 'cuda' 'ninja' 'wayland-protocols' 'libxkbcommon'
+makedepends=('cmake' 'boost' 'mesa' 'git' 'subversion' 'llvm' 'cuda' 'ninja' 'wayland-protocols' 'libxkbcommon'
              'libdecor' 'hip-runtime-amd' 'level-zero-headers' 'intel-oneapi-dpcpp-cpp'
              'intel-oneapi-compiler-shared-runtime' 'intel-compute-runtime')
 optdepends=('cuda: Cycles renderer CUDA support'
@@ -34,21 +34,31 @@ options=('!buildflags')
 source=("git+https://projects.blender.org/blender/blender.git#tag=v$pkgver"
         "git+https://projects.blender.org/blender/blender-addons.git#tag=v$pkgver"
         "git+https://projects.blender.org/blender/blender-addons-contrib#tag=v$pkgver"
+        "svn+https://svn.blender.org/svnroot/bf-blender/tags/blender-${pkgver%%.[^.]}-release/lib/assets"
         https://developer.download.nvidia.com/redist/optix/v7.7/OptiX-7.7-Include.zip
-        https://projects.blender.org/blender/blender/pulls/115127.patch
+        https://projects.blender.org/blender/blender/commit/5486c70aae94196d715c07364292fc108ebf59a8.patch
         force-draco1.patch
         force-draco2.patch)
 sha512sums=('SKIP'
             'SKIP'
             'SKIP'
+            'SKIP'
             '55caea5beccdc0adebdba8a825f3cfee083015311de5602cfcf215139ccbf9fed62f10ee1dcdf7e31a3557aabbc1fa872eeed67bc46f59fb4e5abd18331c0aca'
-            'ae4aa976f00184ccef735b58734ba13bebafa5ebb64b86d784528c60a4d910065246beca00b0fcf97aed4ce14eeefb29f7be53d76d65df9e122f11a8c1da6818'
+            '375508d1d010b4b043b293cb0c192cb2096aef7ddb0dd1be4a738b20aa720523494cf3054161f1ad116fddc6a9ce03159d6da0a3b3fdb1b57002a477c7c5920a'
             'e239da4f3906f1b54265435181cf770bae3d269c8d915df9a73861e6ee71ec70bf2339426e7c81a91e5a567273b3b3742d7a99feefd3398d821b26e1ff3a56d0'
             'c162646eba42ea7112cfb615466c2cbaddac8d254d4a9e91cf887c5bffef1325a983701163223a1fdee091310ac5574a400347aab7f52321825b5fa3d5a9036f')
 
 prepare() {
   cd "$pkgname"
 
+  # Create expected path for assets
+  mkdir -p "$srcdir"/lib
+  # Copy assets to expected location
+  cp -r "$srcdir"/assets "$srcdir"/lib/assets
+  # Remove this directory to prevent it being packaged
+  rm -r "$srcdir"/lib/assets/.makepkg/
+
+  # Copy addons to expected location
   cp -r "$srcdir"/blender-addons scripts/addons
   cp -r "$srcdir"/blender-addons-contrib scripts/addons_contrib
 
@@ -59,7 +69,8 @@ prepare() {
   # To fix manpage installation
   # https://devtalk.blender.org/t/regression-cmake-install-error-for-man-page/32129
   # https://projects.blender.org/blender/blender/pulls/115127
-  patch -Np1 -i "$srcdir"/115127.patch
+  patch -Np1 -i "$srcdir"/5486c70aae94196d715c07364292fc108ebf59a8.patch || true
+  # We don't care about the first failed hunk.
 
   # Revert https://projects.blender.org/blender/blender/commit/4b891b4af which causes all
   # CMake custom commands to be run in serial instead of in parallel.
@@ -79,7 +90,8 @@ build() {
   echo 'set(CYCLES_CUDA_BINARIES_ARCH sm_52 sm_53 sm_60 sm_61 sm_62 sm_70 sm_72 sm_75 sm_80 sm_86 sm_87 sm_89 compute_89 CACHE STRING "CUDA architectures to build binaries for" FORCE)' > precache
   echo 'mark_as_advanced(CYCLES_CUDA_BINARIES_ARCH)' >> precache
 
-  # Disable manpage for the time being
+  # Disable OSL until it's built with LLVM 16 otherwise we get stuff like
+  # https://gitlab.archlinux.org/archlinux/packaging/packages/blender/-/issues/2
   cmake \
     -Bbuild \
     -GNinja \
@@ -91,16 +103,16 @@ build() {
     -DHIP_ROOT_DIR=/opt/rocm \
     -DOPTIX_ROOT_DIR="$srcdir" \
     -DCMAKE_INSTALL_PREFIX=/usr \
+    -DWITH_CYCLES_OSL=OFF \
     -DCMAKE_BUILD_TYPE=Release \
     -DWITH_INSTALL_PORTABLE=OFF \
     -DWITH_PYTHON_INSTALL=OFF \
-    -DWITH_DOC_MANPAGE=OFF \
     -DOCLOC_INSTALL_DIR=/usr \
     -DUSD_ROOT_DIR=/usr \
     -DSYCL_OFFLINE_COMPILER_PARALLEL_JOBS=8
   cmake --build build
     # For debug:
-    # -DSYCL_CPP_FLAGS=--verbose \
+    # -DSYCL_CPP_FLAGS=--verbose
 }
 
 package() {

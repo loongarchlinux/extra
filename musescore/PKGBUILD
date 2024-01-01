@@ -4,8 +4,8 @@
 # Contributor: Dr.Egg <rwhite@archlinux.us>
 
 pkgname=musescore
-pkgver=4.1.1
-pkgrel=2
+pkgver=4.2.0
+pkgrel=1
 pkgdesc='Create, play and print beautiful sheet music'
 arch=(loong64 x86_64)
 url=https://musescore.org/
@@ -14,6 +14,7 @@ groups=(pro-audio)
 depends=(
   gcc-libs
   glibc
+  hicolor-icon-theme
   libasound.so
   libfreetype.so
   libsndfile.so
@@ -40,13 +41,13 @@ makedepends=(
 )
 optdepends=('lame: MP3 export')
 options=(!lto)
-_tag=e4d1ddf2073c5ad4596ee27aa3019db4da2b76e8
+_tag=eb8d33c7af7887f6529ea8362161233ebe262681
 source=(git+https://github.com/musescore/MuseScore.git#tag=${_tag})
 sha256sums=(SKIP)
 
 prepare() {
   cd MuseScore
-# Fix display of scores with recent qt5-declarative
+  # Fix display of scores with recent qt5-declarative
   git cherry-pick -n c747bdbcba81109e2749015a575827b2494af971
 }
 
@@ -67,6 +68,7 @@ build() {
     -DMUSESCORE_REVISION=$(git rev-parse --short=7 HEAD) \
     -DMUE_BUILD_CRASHPAD_CLIENT=OFF \
     -DMUE_BUILD_UNIT_TESTS=OFF \
+    -DMUE_COMPILE_USE_SYSTEM_FREETYPE=ON \
     -DMUE_ENABLE_FILE_ASSOCIATION=ON \
     -DMUE_INSTALL_SOUNDFONT=ON \
     -Wno-dev

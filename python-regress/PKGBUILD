@@ -1,0 +1,65 @@
+# Maintainer: David Runge <dvzrv@archlinux.org>
+
+pkgname=python-regress
+_name=regress
+pkgver=0.4.5
+pkgrel=1
+pkgdesc="Python bindings to the Rust regress crate which provides ECMA regular expressions"
+arch=(loong64 x86_64)
+url="https://github.com/crate-py/regress"
+license=(MIT)
+depends=(
+  gcc-libs
+  glibc
+  python
+)
+makedepends=(
+  python-build
+  python-installer
+  python-maturin
+  python-wheel
+)
+checkdepends=(python-pytest)
+source=($pkgname-$pkgver.tar.gz::$url/archive/refs/tags/v$pkgver.tar.gz)
+sha512sums=('6b533bf45d7a1b1d0cc87be56d4a2561b14f70b2062f5de6d87b5c4618f59e4702aa5eecebeae03f9cada8aab3f7f595fdecae6c54bb0fbbc5d8527d4ef0dae4')
+b2sums=('9df274d6b2d1a04acdd5e28a4a724319f786969d254af6c70e5919d2df26f4806d675f4ede72dedb8f99edc3a24810cad74f66d85558f46ab60705dac5a64e26')
+
+prepare() {
+  cd $_name-$pkgver
+  export RUSTUP_TOOLCHAIN=stable
+  cargo fetch --locked --target "$(rustc -vV | sed -n 's/host: //p')"
+}
+
+build() {
+  local python_build_options=(
+    --wheel
+    --no-isolation
+    -C="--target=$(rustc -vV | sed -n 's/host: //p')"
+    -C="--locked"
+    -C="--release"
+    -C="--all-features"
+    -C="--strip"
+  )
+
+  cd $_name-$pkgver
+  python -m build "${python_build_options[@]}"
+}
+
+check() {
+  local pytest_options=(
+    -vv
+  )
+  local site_packages=$(python -c "import site; print(site.getsitepackages()[0])")
+
+  cd $_name-$pkgver
+  # install to temporary location, as importlib is used
+  python -m installer --destdir=test_dir dist/*.whl
+  export PYTHONPATH="$PWD/test_dir/$site_packages:$PYTHONPATH"
+  pytest "${pytest_options[@]}"
+}
+
+package() {
+  cd $_name-$pkgver
+  python -m installer --destdir="$pkgdir" dist/*.whl
+  install -vDm 644 LICENSE -t "$pkgdir/usr/share/licenses/$pkgname/"
+}

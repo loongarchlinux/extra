@@ -1,27 +1,71 @@
 # Maintainer: Bruno Pagani <archange@archlinux.org>
 
 pkgname=fractal
-pkgver=4.4.2
-pkgrel=1
-pkgdesc="GTK+ client for Matrix written in Rust"
+pkgver=5
+pkgrel=2
+pkgdesc="Matrix group messaging app"
 arch=(loong64 x86_64)
-url="https://wiki.gnome.org/Apps/Fractal"
-license=(GPL3)
-depends=(gtk3 gst-plugins-base-libs gst-plugin-gtk gst-plugins-bad gst-editing-services gtksourceview4 gspell libhandy0)
+url="https://gitlab.gnome.org/GNOME/fractal/"
+license=(GPL-3.0-only)
+depends=(
+  dconf
+  gcc-libs
+  glib2
+  glibc
+  graphene
+  gst-plugins-bad
+  gst-plugins-bad-libs
+  gst-plugins-base-libs
+  gstreamer
+  gtk4
+  gtksourceview5
+  hicolor-icon-theme
+  libadwaita
+  libpipewire
+  libshumate
+  openssl
+  pango
+  sqlite
+  xdg-desktop-portal
+)
+makedepends=(
+  clang
+  cmake
+  meson
+  rust
+)
 optdepends=('org.freedesktop.secrets: password storage')
-makedepends=(meson rust)
-_md5=991d563a6bf692c446291f3224f96a08
-source=("https://gitlab.gnome.org/GNOME/fractal/-/archive/${pkgver}/fractal-${pkgver}.tar.gz")
-sha256sums=('97bb2f355fb1a89851bf16c17aed63063c6c0a79d8adcd31ce0ab82bc4a56f5e')
+source=(
+  $url/-/archive/$pkgver/$pkgname-$pkgver.tar.gz
+  $pkgname-5-appstreamcli_options.patch
+)
+sha512sums=('b58f828d404d93f63cffbcac11ef4eebbbf6d298f69af9078c644f276621d0a48ce142e7ff5309281cd0c3a850d550c7c7366f396f6431d3ab489e3f1313795d'
+            '8b784ce6d2e0e210fc7a18b4632807804968cc5f59f2bc5238965952c3352597ffc4b6ce7c40be1a799ea1398bac19b5c347eacc3ee1cae4a5a361061cea07e6')
+b2sums=('ae167b8558566bdac2c4986f1352cddbe5161d036025b25ae1f04f1e44a1051efdefdffdbc6b10adcc1a083e21cdef58cac390c2d81a84e17aa192c5e5f09db3'
+        '062ec50019c94a8879233923307f3b2a6ec38be2fb1fed7943b9a5c57796d60fff356bb601e68296a1ab80c414a50c6543d9df7bd019c94d81018f54718bc199')
+
+prepare() {
+  # fix change to appstreamcli option in 1.0.0: https://gitlab.gnome.org/GNOME/fractal/-/merge_requests/1463
+  patch -Np1 -d $pkgname-$pkgver -i ../$pkgname-5-appstreamcli_options.patch
+
+  # NOTE: usptream uses a custom CARGO_HOME from within meson
+  export CARGO_HOME="$(pwd)/build/cargo-home"
+  cd $pkgname-$pkgver
+  export RUSTUP_TOOLCHAIN=stable
+  cargo fetch --locked --target "$CARCH-unknown-linux-gnu"
+}
 
 build() {
-    cd ${pkgname}-${pkgver}
-    CFLAGS+=' -ffat-lto-objects'
-    arch-meson . _build
-    meson compile -C _build
+  CFLAGS+=' -ffat-lto-objects'
+  arch-meson $pkgname-$pkgver build
+  meson compile -C build
+}
+
+check() {
+  meson test -C build --print-errorlogs
 }
 
 package() {
-    cd ${pkgname}-${pkgver}
-    DESTDIR="${pkgdir}" meson install -C _build
+  # NOTE: explicitly prevent rebuild: https://gitlab.gnome.org/GNOME/fractal/-/issues/1327
+  meson install -C build --destdir "$pkgdir" --no-rebuild
 }

@@ -14,7 +14,7 @@
 
 pkgname=dovecot
 pkgver=2.3.20
-pkgrel=3
+pkgrel=4
 
 pkgdesc="An IMAP and POP3 server written with security primarily in mind"
 url="https://dovecot.org/"
@@ -58,7 +58,7 @@ validpgpkeys=(
 )
 
 prepare() {
-  cd "${srcdir}/${pkgname}-${pkgver}"
+  cd "${pkgname}-${pkgver}"
   patch -Np1 -i ../dovecot-2.3.14-opensslv3.patch
 
   # fix path in helper script
@@ -66,7 +66,11 @@ prepare() {
 }
 
 build() {
-  cd "${srcdir}/${pkgname}-${pkgver}"
+  cd "${pkgname}-${pkgver}"
+
+  # this uses malloc_usable_size, which is incompatible with fortification level 3
+  export CFLAGS="${CFLAGS/_FORTIFY_SOURCE=3/_FORTIFY_SOURCE=2}"
+  export CXXFLAGS="${CXXFLAGS/_FORTIFY_SOURCE=3/_FORTIFY_SOURCE=2}"
 
   ./configure \
     --prefix=/usr \
@@ -104,7 +108,7 @@ build() {
 }
 
 check() {
-  cd "${srcdir}/${pkgname}-${pkgver}"
+  cd "${pkgname}-${pkgver}"
   make check
 }
 
@@ -112,7 +116,7 @@ package() {
   # system user/group dovenull - 74
   # system user/group dovecot  - 76
 
-  cd "${srcdir}/${pkgname}-${pkgver}"
+  cd "${pkgname}-${pkgver}"
   make DESTDIR="$pkgdir" install
   install -Dm644 "${srcdir}/dovecot.sysusersd" \
     "${pkgdir}/usr/lib/sysusers.d/dovecot.conf"

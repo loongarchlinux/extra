@@ -2,7 +2,7 @@
 
 pkgname=python-pylsqpack
 _name=pylsqpack
-pkgver=0.3.17
+pkgver=0.3.18
 pkgrel=1
 pkgdesc='Python bindings for ls-qpack'
 url='https://github.com/aiortc/pylsqpack'
@@ -11,7 +11,7 @@ license=('BSD-3-Clause')
 depends=('python')
 makedepends=('python-build' 'python-installer' 'python-setuptools' 'python-wheel')
 source=(https://files.pythonhosted.org/packages/source/${_name::1}/$_name/$_name-$pkgver.tar.gz)
-b2sums=('209cceb4f136af54dbecbcd4769852760f541d6dec2162f3e7f8adec3150d441174ae2a80108cc3099043ae050f58abd36c7e43c8551fb32dc4878c1e9e5a1d3')
+b2sums=('bb7320d9254feb12740536180aa065cdf38af42ed62772178213477fa48222cfb017e5d5c087862b223219ad8a2c1ef1ab65d44de183a906d96a2b11ae51995f')
 
 build() {
   cd "${_name}-${pkgver}"

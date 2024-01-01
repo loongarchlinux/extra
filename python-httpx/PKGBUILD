@@ -4,7 +4,7 @@
 _pkgname=httpx
 pkgname=python-httpx
 # https://github.com/encode/httpx/blob/master/CHANGELOG.md
-pkgver=0.25.1
+pkgver=0.25.2
 pkgrel=1
 pkgdesc="A next generation HTTP client for Python"
 arch=('any')
@@ -30,9 +30,9 @@ checkdepends=('python-pytest-asyncio' 'python-pytest-trio' 'python-typing_extens
               'python-rich' 'python-chardet')
 source=("${pkgname}-${pkgver}.tar.gz::${url}/archive/${pkgver}.tar.gz"
         "uvicorn-test-server-use-h11.diff")
-sha512sums=('ad67f45162e328dba3d74abc75cdae02cc4da1605e21456fbb2023f9f515efa6ec6c5799927a4a4557cf439819f9b05dc2805002e29b97102dadcf934cbd0e2b'
+sha512sums=('7e62fcea55b7d0710f6d50581c8dd1ff5ae594a673a9b1cea5c03487eb3402ca96d44c311a9bcef14f20a7faa03462a3fab07edfe1ce2b11ecd66e4f7e1a06d5'
             'd3e6a9df365aff5e4e7b724469672c6da9c7e95cc5d79339ebd1ea249236802d81b8792efb0826f89747424fa1bef20d4965ddb75b3b67e9cd320b5fcc738f18')
-b2sums=('f13340d5b051fa2020c12825c31df8f5566c3900baa54267cf0718eaff35b600186cfee5a0db5d7fd1a86fbb94bb0d164c7c9be3d6508cd30fc2fbc75cc0c833'
+b2sums=('8ae9fd692341ae3224c73c1f6837489819df1a00e13702a7af72143bf291cfcae23807fd51a6e1092672d0b5595f9557084151f3d07fbdd4e7fce8f5860a879f'
         'f7fc5aa67d59dfbf544ea2668a5df6449d1cb30f5adf1433d92ebbc0fd10d46fec592f1befe829e126d72240666b9c3ea1f69a9f2cca6f3f4e135a7e454be25d')
 
 prepare() {

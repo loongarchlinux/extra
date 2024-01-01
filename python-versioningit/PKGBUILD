@@ -3,7 +3,7 @@
 # Contributor:
 
 pkgname=python-versioningit
-pkgver=2.3.0
+pkgver=3.0.0
 pkgrel=1
 pkgdesc='Versioning It with your Version In Git'
 arch=('any')
@@ -28,7 +28,7 @@ checkdepends=(
   'python-pytest-mock'
 )
 source=("${pkgname#*n-}-${pkgver}.tar.gz::${url}/releases/download/v${pkgver}/${pkgname#*n-}-${pkgver}.tar.gz")
-sha256sums=('1d0d71cfa3c2bc4f8dfb3d4a15c144eb8aa6a09d9da98923d410994a2ef826ea')
+sha256sums=('4e3ce47a6424d850ae9e55e1b134a020e9fcbcb895338f107f2b5c51d34c9c1b')
 
 build() {
   cd ${pkgname#*n-}-${pkgver}

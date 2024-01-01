@@ -3,7 +3,7 @@
 
 pkgname=python-pygls
 _name=${pkgname#python-}
-pkgver=1.2.0
+pkgver=1.2.1
 pkgrel=1
 pkgdesc='Pythonic generic implementation of the Language Server Protocol'
 arch=('any')

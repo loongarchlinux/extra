@@ -1,8 +1,8 @@
 # Maintainer: Felix Yan <felixonmars@archlinux.org>
 
 pkgname=python-hacking
-pkgver=6.0.0
-_commit=3fde1e570a064ce38e7c512b16610ff4650426c3
+pkgver=6.0.1
+_commit=8d0a4a18747dd7023a684123799f5773c49de0f3
 pkgrel=1
 arch=('any')
 pkgdesc='OpenStack Hacking Guideline Enforcement'

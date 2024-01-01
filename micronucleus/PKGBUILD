@@ -1,0 +1,46 @@
+# Maintainer: kpcyrd <kpcyrd[at]archlinux[dot]org>
+# Contributor: GI_Jack <GI_Jack@hackermail.com>
+# Contributor: yjun <jerrysteve1101@gmail.com>
+# Contributor: Yuval Adam <yuv dot adm at gmail dot com>
+
+pkgname=micronucleus
+pkgver=2.6
+pkgrel=2
+pkgdesc="ATTiny usb bootloader and flashing tool"
+url='https://github.com/micronucleus/micronucleus'
+arch=('loong64' 'x86_64')
+license=('GPL-2.0-or-later')
+depends=('libusb-compat')
+install=micronucleus.install
+source=(https://github.com/micronucleus/micronucleus/archive/v${pkgver}/${pkgname}-${pkgver}.tar.gz
+        49-micronucleus.rules
+        cflags-ldflags.patch
+        reproducible-builds.patch)
+sha256sums=('586d7bb1c064fe93dc5fc5b5ae0651641cd7fa8272b06cfd11feb6a0b2a06b9c'
+            '532d0c38faa9294c29ff280a60fd4e3d5fe4d680338d189091acf2818641c6ab'
+            '6e82dfb36fc7a108c45056dbf8a2ed28708d97b05e0d4ff96bbc64125e9b714e'
+            'b86de6669b5c5b07f4084447949e0bba6b0ce8036ce14fa87f1201fff9ccb8da')
+b2sums=('9892e0d9c9321b37a1e0f868fa687ff3c15ebacb3db2dd737a823f4706bb992957e45d494e87df2c1e9e9f62ea92520ffae585565e67745ba710fbb3be682695'
+        'c5713782e32ffba277fb27dd58ccddf5bd0eac5d2947b8f9f7780746eb02bea92f40fe1da5bfeaedab1570aadcc887d13612a8d9e4cb0bad6d39ea71d5f64566'
+        '8e2c200bb20a9db19cf08e4029384b1acc85a9ca2d452f624a7f7a8346bd182952425a4ad8889d31ae5ad46e2b4dd717117ceacc619c289c94dabfd2070d2c95'
+        'd275a2f32910ed02e4f1aec7e39373df1f2bcf3fbc1536c4febfc7e4602aab93c16e94322e61f24a749602ba109c3b4be401759eea145234b88b2591007b877e')
+
+prepare() {
+  cd ${pkgname}-${pkgver}
+  patch -Np1 -i ../cflags-ldflags.patch
+  patch -Np1 -i ../reproducible-builds.patch
+}
+
+build() {
+  cd ${pkgname}-${pkgver}/commandline
+  make
+}
+
+package() {
+  cd ${pkgname}-${pkgver}
+  install -Dm755 commandline/micronucleus -t "${pkgdir}/usr/bin"
+  install -Dm644 ../49-micronucleus.rules -t "${pkgdir}/usr/lib/udev/rules.d"
+  install -Dm644 License.txt "${pkgdir}/usr/share/licenses/${pkgname}/LICENSE"
+}
+
+# vim: ts=2 sw=2 et:

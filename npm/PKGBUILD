@@ -2,7 +2,7 @@
 # Maintainer: Daniel M. Capella <polyzen@archlinux.org>
 
 pkgname=npm
-pkgver=10.2.4
+pkgver=10.2.5
 pkgrel=1
 pkgdesc='A package manager for JavaScript'
 arch=('any')

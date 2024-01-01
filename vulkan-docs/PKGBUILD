@@ -2,7 +2,7 @@
 
 pkgbase=vulkan-docs
 pkgname=(vulkan-html-docs)
-pkgver=1.3.257
+pkgver=1.3.274
 pkgrel=1
 epoch=1
 _pkgname=Vulkan-Docs
@@ -13,7 +13,7 @@ makedepends=(python3 python-pyparsing dblatex source-highlight cmake ghostscript
 makedepends+=(rubygems graphicsmagick pango gdk-pixbuf2 jbigkit)
 groups=(vulkan-devel)
 source=("https://github.com/KhronosGroup/${_pkgname}/archive/v${pkgver}.tar.gz")
-sha256sums=('4c0a0607d57db783534abf556c26a14944e3c3a06e4ca8d35bc87d7ecc8e9686')
+sha256sums=('898532824c254507c72457d26debb94f1089cca5f481ea3baa46fe28219d049a')
 
 prepare() {
   export PATH="${PATH}:/build/.local/share/gem/ruby/3.0.0/bin"

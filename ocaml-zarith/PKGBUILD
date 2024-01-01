@@ -3,28 +3,27 @@
 
 pkgname=ocaml-zarith
 provides=('zarith')
-pkgver=1.12
-pkgrel=7
+pkgver=1.13
+pkgrel=1
 pkgdesc='Implements arithmetic and logical operations over arbitrary-precision integers and rational numbers'
 url='https://github.com/ocaml/Zarith'
 arch=('loong64' 'x86_64')
 license=('GPL2')
-depends=('ocaml>=5.0.0' 'ocaml-compiler-libs>=5.0.0' 'gmp')
+depends=('ocaml' 'ocaml-compiler-libs' 'gmp')
 makedepends=('ocaml-findlib')
 source=("https://github.com/ocaml/Zarith/archive/release-${pkgver}.tar.gz")
-sha256sums=('cc32563c3845c86d0f609c86d83bf8607ef12354863d31d3bffc0dacf1ed2881')
+sha256sums=('a5826d33fea0103ad6e66f92583d8e075fb77976de893ffdd73ada0409b3f83b')
 options=(!strip)
 
 build() {
   cd Zarith-release-${pkgver}
 
-  ./configure -installdir "${pkgdir}/usr/lib/ocaml" # install ignores DESTDIR
+  ./configure -installdir "/usr/lib/ocaml"
   make -j1
 }
 
 package() {
   cd Zarith-release-${pkgver}
-
-  mkdir -p "${pkgdir}/usr/lib/ocaml"
-  OCAMLFIND_LDCONF=ignore make install
+  mkdir -p "${pkgdir}/usr/lib/ocaml/stublibs"
+  make install INSTALLDIR=${pkgdir}/usr/lib/ocaml
 }

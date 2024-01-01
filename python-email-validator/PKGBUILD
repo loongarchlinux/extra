@@ -2,7 +2,7 @@
 # Contributor: Daniel Wallace <danielwallace at gtmanfred dot com>
 
 pkgname=python-email-validator
-pkgver=2.0.0
+pkgver=2.1.0
 pkgrel=1
 pkgdesc="A robust email address syntax and deliverability validation library"
 arch=('any')
@@ -12,7 +12,7 @@ depends=('python-dnspython' 'python-idna')
 makedepends=('python-setuptools')
 checkdepends=('python-pytest')
 source=("$pkgname-$pkgver.tar.gz::https://github.com/JoshData/python-email-validator/archive/v$pkgver.tar.gz")
-sha512sums=('67d457642a574498bf12eb6f4fc3c25c46374724f064b775a7382d8c96c7087e78937ffceb717461b853e1945dd5efe9ef7562a1e639249cd5cfe006a776239e')
+sha512sums=('d285404f6735e0cd33385060c483a4dd4e12ace4b2e7027f8cd360901bc640ae999eb5d3ec2b98530e53af48f8e6c180d65cb53eec4de5a1617149ab76027901')
 
 build() {
   cd python-email-validator-$pkgver

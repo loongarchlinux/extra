@@ -5,7 +5,7 @@
 # Contributor: karnath <karnathtorjian@gmail.com>
 
 pkgname=zathura-pdf-poppler
-pkgver=0.3.1
+pkgver=0.3.2
 pkgrel=2
 
 pkgdesc="Adds pdf support to zathura by using the poppler engine"
@@ -18,7 +18,7 @@ makedepends=('meson' 'ninja')
 
 source=(zathura-pdf-poppler-$pkgver.tar.gz::https://github.com/pwmt/zathura-pdf-poppler/archive/$pkgver.tar.gz)
 
-sha256sums=('dc7621dd213adc9618e6c1395ce6b1afece5fa0091930ecc2e9599c625a97439')
+sha256sums=('2e64e59ed46b0d93fbad70eca9a77cc720c5909c988b0b6637333504da52b23d')
 
 build() {
   cd zathura-pdf-poppler-$pkgver

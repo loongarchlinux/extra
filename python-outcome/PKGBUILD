@@ -1,8 +1,8 @@
 # Maintainer: Maxime Gauduin <alucryd@archlinux.org>
 
 pkgname=python-outcome
-pkgver=1.3.0
-pkgrel=1
+pkgver=1.3.0.post0
+pkgrel=2
 pkgdesc='Capture the outcome of Python function calls'
 arch=(any)
 url=https://github.com/python-trio/outcome
@@ -10,17 +10,21 @@ license=(MIT)
 depends=(
   python
   python-attrs
+  python-typing_extensions
 )
 makedepends=(
   git
+  python-build
+  python-installer
   python-setuptools
+  python-wheel
 )
 checkdepends=(
   python-pytest
   python-pytest-asyncio
   python-pytest-cov
 )
-_tag=4037dd7fa89b3a26f41594607bc94aaea422d7c3
+_tag=bf687c97ce6f010d092bfcaecad51132fb978725
 source=(git+https://github.com/python-trio/outcome.git#tag=${_tag})
 sha256sums=(SKIP)
 
@@ -31,7 +35,7 @@ pkgver() {
 
 build() {
   cd outcome
-  python setup.py build
+  python -m build --wheel --no-isolation
 }
 
 check() {
@@ -40,9 +44,8 @@ check() {
 }
 
 package() {
-  cd outcome
-  python setup.py install --root="${pkgdir}" --optimize=1 --skip-build
-  install -Dm 644 LICENSE -t "${pkgdir}"/usr/share/licenses/python-outcome/
+  python -m installer --destdir="${pkgdir}" outcome/dist/*.whl
+  install -Dm 644 outcome/LICENSE -t "${pkgdir}"/usr/share/licenses/python-outcome/
 }
 
 # vim: ts=2 sw=2 et:

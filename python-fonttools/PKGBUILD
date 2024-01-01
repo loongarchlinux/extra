@@ -5,21 +5,21 @@
 
 pkgname=python-fonttools
 _pyname=${pkgname#python-}
-pkgver=4.44.3
+pkgver=4.47.0
 pkgrel=1
 pkgdesc='A library to manipulate font files from Python'
 url="https://github.com/fonttools/$_pyname"
-license=('MIT')
-arch=('loong64' 'x86_64')
-depends=('python')
-makedepends=('cython'
-             'python-'{build,installer}
-             'python-setuptools'
-             'python-wheel')
-checkdepends=('python-brotli'
-              'python-fs'
-              'python-pytest'
-              'python-ufolib2')
+license=(MIT)
+arch=(loong64 x86_64)
+depends=(python)
+makedepends=(cython
+             python-{build,installer}
+             python-setuptools
+             python-wheel)
+checkdepends=(python-brotli
+              python-fs
+              python-pytest
+              python-ufolib2)
 optdepends=('python-brotli: to compress/decompress WOFF 2.0 web fonts'
             'python-fs: to read/write UFO source files'
             'python-lxml: faster backend for XML files reading/writing'
@@ -32,21 +32,23 @@ optdepends=('python-brotli: to compress/decompress WOFF 2.0 web fonts'
             'python-uharfbuzz: to use the Harfbuzz Repacker for packing GSUB/GPOS tables'
             'python-unicodedata2: for displaying the Unicode character names when dumping the cmap table with ttx'
             'python-zopfli: faster backend fom WOFF 1.0 web fonts compression')
-source=("$url/archive/$pkgver/$_pyname-$pkgver.tar.gz")
-sha256sums=('7b65b28890cf112987b5949ca3961fdd6ba09489030ec404ab616ad2c12ecb05')
+_archive="$_pyname-$pkgver"
+source=("$url/archive/$pkgver/$_archive.tar.gz")
+sha256sums=('a0d7c2f90b533cba85cd2a4d7a0baa25c11badce3a8ac001d9540ae9b526eaf8')
 
 build() {
-	cd "$_pyname-$pkgver"
+	cd "$_archive"
 	python -m build -wn
 }
 
 check() {
-	cd "$_pyname-$pkgver"
-	PYTHONPATH=Lib pytest
+	cd "$_archive"
+	# Disable test that requires python-skia-pathops which to date is AUR only (and binary wheel only)
+	PYTHONPATH=Lib pytest --deselect Tests/svgLib/path/path_test
 }
 
 package() {
-	cd "$_pyname-$pkgver"
+	cd "$_archive"
 	python -m installer -d "$pkgdir" dist/*.whl
 	install -Dm0755 -t "$pkgdir/usr/share/licenses/$pkgname/" LICENSE
 }

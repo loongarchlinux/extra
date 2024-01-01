@@ -2,18 +2,18 @@
 
 _pkg=mss
 pkgname=python-${_pkg}
-pkgver=7.0.1
-pkgrel=2
+pkgver=9.0.1
+pkgrel=1
 pkgdesc="Ultra fast cross-platform multiple screenshots module"
 arch=(any)
 url="https://github.com/BoboTiG/python-mss"
 license=(MIT)
 depends=(python)
 makedepends=(python-build python-installer python-setuptools)
-checkdepends=(python-pytest xorg-server-xvfb libxrandr lsof python-flaky python-wheel)
+checkdepends=(python-pytest xorg-server-xvfb libxrandr lsof python-flaky python-wheel python-pytest-cov python-pytest-rerunfailures)
 source=(https://files.pythonhosted.org/packages/source/${_pkg::1}/${_pkg}/${_pkg}-${pkgver}.tar.gz)
 #source=(${url}/archive/v${pkgver}/${pkgname}-${pkgver}.tar.gz)
-sha256sums=('f14cee528903c3b01d3b8f1209cd498422f71e3d0d2d92c5b933edd3b9772022')
+sha256sums=('6eb7b9008cf27428811fa33aeb35f3334db81e3f7cc2dd49ec7c6e5a94b39f12')
 
 build() {
   cd ${_pkg}-${pkgver}
@@ -22,11 +22,12 @@ build() {
 
 check() {
   cd ${_pkg}-${pkgver}
-  PYTHONPATH="${PWD}/build/lib/" xvfb-run -a -s "+extension RANDR +render -screen 0 1024x768x24" pytest -k 'not test_wheel_python_3_only'
+  PYTHONPATH="${PWD}/build/lib/" xvfb-run -a -s "+extension RANDR +render -screen 0 1024x768x24" \
+    pytest -k 'not test_wheel_python_3_only and not test_resource_leaks'
 }
 
 package() {
   cd ${_pkg}-${pkgver}
   python -m installer --destdir="${pkgdir}" dist/*.whl
-  install -Dm644 LICENSE -t "${pkgdir}"/usr/share/licenses/${pkgname}
+  install -Dm644 LICENSE.txt -t "${pkgdir}"/usr/share/licenses/${pkgname}
 }

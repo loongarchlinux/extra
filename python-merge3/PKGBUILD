@@ -4,7 +4,7 @@
 
 pkgname=python-merge3
 pkgver=0.0.14
-pkgrel=1
+pkgrel=2
 pkgdesc='Python implementation of 3-way merge'
 arch=(any)
 url=https://github.com/breezy-team/merge3
@@ -12,7 +12,10 @@ license=(GPL2)
 depends=(python)
 makedepends=(
   git
+  python-build
+  python-installer
   python-setuptools
+  python-wheel
 )
 _tag=d5e00212bc40620bc4a5fc43e603ddb63f2ed30a
 #source=(git+https://github.com/breezy-team/merge3.git?signed#tag=${_tag})
@@ -27,7 +30,7 @@ pkgver() {
 
 build() {
   cd merge3
-  python setup.py build
+  python -m build --wheel --no-isolation
 }
 
 check() {
@@ -36,8 +39,7 @@ check() {
 }
 
 package() {
-  cd merge3
-  python setup.py install --root="${pkgdir}" --optimize=1 --skip-build
+  python -m installer --destdir="${pkgdir}" merge3/dist/*.whl
 }
 
 # vim: ts=2 sw=2 et:

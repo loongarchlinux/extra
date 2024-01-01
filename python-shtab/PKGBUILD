@@ -2,7 +2,7 @@
 # Contributor: SZanko, szanko at protonmail dot com
 
 pkgname=python-shtab
-pkgver=1.6.4
+pkgver=1.6.5
 pkgrel=1
 pkgdesc='Automagic shell tab completion for Python CLI applications'
 arch=('any')
@@ -21,7 +21,7 @@ checkdepends=(
   'python-pytest-cov'
   'python-pytest-timeout'
 )
-_commit='3d614484fbf664adc9b898b5f5f82a9b793482e3'
+_commit='f09e930b12081d1afbd06b0376f88040d30a807c'
 source=("$pkgname::git+$url#commit=$_commit")
 b2sums=('SKIP')
 
@@ -67,6 +67,6 @@ package() {
   # symlink license file
   local site_packages=$(python -c "import site; print(site.getsitepackages()[0])")
   install -d "$pkgdir/usr/share/licenses/$pkgname"
-  ln -s "$site_packages/${pkgname#python-}-$pkgver.dist-info/LICENSE" \
-    "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
+  ln -s "$site_packages/${pkgname#python-}-$pkgver.dist-info/LICENCE" \
+    "$pkgdir/usr/share/licenses/$pkgname/LICENCE"
 }

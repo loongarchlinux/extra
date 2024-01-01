@@ -2,8 +2,8 @@
 # Contributor: Alois Nespor <alois.nespor@gmail.com>
 
 pkgname=qstardict
-pkgver=1.3
-pkgrel=3
+pkgver=1.4.1
+pkgrel=1
 pkgdesc="Qt clone of StarDict with full support of StarDict dictionaries"
 provides=('stardict')
 depends=('hicolor-icon-theme' 'qt5-base')
@@ -12,18 +12,24 @@ arch=('loong64' 'x86_64')
 url="http://qstardict.ylsoftware.com/index.php"
 license=('GPL2')
 changelog=$pkgname.changelog
-source=(https://github.com/a-rodin/qstardict/archive/$pkgname-$pkgver.tar.gz)
-sha256sums=('9b083a3177407d66a17403742590471a0aa89a3d31df886926b79fa21e4d41a4')
+source=($pkgname-$pkgver.tar.gz::https://notabug.org/a-rodin/qstardict/archive/$pkgver.tar.gz
+        fix-build.patch)
+sha256sums=('21d6a3e52a4e3d20058c23f6bedd5ac223e573a0e20e2bd79200b60a3ea4df02'
+            'b76a810b7464e784a07f470e76b56dfc34c946158aff273ecfc6866f14acc108')
+
+prepare() {
+  patch -d $pkgname -p1 < fix-build.patch
+}
 
 build() {
-  cd "${srcdir}"/$pkgname-$pkgname-$pkgver
+  cd $pkgname
 
   qmake-qt5 ENABLED_PLUGINS="stardict swac web"
   make
 }
 
 package() {
-  cd "${srcdir}"/$pkgname-$pkgname-$pkgver
+  cd $pkgname
 
   make INSTALL_ROOT="${pkgdir}" install
 }

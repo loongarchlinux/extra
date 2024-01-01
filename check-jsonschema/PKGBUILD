@@ -1,15 +1,16 @@
 # Maintainer: David Runge <dvzrv@archlinux.org>
 
 pkgname=check-jsonschema
-pkgver=0.24.1
+pkgver=0.27.3
 pkgrel=1
 pkgdesc="A JSON Schema CLI and pre-commit hook built on jsonschema"
 arch=(any)
 url="https://github.com/python-jsonschema/check-jsonschema"
-license=(Apache)
+license=(Apache-2.0)
 depends=(
   python
   python-click
+  python-importlib-resources
   python-jsonschema
   python-referencing
   python-requests
@@ -25,14 +26,15 @@ checkdepends=(
   python-json5
   python-pytest
   python-pytest-xdist
+  python-regress
   python-responses
 )
 optdepends=(
   'python-json5: for JSON5 support'
 )
 source=($url/archive/$pkgver/$pkgname-$pkgver.tar.gz)
-sha512sums=('7d0f9db1f54c161b2620e6044b0010db5957313fd9faccaadeb190b5ceeb6477379b6ec21898b0ca8715d866c00ae63dbd897744127a0c35ed16418f55c74448')
-b2sums=('1b1080af70cb4df0f0cd62517623136cece6c5c49407dab591bd99f8911f602df314111f221a77df8d718f067b0b713b6c9850e4a2bd01c74227ece0e470969e')
+sha512sums=('edc4ac65a13acd1a29c0ccf6498d3e6269d4509a72fde2ae5527a3c9236e3d2dbb4ba10cb47c0e228ac79b11dc73b1c80aa71b38f090c9eabf970fef0293993a')
+b2sums=('cf5a3d71a696bd3de6b10771d6379f1e943e0d5b0f7d8b2640cfa60d513c79bfe2485e4aeb8df8b803de24e1b3455360f0e6c80cf09c9da7b036a58f33a5000f')
 
 check() {
   # we don't support pinning

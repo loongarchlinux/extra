@@ -2,77 +2,102 @@
 
 _name=tzinfo
 pkgname=ruby-tzinfo
-pkgver=2.0.5
+pkgver=2.0.6
 pkgrel=1
 pkgdesc='Daylight savings aware transformations between times in different time zones'
 arch=(any)
 url="https://github.com/tzinfo/tzinfo"
 license=(MIT)
-depends=(ruby ruby-concurrent)
-makedepends=(ruby-rake ruby-rdoc)
-# TODO: package ruby-simplecov
-# checkdepends=(ruby-minitest ruby-simplecov)
+depends=(
+  ruby
+  ruby-concurrent
+)
+makedepends=(
+  ruby-rake
+  ruby-rdoc
+)
+checkdepends=(
+  ruby-minitest
+  ruby-simplecov
+)
 options=(!emptydirs)
-source=($pkgname-$pkgver.tar.gz::https://github.com/$_name/$_name/archive/v$pkgver.tar.gz)
-sha512sums=('a3c59b1f390b186356b9219b0fb18bb762d2123936553738e1068ba46bf0206c5a0394b1d46b5c7b891aa55b8afa839858837511f53e3ef0eb0e85fe3f23b57a')
-b2sums=('44e6d65dadc4828e4b8803c0badf381e18afe7412e090c4d91147b144f300a8c0e3189bc8e8325625678a57ea6a1179a1ed277f5fb54230ce77c46ba6b0100c7')
+source=(
+  $pkgname-$pkgver.tar.gz::$url/archive/v$pkgver.tar.gz
+  $pkgname-2.0.5-tests_without_bundler.patch
+)
+sha512sums=('88af68b13becc4b6b85b4653df95e19e24d8804ac2b2393ef03cfe551b5eaee827a5aecd2156a56572d554dd5239ae828a65e5c49854671aa1989f5c31ba320d'
+            '3bcb80704452dde5b90cd714c7ede2e539791c032d9fda70aeed5cbba3fd91b95a6cdbe653a30bd47f3147f476b0e8df9df24ebf434c306ee46b4d9a5ce4c981')
+b2sums=('8a7918c0edc1e70f3b805dfcdc351d9ec78f42a66973ec7cb0a8bfad31d9ccdadefe93b941aca5c15510ff857bd8282046e8d20d02f308934e087de541c26383'
+        'c55336230e7224c2efd607456a0f34d3a31e517fa0570a8f786d9b5f43447f345794a11a6fb7c6aa1f7e6bb6c6ee818e871cea81a23fb3873fd6f94ab8785bd6')
 
 prepare() {
-  cd "$_name-$pkgver"
-  # we do not do version pinning
-  sed --regexp-extended 's,~>,>=,g' --in-place *.gemspec Gemfile Rakefile
-  # lockfiles should be removed
-  rm -fv Gemfile.lock
-  # do not rely on Gemfiles (unless the project *really* needs it)
-  rm -fv Gemfile
+  # run tests without bundler by removing explicit check for running with bundler
+  patch -Np1 -d $_name-$pkgver -i ../$pkgname-2.0.5-tests_without_bundler.patch
+  cd $_name-$pkgver
+
+  # update gemspec/Gemfile to allow newer version of the dependencies
+  sed -i -e 's|~>|>=|g' $_name.gemspec
 }
 
 build() {
+  local gemdir="$(gem env gemdir)"
+  local gem_install_options=(
+    --local
+    --verbose
+    --ignore-dependencies
+    --no-user-install
+    --install-dir tmp_install/$gemdir
+    --bindir tmp_install/usr/bin
+    $_name-$pkgver.gem
+  )
+  local unrepro_files=(
+    tmp_install/$gemdir/cache/
+    tmp_install/$gemdir/gems/$_name-$pkgver/vendor/
+    tmp_install/$gemdir/doc/$_name-$pkgver/ri/ext/
+  )
+
   cd $_name-$pkgver
+
   gem build $_name.gemspec
-}
-
-# check(){
-#   cd $_name-$pkgver
-#   rake test
-# }
-
-package() {
-  local _gemdir="$(gem env gemdir)"
-
-  cd $_name-$pkgver
-  gem install \
-    --ignore-dependencies \
-    --no-user-install \
-    --install-dir "$pkgdir/$_gemdir" \
-    --bindir "$pkgdir/usr/bin" \
-    "$_name-$pkgver.gem"
+  gem install "${gem_install_options[@]}"
 
   # remove unrepreducible files
-  rm -frv \
-    "$pkgdir/$_gemdir/cache/" \
-    "$pkgdir/$_gemdir/gems/$_name-$pkgver/vendor/" \
-    "$pkgdir/$_gemdir/doc/$_name-$pkgver/ri/ext/"
+  rm -frv "${unrepro_files[@]}"
 
-  find "$pkgdir/$_gemdir/gems/" \
+  find tmp_install/$gemdir/gems/ \
     -type f \
     \( \
-        -iname "*.o" -o \
-        -iname "*.c" -o \
-        -iname "*.so" -o \
-        -iname "*.time" -o \
-        -iname "gem.build_complete" -o \
-        -iname "Makefile" \
+      -iname "*.o" -o \
+      -iname "*.c" -o \
+      -iname "*.so" -o \
+      -iname "*.time" -o \
+      -iname "gem.build_complete" -o \
+      -iname "Makefile" \
     \) \
     -delete
 
-  find "$pkgdir/$_gemdir/extensions/" \
+  find tmp_install/$gemdir/extensions/ \
     -type f \
     \( \
       -iname "mkmf.log" -o \
       -iname "gem_make.out" \
     \) \
     -delete
+}
+
+check() {
+  local gemdir="$(gem env gemdir)"
+
+  cd $_name-$pkgver
+
+  GEM_HOME="tmp_install/$gemdir" rake test
+}
+
+package() {
+  cd $_name-$pkgver
+
+  mv -v tmp_install/* "$pkgdir/"
 
   install -vDm 644 LICENSE -t "$pkgdir/usr/share/licenses/$pkgname/"
+  install -vDm 644 {CHANGES,README}.md -t "$pkgdir/usr/share/doc/$pkgname/"
 }

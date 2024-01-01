@@ -4,7 +4,7 @@
 
 pkgname=rtl-sdr
 pkgver=2.0.1
-pkgrel=2
+pkgrel=3
 epoch=1
 pkgdesc='Driver for Realtek RTL2832U, allowing general purpose software defined radio (SDR)'
 arch=('loong64' 'x86_64')
@@ -17,9 +17,11 @@ _commit='420086af84d7eaaf98ff948cd11fea2cae71734a'
 source=(
   "$pkgname::git+https://gitea.osmocom.org/sdr/rtl-sdr#commit=$_commit"
   'fix-udev-directory.patch'
+  "$pkgname.sysusers"
 )
 b2sums=('SKIP'
-        '2356582926b8bb0b1b7bbf22dd046ae9c55855a925818730d8e9558e4620f8f6599663aec50e0bdb5c1e7f1242e8f170d2f9eecb0808e42f53d06ea6a812ec64')
+        '2356582926b8bb0b1b7bbf22dd046ae9c55855a925818730d8e9558e4620f8f6599663aec50e0bdb5c1e7f1242e8f170d2f9eecb0808e42f53d06ea6a812ec64'
+        'ff6d84a21f23ea3da8771cbf6f6344d7ac7a52a0987b6f8974bc083efee3389250402e861b233460228439fb8c7e35c4f98cf91254ecc5d956742158fd565cc3')
 
 pkgver() {
   cd "$pkgname"
@@ -33,9 +35,9 @@ prepare() {
   # ensure udev rules get installed to correct directory
   patch -p1 -i "$srcdir/fix-udev-directory.patch"
 
-  # fix udev rules and allow access to any logged in user
+  # fix udev rules and allow access to any user that is locally logged in or in the rtlsdr group
   # https://bugzilla.redhat.com/show_bug.cgi?id=815093
-  sed -e 's/GROUP="plugdev"/TAG+="uaccess"/' -i rtl-sdr.rules
+  sed -e 's/GROUP="plugdev"/GROUP="rtlsdr", TAG+="uaccess"/' -i rtl-sdr.rules
 }
 
 build() {
@@ -53,6 +55,9 @@ build() {
 
 package() {
   DESTDIR="$pkgdir" cmake --install build
+
+  # rtlsdr group creation
+  install -vDm644 $pkgname.sysusers "$pkgdir/usr/lib/sysusers.d/$pkgname.conf"
 
   cd "$pkgname"
 

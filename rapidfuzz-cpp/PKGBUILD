@@ -1,21 +1,22 @@
-# Maintainer:
+# Maintainer: George Rawlinson <grawlinson@archlinux.org>
 # Contributor: Pekka Ristola <pekkarr [at] protonmail [dot] com>
 
 pkgname=rapidfuzz-cpp
-pkgver=2.1.1
+pkgver=3.0.0
 pkgrel=1
 pkgdesc='Rapid fuzzy string matching in C++ using the Levenshtein Distance'
-arch=(any)
+arch=('any')
 url='https://github.com/maxbachmann/rapidfuzz-cpp'
-license=(MIT)
-makedepends=(cmake)
-source=(https://github.com/maxbachmann/rapidfuzz-cpp/archive/v$pkgver/$pkgname-$pkgver.tar.gz)
-sha256sums=('1680c0dbf77d228ea81825c24755db99ee0e21a8db3663b5136741b3e108c3f2')
+license=('MIT')
+depends=('cmake')
+makedepends=('git')
+source=("$pkgname::git+$url#tag=v$pkgver")
+b2sums=('SKIP')
 
 build() {
   cmake \
     -B build \
-    -S $pkgname-$pkgver \
+    -S "$pkgname" \
     -D CMAKE_INSTALL_PREFIX=/usr
 
   cmake --build build
@@ -24,5 +25,6 @@ build() {
 package() {
   DESTDIR="$pkgdir" cmake --install build
 
-  install -Dm644 $pkgname-$pkgver/LICENSE -t "$pkgdir"/usr/share/licenses/$pkgname
+  # license
+  install -vDm644 -t "$pkgdir/usr/share/licenses/$pkgname" "$pkgname/LICENSE"
 }

@@ -1,0 +1,41 @@
+# Maintainer: Felix Yan <felixonmars@archlinux.org>
+# Contributor: Josip Ponjavic <josipponjavic at gmail dot com>
+# Contributor: Xu Fasheng <fasheng.xu[AT]gmail.com>
+
+pkgname=dtk6widget
+pkgver=6.0.2
+pkgrel=2
+pkgdesc='Deepin base graphical widgets library'
+arch=('loong64' 'x86_64')
+url="https://github.com/linuxdeepin/dtk6widget"
+license=('LGPL3')
+# qt6-imageformats is needed for webp (dci) icons
+depends=('dtk6core' 'dtk6gui' 'gcc-libs' 'glibc' 'libx11' 'libxcb' 'libxext' 'libxi'
+         'qt6-base' 'qt6-imageformats' 'qt6-svg' 'startup-notification' 'xcb-util')
+makedepends=('cmake' 'ninja' 'qt6-tools' 'gtest' 'doxygen')
+source=("https://github.com/linuxdeepin/dtk6widget/archive/$pkgver/$pkgname-$pkgver.tar.gz")
+sha512sums=('191b0edc9660d4304b18d3ad1876baee95a48dd7780177316c75ace7fe97592183fcc1110130477cd681fe4905e5ae37dbf22b6ec40f2e4fa03866fd15387bd6')
+
+build() {
+  cd dtk6widget-$pkgver
+  # Disable plugins because they are not going to be installed
+  cmake . -GNinja \
+      -DBUILD_DOCS=ON \
+      -DBUILD_PLUGINS=OFF \
+      -DCMAKE_INSTALL_LIBDIR=lib \
+      -DCMAKE_INSTALL_PREFIX=/usr \
+      -DDTK_VERSION=$pkgver \
+      -DCMAKE_BUILD_TYPE=None
+  ninja
+}
+
+check() {
+  cd dtk6widget-$pkgver
+  # TODO
+  # ninja test || echo "Tests failed"
+}
+
+package() {
+  cd dtk6widget-$pkgver
+  DESTDIR="$pkgdir" ninja install
+}

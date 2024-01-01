@@ -3,7 +3,7 @@
 
 pkgname=osbuild
 pkgdesc='Build Pipelines for Operating System Artifacts'
-pkgver=100
+pkgver=102
 pkgrel=1
 url="https://www.osbuild.org"
 arch=(any)
@@ -13,7 +13,7 @@ makedepends=(make python-docutils python-setuptools)
 optdepends=('dnf: build rpm/dnf images'
             'pacman: build pacman images')
 source=($pkgname-$pkgver.tar.gz::https://github.com/osbuild/osbuild/archive/refs/tags/v${pkgver}.tar.gz)
-sha256sums=('033c5a74856356f4d2d9591f44f75e13a52d9b4412e4b67eec5f6e0a05896369')
+sha256sums=('dedb06c33912f125e836c0da3ecf91cad5614188b98ea9e947e0beb37253011a')
 
 prepare() {
   cd $pkgname-$pkgver
@@ -34,6 +34,9 @@ package() {
   for group in assemblers devices inputs runners schemas sources stages mounts ; do
     cp -vdr --no-preserve=ownership "$group" "$pkgdir/usr/lib/osbuild/"
   done
+
+  # dnf devsolve script
+  install -Dm755 tools/osbuild-depsolve-dnf "$pkgdir/usr/lib/osbuild/osbuild-depsolve-dnf"
 
   # udev rules
   install -Dm644 data/10-osbuild-inhibitor.rules "$pkgdir"/usr/lib/udev/rules.d/10-osbuild-inhibitor.rules

@@ -2,18 +2,22 @@
 
 pkgname=go-task
 pkgver=3.31.0
-pkgrel=2
+pkgrel=3
 pkgdesc='A task runner written in Go'
 arch=('loong64' 'x86_64')
 url='https://taskfile.dev'
 license=('MIT')
 depends=('glibc')
 makedepends=('git' 'go')
-conflicts=('task')
 options=('!lto')
+install=go-task.install
 _commit='6177376e5045696bc12dcc083873b27f7c0da5f1'
-source=("$pkgname::git+https://github.com/go-task/task#commit=$_commit")
-b2sums=('SKIP')
+source=(
+  "$pkgname::git+https://github.com/go-task/task#commit=$_commit"
+  'rename-completions.patch'
+)
+b2sums=('SKIP'
+        '1e1c959f39955dbe7d4bab3db5694551f43968446292ee499d47130d85be6ea20283f4162023cf34f6cc7c1e2382896613c38c540cc92141e5c3d85cbc07d09d')
 
 pkgver() {
   cd "$pkgname"
@@ -27,6 +31,9 @@ prepare() {
   # download dependencies
   export GOPATH="${srcdir}"
   go mod download
+
+  # rename completions from `task` to `go-task`
+  patch -p1 -i "$srcdir/rename-completions.patch"
 }
 
 build() {
@@ -46,6 +53,7 @@ build() {
     -linkmode external \
     -extldflags ${LDFLAGS} \
     -X github.com/go-task/task/v3/internal/version.version=${pkgver}" \
+    -o go-task \
     ./cmd/task
 }
 
@@ -59,12 +67,12 @@ package() {
   cd "$pkgname"
 
   # binary
-  install -vDm755 -t "$pkgdir/usr/bin" task
+  install -vDm755 -t "$pkgdir/usr/bin" go-task
 
   # shell completions
-  install -vDm644 completion/bash/task.bash "$pkgdir/usr/share/bash-completion/completions/task"
-  install -vDm644 completion/fish/task.fish "$pkgdir/usr/share/fish/vendor_completions.d/task.fish"
-  install -vDm644 completion/zsh/_task "$pkgdir/usr/share/zsh/site-functions/_task"
+  install -vDm644 completion/bash/task.bash "$pkgdir/usr/share/bash-completion/completions/go-task"
+  install -vDm644 completion/fish/task.fish "$pkgdir/usr/share/fish/vendor_completions.d/go-task.fish"
+  install -vDm644 completion/zsh/_task "$pkgdir/usr/share/zsh/site-functions/_go-task"
 
   # license
   install -vDm644 -t "$pkgdir/usr/share/licenses/$pkgname" LICENSE

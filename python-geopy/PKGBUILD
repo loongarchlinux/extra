@@ -4,7 +4,7 @@ _name=geopy
 pkgname=python-geopy
 _commit=b93ffa7ae48eccb99565812f2a82a774c0d8a720  # refs/tags/2.4.1
 pkgver=2.4.1
-pkgrel=1
+pkgrel=2
 pkgdesc="Geocoding library for Python"
 arch=(any)
 url="https://github.com/geopy/geopy"
@@ -22,7 +22,6 @@ makedepends=(
 )
 checkdepends=(
   python-aiohttp
-  python-async_generator
   python-pytest-asyncio
   python-pytest-aiohttp
   python-pytest

@@ -2,25 +2,39 @@
 # Maintainer: Dan McGee <dan@archlinux.org>
 
 pkgname=postgresql-old-upgrade
-pkgver=14.9
+pkgver=15.5
 _majorver=${pkgver%.*}
-pkgrel=2
+pkgrel=4
 pkgdesc='PostgreSQL build for migrating between major versions with pg_upgrade'
 url='https://www.postgresql.org/'
 arch=('loong64' 'x86_64')
 license=('custom:PostgreSQL')
-depends=("postgresql-libs>=${_majorver}" 'libxml2' 'openssl>=1.0.0' 'pam'
-         'zlib' 'icu' 'systemd-libs' 'libldap' 'krb5' 'llvm15-libs')
-makedepends=('python' 'perl' 'tcl>=8.6.0' 'systemd' 'llvm15' 'clang15')
+depends=("postgresql-libs>=${_majorver}" 'libxml2' 'openssl' 'pam' 'zlib' 'icu'
+         'systemd-libs' 'libldap' 'krb5' 'llvm-libs')
+makedepends=('python' 'perl' 'tcl' 'systemd' 'llvm' 'clang')
 optdepends=('python: for PL/Python 3 support'
             'perl: for PL/Perl support'
             'tcl: for PL/Tcl support')
-source=(https://ftp.postgresql.org/pub/source/v${pkgver}/postgresql-${pkgver}.tar.bz2)
-md5sums=('2d878449c930592e6cf3482e949c787b')
-sha256sums=('b1fe3ba9b1a7f3a9637dd1656dfdad2889016073fd4d35f13b50143cbbb6a8ef')
-b2sums=('51c2e6205092873369ca68e2502cfccb1de7d6e8275ebd02dd58d8ed6133aaab9eacc21f8057b7e6555df4207b7af51f43c84b5e6e22eaa9c494e4eceb806fbb')
+source=(https://ftp.postgresql.org/pub/source/v${pkgver}/postgresql-${pkgver}.tar.bz2
+        libxml2-2.12.patch
+        openssl3.2.patch)
+md5sums=('9a7d6515408ecb5823546d0a3d7b318c'
+         '9840030511edcd07a363299293ff3aca'
+         'e8b8f43645996189e01e49c55eef8e78')
+sha256sums=('8f53aa95d78eb8e82536ea46b68187793b42bba3b4f65aa342f540b23c9b10a6'
+            'd63e66b46fbe845998c1f4bdf0f74dd5298d2384fceaae055ef28bcf655e2728'
+            '0eab3ea86e0e93b0105981d46d96a4f9a4a0128ae5066e6837097f830e307d70')
+b2sums=('e3731b973242d4de8b4b78e00842df52e006f08510efc0ff02bf7b8b479e17aa9e1c8116644d9a82f23d4334f527f1a82a1c2eec7f7c199a2fdf500b46740264'
+        'acfe2d4381065715cbcd7de8393015bb3341fabd7301ca2a8b9cde4e33e524842f4ea0d97c4164ebbcbb980b1dc0cbe5f0fa031b33d78f7932fea97825a6dea3'
+        '47e5ec9cbc71d1ef159d167d5f188e30d6c8043f3b6131fc023f356e1154b96fb3c883ec6efc445438d09834b986c77db9605fa024d82190d9a9fb7840941634')
 
 # Upstream provides md5 and sha256
+
+prepare() {
+  cd postgresql-${pkgver}
+  patch -p1 -F3 < ../libxml2-2.12.patch
+  patch -p1 < ../openssl3.2.patch
+}
 
 build() {
   cd postgresql-${pkgver}
@@ -41,6 +55,8 @@ build() {
     --with-ldap
     --with-llvm
     --without-libxslt
+    --with-lz4
+    --with-zstd
     --disable-nls
     --enable-thread-safety
     --disable-rpath
@@ -49,7 +65,6 @@ build() {
   # Fix static libs
   CFLAGS+=" -ffat-lto-objects"
 
-  LLVM_CONFIG=llvm-config-15 CLANG=/usr/lib/llvm15/bin/clang \
   ./configure "${configure_options[@]}"
   make -C src all
   make -C contrib all

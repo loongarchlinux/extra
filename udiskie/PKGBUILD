@@ -5,7 +5,7 @@
 # Contributor: Byron Clark <byron@theclarkfamily.name>
 
 pkgname=udiskie
-pkgver=2.5.0
+pkgver=2.5.1
 pkgrel=1
 pkgdesc="Removable disk automounter using udisks"
 arch=("any")
@@ -15,7 +15,7 @@ depends=("udisks2" "python" "python-gobject" "python-yaml" "python-docopt" "gtk3
 makedepends=("asciidoc" "python-setuptools")
 optdepends=("libappindicator-gtk3: --appindicator support")
 source=("$pkgname-$pkgver.tar.gz::https://codeload.github.com/coldfix/$pkgname/tar.gz/v$pkgver")
-sha256sums=('0ed83aa60dbb1b6e1cbadaf60de61530cb28741c02fef23c3d2f6749a06d0f2c')
+sha256sums=('019a167722395ada815fca0cb1d1244988c588ee9c4868a194f267439a700d82')
 
 build(){
 	cd "$pkgname-$pkgver"

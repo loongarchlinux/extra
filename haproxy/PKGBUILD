@@ -2,8 +2,8 @@
 # Contributor: Bartłomiej Piotrowski <bpiotrowski@archlinux.org>
 
 pkgname=haproxy
-pkgver=2.8.4
-pkgrel=1
+pkgver=2.9.1
+pkgrel=2
 
 pkgdesc='Reliable, high performance TCP/HTTP load balancer'
 url='https://www.haproxy.org/'
@@ -18,11 +18,13 @@ backup=('etc/haproxy/haproxy.cfg')
 install=haproxy.install
 
 source=(https://www.haproxy.org/download/${pkgver%.*}/src/haproxy-$pkgver.tar.gz
+        haproxy-stconn-Disable-zero-copy.patch::https://github.com/haproxy/haproxy/commit/123a9e7d83213bcc0478840bab2270113275fb0a.patch
         haproxy.cfg
         haproxy.sysusers
         0001-Use-CFLAGS-and-LDFLAGS-when-building-admin.patch)
 
-sha256sums=('81bacbf50ec6d0f7ecaaad7c03e59978b00322fbdad6ed4a989dd31754b6f25d'
+sha256sums=('d5801c772aab9c43f40964b7b33b4388d14b5b45750be4d2671785863cdb9f1c'
+            'bcb1a784181e486b66ea41a4cfbf1293bb38fab1f3ebe94ba2b054a9c9c85c39'
             'f6babef513b99a3fa0e50f2b144c73c980f1b78b119874ffa2580af1e651e7a9'
             'b02b4088205039f0979aef0ef3e22957f493dd54eabefaee7011f2d795303b3e'
             'a1e3a1c2923465081383eb431bae55ff9841d89909469311cdba4b394ec4a998')
@@ -31,6 +33,7 @@ prepare() {
   cd haproxy-$pkgver
 
   patch -p1 <"$srcdir"/0001-Use-CFLAGS-and-LDFLAGS-when-building-admin.patch
+  patch -Np1 < ../haproxy-stconn-Disable-zero-copy.patch
 }
 
 build() {

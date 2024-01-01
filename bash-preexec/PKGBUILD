@@ -3,12 +3,12 @@
 
 pkgname=bash-preexec
 pkgver=0.5.0
-pkgrel=1
+pkgrel=2
 pkgdesc="preexec and precmd functions for Bash just like Zsh"
 arch=('any')
 url="https://github.com/rcaloras/bash-preexec"
 license=('MIT')
-makedepends=('bash-bats')
+makedepends=('bats' 'coreutils')
 source=("$pkgname-$pkgver.tar.gz::$url/archive/$pkgver.tar.gz"
         "$pkgname-$pkgver-tests.patch::$url/commit/a44754f5c3ca76b0330324680670cb8574d2768f.patch")
 install=$pkgname.install
@@ -22,12 +22,12 @@ prepare() {
 
 check() {
   cd "$pkgname-$pkgver/test"
-  bats .
+  bats --jobs "$(nproc)" .
 }
 
 package() {
   cd "$pkgname-$pkgver"
-  install -Dm 755 "${pkgname}.sh" -t "$pkgdir/usr/share/$pkgname" 
+  install -Dm 755 "${pkgname}.sh" -t "$pkgdir/usr/share/$pkgname"
   install -Dm 644 README.md -t "$pkgdir/usr/share/doc/$pkgname"
   install -Dm 644 LICENSE.md -t "$pkgdir/usr/share/licenses/$pkgname"
 }

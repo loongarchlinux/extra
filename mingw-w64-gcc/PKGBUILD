@@ -1,7 +1,7 @@
 # Maintainer: Felix Yan <felixonmars@archlinux.org>
 
 pkgname=mingw-w64-gcc
-pkgver=12.2.0
+pkgver=13.1.0
 pkgrel=1
 pkgdesc="Cross GCC for the MinGW-w64 cross-compiler"
 arch=('loong64' 'x86_64' 'aarch64')
@@ -9,24 +9,20 @@ url="https://gcc.gnu.org"
 license=('GPL' 'LGPL' 'FDL' 'custom')
 groups=('mingw-w64-toolchain' 'mingw-w64')
 depends=('zlib' 'libisl' 'libmpc' 'mingw-w64-crt' 'mingw-w64-binutils' 'mingw-w64-winpthreads' 'mingw-w64-headers')
-makedepends=("gcc-ada>=${pkgver:0:2}")
+# gcc-d doesn't build as of 13.1.0
+makedepends=("gcc-ada")
 options=('!strip' 'staticlibs' '!emptydirs' '!buildflags')
-source=(https://ftp.gnu.org/gnu/gcc/gcc-$pkgver/gcc-$pkgver.tar.xz{,.sig}
-       https://raw.githubusercontent.com/msys2/MINGW-packages/master/mingw-w64-gcc/0020-libgomp-Don-t-hard-code-MS-printf-attributes.patch)
+source=(https://ftp.gnu.org/gnu/gcc/gcc-$pkgver/gcc-$pkgver.tar.xz{,.sig})
 validpgpkeys=(D3A93CAD751C2AF4F8C7AD516C35B99309B5FA62  # Jakub Jelinek <jakub@redhat.com>
               13975A70E63C361C73AE69EF6EEB81F8981C74C7) # richard.guenther@gmail.com
-sha512sums=('e9e857bd81bf7a370307d6848c81b2f5403db8c7b5207f54bce3f3faac3bde63445684092c2bc1a2427cddb6f7746496d9fbbef05fbbd77f2810b2998f1f9173'
-            'SKIP'
-            '71f0472b1d199dff7f25333da0b4c766e484b57daa0f75aeb9a0ce2187a3e7f4fc4bd5cfe464c942855eadbcdcc3646a7a3b64144fb3379dcbd6e7fc39a374c4')
+sha512sums=('6cf06dfc48f57f5e67f7efe3248019329a14d690c728d9f2f7ef5fa0d58f1816f309586ba7ea2eac20d0b60a2d1b701f68392e9067dd46f827ba0efd7192db33'
+            'SKIP')
 
 _architectures="i686-w64-mingw32 x86_64-w64-mingw32"
 
 prepare() {
   ln -sf gcc-${pkgver/+/-} gcc
   cd gcc
-
-  # https://sourceforge.net/p/mingw-w64/bugs/853/
-  patch -p1 -i ../0020-libgomp-Don-t-hard-code-MS-printf-attributes.patch
 
   # mmapio.c:69:14: error: implicit declaration of function ‘getpagesize’
   sed -i 's|\-Werror||g' libbacktrace/configure
@@ -38,7 +34,7 @@ build() {
     "$srcdir"/gcc/configure --prefix=/usr --libexecdir=/usr/lib \
         --target=${_arch} \
         --with-bugurl=https://bugs.archlinux.org/ \
-        --enable-languages=c,lto,c++,ada,objc,obj-c++,fortran \
+        --enable-languages=ada,c,c++,fortran,lto,objc,obj-c++ \
         --enable-shared --enable-static \
         --enable-threads=posix --enable-fully-dynamic-string \
         --enable-libstdcxx-time=yes --enable-libstdcxx-filesystem-ts=yes \

@@ -2,8 +2,8 @@
 # Maintainer: Jan Alexander Steffens (heftig) <heftig@archlinux.org>
 
 pkgname=gnome-shell-extensions
-pkgver=45.1
-pkgrel=3
+pkgver=45.2
+pkgrel=1
 pkgdesc="Extensions for GNOME shell, including classic mode"
 url="https://wiki.gnome.org/Projects/GnomeShell/Extensions"
 arch=(any)
@@ -15,15 +15,11 @@ makedepends=(
 )
 optdepends=('gnome-menus: applications menu extension')
 groups=(gnome)
-_commit=f27b239f5566ad587e09e8607d8efc0ac5ba532b  # tags/45.1^0
+_commit=b02e43d84cf7a1956d2d8cc77079a64cddef4d40  # tags/45.2^0
 source=(
   "git+https://gitlab.gnome.org/GNOME/gnome-shell-extensions.git#commit=$_commit"
-  0001-workspace-indicator-Only-initialize-preview-visibili.patch
-  0002-window-list-Only-initialize-preview-visibility-on-ma.patch
 )
-b2sums=('SKIP'
-        '60a97e3b25b2ebd85c65eaa689ef2768066e258a702da001fc2a6d7cde0308471ea67794cc997efb20c20935f6b5bf7b0a87ad29a43fe282e7578687250475df'
-        '3d3325375707df09d5a622d997f865e69f325be3e36840f681904e228e718ab759e0389b5c7b0591d8c872acda1cd7bca8742065cc02abe31f2d914567509e1e')
+b2sums=('SKIP')
 
 pkgver() {
   cd $pkgname
@@ -32,11 +28,6 @@ pkgver() {
 
 prepare() {
   cd $pkgname
-
-  # https://bugs.archlinux.org/task/80132
-  # https://gitlab.gnome.org/GNOME/gnome-shell-extensions/-/merge_requests/286
-  git apply -3 ../0001-workspace-indicator-Only-initialize-preview-visibili.patch
-  git apply -3 ../0002-window-list-Only-initialize-preview-visibility-on-ma.patch
 }
 
 build() {

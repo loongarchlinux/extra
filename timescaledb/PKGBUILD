@@ -3,40 +3,44 @@
 # Contributor: Felix Fung <fylixeoi@gmail.com>
 
 pkgname=timescaledb
-_commit=2a39fbb444888bbba9139c7f7ab84f2aa28509ee
+_current_pg_version=16
+_next_pg_version=$(( _current_pg_version + 1 ))
 # limit to last 5 releases
-_versions=(
-  2.11.1
-  2.11.2
-  2.12.0
-  2.12.1
-  2.12.2 # current ts version
+declare -gA _commits=(
+  [2.13.0]=96f81a3106683f186f091ad88339c8c223f4363c
 )
-pkgver="${_versions[-1]}"
+pkgver=2.13.0
 pkgrel=1
 pkgdesc='An open-source time-series database optimized for fast ingest and complex queries'
 arch=('loong64' 'x86_64')
 url='https://www.timescale.com/'
 license=('Apache' 'custom:Timescale')
-depends=('postgresql<16' 'postgresql-libs<16' 'openssl')
+depends=(
+  'openssl'
+  "postgresql-libs<$_next_pg_version"
+  "postgresql-libs>=$_current_pg_version"
+  "postgresql<$_next_pg_version"
+  "postgresql>=$_current_pg_version"
+)
 makedepends=('gcc' 'cmake' 'git')
 optdepends=(
   'timescaledb-tune: tune postgresql.conf for better performance'
   'timescaledb-old-upgrade: upgrade from previous major version of PostgreSQL'
 )
 install=timescaledb.install
-source=("$pkgname::git+https://github.com/timescale/timescaledb#commit=$_commit")
-sha512sums=('SKIP')
+source=("$pkgname::git+https://github.com/timescale/timescaledb#commit=${_commits[$pkgver]}")
+b2sums=('SKIP')
 
 prepare() {
-  mkdir build
+  mkdir -p build
 }
 
 build() {
-  for version in "${_versions[@]}"; do
+  local version
+  for version in "${!_commits[@]}"; do
     cd "$srcdir/$pkgname"
 
-    git checkout "$version"
+    git checkout "${_commits[$version]}"
 
     BUILD_DIR="$srcdir/build/$version" ./bootstrap \
       -DWARNINGS_AS_ERRORS=OFF \
@@ -53,7 +57,7 @@ build() {
       -e "s:BUILD_OS_VERSION \".*\"$:BUILD_OS_VERSION \"rolling\":" \
       -i src/config.h
 
-    if [ "$version" == "${_versions[-1]}" ]; then
+    if [[ $version == $pkgver ]]; then
       make
     else
       make timescaledb timescaledb-tsl sqlfile
@@ -64,14 +68,15 @@ build() {
 package() {
   cd "$pkgname"
   # install licenses from latest version
-  git checkout "${_versions[-1]}"
+  git checkout "${_commits[$pkgver]}"
   install -vDm644 -t "$pkgdir/usr/share/licenses/$pkgname" \
     LICENSE LICENSE-APACHE tsl/LICENSE-TIMESCALE
 
   # install package or past shared library
-  for version in "${_versions[@]}"; do
+  local version
+  for version in "${!_commits[@]}"; do
     cd "$srcdir/build/$version"
-    if [ "$version" == "${_versions[-1]}" ]; then
+    if [[ $version == $pkgver ]]; then
       make DESTDIR="$pkgdir/" install
     else
       install -vDm755 -t "$pkgdir/usr/lib/postgresql" \

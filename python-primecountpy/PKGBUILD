@@ -1,24 +1,32 @@
 # Maintainer: Antonio Rojas <arojas@archlinux.org>
 
-_pipname=primecountpy
-pkgname=python-$_pipname
+_pyname=primecountpy
+pkgname=python-$_pyname
 pkgver=0.1.0
-pkgrel=2
+pkgrel=4
 pkgdesc='Cython interface to the C++ library primecount'
 arch=(loong64 x86_64)
 url='https://github.com/dimpase/primecountpy'
 license=(GPL3)
-depends=(python-cysignals primecount)
-makedepends=(cython python-setuptools)
-source=(https://pypi.io/packages/source/${_pipname:0:1}/$_pipname/$_pipname-$pkgver.tar.gz)
-sha256sums=('78fe7cc32115f0669a45d7c90faaf39f7ce3939e39e2e7e5f14c17fe4bff0676')
+depends=(gcc-libs
+         glibc
+         primecount
+         python
+         python-cysignals)
+makedepends=(cython
+             python-build
+             python-installer
+             python-setuptools
+             python-wheel)
+source=(https://github.com/dimpase/primecountpy/archive/v$pkgver/$_pyname-$pkgver.tar.gz)
+sha256sums=('42835b1ddfc2e95c2a48118c3a871d650146aae92a63dd4564dd1be171d09c15')
 
 build() {
-  cd $_pipname-$pkgver
-  python setup.py build
+  cd $_pyname-$pkgver
+  python -m build --wheel --no-isolation
 }
 
 package() {
-  cd $_pipname-$pkgver 
-  python setup.py install --root="$pkgdir" --optimize=1 --skip-build
+  cd $_pyname-$pkgver 
+  python -m installer --destdir="$pkgdir" dist/*.whl
 }

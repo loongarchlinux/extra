@@ -1,0 +1,36 @@
+# Maintainer: Caleb Maclennan <caleb@alerque.com>
+# Contributor: Sanpi <sanpi+aur@homecomputing.fr>
+
+pkgname=jaq
+pkgver=1.2.0
+pkgrel=2
+pkgdesc='A jq clone focussed on correctness, speed, and simplicity'
+url="https://github.com/01mf02/$pkgname"
+arch=(loong64 x86_64)
+license=(MIT)
+makedepends=(cargo)
+_archive="$pkgname-$pkgver"
+source=("$url/archive/v$pkgver/$_archive.tar.gz")
+sha256sums=('3895dda6c808d93353bdcf3d265613c2c2fcdbbb20b1177bda8bb95fc0078277')
+
+prepare() {
+	cd "$_archive"
+	cargo fetch --locked --target "$CARCH-unknown-linux-gnu"
+}
+
+build() {
+	cd "$_archive"
+	CFLAGS+=" -ffat-lto-objects"
+	cargo build --frozen --release
+}
+
+check() {
+	cd "$_archive"
+	cargo test --frozen
+}
+
+package() {
+	cd "$_archive"
+	install -Dm0755 -t "$pkgdir/usr/bin/" "target/release/$pkgname"
+	install -Dm0644 -t "$pkgdir/usr/share/licenses/$pkgname/" LICENSE-MIT
+}

@@ -3,7 +3,7 @@
 # Contributor : Jingbei Li <i@jingbei.li>
 
 pkgname=plantuml
-pkgver=1.2023.11
+pkgver=1.2023.12
 pkgrel=1
 pkgdesc="Component that allows to quickly write uml diagrams"
 arch=(any)
@@ -13,7 +13,7 @@ depends=("java-runtime>=8" "bash")
 makedepends=("gradle" "java-environment>=8")
 source=("https://github.com/plantuml/plantuml/archive/v$pkgver/$pkgname-$pkgver.tar.gz"
         "$pkgname.run")
-sha256sums=('70dc0b2fcb738abd7d2c7012085a04d34e7d90e64a517afbc09ebf26ef1c112a'
+sha256sums=('67880e74ff80dab6427ef5e4f3adec3ed87878411599cd96aff2884ae280bb97'
             'a3fb528f4c719cfd0ff6154c60fd54ce341011d132caf950cc30af4989f6aac8')
 optdepends=('plantuml-ascii-math: allow use AsciiMath or JLaTeXMath notation'
             'ditaa: allow use ditaa notation'

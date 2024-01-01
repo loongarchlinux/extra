@@ -3,15 +3,15 @@
 
 pkgname=python-pyotp
 _pkgname=pyotp
-_gitcommit=a50b2701e1ecaaafc62b90a7424f602ce8edfceb
-pkgver=2.6.0
-pkgrel=5
+_gitcommit=c119693513a768629c4c8269c14083d71b941746
+pkgver=2.9.0
+pkgrel=1
 pkgdesc='Python library for generating and verifying one-time passwords'
 url='https://pyotp.readthedocs.io/'
 arch=('any')
 license=('MIT')
 depends=('python')
-makedepends=('git' 'python-setuptools' 'python-sphinx' 'python-guzzle-sphinx-theme')
+makedepends=('git' 'python-setuptools' 'python-sphinx' 'python-guzzle-sphinx-theme' 'python-sphinxext-opengraph')
 options=('!makeflags')
 source=("git+https://github.com/pyotp/pyotp#commit=${_gitcommit}?signed")
 sha512sums=('SKIP')

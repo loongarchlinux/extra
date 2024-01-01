@@ -2,7 +2,7 @@
 # Contributor:  Joakim Hernberg <jbh@alchemy.lu>
 
 pkgbase=linux-rt
-pkgver=6.5.2.8.realtime1
+pkgver=6.6.5.16.realtime1
 pkgrel=1
 pkgdesc='Linux RT'
 arch=(loong64 x86_64)
@@ -28,13 +28,12 @@ source=(
   config
 )
 sha512sums=('SKIP'
-            '4b970ba8e9048e1cb4060d4ab70c10c716c88b649dd1e60b6a66f28180b7e75a2f132e27125643964dd837384e3a8272c0b2c5397390771f78cd533cc09468e2')
+            '9b0c5f6deee2014c8192a31a451dc16b5e846d7e46032c603ff59ffba1f76b8a952f08dc89dd2eb0da3fbd272bae9db055f7626785c4ac16a95a7f8a36e749e4')
 b2sums=('SKIP'
-        '0c113d1d39dfc10d1550f2636232bd490618f1e1b436eebfd1bdec12deb2622ba57172c031f9e374b7849f0d2e53a48e6c54edc91fdc9e5829d55f4b9aa06d84')
+        'b4497d8c9f88d54116855c4ba272c39f0d3c16a0ce415de7124d5d292c29ff2631926fc846272c4f22326a718bdd92aa78dc4eec79db64d90486545a7d2d6440')
 validpgpkeys=(
   '647F28654894E3BD457199BE38DBBDC86092693E'  # Greg Kroah-Hartman <gregkh@kernel.org>
   '64254695FFF0AA4466CC19E67B96E8162A8CF5D1'  # Sebastian Andrzej Siewior
-  'C7E7849466FE2358343588377258734B41C31549'  # David Runge <dvzrv@archlinux.org>
   '991F6E3F0765CF6295888586139B09DA5BF0D338'  # David Runge <dvzrv@archlinux.org>
 )
 
@@ -54,7 +53,9 @@ prepare() {
   echo "-$pkgrel" > localversion.10-pkgrel
   echo "${pkgbase#linux}" > localversion.20-pkgname
   make defconfig
-  make -s kernelrelease > version
+  # workaround for scripts/setlocalversion trying to be too clever (and appending commit checksums where it shouldn't)
+  local kernelrelease=$(make -s kernelrelease)
+  echo "${kernelrelease/-g*/}" > version
   make mrproper
 
   local src
@@ -159,8 +160,8 @@ _package() {
   ZSTD_CLEVEL=19 _make INSTALL_MOD_PATH="$pkgdir/usr" INSTALL_MOD_STRIP=1 \
     DEPMOD=/doesnt/exist modules_install  # Suppress depmod
 
-  # remove build and source links
-  rm "$modulesdir"/{source,build}
+  # remove build link
+  rm "$modulesdir"/build
 
   # licenses
   install -vDm 644 LICENSES/deprecated/{GPL-1.0,ISC,Linux-OpenIB,X11,Zlib} -t "$pkgdir/usr/share/licenses/$pkgname/"

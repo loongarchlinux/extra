@@ -1,7 +1,7 @@
 # Maintainer: George Rawlinson <grawlinson@archlinux.org>
 
 pkgname=toot
-pkgver=0.39.0
+pkgver=0.40.2
 pkgrel=1
 pkgdesc='A Mastodon CLI client'
 arch=('any')
@@ -14,6 +14,8 @@ depends=(
   'python-wcwidth'
   'python-urwid'
   'python-tomlkit'
+  'python-click'
+  'python-typing_extensions'
 )
 makedepends=(
   'git'
@@ -22,7 +24,7 @@ makedepends=(
   'python-setuptools'
   'python-wheel'
 )
-_commit='509afd16a8479240f81d7566896ed9e97a1d109f'
+_commit='09b29d2b93aaf07962d9b3d7c4715930f4b2f5c2'
 source=("$pkgname::git+$url#commit=$_commit")
 b2sums=('SKIP')
 
@@ -36,10 +38,24 @@ build() {
   cd "$pkgname"
 
   python -m build --wheel --no-isolation
+
+  # generate shell completions
+  python -m installer --destdir="$(pwd)/tmp" dist/*.whl
+  local site_packages=$(python -c "import site; print(site.getsitepackages()[0])")
+  export PATH="$(pwd)/tmp/usr/bin:$PATH"
+  export PYTHONPATH="$(pwd)/tmp/$site_packages"
+  for shell in bash fish zsh; do
+  _TOOT_COMPLETE=${shell}_source toot > "$shell.completion"
+  done
 }
 
 package() {
   cd "$pkgname"
 
   python -m installer --destdir="$pkgdir" dist/*.whl
+
+  # shell completion
+  install -vDm644 bash.completion "$pkgdir/usr/share/bash-completion/completions/toot"
+  install -vDm644 fish.completion "$pkgdir/usr/share/fish/vendor_completions.d/toot.fish"
+  install -vDm644 zsh.completion "$pkgdir/usr/share/zsh/site-functions/_toot"
 }

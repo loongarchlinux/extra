@@ -1,7 +1,8 @@
-# Maintainer: Eric Bélanger <eric@archlinux.org>
+# Maintainer: Christian Hesse <mail@eworm.de>
+# Contributor: Eric Bélanger <eric@archlinux.org>
 
 pkgname=putty
-pkgver=0.79
+pkgver=0.80
 pkgrel=1
 pkgdesc='A terminal integrated SSH/Telnet client'
 arch=('loong64' 'x86_64')
@@ -9,32 +10,28 @@ url='https://www.chiark.greenend.org.uk/~sgtatham/putty/'
 license=('MIT')
 depends=('gtk3')
 makedepends=('cmake')
-validpgpkeys=('F412BA3AA30FDC0E77B4E3871993D21BCAD1AA77') # "PuTTY Releases <putty@projects.tartarus.org>
+validpgpkeys=('F412BA3AA30FDC0E77B4E3871993D21BCAD1AA77') # PuTTY Releases <putty@projects.tartarus.org>
 source=("https://the.earth.li/~sgtatham/putty/${pkgver}/${pkgname}-${pkgver}.tar.gz"
         "putty-${pkgver}.tar.gz.sig::https://the.earth.li/~sgtatham/putty/${pkgver}/putty-${pkgver}.tar.gz.gpg"
         'putty.desktop'
         'putty.png'
         'putty.xpm')
-sha256sums=('428cc8666fbb938ebf4ac9276341980dcd70de395b33164496cf7995ef0ef0d8'
+sha256sums=('2013c83a721b1753529e9090f7c3830e8fe4c80a070ccce764539badb3f67081'
             'SKIP'
             '4a8af81fe8ac702ad298606076088f237b83beed82cc089a32f314888b67cf2c'
             '621abf249dc6c6326faf259565546df84635b3afbe31893145a5056d8b114396'
             'd65139883171ed0119d9778ff4a89e6a8151a5ae97fcf8dc7cafb59df424377f')
 
 build() {
-  mkdir build
-  cd build
-
-  cmake \
-    "${srcdir}"/${pkgname}-${pkgver}/ \
-    -DCMAKE_INSTALL_PREFIX=/usr
-  make
+  cmake -B build -S ${pkgname}-${pkgver} \
+    -DCMAKE_BUILD_TYPE=None \
+    -DCMAKE_INSTALL_PREFIX=/usr \
+    -Wno-dev
+  cmake --build build
 }
 
 package() {
-  cd build
-
-  make DESTDIR="${pkgdir}" install
+  DESTDIR="$pkgdir" cmake --install build
   
   install -D -m0644 "${srcdir}"/${pkgname}-${pkgver}/LICENCE "${pkgdir}"/usr/share/licenses/${pkgname}/LICENSE
   install -D -m0644 "${srcdir}"/putty.desktop "${pkgdir}"/usr/share/applications/putty.desktop

@@ -1,28 +1,45 @@
 # Maintainer: Jan Alexander Steffens (heftig) <heftig@archlinux.org>
 
 pkgname=flatpak-builder
-pkgver=1.2.3
-pkgrel=2
+pkgver=1.4.0
+pkgrel=1
 pkgdesc="Tool to build flatpaks from source"
 url="https://flatpak.org"
 arch=(loong64 x86_64)
-license=(LGPL)
-depends=(flatpak binutils elfutils unzip tar git breezy patch rpmextract cpio
-         appstream-glib fuse3)
-makedepends=(gobject-introspection git docbook-xsl xmlto)
+license=(LGPL-2.1-or-later)
+depends=(
+  appstream
+  binutils
+  breezy
+  cpio
+  debugedit
+  elfutils
+  flatpak
+  fuse3
+  git
+  patch
+  rpmextract
+  tar
+  unzip
+)
+makedepends=(
+  docbook-xsl
+  git
+  gobject-introspection
+  meson
+  xmlto
+)
 checkdepends=(valgrind)
 replaces=('flatpak<0.9.10')
-_commit=d7dbc51267e83242a9fe0d5a7b5304db0ac72f4f  # tags/1.2.3
+_commit=7d621d6eec7fe523c68d46f3853cdc86561b5637  # tags/1.4.0^0
 source=(
   "git+https://github.com/flatpak/flatpak-builder#commit=$_commit"
   "git+https://gitlab.gnome.org/GNOME/libglnx.git"
-  "git+https://sourceware.org/git/debugedit.git"
   fusermount3.diff
 )
-sha256sums=('SKIP'
-            'SKIP'
-            'SKIP'
-            '984ea70ac2c5794c758523aba9c1f643dc21fb01db4ed962987935a454d521a7')
+b2sums=('SKIP'
+        'SKIP'
+        '7d54ba89b3481722026ef556aabfc8b157069701ec89e900a5616899b937eacc077e620fb2a5f9d4faf5f7189414bc25e9a0fc57a0d8d2952bb24fb22dc445f3')
 
 pkgver() {
   cd $pkgname
@@ -35,39 +52,25 @@ prepare() {
   # https://bugs.archlinux.org/task/75649
   git apply -3 ../fusermount3.diff
 
-  git submodule init
-  git submodule set-url libglnx "$srcdir/libglnx"
-  git submodule set-url debugedit "$srcdir/debugedit"
-  git submodule sync # Git bug: set-url does not sync properly when name != path
-  git -c protocol.file.allow=always submodule update
-
-  NOCONFIGURE=1 ./autogen.sh
+  git submodule set-url subprojects/libglnx "$srcdir/libglnx"
+  git -c protocol.file.allow=always submodule update --init -- subprojects/libglnx
 }
 
 build() {
-  cd $pkgname
+  local meson_options=(
+    -D fuse=3
+  )
 
-  ./configure \
-    --prefix=/usr \
-    --sysconfdir=/etc \
-    --localstatedir=/var \
-    --sbindir=/usr/bin \
-    --libexecdir=/usr/lib \
-    --disable-static
-
-  sed -i -e 's/ -shared / -Wl,-O1,--as-needed\0/g' libtool
-
-  make
+  arch-meson $pkgname build "${meson_options[@]}"
+  meson compile -C build
 }
 
 check() {
-  cd $pkgname
-  make -k check
+  meson test -C build --print-errorlogs
 }
 
 package() {
-  cd $pkgname
-  make DESTDIR="$pkgdir" install
+  meson install -C build --destdir "$pkgdir"
 }
 
 # vim:set sw=2 sts=-1 et:

@@ -4,7 +4,7 @@
 # Contributor: Jerome Leclanche <jerome@leclan.ch>
 
 pkgname=terraform
-pkgver=1.6.4
+pkgver=1.6.6
 pkgrel=1
 pkgdesc="HashiCorp tool for building and updating infrastructure as code idempotently"
 url="https://github.com/hashicorp/terraform"
@@ -17,10 +17,10 @@ options=('!lto')
 source=("$pkgname-$pkgver.tar.gz::https://github.com/hashicorp/terraform/archive/v$pkgver.tar.gz"
         "terraform.bash"
         "terraform.zsh")
-sha512sums=('7564824d301bd99786b9248eeab950141b3861f1c5ce51bce45b55c7a9ba1d66409a2485a717a100f01ce4d3eb718a299fe8d048661cf88101aef43364446b91'
+sha512sums=('3e1ffc99abeb9765ea55cca82fe892b1bfc13d484659dd82e6670ad37e9c46cd25f23dbbcb8954107a1dfe9fcf66d8da3ce299742a458019e1e86a5aa617d071'
             'ea42bfc41288e5ad741fcddfbd5c1f8ba0088be0967b820db1e12e1dc13d1ba242b9cc1c247bf29c36ec59cdce76ff6703cf6b3f76cca5ec441a4927a01afe7d'
             'ad991daf40f68c11fa66256177a04d97bd38d6a89c554d6261489d4de703852628ffc37429d862237ca24e15f6a7c915cfa027731189ac89a27f7b20c72ab4c9')
-b2sums=('b68b7757d19148849bc0b976d2709034112240bd0098205d23d979cde2e686e02d1bc2b48d5b938dadd83afc83310ec14edbfd307735eb2326204e6ce5d58774'
+b2sums=('32d26d54661ec26bf9f8b4eb1ef38add007fae6dcfd0c39413b840ff8a196e195778bfcc662d641c7274a70db8ba465c682002627fab336d5da4181169d93c38'
         'd047735bbb006e9afbaa4b18af7a7f16a205ec528e91caa61a0b663dd6e24ec1df999216f0b7bd06e3b3c087b37f6ce3aa3cf3a20c892a9cc1962d33ce1b0bcc'
         'd58712c8203e4a58ec68738f3d22457547a55d230018408400fd1ca433346171b72fa4a87f05efc93213c71f9757d3a8072149ca4e6894355e79f8cfae3bd55b')
 
@@ -42,7 +42,16 @@ build() {
 
 check() {
 	cd "${pkgname}-${pkgver}"
-	go test -mod=readonly -skip TestInit_cancelModules -skip TestMTLSServer_NoCertFails ./...
+	# TestInit_cancelModules: https://github.com/hashicorp/terraform/issues/33347
+	# TestJSONHook_create: https://github.com/hashicorp/terraform/issues/34410
+	# TestTest/custom_condition_inputs: https://github.com/hashicorp/terraform/issues/34421
+	go test -mod=readonly \
+		-skip TestInit_cancelModules \
+		-skip TestMTLSServer_NoCertFails \
+		-skip TestJSONHook_create \
+		-skip TestTest/custom_condition_inputs \
+		-skip TestTest/custom_condition_inputs \
+		./...
 }
 
 package() {

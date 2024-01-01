@@ -3,11 +3,11 @@
 # Maintainer: Torsten Keßler <tpkessler@archlinux.org>
 
 pkgname=intel-graphics-compiler
-pkgver=1.0.14828.8
+pkgver=1.0.15136.4
 _llvmmaj=14
 _llvmver="${_llvmmaj}.0.5"
 _vciver=0.13.0
-_spirv_llvm_commit=23f398bf369093b1fd67459db8071ffcc6b92658
+_spirv_llvm_commit=43baf90f96fb9df607595b63858fd9e85fbb2604
 _opencl_clang_commit=cf95b338d14685e4f3402ab1828bef31d48f1fd6
 pkgrel=1
 epoch=1
@@ -16,7 +16,7 @@ arch=('loong64' 'x86_64')
 url='https://github.com/intel/intel-graphics-compiler/'
 license=('MIT' 'custom')
 depends=('gcc-libs' 'zlib' 'spirv-tools')
-makedepends=('git' 'cmake' 'ninja' 'python' 'spirv-headers')
+makedepends=('git' 'cmake' 'python' 'python-mako' 'spirv-headers')
 provides=("intel-opencl-clang=${_llvmmaj}.0.0")
 conflicts=('intel-opencl-clang')
 replaces=('intel-opencl-clang')
@@ -26,7 +26,7 @@ source=("${pkgname}-${pkgver}.tar.gz::https://github.com/intel/intel-graphics-co
         "git+https://github.com/KhronosGroup/SPIRV-LLVM-Translator.git#commit=${_spirv_llvm_commit}"
         "git+https://github.com/intel/opencl-clang.git#commit=${_opencl_clang_commit}"
         "git+https://github.com/llvm/llvm-project.git#tag=llvmorg-${_llvmver}")
-sha256sums=('c62e4d68060a4527fd5932fc8dba496fb817d86293073024a90def20801fbf73'
+sha256sums=('0a6e502b5a72ac88275a5bdb64886fbf5fcec890ea892857e25af43e389d4ddb'
             'SKIP'
             'SKIP'
             'SKIP'
@@ -47,7 +47,7 @@ build() {
 
     EMAIL='builduser@archlinux.org' \
     cmake -B build -S "${pkgname}-igc-${pkgver}" \
-        -G Ninja \
+        -G 'Unix Makefiles' \
         -DCMAKE_BUILD_TYPE=Release \
         -DCMAKE_INSTALL_PREFIX=/usr \
         -DCMAKE_INSTALL_LIBDIR=lib \

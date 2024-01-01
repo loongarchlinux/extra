@@ -3,23 +3,25 @@
 _pkgbase=PyAudio
 pkgname=python-pyaudio
 pkgver=0.2.14
-pkgrel=1
+pkgrel=2
 pkgdesc="Python bindings for PortAudio"
 arch=('loong64' 'x86_64')
 url="https://people.csail.mit.edu/hubert/pyaudio/"
 license=('MIT')
-makedepends=('python-setuptools')
+# python-setuptools compat layer still used. Upstream needs to finish pyproject
+# build-system implementation.
+makedepends=('python-build' 'python-installer' 'python-setuptools' 'python-wheel')
 depends=('portaudio' 'python')
 source=("$_pkgbase-$pkgver.tar.gz::https://files.pythonhosted.org/packages/source/P/$_pkgbase/$_pkgbase-$pkgver.tar.gz")
 sha256sums=('78dfff3879b4994d1f4fc6485646a57755c6ee3c19647a491f790a0895bd2f87')
 
 build() {
   cd $_pkgbase-$pkgver
-  python setup.py build
+  python -m build --wheel --no-isolation
 }
 
 package() {
   cd $_pkgbase-$pkgver
-  python3 setup.py install --root "$pkgdir" --optimize=1
+  python -m installer --destdir="$pkgdir" dist/*.whl
   install -Dm644 README.md "$pkgdir/usr/share/licenses/$pkgname/README"
 }

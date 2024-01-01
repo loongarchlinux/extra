@@ -2,21 +2,22 @@
 
 _pkgname=pipx
 pkgname=python-$_pkgname
-pkgver=1.2.1
-pkgrel=1
+pkgver=1.3.3
+pkgrel=2
 pkgdesc='Install and Run Python Applications in Isolated Environments'
 arch=('any')
 url='https://github.com/pipxproject/pipx'
 license=('MIT' 'BSD')
-depends=('python' 'python-userpath' 'python-argcomplete' 'python-packaging')
-makedepends=('python-build' 'python-installer' 'python-hatchling' 'python-wheel')
+depends=('python' 'python-userpath' 'python-argcomplete' 'python-packaging' 'python-platformdirs')
+makedepends=('python-build' 'python-installer' 'python-hatchling' 'python-wheel' 'python-hatch-vcs')
 #checkdepends=('python-tox' 'python-pytest')
 source=("$pkgname-$pkgver.tar.gz::$url/archive/$pkgver.tar.gz")
-sha512sums=('93a0d67de9540584987be126d4e28a2628beefba99e15936369c948dc29fb7f11745413ef3f0ace5586b4456ed8554103bcd5079079bc0a34babc02823f7f9d3')
+sha512sums=('42246a0d8275beee16b85a1007d46d328a892beb89e79fb406ba53942a57b7312d34150376835395b9eca3ecb68db71f0c3c470fd92519dd9175311003707a3d')
 
 build() {
   cd $_pkgname-$pkgver
 
+  SETUPTOOLS_SCM_PRETEND_VERSION=${pkgver} \
   python -m build -nw
 }
 

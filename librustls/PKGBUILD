@@ -1,7 +1,7 @@
 # Maintainer: kpcyrd <kpcyrd[at]archlinux[dot]org>
 
 pkgname=librustls
-pkgver=0.11.0
+pkgver=0.12.0
 pkgrel=1
 pkgdesc="Use rustls from languages other than Rust"
 arch=('loong64' 'x86_64')
@@ -9,22 +9,17 @@ license=('Apache-2.0' 'MIT')
 url='https://github.com/rustls/rustls-ffi'
 makedepends=(
   cargo-c
-  patchelf
   rust
 )
 provides=('librustls.so')
 options=(!lto)
 source=(https://github.com/rustls/rustls-ffi/archive/v${pkgver}/${pkgname}-${pkgver}.tar.gz
-        https://raw.githubusercontent.com/rustls/rustls-ffi/6c24d4829e1d596ce03e6097145e023be29acf78/Cargo.lock
         shared-linking.patch)
-sha256sums=('0eeac3b916286cce35a3f32f3fd11f54ad2584a32bb67ac41c0c563c7c62c98b'
-            '06d3b4df897c45a3320e73dca2fcea1cde75f29b1c0a90f4930b403c7c7dc3b1'
-            '194e5df9f9ea87c53ac39e055ef2a4186ce93c8a50e03566b3947ab05423916b')
+sha256sums=('7eaffd02528155f561742bd712f5454e68fb771b3eb55d63bf0520429ab717f1'
+            '6f1fd82c456e106c265d9778c4a972e84de7fcfc992202993460edb0bd2fa300')
 
 prepare() {
   cd rustls-ffi-${pkgver}
-  [ ! -e Cargo.lock ] # remove Cargo.lock from source= after next release
-  cp ../Cargo.lock .
   cargo fetch --locked --target "$CARCH-unknown-linux-gnu"
   patch -Np1 -i ../shared-linking.patch
 }
@@ -32,13 +27,11 @@ prepare() {
 build() {
   cd rustls-ffi-${pkgver}
   RUSTC_BOOTSTRAP=1 cargo cbuild --release --frozen --prefix=/usr
-  patchelf --set-soname "librustls.so.${pkgver}" "target/$CARCH-unknown-linux-gnu/release/librustls.so"
 }
 
 package() {
   cd rustls-ffi-${pkgver}
   cargo cinstall --release --frozen --prefix /usr --destdir "${pkgdir}"
-  rm "${pkgdir}/usr/lib/librustls.so.0"
   install -Dm644 -t "${pkgdir}/usr/share/licenses/${pkgname}" LICENSE-*
 }
 

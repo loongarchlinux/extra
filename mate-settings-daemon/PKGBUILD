@@ -1,8 +1,9 @@
-# Maintainer: Brad Fanella <cesura@archlinux.org>
+# Maintainer: Alexander Epaneshnikov <alex19ep@archlinux.org>
+# Contributor: Brad Fanella <cesura@archlinux.org>
 # Contributor: Martin Wimpress <code@flexion.org>
 
 pkgname=mate-settings-daemon
-pkgver=1.26.0
+pkgver=1.26.1
 pkgrel=1
 pkgdesc="The MATE Settings daemon"
 url="https://mate-desktop.org"
@@ -17,24 +18,24 @@ groups=('mate')
 conflicts=('mate-settings-daemon-gtk3')
 replaces=('mate-settings-daemon-gtk3')
 source=("https://pub.mate-desktop.org/releases/${pkgver%.*}/${pkgname}-${pkgver}.tar.xz")
-sha256sums=('b77aa017ff811a6fcae40bd45f18d8606eec87be21e3e6fa6d35c0fe14e66d41')
+sha256sums=('697ea65b542921c2b766145292d268d3009cc2da8316d2a7869869055e4b1859')
 
 build() {
-    	cd "${pkgname}-${pkgver}"
-    	./configure \
-        	--prefix=/usr \
-        	--libexecdir=/usr/lib/${pkgname} \
-        	--sysconfdir=/etc \
-        	--enable-polkit \
-        	--enable-pulse
+	cd "${pkgname}-${pkgver}"
+	./configure \
+	            --prefix=/usr \
+	            --libexecdir=/usr/lib/${pkgname} \
+	            --sysconfdir=/etc \
+	            --enable-polkit \
+	            --enable-pulse
 
-    	#https://bugzilla.gnome.org/show_bug.cgi?id=656231
-    	sed -i -e 's/ -shared / -Wl,-O1,--as-needed\0/g' libtool
+	#https://bugzilla.gnome.org/show_bug.cgi?id=656231
+	sed -i -e 's/ -shared / -Wl,-O1,--as-needed\0/g' libtool
 
-    	make
+	make
 }
 
 package() {
-    	cd "${pkgname}-${pkgver}"
-    	make DESTDIR="${pkgdir}" install
+	cd "${pkgname}-${pkgver}"
+	make DESTDIR="${pkgdir}" install
 }

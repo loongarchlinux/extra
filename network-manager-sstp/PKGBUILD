@@ -3,48 +3,40 @@
 # Contributor: Martchus <martchus@gmx.net>
 
 pkgname=network-manager-sstp
-pkgver=1.3.1
-pkgrel=3
+pkgver=1.3.2
+pkgrel=1
 pkgdesc="SSTP support for NetworkManager"
 arch=('loong64' 'x86_64')
 url="https://gitlab.gnome.org/GNOME/network-manager-sstp"
 license=('GPL2')
-depends=('libsecret' 'sstp-client')
-optdepends=('ppp'
-            'libnma: GUI support (GTK 3)'
+depends=('libsecret' 'ppp' 'sstp-client')
+optdepends=('libnma: GUI support (GTK 3)'
             'libnma-gtk4: GUI support (GTK 4)')
-makedepends=('gtk3' 'gtk4' 'libnma' 'libnma-gtk4' 'intltool' 'ppp' 'python')
-source=("https://gitlab.gnome.org/GNOME/network-manager-sstp/-/archive/release-$pkgver/network-manager-sstp-release-$pkgver.tar.bz2"
-        $pkgname-ppp-2.5.0.patch::https://gitlab.gnome.org/GNOME/network-manager-sstp/-/commit/4cd0ec66174011925c93aa04edccca92b4d1387f.patch)
-sha256sums=('20ff1422a8779b5825ea0198e0d4232a27ac9b15f2dcafc04124f26bef7864d6'
-            'a4169948edf380d08b15b738024bad669f14e0c671de35ea16359577ef68aef7')
+makedepends=('gtk3' 'gtk4' 'libnma' 'libnma-gtk4' 'python')
+source=("https://gitlab.gnome.org/GNOME/network-manager-sstp/-/releases/release-$pkgver-1/downloads/dists/NetworkManager-sstp-$pkgver.tar.xz")
+b2sums=('58489e093092b119ca105f78aca7f48f846778baf4245d9cece045404cf2d35b87beb13106363705ef800caae3351f3bdaf7992237b264446c69ddb52268df11')
 
 prepare() {
-  cd network-manager-sstp-release-$pkgver
-  patch -Np1 -i ../$pkgname-ppp-2.5.0.patch
+  cd NetworkManager-sstp-$pkgver
 }
 
 build() {
-  pppd_version=(`pppd --version 2>&1 | awk '{print $3}'`)
-  cd network-manager-sstp-release-$pkgver
+  local configure_options=(
+    --prefix=/usr
+    --sysconfdir=/etc
+    --localstatedir=/var
+    --libexecdir=/usr/lib
+    --disable-static
+    --with-gtk4
+  )
 
-  ./autogen.sh \
-    --prefix=/usr \
-    --sysconfdir=/etc \
-    --with-pppd-plugin-dir=/usr/lib/pppd/$pppd_version \
-    --libdir=/usr/lib \
-    --libexecdir=/usr/lib/NetworkManager \
-    --with-libnm-glib=no \
-    --enable-more-warnings=yes \
-    --with-gtk4=yes
-  # libnm-glib disabled due to missing libnm-gtk package
-  # set_more_warnings being error by default, which adds -Werror
-
+  cd NetworkManager-sstp-$pkgver
+  ./configure "${configure_options[@]}"
+  sed -i -e 's/ -shared / -Wl,-O1,--as-needed\0/g' libtool
   make
 }
 
 package() {
-  cd network-manager-sstp-release-$pkgver
-
+  cd NetworkManager-sstp-$pkgver
   make DESTDIR="$pkgdir" dbusservicedir=/usr/share/dbus-1/system.d install
 }

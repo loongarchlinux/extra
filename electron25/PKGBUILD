@@ -6,63 +6,77 @@
 # https://releases.electronjs.org/
 # https://github.com/stha09/chromium-patches/releases
 
-pkgver=25.9.4
+pkgver=25.9.6
 _chromiumver=114.0.5735.289
-# shellcheck disable=SC2034
 pkgrel=1
 
 _major_ver=${pkgver%%.*}
 pkgname="electron${_major_ver}"
-# shellcheck disable=SC2034
 pkgdesc='Build cross platform desktop apps with web technologies'
-# shellcheck disable=SC2034
-arch=('loong64' 'x86_64')
-# shellcheck disable=SC2034
+arch=(loong64 x86_64)
 url='https://electronjs.org/'
-# shellcheck disable=SC2034
-license=('MIT' 'custom')
-# shellcheck disable=SC2034
-depends=('c-ares' 'gtk3' 'libevent' 'nss' 'libffi')
-# shellcheck disable=SC2034
-makedepends=('clang' 'git' 'gn' 'gperf' 'harfbuzz-icu' 'http-parser'
-             'qt5-base' 'java-runtime-headless' 'libnotify' 'lld' 'llvm'
-             'ninja' 'npm' 'pciutils' 'pipewire' 'python' 'python-httplib2'
-             'python-requests' 'python-pyparsing' 'python-six' 'wget' 'yarn')
-# shellcheck disable=SC2034
+license=(MIT custom)
+depends=(c-ares
+         gtk3
+         libevent
+         nss
+         libffi)
+makedepends=(clang
+             git
+             gn
+             gperf
+             harfbuzz-icu
+             http-parser
+             java-runtime-headless
+             libnotify
+             lld
+             llvm
+             ninja
+             npm
+             pciutils
+             pipewire
+             python
+             python-httplib2
+             python-pyparsing
+             python-requests
+             python-six
+             qt5-base
+             wget
+             yarn)
 optdepends=('kde-cli-tools: file deletion support (kioclient5)'
             'pipewire: WebRTC desktop sharing under Wayland'
             'qt5-base: enable Qt5 with --enable-features=AllowQt'
             'trash-cli: file deletion support (trash-put)'
             'xdg-utils: open URLs with desktop’s default (xdg-email, xdg-open)')
-# shellcheck disable=SC2034
 options=('!lto') # Electron adds its own flags for ThinLTO
-# shellcheck disable=SC2034
 source=("git+https://github.com/electron/electron.git#tag=v$pkgver"
         'git+https://chromium.googlesource.com/chromium/tools/depot_tools.git#branch=main'
         "chromium-mirror::git+https://github.com/chromium/chromium.git#tag=$_chromiumver"
-        "electron-launcher.sh"
-        "electron.desktop"
-        'default_app-icon.patch'
-        'jinja-python-3.10.patch'
-        'use-system-libraries-in-node.patch'
-        'std-vector-non-const.patch'
-        'add-some-typename-s-that-are-required-in-C-17.patch'
-        'REVERT-disable-autoupgrading-debug-info.patch'
-        'random-fixes-for-gcc13.patch'
-       )
-# shellcheck disable=SC2034
+        REVERT-disable-autoupgrading-debug-info.patch
+        add-some-typename-s-that-are-required-in-C-17.patch
+        default_app-icon.patch
+        electron-launcher.sh
+        electron.desktop
+        jinja-python-3.10.patch
+        random-fixes-for-gcc13.patch
+        std-vector-non-const.patch
+        use-system-libraries-in-node.patch
+        libxml2-2.12.patch
+        icu-74.patch)
 sha256sums=('SKIP'
             'SKIP'
             'SKIP'
+            '1b782b0f6d4f645e4e0daa8a4852d63f0c972aa0473319216ff04613a0592a69'
+            '621ed210d75d0e846192c1571bb30db988721224a41572c27769c0288d361c11'
+            'dd2d248831dd4944d385ebf008426e66efe61d6fdf66f8932c963a12167947b4'
             'b0ac3422a6ab04859b40d4d7c0fd5f703c893c9ec145c9894c468fbc0a4d457c'
             '4484200d90b76830b69eea3a471c103999a3ce86bb2c29e6c14c945bf4102bae'
-            'dd2d248831dd4944d385ebf008426e66efe61d6fdf66f8932c963a12167947b4'
             '55dbe71dbc1f3ab60bf1fa79f7aea7ef1fe76436b1d7df48728a1f8227d2134e'
-            'ff588a8a4fd2f79eb8a4f11cf1aa151298ffb895be566c57cc355d47f161f53f'
+            'ba4dd0a25a4fc3267ed19ccb39f28b28176ca3f97f53a4e9f5e9215280040ea0'
             '893bc04c7fceba2f0a7195ed48551d55f066bbc530ec934c89c55768e6f3949c'
-            '621ed210d75d0e846192c1571bb30db988721224a41572c27769c0288d361c11'
-            '1b782b0f6d4f645e4e0daa8a4852d63f0c972aa0473319216ff04613a0592a69'
-            'ba4dd0a25a4fc3267ed19ccb39f28b28176ca3f97f53a4e9f5e9215280040ea0')
+            'ff588a8a4fd2f79eb8a4f11cf1aa151298ffb895be566c57cc355d47f161f53f'
+            'bfae9e773edfd0ddbc617777fdd4c0609cba2b048be7afe40f97768e4eb6117e'
+            '547e092f6a20ebd15e486b31111145bc94b8709ec230da89c591963001378845')
 
 # Possible replacements are listed in build/linux/unbundle/replace_gn_files.py
 # Keys are the names in the above script; values are the dependencies in Arch
@@ -173,6 +187,12 @@ EOF
   patch -Np1 -i "${srcdir}/jinja-python-3.10.patch" -d "third_party/electron_node/tools/inspector_protocol/jinja2"
   patch -Np1 -i "${srcdir}/use-system-libraries-in-node.patch"
   patch -Np1 -i "${srcdir}/default_app-icon.patch"  # Icon from .desktop file
+
+  # Fix build with libxml2 2.12
+  patch -Np1 -i ../libxml2-2.12.patch
+
+  # Fix build with ICU 74
+  patch -Np1 -i ../icu-74.patch
 
   # Allow building against system libraries in official builds
   echo "Patching Chromium for using system libraries..."

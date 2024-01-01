@@ -6,7 +6,7 @@
 
 pkgname=python-sympy
 pkgver=1.12
-pkgrel=1
+pkgrel=2
 arch=('any')
 pkgdesc='Symbolic manipulation package (Computer Algebra System), written in pure Python'
 url='https://sympy.org/en/index.html'
@@ -14,13 +14,16 @@ license=('BSD')
 depends=('python-mpmath')
 optdepends=('ipython: user friendly interface for isympy'
             'python-symengine: optimized backend, set USE_SYMENGINE=1 to use')
-makedepends=('python-setuptools')
+makedepends=('python-build'
+             'python-installer'
+             'python-setuptools'
+             'python-wheel')
 source=("https://github.com/sympy/sympy/archive/sympy-$pkgver/sympy-$pkgver.tar.gz")
 sha512sums=('96a89b88f6912d70c56f5bd1903dd3c518963118ff25d033cdcb7da2f260b8ee209d3ab4a4394dd2b5dc0b4585b71ccd55d55c8e5c6e28024cccbedf07ee4360')
 
 build() {
   cd sympy-sympy-$pkgver
-  python setup.py build
+  python -m build --wheel --no-isolation
 }
 
 check() {
@@ -31,7 +34,7 @@ check() {
 package() {
   cd sympy-sympy-$pkgver
 
-  python setup.py install --root "$pkgdir" --optimize=1
+  python -m installer --destdir="$pkgdir" dist/*.whl
 
   install -D -m644 LICENSE "$pkgdir"/usr/share/licenses/$pkgname/LICENSE
 }

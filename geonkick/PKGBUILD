@@ -1,8 +1,8 @@
 # Maintainer: David Runge <dvzrv@archlinux.org>
 
 pkgbase=geonkick
-pkgname=(geonkick geonkick-{common,lv2,standalone})
-pkgver=2.10.2
+pkgname=(geonkick geonkick-{common,lv2,standalone,vst3})
+pkgver=3.2.0
 pkgrel=1
 pkgdesc="A free software percussion synthesizer"
 arch=(loong64 x86_64)
@@ -14,21 +14,25 @@ makedepends=(
   cmake
   gcc-libs
   glibc
+  gtkmm3
   hicolor-icon-theme
   jack
   libsndfile
   libx11
+  libxkbcommon
+  libxkbcommon-x11
   lv2
-  openssl
+  pango
   rapidjson
   vst3sdk
+  xcb-util
+  xcb-util-cursor
+  xcb-util-keysyms
 )
 checkdepends=(lv2lint)
-# issues with visible symbols during check() if LTO is enabled: https://github.com/free-sm/geonkick/issues/164
-options=(!lto)
 source=($_url/-/archive/v$pkgver/$pkgname-v$pkgver.tar.gz)
-sha512sums=('0e66fa6fc3449346780dc20ff8f2cb272e8265c2a597ae1ecbfeec787a4970805b09f6b537214e89fb5a1b1ebe9be0505a05f4d30eb5c8f5b4995b603c6309e4')
-b2sums=('537a9dd7d3f68722ba40625c845367aeaa2715295c34584d02509c7c28449ce91afb045d0120afede70d268eaa01e2a66af17b4e0720d0d204e6c81fe21794c4')
+sha512sums=('d50fccecfb861fa369e39027c7ab4a1eb37741189ac7f3a3836784eef6ab2f68f2d437c95397e33a5fe21642385bcad4e11166a9f8283c7a17dc33b68a69e5ff')
+b2sums=('1ec94cb4a055ec7e3672264ce0ab9143b86dd6fa31910e277ce3430e7b6eca9f12cf241e205106ce4667a098cae91c065029b13642e4eac81c3cd94e43709cf7')
 
 _pick() {
   local p="$1" f d; shift
@@ -45,27 +49,34 @@ build() {
     -B build
     -D CMAKE_BUILD_TYPE=None
     -D CMAKE_INSTALL_PREFIX=/usr
-    # vst3 plugin build broken: https://gitlab.com/Geonkick-Synthesizer/geonkick/-/issues/2
-    # -D GKICK_VST3=ON
-    # -D VST3_SDK_PATH=/usr/src/vst3sdk
+    -D VST3_SDK_PATH=/usr/src/vst3sdk
     -S $pkgname-v$pkgver
     -W no-dev
   )
 
+  export CFLAGS+=" -DNDEBUG"
+  export CXXFLAGS+=" -DNDEBUG"
   cmake "${cmake_options[@]}"
   cmake --build build --verbose
 }
 
 check() {
-  cp -av build/src/plugin/lv2/*.so $pkgname-v$pkgver/src/plugin/lv2/$pkgname.lv2/
-  lv2lint -Mpack -I $pkgname-v$pkgver/src/plugin/lv2/$pkgname.lv2/ "http://geontime.com/geonkick"
-  rm -v $pkgname-v$pkgver/src/plugin/lv2/$pkgname.lv2/*.so
+  local lv2lint_options=(
+    -Mpack
+    -t "Plugin Symbols"  # https://gitlab.com/Geonkick-Synthesizer/geonkick/-/issues/5
+    -t "UI Symbols"  # https://gitlab.com/Geonkick-Synthesizer/geonkick/-/issues/5
+    -I build/src/plugin/lv2/
+    "http://geonkick.org/geonkick"
+  )
+
+  cp -av $pkgname-v$pkgver/src/plugin/lv2/$pkgname.lv2/*.ttl build/src/plugin/lv2/
+  lv2lint "${lv2lint_options[@]}"
+  rm -v build/src/plugin/lv2/*.ttl
 }
 
 package_geonkick() {
   depends=(
-    $pkgbase-lv2=$pkgver
-    $pkgbase-standalone=$pkgver
+    $pkgbase-{lv2,standalone,vst3}=$pkgver
   )
 
   DESTDIR="$pkgdir" cmake --install build
@@ -81,6 +92,8 @@ package_geonkick() {
 
     _pick $pkgbase-standalone usr/bin
     _pick $pkgbase-standalone usr/share/{applications,icons,man,mime}
+
+    _pick $pkgbase-vst3 usr/lib/vst3
   )
 }
 
@@ -104,7 +117,6 @@ package_geonkick-lv2() {
     libsndfile
     libx11
     lv2-host
-    openssl
   )
   
   mv -v $pkgname/* "$pkgdir"
@@ -122,7 +134,24 @@ package_geonkick-standalone() {
     jack
     libsndfile
     libx11
-    openssl
+  )
+
+  mv -v $pkgname/* "$pkgdir"
+}
+
+package_geonkick-vst3() {
+  pkgdesc+=" - VST3 plugin"
+  groups=(
+    pro-audio
+    vst3-plugins
+  )
+  depends=(
+    cairo
+    gcc-libs
+    geonkick-common=$pkgver
+    glibc
+    libsndfile
+    vst3-host
   )
   
   mv -v $pkgname/* "$pkgdir"

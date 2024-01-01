@@ -3,8 +3,8 @@
 # Contributor: Ionut Biru <ibiru@archlinux.org>
 
 pkgname=gjs
-pkgver=1.78.0
-pkgrel=4
+pkgver=1.78.1
+pkgrel=1
 epoch=2
 pkgdesc="Javascript Bindings for GNOME"
 url="https://wiki.gnome.org/Projects/Gjs"
@@ -34,7 +34,7 @@ checkdepends=(
   xorg-server-xvfb
 )
 provides=(libgjs.so)
-_commit=ff65456cff40b4d9f8b74e732188393e04150ac4  # tags/1.78.0^0
+_commit=6b655e71cb5f41f1f443471e294f271d71a78848  # tags/1.78.1^0
 source=("git+https://gitlab.gnome.org/GNOME/gjs.git#commit=$_commit")
 b2sums=('SKIP')
 
@@ -45,10 +45,6 @@ pkgver() {
 
 prepare() {
   cd gjs
-
-  # Fix some extensions loading modules twice
-  # https://gitlab.gnome.org/GNOME/gjs/-/issues/577
-  git cherry-pick -n 3cae384aaf15dec6653b1a5400032c2c2e5dc34c
 }
 
 build() {

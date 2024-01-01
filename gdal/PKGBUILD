@@ -5,8 +5,8 @@
 
 pkgbase=gdal
 pkgname=(gdal python-gdal)
-pkgver=3.7.3
-pkgrel=2
+pkgver=3.8.2
+pkgrel=1
 pkgdesc="A translator library for raster and vector geospatial data formats"
 arch=(loong64 x86_64)
 url="https://gdal.org/"
@@ -15,18 +15,13 @@ makedepends=(cmake opencl-headers python-setuptools python-numpy
              proj arrow blosc cfitsio curl crypto++ libdeflate expat libfreexl
              libgeotiff geos giflib libheif hdf5 libjpeg-turbo json-c libjxl xz
              libxml2 lz4 mariadb-libs netcdf unixodbc ocl-icd openexr openjpeg2
-             openssl pcre2 libpng podofo-0.9 poppler postgresql-libs qhull
-             libspatialite sqlite swig libtiff libwebp xerces-c zlib zstd)
+             openssl pcre2 libpng podofo poppler postgresql-libs qhull
+             libspatialite sqlite swig libtiff libwebp xerces-c zlib zstd libaec)
 # armadillo basisu brunsli lerc libkml qb3 rasterlite2 sfcgal tiledb
 # ogdi
 changelog=$pkgbase.changelog
 source=(https://download.osgeo.org/${pkgbase}/${pkgver}/${pkgbase}-${pkgver}.tar.xz)
-b2sums=('743ce2d8027fb228630a2951af2de8ac7fb5fa0b32124d58fb545ac61fdf5240f17ae85cfdcab51ea5e1b4e2311b55af4c7bbdfe82c6ed5ea180a5c8b254ccfd')
-
-prepare() {
-# Fix build with podofo-0.9
-  sed -e 's|podofo.h|podofo/podofo.h|' -i $pkgbase-$pkgver/frmts/pdf/pdfsdk_headers.h
-}
+b2sums=('c00a69810f9c7ac1f8dd30e5bcee6a87277cc93391a8569ebc77ea53df52ee712310baad36ff32354b7bea6fa5a5f3b8f4f106ffe1534df4aa2fbc9afa5a9ee9')
 
 build() {
   cmake -B build -S $pkgbase-$pkgver \
@@ -74,16 +69,14 @@ build() {
     -DGDAL_USE_WEBP=ON \
     -DGDAL_USE_XERCESC=ON \
     -DGDAL_USE_ZLIB=ON \
-    -DGDAL_USE_ZSTD=ON \
-    -DPODOFO_INCLUDE_DIR=/usr/include/podofo-0.9 \
-    -DPODOFO_LIBRARY=/usr/lib/podofo-0.9/libpodofo.so
+    -DGDAL_USE_ZSTD=ON
   make -C build
 }
 
 package_gdal () {
   depends=(proj blosc crypto++ curl libdeflate expat libfreexl geos libgeotiff
            giflib libjpeg-turbo json-c xz libxml2 lz4 unixodbc ocl-icd openssl
-           pcre2 libpng qhull libspatialite sqlite libtiff xerces-c zlib zstd)
+           pcre2 libpng qhull libspatialite sqlite libtiff xerces-c zlib zstd libaec)
   optdepends=('arrow: Arrow/Parquet support'
               'cfitsio: FITS support'
               'hdf5: HDF5 support'
@@ -93,7 +86,7 @@ package_gdal () {
               'netcdf: netCDF support'
               'openexr: EXR support'
               'openjpeg2: JP2 support'
-              'podofo-0.9: PDF support'
+              'podofo: PDF support'
               'poppler: PDF support'
               'postgresql-libs: PostgreSQL support'
               'libwebp: WebP support')

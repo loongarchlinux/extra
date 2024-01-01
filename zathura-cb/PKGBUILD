@@ -4,7 +4,7 @@
 
 pkgname=zathura-cb
 pkgver=0.1.10
-pkgrel=2
+pkgrel=4
 
 pkgdesc="Adds comic book support to zathura"
 url="https://pwmt.org/projects/zathura-cb/"

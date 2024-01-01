@@ -3,30 +3,50 @@
 # Contributor: Charles Lindsay <charles@chaoslizard.org>
 
 pkgname=libmirage
-pkgver=3.2.6
+pkgver=3.2.7
 pkgrel=1
 pkgdesc="CD-ROM image (B6T/C2D/CCD/CDI/CIF/CUE/ISO/MDS/MDX/NRG/TOC) access library"
-arch=(loong64 x86_64)
 url="https://cdemu.sourceforge.io/"
+arch=(loong64 x86_64)
 license=(GPL)
-depends=(glib2 libsndfile libsamplerate zlib bzip2 xz shared-mime-info)
-makedepends=(gtk-doc gobject-introspection cmake intltool)
+depends=(
+  bzip2
+  glib2
+  libsamplerate
+  libsndfile
+  shared-mime-info
+  xz
+  zlib
+)
+makedepends=(
+  cmake
+  gobject-introspection
+  gtk-doc
+  intltool
+  ninja
+  vala
+)
 source=(https://downloads.sourceforge.net/cdemu/$pkgname-$pkgver.tar.xz)
-sha256sums=('257f4690c9195749ea936c4b44ada3e449b352dadaa107f31a1ed10f7b6df2a6')
+sha256sums=('fa892480d7954bcca8292ad00f2e08b7b3e23e54d288eb14a05c50d454bdb3d3')
 
 prepare() {
   cd $pkgname-$pkgver
 }
 
 build() {
-  cmake -S $pkgname-$pkgver -B build \
-    -DCMAKE_BUILD_TYPE=None \
-    -DCMAKE_INSTALL_PREFIX=/usr \
-    -DCMAKE_INSTALL_LIBDIR=lib \
-    -DPOST_INSTALL_HOOKS:BOOL=OFF
+  local cmake_options=(
+    -D CMAKE_BUILD_TYPE=None
+    -D CMAKE_INSTALL_LIBDIR=lib
+    -D CMAKE_INSTALL_PREFIX=/usr
+    -D POST_INSTALL_HOOKS=OFF
+  )
+
+  cmake -S $pkgname-$pkgver -B build -G Ninja "${cmake_options[@]}"
   cmake --build build
 }
 
 package() {
   DESTDIR="$pkgdir" cmake --install build
 }
+
+# vim:set sw=2 sts=-1 et:

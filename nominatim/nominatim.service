@@ -1,0 +1,21 @@
+[Unit]
+Description=Nominatim running as a gunicorn application
+After=network.target
+Requires=nominatim.socket
+
+[Service]
+Type=simple
+Environment="PYTHONPATH=/usr/lib/nominatim/lib-python/"
+User=http
+Group=http
+WorkingDirectory=/var/lib/nominatim
+ExecStart=/usr/bin/gunicorn -b unix:/run/nominatim.sock -w 4 -k uvicorn.workers.UvicornWorker nominatim.server.falcon.server:run_wsgi
+ExecReload=/bin/kill -s HUP $MAINPID
+StandardOutput=append:/var/log/nominatim/gunicorn.log
+StandardError=inherit
+PrivateTmp=true
+TimeoutStopSec=5
+KillMode=mixed
+
+[Install]
+WantedBy=multi-user.target

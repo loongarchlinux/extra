@@ -3,7 +3,7 @@
 # Contributor: Martin Wimpress <code@flexion.org>
 
 pkgname=libmateweather
-pkgver=1.26.2
+pkgver=1.26.3
 pkgrel=1
 pkgdesc="Provides access to weather information from the Internet."
 url="https://mate-desktop.org"
@@ -13,7 +13,7 @@ depends=('gtk3' 'libsoup' 'gettext')
 conflicts=('libmateweather-gtk3')
 replaces=('libmateweather-gtk3')
 source=("https://pub.mate-desktop.org/releases/${pkgver%.*}/${pkgname}-${pkgver}.tar.xz")
-sha256sums=('ca50a81586655cf53a8f96766b9ce90a4d07ed0fe162bd5e15dadadd0060c7f6')
+sha256sums=('5e6cd24418847cb45acf17da5b435a7131cb4ec2acff68e828f342a1bf13ef4a')
 
 build() {
     	cd "${pkgname}-${pkgver}"

@@ -1,0 +1,132 @@
+# Maintainer: George Rawlinson <grawlinson@archlinux.org>
+
+pkgbase=elephantdsp-roomreverb
+pkgname=(
+  'elephantdsp-roomreverb-clap'
+  'elephantdsp-roomreverb-lv2'
+  'elephantdsp-roomreverb-vst3'
+)
+pkgver=1.1.0
+pkgrel=1
+pkgdesc='A mono and stereo algorithmic room reverb audio effect plugin'
+arch=('loong64' 'x86_64')
+url='https://www.elephantdsp.com/products/room-reverb/'
+license=('GPL3')
+groups=('pro-audio')
+_common_depends=(
+  'glibc'
+  'gcc-libs'
+  'freetype2'
+  'libjpeg-turbo'
+  'libpng'
+  'zlib'
+)
+makedepends=(
+  'git'
+  'cmake'
+  'juce'
+  'libx11'
+  'libxcursor'
+  'libxinerama'
+  'libxrandr'
+  'lv2'
+  'flac'
+  'alsa-lib'
+  'libvorbis'
+  'webkit2gtk'
+  'zlib'
+)
+_commit='71771462a6d9d3389604e48d9fe9439cf9f831f5'
+source=(
+  "$pkgbase::git+https://github.com/cvde/RoomReverb#commit=$_commit"
+  'github.com-free-audio-clap::git+https://github.com/free-audio/clap'
+  'github.com-free-audio-clap-helpers::git+https://github.com/free-audio/clap-helpers'
+  'github.com-free-audio-clap-juce-extensions::git+https://github.com/free-audio/clap-juce-extensions'
+  'devendor-juce.patch'
+  'no-copy-plugin.patch'
+)
+b2sums=('SKIP'
+        'SKIP'
+        'SKIP'
+        'SKIP'
+        '1b83f40cf4f8736aad0738e5a0553d55acc2b29eb834ad022b78ab01619d9c69f53d952cb7d53f7369115cc98734989d4ff0fc365afd46ced9101d9ff871866e'
+        'cccc8f93cbaee3eac0b7180bde50595a007eac8e22b4ba3d532fe8715a890409e084c2fbf50301a236bfa3c0f336704a53eeaf21d84e04c8f376f9e7f22642a7')
+
+pkgver() {
+  cd "$pkgbase"
+
+  git describe --tags | sed 's/^v//'
+}
+
+prepare() {
+  cd "$pkgbase"
+
+  # setup git submodules
+  git submodule init Libs/clap-juce-extensions
+  git config submodule.Libs/clap-juce-extensions.url "$srcdir/github.com-free-audio-clap-juce-extensions"
+  git -c protocol.file.allow=always submodule update
+
+  # setup git submodules for clap-juce-extensions
+  pushd Libs/clap-juce-extensions
+  git submodule init
+  git config submodule.clap-libs/clap.url "$srcdir/github.com-free-audio-clap"
+  git config submodule.clap-libs/clap-helpers.url "$srcdir/github.com-free-audio-clap-helpers"
+  git -c protocol.file.allow=always submodule update
+  popd
+
+  # fix for cmake trying to install into ~/.clap, ~/.lv2, and ~/.vst3 during build
+  patch -p1 -i "$srcdir/no-copy-plugin.patch"
+
+  # use system JUCE
+  patch -p1 -i "$srcdir/devendor-juce.patch"
+}
+
+build() {
+  cmake \
+    -S "$pkgbase" \
+    -B build \
+    -DCMAKE_BUILD_TYPE=Release \
+    -Wno-dev
+
+  cmake --build build
+}
+
+package_elephantdsp-roomreverb-clap() {
+  pkgdesc+=' - CLAP plugin'
+  groups+=('clap-plugins')
+  depends=(
+    "${_common_depends[@]}"
+    'clap-host'
+  )
+  cd build/RoomReverb_artefacts/Release
+
+  install -vDm755 -t "$pkgdir/usr/lib/clap" CLAP/RoomReverb.clap
+}
+
+package_elephantdsp-roomreverb-lv2() {
+  pkgdesc+=' - LV2 plugin'
+  groups+=('lv2-plugins')
+  depends=(
+    "${_common_depends[@]}"
+    'lv2-host'
+  )
+
+  cd build/RoomReverb_artefacts/Release
+
+  install -vd "$pkgdir/usr/lib/lv2"
+  cp -vr LV2/RoomReverb.lv2 "$pkgdir/usr/lib/lv2"
+}
+
+package_elephantdsp-roomreverb-vst3() {
+  pkgdesc+=' - VST3 plugin'
+  groups+=('vst3-plugins')
+  depends=(
+    "${_common_depends[@]}"
+    'vst3-host'
+  )
+
+  cd build/RoomReverb_artefacts/Release
+
+  install -vd "$pkgdir/usr/lib/vst3"
+  cp -vr VST3/RoomReverb.vst3 "$pkgdir/usr/lib/vst3"
+}

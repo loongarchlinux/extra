@@ -1,8 +1,8 @@
 # Maintainer: Felix Yan <felixonmars@archlinux.org>
 
 pkgname=python-geoip2
-pkgver=4.7.0
-_testdatacommit=2b37923df61aa3b5fb6c7edfbf4dc5fafa10258a
+pkgver=4.8.0
+_testdatacommit=1271107ccad72c320bc7dc8aefd767cba550101a
 pkgrel=1
 pkgdesc="MaxMind GeoIP2 API"
 url="https://github.com/maxmind/GeoIP2-python"
@@ -13,11 +13,12 @@ depends=(
   'python-aiohttp'
   'python-maxminddb'
   'python-requests'
+  'python-setuptools'
 )
 makedepends=(
   'python-build'
   'python-installer'
-  'python-setuptools'
+  'python-setuptools-scm'
   'python-wheel'
 )
 checkdepends=(
@@ -28,8 +29,8 @@ source=(
   "https://github.com/maxmind/GeoIP2-python/archive/v$pkgver/$pkgname-$pkgver.tar.gz"
   MaxMind-DB-$_testdatacommit.tar.gz::https://github.com/maxmind/MaxMind-DB/archive/$_testdatacommit.tar.gz
 )
-sha512sums=('eebcf56dca3cd245379948a5e53d9518761c08ae5c88ab090f118fbf72161111c78172842f9fcbb56f1411e57977b14d13b84c3a35cc339d2d261a578eb24617'
-            'a192a9fec623ffb84e369289292bf4a87d91e9a604494583f3bff293eeed56ca1bc1e8db3f89dbccddafe8b35a1d0340ac754998a2c84f6e4d70dfc4d4c7aa1d')
+sha512sums=('e22fac4c5016d6bc17a2e7902ea61f5ac43526a3d86c21a3199a409d084fd7a60001ed553a2c3d355636a06a73baad15014dc0ed41e5bb0eb93cefde5a14509e'
+            'a028b07cfdb84b98629e66937472feb291e0c022cf226513d765b21c420672620ff00b9004aa4cf1519d76a428a33600c453335e2fa9832e78e4621307b5723b')
 
 prepare() {
   cd GeoIP2-python-$pkgver

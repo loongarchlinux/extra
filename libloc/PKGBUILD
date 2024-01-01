@@ -1,0 +1,97 @@
+# Maintainer: kpcyrd <kpcyrd[at]archlinux[dot]org>
+# Contributor: Macxcool <macx cool at tutanota dot com>
+# Contributor: loqs
+
+pkgbase=libloc
+pkgname=(
+  libloc
+  libloc-database
+  python-location
+)
+pkgver=0.9.17
+pkgrel=3
+pkgdesc="IPFire Location Database - Determine the location of someone on the Internet"
+url='https://git.ipfire.org/?p=location/libloc.git;a=summary'
+arch=('loong64' 'x86_64')
+license=('LGPL-2.1-or-later')
+makedepends=(
+  asciidoc
+  intltool
+  libcrypto.so
+  python
+  systemd
+)
+source=(https://source.ipfire.org/releases/libloc/libloc-${pkgver}.tar.gz)
+sha256sums=('87f28415c0656351b27bc564cda1dd0ed7cb1dc3fd406492d2b6ad9a2cf1733c')
+b2sums=('b0bf860ebaccd3cb49c58c066c430f7a1f936a2029957db9b88e22c04240af0268a8f6388e8ca512102f14033037a2ab8bbb93fe83e525b9859c790c5c382df4')
+
+prepare() {
+  cd ${pkgbase}-${pkgver}
+  intltoolize -f
+  autoreconf -fi
+}
+
+build() {
+  cd ${pkgbase}-${pkgver}
+  ./configure --prefix=/usr --localstatedir=/var --disable-perl
+  make
+}
+
+check() {
+  cd ${pkgbase}-${pkgver}
+  make -k check
+}
+
+package_libloc() {
+  depends=(
+    libcrypto.so
+    libloc-database
+  )
+
+  cd ${pkgbase}-${pkgver}
+  make DESTDIR="${pkgdir}" install
+
+  rm -r \
+    "${pkgdir}/var" \
+    "${pkgdir}/usr/share/man/man1" \
+    "${pkgdir}/usr/share/bash-completion" \
+    "${pkgdir}/usr/lib/systemd" \
+    "${pkgdir}/usr/lib/python3"* \
+    "${pkgdir}/usr/bin"
+
+  install -Dm644 COPYING -t "${pkgdir}/usr/share/licenses/${pkgname}"
+}
+
+package_libloc-database() {
+  pkgdesc+=' (Database files)'
+  license=('CC-BY-SA-4.0')
+  install="${pkgname}.install"
+
+  cd ${pkgbase}-${pkgver}
+  install -Dm 644 data/database.db "${pkgdir}/usr/share/libloc-location/location.db"
+}
+
+package_python-location() {
+  pkgdesc+=' (Python tooling)'
+  depends=(
+    libcrypto.so
+    libloc
+    python
+    python-psycopg2
+  )
+
+  cd ${pkgbase}-${pkgver}
+  make DESTDIR="${pkgdir}" install
+
+  rm -r \
+    "${pkgdir}/var/lib/location/database.db" \
+    "${pkgdir}/usr/share/man/man3" \
+    "${pkgdir}/usr/share/locale" \
+    "${pkgdir}/usr/lib/pkgconfig" \
+    "${pkgdir}/usr/lib/libloc.so"* \
+    "${pkgdir}/usr/include"
+
+  install -Dm644 COPYING -t "${pkgdir}/usr/share/licenses/${pkgname}"
+}
+
+# vim: ts=2 sw=2 et:

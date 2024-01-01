@@ -3,8 +3,8 @@
 # Contributor: Phillip A. (flying-sheep)
 
 pkgname=python-hatch
-pkgver=1.7.0
-pkgrel=4
+pkgver=1.8.1
+pkgrel=1
 pkgdesc="A modern project, package, and virtual env manager"
 arch=('any')
 url="https://github.com/pypa/hatch"
@@ -34,12 +34,16 @@ makedepends=(
 )
 checkdepends=(
   'git'
+  'libxcrypt-compat'
   'python-pytest'
+  'python-pytest-mock'
+  'python-zstandard'
+  'rust'
 )
 _name=${pkgname/python-/}
 source=("$url/archive/refs/tags/$_name-v$pkgver.tar.gz")
-sha256sums=('0a71d96fc008e7c6f6ba01324a0362cb2098f04b515a0dc47644ec22ea431a71')
-b2sums=('7ef4df3c724000c05783ee83dd3759096107eccb56b9d99bf1463daf82bd0cd24f015d85ef34f7b898adb3f4b77c17f6840ffda4f70ee5baeb44619b4055c80f')
+sha256sums=('45c17cb36f48c07f1ea28bb84efa267b2e729d24ab9ac248b0a2812145faf771')
+b2sums=('274508c7a4c44909f395d56c9e9f59477d45cec13c0e23aea2bcd95ad44e7c0d740b0af142cb42bb850e2e3a10f10a0528c406de2d2c9c9fb198df16132c03a5')
 
 build() {
   cd $_name-$_name-v$pkgver
@@ -150,6 +154,7 @@ check() {
   # install to temporary location, as importlib is used
   python -m installer --destdir=test_dir dist/*.whl
   export PYTHONPATH="$PWD/test_dir/$site_packages:$PYTHONPATH"
+  sed -e "s|'sh'|'bash'|g" -i tests/cli/python/conftest.py
   pytest "${pytest_options[@]}"
 }
 

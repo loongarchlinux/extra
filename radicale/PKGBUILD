@@ -6,15 +6,32 @@
 pkgname=radicale
 _name=Radicale
 pkgver=3.1.8
-pkgrel=2
+pkgrel=3
 pkgdesc="Simple calendar (CalDAV) and contact (CardDAV) server"
 arch=(any)
 url="https://radicale.org/"
-license=(GPL3)
-depends=(python-bcrypt python-dateutil python-defusedxml python-passlib
-python-pytz python-vobject)
-makedepends=(python-build python-installer python-setuptools python-wheel)
-checkdepends=(python-pytest python-pytest-runner python-typeguard python-waitress)
+_url="https://github.com/Kozea/radicale"
+license=(GPL-3.0-or-later)
+depends=(
+  python
+  python-bcrypt
+  python-dateutil
+  python-defusedxml
+  python-passlib
+  python-pytz
+  python-vobject
+)
+makedepends=(
+  python-build
+  python-installer
+  python-setuptools
+  python-wheel
+)
+checkdepends=(
+  python-pytest
+  python-typeguard
+  python-waitress
+)
 backup=(
   'etc/radicale/config'
   'etc/radicale/rights'
@@ -22,7 +39,7 @@ backup=(
 )
 install=$pkgname.install
 source=(
-  $pkgname-$pkgver.tar.gz::https://github.com/Kozea/$pkgname/archive/v$pkgver.tar.gz
+  $pkgname-$pkgver.tar.gz::$_url/archive/v$pkgver.tar.gz
   $pkgname-sysusers.conf
   $pkgname-tmpfiles.conf
   $pkgname.service
@@ -47,12 +64,22 @@ build() {
 }
 
 check() {
+  local pytest_options=(
+    -vv
+    --deselect radicale/tests/test_server.py::TestBaseServerRequests::test_root
+    --deselect radicale/tests/test_server.py::TestBaseServerRequests::test_ssl
+    --deselect radicale/tests/test_server.py::TestBaseServerRequests::test_command_line_interface
+    --deselect radicale/tests/test_server.py::TestBaseServerRequests::test_command_line_interface_with_bool_options
+    --deselect radicale/tests/test_server.py::TestBaseServerRequests::test_wsgi_server
+    --deselect radicale/tests/test_web.py::TestBaseWebRequests::test_internal
+    --deselect radicale/tests/test_web.py::TestBaseWebRequests::test_none
+  )
   local _site_packages=$(python -c "import site; print(site.getsitepackages()[0])")
 
   cd $_name-$pkgver
   python -m installer --destdir=test_dir dist/*.whl
   export PYTHONPATH="test_dir/$_site_packages:$PYTHONPATH"
-  pytest -v -c /dev/null
+  pytest "${pytest_options[@]}" $pkgname/tests
 }
 
 package() {

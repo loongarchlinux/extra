@@ -2,7 +2,7 @@
 
 _name=sphinxext-opengraph
 pkgname=python-$_name
-pkgver=0.9.0
+pkgver=0.9.1
 pkgrel=1
 pkgdesc="Sphinx extension to generate unique OpenGraph metadata"
 arch=('any')
@@ -11,7 +11,7 @@ license=('BSD')
 depends=('python-sphinx' 'python-matplotlib')
 makedepends=('python-setuptools' 'python-setuptools-scm')
 source=(https://files.pythonhosted.org/packages/source/s/$_name/$_name-$pkgver.tar.gz)
-sha256sums=('4e57e25b6d56f47b9c06a5a5d68a2a00ed3577c8a39e459b52118c6bfe5e8c8b')
+sha256sums=('dd2868a1e7c9497977fbbf44cc0844a42af39ca65fe1bb0272518af225d06fc5')
 
 prepare() {
   cd $_name-$pkgver

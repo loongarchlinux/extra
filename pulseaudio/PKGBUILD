@@ -12,7 +12,7 @@ pkgname=(
   pulseaudio-rtp
 )
 pkgver=16.1
-pkgrel=6
+pkgrel=7
 pkgdesc="A featureful, general-purpose sound server"
 url="https://www.freedesktop.org/wiki/Software/PulseAudio/"
 arch=(loong64 x86_64)
@@ -119,6 +119,8 @@ package_pulseaudio() {
     'pulseaudio-rtp: RTP and RAOP support'
     'pulseaudio-zeroconf: Zeroconf support'
   )
+  provides=(pulse-native-provider)
+  conflicts=(pipewire-pulse)
   backup=(
     etc/pulse/daemon.conf
     etc/pulse/default.pa
@@ -146,6 +148,10 @@ package_pulseaudio() {
   # Required by qpaeq
   sed -e '/Load several protocols/aload-module module-dbus-protocol' \
       -i etc/pulse/default.pa
+
+  # Avoid warning about nonexistent dir
+  # https://gitlab.archlinux.org/archlinux/packaging/packages/pulseaudio/-/issues/3
+  mkdir -p etc/pulse/{default,system}.pa.d
 
   rm -r etc/dbus-1
 
@@ -195,7 +201,10 @@ package_libpulse() {
     libxcb
     systemd
   )
-  optdepends=('glib2: mainloop integration')
+  optdepends=(
+    'glib2: mainloop integration'
+    'pulse-native-provider: PulseAudio backend'
+  )
   provides=(
     libpulse-mainloop-glib.so
     libpulse-simple.so

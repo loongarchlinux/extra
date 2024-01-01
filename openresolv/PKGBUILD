@@ -3,12 +3,13 @@
 
 pkgname=openresolv
 pkgver=3.13.2
-pkgrel=1
+pkgrel=2
 pkgdesc="resolv.conf management framework (resolvconf)"
 url="https://roy.marples.name/projects/openresolv"
 arch=(any)
 license=(custom:BSD)
 provides=(resolvconf)
+conflicts=(resolvconf)
 depends=(bash)
 makedepends=(
   git

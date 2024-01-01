@@ -3,8 +3,8 @@
 # Contributor: Gilles Hamel <hamelg at laposte dot net>
 
 pkgname=grafana
-pkgver=10.2.2
-pkgrel=1
+pkgver=10.2.3
+pkgrel=2
 pkgdesc='Gorgeous metric viz, dashboards & editors for Graphite, InfluxDB & OpenTSDB'
 url='https://grafana.com/'
 arch=('loong64' 'x86_64')
@@ -39,7 +39,13 @@ prepare() {
   sed -ri 's,^(\s*provisioning\s*=).*,\1 /var/lib/grafana/conf/provisioning,' conf/defaults.ini
   sed -ri 's,^(\s*logs\s*=).*,\1 /var/log/grafana,' conf/defaults.ini
 
-  sed -i "s/v8.4.0-pre/v$pkgver/" package.json
+  # fix wrong gauge panel size
+  # https://github.com/grafana/grafana/issues/79827
+  git format-patch -1 --stdout 3e08abff3ba1 | patch -Rp1
+
+  # attempt to fix wrong bar gauge size
+  # https://github.com/grafana/grafana/issues/79797
+  git format-patch -1 --stdout 4b87f38f668d | patch -Rp1
 }
 
 build() {

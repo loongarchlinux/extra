@@ -1,0 +1,97 @@
+# Maintainer: George Rawlinson <grawlinson@archlinux.org>
+
+pkgbase=ot-cryptid
+pkgname=(
+  'ot-cryptid-docs'
+  'ot-cryptid-clap'
+  'ot-cryptid-vst3'
+  'ot-cryptid-standalone'
+)
+pkgver=1.0.1
+pkgrel=3
+pkgdesc='FM drum synthesizer with a Yamaha DX-7 emulation sound engine'
+arch=('loong64' 'x86_64')
+url='https://punklabs.com/ot-cryptid'
+license=('GPL3')
+groups=('pro-audio')
+_common_depends=(
+  'glibc'
+  'gcc-libs'
+  'libglvnd'
+  'libx11'
+  'libxcb'
+  'libxcursor'
+  'xcb-util-wm'
+)
+makedepends=(
+  'alsa-lib'
+  'rust'
+  'jack'
+  'python'
+  'libglvnd'
+  'libx11'
+  'libxcb'
+  'libxcursor'
+  'xcb-util-wm'
+)
+source=(
+  "$pkgbase-$pkgver.zip::https://punklabs.com/content/projects/ot-cryptid/downloads/OneTrick-CRYPTID-$pkgver-Source.zip"
+  "$pkgbase-$pkgver-UserGuide.pdf::https://punklabs.com/content/projects/ot-cryptid/downloads/OneTrick%20CRYPTID%20User%20Guide.pdf"
+)
+sha512sums=('1b48e988c7fc6bd2a1a45f06f848dd9eaadf51f91c36e093d18185b2a6df4971f3884056ea4be3ec9b7455b84d579544e5abf8553951e2ea0fec692651310679'
+            'b485343816b463844c4cf7727541d87a81538ab0d655207fae1de66a540cfbafc9a0fd0056c15d2069f9c066b3416f094aae7977ed68deaeddae3cd2aac8ff2f')
+b2sums=('78f6f79e9cf366d68a86e18d2504e67e017e4e793d818d1c2311f15223bc9b87a976e4bbc9d21cc97de07c13630a5337376ae1853cb00b8c4c44020e40c30fe9'
+        '34e81e067128285f0b30ff5398322be9e9ac1c7c4234c6d0311743f7d58f376b4b9de6b69a00dbf850da195d1aefa0f739918d97cffee3469b7059e27632c07e')
+
+prepare() {
+  # download dependencies
+  cargo fetch --locked --target "$CARCH-unknown-linux-gnu"
+}
+
+build() {
+  cargo xtask bundle onetrick_cryptid --release
+}
+
+package_ot-cryptid-docs() {
+  pkgdesc+=' - documentation'
+
+  install -vDm644 -t "$pkgdir/usr/share/doc/$pkgbase" ./*.txt
+  install -vDm644 "$pkgbase-$pkgver-UserGuide.pdf" "$pkgdir/usr/share/doc/$pkgbase/UserGuide.pdf"
+}
+
+package_ot-cryptid-clap() {
+  pkgdesc+=' - CLAP plugin'
+  groups+=('clap-plugins')
+  depends=(
+    "${_common_depends[@]}"
+    'clap-host'
+  )
+  optdepends=('ot-cryptid-docs: documentation')
+
+  install -vDm644 -t "$pkgdir/usr/lib/clap" target/bundled/OneTrick\ CRYPTID.clap
+}
+
+package_ot-cryptid-vst3() {
+  pkgdesc+=' - VST3 plugin'
+  groups+=('vst3-plugins')
+  depends=(
+    "${_common_depends[@]}"
+    'vst3-host'
+  )
+  optdepends=('ot-cryptid-docs: documentation')
+
+  install -vd "$pkgdir/usr/lib/vst3"
+  cp -vr target/bundled/OneTrick\ CRYPTID.vst3 "$pkgdir/usr/lib/vst3"
+}
+
+package_ot-cryptid-standalone() {
+  pkgdesc+=' - standalone'
+  depends=("${_common_depends[@]}")
+  optdepends=(
+    'jack: audio backend'
+    'alsa-lib: audio-backend'
+    'ot-cryptid-docs: documentation'
+  )
+
+  install -vDm755 -t "$pkgdir/usr/bin" target/bundled/OneTrick\ CRYPTID
+}

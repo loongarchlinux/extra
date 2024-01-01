@@ -1,7 +1,7 @@
 # Maintainer: George Rawlinson <grawlinson@archlinux.org>
 
 pkgname=python-poetry-dynamic-versioning
-pkgver=1.1.0
+pkgver=1.2.0
 pkgrel=1
 pkgdesc='Plugin for Poetry to enable dynamic versioning based on VCS tags'
 arch=('any')
@@ -27,7 +27,7 @@ checkdepends=(
   'python-pytest'
   'python-pytest-cov'
 )
-_commit='65e2bc4bd910376efabf2a838308655d60a0e319'
+_commit='dd9952fcb4c07d913112577af48ba736573b93e5'
 source=("$pkgname::git+$url#commit=$_commit")
 b2sums=('SKIP')
 

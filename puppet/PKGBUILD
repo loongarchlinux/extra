@@ -10,13 +10,13 @@
 # Contributor: Niels Abspoel <aboe76 (at) Gmail (dot) com>
 
 pkgname=puppet
-pkgver=7.26.0
-pkgrel=1
+pkgver=7.27.0
+pkgrel=3
 pkgdesc='Server automation framework and application'
 arch=('any')
-url='https://puppet.com/products/open-source-projects'
+url='https://www.puppet.com/community/open-source'
 license=('Apache')
-depends=(ruby facter ruby-semantic_puppet ruby-augeas ruby-shadow ruby-concurrent ruby-multi_json ruby-puppet-resource_api ruby-deep_merge ruby-fast_gettext hiera ruby-locale ruby-scanf)
+depends=(ruby facter ruby-semantic_puppet ruby-augeas ruby-shadow ruby-concurrent ruby-multi_json ruby-puppet-resource_api ruby-deep_merge ruby-fast_gettext hiera ruby-locale ruby-scanf ruby-msgpack)
 makedepends=('git' 'rake' 'ruby-rdoc')
 checkdepends=('ruby-rspec' 'ruby-yard' 'ruby-rspec-its' 'ruby-webmock')
 backup=('etc/puppetlabs/puppet/auth.conf'
@@ -24,15 +24,15 @@ backup=('etc/puppetlabs/puppet/auth.conf'
         'etc/puppetlabs/puppet/hiera.yaml')
 install="$pkgname.install"
 
-_augeas_commit=22db3b937d9f57f487bb37296bd41c209d69113f
-_cron_commit=e135dfc40fffb83f0f82534f8ef6d4b886ef186c
-_host_commit=bd8ace42d6aa46127561b79a920c12d316732dc0
-_mount_commit=468d108a929172c7fbc180a3a077b0442cc0c858
-_selinux_commit=c3d25664d99f96ad22a5f359b668bcd55a399d86
-_sshkeys_commit=e79aedb612ab702c06461b7fb75484064f7ed850
-_yumrepo_commit=5c77eecfd5751dd93cab90c0f67e5d112e638ab7
-_zfs_commit=7de49486bcd8e7c5579a7970dea11727c63a4c8b
-_zone_commit=7880999cdcf15b9a3594b78a06e47399c78baba1
+_augeas_commit=76e9ee2238036658286fca8c80b34a947214635d
+_cron_commit=1d605e813f62a45dcf7881e07f25ba05fef816a6
+_host_commit=d6b6393d559f889438fad1570883b0d6d5a381ab
+_mount_commit=404da7fa334c29aa387a14e12bdf4691504498ea
+_selinux_commit=4ad08a07350283766d32266c15617237a2562e1f
+_sshkeys_commit=bf6cf14c4dc27e2b1b4a7b1f32d57ff7ff3aeb8f
+_yumrepo_commit=fdda12d4b9475a6c3ba49d629c290ab6897b481e
+_zfs_commit=0af39efa1d812c926dd3dbd0ca63ef7ee8538583
+_zone_commit=1d227dcccaf34435fe5c8a7abf25c319e7d96e21
 
 source=("https://github.com/puppetlabs/puppet/archive/${pkgver}/puppet-${pkgver}.tar.gz"
         "augeas_core::git+https://github.com/puppetlabs/puppetlabs-augeas_core#commit=${_augeas_commit}"
@@ -45,7 +45,7 @@ source=("https://github.com/puppetlabs/puppet/archive/${pkgver}/puppet-${pkgver}
         "zfs_core::git+https://github.com/puppetlabs/puppetlabs-zfs_core#commit=${_zfs_commit}"
         "zone_core::git+https://github.com/puppetlabs/puppetlabs-zone_core#commit=${_zone_commit}"
         )
-sha512sums=('297a744bc85c0558f853ce420c49e877525117d205805e4de652da6dd8d333fe855b5483e5d56a5941f3f3551d9a6cf916c31894482fcc86a71f33b0e7710cfd'
+sha512sums=('f28b8ebb61a951a4e6176269e5fcf6066cc853b61a1f8c0dff974ab42914b34197a200800c37b71f5ab4d4b5e70929931d464c7a8abb1682e316d1150312f330'
             'SKIP'
             'SKIP'
             'SKIP'
@@ -109,7 +109,7 @@ package() {
   install --directory "${pkgdir}/opt/puppetlabs/puppet/vendor_modules/"
   mv *_core "${pkgdir}/opt/puppetlabs/puppet/vendor_modules/"
   # Search for unwanted directories and files and delete them
-  find "${pkgdir}/opt/puppetlabs/puppet/vendor_modules/" -type d -name .git -o -name spec -exec rm -rf {} +
+  find "${pkgdir}/opt/puppetlabs/puppet/vendor_modules/" -type d \( -name .git -o -name spec -o -name rakelib \) -exec rm -rf {} +
   find "${pkgdir}/opt/puppetlabs/puppet/vendor_modules/" -name '.*' -exec rm -rf {} +
-  find "${pkgdir}/opt/puppetlabs/puppet/vendor_modules/" -type f -name pdk.yaml -delete
+  find "${pkgdir}/opt/puppetlabs/puppet/vendor_modules/" -type f \( -name pdk.yaml -o -name appveyor.yml -o -name Rakefile -o -name Gemfile \) -delete
 }

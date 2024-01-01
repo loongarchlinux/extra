@@ -1,4 +1,4 @@
-# Maintainer:
+# Maintainer: George Rawlinson <grawlinson@archlinux.org>
 # Contributor: Kyle Keen <keenerd@gmail.com>
 # Contributor: Sergej Pupykin <pupykin.s+arch@gmail.com>
 # Contributor: Andrea Scarpino <andrea@archlinux.org>
@@ -6,37 +6,60 @@
 # Contributor: Ben <contrasutra@myrealbox.com>
 
 pkgname=elinks
-pkgver=0.16.1.1
-pkgrel=2
-pkgdesc="Advanced, feature-rich text mode web browser"
-arch=("loong64" "x86_64")
-url="https://github.com/rkd77/elinks"
+pkgver=0.17.0
+pkgrel=1
+pkgdesc='Advanced feature-rich text-mode web browser'
+arch=('loong64' 'x86_64')
+url='https://github.com/rkd77/elinks'
 license=('GPL')
-depends=('bzip2' 'expat>=2.0' 'gpm>=1.20.4' 'openssl' 'lua' 'libidn' 'gc' 'tre'
-         'zlib')
-source=("elinks-$pkgver.tgz::https://github.com/rkd77/elinks/archive/v$pkgver.tar.gz")
-sha256sums=('d07e55ede144d532212b2b5b92fb81df4360ddd2b156ccaf09cfa4aa218e1aed')
-
-# todo: make it work with a modern 'js' package
-# (upstream has no interest in writing that)
+depends=(
+  'glibc'
+  'brotli'
+  'bzip2'
+  'gpm'
+  'openssl'
+  'lua'
+  'libdom'
+  'libcss'
+  'libidn2'
+  'xz'
+  'libwapcaplet'
+  'expat'
+  'zlib'
+  'curl'
+  'tre'
+)
+makedepends=(
+  'git'
+  'meson'
+  'dblatex'
+  'xmlto'
+  'libiconv'
+  'gc'
+  'cmake'
+)
+source=("$pkgname::git+$url#tag=v$pkgver")
+b2sums=('SKIP')
 
 build() {
-  cd elinks-$pkgver
-  sed -i 's/Terminal=1/Terminal=true/' "contrib/debian/$pkgname.desktop"
-  [ -x configure ] || sh autogen.sh
-  ./configure --prefix=/usr --mandir=/usr/share/man \
-              --sysconfdir=/etc \
-              --disable-smb --without-x --enable-cgi \
-              --enable-leds --enable-256-colors --enable-html-highlight \
-              --enable-gemini --with-zlib --with-luapkg=lua54
-  make -j1
+  arch-meson \
+    "$pkgname" \
+    build \
+    -D cgi=true \
+    -D true-color=true \
+    -D html-highlight=true \
+    -D bzlib=true \
+    -D brotli=true \
+    -D lzma=true \
+    -D luapkg=lua54 \
+    -D tre=true \
+    -D gemini=true \
+    -D reproducible=true \
+    -D source-date-epoch="$SOURCE_DATE_EPOCH"
+
+  meson compile -C build
 }
 
 package() {
-  cd elinks-$pkgver
-  make DESTDIR="$pkgdir" install
-  rm -f "$pkgdir/usr/share/locale/locale.alias"
-
-  install -D -m644 "contrib/debian/$pkgname.desktop" \
-    "$pkgdir/usr/share/applications/$pkgname.desktop"
+  meson install -C build --destdir="$pkgdir"
 }

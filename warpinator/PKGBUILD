@@ -3,19 +3,19 @@
 # Contributor: Kyle Laker <kyle@laker.email>
 
 pkgname=warpinator
-pkgver=1.6.4
-pkgrel=1
+pkgver=1.8.1
+pkgrel=2
 pkgdesc='LAN file sender, send and receive files across the network'
 arch=('any')
 url='https://github.com/linuxmint/warpinator'
 license=('GPL3')
 depends=('gtk3' 'libnm' 'python-cryptography' 'python-gobject' 'python-grpcio'
          'python-protobuf' 'python-pynacl' 'python-setproctitle' 'python-setuptools' 'python-xapp' 'python-zeroconf'
-         'xapp' 'python-cairo')
+         'xapp' 'python-cairo' 'python-qrcode' 'python-pillow')
 makedepends=('meson' 'polkit')
 optdepends=('ufw: Open a firewall port for Warpinator')
 source=("https://github.com/linuxmint/$pkgname/archive/$pkgver/$pkgname-$pkgver.tar.gz")
-sha256sums=('718fbaa3227f5ffed0666c7b2f10b2a89a4c32c92741fd7dc31f27ee6f0b4673')
+sha256sums=('8aabdfe1fe93088a7c9eaf99fbe347d678e44095ddded66f8315f4cd717b6687')
 
 prepare() {
   cd $pkgname-$pkgver
@@ -24,11 +24,10 @@ prepare() {
   sed -i 's|libexec/warpinator|lib/warpinator|' \
     bin/warpinator.in \
     data/org.x.warpinator.policy.in.in
-  sed -i 's/libexec/lib/' install-scripts/download_zeroconf.py
 }
 
 build() {
-  arch-meson $pkgname-$pkgver build -D bundle-zeroconf=false
+  arch-meson $pkgname-$pkgver build -D bundle-zeroconf=false -D bundle-grpc=false
   meson compile -C build
 }
 

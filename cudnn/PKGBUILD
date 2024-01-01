@@ -4,7 +4,7 @@
 # Contributor: Yunhui Fu <yhfdev@gmail.com>
 
 pkgname=cudnn
-pkgver=8.9.6.50
+pkgver=8.9.7.29
 _cudaver=12
 pkgrel=1
 pkgdesc="NVIDIA CUDA Deep Neural Network library"
@@ -21,7 +21,7 @@ options=(!strip staticlibs)
 # or https://developer.download.nvidia.com/compute/cudnn/redist/cudnn/linux-x86_64/
 source=("https://developer.download.nvidia.com/compute/cudnn/redist/cudnn/linux-x86_64/cudnn-linux-x86_64-${pkgver}_cuda${_cudaver}-archive.tar.xz"
         "NVIDIA_SLA+cuDNN_Supp_Feb2017_release.pdf")
-b2sums=('5b2e052c81d1b06fc3fa7d8a75cfbc115808003cdb48a0d703daa5d3badb4d6f9efffbf4399f12f7ba35296b08ff184e2a18316b483e5ea2aaa59d30a77f0f55'
+b2sums=('8c68349d8cbc8080ed352f2749426be4cda9aed18b6b7dababe739e7eef74ba20157ca6424bfd1df7f1299ea87e11e8606bdef9f60b312cddf79eb3d7ebe6c3f'
         '222e3d3640808a130dfc339fa8e48ea396f784af77d09d90fae1e5550de8272e643d9a765d832b3d950234a3f7a8706a12191d49717f732cff190e5fd920ed52')
 
 package() {

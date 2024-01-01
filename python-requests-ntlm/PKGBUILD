@@ -5,23 +5,23 @@
 pkgname=python-requests-ntlm
 _module='requests_ntlm'
 pkgver=1.2.0
-pkgrel=2
+pkgrel=3
 pkgdesc="Allows for HTTP NTLM authentication using the requests library"
 url="https://github.com/requests/requests-ntlm"
 depends=('python' 'python-requests' 'python-ntlm-auth' 'python-pyspnego')
-makedepends=('python-setuptools')
+makedepends=('python-setuptools' 'python-build' 'python-wheel' 'python-installer')
 license=('custom:ISC License (ISCL)')
 arch=(any)
 source=("https://files.pythonhosted.org/packages/source/r/requests_ntlm/requests_ntlm-${pkgver}.tar.gz")
 sha512sums=('557f4a4625dc74fc4023a8d74b480cfd61a64b88f6003f381bd0a5f160f4c8337b53a575b720f930cd8fe5c375c1508bbe36cff60e31df00bb9a7e3b19196678')
 
 build() {
-    cd "${srcdir}/${_module}-${pkgver}"
-    python setup.py build
+  cd "${srcdir}/${_module}-${pkgver}"
+  python -m build --wheel --no-isolation
 }
 
 package() {
-    cd "${srcdir}/${_module}-${pkgver}"
-    install -D -m644 LICENSE "${pkgdir}/usr/share/licenses/python-requests-ntlm/LICENSE"
-    python setup.py install --root="${pkgdir}" --optimize=1 --skip-build
+  cd "${srcdir}/${_module}-${pkgver}"
+  install -D -m644 LICENSE "${pkgdir}/usr/share/licenses/python-requests-ntlm/LICENSE"
+  python -m installer --destdir="$pkgdir" dist/*.whl
 }

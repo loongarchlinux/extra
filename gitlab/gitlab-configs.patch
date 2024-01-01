@@ -285,7 +285,7 @@ index 5002e9e24bf..030fcc6a3cd 100644
      object_store:
        enabled: false
        remote_directory: pages # The bucket name
-@@ -667,7 +667,7 @@ production: &base
+@@ -668,7 +668,7 @@ production: &base
      # port: 5005
      # api_url: http://localhost:5000/ # internal address to the registry, will be used by GitLab to directly communicate with API
      # key: config/registry.key
@@ -294,7 +294,7 @@ index 5002e9e24bf..030fcc6a3cd 100644
      # issuer: gitlab-issuer
      # notification_secret: '' # only set it when you use Geo replication feature without built-in Registry
  
-@@ -718,7 +718,7 @@ production: &base
+@@ -719,7 +719,7 @@ production: &base
      # Default project notifications settings:
  
      # The location where build traces are stored (default: builds/). Relative paths are relative to Rails.root
@@ -303,7 +303,7 @@ index 5002e9e24bf..030fcc6a3cd 100644
  
    #
    # 3. Auth settings
-@@ -1171,7 +1171,7 @@ production: &base
+@@ -1173,7 +1173,7 @@ production: &base
  
    # Shared file storage settings
    shared:
@@ -312,13 +312,11 @@ index 5002e9e24bf..030fcc6a3cd 100644
  
    # Encrypted Settings configuration
    encrypted_settings:
-@@ -1196,14 +1196,14 @@ production: &base
-     # real path not the symlink.
+@@ -1194,13 +1194,13 @@ production: &base
+   repositories:
      storages: # You must have at least a `default` storage path.
        default:
--        path: /home/git/repositories/
 -        gitaly_address: unix:/home/git/gitlab/tmp/sockets/private/gitaly.socket # TCP connections are supported too (e.g. tcp://host:port). TLS connections are also supported using the system certificate pool (eg: tls://host:port).
-+        path: /var/lib/gitlab/repositories
 +        gitaly_address: unix:/run/gitlab/gitlab-gitaly.socket # TCP connections are supported too (e.g. tcp://host:port). TLS connections are also supported using the system certificate pool (eg: tls://host:port).
          # gitaly_token: 'special token' # Optional: override global gitaly.token for this storage.
  
@@ -327,11 +325,11 @@ index 5002e9e24bf..030fcc6a3cd 100644
 -    path: "tmp/backups"   # Relative paths are relative to Rails.root (default: tmp/backups/)
 -    # gitaly_backup_path: /home/git/gitaly/_build/bin/gitaly-backup # Path of the gitaly-backup binary (default: searches $PATH)
 +    path: "/var/lib/gitlab/backups"   # Relative paths are relative to Rails.root (default: tmp/backups/)
-+    # gitaly_backup_path: /var/lib/gitaly/_build/bin/gitaly-backup # Path of the gitaly-backup binary (default: searches $PATH)
++    # gitaly_backup_path: /usr/bin/gitaly-backup # Path of the gitaly-backup binary (default: searches $PATH)
      # archive_permissions: 0640 # Permissions for the resulting backup.tar file (default: 0600)
      # keep_time: 604800   # default: 0 (forever) (in seconds)
      # pg_schema: public     # default: nil, it means that all schemas will be backed up
-@@ -1238,12 +1238,12 @@ production: &base
+@@ -1235,12 +1235,12 @@ production: &base
  
    ## GitLab Shell settings
    gitlab_shell:
@@ -347,7 +345,7 @@ index 5002e9e24bf..030fcc6a3cd 100644
  
      # Git over HTTP
      upload_pack: true
-@@ -1258,13 +1258,13 @@ production: &base
+@@ -1255,13 +1255,13 @@ production: &base
    workhorse:
      # File that contains the secret key for verifying access for gitlab-workhorse.
      # Default is '.gitlab_workhorse_secret' relative to Rails.root (i.e. root of the GitLab app).
@@ -363,7 +361,7 @@ index 5002e9e24bf..030fcc6a3cd 100644
  
      # The URL to the external KAS API (used by the Kubernetes agents)
      # external_url: wss://kas.example.com
-@@ -1278,17 +1278,17 @@ production: &base
+@@ -1275,17 +1275,17 @@ production: &base
    suggested_reviewers:
      # File that contains the secret key for verifying access to GitLab internal API for Suggested Reviewers.
      # Default is '.gitlab_suggested_reviewers_secret' relative to Rails.root (i.e. root of the GitLab app).
@@ -386,7 +384,7 @@ index 5002e9e24bf..030fcc6a3cd 100644
    ## Git settings
    # CAUTION!
 diff --git a/config/puma.rb.example b/config/puma.rb.example
-index 65c817bb2d8..52012b50e0d 100644
+index 65c817bb2d8..2d6aa7c6482 100644
 --- a/config/puma.rb.example
 +++ b/config/puma.rb.example
 @@ -5,11 +5,11 @@

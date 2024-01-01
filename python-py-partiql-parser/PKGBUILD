@@ -4,7 +4,7 @@ pkgname=python-py-partiql-parser
 _pkgname=py-partiql-parser
 # https://github.com/getmoto/py-partiql-parser/blob/main/CHANGELOG.md
 # UPDATE_BLOCKED: moto pins a specific version https://github.com/getmoto/moto/blob/master/setup.cfg
-pkgver=0.4.2
+pkgver=0.5.0
 pkgrel=1
 pkgdesc='Python Parser for PartiQL'
 arch=(any)
@@ -18,7 +18,7 @@ depends=(python)
 makedepends=(python-build python-installer python-setuptools python-wheel)
 checkdepends=(python-pytest)
 source=("https://github.com/getmoto/py-partiql-parser/archive/refs/tags/$pkgver/$pkgname-$pkgver.tar.gz")
-sha256sums=('5d7531f31f5508880ad4e29eb85d6901185cf999c48c2bc7b18e06cb27f8bfd3')
+sha256sums=('e9dade1734d7ee48177960d0db2d751b7d3260ffd5882c1a92be441e9b0d35b2')
 
 build() {
   cd $_pkgname-$pkgver

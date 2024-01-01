@@ -7,7 +7,7 @@ pkgname=('usd' 'usd-extras')
 _pkgname='OpenUSD'
 pkgbase=usd
 pkgver=23.11
-pkgrel=3
+pkgrel=5
 arch=(loong64 x86_64)
 url='https://openusd.org'
 pkgdesc='3D VFX pipeline interchange file format'
@@ -19,12 +19,14 @@ makedepends=('cmake' 'help2man' 'git' 'openvdb' 'boost' 'alembic' 'draco'
              'openshadinglanguage')
 source=("git+https://github.com/PixarAnimationStudios/$_pkgname.git#tag=v$pkgver"
         https://openusd.org/images/USDLogoUnsized.svg
+        "usd-ocio230.patch::https://patch-diff.githubusercontent.com/raw/PixarAnimationStudios/OpenUSD/pull/2651.patch"
         "usd-tbb.patch"
         "usd-embree4.patch"
         "usd-defaultfonts.patch"
         "org.openusd.usdview.desktop")
 sha256sums=('SKIP'
             '529dea685836be7de95800d9688db4e1df6a8a3f341130069abdd2b5b1572128'
+            '622b24265b113b0272c2c26a1112964c86265ac48005bf77f78839fc8a7c7549'
             'e4a1378a2ce34edbd65f016689cbca0dc37dc2b1c2ddfd837724078ed231063c'
             '8cbdeb862e587e4fc73af9b52046e22d85623021649eeb56e4c14aa31fab89be'
             '3408ad2877d547f60d2db6b28983837119b8800b62ae1cdc23b37dbe31e17f1c'
@@ -37,6 +39,7 @@ prepare() {
 
   _pyver=$(python -c 'import sys; print(".".join(map(str, sys.version_info[:2])))')
 
+  patch -Np1 -i ${srcdir}/usd-ocio230.patch
   patch -Np1 -i ${srcdir}/usd-tbb.patch
   patch -Np1 -i ${srcdir}/usd-defaultfonts.patch
   patch -Np1 -i ${srcdir}/usd-embree4.patch

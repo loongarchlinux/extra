@@ -1,11 +1,12 @@
 # Maintainer: Jaroslav Lichtblau <svetlemodry@archlinux.org>
 # Maintainer: Christian Rebischke <christian.rebischke@archlinux.org>
+# Maintainer: Robin Candau <antiz@archlinux.org>
 # Contributor: fordprefect
 # Contributor: Jonathon Fernyhough <jonathon_at_manjaro_dot_org>
 # Contributor: Brenton Horne
 
 pkgname=hugo
-pkgver=0.120.1
+pkgver=0.121.1
 pkgrel=1
 pkgdesc="Fast and Flexible Static Site Generator in Go"
 arch=('loong64' 'x86_64')
@@ -14,11 +15,11 @@ license=('Apache')
 depends=('glibc')
 makedepends=('go' 'git')
 optdepends=('python-docutils: reStructuredText support')
-source=(${pkgname}-${pkgver}.tar.gz::https://github.com/gohugoio/${pkgname}/archive/v${pkgver}.tar.gz)
-sha512sums=('b8f6676f9565e2a5510d68cd86bc470121276c36b2ad3fc4fbb02e9d140c97916e4967edaaf1a333c02c1654c95726ba0a4d19229982a6e4367c25b04c3c7e5a')
+source=("${pkgname}-${pkgver}.tar.gz::https://github.com/gohugoio/${pkgname}/archive/v${pkgver}.tar.gz")
+sha512sums=('ab22299ee7c14665aa9ec8f39262a052d75896b8ba6e22fb237d01360257b39e0dcc24615a1afc50ab4f008b0d0eaa88d7b263fb621932e65fee6bce1ce19d6c')
 
 build() {
-  cd "${srcdir}"/${pkgname}-${pkgver}
+  cd "${pkgname}-${pkgver}"
   export CGO_CPPFLAGS="${CPPFLAGS}"
   export CGO_CFLAGS="${CFLAGS}"
   export CGO_CXXFLAGS="${CXXFLAGS}"
@@ -27,19 +28,19 @@ build() {
   go build -tags extended
 
   ./hugo gen man
-  ./hugo completion bash > ${pkgname}.bash-completion
-  ./hugo completion fish > ${pkgname}.fish
-  ./hugo completion zsh > ${pkgname}.zsh
+  ./hugo completion bash > "${pkgname}.bash-completion"
+  ./hugo completion fish > "${pkgname}.fish"
+  ./hugo completion zsh > "${pkgname}.zsh"
 }
 
 package() {
-  cd "${srcdir}"/${pkgname}-${pkgver}
-  install -Dm755 "${pkgname}" "${pkgdir}"/usr/bin/${pkgname}
-  install -Dm644 LICENSE "${pkgdir}"/usr/share/licenses/${pkgname}/LICENSE
+  cd "${pkgname}-${pkgver}"
+  install -Dm 755 "${pkgname}" "${pkgdir}/usr/bin/${pkgname}"
+  install -Dm 644 LICENSE "${pkgdir}/usr/share/licenses/${pkgname}/LICENSE"
 
-  install -Dm644 "${srcdir}"/${pkgname}-${pkgver}/man/*.1  -t "${pkgdir}"/usr/share/man/man1/
+  install -Dm 644 man/*.1 -t "${pkgdir}/usr/share/man/man1/"
   
-  install -Dm644 ${pkgname}.bash-completion "${pkgdir}"/usr/share/bash-completion/completions/${pkgname}
-  install -Dm644 ${pkgname}.fish "${pkgdir}"/usr/share/fish/vendor_completions.d/${pkgname}.fish
-  install -Dm644 ${pkgname}.zsh "${pkgdir}"/usr/share/zsh/site-functions/_${pkgname}
+  install -Dm 644 "${pkgname}.bash-completion" "${pkgdir}/usr/share/bash-completion/completions/${pkgname}"
+  install -Dm 644 "${pkgname}.fish" "${pkgdir}/usr/share/fish/vendor_completions.d/${pkgname}.fish"
+  install -Dm 644 "${pkgname}.zsh" "${pkgdir}/usr/share/zsh/site-functions/_${pkgname}"
 }

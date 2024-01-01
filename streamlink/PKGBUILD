@@ -3,7 +3,7 @@
 # Contributor: Josip Ponjavic <josipponjavic at gmail dot com>
 
 pkgname=streamlink
-pkgver=6.4.1
+pkgver=6.5.0
 pkgrel=1
 pkgdesc='CLI program that launches streams from various streaming services in a custom video player (livestreamer fork)'
 arch=('any')
@@ -11,14 +11,13 @@ url='https://streamlink.github.io/'
 license=('BSD')
 depends=("python-"{certifi,isodate,pycountry,pycryptodome,pysocks,requests,trio,trio-websocket,websocket-client})
 checkdepends=("python-"{freezegun,pytest,pytest-asyncio,pytest-trio,requests-mock})
-makedepends=("python-"{build,installer,setuptools,versioningit,wheel})
+makedepends=("python-"{build,installer,setuptools,wheel})
 optdepends=('ffmpeg: Required to play streams that are made up of separate audio and video streams, eg. YouTube 1080p+')
 source=("https://github.com/${pkgname}/${pkgname}/releases/download/${pkgver}/${pkgname}-${pkgver}.tar.gz"{,.asc})
-validpgpkeys=('E2B794C7C2C37162E5E2A097E3DB9E282E390FA0'  # Streamlink Signing Key <streamlink@protonmail.com>
-              'CDAC41B9122470FAF357A9D344448A298D5C3618') # Streamlink signing key <streamlink@protonmail.com>
-sha256sums=('8e3dacb009334bad206dc9b50ddc3768d6a489fc7824ac42bb4bc70d0a926eac'
+validpgpkeys=('CDAC41B9122470FAF357A9D344448A298D5C3618') # Streamlink signing key <streamlink@protonmail.com>
+sha256sums=('8f4d61593bcce10f8d5e84ca956aac4fa639c0a349e7df379834373a883966ed'
             'SKIP')
-sha512sums=('8886b990637e9f4e87b4fcdc00c2d3e11203746e7256c0d85aee3128f65baaf37ea730c2626c3ec8f0f5ee0042bbd271c4a6290bd346d59915f2f554602f0db4'
+sha512sums=('affd45d1b17704768a405b389f9696090917e5cc73b0e22455e7f944eb0798dae7b23f73a728d3641fb43a5104e731816442be0e6f05a04a5bfe132c28d5491c'
             'SKIP')
 
 build() {
@@ -30,7 +29,7 @@ check() {
   cd ${pkgname}-${pkgver}
   python -m installer --destdir="$PWD/tmp" dist/*.whl
   local pyver=$(python -c 'import sys;print(".".join(map(str,sys.version_info[:2])))')
-  TZ=UTC PYTHONPATH="$PWD/tmp/usr/lib/python${pyver}/site-packages:$PYTHONPATH" python -m pytest
+  PYTHONPATH="$PWD/tmp/usr/lib/python${pyver}/site-packages:$PYTHONPATH" python -m pytest
 }
 
 package() {

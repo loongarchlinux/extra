@@ -1,19 +1,20 @@
 # Maintainer: Alexander F. Rødseth <xyproto@archlinux.org>
 # Contributor: Matt Harrison <matt@harrison.us.com>
+# Contributor: Kainoa Kanter <kainoa@t1c.dev>
 
 pkgname=ollama
 pkgdesc='Create, run and share large language models (LLMs)'
-pkgver=0.1.10
-pkgrel=1
+pkgver=0.1.17
+pkgrel=2
 arch=(loong64 x86_64)
 url='https://github.com/jmorganca/ollama'
 license=(MIT)
 makedepends=(cmake git go setconf)
-_ollamacommit=41434a7cdcf33918ae2d37eb23d819ef7361e843 # tag: v0.1.10
+_ollamacommit=6b5bdfa6c9321405174ad443f21c2e41db36a867 # tag: v0.1.17
 # The git submodule commit hashes are here:
-# https://github.com/jmorganca/ollama/tree/v0.1.10/llm/llama.cpp
+# https://github.com/jmorganca/ollama/tree/v0.1.17/llm/llama.cpp
 _ggmlcommit=9e232f0234073358e7031c1b8d7aa45020469a3b
-_ggufcommit=9e70cc03229df19ca2d28ce23cc817198f897278
+_ggufcommit=a7aee47b98e45539d491071b25778b833b77e387
 source=(git+$url#commit=$_ollamacommit
         ggml::git+https://github.com/ggerganov/llama.cpp#commit=$_ggmlcommit
         gguf::git+https://github.com/ggerganov/llama.cpp#commit=$_ggufcommit
@@ -39,8 +40,11 @@ prepare() {
   # Do not git clone when "go generate" is being run.
   sed -i 's,git submodule,true,g' llm/llama.cpp/generate_linux.go
 
-  # Set the version number
-  setconf version/version.go 'var Version string' "\"$pkgver\""
+  # Do not build with CUDA, but turn LTO on
+  sed -i 's,LLAMA_CUBLAS=on,LLAMA_LTO=on,g' llm/llama.cpp/generate_linux.go
+
+  # Set build mode to release
+  sed -i '33s/DebugMode/ReleaseMode/;45s/DebugMode/ReleaseMode/' "$srcdir/ollama/server/routes.go"
 }
 
 build() {
@@ -50,8 +54,9 @@ build() {
   go build -buildmode=pie -trimpath -mod=readonly -modcacherw -ldflags=-linkmode=external -ldflags=-buildid=''
 }
 
+
 check() {
-  cd $pkgname
+  cd ${pkgname/-cuda}
   go test ./...
 }
 

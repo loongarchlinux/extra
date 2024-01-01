@@ -3,7 +3,7 @@
 # Contributor: Eric Bélanger <eric@archlinux.org>
 
 pkgname=gajim
-pkgver=1.8.3
+pkgver=1.8.4
 pkgrel=1
 pkgdesc='Full featured and easy to use XMPP (Jabber) client'
 url='https://gajim.org/'
@@ -29,8 +29,8 @@ optdepends=('python-dbus: to have gajim-remote working'
             'libxss: for idle time checking on X11'
             'python-gnupg: encrypting chat messages with OpenPGP')
 source=(https://www.gajim.org/downloads/${pkgver%.*}/gajim-${pkgver}.tar.gz)
-sha512sums=('39ef1fe93bd2416cc7c9328289f4cf467aceb2a770e11f84b249965687e60668221a95a3c5f617e228f29aab99dad8775647ef7972f6a0d2075b5b7fcb169b70')
-b2sums=('6d5b85f5ae403136755b1f9b11924f211ebb33fbe50040096e2bf0c7306d83d0abc594c8337b26f26168477a4dc2247dd1ac86c7ae2cd0fabbfb0639452480c4')
+sha512sums=('1a5b028c0e308eb15417c8c11584bc0e8b0218fead5155093ede4bc3961b6bee2b47bc3510f751dc70194634d6ca94d4a675f6891c8f050859fb4729020e52cb')
+b2sums=('e23eafe707bc482a050fcef44df9e68af552444cce173c506538ebe01557a894dc0ba8b9afe18f195fd0b00b717b1268531a960b1c8b868c22081135d14e3079')
 
 build() {
   cd ${pkgname}-${pkgver}

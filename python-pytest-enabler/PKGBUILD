@@ -1,8 +1,8 @@
 # Maintainer: Felix Yan <felixonmars@archlinux.org>
 
 pkgname=python-pytest-enabler
-pkgver=2.3.1
-_commit=a1e167bc165fb320097d0e7d13d24e3539cb956a
+pkgver=3.0.0
+_commit=ac1bd58b07ab75c92d6dc96f0e7fb357106f9f85
 pkgrel=1
 pkgdesc='Enable installed pytest plugins'
 arch=('any')

@@ -5,8 +5,8 @@
 # Contributor: Yosef Or Boczko <yoseforb@gnome.org>
 
 pkgname=gnome-software
-pkgver=45.1
-pkgrel=2
+pkgver=45.2
+pkgrel=1
 pkgdesc="GNOME Software Tools"
 url="https://wiki.gnome.org/Apps/Software/"
 arch=(loong64 x86_64)
@@ -38,15 +38,13 @@ optdepends=(
   'malcontent: Parental control plugin'
 )
 groups=(gnome)
-_commit=b615e544ca5804eb660ea9b8e6d55485d2f6cc65  # tags/45.1^0
+_commit=4048cbc7fc3aa5d2b37f80734cabdf28658c1ca4  # tags/45.2^0
 source=(
   "git+https://gitlab.gnome.org/GNOME/gnome-software.git#commit=$_commit"
   "git+https://gitlab.gnome.org/mwleeds/gnome-pwa-list.git"
-  "appstream-1.0.patch"
 )
 b2sums=('SKIP'
-        'SKIP'
-        'a110ec8e08f1c952c3ccf64cede202206cc1cbf95ead1b6f6224e5c1fb9d393904703cce03a248520cc4221f8a2fe5c85ca8a37ff850ed6e3025bb174d69f724')
+        'SKIP')
 
 pkgver() {
   cd $pkgname
@@ -57,7 +55,8 @@ prepare() {
   cd $pkgname
 
   # support appstream 1.0
-  patch -p1 < ../appstream-1.0.patch
+  git cherry-pick -n 0655f358ed0e8455e12d9634f60bc4dbaee434e3 \
+                     e431ab003f3fabf616b6eb7dc93f8967bc9473e5
 
   git submodule init
   git submodule set-url subprojects/gnome-pwa-list "$srcdir/gnome-pwa-list"

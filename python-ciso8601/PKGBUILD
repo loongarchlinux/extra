@@ -2,7 +2,7 @@
 
 pkgname=python-ciso8601
 pkgver=2.3.1
-pkgrel=1
+pkgrel=2
 pkgdesc='Fast ISO8601 date time parser for Python written in C'
 arch=(loong64 x86_64)
 url=https://github.com/closeio/ciso8601
@@ -14,7 +14,10 @@ depends=(
 makedepends=(
   cython
   git
+  python-build
+  python-installer
   python-setuptools
+  python-wheel
 )
 _tag=b17984f5b4c6db0ef596b4d31456c8a39ae278ee
 source=(git+https://github.com/closeio/ciso8601.git#tag=${_tag})
@@ -28,15 +31,12 @@ pkgver() {
 
 build() {
   cd ciso8601
-
-  python setup.py build
+  python -m build --wheel --no-isolation
 }
 
 package() {
-  cd ciso8601
-
-  python setup.py install --root="${pkgdir}" --optimize=1 --skip-build
-  install -Dm 644 LICENSE -t "${pkgdir}"/usr/share/licenses/python-ciso8601/
+  python -m installer --destdir="${pkgdir}" ciso8601/dist/*.whl
+  install -Dm 644 ciso8601/LICENSE -t "${pkgdir}"/usr/share/licenses/python-ciso8601/
 }
 
 # vim: ts=2 sw=2 et:

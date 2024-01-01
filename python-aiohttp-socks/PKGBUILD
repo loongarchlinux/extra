@@ -2,14 +2,14 @@
 # Maintainer: Jonas Witschel <diabonas@archlinux.org>
 
 pkgname=python-aiohttp-socks
-pkgver=0.8.2
-_tag=c6cba8d62da795d43752432967b66619a02a93f9 # git rev-parse "v$pkgver"
+pkgver=0.8.4
+_tag=2521e1b078e97f02d06b01aa8950bc6b23f24746 # git rev-parse "v$pkgver"
 pkgrel=1
 pkgdesc="SOCKS proxy connector for aiohttp. SOCKS4(a) and SOCKS5 are supported."
 arch=('any')
 url="https://github.com/romis2012/aiohttp-socks/"
 license=('Apache')
-depends=('python' 'python-aiohttp' 'python-python-socks')
+depends=('python' 'python-aiohttp' 'python-python-socks' 'python-async-timeout')
 makedepends=('git' 'python-build' 'python-installer' 'python-setuptools' 'python-wheel')
 checkdepends=('python-flask' 'python-pytest' 'python-pytest-asyncio' 'python-trustme' 'python-anyio' 'python-tiny-proxy')
 source=("git+https://github.com/romis2012/aiohttp-socks.git?signed#tag=$_tag")

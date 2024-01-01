@@ -1,33 +1,41 @@
-# Maintainer: Anatol Pomozov <anatol.pomozov@gmail.com>
+# Maintainer:
+# Contributor: Anatol Pomozov <anatol.pomozov@gmail.com>
 
 pkgname=stlink
 pkgver=1.7.0
-pkgrel=1
-pkgdesc='Firmware programmer for STM32 STLINK v1/v2 protocol'
+pkgrel=2
+pkgdesc='Open source STM32 MCU programming toolset'
 arch=(loong64 x86_64)
 url='https://github.com/texane/stlink'
-license=(BSD)
-# Add support for gtk3-based GUI
-depends=(libusb)
-makedepends=(cmake gtk3)
-optdepends=('gtk3: GUI application')
-install=stlink.install
-source=($pkgname-$pkgver.zip::https://github.com/texane/stlink/archive/v$pkgver.zip)
-sha256sums=('dd2fde56c701b9084f6c60c5d2549673150b596f06cffe1334f498013a97f0e1')
+license=(BSD-3-Clause)
+depends=(
+  glib2
+  glibc
+  gtk3
+  hicolor-icon-theme
+  libusb
+)
+makedepends=(cmake)
+source=($pkgname-$pkgver.tar.gz::$url/archive/v$pkgver.tar.gz)
+sha512sums=('58b73c7a73809f36ab8ef53370bcbdba7456433c8559f350349febd282188541184b5c171eb2ca1ad38ec4b3ae32d3a89895a208bcacc264ec0aed5f61e6bcd0')
+b2sums=('7e00a01912e1d21fa29a7299fbb21f8e85540d3e4f4c90be8fcd9b4a8ef14bae2c0cd460463babf04fd52a11ebeac9601a5f31874dd4cce3077434c2bfc96168')
 
 build() {
-  cd stlink-$pkgver
-  cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr \
-        -DSTLINK_UDEV_RULES_DIR=/usr/lib/udev/rules.d \
-        -DSTLINK_MODPROBED_DIR=/usr/lib/modprobe.d
-  make
+  local cmake_options=(
+    -B build
+    -D CMAKE_BUILD_TYPE=None
+    -D CMAKE_INSTALL_PREFIX=/usr
+    -D STLINK_MODPROBED_DIR=/usr/lib/modprobe.d
+    -D STLINK_UDEV_RULES_DIR=/usr/lib/udev/rules.d
+    -S $pkgname-$pkgver
+    -W no-dev
+  )
+
+  cmake "${cmake_options[@]}"
+  cmake --build build --verbose
 }
 
 package() {
-  cd stlink-$pkgver
-
-  make DESTDIR="$pkgdir" install
-
-  install -Dm644 LICENSE.md "$pkgdir"/usr/share/licenses/$pkgname/LICENSE
-  rm "$pkgdir"/usr/lib/libstlink.a
+  DESTDIR="$pkgdir" cmake --install build
+  install -Dm644 $pkgname-$pkgver/LICENSE.md -t "$pkgdir/usr/share/licenses/$pkgname/"
 }

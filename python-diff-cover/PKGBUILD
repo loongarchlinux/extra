@@ -2,12 +2,12 @@
 
 _name=diff_cover
 pkgname=python-diff-cover
-pkgver=8.0.1
+pkgver=8.0.2
 pkgrel=1
 pkgdesc="Automatically find diff lines that need test coverage"
 arch=(any)
 url="https://github.com/Bachmann1234/diff_cover"
-license=(Apache)
+license=(Apache-2.0)
 depends=(
   python
   python-chardet
@@ -28,8 +28,8 @@ checkdepends=(
 )
 optdepends=('python-tomli: for TOML support')
 source=($_name-$pkgver.tar.gz::$url/archive/refs/tags/v$pkgver.tar.gz)
-sha512sums=('c1642c1d340003bcdf05084f52a24677f4506bee4f42cb014783b7a5d4ad7de833fea8d8d35b7d3cde74801236ef6f0982bfb410cf11310d22787569848c9978')
-b2sums=('756eb4bdbfe1cc3e81b5bca3ac1c991c9d0842592657e92d329230775076d73db1382a864a5257ca244c435dfee2d44256abff76ff09bd561e82eacf941659a5')
+sha512sums=('643291dc5091232eee1d04ddbdb24bfe3565e9cda2fc2a69d5af9100f5966c7105c3b403728bd986d10c1aabd1062e8b780defe6d4f214c41d7a4870438ef878')
+b2sums=('eacf8d10ff5efc0a22e5d3782cb40e3d43e32bf47165ea6c46f24c3bcbacbfc3dd94ce827bb7f8a52d19012133002ab97405a837452f15a20e6a6d0d88295c61')
 
 build() {
   cd $_name-$pkgver

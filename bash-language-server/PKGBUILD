@@ -3,41 +3,43 @@
 # Maintainer: Daniel M. Capella <polyzen@archlinux.org>
 
 pkgname=bash-language-server
-pkgver=5.0.0
-pkgrel=2
-pkgdesc="Bash language server implementation based on Tree Sitter and its grammar for Bash"
-arch=("any")
-url="https://github.com/bash-lsp/bash-language-server"
-license=("MIT")
-depends=("nodejs")
-makedepends=("git" "npm" "pnpm")
-optdepends=('bash-completion: for CLI args completion'
-            'man-db: for documentation via manual pages'
-            'shellcheck: to enable linting')
+pkgver=5.1.1
+pkgrel=1
+pkgdesc='Bash language server implementation based on Tree Sitter and its grammar for Bash'
+arch=('any')
+url=https://github.com/bash-lsp/bash-language-server
+license=('MIT')
+depends=('nodejs')
+makedepends=('git' 'npm' 'pnpm')
+optdepends=(
+  'bash-completion: for CLI args completion'
+  'man-db: for documentation via manual pages'
+  'shellcheck: to enable linting'
+)
 options=('!emptydirs')
-source=("$pkgname-$pkgver.tar.gz::$url/archive/server-$pkgver.tar.gz")
-b2sums=('53c73a7dfd49d38699b054916e429100603793028a369dbcc6161e20af02facc5b56e100d06a92d0f59f09fe3a36b3cb2b3c4a387d35a262d481823f56a6f8fb')
+source=("git+$url.git#tag=server-$pkgver")
+b2sums=('SKIP')
 
 build() {
-    cd "$pkgname-server-$pkgver"
-    pnpm install --frozen-lockfile
-    pnpm run compile
+  cd $pkgname
+  pnpm install --frozen-lockfile
+  pnpm run compile
 }
 
 package() {
-    local _npmdir="/usr/lib/node_modules/$pkgname"
-    install -d "$pkgdir"/{usr/bin,"$_npmdir"}
-    ln -s "$_npmdir/out/cli.js" "$pkgdir/usr/bin/$pkgname"
+  local mod_dir=/usr/lib/node_modules/$pkgname
+  install -d "$pkgdir"/{usr/bin,$mod_dir}
+  ln -s $mod_dir/out/cli.js "$pkgdir"/usr/bin/$pkgname
 
-    cd "$pkgname-server-$pkgver"
-    install -Dm644 -t "$pkgdir/usr/share/licenses/$pkgname/" LICENSE
+  cd $pkgname
+  install -Dm644 -t "$pkgdir"/usr/share/licenses/$pkgname LICENSE
 
-    cd server
-    # Prune unnecessary packages
-    rm -r node_modules
-    npm install --production
+  cd server
+  # Prune unnecessary packages
+  rm -r node_modules
+  npm install --production
 
-    cp -r node_modules out package.json tree-sitter-bash.wasm "$pkgdir/$_npmdir"
-    chmod +x "$pkgdir/$_npmdir/out/cli.js"
-    install -Dm644 -t "$pkgdir/usr/share/doc/$pkgname/" ./*.md
+  cp -r node_modules out package.json tree-sitter-bash.wasm "$pkgdir"/$mod_dir
+  chmod +x "$pkgdir"/$mod_dir/out/cli.js
+  install -Dm644 -t "$pkgdir"/usr/share/doc/$pkgname ./*.md
 }

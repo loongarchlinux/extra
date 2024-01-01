@@ -1,7 +1,7 @@
 # Maintainer: Christian Rebischke <chris.rebischke@archlinux.org>
 
 pkgname=operator-sdk
-pkgver=1.31.0
+pkgver=1.33.0
 pkgrel=1
 pkgdesc="SDK for building Kubernetes applications"
 arch=('loong64' 'x86_64')
@@ -10,8 +10,8 @@ license=('Apache')
 makedepends=('go')
 depends=('glibc')
 source=("${pkgname}-${pkgver}.tar.gz::https://github.com/operator-framework/operator-sdk/archive/v${pkgver}.tar.gz")
-sha512sums=('059132de2df8437ad0ad56eb9b98d4e4fc5c7e4f2d20d4965b087f9fed120483d3d6f480a4eee584a06ca301ee4fe15a9744052577c57ca363385d94bc0b3ef6')
-b2sums=('121874363ead9ee1fa5d0c644f5a754bdd948bb736065569bccd6ce078184a977a74ea9f0a91b100349b18f973d050aa55cfad0d9c0c056c8c444b6b0a67bcb2')
+sha512sums=('c70e40078a125b90246748d507782a4af473d48b4729c63e98fa9262ffa8ec600f02b40b7d4ac0a767493f8618afb2e3702dd764c8494e852248c452e6bc4cb3')
+b2sums=('4bada853457f01bc2c39dcf8e0ceb4b960811e2f90a091178c8c3d02239d13acb78827332cc534ed6e192965bcffaf019205ca3ec3e0cca0e0db15ea752c2a7a')
 
 prepare() {
   export GOPATH="${srcdir}"
@@ -28,7 +28,7 @@ build() {
   export CGO_CXXFLAGS="${CXXFLAGS}"
   export CGO_LDFLAGS="${LDFLAGS}"
   export GOFLAGS="-buildmode=pie -trimpath -mod=readonly -modcacherw"
-  go build -ldflags "-linkmode=external" -v -o . ./cmd/{operator-sdk,ansible-operator,helm-operator}
+  go build -ldflags "-linkmode=external" -v -o . ./cmd/{operator-sdk,helm-operator}
 }
 
 #check() {
@@ -41,9 +41,6 @@ package() {
   install -Dsm755 ./operator-sdk "${pkgdir}/usr/bin/operator-sdk"
   ./operator-sdk completion bash | install -Dm644 /dev/stdin "$pkgdir/usr/share/bash-completion/completions/operator-sdk"
   ./operator-sdk completion zsh | install -Dm644 /dev/stdin "$pkgdir/usr/share/zsh/site-functions/_operator-sdk"
-  install -Dsm755 ./ansible-operator "${pkgdir}/usr/bin/ansible-operator"
-  ./ansible-operator completion bash | install -Dm644 /dev/stdin "$pkgdir/usr/share/bash-completion/completions/ansible-operator"
-  ./ansible-operator completion zsh | install -Dm644 /dev/stdin "$pkgdir/usr/share/zsh/site-functions/_ansible-operator"
   install -Dsm755 ./helm-operator "${pkgdir}/usr/bin/helm-operator"
   ./helm-operator completion bash | install -Dm644 /dev/stdin "$pkgdir/usr/share/bash-completion/completions/helm-operator"
   ./helm-operator completion zsh | install -Dm644 /dev/stdin "$pkgdir/usr/share/zsh/site-functions/_helm-operator"

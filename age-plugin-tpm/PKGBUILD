@@ -1,0 +1,35 @@
+# Maintainer: Morten Linderud <foxboron@archlinux.org>
+
+pkgname=age-plugin-tpm
+pkgver=0.2.0
+pkgrel=3
+pkgdesc="TPM plugin for age"
+arch=("loong64" "x86_64")
+url="https://github.com/Foxboron/age-plugin-tpm"
+license=("MIT")
+depends=("glibc")
+makedepends=("go" "git" "swtpm")
+source=("$pkgname-$pkgver.tar.gz::https://github.com/Foxboron/$pkgname/archive/v${pkgver}.tar.gz")
+sha256sums=('cafbf5986d7ac3b5e314b0f5cafe7fe8424d3af8e9a18f19a71a490bed91be7a')
+
+build(){
+    cd "${pkgname}-${pkgver}"
+    go build \
+        -trimpath \
+        -buildmode=pie \
+        -mod=readonly \
+        -modcacherw \
+        -ldflags "-X main.Version=${pkgver} -linkmode external -extldflags \"${LDFLAGS}\"" \
+        -o . ./...
+}
+
+check(){
+    cd "${pkgname}-${pkgver}"
+    go test ./...
+}
+
+package(){
+    cd "${pkgname}-${pkgver}"
+    install -Dm755 -t "${pkgdir}/usr/bin/" age-plugin-tpm
+    install -Dm644 -t "${pkgdir}/usr/share/licenses/${pkgname}/" LICENSE
+}

@@ -1,27 +1,29 @@
 # Maintainer: Felix Yan <felixonmars@archlinux.org>
 
 pkgname=deepin-application-manager
-pkgver=1.0.20
+pkgver=1.1.4
 pkgrel=1
 pkgdesc='App manager of Deepin Desktop Environment'
 arch=('loong64' 'x86_64')
 url="https://github.com/linuxdeepin/dde-application-manager"
 license=('GPL3')
+# deepin-wloutput-daemon: org.deepin.dde.KWayland1
 # startdde: org.deepin.dde.XSettings1
-depends=('qt5-base' 'dtkcore' 'dtkwidget' 'xcb-util-wm' 'glibc' 'libxcb' 'libxres' 'gcc-libs'
-         'libx11' 'glib2' 'gsettings-qt' 'startdde')
-makedepends=('cmake' 'ninja')
+depends=('qt6-base' 'glibc' 'gcc-libs' 'systemd-libs' 'deepin-wloutput-daemon' 'startdde')
+makedepends=('cmake' 'ninja' 'gtest')
 groups=('deepin')
 source=("https://github.com/linuxdeepin/dde-application-manager/archive/$pkgver/$pkgname-$pkgver.tar.gz")
-sha512sums=('d7ce6a1fbcad66fecf5a98b8008334c7330ff8190c609fa1c6fa42ddfa693402c1bd84b07c27ea2becc98f499f4ab8698802b670252b7188586d67c8fb0fcd79')
+sha512sums=('194b1b804d78dfcd4962706b515ee5731a111ffe83b027502401cc5246d45e831ac40951b5aff8e4fac153967b6183e0243a63db9878dd5f94d22d4258e11f49')
 
 build() {
   cd dde-application-manager-$pkgver
-  cmake . -GNinja -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_INSTALL_SYSCONFDIR=/etc
+  cmake . -GNinja -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_INSTALL_SYSCONFDIR=/etc -DCMAKE_INSTALL_LIBEXECDIR=lib
   ninja
 }
 
 package() {
   cd dde-application-manager-$pkgver
   DESTDIR="$pkgdir" ninja install
+  rm -r "$pkgdir"/etc/dpkg
+  rmdir "$pkgdir"/etc
 }

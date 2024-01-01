@@ -2,7 +2,7 @@
 
 pkgname=crane
 _pkgname=go-containerregistry
-pkgver=0.16.1
+pkgver=0.17.0
 pkgrel=1
 pkgdesc="Interacting with remote container images and registries."
 arch=('loong64' 'x86_64')
@@ -10,8 +10,8 @@ url="https://github.com/google/go-containerregistry"
 license=('Apache-2.0')
 makedepends=('go')
 source=(https://github.com/google/${_pkgname}/archive/v${pkgver}/${pkgname}-${pkgver}.tar.gz)
-sha256sums=('6b8d41175fda7497a90eb89a9b30d8291b418e1f9e524ae094439c9887fb06ac')
-b2sums=('23e65a9d405dde7a6f5917e9a484bc93e7cd24136a18b0c71fd69b02538ec93afbad225c098eb0839b12412dce3d24227cf72bda38f59b73f3f3323a22f1f5b4')
+sha256sums=('6f43e3b70d855e59303cc1c58ed0a748c3fc09ffe16db7808932fa3d75858f7f')
+b2sums=('c202b1e3add20101afad468f9cbd9fc0cdc9f2f86de14e5ba11e9b3bbdee3d1c306d13205c3aec13018b2eb70c9e8a97ec837f5af457c4ebed344b079ea71d74')
 
 build() {
   cd ${_pkgname}-${pkgver}
@@ -29,10 +29,28 @@ build() {
   go build .
 }
 
+check() {
+  cd ${_pkgname}-${pkgver}
+  ./crane --help
+  ./gcrane --help
+  ./cmd/krane/krane --help
+}
+
 package() {
   cd ${_pkgname}-${pkgver}
   install -Dm755 -t "${pkgdir}/usr/bin" \
     crane gcrane cmd/krane/krane
+
+  # setup completions
+  install -dm 755 "${pkgdir}/usr/share/bash-completion/completions" \
+                  "${pkgdir}/usr/share/zsh/site-functions" \
+                 "${pkgdir}/usr/share/fish/vendor_completions.d"
+  for bin in crane gcrane krane; do
+    "${pkgdir}/usr/bin/${bin}" completion bash > "${pkgdir}/usr/share/bash-completion/completions/${bin}"
+    "${pkgdir}/usr/bin/${bin}" completion zsh > "${pkgdir}/usr/share/zsh/site-functions/_${bin}"
+    "${pkgdir}/usr/bin/${bin}" completion fish > "${pkgdir}/usr/share/fish/vendor_completions.d/${bin}.fish"
+  done
+
   install -Dm644 LICENSE "${pkgdir}/usr/share/licenses/${pkgname}/LICENSE"
 }
 

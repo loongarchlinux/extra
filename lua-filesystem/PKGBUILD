@@ -1,4 +1,5 @@
 # Maintainer: Daurnimator <daurnimator@archlinux.org>
+# Maintainer: Caleb Maclennan <caleb@alerque.com>
 # Contributor: Sergej Pupykin <arch+pub@p5n.pp.ru>
 # Contributor: Bartłomiej Piotrowski <nospam@bpiotrowski.pl>
 # Contributor: Chris Brannon <cmbrannon79@gmail.com>
@@ -9,48 +10,50 @@ pkgbase=lua-filesystem
 pkgname=(lua-filesystem lua51-filesystem lua52-filesystem lua53-filesystem)
 pkgver=1.8.0
 _tag=${pkgver//./_}
-pkgrel=3
+pkgrel=4
 pkgdesc='File System Library for the Lua Programming Language'
 arch=('loong64' 'x86_64')
-url='http://keplerproject.github.io/luafilesystem/'
+url='https://lunarmodules.github.io/luafilesystem'
+_url='https://github.com/lunarmodules/luafilesystem'
 license=('MIT')
 makedepends=('lua' 'lua51' 'lua52' 'lua53')
-source=("$pkgbase-${_tag}.tar.gz::https://github.com/keplerproject/luafilesystem/archive/v${_tag}.tar.gz")
+_archive="${pkgbase/-/}-$_tag"
+source=("$_url/archive/v$_tag/$_archive.tar.gz")
 sha256sums=('16d17c788b8093f2047325343f5e9b74cccb1ea96001e45914a58bbae8932495')
 
 build() {
-  cp -a luafilesystem-${_tag} luafilesystem-${_tag}-51
-  make -C luafilesystem-${_tag}-51 PREFIX=/usr LIB_OPTION="-shared ${LDFLAGS}" LUA_VERSION=5.1
+  cp -a $_archive $_archive-51
+  make -C $_archive-51 PREFIX=/usr LIB_OPTION="-shared ${LDFLAGS}" LUA_VERSION=5.1
 
-  cp -a luafilesystem-${_tag} luafilesystem-${_tag}-52
-  make -C luafilesystem-${_tag}-52 PREFIX=/usr LIB_OPTION="-shared ${LDFLAGS}" LUA_VERSION=5.2
+  cp -a $_archive $_archive-52
+  make -C $_archive-52 PREFIX=/usr LIB_OPTION="-shared ${LDFLAGS}" LUA_VERSION=5.2
 
-  cp -a luafilesystem-${_tag} luafilesystem-${_tag}-53
-  make -C luafilesystem-${_tag}-53 PREFIX=/usr LIB_OPTION="-shared ${LDFLAGS}" LUA_VERSION=5.3
+  cp -a $_archive $_archive-53
+  make -C $_archive-53 PREFIX=/usr LIB_OPTION="-shared ${LDFLAGS}" LUA_VERSION=5.3
 
-  make -C luafilesystem-${_tag} PREFIX=/usr LIB_OPTION="-shared ${LDFLAGS}" LUA_VERSION=5.4
+  make -C $_archive PREFIX=/usr LIB_OPTION="-shared ${LDFLAGS}" LUA_VERSION=5.4
 }
 
 package_lua-filesystem() {
-  cd luafilesystem-${_tag}
+  cd $_archive
   make DESTDIR="$pkgdir" PREFIX=/usr LUA_VERSION=5.4 install
   install -Dm644 LICENSE "$pkgdir"/usr/share/licenses/$pkgname/LICENSE
 }
 
 package_lua51-filesystem() {
-  cd luafilesystem-${_tag}-51
+  cd $_archive-51
   make DESTDIR="$pkgdir" PREFIX=/usr LUA_VERSION=5.1 install
   install -Dm644 LICENSE "$pkgdir"/usr/share/licenses/$pkgname/LICENSE
 }
 
 package_lua52-filesystem() {
-  cd luafilesystem-${_tag}-52
+  cd $_archive-52
   make DESTDIR="$pkgdir" PREFIX=/usr LUA_VERSION=5.2 install
   install -Dm644 LICENSE "$pkgdir"/usr/share/licenses/$pkgname/LICENSE
 }
 
 package_lua53-filesystem() {
-  cd luafilesystem-${_tag}-53
+  cd $_archive-53
   make DESTDIR="$pkgdir" PREFIX=/usr LUA_VERSION=5.3 install
   install -Dm644 LICENSE "$pkgdir"/usr/share/licenses/$pkgname/LICENSE
 }

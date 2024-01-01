@@ -1,17 +1,24 @@
 # Maintainer: Orhun Parmaksız <orhun@archlinux.org>
+# Maintainer: kpcyrd <kpcyrd[at]archlinux[dot]org>
 
 pkgname=arti
-pkgver=1.1.8
+pkgver=1.1.11
 pkgrel=1
 pkgdesc="An implementation of Tor in Rust"
 arch=('loong64' 'x86_64')
 url="https://gitlab.torproject.org/tpo/core/arti"
 license=('MIT' 'Apache')
-depends=('sqlite' 'openssl' 'xz')
+depends=(
+  'liblzma.so'
+  'libsqlite3.so'
+  'libssl.so'
+)
 makedepends=('cargo')
-source=("$pkgname-$pkgver.tar.gz::$url/-/archive/$pkgname-v$pkgver/$pkgname-$pkgname-v$pkgver.tar.gz")
-sha256sums=('8ad12358086a65d2c41fb3be31b09e0324ef41e2669e6c596753589c4155ee2d')
+backup=('etc/arti.d/arti.toml')
 options=('!lto')
+source=("$pkgname-$pkgver.tar.gz::$url/-/archive/$pkgname-v$pkgver/$pkgname-$pkgname-v$pkgver.tar.gz")
+sha256sums=('ac90e7deb16d8ede1a7a5ef5c966444d4881dfff9889bf87bd41cd5a82272443')
+b2sums=('4fccaef197107be9453253c23f54bc4747484b041830a6c59397e9a12ab5f08b96d9da950e8d2069df1e245865e824296a635c6a25d76f5f75784d4c63dab20c')
 
 prepare() {
   mv "$pkgname-$pkgname-v$pkgver" "$pkgname-$pkgver"
@@ -27,12 +34,21 @@ build() {
 check() {
   cd "$pkgname-$pkgver"
   cargo test --frozen
+  "target/release/$pkgname" --help
 }
 
 package() {
   cd "$pkgname-$pkgver"
   install -Dm 755 "target/release/$pkgname" -t "$pkgdir/usr/bin"
-  install -Dm 644 README.md -t "$pkgdir/usr/share/doc/$pkgname"
+
+  # config
+  install -Dm 640 crates/arti/src/arti-example-config.toml "$pkgdir/etc/arti.d/arti.toml"
+
+  # docs
+  install -Dm 644 -t "$pkgdir/usr/share/doc/$pkgname" \
+    README.md \
+    crates/arti/src/arti-example-config.toml
+
   install -Dm 644 LICENSE-MIT -t "$pkgdir/usr/share/licenses/$pkgname"
 }
 

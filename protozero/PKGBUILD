@@ -1,0 +1,52 @@
+# Maintainer: Justin Kromlinger <hashworks@archlinux.org>
+# Contributor: Simon Legner <Simon.Legner@gmail.com>
+# Contributor: peippo <christoph+aur@christophfink.com>
+
+pkgbase=protozero
+pkgname=(protozero protozero-docs)
+pkgver=1.7.1
+pkgrel=5
+pkgdesc="Minimalist protocol buffer decoder and encoder in C++"
+url="https://github.com/mapbox/protozero"
+arch=('any')
+license=('custom')
+makedepends=('clang' 'cmake' 'cppcheck' 'protobuf' 'doxygen' 'graphviz')
+source=("${pkgname}-${pkgver}.tar.gz::https://github.com/mapbox/${pkgname}/archive/v${pkgver}.tar.gz")
+sha256sums=('27e0017d5b3ba06d646a3ec6391d5ccc8500db821be480aefd2e4ddc3de5ff99')
+
+build() {
+  mkdir -p "${pkgname}-${pkgver}/build"
+  cd "${pkgname}-${pkgver}/build"
+
+  cmake \
+    -DCMAKE_CXX_STANDARD=17 \
+    -DCMAKE_BUILD_TYPE=Release \
+    -DCMAKE_INSTALL_PREFIX=/usr \
+    -DIWYU_TOOL=/usr/bin/iwyu-tool \
+    ..
+
+  make
+}
+
+check() {
+  cd "${pkgname}-${pkgver}/build"
+  make test
+}
+
+package_protozero() {
+  cd "${pkgname}-${pkgver}/build"
+  make DESTDIR="${pkgdir}" install
+  install -Dm644 ../LICENSE.md "${pkgdir}/usr/share/licenses/${pkgname}/LICENSE"
+}
+
+package_protozero-docs() {
+  pkgdesc+=" (documentation)"
+  depends=()
+  
+  cd "${pkgbase}-${pkgver}/build"
+
+  mkdir -p "${pkgdir}/usr/share/doc"
+  cp -r doc/html "${pkgdir}/usr/share/doc/${pkgbase}"
+  
+  install -Dm644 ../LICENSE.md "${pkgdir}/usr/share/licenses/${pkgname}/LICENSE"
+}

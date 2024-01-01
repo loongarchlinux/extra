@@ -11,10 +11,9 @@ pkgname=(
   'surge-xt-standalone'
   'surge-xt-vst3'
   'surge-xt-clap'
-  'surge-xt-lv2'
 )
-pkgver=1.2.3
-pkgrel=2
+pkgver=1.3.0
+pkgrel=1
 pkgdesc='Subtractive hybrid synthesizer'
 arch=('loong64' 'x86_64')
 url='https://surge-synthesizer.github.io'
@@ -51,22 +50,22 @@ makedepends=(
   'jack'
   'webkit2gtk'
   'ripgrep'
-  'lv2'
   'juce'
 )
 options=('!lto') # LTO disabled due to crashes at application startup
-_commit='bb8dd2b398cfa8d6d1a20daf7dee2cb4e8097dbf'
+_commit='20a8e16ab5cf2e92d718c16d42965622a9eb7db4'
 source=(
   "$pkgbase::git+https://github.com/surge-synthesizer/surge#commit=$_commit"
   'improve-reproducibility.patch'
   'devendor-libs.patch'
-  'fix-lv2-ftbfs.patch'
   'github.com-surge-synthesizer-tuning-library::git+https://github.com/surge-synthesizer/tuning-library'
   'github.com-surge-synthesizer-eurorack::git+https://github.com/surge-synthesizer/eurorack'
   'github.com-surge-synthesizer-JUCE::git+https://github.com/surge-synthesizer/JUCE'
-  'github.com-surge-synthesizer-sst-plugininfra::git+https://github.com/surge-synthesizer/sst-plugininfra'
+  'github.com-surge-synthesizer-sst-basic-blocks::git+https://github.com/surge-synthesizer/sst-basic-blocks'
   'github.com-surge-synthesizer-sst-cpputils::git+https://github.com/surge-synthesizer/sst-cpputils'
+  'github.com-surge-synthesizer-sst-effects::git+https://github.com/surge-synthesizer/sst-effects'
   'github.com-surge-synthesizer-sst-filters::git+https://github.com/surge-synthesizer/sst-filters'
+  'github.com-surge-synthesizer-sst-plugininfra::git+https://github.com/surge-synthesizer/sst-plugininfra'
   'github.com-surge-synthesizer-sst-waveshapers::git+https://github.com/surge-synthesizer/sst-waveshapers'
   'github.com-surge-synthesizer-pffft::git+https://github.com/surge-synthesizer/pffft'
   'github.com-free-audio-clap::git+https://github.com/free-audio/clap'
@@ -77,12 +76,11 @@ source=(
   'github.com-LuaJIT-LuaJIT::git+https://github.com/LuaJIT/LuaJIT'
   'github.com-taocpp-PEGTL::git+https://github.com/taocpp/PEGTL'
   'github.com-gulrak-filesystem::git+https://github.com/gulrak/filesystem'
-  'github.com-lv2-porting-project-JUCE::git+https://github.com/lv2-porting-project/JUCE#branch=lv2'
 )
 b2sums=('SKIP'
         '6e71b56ffde699319def99e03637d9c3fb6197a6e0637b9f44b52a9207a8e06c8d482c05cdd711ec2c5901f403381dda70e786bca6b56cce14dc449325f24761'
-        '35ae92a5363334901810d801238ab9e655c2db5695d085bbc431291ef107c5726d2aa919de77fba154ab63b3875df772cc5fd1531c0adcb9215cac99500ba832'
-        'c43e5a1b9605243be07ab3903885836a2199787f0c7a8dc6ae2be9d8d4a91bcf07fde520c3440f1be425194476065cb287b99446b144c5cd76d012fb0f10f35e'
+        'c7c41fbfbdb84480911d0d006d3a76b95d2c3334acc49e83a26ae658de0eccaa5c42e933d588ea6385e75b9ff3f7a43366730d14e28fbdf54086c515c914d389'
+        'SKIP'
         'SKIP'
         'SKIP'
         'SKIP'
@@ -120,9 +118,11 @@ prepare() {
     libs/JUCE \
     libs/LuaJitLib/LuaJIT \
     libs/PEGTL \
+    libs/sst/sst-basic-blocks \
     libs/sst/sst-plugininfra \
     libs/sst/sst-cpputils \
     libs/clap-juce-extensions \
+    libs/sst/sst-effects \
     libs/sst/sst-filters \
     libs/sst/sst-waveshapers \
     libs/pffft
@@ -134,6 +134,8 @@ prepare() {
   git config submodule.libs/JUCE.url "$srcdir/github.com-surge-synthesizer-JUCE"
   git config submodule.libs/LuaJitLib/LuaJIT.url "$srcdir/github.com-LuaJIT-LuaJIT"
   git config submodule.libs/PEGTL.url "$srcdir/github.com-taocpp-PEGTL"
+  git config submodule.libs/sst/sst-effects.url "$srcdir/github.com-surge-synthesizer-sst-effects"
+  git config submodule.libs/sst/sst-basic-blocks.url "$srcdir/github.com-surge-synthesizer-sst-basic-blocks"
   git config submodule.libs/sst/sst-plugininfra.url "$srcdir/github.com-surge-synthesizer-sst-plugininfra"
   git config submodule.libs/sst/sst-cpputils.url "$srcdir/github.com-surge-synthesizer-sst-cpputils"
   git config submodule.libs/clap-juce-extensions.url "$srcdir/github.com-free-audio-clap-juce-extensions"
@@ -167,13 +169,9 @@ prepare() {
   rg --files-with-matches 'include "fmt/core.h"' | xargs -I@ sed 's|"fmt/core.h"|<fmt/core.h>|g' -i @
   rg --files-with-matches 'include "samplerate.h"' | xargs -I@ sed 's|"samplerate.h"|<samplerate.h>|g' -i @
 
-  # add missing LV2 header
-  pushd "$srcdir/github.com-lv2-porting-project-JUCE"
-  patch -p1 -i "$srcdir/fix-lv2-ftbfs.patch"
-  popd
-
-  # FTBFS due to GCC13
-  git cherry-pick --no-commit d2fba1c6ff02cbdfa9db2ce06508745c247629b5
+  # FTBFS: target "surge-xt-tests" links to surge::catch2_v3
+  # but the target was not found.
+  git revert --no-commit c694f89dfaadd6610855b6ba2faca66096ba6c03
 }
 
 build() {
@@ -184,31 +182,17 @@ build() {
   cmake \
     -B build \
     -S "$pkgbase" \
-    -DCMAKE_INSTALL_PREFIX='/usr' \
-    -DCMAKE_INSTALL_LIBDIR='/usr/lib' \
-    -DCMAKE_BUILD_TYPE=Release \
+    -D CMAKE_INSTALL_PREFIX='/usr' \
+    -D CMAKE_INSTALL_LIBDIR='/usr/lib' \
+    -D CMAKE_BUILD_TYPE=Release \
     -W no-dev \
-    -DSURGE_BUILD_TESTRUNNER=OFF
+    -D SURGE_BUILD_TESTRUNNER=OFF
 
   cmake --build build
-
-  # build LV2 plugin
-  cmake \
-    -B build-lv2 \
-    -S "$pkgbase" \
-    -DCMAKE_INSTALL_PREFIX='/usr' \
-    -DCMAKE_INSTALL_LIBDIR='/usr/lib' \
-    -DCMAKE_BUILD_TYPE=Release \
-    -W no-dev \
-    -DSURGE_BUILD_TESTRUNNER=OFF \
-    -DJUCE_SUPPORTS_LV2=True \
-    -DSURGE_JUCE_PATH="$srcdir/github.com-lv2-porting-project-JUCE"
-
-  cmake --build build-lv2 --target surge-xt_LV2 surge-fx_LV2 --parallel
 }
 
 package_surge-xt() {
-  depends=($pkgbase-{common,standalone,vst3,clap,lv2}=$pkgver)
+  depends=($pkgbase-{common,standalone,vst3,clap}=$pkgver)
 
   # complete install, followed by…
   DESTDIR="$pkgdir" cmake --install build
@@ -284,17 +268,4 @@ package_surge-xt-clap(){
 
   install -vd "$pkgdir/usr/lib"
   mv usr-lib/clap "$pkgdir/usr/lib"
-}
-
-package_surge-xt-lv2(){
-  pkgdesc+=' - LV2 plugin'
-  groups+=('lv2-plugins')
-  depends=(
-    "surge-xt-common=$pkgver"
-    "${_common_depends[@]}"
-    'lv2-host'
-  )
-
-  install -vd "$pkgdir/usr/lib/lv2"
-  cp -vr build-lv2/surge_xt_products/*.lv2 "$pkgdir/usr/lib/lv2"
 }

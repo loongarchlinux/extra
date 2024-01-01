@@ -1,9 +1,11 @@
 # Maintainer: Caleb Maclennan <caleb@alerque.com>
 # Contributor: ThatOneCalculator <kainoa@t1c.dev>
+# Contributor: Brenno Lemos <brenno@syndel.is>
+# Contributor: Gabriel Fox <inbox@gabrielfox.dev>
 
 pkgname=hyprland
-pkgver=0.30.0
-pkgrel=1
+pkgver=0.33.1
+pkgrel=2
 pkgdesc='a highly customizable dynamic tiling Wayland compositor'
 arch=(loong64 x86_64 aarch64)
 url="https://github.com/hyprwm/${pkgname^}"
@@ -25,7 +27,6 @@ depends=(cairo
          libxrender
          opengl-driver
          pango
-         pixman
          pixman
          polkit
          seatd
@@ -51,36 +52,22 @@ makedepends=(cmake
              xorgproto)
 _archive="${pkgname^}-$pkgver"
 source=("$_archive.tar.gz::$url/releases/download/v$pkgver/source-v$pkgver.tar.gz")
-sha256sums=('68a79b2c1ae1a56c046e6ecf07f0b3a8135461d387f6ad0d8f0623a7f300ca80')
+sha256sums=('fe2b39ca90a4dde04159d69ea49c71315449efe5630cf2ff8bb75d4dd4589153')
 
 prepare() {
 	ln -sf hyprland-source "$_archive"
 	cd "$_archive"
-	make fixwlr
 	sed -i -e '/^release:/{n;s/-D/-DCMAKE_SKIP_RPATH=ON -D/}' Makefile
 }
 
 build() {
 	cd "$_archive"
-	pushd subprojects/wlroots
-	meson build/ --prefix="$srcdir/tmpwlr" --buildtype=release
-	ninja -C build/
-	mkdir -p "$srcdir/tmpwlr"
-	ninja -C build/ install
-	popd
-	pushd subprojects/udis86
-	cmake --no-warn-unused-cli -DCMAKE_BUILD_TYPE:STRING=Release -H./ -B./build -G Ninja
-	cmake --build ./build --config Release --target all
-	popd
-	make protocols
 	make release
-	pushd hyprctl
-	make all
 }
 
 package() {
 	cd "$_archive"
-	find src -name '*.hpp' -exec install -Dm0644 {} "$pkgdir/usr/include/hyprland/{}" \;
+	find src \( -name '*.h' -o -name '*.hpp' \) -exec install -Dm0644 {} "$pkgdir/usr/include/hyprland/{}" \;
 	pushd subprojects/wlroots/include
 	find . -name '*.h' -exec install -Dm0644 {} "$pkgdir/usr/include/hyprland/wlroots/{}" \;
 	popd
@@ -93,11 +80,11 @@ package() {
 	cmake -DCMAKE_INSTALL_PREFIX=/usr ..
 	popd
 	install -Dm0644 -t "$pkgdir/usr/share/pkgconfig" build/hyprland.pc
-	install -Dm0755 -t "$pkgdir/usr/bin" build/Hyprland
-	install -Dm0755 -t "$pkgdir/usr/bin" hyprctl/hyprctl
-	install -Dm0644 -t "$pkgdir/usr/share/$pkgname" assets/*.png
-	install -Dm0644 -t "$pkgdir/usr/share/wayland-sessions" "example/$pkgname.desktop"
-	install -Dm0644 -t "$pkgdir/usr/share/$pkgname" "example/$pkgname.conf"
+	install -Dm0755 -t "$pkgdir/usr/bin/" build/Hyprland build/hyprctl/hyprctl
+	install -Dm0644 -t "$pkgdir/usr/share/$pkgname/" assets/*.png
+	install -Dm0644 -t "$pkgdir/usr/share/wayland-sessions/" "example/$pkgname.desktop"
+	install -Dm0644 -t "$pkgdir/usr/share/$pkgname/" "example/$pkgname.conf"
 	install -Dm0644 -t "$pkgdir/usr/share/licenses/$pkgname/" LICENSE
-	install -Dm0755 -t "$pkgdir/usr/lib" "$srcdir/tmpwlr/lib/libwlroots.so.12032"
+        find subprojects/wlroots/build -name 'libwlroots.so.*' -type f -execdir \
+                install -Dm0755 -t "$pkgdir/usr/lib/" {} \;
 }

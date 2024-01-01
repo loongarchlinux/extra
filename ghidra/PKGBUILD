@@ -2,9 +2,10 @@
 # Maintainer: Levente Polyak <anthraxx[at]archlinux[dot]org>
 
 pkgname=ghidra
-pkgver=10.4
+pkgver=11.0
 _d2j=2.1
 _yajsw=13.09
+_jserif=2.1
 pkgrel=1
 pkgdesc='Software reverse engineering framework'
 url='https://ghidra-sre.org/'
@@ -14,18 +15,22 @@ depends=('java-environment>=17' 'bash')
 makedepends=('git' 'gradle' 'unzip' 'java-environment=17')
 optdepends=('pam: GhidraServer support')
 options=('!strip')
-source=(https://github.com/NationalSecurityAgency/ghidra/archive/Ghidra_${pkgver}_build.tar.gz
-        "git+https://github.com/NationalSecurityAgency/ghidra-data#tag=Ghidra_${pkgver}"
-        https://github.com/pxb1988/dex2jar/releases/download/v${_d2j}/dex2jar-${_d2j}.zip
-        https://storage.googleapis.com/google-code-archive-downloads/v2/code.google.com/android4me/AXMLPrinter2.jar
-        https://sourceforge.net/projects/yajsw/files/yajsw/yajsw-stable-${_yajsw}/yajsw-stable-${_yajsw}.zip)
+source=(
+  https://github.com/NationalSecurityAgency/ghidra/archive/Ghidra_${pkgver}_build.tar.gz
+  "git+https://github.com/NationalSecurityAgency/ghidra-data#tag=Ghidra_${pkgver}"
+  https://github.com/pxb1988/dex2jar/releases/download/v${_d2j}/dex2jar-${_d2j}.zip
+  https://storage.googleapis.com/google-code-archive-downloads/v2/code.google.com/android4me/AXMLPrinter2.jar
+  https://sourceforge.net/projects/yajsw/files/yajsw/yajsw-stable-${_yajsw}/yajsw-stable-${_yajsw}.zip
+  https://github.com/NationalSecurityAgency/ghidra-data/raw/Ghidra_${pkgver}/lib/java-sarif-${_jserif}-modified.jar
+)
 noextract=(AXMLPrinter2.jar
            yajsw-beta-${_yajsw}.zip)
-sha512sums=('e7327b652ddb9dcb9025ef6db46d60e853bcc155cb493cf5dfd941a2c468e55a1be7d8aa5c4b2199a39e09653e69eba0a80347596f32de0440edf75cbea17cbc'
+sha512sums=('9c6ad91a71ea49ce90bff422f45d2ad076898d618614b7aded6dfabf8660ccf05fc6579e4f41d50e49ea6c1dc88c03260ff63210d411e405f88aa78bb2cce29b'
             'SKIP'
             '44b4a51043ef608158e16f70d9a448ae0a37896da19bd9837e1124e197b7b41a7c37f074386b0cc03edd4f385066bf5ef04c553f6dec0b0cc2a11ecbf299b16f'
             'c1168ec913f1fbb0675915d4fd865ec9a8e8573f6c8aedcb6e68166f61f11aeaececc7548d54d78134843c0102c57d6350973f6d3027d0ffdae52a5c57a7f601'
-            'd8682b57ce7577374a17113e1ace77393397e405e6450e3f7637ed1f0f42bc7170b378f775a4ba3c458b202ef35f95b35317cce45659b8a3b25aaa59e8393aa4')
+            'd8682b57ce7577374a17113e1ace77393397e405e6450e3f7637ed1f0f42bc7170b378f775a4ba3c458b202ef35f95b35317cce45659b8a3b25aaa59e8393aa4'
+            '04d1f895f87a8f0a653ee5c2b18ed0b6d158f1b7de4e16de2e50ed5a3087b1e83ca01f6c4c8c53d1788942e29d2f41528c910f224c41e27098cb5c2838a8ddf3')
 
 prepare() {
   export PATH="/usr/lib/jvm/java-17-openjdk/bin:${PATH}"
@@ -33,7 +38,7 @@ prepare() {
 
   # Copy needed libraries into flat repo folder
   install -Dm 644 ../dex-tools-${_d2j}/lib/dex-*.jar \
-    ../AXMLPrinter2.jar \
+    ../AXMLPrinter2.jar ../java-sarif-${_jserif}-modified.jar \
     -t dependencies/flatRepo
 
   # YAJSW expects this symlink

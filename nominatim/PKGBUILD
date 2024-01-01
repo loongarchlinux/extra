@@ -1,0 +1,162 @@
+# Maintainer: Justin Kromlinger <hashworks@archlinux.org>
+# Contributor: peippo <christoph+aur@christophfink.com>
+
+pkgname="nominatim"
+pkgdesc="Geocoding tool using OpenStreetmap data"
+url="https://nominatim.org"
+
+pkgver=4.3.2
+pkgrel=1
+
+arch=("any")
+license=("GPL2")
+
+makedepends=(
+    "clang"
+    "cmake"
+    "git"
+    "php"
+)
+#checkdepends=(
+#    "python-behave"
+#    "python-pytest"
+#    "python-pytest-asyncio"
+#)
+depends=(
+    "expat"
+    "proj"
+    "boost"
+    "boost-libs"
+    "libosmium"
+    "osm2pgsql"
+    "postgresql"
+    "postgis"
+    "python-asyncpg"
+    "python-psycopg2"
+    "python-dotenv"
+    "python-psutil"
+    "python-jinja"
+    "python-pyicu"
+    "python-yaml"
+    "python-requests"
+    "python-osmium"
+    "python-ujson"
+    "python-falcon"
+    "python-sqlalchemy"
+    "python-datrie"
+    "uvicorn"
+    "gunicorn"
+    "libdatrie"
+    "perl" # /usr/share/munin/plugins/nominatim_query_speed
+)
+optdepends=(
+    "nginx: http server for python or php frontends"
+    "apache: http server for python or php frontends"
+    "php: Legacy PHP frontend"
+    "php-cgi: Legacy PHP frontend"
+    "php-intl: Legacy PHP frontend"
+    "php-pgsql: Legacy PHP frontend"
+    "python-starlette: Alternative Python frontend using Starlette ASGI framework"
+    "nominatim-data-wikipedia: optional auxiliary data source to help indicate the importance of OSM features"
+    "nominatim-data-postcodes-gb: improve searches that involve a UK postcode"
+    "nominatim-data-postcodes-us: improve searches that involve a US postcode"
+    "nominatim-data-tiger: improves searches that involve US house numbers"
+)
+
+source=(
+    "${pkgname}-${pkgver}.tar.gz::https://github.com/osm-search/Nominatim/archive/refs/tags/v${pkgver}.tar.gz"
+    "https://nominatim.org/data/country_grid.sql.gz"
+    "${pkgname}.sysusers"
+    "${pkgname}.tmpfiles"
+    "nominatim.service"
+    "nominatim.socket"
+    "nominatim-updates.service"
+    "nominatim-updates.timer"
+    "nginx-python.conf"
+    "apache-php.conf"
+    "nginx-php.conf"
+    "php.ini"
+    "php-fpm.conf"
+    "0001-Fix-configuration-to-point-to-installed-files.patch"
+    "0002-Set-default-project-directory-to-package-provided-di.patch"
+)
+sha256sums=('3e05e57bdbeed519e3ffe3716ddb86b86413eec4296bb4f69580825fdcc17eb5'
+            'fe66393aaf561749255cebf4c61d13a8425e326b8ce50409d88c4035165de049'
+            '7f71b5217cbe0713fa5f8baa138348c9cd49f42c2b6025c059076042e0c04c6d'
+            '964e7d8bde044dee0b69002959bcdd5d469f83d85f166ddd5fb178954bc84999'
+            '0bee153f02a063abff72115cd7e606f62a73bd2b810f7adea302c9b0b8ad7c41'
+            '20aac7e4ec92fe89b8b53b0bfdb1c546c39b3db0f0969aeb2ff376d67f4918ba'
+            'a3f0a194b9c26202eff3e3c1dbebde405dc8caab0fff86163fe3664ae05cdcc4'
+            '4f4c14000d2dd56271377a543dbebaf547fc543a9f610570a740e03c196b1947'
+            '5131a42f62d83bd68089769badd29bdd07e08263a336212d7f337e3f5b273fb0'
+            '3c4d5fbb1299aff5d4efa855c8b278f2e19c47104982f3488c2c545a40f75ac8'
+            '2f8e550a8bc89de96d29bc61c96cc6cc6007a516f72fc6f125ba30e779a7e64a'
+            '37c4b17463f8317d39bb741b07bbb693afc0bbf584eec590f89b849542b98b7d'
+            'c2d5391160704bc636fde73c0e92346529ae1698f1cc909a8341271e0e4967d4'
+            'ed051533ad83fb93e458e31d4e116ad9717ff8d4edc7af0dec2b2a3bb61c7172'
+            '4650a98992bb0371cffa740c9ffc3b92032346d0ae13fb78e34aeeb534ee5255')
+noextract=(
+)
+
+install="${pkgname}.install"
+
+prepare() {
+    cd "Nominatim-${pkgver}"
+
+    patch -p1 < "$srcdir/0001-Fix-configuration-to-point-to-installed-files.patch"
+    patch -p1 < "$srcdir/0002-Set-default-project-directory-to-package-provided-di.patch"
+
+    mv ../country_grid.sql.gz data/country_osm_grid.sql.gz
+}
+
+build() {
+    # The postgres module is built using postgres' module makefiles, which set CFLAGS to the ones
+    # used during postgres' compilation. This includes -ffile-prefix-map, which breaks debug packages.
+    # Add our $DEBUG_CFLAGS to CUSTOM_COPT, which is appended to CFLAGS in
+    # /usr/lib/postgresql/pgxs/src/Makefile.global.
+    export CUSTOM_COPT=$DEBUG_CFLAGS
+
+    cmake -S "Nominatim-$pkgver" -B build \
+        -DCMAKE_BUILD_TYPE="None" \
+        -DCMAKE_INSTALL_PREFIX="/usr" \
+        -DBUILD_OSM2PGSQL=off
+
+    make -C build VERBOSE=1
+}
+
+# https://github.com/osm-search/Nominatim/blob/master/.github/workflows/ci-tests.yml#L132
+# Disabled, needs a local postgres
+#check() {
+#    cd "Nominatim-${pkgver}"
+#    python -m pytest test/python
+
+#    cd "test/bdd"    
+#    python -m behave -DREMOVE_TEMPLATE=1 -DBUILDDIR=$GITHUB_WORKSPACE/build --format=progress3
+#}
+
+package() {
+    cd "${srcdir}/build/"
+    make DESTDIR="${pkgdir}/" install
+
+    rm "${pkgdir}/usr/share/nominatim/country_osm_grid.sql.gz" # link to /startdir, drop it
+    install -Dm644 "${srcdir}/Nominatim-${pkgver}/data/country_osm_grid.sql.gz" -t "${pkgdir}/usr/share/nominatim/"
+
+    # install python gunicorn and update service files
+    install -Dm644 "${srcdir}/nominatim.service" -t "${pkgdir}/usr/lib/systemd/system/"
+    install -Dm644 "${srcdir}/nominatim.socket" -t "${pkgdir}/usr/lib/systemd/system/"
+    install -Dm644 "${srcdir}/nominatim-updates.service" -t "${pkgdir}/usr/lib/systemd/system/"
+    install -Dm644 "${srcdir}/nominatim-updates.timer" -t "${pkgdir}/usr/lib/systemd/system/"
+
+    # install apache, nginx and PHP example configs
+    install -Dm644 "${srcdir}/nginx-python.conf" -t "${pkgdir}/usr/share/doc/$pkgname/examples/"
+    install -Dm644 "${srcdir}/apache-php.conf" -t "${pkgdir}/usr/share/doc/$pkgname/examples/php/"
+    install -Dm644 "${srcdir}/nginx-php.conf" -t "${pkgdir}/usr/share/doc/$pkgname/examples/php/"
+    install -Dm644 "${srcdir}/php-fpm.conf" -t "${pkgdir}/usr/share/doc/${pkgname}/examples/php/"
+    install -Dm644 "${srcdir}/php.ini" -t "${pkgdir}/usr/share/doc/${pkgname}/example/php/"
+
+    # create users and directories
+    install -Dm 644 "${srcdir}/${pkgname}.sysusers" "${pkgdir}/usr/lib/sysusers.d/${pkgname}.conf"
+    install -Dm 644 "${srcdir}/${pkgname}.tmpfiles" "${pkgdir}/usr/lib/tmpfiles.d/${pkgname}.conf"
+}
+
+# vim: set et ts=4:

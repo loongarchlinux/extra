@@ -1,0 +1,106 @@
+# Maintainer: George Rawlinson <grawlinson@archlinux.org>
+# Contributor: OSAMC <https://github.com/osam-cologne/archlinux-proaudio>
+# Contributor: Christopher Arndt <aur -at- chrisarndt -dot- de>
+# Contributor: Alexandros Theodotou <alex at zrythm dot org>
+
+pkgbase=ot-simian
+pkgname=(
+  'ot-simian-docs'
+  'ot-simian-vst3'
+  'ot-simian-lv2'
+)
+pkgver=1.1.0
+pkgrel=3
+pkgdesc='Drum synthesizer inspired by the Simmons SDS-V'
+arch=('loong64' 'x86_64')
+url='https://punklabs.com/ot-simian'
+license=('GPL3')
+groups=('pro-audio')
+_common_depends=(
+  'glibc'
+  'gcc-libs'
+  'libx11'
+)
+makedepends=('dub' 'ldc' 'libx11' 'python')
+source=(
+  "$pkgbase-$pkgver.zip::https://punklabs.com/content/projects/ot-simian/downloads/OneTrick-SIMIAN-$pkgver-Source.zip"
+  "$pkgbase-$pkgver-UserGuide.pdf::https://punklabs.com/content/projects/ot-simian/downloads/OneTrick%20SIMIAN%20User%20Guide.pdf"
+  'generate-manifest-ttl.py'
+)
+sha512sums=('c809306393b5dc512e633a8ade422187c59e7c31591ed55baae9f75da85cedb803895c7d23c2535899e5dcc841906729b94d103c298489e0c97016e736bf9a08'
+            'aadd82e02691a56ae65b27e558270c0baab20ef7e4b8df4366cb4dd532ae2cba3e996b4fe35e9a16d1dd46737115d400d84f07cc3a81b57a430ff881184e722c'
+            'd76b18bdbb2fa72bc78d52aa01dd731e7e30343eb5b3efce6bd31fdb5ff4accc54c69a0b9564b924737d25cd20730a45ef08947837bebef7e28994d86fdb1b04')
+b2sums=('473788c6d9ae2a7baca7bc903ba0c661c1313f4d3b1ecda413f8ec0e63cb6b091da26801084189706d0a770a88bb5a536c2121869e2f8e30c65537580211af31'
+        '772bd6b938d550829bc930cef124391b2cf38fb159f6ff29456630868f85690dd442d2913195283d301379646a59fd8cf64da5b7b74c035cbf4bbba837626c76'
+        'fe22631ce37afa5c8e8759251dbf6dd2aded6eeadf01c7aa10cd4d5424cb9de6e54a702f4a0f11266bc053762ec25f54b71ae3adbdc02761373def89bc753ccb')
+
+_plugin_name="Punk Labs LLC OneTrick SIMIAN"
+_lv2_name="$_plugin_name.lv2"
+_lv2_libname="${_plugin_name// /}.so"
+_vst3_libpath="$_plugin_name.vst3/Contents/$(uname -m)-linux"
+_vst3_libname="$_plugin_name.so"
+
+prepare() {
+  # make dub build use LDFLAGS
+  if ! grep -q -- -Wl dub.json; then
+    sed -i -Ee 's@"lflags-linux-ldc": \[(.*)]@"lflags-linux-ldc": [ \1, "'$LDFLAGS'" ]@' dub.json
+  fi
+
+  # create build dir
+  mkdir -p "$_lv2_name"
+}
+
+build() {
+  # LV2 plugin
+  dub build \
+    --build=release-nobounds \
+    --arch=$CARCH \
+    --compiler=ldc2 \
+    --combined \
+    --config=LV2
+
+  # move to build dir
+  mv libonetrick_simian.so "$_lv2_name/$_lv2_libname"
+
+  # LV2 manifest.ttl
+  python generate-manifest-ttl.py "$_lv2_name/$_lv2_libname" "$_lv2_name" "$_lv2_libname"
+
+  # VST3 plugin
+  dub build \
+    --build=release-nobounds \
+    --arch=$CARCH \
+    --compiler=ldc2 \
+    --combined \
+    --config=VST3
+
+  mv libonetrick_simian.so "$_vst3_libname"
+}
+
+package_ot-simian-docs() {
+  pkgdesc+=' - documentation'
+
+  install -vDm644 "$pkgbase-$pkgver-UserGuide.pdf" "$pkgdir/usr/share/doc/$pkgbase/UserGuide.pdf"
+}
+
+package_ot-simian-vst3() {
+  pkgdesc+=' - VST3 plugin'
+  groups+=('vst3-plugins')
+  depends=(
+    "${_common_depends[@]}"
+    'vst3-host'
+  )
+  optdepends=('ot-simian-docs: documentation')
+
+  install -vDm755 -t "$pkgdir/usr/lib/vst3/$_vst3_libpath" "$_vst3_libname"
+}
+package_ot-simian-lv2() {
+  pkgdesc+=' - LV2 plugin'
+  groups+=('lv2-plugins')
+  depends=(
+    "${_common_depends[@]}"
+    'lv2-host'
+  )
+  optdepends=('ot-simian-docs: documentation')
+
+  install -vDm644 -t "$pkgdir/usr/lib/lv2/$_lv2_name" "$_lv2_name"/*.{ttl,so}
+}

@@ -2,15 +2,25 @@
 
 pkgname=opentimelineio
 pkgver=0.15
-pkgrel=3
+pkgrel=4
 pkgdesc='Open Source API and interchange format for editorial timeline information'
 url='http://opentimeline.io/'
 license=(Apache)
 arch=(loong64 x86_64)
-depends=(python-aaf2)
-makedepends=(cmake python-setuptools pybind11 git imath)
+depends=(gcc-libs
+         glibc
+         python
+         python-aaf2)
+makedepends=(cmake
+             git
+             imath
+             pybind11
+             python-build
+             python-installer
+             python-setuptools
+             python-wheel)
 source=(git+https://github.com/PixarAnimationStudios/OpenTimelineIO#tag=v$pkgver
-        git+https://github.com/Tencent/rapidjson
+        opentimelineio-rapidjson::git+https://github.com/Tencent/rapidjson
         unbundle.patch)
 sha256sums=('SKIP'
             'SKIP'
@@ -20,15 +30,12 @@ prepare() {
   cd OpenTimelineIO
 
   git submodule init src/deps/rapidjson
-  git submodule set-url src/deps/rapidjson "$srcdir"/rapidjson
+  git submodule set-url src/deps/rapidjson "$srcdir"/opentimelineio-rapidjson
   git -c protocol.file.allow=always submodule update src/deps/rapidjson
 
-#  git submodule update --init
-#  sed -e '/src\/deps/d' -i CMakeLists.txt # Unbundle pybind11
-#  sed -e '1 i\find_package(pybind11)' -i src/py-opentimelineio/opentime-bindings/CMakeLists.txt \
-#                                      -i src/py-opentimelineio/opentimelineio-bindings/CMakeLists.txt
-#  rm -r src/deps
+  git cherry-pick -n d1e78073d4fc321b667ceffc2d95251015af5fea # Fix build with GCC 13
   patch -p1 -i ../unbundle.patch # Use C++17 any and optional
+  sed -e '/cmake/d' -i pyproject.toml
 }
 
 build() {
@@ -42,13 +49,13 @@ build() {
 # Workaround messy build system
   export CXXFLAGS+=" -I/usr/include/Imath"
   cd OpenTimelineIO
-  python setup.py build
+  python -m build --wheel --no-isolation
 }
 
 package() {
   DESTDIR="$pkgdir" cmake --install build
 
   cd OpenTimelineIO
-  DESTDIR="$pkgdir" python setup.py install --root="$pkgdir" --optimize=1
+  python -m installer --destdir="$pkgdir" dist/*.whl
   rm -fr "$pkgdir"/build
 }

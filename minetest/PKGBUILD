@@ -2,7 +2,7 @@
 # Contributor: Konsta Kokkinen <kray@tsundere.fi>
 
 pkgname=('minetest' 'minetest-server' 'minetest-common')
-pkgver=5.7.0
+pkgver=5.8.0
 pkgrel=1
 arch=('loong64' 'x86_64')
 url='https://www.minetest.net/'
@@ -15,8 +15,8 @@ source=(${pkgname}-${pkgver}.tar.gz::https://github.com/minetest/minetest/archiv
         minetest.service
         sysusers.d
         tmpfiles.d)
-sha256sums=('0cd0fd48a97f76e337a2e1284599a054f8f92906a84a4ef2122ed321e1b75fa7'
-            '0787b24cf7b340a8a2be873ca3744cec60c2683011f1d658350a031d1bd5976d'
+sha256sums=('610c85a24d77acdc3043a69d777bed9e6c00169406ca09df22ad490fe0d68c0c'
+            '33a3bb43b08497a0bdb2f49f140a2829e582d5c16c0ad52be1595c803f706912'
             '2d80b4ff925770bdf3d857debb2ad11227cc9b022eb01a358b18f8d5f2641a5c'
             'e4166d639b35efda2cd72269208184ab1e72c54541344cd202ff2005c90b9433'
             'd9405cf7cd0a657ef06082570783383a1f527fbc0bd122ea506d4fbe26950d4a')
@@ -26,7 +26,7 @@ prepare() {
 
   git clone https://github.com/minetest/irrlicht.git ${pkgname}-${pkgver}/lib/irrlichtmt
   cd ${pkgname}-${pkgver}/lib/irrlichtmt
-  git checkout tags/1.9.0mt10
+  git checkout tags/1.9.0mt13
 }
 
 build() {
@@ -35,7 +35,6 @@ build() {
     -DCMAKE_INSTALL_PREFIX=/usr \
     -DBUILD_CLIENT=1 \
     -DENABLE_GETTEXT=1 \
-    -DENABLE_FREETYPE=1 \
     -DENABLE_LEVELDB=0 \
     -DENABLE_POSTGRESQL=1 \
     -DENABLE_SPATIAL=1 \
@@ -98,7 +97,7 @@ package_minetest-common() {
   cp -r "${srcdir}"/minetest_game-${pkgver} "${pkgdir}"/usr/share/minetest/games/minetest
   rm "${pkgdir}"/usr/share/minetest/games/minetest/.gitignore
 
-  for file in doc/{fst_api,lua_api,menu_lua_api,protocol,world_format}.txt; do
+  for file in doc/{fst_api,lua_api,menu_lua_api,protocol,world_format}.*; do
     install -Dm644 $file "${pkgdir}"/usr/share/minetest/doc/$(basename $file)
   done
 

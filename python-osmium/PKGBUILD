@@ -1,0 +1,37 @@
+# Maintainer: Justin Kromlinger <hashworks@archlinux.org>
+# Contributor: Simon Legner <Simon.Legner@gmail.com>
+
+pkgname=python-osmium
+pkgver=3.7.0
+pkgrel=2
+pkgdesc="Python bindings for libosmium, the data processing library for OSM data"
+url="https://osmcode.org/pyosmium"
+depends=('python' 'libosmium' 'pybind11' 'python-requests' 'python-urllib3')
+makedepends=('python-setuptools' 'cmake' 'protozero')
+checkdepends=('python-pytest' 'python-pytest-httpserver' 'python-shapely' 'python-numpy')
+replaces=('pyosmium')
+provides=('python-pyosmium' 'pyosmium')
+license=('custom')
+arch=('loong64' 'x86_64')
+source=("${pkgname}-${pkgver}.tar.gz::https://github.com/osmcode/pyosmium/archive/refs/tags/v${pkgver}.tar.gz")
+sha256sums=('b23bdfc58befef4d0c9f6d3712e30640d9c8de3239415f47057df1bc7261036e')
+
+build() {
+    cd "pyosmium-${pkgver}"
+
+    python setup.py build
+}
+
+check() {
+    cd "pyosmium-${pkgver}"
+
+    pytest test
+}
+
+package() {
+    cd "pyosmium-${pkgver}"
+
+    python setup.py install --root="${pkgdir}" --optimize=1 --skip-build
+
+    install -Dm644 LICENSE.TXT "${pkgdir}/usr/share/licenses/${pkgname}/LICENSE.TXT"
+}

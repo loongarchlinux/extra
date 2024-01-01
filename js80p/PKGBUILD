@@ -1,0 +1,61 @@
+# Maintainer: George Rawlinson <grawlinson@archlinux.org>
+
+pkgname=js80p
+pkgver=2.4.4
+pkgrel=2
+pkgdesc='A MIDI driven, performance oriented, versatile synthesizer'
+arch=('loong64' 'x86_64')
+url='https://attilammagyar.github.io/js80p/'
+license=('GPL3')
+groups=('pro-audio' 'vst3-plugins')
+depends=(
+  'glibc'
+  'gcc-libs'
+  'libxcb'
+  'cairo'
+)
+makedepends=(
+  'git'
+  'alsa-lib'
+  'libx11'
+  'zenity'
+  'kdialog'
+)
+install=js80p.install
+_commit='a51b36239fa7d81aafc387d5d7db1238ab5a394a'
+source=("$pkgname::git+https://github.com/attilammagyar/js80p#commit=$_commit")
+b2sums=('SKIP')
+
+pkgver() {
+  cd "$pkgname"
+
+  git describe --tags | sed 's/^v//'
+}
+
+build() {
+  cd "$pkgname"
+
+  # supports AVX, but that's not in x86_64_v1
+  make \
+    SYS_LIB_PATH=/usr/lib \
+    TARGET_PLATFORM="$CARCH-gpp" \
+    INSTRUCTION_SET=sse2 \
+    VERSION_STR=$(git describe --tags) \
+    VERSION_INT=$(git describe --tags | sed "s/[^0-9]//g") \
+    vst3
+}
+
+package() {
+  cd "$pkgname"
+
+  # vst3
+  install -vDm644 \
+    dist/js80p-dev-linux-64bit-sse2-vst3_single_file/js80p.vst3 \
+    "$pkgdir/usr/lib/vst3/$pkgname.vst3/Contents/$CARCH-linux/$pkgname.so"
+
+  # presets
+  install -vDm644 -t "$pkgdir/usr/share/$pkgname/presets" presets/*.js80p
+
+  # documentation
+  install -vDm644 -t "$pkgdir/usr/share/doc/$pkgname" README.md
+}

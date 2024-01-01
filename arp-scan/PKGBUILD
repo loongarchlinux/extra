@@ -3,12 +3,16 @@
 
 pkgname=arp-scan
 pkgver=1.10.0
-pkgrel=3
+pkgrel=4
 pkgdesc="A tool that uses ARP to discover and fingerprint IP hosts on the local network"
 arch=('loong64' 'x86_64')
 url="https://github.com/royhills/arp-scan"
 license=('GPL')
 depends=('libpcap' 'perl-libwww')
+optdepends=(
+    'perl-text-csv: get-oui script'
+    'perl-lwp-protocol-https: get-oui script'
+)
 backup=('etc/arp-scan/mac-vendor.txt')
 source=(https://github.com/royhills/$pkgname/archive/$pkgver/$pkgname-$pkgver.tar.gz
         arp-scan-eacces.patch)
@@ -33,5 +37,6 @@ build() {
 
 package() {
     cd "$srcdir"/$pkgname-$pkgver
-    make DESTDIR="${pkgdir}" install
+    make DESTDIR="$pkgdir" install
+    rm "$pkgdir/usr/bin/get-iab"
 }

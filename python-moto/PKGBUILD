@@ -4,7 +4,7 @@
 pkgname=python-moto
 _pkgname=moto
 # https://github.com/spulec/moto/blob/master/CHANGELOG.md
-pkgver=4.2.9
+pkgver=4.2.12
 pkgrel=1
 pkgdesc='Moto is a library to mock out the boto library.'
 arch=(any)
@@ -49,20 +49,14 @@ checkdepends+=(python-yaml python-jose python-openapi-spec-validator python-dock
                python-crc32c
                python-flask python-flask-cors python-multipart)
 source=("https://github.com/getmoto/moto/archive/refs/tags/$pkgver/$pkgname-$pkgver.tar.gz"
-        "fix-tests.diff"
-        "typing-extensions.diff"
-        "add-requires_docker.diff")
-sha256sums=('c5b77fee5f371694ff2b7027c9c1b48f204a43e6da6a6dc7517de0dc7db6da9b'
-            '21305cdf3d650ced1acb1d0f7dde8760b26e32a94c56a5571e798d6b6976cf5a'
-            '8406f4c68b8b43c3666fe5a153de1321a9bc9f02ad19910c6078d8189d8cb24f'
-            '178b2c2a4d9b1a74220885ebdf9b521f212534acf8611b0352a2ed59d77e134d')
+        "fix-tests.diff")
+sha256sums=('55e3bba30011512327389a86feeda7d820270849454be09e46c28f1239019451'
+            '21305cdf3d650ced1acb1d0f7dde8760b26e32a94c56a5571e798d6b6976cf5a')
 
 prepare() {
   cd $_pkgname-$pkgver
 
   patch -Np1 -i ../fix-tests.diff
-  patch -Np1 -i ../typing-extensions.diff
-  patch -Np0 -i ../add-requires_docker.diff
 }
 
 build() {

@@ -1,0 +1,50 @@
+# Maintainer: Torsten Keßler <tpkessler at archlinux dot org>
+pkgname=hipblaslt
+pkgver=5.7.1
+pkgrel=1
+pkgdesc='General matrix-matrix operations beyond a traditional BLAS library'
+arch=('loong64' 'x86_64')
+url='https://rocm.docs.amd.com/projects/hipBLASLt/en/latest/index.html'
+license=('MIT')
+depends=('hip' 'hipblas')
+makedepends=('rocm-cmake' 'python' 'cmake' 'git'
+             'msgpack-cxx' 'python-msgpack' 'python-joblib' 'python-pyaml')
+_git='https://github.com/ROCmSoftwarePlatform/hipBLASLt'
+source=("$pkgname-$pkgver.tar.gz::$_git/archive/rocm-$pkgver.tar.gz"
+        "$pkgname-find-msgpack5.patch"
+        "$pkgname-default-factory.patch")
+sha256sums=('2cad40cfbb72a03dd0149eed5500ced7dc42d0a21e95dc9f3170e73611e2a4bb'
+            '7943de413882065de7d840a4a0f48e8133c4977a04a3e9587ea7936cc8a0939d'
+            'a39cd236855ef2420848b4779ec3dbf2e45dcaaa9542d312809209ca0c06f617')
+_dirname="$(basename "$_git")-$(basename "${source[0]}" ".tar.gz")"
+
+prepare() {
+  cd "$_dirname"
+  patch -Np1 -i "$srcdir/$pkgname-find-msgpack5.patch"
+  patch -Np1 -i "$srcdir/$pkgname-default-factory.patch"
+}
+
+build() {
+  local cmake_args=(
+    -Wno-dev
+    -B build
+    -S "$_dirname"
+    -DCMAKE_BUILD_TYPE=None
+    -DCMAKE_CXX_COMPILER=/opt/rocm/bin/hipcc
+    -DCMAKE_INSTALL_PREFIX=/opt/rocm
+    -DTensile_CODE_OBJECT_VERSION=V3  # V2 is not supported by all GPU targets
+  )
+  # -fcf-protection is not supported by HIP, see
+  # https://docs.amd.com/bundle/ROCm-Compiler-Reference-Guide-v5.5/page/Compiler_Options_and_Features.html#d2e2018
+  CXXFLAGS="${CXXFLAGS} -fcf-protection=none" cmake "${cmake_args[@]}"
+  VERBOSE=1 cmake --build build
+}
+
+package() {
+  DESTDIR="$pkgdir" cmake --install build
+
+  echo "/opt/rocm/$pkgname/lib" > "$pkgname.conf"
+  install -Dm644 "$pkgname.conf" "$pkgdir/etc/ld.so.conf.d/$pkgname.conf"
+
+  install -Dm644 "$_dirname/LICENSE.md" "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
+}

@@ -1,0 +1,27 @@
+#!/bin/bash
+
+post_install() {
+    cat <<- 'EOF'
+    Create the required PostgreSQL database and user for nominatim by running
+    `sudo -u postgres createuser --superuser nominatim`
+    `sudo -u postgres createuser http`
+
+    Then `su` to user `nominatim` and follow the instructions at https://nominatim.org/release-docs/latest/admin/Import/#choosing-the-data-to-import to
+    download and import data. The project directory is /var/lib/nominatim. The configuration can be found in `/etc/nominatim/env.defaults`.
+
+    Don't forget to remove superuser permissions from the nominatim PostgreSQL user after installation is complete.
+
+    After the import one should run `nominatim replication --init`, and start an initial catch-up:
+    `NOMINATIM_REPLICATION_MAX_DIFF=5000 nominatim replication --catch-up --threads 16`
+    For future periodic updates start and enable the update timer:
+    `systemctl enable --now nominatim-updates.timer`
+
+    To use the python frontend with gunicorn and Falcon, start and enable the nominatim socket and service:
+    `systemctl enable --now nominatim.socket nominatim.service`
+
+    See `/usr/share/doc/nominatim/examples/nginx-python.conf` for an examplary nginx vhost that uses the python socket.
+
+    Alternatively, you can choose to use the legacy PHP frontend. To do so, install all optional PHP dependencies and
+    use the PHP example configurations in `/usr/share/doc/nominatim/examples/php`.
+	EOF
+}

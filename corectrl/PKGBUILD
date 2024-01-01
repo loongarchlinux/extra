@@ -3,7 +3,7 @@
 
 pkgname=corectrl
 pkgver=1.3.8
-pkgrel=1
+pkgrel=2
 _tag_head_commit=dd0b8ce1e43c30e014cbaf0590422132acc0ce31
 pkgdesc="Core control application"
 url="https://gitlab.com/corectrl/corectrl"
@@ -18,9 +18,17 @@ optdepends=(
 	'mesa-utils: For glxinfo'
 	'util-linux: For lscpu'
 )
-source=("https://gitlab.com/corectrl/corectrl/-/archive/v${pkgver}/${pkgname}-v${pkgver}.tar.bz2")
-sha256sums=('397d2ba827ab197d30971059bc15aa8ad8d3bcb9e47230bc406808e482454249')
-b2sums=('65a768589ab5b60092888ae9d50d3350a02642508b3c05b15a2bc69874e20e9f133c58c29eb9cb61127c393029636dd3914b48ea10d01f51b469e27c00e0d1e6')
+source=("https://gitlab.com/corectrl/corectrl/-/archive/v${pkgver}/${pkgname}-v${pkgver}.tar.bz2"
+        "0001-Migrate-to-catch2-v3.patch")
+sha256sums=('397d2ba827ab197d30971059bc15aa8ad8d3bcb9e47230bc406808e482454249'
+            '66442a5870b65422232e4bcaca4de8212b1f53803b2da98e5737310865786e66')
+b2sums=('65a768589ab5b60092888ae9d50d3350a02642508b3c05b15a2bc69874e20e9f133c58c29eb9cb61127c393029636dd3914b48ea10d01f51b469e27c00e0d1e6'
+        '56080519dbb141e71b8b91774be13573dfde8bbbf64dd7d630391e5adda566fd14596bbeaf62a29899b77212c06ec529a9183d82ef9c4e512e13e000915783d3')
+
+prepare() {
+  cd "${pkgname}-v${pkgver}"
+  patch -Np1 < "${srcdir}/0001-Migrate-to-catch2-v3.patch" # https://gitlab.com/corectrl/corectrl/-/merge_requests/44
+}
 
 build() {
   cmake \

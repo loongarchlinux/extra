@@ -7,7 +7,7 @@
 # Contributor: Sparadox <etienne.lafarge at gmail.com>
 
 pkgname=cloud-init
-pkgver=23.3.3
+pkgver=23.4.1
 pkgrel=1
 pkgdesc="Cloud instance initialization"
 arch=(any)
@@ -59,9 +59,9 @@ source=(
   https://github.com/canonical/cloud-init/archive/$pkgver/$pkgname-$pkgver.tar.gz
   $pkgname-22.1-lib_dir.patch
 )
-sha512sums=('c07b61ea1d01e9977ccba269d73e22001cb433aca6be7d99086100a0d52abcf9fe2c09724c1fb551e44c4b1c82488e666dc6fed32ff26662bbfdb41d70915aa9'
+sha512sums=('4ac62a4ab49726de692e3671365da5acdfc018e2c9fb93d7e0acbdae5752ef12970497957358c59b58362ec741ef806173a7affc456d30ff8adebfca2c29251a'
             '32b7521f0ae4d61a4d86f2f840fb0670e2cdc7bab708fc7b7676b5178b6d660beb3a46b803f5bcd7e0f18c6d6339fc96e20a951dfafadbb0312e4a0cafce325f')
-b2sums=('1f99fb3b762b05bf81ccc212111af49dcc6e89d542084618cd264597058ffdbead95c4028676a733c0113677fe3cd397b8b0201f54323be9f5f49e332723e25c'
+b2sums=('ef629c80bf9c2affad2a53cafdda6c40fe60a603b99229e484a3d1b26c33c3280b42997afca83307704ceb26b939c25638d9b6193d8f4054017cfb102c6a2703'
         '4e03bd647ca9e1bc3d9c507824d43e4013a20d5bbcb7215755b427d0c7ded9ee48dbfb9faaae703ab2d519aee7c48a40277603c8f874347b574b7ac2b1e1a9fd')
 
 prepare() {
@@ -98,7 +98,7 @@ package() {
   # configuration and hooks
   install -vDm 644 config/clean.d/* -t "$pkgdir/etc/cloud/clean.d/"
   install -vDm 644 config/cloud.cfg.d/* -t "$pkgdir/etc/cloud/cloud.cfg.d/"
-  ./tools/render-cloudcfg --variant arch ./config/cloud.cfg.tmpl "$pkgdir/etc/cloud/cloud.cfg"
+  ./tools/render-template --variant arch ./config/cloud.cfg.tmpl "$pkgdir/etc/cloud/cloud.cfg"
   install -vDm 644 templates/*.tmpl -t "$pkgdir/etc/cloud/templates/"
   install -vDm 755 tools/{ds-identify,hook-hotplug,uncloud-init,write-ssh-key-fingerprints} -t "$pkgdir/usr/lib/$pkgname/"
   # documentation, man pages and shell completion
@@ -112,10 +112,10 @@ package() {
   # systemd integration
   install -vdm 755 "$pkgdir/usr/lib/systemd/system"{,-generators}
   for _file in cloud-{config,final,init-local,init}.service; do
-    ./tools/render-cloudcfg --variant arch ./systemd/$_file.tmpl "$pkgdir/usr/lib/systemd/system/$_file"
+    ./tools/render-template --variant arch ./systemd/$_file.tmpl "$pkgdir/usr/lib/systemd/system/$_file"
   done
   install -vDm 644 systemd/*.{service,socket,target} "$pkgdir/usr/lib/systemd/system/"
-  ./tools/render-cloudcfg --variant arch ./systemd/cloud-init-generator.tmpl "$pkgdir/usr/lib/systemd/system-generators/cloud-init-generator"
+  ./tools/render-template --variant arch ./systemd/cloud-init-generator.tmpl "$pkgdir/usr/lib/systemd/system-generators/cloud-init-generator"
   chmod 755 "$pkgdir/usr/lib/systemd/system-generators/cloud-init-generator"
   install -vDm 644 systemd/disable-sshd-keygen-if-cloud-init-active.conf -t "$pkgdir/usr/lib/systemd/system/sshd-keygen@.service.d/"
 }

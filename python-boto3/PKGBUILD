@@ -3,8 +3,7 @@
 # Contributor: Felix Yan <felixonmars@archlinux.org>
 
 pkgname=python-boto3
-# UPDATE_BLOCKED: blocked as python-botocore is blocked
-pkgver=1.28.64
+pkgver=1.33.13
 pkgrel=1
 pkgdesc='The AWS SDK for Python'
 arch=('any')
@@ -12,9 +11,12 @@ license=('Apache')
 url='https://github.com/boto/boto3'
 depends=('python' 'python-botocore' 'python-jmespath' 'python-s3transfer')
 makedepends=('python-build' 'python-installer' 'python-setuptools' 'python-wheel')
-checkdepends=('python-pytest' 'python-pytest-xdist')
+checkdepends=('python-pytest' 'python-pytest-xdist' 'python-awscrt')
+optdepends=(
+  'python-awscrt: AWS CRT S3 transfers'
+)
 source=("$pkgname-$pkgver.tar.gz::https://github.com/boto/boto3/archive/$pkgver.tar.gz")
-sha512sums=('ca0042e173c4a35dc9d6ab8ed362d3308753d3722bb4cf25302fd0018c5d94e66a2ea288610192ad5a353ca54f0ab8f1942224269935b1fe3444b2e70842da13')
+sha512sums=('40489e66fd591c05d58312015a91b5d42485af9d643db163b725a857438ca6b2306b237fd38f685ce4a4380688dcbf734aa8a49c4336bbe5135838bda8e7da82')
 
 build() {
   cd boto3-$pkgver
@@ -23,8 +25,18 @@ build() {
 
 check() {
   cd boto3-$pkgver
+
+  export AWS_SECRET_ACCESS_KEY=fake_key
+  export AWS_ACCESS_KEY_ID=fake_id
+
+  export PYTEST_XDIST_AUTO_NUM_WORKERS=$(echo "$MAKEFLAGS" | grep -oP '\-j\s*\K[0-9]+')
+  pytest_args=()
+  if [ -n "$PYTEST_XDIST_AUTO_NUM_WORKERS" ]; then
+    pytest_args+=(-n auto)
+  fi
+
   # Many integration tests need real credentials
-  pytest tests -n auto --ignore=tests/integration
+  pytest tests "${pytest_args[@]}" --ignore=tests/integration
 }
 
 package() {

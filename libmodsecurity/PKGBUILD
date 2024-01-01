@@ -1,7 +1,7 @@
 # Maintainer: Massimiliano Torromeo <massimiliano.torromeo@gmail.com>
 
 pkgname=libmodsecurity
-pkgver=3.0.10
+pkgver=3.0.11
 pkgrel=1
 epoch=1
 
@@ -11,11 +11,18 @@ depends=('yajl' 'curl' 'lmdb' 'libxml2' 'pcre2' 'geoip' 'libmaxminddb' 'ssdeep' 
 makedepends=('doxygen')
 url="https://github.com/SpiderLabs/ModSecurity/tree/v3/master"
 license=('APACHE')
-source=("https://github.com/SpiderLabs/ModSecurity/releases/download/v$pkgver/modsecurity-v$pkgver.tar.gz"{,.asc})
-sha256sums=('d5d459f7c2e57a69a405f3222d8e285de419a594b0ea8829058709962227ead0'
-            'SKIP')
+source=("https://github.com/SpiderLabs/ModSecurity/releases/download/v$pkgver/modsecurity-v$pkgver.tar.gz"{,.asc}
+        libxml-includes.patch)
+sha256sums=('070f46c779d30785b95eb1316b46e2e4e6f90fd94a96aaca4bd54cd94738b692'
+            'SKIP'
+            '7ee0adbe5b164ca512c49e51e30ffd41e29244156a695e619dcf1d0387e69aef')
 validpgpkeys=('190EFACCA1E9FA466A8ECD9CE6DFB08CE8B11277'  # Felipe Zimmerle da Nobrega Costa <felipe@zimmerle.org>
               'F126692E9BA86B3958E73ED2F2FC4E45883BCBA4') # Martin Vierula (GitHub key) <Martin.Vierula@trustwave.com>
+
+prepare() {
+	cd "$srcdir"/modsecurity-v$pkgver
+	patch -p1 -i ../libxml-includes.patch
+}
 
 build() {
 	cd "$srcdir"/modsecurity-v$pkgver

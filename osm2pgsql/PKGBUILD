@@ -1,0 +1,35 @@
+# Maintainer: Justin Kromlinger <hashworks@archlinux.org>
+# Contributor: Aleksandar Trifunovic <akstrfn@gmail.com>
+# Contributor: Simon Legner <Simon.Legner@gmail.com>
+
+pkgname=osm2pgsql
+pkgver=1.10.0
+pkgrel=5
+pkgdesc="tool for loading OpenStreetMap data into a PostgreSQL / PostGIS database"
+arch=('loong64' 'x86_64')
+url="https://osm2pgsql.org/"
+license=('GPL')
+depends=('boost-libs' 'expat' 'geos' 'proj' 'postgresql-libs' 'zlib' 'python' 'python-psycopg' 'python-osmium' 'lua')
+makedepends=('boost' 'cmake' 'nlohmann-json')
+optdepends=('postgresql: for creating a PostgreSQL database'
+            'postgis: for creating a PostGIS database')
+source=("${pkgname}-${pkgver}.tar.gz::https://github.com/openstreetmap/osm2pgsql/archive/$pkgver.tar.gz")
+sha256sums=('33849d8edacbca5ab5492fed32ac954de14f92ab6b3028c03ef88bb7ab596d20')
+
+prepare() {
+    cmake -B build -S "${pkgname}-${pkgver}" \
+	-DCMAKE_INSTALL_PREFIX=/usr \
+	-DCMAKE_BUILD_TYPE=Release
+}
+
+build() {
+    cmake --build build
+}
+
+check() {
+    ctest --test-dir build --output-on-failure
+}
+
+package() {
+    DESTDIR="$pkgdir/" cmake --install build
+}

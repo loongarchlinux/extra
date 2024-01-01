@@ -3,15 +3,17 @@
 
 pkgname=himalaya
 pkgver=0.9.0
-pkgrel=1
+pkgrel=2
 pkgdesc="A CLI email client"
 arch=('loong64' 'x86_64')
 url="https://github.com/soywod/himalaya"
 license=('BSD')
-depends=('gcc-libs' 'notmuch' 'openssl')
+depends=('gcc-libs' 'gpgme' 'notmuch' 'openssl')
 makedepends=('cargo')
 source=("$url/archive/v$pkgver/$pkgname-$pkgver.tar.gz")
 sha512sums=('0233289968a80672e39d7cd133f14bb9cd27129f389fccc4b366844389395a5bbfb89184e4d2b2ef2ecbbcaaf959a679f937f4b4b7c6018a52269a196c4af551')
+
+_features='notmuch-backend,pgp-gpg'
 
 prepare() {
   cd "$pkgname-$pkgver"
@@ -22,7 +24,7 @@ prepare() {
 build() {
   cd "$pkgname-$pkgver"
   CFLAGS+=" -ffat-lto-objects"
-  cargo build --frozen --release --features notmuch-backend
+  cargo build --frozen --release --features "$_features"
   local _completion="target/release/$pkgname completion"
   $_completion bash > "completions/$pkgname"
   $_completion fish > "completions/$pkgname.fish"
@@ -33,7 +35,7 @@ build() {
 
 check() {
   cd "$pkgname-$pkgver"
-  cargo test --frozen --features notmuch-backend -- --skip "test_imap_backend"
+  cargo test --frozen --features "$_features" -- --skip 'test_imap_backend'
 }
 
 package_himalaya() {

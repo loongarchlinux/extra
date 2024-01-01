@@ -2,7 +2,7 @@
 
 pkgname=python-aioquic
 _name=aioquic
-pkgver=0.9.22
+pkgver=0.9.24
 pkgrel=1
 pkgdesc='QUIC and HTTP/3 implementation in Python'
 url='https://github.com/aiortc/aioquic'
@@ -24,7 +24,7 @@ makedepends=(
   'python-wheel'
 )
 source=(https://files.pythonhosted.org/packages/source/${_name::1}/$_name/$_name-$pkgver.tar.gz)
-b2sums=('1a935b36e24b56478b64be30831a9af3d811cdfc6de5736abd9fd8ca3d900f7522f5a0abdef2a058ccd573ea3374cf345850f5dc6fb5222fb3a20486dc55da7d')
+b2sums=('43be5c8c9e69a0192e83d28325e64f6b3ca76530d723626db117437b5cb8fe9b8ad8ed7b589a75dd9b6712fde551f08769b2409f5eac25df34b3d696ad7639ed')
 
 build() {
   cd "${_name}-${pkgver}"

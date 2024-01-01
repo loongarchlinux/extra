@@ -1,0 +1,99 @@
+# Maintainer: George Rawlinson <grawlinson@archlinux.org>
+
+pkgbase=ot-urchin
+pkgname=(
+  'ot-urchin-docs'
+  'ot-urchin-standalone'
+  'ot-urchin-clap'
+  'ot-urchin-vst3'
+)
+pkgver=1.0.0
+pkgrel=1
+pkgdesc='A hybrid drum synth that models the gritty lo-fi sound of vintage beats'
+arch=('loong64' 'x86_64')
+url='https://punklabs.com/ot-urchin'
+license=('GPL3')
+groups=('pro-audio')
+_common_depends=(
+  'glibc'
+  'gcc-libs'
+  'libx11'
+  'libxcb'
+  'xcb-util-wm'
+  'libglvnd'
+)
+makedepends=(
+  'rust'
+  'libglvnd'
+  'python'
+  'alsa-lib'
+  'jack'
+  'libx11'
+  'libxcb'
+  'libxcursor'
+  'xcb-util-wm'
+)
+source=(
+  "$pkgbase-$pkgver.zip::https://punklabs.com/content/projects/ot-urchin/downloads/OneTrickURCHIN-Source-v$pkgver.zip"
+  "$pkgbase-$pkgver-UserGuide.pdf::https://punklabs.com/content/projects/ot-urchin/downloads/OneTrick%20URCHIN%20User%20Guide.pdf"
+)
+sha512sums=('7dfb87a5989ebbf8e6f3581f41266c0b76faa496c641433ba99e83a8b2fedf43a416fde692dbda61e1f9bb9d93cdb46f62edef53826eb0fc6e92aad8206d0888'
+            '14c3733523da6826b88f2942213aa0487cb97dbba21b22dab2d39c9f31f18d9a50c33fd61bc1c67377490b0f4f0227854ac2ced2fda9ef0da19fb6f1a2f47f4e')
+b2sums=('274fd49d0eaae0b9cc1b9e04650f2bb5dba9c4283565e7d292fc6a4fc82deda5fec9b35a9a9fa61f26ef37039e411047ab26d3df6a57da3bc6edd8478928f95d'
+        'd34311025c69665beb59bfe35a3051c6c5a3c8896de97b091c9aac0f9c3cb27e39476374288d7ed54e64d4a660c6429c85bf417bc5b17658c0d967329d4846f3')
+
+prepare() {
+  # download dependencies
+  cargo fetch --locked --target "$CARCH-unknown-linux-gnu"
+}
+
+build() {
+  cargo xtask bundle onetrick_urchin --release
+}
+
+package_ot-urchin-docs() {
+  pkgdesc+=' - documentation'
+
+  install -vDm644 -t "$pkgdir/usr/share/doc/$pkgbase" ./*.txt
+  install -vDm644 "$pkgbase-$pkgver-UserGuide.pdf" "$pkgdir/usr/share/doc/$pkgbase/UserGuide.pdf"
+}
+
+package_ot-urchin-standalone() {
+  pkgdesc+=' - standalone'
+  depends=("${_common_depends[@]}")
+  optdepends=(
+    'jack: audio backend'
+    'alsa-lib: audio backend'
+    'ot-urchin-docs: documentation'
+  )
+
+  # standalone
+  install -vDm755 -t "$pkgdir/usr/bin" target/bundled/OneTrick\ URCHIN
+}
+
+package_ot-urchin-clap() {
+  pkgdesc+=' - CLAP plugin'
+  groups+=('clap-plugins')
+  depends=(
+    "${_common_depends[@]}"
+    'clap-host'
+  )
+  optdepends=('ot-urchin-docs: documentation')
+
+  # CLAP
+  install -vDm644 -t "$pkgdir/usr/lib/clap" target/bundled/OneTrick\ URCHIN.clap
+}
+
+package_ot-urchin-vst3() {
+  pkgdesc+=' - VST3 plugin'
+  groups+=('vst3-plugins')
+  depends=(
+    "${_common_depends[@]}"
+    'vst3-host'
+  )
+  optdepends=('ot-urchin-docs: documentation')
+
+  # VST3
+  install -vd "$pkgdir/usr/lib/vst3"
+  cp -vr target/bundled/OneTrick\ URCHIN.vst3 "$pkgdir/usr/lib/vst3"
+}

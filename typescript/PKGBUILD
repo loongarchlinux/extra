@@ -4,7 +4,7 @@
 
 _name=TypeScript
 pkgname=typescript
-pkgver=5.3.2
+pkgver=5.3.3
 pkgrel=1
 pkgdesc='JavaScript with syntax for types'
 arch=('any')
@@ -31,11 +31,12 @@ check() {
 }
 
 package() {
-  install -d "$pkgdir"/usr/{bin,lib/node_modules/$pkgname}
-  ln -s ../lib/node_modules/$pkgname/bin/{tsc,tsserver} "$pkgdir"/usr/bin
+  local mod_dir=/usr/lib/node_modules/$pkgname
+  install -d "$pkgdir"/{usr/bin,$mod_dir}
+  ln -s $mod_dir/bin/{tsc,tsserver} "$pkgdir"/usr/bin
 
   cd $_name
   rsync -r --exclude=.gitattributes README.md SECURITY.md bin lib package.json \
-    "$pkgdir"/usr/lib/node_modules/$pkgname
+    "$pkgdir"/$mod_dir
   install -Dt "$pkgdir"/usr/share/licenses/$pkgname ThirdPartyNoticeText.txt
 }

@@ -2,15 +2,16 @@
 # Contributor: Daniel Wallace <danielwallace at gtmanfred dot com>
 
 pkgname=python-oslo-utils
-pkgver=6.2.1
-_commit=a5941e8f845534e3604dacf2dfa9a87d224eeef8
+pkgver=6.3.0
+_commit=505d80e557631b8d78bd372fcec5832cfd916360
 pkgrel=1
 pkgdesc="Oslo Utility library"
 arch=('any')
 url="https://pypi.python.org/pypi/oslo.utils/$pkgver"
 license=('Apache')
 depends=('python-iso8601' 'python-oslo-i18n' 'python-pytz' 'python-netaddr'
-         'python-netifaces' 'python-debtcollector' 'python-pyparsing' 'python-packaging')
+         'python-netifaces' 'python-debtcollector' 'python-pyparsing' 'python-packaging'
+         'python-yaml')
 makedepends=('git' 'python-setuptools')
 checkdepends=('python-eventlet' 'python-testscenarios' 'python-testtools' 'python-oslotest'
               'python-ddt' 'python-stestr')

@@ -1,7 +1,7 @@
 # Maintainer: David Runge <dvzrv@archlinux.org>
 
 pkgname=pypiserver
-pkgver=2.0.0
+pkgver=2.0.1
 pkgrel=1
 pkgdesc="Minimal PyPI server for uploading and downloading packages with pip/easy_install"
 arch=(any)
@@ -36,8 +36,8 @@ optdepends=(
   'python-watchdog: for cache'
 )
 source=($pkgname-$pkgver.tar.gz::$url/archive/refs/tags/v$pkgver.tar.gz)
-sha512sums=('320d0439b44c669bc6a13621be83b4b87973a51e34b45bfaef3073ab4f85da35a6c852ba26a1668517e68b758827b33eb03d3e09fea7c805fbd6307adec086d5')
-b2sums=('e7a3a1abf7727bd343c31fe0749a7575042bb037be08da12f1a3690b397bb617bf910c2acb556e5b23e01770916ecbc58128b198ae34efec7d4b993a3bc5d74b')
+sha512sums=('962b34ea2bbca680fcf7ee8153ecea09c2f0c1bcebaaacee4666c93deab9d2508e08a22d82635a64d8aaec7cab3b5485e3752f1439006ed01b58539035f3b711')
+b2sums=('b37700ffe0c7361289a3825dafd86041fab9ddf574d7792c7cd155f7e869a1bdd2de4e2a658c808afc7fe5ee8989876fcb7e85a8da74202c2c4c4344fbaf1df4')
 validpgpkeys=('0BFB950A1851C0E7EE46D9BCAF5C892A5573ABED') # Matthew Planchard (2020-06-22-mininix) <msplanchard@gmail.com>
 
 build() {

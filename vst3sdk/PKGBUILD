@@ -1,10 +1,11 @@
 # Maintainer: David Runge <dvzrv@archlinux.org>
+# Maintainer: Christian Heusel <dvzrv@archlinux.org>
 
 pkgbase=vst3sdk
 pkgname=(vst3sdk vst3sdk-docs)
-pkgver=3.7.8_build_34
-_commit=0041ef2c879c3c54c03d33cdc11a97eaebfb5752  # 3.7.8_build_34
-pkgrel=2
+pkgver=3.7.9_build_61
+_commit=dfff2e399c1a638bd7f5e334440a61e7262eed3f  # v3.7.9_build_61
+pkgrel=1
 pkgdesc="VST 3 Plug-In SDK"
 arch=(any)
 url="https://github.com/steinbergmedia/vst3sdk"
@@ -20,7 +21,8 @@ source=(
   git+https://github.com/steinbergmedia/vst3_pluginterfaces
   git+https://github.com/steinbergmedia/vst3_public_sdk
   git+https://github.com/steinbergmedia/vstgui
-  "vst3sdk-3.7.8_build_34-cmake-build-type-none.patch"
+  git+https://github.com/steinbergmedia/vst3_tutorials
+  "vst3sdk-3.7.9_build_61-cmake-build-type-none.patch"
   $pkgname.pc
 )
 sha512sums=('SKIP'
@@ -30,7 +32,8 @@ sha512sums=('SKIP'
             'SKIP'
             'SKIP'
             'SKIP'
-            'e9417955746b231274f6f3d64cd06e22b79eaca25821b5f223668f79b67b9bbc932ce836922a464fd2f43b64fffaf18e1f5d879f8378e68305a4ac67586d089e'
+            'SKIP'
+            'cef7f0a3d977bd51890de7d0bcf11703d80ffb0997e8a5f9b5854134479ab2b6971658797bfa7cdd8cc2a52d928ec4dc4b542500de04b0d0f825179597b28e1f'
             '501dff8299ccf9aeba61a64331c3ac74ece89eee956bffff0e303653b566acfca5cba4957c8bafb883efe6cc78c34da64ec9870daf9f2c37e2734110b9cad1dd')
 b2sums=('SKIP'
         'SKIP'
@@ -39,7 +42,8 @@ b2sums=('SKIP'
         'SKIP'
         'SKIP'
         'SKIP'
-        'c8ede1c4e023fe85e55774e46c6e332241bc10c93fa5b044524381a5146aa3cc39ff85b39098cf8f2916eaf35e9b22bd4f9bb80df49ff515a9ef85c0e11cd4bf'
+        'SKIP'
+        'a7cf564f31c471440310c3e3a11eac143ad1df100c8bb7bde9096b83711846878b4842742b050cc293b337b6284d28959ef3446d2be5337a74faac7bfcf74206'
         'e39e1353fdc22f7d93b6f89f8242fafddd56422a03df1cb26e81a3874456c49029a3726b43223fe21231eff6fe240e1216f3dca36a0e5297c9c0d43ab390bcd9')
 
 prepare() {
@@ -55,12 +59,13 @@ prepare() {
   git config submodule.pluginterfaces.url ../vst3_pluginterfaces
   git config submodule.public.sdk.url ../vst3_public_sdk
   git config submodule.vstgui4.url ../vstgui
+  git config submodule.tutorials.url ../vst3_tutorials
   git -c protocol.file.allow=always submodule update
 
   # the build currently fails for packages that set -DCMAKE_BUILD_TYPE other
   # than Debug, Release or ReleaseLTO as the release modes are hardcoded in
   # vst3sdk. This patch also adds support for build type "None"
-  patch --forward --strip=2 --input="${srcdir}/vst3sdk-3.7.8_build_34-cmake-build-type-none.patch"
+  patch --forward --strip=1 --dir=public.sdk --input="${srcdir}/vst3sdk-3.7.9_build_61-cmake-build-type-none.patch"
 }
 
 package_vst3sdk() {

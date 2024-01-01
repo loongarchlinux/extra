@@ -2,8 +2,8 @@
 # Contributor: peeweep <peeweep at 0x0 dot ee>
 
 pkgname=neovide
-pkgver=0.11.2
-pkgrel=4
+pkgver=0.12.0
+pkgrel=1
 pkgdesc='No Nonsense Neovim Client in Rust'
 arch=(loong64 x86_64)
 url="https://github.com/$pkgname/$pkgname"
@@ -13,6 +13,7 @@ depends=(gcc-libs
          fontconfig libfontconfig.so
          freetype2 libfreetype.so
          hicolor-icon-theme
+         libjpeg libjpeg.so
          libglvnd
          neovim
          sndio)
@@ -22,15 +23,11 @@ optdepends=('vulkan-intel: vulkan support for intel'
             'libxkbcommon-x11: run on X11 (not needed for wayland)')
 _archive=("$pkgname-$pkgver")
 source=("$url/archive/$pkgver/$_archive.tar.gz")
-sha256sums=('62e973a5407a6bfc731ce78e0495d2ed10930d33b22fe94cfe23acccbf789ae9')
+sha256sums=('8770dd6977605f9bafa990a60cf8f2ebeba7df16417dab2e8c5583d279ec86ef')
 
 prepare() {
 	cd "$_archive"
-	sed -r -i \
-		-e '/^incremental/a opt-level = 3' \
-		-e '/wayland/s/\]/, "embed-icudtl"]/g' \
-		-e '/wayland/a no-default-features = true' \
-		Cargo.toml
+	sed -r -i -e '/^incremental/a opt-level = 3' Cargo.toml
 	cargo fetch --locked --target "$CARCH-unknown-linux-gnu"
 }
 

@@ -5,8 +5,8 @@
 
 _commit=4113104583a59ba2d1f04fee3b049c5f43f6578c
 pkgname=ansible-lint
-pkgver=6.22.0
-pkgrel=3
+pkgver=6.22.1
+pkgrel=1
 pkgdesc="Checks playbooks for practices and behaviour that could potentially be improved."
 arch=('any')
 url="https://github.com/ansible/ansible-lint"
