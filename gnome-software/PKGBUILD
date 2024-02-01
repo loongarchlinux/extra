@@ -5,7 +5,7 @@
 # Contributor: Yosef Or Boczko <yoseforb@gnome.org>
 
 pkgname=gnome-software
-pkgver=45.2
+pkgver=45.3
 pkgrel=1
 pkgdesc="GNOME Software Tools"
 url="https://wiki.gnome.org/Apps/Software/"
@@ -38,7 +38,7 @@ optdepends=(
   'malcontent: Parental control plugin'
 )
 groups=(gnome)
-_commit=4048cbc7fc3aa5d2b37f80734cabdf28658c1ca4  # tags/45.2^0
+_commit=f027ac3fc839c0c0fe68006cea1acc757461c128  # tags/45.3^0
 source=(
   "git+https://gitlab.gnome.org/GNOME/gnome-software.git#commit=$_commit"
   "git+https://gitlab.gnome.org/mwleeds/gnome-pwa-list.git"

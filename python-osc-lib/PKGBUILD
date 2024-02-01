@@ -2,8 +2,8 @@
 # Contributor: Daniel Wallace <danielwallace at gtmanfred dot com>
 
 pkgname=python-osc-lib
-pkgver=2.9.0
-_commit=3f47018de8d5f7a83425e1d2d08ce2e3c7a33534
+pkgver=3.0.0
+_commit=f0e64f76240d2a2d9a4ec032ab091457fcd54248
 pkgrel=1
 pkgdesc="OpenStackClient Library"
 arch=('any')

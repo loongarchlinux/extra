@@ -1,24 +1,37 @@
 # Maintainer: Sven-Hendrik Haase <svenstaro@archlinux.org>
+# Maintainer: Orhun Parmaksız <orhun@archlinux.org>
 # Contributor: mexus <gilaldpellaeon@gmail.com>
+
 pkgname=dua-cli
-pkgver=2.24.2
+pkgver=2.28.0
 pkgrel=1
 pkgdesc="A tool to conveniently learn about the disk usage of directories, fast!"
 arch=('loong64' 'x86_64')
 url="https://github.com/Byron/dua-cli"
 license=('MIT')
 depends=('gcc-libs')
-makedepends=('rust')
+makedepends=('cargo')
 source=("$pkgname-$pkgver.tar.gz::https://github.com/Byron/${pkgname}/archive/v${pkgver}.tar.gz")
-sha512sums=('3018067955723d0bd7bdb09a38b89b6acafd37bcdc517bfa3ce69574b430245aee4628ee61781830c2782d0ee1d0319f3e998dd06a236f1123d1898984db5aa7')
+sha512sums=('b3bd4ec5a101a3e1e5a88d5de761f37a1ec1b71d6abe9d3aa1c72eac27ebfb19ce44365baec809c70cc9b77d295ca7e242554bf400a5460c45ab2b500f893da5')
+
+prepare() {
+  cd "$pkgname-$pkgver"
+  cargo fetch --locked --target "$(rustc -vV | sed -n 's/host: //p')"
+}
 
 build() {
   cd "$srcdir/$pkgname-$pkgver"
   cargo build --release --locked
 }
 
+check() {
+  cd "$pkgname-$pkgver"
+  cargo test --frozen
+}
+
 package() {
   cd "$srcdir/$pkgname-$pkgver"
   install -Dm 644 "LICENSE" "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
+  install -Dm 644 README.md "$pkgdir/usr/share/doc/$pkgname/README.md"
   install -Dm 755 "target/release/dua" "$pkgdir/usr/bin/dua"
 }

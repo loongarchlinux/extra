@@ -4,7 +4,7 @@
 # Contributor: juantascon
 
 pkgname=python-peewee
-pkgver=3.16.3
+pkgver=3.17.0
 pkgrel=1
 pkgdesc="a little orm"
 url="https://github.com/coleifer/peewee/"
@@ -16,7 +16,7 @@ optdepends=('python-psycopg2: for PostgreSQL database support'
 makedepends=('python-build' 'python-installer' 'cython' 'python-setuptools' 'python-wheel')
 checkdepends=('python-apsw' 'python-flask' 'python-psycopg2')
 source=("$pkgname-$pkgver.tar.gz::https://github.com/coleifer/peewee/archive/$pkgver.tar.gz")
-sha512sums=('e940c0fc78c736477b2550379912587f2129bf6c11252a04188a70d260410539ef90879dcf4145466c3276130b33c85b53db80afb5503b7b76693155d5f8abbe')
+sha512sums=('978a911aa0236246abcc3cc2ef54d418dc8f94bf78ce6eeeeaf43352d92ccb4238c66972b78a904d3ceed47736a2c509fbdde837e7660290faf220e5744b1cfa')
 
 build() {
   cd peewee-$pkgver

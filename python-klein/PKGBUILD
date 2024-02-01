@@ -3,7 +3,7 @@
 
 pkgname=python-klein
 # https://github.com/twisted/klein/blob/trunk/NEWS.rst
-pkgver=23.5.0
+pkgver=23.12.0
 pkgrel=1
 arch=(any)
 pkgdesc='A web micro-framework built on werkzeug and twisted.web'
@@ -13,14 +13,14 @@ depends=(python python-attrs python-hyperlink python-incremental
          python-tubes python-twisted python-werkzeug python-zope-interface
          # Detected by namcap and not declared in setup.py
          python-constantly)
-makedepends=(python-setuptools)
+makedepends=(python-build python-installer python-setuptools python-wheel)
 checkdepends=(python-hypothesis python-treq python-pytest)
 source=("https://github.com/twisted/klein/archive/$pkgver/klein-$pkgver.tar.gz")
-sha512sums=('ebfd50989bec653cb0997d5d58cd9071e1bd1690566f1892ca3a04511dfe1a64dc790859d955d69aa1757f77f049278bd628025fc2b596d153b7208d3007f0bc')
+sha512sums=('c06169a9e619b2f8f60b59e469429f63ceb22a775ef3cf3c688826208d291335e0922ad96b633f71f5e5cf93a05f7ed879b4ca605ee9c593239d54b4dc7d1151')
 
 build() {
   cd klein-$pkgver
-  python setup.py build
+  python -m build --wheel --no-isolation
 }
 
 check() {
@@ -30,6 +30,6 @@ check() {
 
 package() {
   cd klein-$pkgver
-  python setup.py install --root="$pkgdir" --optimize=1 --skip-build
+  python -m installer --destdir="$pkgdir" dist/*.whl
   install -Dm644 LICENSE -t "$pkgdir"/usr/share/licenses/$pkgname
 }

@@ -5,8 +5,8 @@
 
 _name=urwid
 pkgname=python-urwid
-pkgver=2.2.3
-_commit=fd35a007e8e43c770b7514114f707d3cc0036096
+pkgver=2.4.1
+_commit=fd6e4462c21824641c7598b042820f1a98aae459
 pkgrel=1
 pkgdesc='Curses-based user interface library'
 url='https://urwid.org/'
@@ -51,7 +51,7 @@ build() {
 }
 
 check() {
-  cd $_name
+  cd $_name/tests
   pytest -v
 }
 

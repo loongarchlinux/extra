@@ -2,7 +2,7 @@
 
 _hkgname=language-c99-simple
 pkgname=haskell-language-c99-simple
-pkgver=0.2.3
+pkgver=0.3.0
 pkgrel=1
 pkgdesc="C-like AST to simplify writing C99 programs."
 url="https://github.com/fdedden/language-c99-simple.git"
@@ -11,18 +11,18 @@ arch=('loong64' 'x86_64')
 depends=('ghc-libs' 'haskell-language-c99' 'haskell-language-c99-util')
 makedepends=('ghc')
 source=("https://hackage.haskell.org/packages/archive/$_hkgname/$pkgver/$_hkgname-$pkgver.tar.gz")
-sha256sums=('e3af3811d5aabe659e3fe9da0d0aeb4411cb436f1d1b33c8b6fa4c7d13f8d257')
+sha256sums=('7275797bd2cfd4799ae0094ecd9da4e9333d12defd396277ac403343e542e06e')
 
 build() {
   cd $_hkgname-$pkgver
 
   runhaskell Setup configure -O --enable-shared --enable-executable-dynamic --disable-library-vanilla \
     --prefix=/usr --docdir=/usr/share/doc/$pkgname --datasubdir=$pkgname --enable-tests \
-    --dynlibdir=/usr/lib --libsubdir=\$compiler/site-local/\$pkgid \
+    --dynlibdir=/usr/lib --libsubdir=\$compiler/site-local/\$pkgid --ghc-option=-fllvm \
     --ghc-option=-optl-Wl\,-z\,relro\,-z\,now \
     --ghc-option='-pie' 
 
-  runhaskell Setup build
+  runhaskell Setup build $MAKEFLAGS
   runhaskell Setup register --gen-script
   runhaskell Setup unregister --gen-script
   sed -i -r -e "s|ghc-pkg.*update[^ ]* |&'--force' |" register.sh
@@ -31,7 +31,7 @@ build() {
 
 check() {
   cd $_hkgname-$pkgver
-  runhaskell Setup test
+  runhaskell Setup test --show-details=direct
 }
 
 package() {

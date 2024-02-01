@@ -1,0 +1,46 @@
+# Maintainer: Torsten Keßler <tpkessler@archlinux.org>
+# Contributor: Butui Hu <hot123tea123@gmail.com>
+
+pkgname=python-onnx
+pkgver=1.15.0
+pkgrel=3
+epoch=1
+pkgdesc='Open standard for machine learning interoperability'
+arch=('loong64' 'x86_64')
+url='https://onnx.ai'
+license=('MIT')
+depends=(
+  python
+  protobuf
+  python-protobuf
+  python-numpy
+)
+makedepends=(
+  cmake
+  git
+  pybind11
+  python-build
+  python-installer
+  python-setuptools
+  python-wheel
+)
+source=("${pkgname}::git+https://github.com/onnx/onnx.git#tag=v${pkgver}")
+sha512sums=('SKIP')
+
+prepare() {
+  cd "${pkgname}"
+  # bump CMAKE_CXX_STANDARD to 17, see also https://github.com/onnx/onnx/pull/5119
+  sed -i 's#CMAKE_CXX_STANDARD 14#CMAKE_CXX_STANDARD 17#' CMakeLists.txt
+}
+
+build() {
+  cd "${pkgname}"
+  python -m build --wheel --no-isolation
+}
+
+package() {
+  cd "${pkgname}"
+  python -m installer --destdir="${pkgdir}" dist/*.whl
+  install -Dm644 LICENSE -t "${pkgdir}/usr/share/licenses/${pkgname}"
+}
+# vim:set ts=2 sw=2 et:

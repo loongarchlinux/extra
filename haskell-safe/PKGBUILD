@@ -3,28 +3,33 @@
 
 _hkgname=safe
 pkgname=haskell-safe
-pkgver=0.3.19
-pkgrel=8
+pkgver=0.3.20
+pkgrel=3
 pkgdesc="Library of safe (exception free) functions"
 url="https://github.com/ndmitchell/safe#readme"
 license=("BSD")
 arch=('loong64' 'x86_64')
 depends=('ghc-libs')
-makedepends=('ghc')
+makedepends=('ghc' 'haskell-quickcheck')
 source=("https://hackage.haskell.org/packages/archive/${_hkgname}/${pkgver}/${_hkgname}-${pkgver}.tar.gz")
-sha512sums=('9e987a895f0f888338bb2b0088732a404246a28ce32d73808ed6aa3b6d909da884ec54d5fe71fd190e287f108be1800bef2865acfcfac3bf6873dfb7c679cfea')
+sha512sums=('4bad7dce8f20112f6223b1575cde71755f203d15c2b970e0f992906fe21ac7fb69f460cfe9e3eb013689e05421a62e62902f8a6f0177620bf2c6e2919813f436')
 
 build() {
     cd $_hkgname-$pkgver
     
     runhaskell Setup configure -O --enable-shared --enable-executable-dynamic --disable-library-vanilla \
-        --prefix=/usr --docdir=/usr/share/doc/$pkgname \
+        --prefix=/usr --docdir=/usr/share/doc/$pkgname --datasubdir=$pkgname --enable-tests \
         --dynlibdir=/usr/lib --libsubdir=\$compiler/site-local/\$pkgid --ghc-option=-fllvm
     runhaskell Setup build $MAKEFLAGS
     runhaskell Setup register --gen-script
     runhaskell Setup unregister --gen-script
     sed -i -r -e "s|ghc-pkg.*update[^ ]* |&'--force' |" register.sh
     sed -i -r -e "s|ghc-pkg.*unregister[^ ]* |&'--force' |" unregister.sh
+}
+
+check() {
+    cd $_hkgname-$pkgver
+    runhaskell Setup test --show-details=direct
 }
 
 package() {

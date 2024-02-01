@@ -4,7 +4,7 @@
 pkgbase=kid3
 pkgname=('kid3-common' 'kid3-qt' 'kid3')
 pkgver=3.9.4
-pkgrel=2
+pkgrel=3
 pkgdesc="An MP3, Ogg/Vorbis and FLAC tag editor"
 arch=('loong64' 'x86_64')
 url="https://kid3.kde.org/"
@@ -13,10 +13,22 @@ depends=('chromaprint' 'flac' 'id3lib' 'kxmlgui5' 'libmp4v2'
          'qt5-declarative' 'qt5-multimedia' 'taglib' 'kio5')
 makedepends=('cmake' 'docbook-xsl' 'extra-cmake-modules' 'kdoctools5' 'python' 'qt5-tools')
 changelog=$pkgbase.changelog
-source=(https://prdownloads.sourceforge.net/$pkgbase/$pkgbase-$pkgver.tar.gz{,.sig})
+source=(https://prdownloads.sourceforge.net/$pkgbase/$pkgbase-$pkgver.tar.gz{,.sig}
+        https://invent.kde.org/multimedia/kid3/-/commit/3ed2e5f7.patch
+        https://invent.kde.org/multimedia/kid3/-/commit/98524900.patch
+        taglib-2.patch)
 validpgpkeys=('7D09794C2812F62194B081C14CAD34426E354DD2') # Urs Fleisch
 sha256sums=('6d67d941604c3d96e42b2bafbe7ec4a60004620b729ccbe2550af211eb59dd7b'
-            'SKIP')
+            'SKIP'
+            '7f59595a638056a780db5ce3b4266760e7f478e7b11c4c5b703772fddc8bdb5c'
+            '6edd2ab211d92c2e4ab6c5c757686bd730f2f54cb26b23e4c513d18cbc341900'
+            '11bd60246fe7c8066c5b33b3884b2008f19afbc8b7c0df3a5631e39258642e0c')
+
+prepare() {
+  patch -d $pkgbase-$pkgver -p1 < 3ed2e5f7.patch
+  patch -d $pkgbase-$pkgver -p1 < 98524900.patch # Fix build with taglib 2
+  patch -d $pkgbase-$pkgver -p1 < taglib-2.patch
+}
 
 build() {
   export CXXFLAGS+=' -DNDEBUG' # FS#69904

@@ -1,0 +1,22 @@
+# Maintainer: Alexander F. Rødseth <xyproto@archlinux.org>
+
+pkgname=tinyxxd
+pkgver=1.1.0
+pkgrel=1
+pkgdesc='Standalone version of the hex dump utility that comes with ViM'
+arch=(loong64 x86_64)
+url='https://github.com/xyproto/tinyxxd'
+provides=(xxd)
+conflicts=(xxd)
+license=(GPL2)
+source=("$url/releases/download/v$pkgver/$pkgname-$pkgver.tar.gz")
+b2sums=('c6674d5cf4b6c61e67a87f5c267abc2613082e73435a0736b963ac3d04422bed43f5963856bb94d33932b871a53bd5fdb250966b2e411cc4cb00dd7d44729865')
+
+build() {
+  make CFLAGS="$CFLAGS -std=c11 -pipe -fPIC -fstack-protector-strong -D_GNU_SOURCE -s -Wl,-z,now" -C $pkgname-$pkgver
+}
+
+package() {
+  DESTDIR="$pkgdir" make -C $pkgname-$pkgver install
+  ln -s /usr/bin/tinyxxd "$pkgdir/usr/bin/xxd"
+}

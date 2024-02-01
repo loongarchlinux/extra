@@ -3,14 +3,13 @@
 pkgname=chatblade
 pkgdesc="A CLI Swiss Army Knife for ChatGPT"
 pkgver=0.3.4
-pkgrel=2
+pkgrel=3
 arch=("any")
 url="https://github.com/npiv/chatblade"
 license=("GPL3")
 # https://github.com/npiv/chatblade/blob/main/requirements.txt
 depends=(
 	"python"
-	"python-importlib-metadata"
 	"python-setuptools"
 	"python-aiohttp"
 	"python-aiosignal"

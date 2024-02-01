@@ -1,0 +1,31 @@
+# Maintainer:
+# Contributor: @RubenKelevra <cyrond@gmail.com>
+
+_pyname=watchfiles
+pkgname=python-$_pyname
+pkgver=0.21.0
+pkgrel=1
+pkgdesc='Simple, modern and high performance file watching and code reload in python'
+url='https://github.com/samuelcolvin/watchfiles'
+depends=(python
+         python-anyio)
+makedepends=(python-build
+             python-installer
+             python-maturin)
+checkdepends=(python-pytest
+              python-pytest-timeout)
+license=(MIT)
+arch=(loong64 x86_64)
+source=(https://github.com/samuelcolvin/watchfiles/archive/v$pkgver/$pkgname-$pkgver.tar.gz)
+b2sums=('299ab53edde696315fff1c1bdb63d45badb008e990bfb7367d5599e9f2e79c0aafbb761a21aa56c6c4e1dc4697f7ae20a868aff0a302e8393321f143cea048c0')
+
+build() {
+  cd $_pyname-$pkgver
+  python -m build --wheel --no-isolation
+}
+
+package() {
+  cd $_pyname-$pkgver
+  python -m installer --destdir="$pkgdir" dist/*.whl
+  install -Dm644 LICENSE -t "$pkgdir"/usr/share/licenses/$pkgname
+}

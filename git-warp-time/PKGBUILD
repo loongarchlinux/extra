@@ -2,14 +2,14 @@
 
 pkgname=git-warp-time
 pkgver=0.7.2
-pkgrel=1
+pkgrel=2
 pkgdesc='reset timestamps of Git repository files to the time of the last modifying commit'
 arch=(loong64 x86_64)
 url="https://github.com/alerque/$pkgname"
-license=(GPL3)
+license=(GPL-3.0-only)
 depends=(gcc-libs
          glibc
-         libgit2.so)
+         libgit2 libgit2.so)
 makedepends=(cargo
              git
              jq)
@@ -22,18 +22,24 @@ prepare() {
 	sed Makefile.am -i \
 		-e 's/cargo \(build\|install\|test\)/cargo --offline \1/'
 	autoreconf
-	cargo fetch --locked
+	cargo fetch --locked --target "$(rustc -vV | sed -n 's/host: //p')"
+}
+
+_srcenv() {
+	cd "$_archive"
+	export RUSTUP_TOOLCHAIN=stable
+	export CARGO_TARGET_DIR=target
 }
 
 build() {
-	cd "$_archive"
-	CFLAGS+=" -ffat-lto-objects"
+	_srcenv
+	CFLAGS+=' -ffat-lto-objects'
 	./configure --prefix /usr --enable-shared
 	make
 }
 
 check() {
-	cd "$_archive"
+	_srcenv
 	make check
 }
 

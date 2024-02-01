@@ -3,20 +3,30 @@
 
 pkgname=metacity
 pkgver=3.50.0
-pkgrel=1
+pkgrel=3
 pkgdesc='Window manager of GNOME Flashback'
 arch=('loong64' 'x86_64')
 url='https://wiki.gnome.org/Projects/Metacity'
-license=('GPL')
-depends=('dconf' 'libcanberra' 'libgtop' 'libsm' 'libxpresent' 'libxres'
-         'gsettings-desktop-schemas' 'gtk3' 'startup-notification' 'zenity')
-makedepends=('vulkan-headers' 'python')
-source=("https://download.gnome.org/sources/$pkgname/${pkgver%.*}/$pkgname-$pkgver.tar.xz")
-sha256sums=('18e9b106438d46394e4148bcb83acc6367312be54559cdb564e270c1ccaeb60f')
+license=('GPL-2.0-or-later')
+depends=('at-spi2-core' 'cairo' 'dconf' 'gdk-pixbuf2' 'glib2' 'glibc' 'gsettings-desktop-schemas'
+         'gtk3' 'libcanberra' 'libice' 'libgtop' 'libsm' 'libx11' 'libxcomposite' 'libxcursor'
+         'libxdamage' 'libxext' 'libxfixes' 'libxinerama' 'libxpresent' 'libxrandr' 'libxres'
+         'libxrender' 'pango' 'startup-notification' 'zenity')
+makedepends=('python')
+source=("https://download.gnome.org/sources/$pkgname/${pkgver%.*}/$pkgname-$pkgver.tar.xz"
+        '0001-frames-Add-basic-color-scheme-support.patch')
+sha256sums=('18e9b106438d46394e4148bcb83acc6367312be54559cdb564e270c1ccaeb60f'
+            '66e54af887dbc41742f5845f195f202113b38861e5b481dc401f9e8b78d665fb')
+
+prepare() {
+  cd $pkgname-$pkgver
+  # https://gitlab.gnome.org/GNOME/metacity/-/merge_requests/36
+  patch -Np1 -i ../0001-frames-Add-basic-color-scheme-support.patch
+}
 
 build() {
   cd $pkgname-$pkgver
-  ./configure --prefix=/usr --disable-schemas-compile
+  ./configure --prefix=/usr --disable-vulkan
   sed -i -e 's/ -shared / -Wl,-O1,--as-needed\0/g' libtool
   make
 }

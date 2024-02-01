@@ -6,17 +6,25 @@
 pkgbase=mame
 pkgname=(mame
          mame-tools)
-pkgver=0.261
+pkgver=0.262
 pkgrel=1
 pkgdesc='Port of the popular Multiple Arcade Machine Emulator using SDL with OpenGL support'
 url='https://mamedev.org/'
-license=(GPL2)
+license=(BSD-2-Clause
+         BSD-3-Clause
+         BSL-1.0
+         CC0
+         GPL-2.0-only
+         LGPL-2.1-only
+         MIT
+         Zlib)
 arch=(loong64 x86_64)
 makedepends=(asio
              flac
              glm
              libpulse
              libutf8proc
+             libxi
              libxinerama
              lua
              nasm
@@ -24,14 +32,14 @@ makedepends=(asio
              portmidi
              pugixml
              python
-             qt5-base
+             qt6-base
              rapidjson
              sdl2_ttf)
 source=(https://github.com/mamedev/mame/archive/mame${pkgver/./}.tar.gz
         mame.desktop
         mame.sh
         mame.svg)
-sha256sums=('51d5ce1563897709ceb7a924c31a70cc5ff2bec466aab8d0cc9ff3cc72b38899'
+sha256sums=('64e482f3dd13be4e91c5dfa076fb7a71f450f2879118c6ae452b0037b661aaae'
             '0e5e93f84673c2d17a1bf7a6b256cfa54ef89a086a828df19bc054c12776d821'
             'ee1c59bafc5e5441e99fa4c58108a3e18048e60672f34de865c8a5a976094dba'
             '17c442c933d764175e4ce1de50a80c0c2ddd5d733caf09c3cd5e6ba697ac43f4')
@@ -45,6 +53,8 @@ prepare() {
   sed -e 's|\# USE_SYSTEM_LIB|USE_SYSTEM_LIB|g' -i makefile
 # Use C++ LUA
   sed -e 's|ext_lib("lua")|ext_lib("lua++")|' -i scripts/src/main.lua -i scripts/src/3rdparty.lua
+# Drop hardcoded libexec
+  sed -e 's|libexec/||' -i scripts/src/osd/modules.lua
 }
 
 build() {
@@ -56,6 +66,7 @@ build() {
     NOWERROR=1 \
     OPTIMIZE=2 \
     TOOLS=1 \
+    QT_HOME=/usr/lib/qt6 \
     ARCHOPTS=-flifetime-dse=1
 }
 

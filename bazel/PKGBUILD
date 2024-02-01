@@ -4,25 +4,23 @@
 # Contributor: Simon Legner <Simon.Legner@gmail.com>
 
 pkgname=bazel
-pkgver=6.4.0
+pkgver=7.0.1
 pkgrel=1
 pkgdesc='Correct, reproducible, and fast builds for everyone'
 arch=('loong64' 'x86_64')
 license=('Apache')
 url='https://bazel.build/'
 depends=('java-environment=11' 'libarchive' 'zip' 'unzip')
-makedepends=('git' 'protobuf' 'python' 'gcc12')
+makedepends=('git' 'protobuf' 'python')
 options=('!distcc' '!strip')
 source=("https://github.com/bazelbuild/bazel/releases/download/${pkgver}/bazel-${pkgver}-dist.zip"
         "https://github.com/bazelbuild/bazel/releases/download/${pkgver}/bazel-${pkgver}-dist.zip.sig")
-b2sums=('096f942639a1f2bf8f67ce6d4d313d18ada6998400c3ba320f6afe7877d20113c3d5ee76dcc125fd6eab832d0ba8c94d83d6b15d1e659b0b96835cdb0ec8b496'
+b2sums=('6e6cd7dc6ada5938dd8a47e0cb7d46bfbfd1950fe3ee6fdbadc812197ab180d604ef8e1b8f8c247b920bd6e74abc2f8b066931af0ebb9337372153175f53277e'
         'SKIP')
 validpgpkeys=('71A1D0EFCFEB6281FD0437C93D5919B448457EE0')
 
 build() {
-  export CC=gcc-12
-  export CXX=g++-12
-  EMBED_LABEL=$pkgver EXTRA_BAZEL_ARGS="--host_javabase=@local_jdk//:jdk" ./compile.sh
+  EMBED_LABEL=$pkgver EXTRA_BAZEL_ARGS="--tool_java_runtime_version=local_jdk" ./compile.sh
   ./output/bazel build scripts:bazel-complete.bash
   cd output
   ./bazel shutdown

@@ -1,33 +1,33 @@
 # Maintainer: Daniel M. Capella <polyzen@archlinux.org>
 
 pkgname=rink
-pkgver=0.6.3
-pkgrel=2
+pkgver=0.7.0
+pkgrel=1
 pkgdesc='Unit conversion tool and library written in rust'
 arch=('loong64' 'x86_64')
 url=https://rinkcalc.app
 license=('GPL3' 'MPL2')
 depends=('gcc-libs' 'openssl')
-makedepends=('rust')
-source=("rink-$pkgver.tar.gz::https://static.crates.io/crates/rink/rink-$pkgver.crate")
-b2sums=('ace1c42f8e5afc6746e7f66a515b8fb0fd534b843ed6d76cd85604b293e8134cac1ce13e4b5edf3a6317e0f96061f2a20c62268fbc57e897609e312d06d61c38')
+makedepends=('git' 'rust')
+source=("git+https://github.com/tiffany352/$pkgname-rs.git#tag=v$pkgver")
+b2sums=('SKIP')
 
 prepare() {
-  cd rink-$pkgver
-  cargo fetch --locked --target "$CARCH-unknown-linux-gnu"
+  cd $pkgname-rs
+  cargo fetch --locked --target "$(rustc -vV | sed -n 's/host: //p')"
 }
 
 build() {
-  cd rink-$pkgver
+  cd $pkgname-rs
   cargo build --release --locked --offline
 }
 
 check() {
-  cd rink-$pkgver
+  cd $pkgname-rs
   cargo test --locked --offline
 }
 
 package() {
-  cd rink-$pkgver
-  install -Dt "$pkgdir"/usr/bin target/release/rink
+  cd $pkgname-rs
+  install -Dt "$pkgdir"/usr/bin target/release/$pkgname
 }

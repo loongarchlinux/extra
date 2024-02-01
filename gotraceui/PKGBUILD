@@ -1,0 +1,51 @@
+# Maintainer: Morten Linderud <foxboron@archlinux.org>
+
+pkgname=gotraceui
+pkgver=0.4.0
+pkgrel=2
+pkgdesc="Go execution trace frontend"
+arch=('loong64' 'x86_64')
+url="https://github.com/dominikh/gotraceui"
+license=('MIT')
+depends=('wayland' 'libxkbcommon' 'libx11' 'libglvnd' 'libxkbcommon-x11' 'libxcursor')
+makedepends=('go' 'git' 'vulkan-headers')
+source=("${pkgname}-${pkgver}.tar.gz::https://github.com/dominikh/gotraceui/archive/v${pkgver}.tar.gz")
+sha256sums=('5aa6bc3e36fcde4cf91e8056df99ac432175c72ed76a061406469d8eca78f647')
+
+build(){
+  cd "${pkgname}-${pkgver}"
+  export CGO_CPPFLAGS="${CPPFLAGS}"
+  export CGO_CFLAGS="${CFLAGS}"
+  export CGO_CXXFLAGS="${CXXFLAGS}"
+  export CGO_LDFLAGS="${LDFLAGS}"
+  export GOFLAGS="-buildmode=pie -mod=readonly -modcacherw"
+  export GOPATH="${srcdir}"
+  go build -ldflags='-X gioui.org/app.ID=co.honnef.Gotraceui -compressdwarf=false -linkmode=external' ./cmd/gotraceui
+}
+
+check(){
+  cd "${pkgname}-${pkgver}"
+  export CGO_CPPFLAGS="${CPPFLAGS}"
+  export CGO_CFLAGS="${CFLAGS}"
+  export CGO_CXXFLAGS="${CXXFLAGS}"
+  export CGO_LDFLAGS="${LDFLAGS}"
+  export GOFLAGS="-buildmode=pie -mod=readonly -modcacherw"
+  export GOPATH="${srcdir}"
+  go test -v ./... 
+}
+
+package() {
+  cd "${pkgname}-${pkgver}"
+
+  install -Dm644 "share/applications/co.honnef.Gotraceui.desktop" "${pkgdir}/usr/share/applications/co.honnef.Gotraceui.desktop"
+  install -Dm644 "share/mime/packages/x-gotraceui.xml" "${pkgdir}/usr/share/mime/packages/x-gotraceui.xml"
+  install -Dm755 gotraceui "${pkgdir}/usr/bin/gotraceui"
+  install -Dm644 LICENSE "${pkgdir}/usr/share/licenses/${pkgname}/LICENSE"
+  install -Dm644 LICENSE-THIRD-PARTY "${pkgdir}/usr/share/licenses/${pkgname}/LICENSE-THIRD-PARTY"
+
+  for i in 32 48 64 72 96 128 192 256 512 1024 ; do
+    install -vDm0644 "share/icons/hicolor/${i}x${i}/apps/gotraceui.png" \
+      "$pkgdir/usr/share/icons/hicolor/${i}x${i}/apps/gotraceui.png"
+  done
+  install -Dm644 "share/icons/hicolor/scalable/apps/gotraceui.svg" "${pkgdir}/usr/share/icons/hicolor/scalable/apps/gotraceui.svg"
+}

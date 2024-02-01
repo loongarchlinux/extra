@@ -1,0 +1,39 @@
+# Maintainer: Felix Yan <felixonmars@archlinux.org>
+
+pkgname=nvmetcli
+pkgver=0.8
+_commit=d323d5a3091af490502c5d025ec7361a3a2cfbd9
+pkgrel=2
+pkgdesc="Command line interface for the kernel NVMe target"
+arch=('any')
+url="http://git.infradead.org/users/hch/nvmetcli.git"
+license=('Apache-2.0')
+depends=('python-configshell-fb' 'python-six')  # kmod
+makedepends=('git' 'python-setuptools')
+checkdepends=('python-nose2')
+source=(git://git.infradead.org/users/hch/nvmetcli.git#commit=$_commit)
+sha512sums=('SKIP')
+
+prepare() {
+  cd nvmetcli
+  sed -i 's|/usr/sbin|/usr/bin|' setup.cfg nvmet.service
+}
+
+build() {
+  cd nvmetcli
+  python setup.py build
+}
+
+check() {
+  cd nvmetcli
+  # Tests need /sys/kernel/config/nvmet (present after modprobe nvmet)
+  nose2 nvmet || echo "Tests failed"
+}
+
+package() {
+  cd nvmetcli
+  python setup.py install --root="$pkgdir" --optimize=1
+
+  install -Dm644 nvmet.service -t "$pkgdir"/usr/lib/systemd/system/
+  install -Dm644 README *.json Documentation/nvmetcli.txt -t "$pkgdir"/usr/share/doc/nvmetcli/
+}

@@ -1,0 +1,114 @@
+From e1c033d071c59062f013e7f590c8a056985e6c7c Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Ball=C3=B3=20Gy=C3=B6rgy?= <ballogyor@gmail.com>
+Date: Tue, 23 Jan 2024 21:50:58 +0100
+Subject: [PATCH] frames: Add basic color-scheme support
+
+Use the dark variant for decorations if the color-scheme preference
+indicates that it's preferred, and the client didn't explicitly
+pick a variant via the _GTK_THEME_VARIANT hint.
+
+Based on mutter commit:
+https://gitlab.gnome.org/GNOME/mutter/-/commit/9d4aa4488a5bc8e3036dc400840b301c12943ca9
+---
+ src/ui/frames.c | 36 ++++++++++++++++++++++++++++++++----
+ 1 file changed, 32 insertions(+), 4 deletions(-)
+
+diff --git a/src/ui/frames.c b/src/ui/frames.c
+index 35a4a930..1267fe9b 100644
+--- a/src/ui/frames.c
++++ b/src/ui/frames.c
+@@ -77,6 +77,7 @@ static MetaUIFrame* meta_frames_lookup_window (MetaFrames *frames,
+ 
+ static void meta_frames_font_changed          (MetaFrames *frames);
+ static void meta_frames_button_layout_changed (MetaFrames *frames);
++static void meta_frames_reattach_all_styles   (MetaFrames *frames);
+ 
+ static void clear_tip (MetaFrames *frames);
+ static void invalidate_all_caches (MetaFrames *frames);
+@@ -93,6 +94,8 @@ struct _MetaFrames
+ 
+   GHashTable  *frames;
+ 
++  GSettings   *interface_settings;
++
+   guint        tooltip_timeout;
+   MetaUIFrame *last_motion_frame;
+ 
+@@ -385,6 +388,12 @@ meta_frames_init (MetaFrames *frames)
+ 
+   display = gdk_display_get_default ();
+ 
++  frames->interface_settings = g_settings_new ("org.gnome.desktop.interface");
++  g_signal_connect_swapped (frames->interface_settings,
++                            "changed::color-scheme",
++                            G_CALLBACK (meta_frames_reattach_all_styles),
++                            frames);
++
+   frames->xdisplay = gdk_x11_display_get_xdisplay (display);
+ 
+   frames->frames = g_hash_table_new (unsigned_long_hash, unsigned_long_equal);
+@@ -432,6 +441,8 @@ meta_frames_destroy (GtkWidget *widget)
+     }
+   g_slist_free (winlist);
+ 
++  g_clear_object (&frames->interface_settings);
++
+   GTK_WIDGET_CLASS (meta_frames_parent_class)->destroy (widget);
+ }
+ 
+@@ -588,6 +599,13 @@ reattach_style_func (gpointer key, gpointer value, gpointer data)
+   meta_frames_attach_style (frames, frame);
+ }
+ 
++static void
++meta_frames_reattach_all_styles (MetaFrames *frames)
++{
++  g_hash_table_foreach (frames->frames, reattach_style_func, frames);
++  meta_retheme_all ();
++}
++
+ static void
+ meta_frames_style_updated (GtkWidget *widget)
+ {
+@@ -601,10 +619,7 @@ meta_frames_style_updated (GtkWidget *widget)
+ 
+   meta_frames_font_changed (frames);
+ 
+-  g_hash_table_foreach (frames->frames,
+-                        reattach_style_func, frames);
+-
+-  meta_retheme_all ();
++  meta_frames_reattach_all_styles (frames);
+ 
+   GTK_WIDGET_CLASS (meta_frames_parent_class)->style_updated (widget);
+ }
+@@ -667,6 +682,17 @@ get_global_theme_variant (MetaFrames *frames)
+   return NULL;
+ }
+ 
++static const char *
++get_color_scheme_variant (MetaFrames *frames)
++{
++  int color_scheme = g_settings_get_enum (frames->interface_settings, "color-scheme");
++
++  if (color_scheme == G_DESKTOP_COLOR_SCHEME_PREFER_DARK)
++    return "dark";
++
++  return NULL;
++}
++
+ /* In order to use a style with a window it has to be attached to that
+  * window. Actually, the colormaps just have to match, but since GTK+
+  * already takes care of making sure that its cheap to attach a style
+@@ -691,6 +717,8 @@ meta_frames_attach_style (MetaFrames  *frames,
+ 
+   if (variant == NULL)
+     frame->theme_variant = g_strdup (get_global_theme_variant (frames));
++  if (variant == NULL)
++    frame->theme_variant = g_strdup (get_color_scheme_variant (frames));
+   else
+     frame->theme_variant = *variant != '\0' ? g_strdup (variant) : NULL;
+ }
+-- 
+2.43.0
+

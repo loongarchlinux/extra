@@ -3,12 +3,12 @@
 # Contributor: Pieter Goetschalckx <3.14.e.ter <at> gmail <dot> com>
 
 pkgname=apprise
-pkgver=1.7.1
+pkgver=1.7.2
 pkgrel=1
 pkgdesc='Push Notifications that work with just about every platform'
 arch=('any')
 url=https://github.com/caronc/apprise
-license=('BSD')
+license=('BSD-2-Clause')
 depends=(
   'python-certifi'
   'python-click'
@@ -36,16 +36,22 @@ source=("git+$url.git#tag=v$pkgver")
 b2sums=('SKIP')
 
 build(){
- cd $pkgname
- python -m build --wheel --no-isolation
+  cd $pkgname
+  python -m build --wheel --no-isolation
 }
 
 check(){
- cd $pkgname
- PYTHONPATH="$pwd/$pkgname:$PYTHONPATH" pytest
+  cd $pkgname
+  PYTHONPATH="$pwd/$pkgname:$PYTHONPATH" pytest
 }
 
 package(){
- cd $pkgname
- python -m installer --destdir="$pkgdir" dist/*.whl
+  cd $pkgname
+  python -m installer --destdir="$pkgdir" dist/*.whl
+
+  # Symlink license file
+  local site_packages=$(python -c "import site; print(site.getsitepackages()[0])")
+  install -d "$pkgdir"/usr/share/licenses/$pkgname
+  ln -s "$site_packages"/$pkgname-$pkgver.dist-info/LICENSE \
+    "$pkgdir"/usr/share/licenses/$pkgname/LICENSE
 }

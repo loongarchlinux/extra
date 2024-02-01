@@ -5,7 +5,7 @@
 
 pkgname=pass
 pkgver=1.7.4
-pkgrel=4
+pkgrel=5
 pkgdesc='Stores, retrieves, generates, and synchronizes passwords securely'
 arch=('any')
 url='https://www.passwordstore.org/'
@@ -16,6 +16,7 @@ makedepends=('git')
 optdepends=('git: for Git support'
             'dmenu: for passmenu'
             'xdotool: to type passwords with passmenu'
+            'ydotool: to type passwords with passmenu (wayland)'
             'qrencode: for QR code support'
             'vim-plugin-runtime: for redact_pass.vim'
             'xclip: for clipboard support on X11'

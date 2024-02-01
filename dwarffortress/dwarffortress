@@ -1,20 +1,15 @@
 #!/bin/bash
-export SDL_DISABLE_LOCK_KEYS=1 # Work around for bug in Debian/Ubuntu SDL patch.
-#export SDL_VIDEO_CENTERED=1    # Centre the screen.  Messes up resizing.
+DIRECTORY="${XDG_DATA_HOME:-$HOME/.local/share}/dwarffortress"
 
-pkgname=dwarffortress #To be set by PKGBUILD
-
-if [[ ! -d "$HOME/.$pkgname" ]]; then
-    mkdir -p "$HOME/.$pkgname/data"
-    ln -s /opt/"$pkgname"/raw "$HOME/.$pkgname/raw"
-    ln -s /opt/"$pkgname"/libs "$HOME/.$pkgname/libs"
-    cp -rn /opt/"$pkgname"/data/init "$HOME/.$pkgname/data/init"
+if [[ ! -d "$DIRECTORY" ]]; then
+    echo "Setting up $DIRECTORY"
+    mkdir "$DIRECTORY"
+    ln -s /opt/dwarffortress/data "$DIRECTORY/data"
+    # Setting LD_LIBRARY_PATH doesn't seem to work,
+    # so we copy the shared objects
+    ln -s /opt/dwarffortress/*.so* "$DIRECTORY/"
 fi
 
-for link in announcement art dipscript help index initial_movies movies shader.fs shader.vs sound speech; do
-    cp -ru /opt/"$pkgname"/data/$link -t "$HOME/.$pkgname/data/"
-done
-
-cd "$HOME/.$pkgname"
-exec ./libs/Dwarf_Fortress "$@"
-
+cd "$DIRECTORY"
+DF_DIR=/opt/dwarffortress
+LD_LIBRARY_PATH="${LD_LIBRARY_PATH:+$LD_LIBRARY_PATH:}${DF_DIR}" $DF_DIR/dwarfort "$@" # Go, go, go! :)

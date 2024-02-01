@@ -1,0 +1,30 @@
+# Maintainer: Felix Yan <felixonmars@archlinux.org>
+
+pkgname=wpmeta
+pkgver=0.1.0
+_commit=25156128b3201faa6981fb355dbfef25963c5c3a
+pkgrel=1
+pkgdesc='Wallpaper metadata generator'
+arch=('loong64' 'x86_64')
+url=https://github.com/AOSC-Dev/wpmeta
+license=('MIT')
+depends=('gcc-libs')
+makedepends=('git' 'rust')
+source=("git+https://github.com/AOSC-Dev/wpmeta#commit=$_commit")
+sha512sums=('SKIP')
+
+build() {
+  cd wpmeta
+  cargo build --release --locked
+}
+
+check() {
+  cd wpmeta
+  cargo test --release --locked
+}
+
+package() {
+  cd wpmeta
+  install -Dm755 target/release/wpmeta -t "$pkgdir"/usr/bin/
+  install -Dm644 LICENSE -t "$pkgdir"/usr/share/licenses/$pkgname/
+}

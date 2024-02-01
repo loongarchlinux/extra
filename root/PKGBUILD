@@ -6,7 +6,7 @@
 
 pkgbase=root
 pkgname=('root' 'root-cuda')
-pkgver=6.28.08
+pkgver=6.30.02
 pkgrel=1
 pkgdesc='C++ data analysis framework and interpreter from CERN'
 arch=('loong64' 'x86_64')
@@ -22,7 +22,6 @@ makedepends=(
     'cuda'
     'cudnn'
     'gcc-fortran'
-    'gcc12-fortran'
     'git'
     'go'
     'libxml2'
@@ -101,7 +100,7 @@ source=(
     'nbman-for-arch.patch'
     'thisroot.fail'
 )
-b2sums=('1fa0ea4d214aa021403f5111df9719aa3b22780420e121a74b740f89d4924d3ff7ae50563d7f08147e57b082885b7bb9707e389324919150382ec6dd2b70cf50'
+b2sums=('38b07dff364adac544c927cb76b5f02d69e4a58949b429e6a276906a80769b74f19db72537183c6f33543d2cf924354e626417b386b8952094d6f31e697065f3'
         '5da6218a171ee0fbd7b03518dde22787bb0e478a18dcf227eea4e65598c0a0bb299747c6503ad3026804e1a4dbcf4d2b674b83e6ed6e482dd3d14ceb4646dee8'
         'b5defce795dbfeee75dab0cc4c20ac84fe55cb11e9acdd5e75831b6db98e6190621867a65427ab44d93b6fe30398db6fd191defb029a6dcd0af087c1e5115451'
         '5e4c589fd9e226fcf7ff9ab880687c10ff0f7b7c03fdf12fc477622d6ec291e2dc62e7f5ce7b68856bccf37b64b2f4331f46788548d39fdca57fd832d1f3b437'
@@ -132,6 +131,8 @@ prepare() {
     CUSTOM_CMAKE_FLAGS+=" -DPYTHON_EXECUTABLE:PATH=/usr/bin/python"
     # need to set install prefix like so
     CUSTOM_CMAKE_FLAGS+=" -DINSTALL_PREFIX=/usr"
+    # GSL option was removed
+    CUSTOM_CMAKE_FLAGS+=" -Dgsl_shared=OFF"
     export CUSTOM_CMAKE_FLAGS
 
     # update system flags
@@ -174,9 +175,6 @@ build() {
     mkdir -p "${srcdir}/build-cuda"
     cd "${srcdir}/build-cuda"
 
-    CC=/usr/bin/gcc-12 \
-    CXX=/usr/bin/g++-12 \
-    FC=/usr/bin/f95-12 \
     cmake -C "${srcdir}/settings-cuda.cmake" \
         ${CUSTOM_CMAKE_FLAGS} \
         ${CUSTOM_CUDA_ARCH} \

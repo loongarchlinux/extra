@@ -1,0 +1,18 @@
+[Unit]
+Description=Prometheus exporter for machine metrics
+Requires=network-online.target
+After=network-online.target
+
+[Service]
+User=elasticsearch_exporter
+Group=elasticsearch_exporter
+Restart=on-failure
+EnvironmentFile=-/etc/conf.d/prometheus-elasticsearch-exporter
+ExecStart=/usr/bin/prometheus-elasticsearch-exporter $ELASTICSEARCH_EXPORTER_ARGS
+ExecReload=/bin/kill -HUP $MAINPID
+NoNewPrivileges=true
+ProtectHome=read-only
+ProtectSystem=strict
+
+[Install]
+WantedBy=multi-user.target

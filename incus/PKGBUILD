@@ -5,15 +5,20 @@
 # Contributor: Benjamin Asbach <archlinux-aur.lxd@impl.it>
 # Contributer: nightuser <nightuser.android at gmail.com>
 
-pkgname=incus
-pkgver=0.4
+pkgbase=incus
+pkgname=(incus incus-tools)
+pkgver=0.5
 pkgrel=1
 pkgdesc="Powerful system container and virtual machine manager"
 arch=('loong64' 'x86_64')
 url="https://linuxcontainers.org/incus/"
 license=('Apache-2.0')
-conflicts=('lxd')
-depends=('lxc' 'lxcfs' 'squashfs-tools' 'dnsmasq' 'cowsql' 'libuv' 'ebtables' 'raft' 'sqlite' 'libcap' 'acl')
+depends=('lxc' 'lxcfs' 'squashfs-tools' 'dnsmasq' 'cowsql' 'libuv' 'ebtables' 'raft' 'sqlite' 'libcap' 'acl'
+
+          # VM Support
+          'qemu-base' 'qemu-chardev-spice' 'qemu-hw-usb-redirect'
+          'qemu-hw-display-virtio-vga' 'qemu-hw-display-virtio-gpu'
+)
 makedepends=('go' 'git' 'tcl' 'apparmor' 'libseccomp' 'systemd')
 optdepends=(
     'lvm2: lvm2 support'
@@ -21,10 +26,9 @@ optdepends=(
     'btrfs-progs: btrfs storage driver support'
     'minio: storage buckets support'
     'cdrtools: VM support'
-    'qemu: VM support'
-    'edk2-ovmf: VM support'
     'systemd-libs: unix device hotplug support'
     'apparmor: apparmor support'
+    'xdelta3: support delta downloads of images'
 )
 source=("https://github.com/lxc/incus/releases/download/v${pkgver}.0/${pkgname}-${pkgver}.tar.xz"{,.asc}
         "incus.socket"
@@ -34,10 +38,10 @@ source=("https://github.com/lxc/incus/releases/download/v${pkgver}.0/${pkgname}-
         "incus.sysusers")
 validpgpkeys=('602F567663E593BCBD14F338C638974D64792D67'  # Stéphane Graber <stgraber@stgraber.org>
              )
-sha256sums=('bee802ade967402b14401e1b5ecbd1336b007a4d816bd86644abbb43b9fc1845'
+sha256sums=('43c29ad1bac5c906db0e283c0b879402e24603fc81d1aef4a0e38e660f51a80a'
             'SKIP'
             '602a8035cc51b8e0c4ca265e31ebf96c7977db4239d384d8f60fed0d2d0317c4'
-            '09936fdbafe493687727e3b2f1e9509258295471f922784968b9a650fc48b0ea'
+            '646b0a9b38954890bc8706b41dfb93c7fdc83cbee1a3632c7258d77a1fddd725'
             '50288528ea910d186157a2515c5200b3b073f645922fb581d1913f236f14667d'
             '1c934cac1aa61be2ede5830ea76dbb9ba199498f6eb920ce1016bbb54dd088bf'
             '90beead5dbde947936a58df8773519c49d92a2028881ae0ec81ee5402510e39a')
@@ -59,7 +63,7 @@ build() {
   CGO_LDFLAGS="-static" go build -v -tags "agent" -o bin/ ./cmd/incus-agent/...
 
   go build -v -ldflags "${GO_LDFLAGS}" -tags "netgo" -o bin/ ./cmd/incus-migrate/...
-  for tool in fuidshift incus lxc-to-incus incusd incus-benchmark incus-user; do
+  for tool in fuidshift incus lxc-to-incus lxd-to-incus incusd incus-benchmark incus-user; do
     go build -v -ldflags "${GO_LDFLAGS}" -tags "libsqlite3" -o bin/ ./cmd/$tool
   done
 
@@ -67,16 +71,12 @@ build() {
   # mkdir manpages
   # ./bin/incus manpage --all ./manpages
   # ./bin/incusd manpage --all ./manpages
-
-  # Build lxd-to-incus as separate binary
-  cd cmd/lxd-to-incus
-  go build -v -ldflags "${GO_LDFLAGS}" -tags "libsqlite3" -o ../../bin/
 }
 
-package() {
-  cd "$pkgname-$pkgver"
+package_incus() {
+  cd "$pkgbase-$pkgver"
 
-  for tool in fuidshift incus lxc-to-incus incusd incus-agent incus-benchmark incus-user lxd-to-incus; do
+  for tool in incus incusd incus-agent incus-user lxd-to-incus; do
     install -v -p -Dm755 "bin/$tool" "${pkgdir}/usr/bin/$tool"
   done
 
@@ -98,6 +98,16 @@ package() {
 
   # Bash completions
   install -v -p -Dm644 "scripts/bash/incus" "${pkgdir}/usr/share/bash-completion/completions/incus"
+}
+
+package_incus-tools() {
+  conflicts=('lxd')
+  cd "$pkgbase-$pkgver"
+  for tool in fuidshift lxc-to-incus incus-benchmark; do
+    install -v -p -Dm755 "bin/$tool" "${pkgdir}/usr/bin/$tool"
+  done
+  # Package license
+  install -v -Dm644 "COPYING"  "${pkgdir}/usr/share/licenses/${pkgname}/LICENCE"
 }
 
 # vim:set ts=2 sw=2 et:

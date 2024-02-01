@@ -3,7 +3,7 @@
 pkgname=python-clevercsv
 pkgver=0.8.0
 _commit=25d696a0adb94e875bad7887ad34ac4be4bd6d3f
-pkgrel=1
+pkgrel=2
 pkgdesc="A Python package for handling messy CSV files"
 url="https://github.com/alan-turing-institute/CleverCSV"
 license=('MIT')
@@ -11,7 +11,7 @@ arch=('loong64' 'x86_64')
 depends=('python-chardet' 'python-regex' 'python-packaging')
 makedepends=('git' 'python-setuptools')
 optdepends=('python-pandas' 'python-tabview' 'python-wilderness' 'python-cchardet')
-checkdepends=('python-pytest-runner' 'python-pandas' 'python-tabview' 'python-wilderness'
+checkdepends=('python-pytest' 'python-pandas' 'python-tabview' 'python-wilderness'
               'python-faust-cchardet' 'python-termcolor')
 source=("git+https://github.com/alan-turing-institute/CleverCSV.git#commit=$_commit")
 sha512sums=('SKIP')
@@ -23,7 +23,8 @@ build() {
 
 check() {
   cd CleverCSV
-  PYTHONPATH="$PWD"/build/lib.linux-$CARCH-3.10 python setup.py pytest
+  local python_version=$(python -c 'import sys; print("".join(map(str, sys.version_info[:2])))')
+  PYTHONPATH="build/lib.linux-x86_64-cpython-${python_version}" pytest
 }
 
 package() {

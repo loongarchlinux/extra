@@ -1,8 +1,8 @@
 # Maintainer: Felix Yan <felixonmars@archlinux.org>
 
 pkgname=python-configargparse
-pkgver=1.5.3
-pkgrel=3
+pkgver=1.5.5
+pkgrel=1
 pkgdesc='A drop-in replacement for argparse that allows options to also be set via config files and/or environment variables'
 arch=('any')
 url='https://github.com/bw2/ConfigArgParse'
@@ -11,8 +11,8 @@ depends=('python')
 makedepends=('python-setuptools')
 checkdepends=('python-pytest' 'python-tests' 'python-yaml')
 optdepends=('python-yaml: for YAML support')
-source=("https://github.com/bw2/ConfigArgParse/archive/v$pkgver/$pkgname-$pkgver.tar.gz")
-sha512sums=('bdc0340bd92cfd5319743a4860af80fc2352f38b156031856c2b39b8c8ad59461281009030c4451dd464334a829b8143c765979cfc9b8ccbe9fbdcb0e08ac7b4')
+source=("https://github.com/bw2/ConfigArgParse/archive/$pkgver/$pkgname-$pkgver.tar.gz")
+sha512sums=('fc9229d12fcc8da3b001d75d10829e1eef4ec0624b89ad319e840bea9a795d3d575a3760538f13a30bd1e778a27a7620486d7cb199fff9df5535017a7fef4a4c')
 
 build() {
   cd ConfigArgParse-$pkgver

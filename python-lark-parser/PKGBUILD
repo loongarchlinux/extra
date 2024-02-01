@@ -1,8 +1,8 @@
-# Maintainer:
+# Maintainer: George Rawlinson <grawlinson@archlinux.org>
 # Contributor: Felix Yan <felixonmars@archlinux.org>
 
 pkgname=python-lark-parser
-pkgver=1.1.8
+pkgver=1.1.9
 pkgrel=1
 pkgdesc='A modern parsing library'
 arch=('any')
@@ -32,7 +32,7 @@ optdepends=(
   'python-js2py: for nearley support'
 )
 provides=('python-lark')
-_commit='a43373c8c16bea0e2e006eb614b21c1970e4f989'
+_commit='262ab71d497a8814f0ca42ca468b923fdb47a3c7'
 source=(
   "$pkgname::git+$url#commit=$_commit"
   'github.com-Hardmath123-nearley::git+https://github.com/Hardmath123/nearley'

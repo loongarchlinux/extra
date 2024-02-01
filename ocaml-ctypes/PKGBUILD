@@ -2,31 +2,26 @@
 # Contributor: Armin K. <krejzi at email dot com>
 
 pkgname=ocaml-ctypes
-pkgver=0.20.2
-pkgrel=2
+pkgver=0.21.1
+pkgrel=1
 pkgdesc="Library for binding to C libraries using pure OCaml"
 arch=('loong64' 'x86_64')
 url="https://github.com/ocamllabs/ocaml-ctypes"
 license=('MIT')
 depends=('ocaml' 'libffi' 'ocaml-integers' 'ocaml-bigarray-compat')
-makedepends=('ocaml-findlib' 'ocaml-compiler-libs')
+makedepends=('ocaml-findlib' 'ocaml-compiler-libs' 'dune')
 options=('!strip' '!makeflags')
 source=($pkgname-$pkgver.tar.gz::https://github.com/ocamllabs/ocaml-ctypes/archive/$pkgver.tar.gz)
-sha512sums=('99cdc77e5283b26fb8f00376f9fe87f84809f533544409036c622ef3bdeb4b6640ece1976da4ef5f4e7dff0ab5a8dd2994ea939fb8a2832d22579b8e854ee55e')
+sha512sums=('3a64b29746360e7dda7725ce7af23ca64cd6a3fa585aa70188cdd143aace744f44c1bd13cdda5c9733ca53d4b874ed42749ca21aaff4f4d53636a390a2c7f94f')
 
 build() {
   cd "$srcdir/$pkgname-$pkgver"
-  make
+  dune build -p ctypes,ctypes-foreign
 }
 
 package() {
   cd "$srcdir/$pkgname-$pkgver"
-
-  local _destdir="$pkgdir$(ocamlfind printconf destdir)"
-  install -d "$_destdir/stublibs"
-
-  make OCAMLFIND_DESTDIR="$_destdir" install
-
+  DESTDIR="${pkgdir}" dune install --prefix "/usr" --libdir "/usr/lib/ocaml" --docdir "/usr/share/doc"
   install -Dm644 LICENSE "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
 }
 

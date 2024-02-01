@@ -5,7 +5,7 @@ pkgname=(
   libtraceevent
   libtraceevent-docs
 )
-pkgver=1.8.1
+pkgver=1.8.2
 pkgrel=1
 epoch=1
 pkgdesc="Linux kernel trace event library"
@@ -20,12 +20,12 @@ makedepends=(
   xmlto
 )
 source=(
-  $pkgname-$pkgver.tar.gz::https://git.kernel.org/pub/scm/libs/libtrace/$pkgname.git/snapshot/$pkgname-$pkgver.tar.gz
+  https://git.kernel.org/pub/scm/libs/libtrace/$pkgname.git/snapshot/$pkgname-$pkgver.tar.gz
   $pkgname-1.5.0-documentation.patch
 )
-sha512sums=('dbe8b81d703e73f0dd4b164bc46a000a7981ae20ef7eadcbe648858db09a038db67d20ee814d6bd52b07f901c4a6f443ce4a43c1fd16c54b0d1df61d92a42241'
+sha512sums=('52b7a23e8bf04feaa568199c99c98217fcb8df1b99d46197ef9edcea19b42e71ff9d2e6c45ebf5335ec782d636ad3d14be4acae5a9e5158650f5f62813081fa2'
             '74b34a722d3fb9d672826e0b6b137f94a7fcd41bb372f8944bb6a0c652c0e725aaef8e95284fc091c2e9954bcf1656b5428d7e0f121682d40c25623178ee4a1e')
-b2sums=('5717bd423ebebb546afabb2154928c92611fb99bd725a3e96d3cf49b2a29ea3e135ca383939332b38219e285453962223694eec5b0967f4d99525c3c6e54acfc'
+b2sums=('afadd9f559bdc071b3741ce42b8bf0c320523f2b39c437bcf4180f277eb804c33b2feac447fae15a869164475fb5f019ef171b69be32c46b74e5f22a3ed3808b'
         'f66f4f20dfe562407a0d4bb53785d1515c4b5f4be64dd96e06ea6c9e03c299b2f0f613901c30893a976b3874d13e768791632a7cb89be92f3788330e4f5ab97d')
 
 _pick() {

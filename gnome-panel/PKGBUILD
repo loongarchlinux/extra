@@ -3,22 +3,57 @@
 
 pkgname=gnome-panel
 pkgver=3.50.0
-pkgrel=1
+pkgrel=2
 pkgdesc='Panel of GNOME Flashback'
 arch=('loong64' 'x86_64')
 url='https://wiki.gnome.org/Projects/GnomePanel'
-license=('GPL')
-depends=('evolution-data-server' 'gnome-desktop' 'gnome-menus' 'libgdm' 'libwnck3' 'nautilus'
-         'geocode-glib' 'polkit')
+license=('GPL-2.0-or-later AND LGPL-2.1-or-later')
+depends=('at-spi2-core' 'cairo' 'dconf' 'evolution-data-server' 'gdk-pixbuf2' 'geocode-glib-2'
+         'glib2' 'glibc' 'gnome-desktop' 'gnome-menus' 'gsettings-desktop-schemas' 'gtk3'
+         'hicolor-icon-theme' 'libgdm' 'libgweather-4' 'libical' 'libwnck3' 'libx11' 'libxrandr'
+         'nautilus' 'pango' 'polkit' 'systemd-libs')
 makedepends=('itstool')
 optdepends=('alacarte: Main menu editor'
             'gnome-applets: Extra applets for the panel')
-source=("https://download.gnome.org/sources/$pkgname/${pkgver%.*}/$pkgname-$pkgver.tar.xz")
-sha256sums=('025ec889d04262d41c95bee85be6421ba3a6050e269b9ce99f692cad49a2eb13')
+source=("https://download.gnome.org/sources/$pkgname/${pkgver%.*}/$pkgname-$pkgver.tar.xz"
+        '0001-menu-Fix-hiding-the-arrow.patch'
+        '0001-menu-move-lock-and-logout-menu-items-below-the-user-.patch'
+        '0001-application-honor-color-scheme-setting.patch'
+        '0001-layout-Load-the-default-layout-if-all-toplevels-were.patch'
+        '0002-context-menu-Add-option-to-reset-the-panel.patch'
+        '0001-theme-fix-NaApplet-class-name.patch')
+sha256sums=('025ec889d04262d41c95bee85be6421ba3a6050e269b9ce99f692cad49a2eb13'
+            'ebece4cb8e8335fd36a8a1f356c670e552803d8e1741ff7da25ffc51c2fd371d'
+            '9acb07432f3770706d06cea7b08577536f492944f4502ad4d43eec495d01046e'
+            '2f94d17d25891173c2308b552daf318b69c64166810f6c2d7837953a39eeb1a4'
+            '54d50db3fa87c94edc7d643ccfdf6b5405b0a5817f3ec293b8086147e83f2ac5'
+            '0fca621f2daf38e253cc11a87aaf0b87ceecd4ae18953ea82697b66a0d2dcc20'
+            '23c06dae39cc23c4240baadd171aec93825da1269fd131362b740eb4539ea65f')
+
+prepare() {
+  cd $pkgname-$pkgver
+
+  # https://gitlab.gnome.org/GNOME/gnome-panel/-/merge_requests/57
+  patch -Np1 -i ../0001-menu-Fix-hiding-the-arrow.patch
+
+  # https://gitlab.gnome.org/GNOME/gnome-panel/-/merge_requests/58
+  patch -Np1 -i ../0001-menu-move-lock-and-logout-menu-items-below-the-user-.patch
+
+  # https://gitlab.gnome.org/GNOME/gnome-panel/-/merge_requests/59
+  patch -Np1 -i ../0001-application-honor-color-scheme-setting.patch
+
+  # https://gitlab.gnome.org/GNOME/gnome-panel/-/merge_requests/60
+  patch -Np1 -i ../0001-layout-Load-the-default-layout-if-all-toplevels-were.patch
+  patch -Np1 -i ../0002-context-menu-Add-option-to-reset-the-panel.patch
+
+  # https://gitlab.gnome.org/GNOME/gnome-panel/-/merge_requests/61
+  patch -Np1 -i ../0001-theme-fix-NaApplet-class-name.patch
+  rm gnome-panel/panel-resources.{c,h}
+}
 
 build() {
   cd $pkgname-$pkgver
-  ./configure --prefix=/usr --disable-schemas-compile --enable-compile-warnings=minimum
+  ./configure --prefix=/usr
   sed -i -e 's/ -shared / -Wl,-O1,--as-needed\0/g' libtool
   make
 }

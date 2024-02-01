@@ -1,0 +1,35 @@
+# Maintainer: Robin Candau <antiz@archlinux.org>
+# Contributor: travisghansen <travisghansen@yahoo.com>
+
+pkgname=yubico-piv-tool
+pkgver=2.4.2
+pkgrel=2
+pkgdesc="Command line tool for the YubiKey PIV application"
+arch=('loong64' 'x86_64')
+url="https://developers.yubico.com/yubico-piv-tool"
+license=('BSD-2-Clause')
+depends=('zlib' 'glibc' 'pcsclite' 'openssl')
+makedepends=('check' 'cmake' 'gengetopt' 'help2man')
+source=(https://developers.yubico.com/yubico-piv-tool/Releases/"${pkgname}-${pkgver}".tar.gz{,.sig})
+sha256sums=('fa9837b232b078357c1fba3d34992b05654ea2b9b55476c1ad336d8c96aac40e'
+            'SKIP')
+validpgpkeys=('1D7308B0055F5AEF36944A8F27A9C24D9588EA0F')
+
+build() {
+	cmake -B build -S "${pkgname}-${pkgver}" \
+		-DCMAKE_BUILD_TYPE='None' \
+		-DCMAKE_INSTALL_PREFIX='/usr' \
+		-Wno-dev
+	cmake --build build
+}
+
+check() {
+	ctest --test-dir build --output-on-failure
+}
+
+package() {
+	DESTDIR="${pkgdir}" cmake --install build
+
+	cd "${pkgname}-${pkgver}"
+	install -Dm 644 COPYING "${pkgdir}/usr/share/licenses/${pkgname}/COPYING"
+}

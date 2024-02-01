@@ -2,26 +2,59 @@
 
 pkgname=gnome-flashback
 pkgver=3.50.0
-pkgrel=1
+pkgrel=2
 pkgdesc='GNOME Flashback session'
 arch=('loong64' 'x86_64')
 url='https://wiki.gnome.org/Projects/GnomeFlashback'
-license=('GPL')
-depends=('gnome-bluetooth-3.0' 'gnome-panel' 'gnome-session' 'gnome-settings-daemon'
-         'gnome-themes-extra' 'libibus' 'libxkbfile' 'metacity' 'libcanberra')
-makedepends=('python3')
+license=('GPL-3.0-or-later')
+depends=('alsa-lib' 'at-spi2-core' 'bash' 'cairo' 'dconf' 'gcc-libs' 'gdk-pixbuf2' 'glib2' 'glibc'
+         'gnome-bluetooth-3.0' 'gnome-desktop' 'gnome-panel' 'gnome-session'
+         'gnome-settings-daemon' 'gsettings-desktop-schemas' 'gtk3' 'libcanberra' 'libgdm'
+         'libibus' 'libpulse' 'libx11' 'libxcb' 'libxext' 'libxfixes' 'libxi' 'libxkbfile'
+         'libxrandr' 'libxxf86vm' 'metacity' 'nautilus' 'pam' 'pango' 'polkit' 'systemd-libs')
+makedepends=('python')
 optdepends=('gnome-backgrounds: Default background'
             'gnome-control-center: System settings'
             'network-manager-applet: Network management')
 source=("https://download.gnome.org/sources/$pkgname/${pkgver%.*}/$pkgname-$pkgver.tar.xz"
+        '0001-background-Support-dark-wallpapers.patch'
+        '0001-polkit-Don-t-reset-the-idle_id.patch'
+        '0001-application-honor-color-scheme-setting.patch'
+        '0001-theme-improve-screensaver-style.patch'
+        '0001-autostart-add-launcher-for-Geoclue-Demo-agent.patch'
         'gnome-flashback.pam')
 sha256sums=('d04c434822022c9fa7e60874e5c8cd2060c8f3c0703c19f2b4032be254272afe'
+            '3a99c7471d1b33b4a140dbf1a9684f5823ab772ead9164b6bc60f173cad2c26b'
+            '674b1681e10128a91d26e3601f8f251ce9a37f67c5003fe9aa2d8a2df5e22041'
+            '7648d3954f5e1b8cabd61bd47062a86d39af1c542172997051cfc50af7a3f917'
+            'd61e51a2d10bf3c6c3f30ec666e21ab548fec23ac5e8e22782ed16fc3731ebf8'
+            '43faf94d4081407156a334f609be768c02b80ed5f2dbffeaddac1d72819a6192'
             '7148b3b1773fa312d6cd14798338cc70cffb6df7504ff1787687edd0363138d2')
+
+prepare() {
+  cd $pkgname-$pkgver
+
+  # https://gitlab.gnome.org/GNOME/gnome-flashback/-/merge_requests/51
+  patch -Np1 -i ../0001-background-Support-dark-wallpapers.patch
+
+  # https://gitlab.gnome.org/GNOME/gnome-flashback/-/merge_requests/52
+  patch -Np1 -i ../0001-polkit-Don-t-reset-the-idle_id.patch
+
+  # https://gitlab.gnome.org/GNOME/gnome-flashback/-/merge_requests/53
+  patch -Np1 -i ../0001-application-honor-color-scheme-setting.patch
+
+  # https://gitlab.gnome.org/GNOME/gnome-flashback/-/merge_requests/54
+  patch -Np1 -i ../0001-theme-improve-screensaver-style.patch
+  rm gnome-flashback/gf-resources.{c,h}
+
+  # https://gitlab.gnome.org/GNOME/gnome-flashback/-/merge_requests/55
+  patch -Np1 -i ../0001-autostart-add-launcher-for-Geoclue-Demo-agent.patch
+  autoreconf -fi
+}
 
 build() {
   cd $pkgname-$pkgver
-  ./configure --prefix=/usr --sysconfdir=/etc --libexecdir=/usr/lib/$pkgname \
-              --disable-schemas-compile --enable-compile-warnings=minimum
+  ./configure --prefix=/usr --sysconfdir=/etc --libexecdir=/usr/lib
   sed -i -e 's/ -shared / -Wl,-O1,--as-needed\0/g' libtool
   make
 }

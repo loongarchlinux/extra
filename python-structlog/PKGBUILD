@@ -3,9 +3,9 @@
 
 pkgname=python-structlog
 # https://github.com/hynek/structlog/blob/main/CHANGELOG.md
-pkgver=23.2.0
+pkgver=24.1.0
 # curl https://api.github.com/repos/hynek/structlog/git/ref/tags/$pkgver | jq -r .object.sha
-_tag=72ef675fdf0c63e1209debfabb96d6ddca857095
+_tag=3dac758cc28fc063067cfce57e37c67b16daf00d
 pkgrel=1
 pkgdesc="Structured Logging for Python"
 url="https://www.structlog.org"

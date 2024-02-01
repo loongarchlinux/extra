@@ -1,0 +1,29 @@
+# Maintainer: Felix Yan <felixonmars@archlinux.org>
+# Contributor: Qirui Wang <wqr.prg@gmail.com>
+# Contributor: Carl George < arch at cgtx dot us >
+
+pkgname=python-sanic
+pkgver=22.12.0
+pkgrel=1
+pkgdesc='Async Python 3.6+ web server/framework | Build fast. Run fast.'
+arch=("any")
+url='https://sanic.dev/'
+license=("MIT")
+depends=('python-sanic-routing' 'python-httptools' 'python-uvloop' 'python-ujson' 'python-aiofiles'
+         'python-websockets' 'python-multidict')
+makedepends=('python-setuptools')
+source=("https://github.com/sanic-org/sanic/archive/v$pkgver/$pkgname-$pkgver.tar.gz")
+sha256sums=('d0bb80a906112ed81340e8273d06d6a45086b897ef4af507326a2b0b1a207025')
+
+build() {
+    cd sanic-$pkgver
+    python setup.py build
+}
+
+# TODO: tests
+
+package() {
+    cd sanic-$pkgver
+    python setup.py install --skip-build --root="$pkgdir" --optimize=1
+    install -Dm644 LICENSE -t "$pkgdir"/usr/share/licenses/$pkgname/
+}

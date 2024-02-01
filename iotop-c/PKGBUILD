@@ -1,0 +1,35 @@
+# Maintainer: Chistian Heusel <gromit@archlinux.org>
+# Contributor: Rumen Jekov <rvjekov@gmail.com>
+# Contributor: Boian Bonev <bbonev@ipacct.com>
+
+pkgname=iotop-c
+pkgver=1.25
+pkgrel=3
+pkgdesc="simple top-like I/O monitor (implemented in C)"
+arch=('loong64' 'x86_64')
+url="https://github.com/Tomas-M/iotop"
+license=('GPL-2.0-or-later')
+depends=('glibc' 'ncurses')
+makedepends=('pkgconf')
+conflicts=('iotop')
+provides=('iotop')
+source=(${url}/releases/download/v${pkgver}/iotop-${pkgver}.tar.xz{,.asc})
+validpgpkeys=('BA60BC20F37E59444D6D25001365720913D2F22D')
+sha256sums=('bf1e1ccb9692e99381cd362c74d64b30913432c7df48f1f91da5f2920a2e2d08'
+            'SKIP')
+
+prepare() {
+	cd iotop-${pkgver}
+	sed -i 's/sbin/bin/g' Makefile
+	sed -i '/STRIP/d' Makefile
+}
+
+build() {
+	cd iotop-${pkgver}
+	make DESTDIR="${pkgdir}" V=1
+}
+
+package() {
+	cd iotop-${pkgver}
+	make DESTDIR="${pkgdir}" install
+}

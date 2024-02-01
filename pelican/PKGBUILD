@@ -3,18 +3,18 @@
 # Contributor: David Runge <dave@sleepmap.de>
 
 pkgname=pelican
-pkgver=4.8.0
-pkgrel=3
+pkgver=4.9.1
+pkgrel=1
 pkgdesc="A tool to generate a static blog, with restructured text (or markdown) input files."
 arch=('any')
 url="https://blog.getpelican.com/"
 license=('AGPL3')
-makedepends=('python-sphinx')
-depends=('python-jinja' 'python-pygments' 'python-feedgenerator' 'python-pytz'
-         'python-docutils' 'python-blinker' 'python-unidecode' 'python-six'
-         'python-dateutil' 'python-rich')
-checkdepends=('python-setuptools' 'python-lxml' 'git' 'python-nose'
-              'python-feedparser' 'python-markdown' 'python-typogrify')
+makedepends=('python-build' 'python-installer' 'python-sphinx' 'python-sphinxext-opengraph' 'python-pdm-backend')
+depends=('python-jinja' 'python-pygments' 'python-feedgenerator'
+         'python-docutils' 'python-blinker' 'python-unidecode'
+         'python-dateutil' 'python-rich' 'python-watchfiles' 'python-ordered-set')
+checkdepends=('python-lxml' 'git'
+              'python-feedparser' 'python-markdown' 'python-typogrify' 'python-pytest-xdist')
 optdepends=('python-markdown: Markdown support'
             'asciidoc: AsciiDoc support'
             'python-beautifulsoup4: importing from wordpress/dotclear/posterous'
@@ -29,22 +29,15 @@ optdepends=('python-markdown: Markdown support'
             'python-typogrify: typographical enhancements'
             'pandoc: for pelican-import auto convert'
             'python-mdx-video: easier embedding of youtube videos in markdown')
-source=("$pkgname-$pkgver.tar.gz::https://github.com/getpelican/pelican/archive/$pkgver.tar.gz"
-         https://github.com/getpelican/pelican/commit/33aca76d.patch
-         https://github.com/getpelican/pelican/commit/3937028c.patch)
-sha512sums=('2e94eb88a836bcb430026463c0e7e906b7f065507e0d873b6e0fc980e271e6a8f2e62b22af4b61c963d90ef61d57787de20656fe7497b0ae14e93eff2d364f3b'
-            '5362679c506a517fc63b37a5e32a4e04659cf9ecb0642512ab9d57d08b336c280f059409561b5abb4134cb7b84b12b194e4124f620ca8289ca856f956950c40e'
-            '3dfc8ce541ee0547ed771cba2c48b08a8cd0b683b4a882f94dea725bb61c056a04b1f837ba622c18121f44bc11bd86ee14da68491e85109e73ba4520b176beaa')
-
-prepare() {
-  cd $pkgname-$pkgver
-  patch -p1 -i ../33aca76d.patch # Fix build with sphinx 6
-  patch -p1 -i ../3937028c.patch # Fix tests with python 3.11
-}
+source=("$pkgname-$pkgver.tar.gz::https://github.com/getpelican/pelican/archive/$pkgver.tar.gz")
+sha512sums=('70b7efd7a38dc2069b1eb9141647fa80bf959de36936ad7b4d38407be7e029fc788ef9b9f297d99e5dc6cad67d58fe6ff97f9b542db7e0a9c23e2907d4604e21')
 
 build() {
+    cd $pkgname-$pkgver
+    python -m build -wn
+
     # sphinx tried to import pelican, make it happy
-    cd "$srcdir/$pkgname-$pkgver/docs"
+    cd docs
     PYTHONPATH=".." make man
     PYTHONPATH=".." make text
 }
@@ -52,7 +45,7 @@ build() {
 package() {
     cd "$srcdir/$pkgname-$pkgver"
 
-    LANG=en_US.UTF-8 python setup.py install --prefix=/usr --root="$pkgdir" --optimize=1
+    LANG=en_US.UTF-8 python -m installer --destdir="$pkgdir" dist/*.whl
 
     cd "docs"
 
@@ -65,12 +58,5 @@ package() {
 
 check() {
     cd "$srcdir/$pkgname-$pkgver"
-    ## TODO: fix upstream tests
-    ##  --exclude="test_log_filter" # will only work with normal logger instead of nosetests logger
-    ##  --exclude="test_basic_generation_works" # will only work with python-pygments==2.6.1
-    ##  --exclude="test_custom_generation_works" # will only work with python-pygments==2.6.1
-    LANG=en_US.UTF-8 nosetests \
-      --exclude="test_log_filter"  \
-      --exclude="test_basic_generation_works" \
-      --exclude="test_custom_generation_works"
+    pytest -v -k 'not test_blinker_is_ordered'
 }

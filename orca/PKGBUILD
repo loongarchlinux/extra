@@ -4,12 +4,12 @@
 # Contributor: William Rea <sillywilly@gmail.com>
 
 pkgname=orca
-pkgver=45.1
+pkgver=45.2
 pkgrel=1
 pkgdesc="Screen reader for individuals who are blind or visually impaired"
 url="https://wiki.gnome.org/Projects/Orca"
 arch=(any)
-license=(LGPL)
+license=(LGPL-2.1-or-later)
 depends=(
   at-spi2-core
   brltty
@@ -38,7 +38,7 @@ makedepends=(
   yelp-tools
 )
 groups=(gnome)
-_commit=9e77d1baf9bd24b78d7499ad9b2e8bb80c9a0c81  # tags/ORCA_45_1^0
+_commit=cd1c1f25fbea6b6d815ce4403364e78e635919be  # tags/ORCA_45_2^0
 source=("git+https://gitlab.gnome.org/GNOME/orca.git#commit=$_commit")
 b2sums=('SKIP')
 
@@ -53,8 +53,14 @@ prepare() {
 }
 
 build() {
+  local configure_options=(
+    --prefix=/usr
+    --sysconfdir=/etc
+    --localstatedir=/var
+  )
+
   cd orca
-  ./configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var
+  ./configure "${configure_options[@]}"
   make
 }
 

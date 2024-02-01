@@ -1,12 +1,12 @@
 # Maintainer: David Runge <dvzrv@archlinux.org>
 
 pkgname=rauc
-pkgver=1.10.1
+pkgver=1.11.1
 pkgrel=1
 pkgdesc="Safe and secure software updates for embedded Linux"
 arch=(loong64 x86_64)
 url="https://rauc.io"
-license=(LGPL2.1)
+license=(LGPL-2.1-or-later)
 depends=(
   gcc-libs
   glibc
@@ -19,6 +19,7 @@ makedepends=(
   dbus
   glib2
   json-glib
+  meson
   python
   systemd
   util-linux
@@ -36,31 +37,31 @@ optdepends=(
   'uboot-tools: for u-boot support'
 )
 source=(https://github.com/rauc/rauc/releases/download/v$pkgver/$pkgname-$pkgver.tar.xz{,.asc})
-sha512sums=('794a1a517c9a9eacf7466710054f88fc48bf57e34cb460f202f62ca976777054c0faf74dd045164ea29977aa8f5d9d268f5154621b51642898ffafc831c75bbb'
+sha512sums=('09f6e7218f884404b56d9d69a028e6098ab2c3d44033d107dcfeffa3ed26ccbd7fff0c27ba1b7c9a74c635b7483f2db1253da148a695bd7db75a2a674438e0f3'
             'SKIP')
-b2sums=('3cdaa88886e0d4f97623939af06a0a90de1a166535ff1cdaf523938a1778bfdd24049387886732d1a13c0d94a43d66f73d9328cc005beb3a73f33b3afda49b22'
+b2sums=('ba1aa015be1b28f50014ccd43154b296170faa680f97e27e14a98d6af58f0b0151cef33f4fb4f13bfd304a278edbcd7d9cc9134612ae7a14de04c3a169ab9e00'
         'SKIP')
 validpgpkeys=("977843FD5C3EBF76BAD4008EA58CC53DBF05E090")  # Jan Lübbe <jlu@pengutronix.de>
 
-prepare() {
-  cd $pkgname-$pkgver
-  autoreconf -fiv
-}
-
 build() {
-  local configure_options=(
-    --prefix=/usr
-    --libexecdir=/usr/lib
-    --enable-gpt
-  )
+  arch-meson $pkgname-$pkgver build
+  meson compile -C build
 
-  cd $pkgname-$pkgver
-  ./configure "${configure_options[@]}"
-  make
 }
 
 check() {
-  make -k check -C $pkgname-$pkgver
+  local meson_tests=($(meson test -C build --list))
+  # disable broken tests: https://github.com/rauc/rauc/issues/1311
+  local disabled_tests=(service)
+  for target in "${disabled_tests[@]}"; do
+    for i in "${!meson_tests[@]}"; do
+      if [[ ${meson_tests[i]} = $target ]]; then
+        unset 'meson_tests[i]'
+      fi
+    done
+  done
+
+  meson test -C build "${meson_tests[@]}"
 }
 
 package() {
@@ -71,7 +72,7 @@ package() {
     util-linux-libs libfdisk.so
   )
 
-  make DESTDIR="$pkgdir/" install -C $pkgname-$pkgver
+  meson install -C build --destdir "$pkgdir"
   install -vdm 755 "$pkgdir/etc/$pkgname/"
   install -vDm 644 $pkgname-$pkgver/contrib/{grub.conf,uboot.sh} -t "$pkgdir/usr/share/doc/$pkgname/"
 }

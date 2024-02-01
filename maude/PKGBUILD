@@ -4,7 +4,7 @@
 # Contributor: Stefan Husmann <stefan-husmann@t-online.de>
 
 pkgname=maude
-pkgver=3.2.2
+pkgver=3.3
 pkgrel=1
 pkgdesc="High-level Specification Language"
 arch=('loong64' 'x86_64')
@@ -12,15 +12,15 @@ url="http://maude.cs.illinois.edu"
 license=('GPL')
 depends=('buddy' 'cvc4' 'libtecla' 'gmp' 'libsigsegv' 'yices')
 makedepends=('flex' 'bison')
-source=("https://github.com/SRI-CSL/Maude/archive/$pkgver/$pkgname-$pkgver.tar.gz"
+source=("https://github.com/SRI-CSL/Maude/archive/Maude$pkgver/$pkgname-$pkgver.tar.gz"
         https://raw.githubusercontent.com/maude-team/full-maude/96be01c059d7f0fb1cbea15e2f0818350fb66eb8/full-maude322.maude
         maude.sh)
-sha512sums=('0414a5cbd0a2cd74b34abbd8072d5564f87f10bcf0d1b59b5e478ffc4d60f13eba9b47387b7efa85f6d5823fff5b436da13daf3b4d8dcbe973325e5afc5a28fe'
+sha512sums=('cd192d1901db92f23005da4da3cbc0beefe3972a531a9c110df01b552b17aa1a37d2fce580d786095bd20a2726f5afd90ecb7bee5cd789dfcd1d0df84d9c5bb0'
             '7527d5962497c2c45856408a78d26331977d3b35bc1824e59e1f87b644072fe78b5c5e0ca392c44056bcdc8c6874603288a6a536691b01c5cd68bdfe5bc99189'
             'f62e1709d035e996c9f9a887840492527415f157990cc2d52355d8a7fe9382a757c06bed95f97e298f8eea0dd2a846bf7efb8fb84987784a4a797820807be12e')
 
 prepare() {
-  cd Maude-$pkgver
+  cd Maude-Maude$pkgver
 
   # Always enabled in CVC4 1.8: https://github.com/CVC4/CVC4/pull/4519
   sed -i '/rewrite-divk/d' src/Mixfix/cvc4_Bindings.cc
@@ -31,18 +31,18 @@ prepare() {
 }
 
 build() {
-  cd Maude-$pkgver/build
+  cd Maude-Maude$pkgver/build
   ../configure --with-cvc4=yes --with-yices2=yes --prefix=/usr --datadir=/usr/share/maude
   make -j1 all CVC4_LIB="-lcvc4 -lcln"
 }
 
 check() {
-  cd Maude-$pkgver/build
+  cd Maude-Maude$pkgver/build
   make check
 }
 
 package() {
-  cd Maude-$pkgver/build
+  cd Maude-Maude$pkgver/build
   make DESTDIR="$pkgdir/" install
   install -Dm644 "$srcdir"/full-maude322.maude "$pkgdir"/usr/share/maude/full-maude.maude
   install -Dm755 "$srcdir"/maude.sh -t "$pkgdir"/etc/profile.d/

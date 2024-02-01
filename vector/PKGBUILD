@@ -1,16 +1,17 @@
 # Maintainer: Justin Kromlinger <hashworks@archlinux.org>
 
 pkgname=vector
-pkgver=0.32.2
+pkgver=0.35.0
 pkgrel=1
 pkgdesc="A high-performance observability data pipeline"
 arch=("loong64" "x86_64")
 _target="x86_64-unknown-linux-gnu"
 url="https://vector.dev"
-license=("MPL2")
+license=("MPL-2.0")
 options=(!lto) # TODO: Build with LTO
 backup=(
-    "etc/vector/vector.toml"
+    "etc/vector/vector.toml" # Versions <0.35.0
+    "etc/vector/vector.yaml"
 )
 depends=("gcc-libs" "zlib")
 # https://github.com/vectordotdev/vector/blob/master/docs/DEVELOPING.md#bring-your-own-toolbox
@@ -29,10 +30,12 @@ source=(
     "git+https://github.com/vectordotdev/vector#tag=v${pkgver}"
     "${pkgname}.sysusers"
     "${pkgname}.tmpfiles"
+    "drop_generates_cgroups_metrics_test.patch"
 )
 sha512sums=('SKIP'
             '4f7a5d63f4e89018d1f0e9aa0fba2bb5c448d7031a7ff40c82878f574243e075c2fca020e78c4c71b1caa1a5bd1f06b496a5d3ab432f01d145233fd6c9ec4b87'
-            'c192492df09d131f9174d2acbb7f265c280eb6d678589b8c93bacc47ae55c51573a5477d715897f8580ced420730992fb68bee78b374f1cc042888ea6b5512fd')
+            'c192492df09d131f9174d2acbb7f265c280eb6d678589b8c93bacc47ae55c51573a5477d715897f8580ced420730992fb68bee78b374f1cc042888ea6b5512fd'
+            'fc2034c483e26d43bab8c7804ba9f16fc1595be494d0f6e42b0ff7ef15f07e3f6a9ee3e7cbce2319180fd9620274d9319fcd3f20d1d3ab91bd87b50baed72a44')
 
 pkgver() {
   cd "${pkgname}"
@@ -41,6 +44,9 @@ pkgver() {
 
 prepare() {
     cd "${pkgname}"
+
+    # https://github.com/vectordotdev/vector/issues/18697
+    patch -p1 -N -l -i ../drop_generates_cgroups_metrics_test.patch
 
     cargo fetch \
         --locked
@@ -72,6 +78,7 @@ check() {
         --locked \
         --offline \
         --no-default-features \
+        --features "target-${_target}" \
         --target "${_target}"
 }
 
@@ -91,7 +98,7 @@ package() {
 
     install -Dm755 "releasebuild/vector" "${pkgdir}/usr/bin/vector"
 
-    install -Dm644 "config/vector.toml" "${pkgdir}/etc/vector/vector.toml"
+    install -Dm644 "config/vector.yaml" "${pkgdir}/etc/vector/vector.yaml"
     cp -r config/examples "${pkgdir}/usr/share/doc/${pkgname}/examples"
 
     install -Dm644 "distribution/systemd/vector.service" "${pkgdir}/usr/lib/systemd/system/vector.service"

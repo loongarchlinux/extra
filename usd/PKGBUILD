@@ -1,22 +1,45 @@
 # Maintainer: Sven-Hendrik Haase <svenstaro@archlinux.org>
+# Maintainer: Caleb Maclennan <caleb@alerque.com>
 # Contributor: Adrià Cabello <adro.cc79 at protonmail dot com>
-# Contributor: Caleb Maclennan <caleb@alerque.com>
 # Contributor: Started by https://github.com/qumaciel at https://github.com/PixarAnimationStudios/USD/issues/2000
 
 pkgname=('usd' 'usd-extras')
 _pkgname='OpenUSD'
 pkgbase=usd
 pkgver=23.11
-pkgrel=5
+pkgrel=8
 arch=(loong64 x86_64)
 url='https://openusd.org'
 pkgdesc='3D VFX pipeline interchange file format'
-license=('Apache')
-depends=('glew' 'python' 'boost-libs' 'jemalloc' 'libglvnd' 'libxt' 'embree' 'openexr'
-         'opencolorio' 'openimageio' 'opensubdiv' 'pyside2' 'pyside6' 'python-opengl'
-         'python-jinja' 'python-numpy' 'qt5-base' 'onetbb' 'materialx' 'ninja' 'dos2unix')
-makedepends=('cmake' 'help2man' 'git' 'openvdb' 'boost' 'alembic' 'draco'
-             'openshadinglanguage')
+license=(Apache-2.0)
+depends=(alembic # libAlembic.so
+         boost libboost_python311.so # https://gitlab.archlinux.org/archlinux/packaging/packages/boost/-/issues/1
+         dos2unix
+         draco # libdraco.so
+         embree # libembree4.so
+         glew
+         imath # libImath-3_1.so
+         jemalloc libjemalloc.so
+         libglvnd libOpenGL.so libGL.so
+         libx11 # libX11.so
+         libxt
+         materialx # libMaterialXGenMsl.so libMaterialXRenderGlsl.so libMaterialXGenGlsl.so libMaterialXRender.so libMaterialXGenShader.so libMaterialXFormat.so libMaterialXCore.so
+         ninja
+         onetbb # libtbb.so
+         opencolorio # libOpenColorIO.so
+         openexr
+         openimageio # libOpenImageIO.so libOpenImageIO_Util.so
+         openshadinglanguage # liboslquery.so
+         opensubdiv # libosdCPU.so libosdGPU.so
+         openvdb # libopenvdb.so
+         pyside2
+         pyside6
+         python # libpython3.11.so
+         python-jinja
+         python-numpy
+         python-opengl
+         qt5-base)
+makedepends=(cmake help2man git)
 source=("git+https://github.com/PixarAnimationStudios/$_pkgname.git#tag=v$pkgver"
         https://openusd.org/images/USDLogoUnsized.svg
         "usd-ocio230.patch::https://patch-diff.githubusercontent.com/raw/PixarAnimationStudios/OpenUSD/pull/2651.patch"
@@ -166,7 +189,7 @@ package_usd() {
 
 package_usd-extras() {
   pkgdesc='Extra components for USD'
-  depends=(usd=$pkgver alembic draco openshadinglanguage openvdb)
+  depends=(usd=$pkgver)
 
   for name in "${_extra[@]}"; do
     find usd-fakeinstall -type d -name "*$name*" -exec cp --parents -r {} ${pkgdir}/ \; || true

@@ -1,8 +1,8 @@
 # Maintainer: Felix Yan <felixonmars@archlinux.org>
 
 pkgname=python-daiquiri
-pkgver=3.2.3
-_commit=17230ab18895ecea3155d9499a174f0b1706995f
+pkgver=3.2.4
+_commit=838233522261c30614631fee3f03286a41c47b72
 pkgrel=1
 pkgdesc='Library to configure Python logging easily'
 arch=('any')

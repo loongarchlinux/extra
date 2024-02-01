@@ -2,19 +2,30 @@
 # Contributor: Jan de Groot <jgc@archlinux.org>
 
 pkgbase=atkmm-2.36
-pkgname=(atkmm-2.36 atkmm-2.36-docs)
-pkgver=2.36.2
+pkgname=(
+  atkmm-2.36
+  atkmm-2.36-docs
+)
+pkgver=2.36.3
 pkgrel=1
 pkgdesc="C++ bindings for ATK"
 url="https://www.gtkmm.org/"
 arch=(loong64 x86_64)
-license=(LGPL)
-depends=(atk glibmm-2.68)
-makedepends=(git meson mm-common glibmm-2.68-docs)
-options=(debug !emptydirs)
-_commit=4829d5f55c02b8a72e261c4ee097082693792e5d  # tags/2.36.2^0
+license=(LGPL-2.1-or-later)
+depends=(
+  atk
+  glibmm-2.68
+)
+makedepends=(
+  git
+  glibmm-2.68-docs
+  meson
+  mm-common
+)
+options=(!emptydirs)
+_commit=75f79502f700614a3c35d9c4eaa4c395ac6c7d66  # tags/2.36.3^0
 source=("git+https://gitlab.gnome.org/GNOME/atkmm.git#commit=$_commit")
-sha256sums=('SKIP')
+b2sums=('SKIP')
 
 pkgver() {
   cd atkmm
@@ -26,7 +37,11 @@ prepare() {
 }
 
 build() {
-  arch-meson atkmm build -D maintainer-mode=true
+  local meson_options=(
+    -D maintainer-mode=true
+  )
+
+  arch-meson atkmm build "${meson_options[@]}"
   meson compile -C build
 }
 
@@ -35,7 +50,10 @@ check() {
 }
 
 package_atkmm-2.36() {
-  depends+=(libsigc-3.0.so libglibmm-2.68.so)
+  depends+=(
+    libglibmm-2.68.so
+    libsigc-3.0.so
+  )
   provides=(libatkmm-2.36.so)
 
   meson install -C build --destdir "$pkgdir"
@@ -52,3 +70,5 @@ package_atkmm-2.36-docs() {
 
   mv -t "$pkgdir" docs/*
 }
+
+# vim:set sw=2 sts=-1 et:

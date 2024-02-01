@@ -3,12 +3,12 @@
 
 pkgname=kotlin
 pkgver=1.9.22
-pkgrel=1
+pkgrel=2
 pkgdesc='Statically typed programming language that can interoperate with Java'
 arch=(any)
 url='https://kotlinlang.org/'
 license=(APACHE custom)
-depends=('java-environment>=8')
+depends=('java-runtime-headless>=8')
 makedepends=(setconf)
 source=("https://github.com/JetBrains/kotlin/releases/download/v${pkgver/_/-}/kotlin-compiler-${pkgver/_/-}.zip")
 sha512sums=('d0e1bdfb1918f007444b1cef6e0c29c2c1846819edd60d016ed62327ea6d2cb505aa18658f916f88b91d9fbdfe0b155ad3361728d6a7a9062806d982bc9b8c6c')
@@ -39,6 +39,10 @@ package() {
     install -Dm644 "$jar" "$pkgdir/usr/share/$pkgname/lib"
   done
 
+  # build.txt must be installed for "-version" to work
+  cd "$srcdir/${pkgname}c"
+  install -Dm644 build.txt "$pkgdir/usr/share/$pkgname"
+
   # licenses
   cd "$srcdir/${pkgname}c/license"
   install -d "$pkgdir/usr/share/licenses/$pkgname"
@@ -47,10 +51,6 @@ package() {
   for txt in third_party/*.txt; do
     install -Dm644 "$txt" "$pkgdir/usr/share/licenses/$pkgname"
   done
-
-  # build.txt must be installed for "-version" to work
-  cd $srcdir/${pkgname}c
-  install -Dm644 build.txt "$pkgdir/usr/share/$pkgname"
 }
 
 # getver: github.com/JetBrains/kotlin/releases/latest

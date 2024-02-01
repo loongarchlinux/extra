@@ -1,0 +1,103 @@
+From 926c1037eb44cf579229cd93707a7662bf890663 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Ball=C3=B3=20Gy=C3=B6rgy?= <ballogyor@gmail.com>
+Date: Wed, 24 Jan 2024 11:49:46 +0100
+Subject: [PATCH 2/2] context-menu: Add option to reset the panel
+
+When the user choose this option, a confirmation dialog is opened. If it's confirmed, it clears the object-id-list and toplevel-id-list, which triggers the panel to recreate the default layout.
+
+Based on the same feature in mate-panel:
+https://github.com/mate-desktop/mate-panel/blob/master/mate-panel/panel-context-menu.c#L182-L227
+---
+ gnome-panel/panel-context-menu.c | 62 ++++++++++++++++++++++++++++++++
+ 1 file changed, 62 insertions(+)
+
+diff --git a/gnome-panel/panel-context-menu.c b/gnome-panel/panel-context-menu.c
+index a64a05c91..f8553a3b9 100644
+--- a/gnome-panel/panel-context-menu.c
++++ b/gnome-panel/panel-context-menu.c
+@@ -43,6 +43,7 @@
+ #include "panel-layout.h"
+ #include "panel-lockdown.h"
+ #include "panel-icon-names.h"
++#include "panel-schemas.h"
+ 
+ static void
+ panel_context_menu_create_new_panel (GtkWidget     *menuitem,
+@@ -204,6 +205,60 @@ add_to_panel_activate_cb (GtkMenuItem   *menuitem,
+   gtk_window_present (GTK_WINDOW (dialog));
+ }
+ 
++static void
++panel_reset_response (GtkWidget *dialog,
++                      int        response)
++{
++	if (response == GTK_RESPONSE_OK) {
++		GSettings *settings;
++
++		settings = g_settings_new (PANEL_LAYOUT_SCHEMA);
++		g_settings_set_strv (settings, PANEL_LAYOUT_OBJECT_ID_LIST_KEY, NULL);
++		g_settings_sync ();
++		g_settings_set_strv (settings, PANEL_LAYOUT_TOPLEVEL_ID_LIST_KEY, NULL);
++		g_settings_sync ();
++
++		g_object_unref (settings);
++	}
++
++	gtk_widget_destroy (dialog);
++}
++
++static void
++query_panel_reset (PanelToplevel *toplevel)
++{
++	GtkWidget *dialog;
++	char *text1;
++	char *text2;
++
++	text1 = _("Reset all panels?");
++	text2 = _("When the panels are reset, all custom settings are lost.");
++
++	dialog = gtk_message_dialog_new (
++			NULL,
++			GTK_DIALOG_MODAL,
++			GTK_MESSAGE_WARNING,
++			GTK_BUTTONS_NONE,
++			"%s", text1);
++
++	gtk_message_dialog_format_secondary_text (GTK_MESSAGE_DIALOG (dialog),
++	                                          "%s", text2);
++	gtk_dialog_add_buttons (GTK_DIALOG (dialog),
++				_("_Cancel"), GTK_RESPONSE_CANCEL,
++				_("_Reset Panels"), GTK_RESPONSE_OK,
++				NULL);
++
++	gtk_dialog_set_default_response (GTK_DIALOG (dialog), GTK_RESPONSE_CANCEL);
++
++	gtk_window_set_position (GTK_WINDOW (dialog), GTK_WIN_POS_CENTER);
++
++	g_signal_connect (dialog, "response",
++			  G_CALLBACK (panel_reset_response),
++			  NULL);
++
++	gtk_widget_show_all (dialog);
++}
++
+ static void
+ panel_context_menu_build_edition (PanelWidget *panel_widget,
+ 				  GtkWidget   *menu)
+@@ -233,6 +288,13 @@ panel_context_menu_build_edition (PanelWidget *panel_widget,
+ 	                  G_CALLBACK (present_properties_dialog),
+ 	                  panel_widget->toplevel);
+ 
++	menuitem = gtk_menu_item_new_with_mnemonic (_("_Reset All Panels"));
++	gtk_widget_show (menuitem);
++	gtk_menu_shell_append (GTK_MENU_SHELL (menu), menuitem);
++	g_signal_connect (menuitem, "activate",
++	                  G_CALLBACK (query_panel_reset),
++	                  panel_widget->toplevel);
++
+ 	menuitem = gtk_menu_item_new_with_mnemonic (_("_Delete This Panel"));
+ 	gtk_widget_show (menuitem);
+ 	gtk_menu_shell_append (GTK_MENU_SHELL (menu), menuitem);
+-- 
+2.43.0
+

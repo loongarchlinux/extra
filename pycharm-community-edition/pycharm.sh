@@ -3,6 +3,10 @@
 if [ -z "$PYCHARM_JDK" ] ; then
   PYCHARM_JDK="/usr/lib/jvm/java-17-openjdk/"
 fi
+# use JBR if exists
+if [ -d "/usr/share/pycharm/jbr/" ] ; then
+  PYCHARM_JDK="/usr/share/pycharm/jbr/"
+fi
 # open-jfx location that should match the JDK version
 if [ -z "$PYCHARM_JFX" ] ; then
   PYCHARM_JFX="/usr/lib/jvm/java-17-openjfx/"

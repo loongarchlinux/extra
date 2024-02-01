@@ -1,0 +1,46 @@
+# Maintainer: kpcyrd <kpcyrd[at]archlinux[dot]org>
+
+pkgname=rarcrack
+pkgver=0.2
+pkgrel=7
+pkgdesc="Bruteforce password cracker for rar, 7z, zip archives"
+url='https://github.com/ziman/rarcrack'
+arch=('loong64' 'x86_64')
+license=('GPL-2.0-only')
+depends=(
+  'libxml2.so'
+  'p7zip'
+  'unrar'
+  'unzip'
+)
+source=(${pkgname}-${pkgver}.tar.gz::https://github.com/ziman/rarcrack/archive/refs/tags/${pkgver}.tar.gz
+        file-type-detection.patch)
+sha256sums=('662d14f080431424c816eca11cea00fe8eeb5bf0d2da36e18f5d07140c0a78af'
+            'ac87373ff9bc674c4231d19cff32ae2ec779a5e6650aa628103e8bfe98025deb')
+b2sums=('1bcadad01e6c99cc6c72d196481d3fc3f403bcacb63fba991024dda4372c82e2dff10fc28d888dcdcf9675f8d89baa2e653acca26bdf7f822de4b6483dd1921c'
+        '197ab99982c9e999935705bf8ebb1998edd5eac05a89c9f73fe74e793907868a6150f0d2d023b3da93caf47e749033fdd4593843ec4f8d8df48aeb7610feaf6b')
+
+prepare() {
+  cd ${pkgname}-${pkgver}
+  patch -p0 -i "../file-type-detection.patch"
+}
+
+build() {
+  cd ${pkgname}-${pkgver}
+  cc ${CFLAGS} ${LDFLAGS} -o rarcrack -pthread rarcrack.c `xml2-config --libs --cflags`
+}
+
+check() {
+  cd ${pkgname}-${pkgver}
+  ./rarcrack --threads 12 test.7z
+  ./rarcrack --threads 12 test.rar
+  ./rarcrack --threads 12 test.zip
+}
+
+package() {
+  cd ${pkgname}-${pkgver}
+  install -Dm 755 -t "${pkgdir}/usr/bin" rarcrack
+  install -Dm 644 -t "${pkgdir}/usr/share/doc/${pkgname}" README
+}
+
+# vim: ts=2 sw=2 et:

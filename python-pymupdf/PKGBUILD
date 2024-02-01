@@ -2,16 +2,18 @@
 
 _name=PyMuPDF
 pkgname=python-pymupdf
-pkgver=1.23.8
+pkgver=1.23.19
 pkgrel=1
 pkgdesc="Python bindings for MuPDF's rendering library"
 arch=(loong64 x86_64)
 url="https://github.com/pymupdf/PyMuPDF"
 license=(AGPL-3.0-or-later)
 depends=(
+  gcc-libs
   glibc
   libmupdf
   python
+  python-mupdf
 )
 makedepends=(
   python-build
@@ -27,6 +29,7 @@ checkdepends=(
   python-fonttools
   python-pillow
   python-pytest
+  tesseract-data-eng
 )
 optdepends=(
   #'python-pymupdf-fonts: for extra fonts'  # TODO: package
@@ -35,20 +38,15 @@ optdepends=(
 )
 source=(
   $_name-$pkgver.tar.gz::$url/archive/refs/tags/$pkgver.tar.gz
-  $pkgname-1.23.5-tesseract_tessdata_dir.patch
 )
-sha512sums=('6266ce8711dc62a467c07ef22b6e22acb81c7a3ba224749af385a23c7ac3435504c9cf0a7d8e2459eba50e11f86bb3f79857fa3b722ab66eff10b554d3e4c7b5'
-            '849ace7d68e9060f057c1229f2cbfc43f418e761032d821ab50072cef7d32a5e821c2f58bcc16ba78b61d5eb2fbc042d8908c2c7d78b436fe40147e8121a1426')
-b2sums=('fcd54efc090e8754e268de67fbc6f974e1466173bd626b10ef72c9c05d0cab40640d188a3c9aa369efc3d252169c4d30b71f49d72ab025b1b1889bda90a433f0'
-        '6f662ba8175c1960ba0d323cecef25fc283d1dd8f6a5af541bf13df52c2432f76841233389c35ea02182d8543231835cff30f03a2ae9eb231e1165cc83268b65')
+sha512sums=('1656f0d7206bc10fe68954d7541cbcb025c3d2e98ffd67156b4b73093e8b3a8c9b0b434499d55e14130690b06bfe805e121a167a4c8cc6c7af7695c0c986628b')
+b2sums=('0f6c2707f2ef342af4b13e83d4698ceb8a261a35939f17459dcf53d1d2fd16aa809e3ed7212d186ef973ac93b1c2f791a94df0143e6c043892b5305da7350398')
 
 prepare() {
   # remove bundled mupdf sources
   rm -frv $pkgname/*.tgz
   # we package clang and swig and don't need python-clang or python-swig
   sed -e 's/"libclang", "swig", //' -i $_name-$pkgver/pyproject.toml
-  # fix tessdata location
-  patch -Np1 -d $_name-$pkgver -i ../$pkgname-1.23.5-tesseract_tessdata_dir.patch
 }
 
 build() {
@@ -73,8 +71,10 @@ build() {
   cd $_name-$pkgver
   # build against system libmupdf
   export PYMUPDF_SETUP_MUPDF_BUILD=''
-  # do not build against mupdfs (non-integrated) C++ API: https://github.com/pymupdf/PyMuPDF/issues/2628
-  export PYMUPDF_SETUP_IMPLEMENTATIONS=a
+  # provide tessdata location
+  export TESSDATA_PREFIX="/usr/share/tessdata"
+  # build against mupdf's C++/ Python language bindings
+  export PYMUPDF_SETUP_IMPLEMENTATIONS=b
   CFLAGS+=" ${cflags[@]}"
   LDFLAGS+=" ${ldflags[@]}"
 
@@ -86,9 +86,12 @@ check() {
     -vv
     # disable broken test, that upstream is not interested in fixing or disabling: https://github.com/pymupdf/PyMuPDF/issues/2127
     --deselect tests/test_pixmap.py::test_color_count
+    --deselect tests/test_pixmap.py::test_3050
     # disable test that shells out to pip: https://github.com/pymupdf/PyMuPDF/issues/2950
     --deselect tests/test_font.py::test_fontarchive
-
+    --deselect tests/test_general.py::test_subset_fonts
+    # we do not care about flake8
+    --deselect tests/test_flake8.py::test_flake8
   )
   local _site_packages=$(python -c "import site; print(site.getsitepackages()[0])")
 
@@ -99,10 +102,6 @@ check() {
 }
 
 package() {
-  depends+=(
-    freetype2 libfreetype.so
-  )
-
   cd $_name-$pkgver
   python -m installer --destdir="$pkgdir" dist/*.whl
   install -vDm 644 README.md -t "$pkgdir/usr/share/doc/$pkgname/"

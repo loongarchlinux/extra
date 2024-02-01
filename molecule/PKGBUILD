@@ -2,8 +2,8 @@
 # Maintainer: Robin Candau <antiz@archlinux.org>
 
 pkgname=molecule
-pkgver=6.0.2
-pkgrel=2
+pkgver=6.0.3
+pkgrel=1
 pkgdesc="Aids in the development and testing of Ansible roles"
 arch=(any)
 url="https://github.com/ansible-community/molecule"
@@ -40,6 +40,7 @@ checkdepends=(
   python-pytest-mock
   python-pytest-testinfra
   python-pytest-xdist
+  python-regress
   yamllint
 )
 optdepends=(
@@ -51,8 +52,8 @@ optdepends=(
   'python-pytest-testinfra: for the testinfra verifier'
 )
 source=($pkgname-$pkgver.tar.gz::$url/archive/refs/tags/v$pkgver.tar.gz)
-sha512sums=('384e8f24f23cf50c0579cc6e35bf79840a6565ac82546c2108bca6037161cc43c26aef490c06bf0e9b96012ba88df28933f08c302f867d20bb77aea7f3b11e59')
-b2sums=('b30a0aa0b3d322c3df4e027f1766e9f6f9d8f83d3334f2d5cd8362b673f849a58f6fd56e9f3212e5fe8a421ee72d54b362d08d09f39a8b8469e9e57533fb5bb1')
+sha512sums=('a05a430169b7fb27ae527e63dd49cde4a4dc95ff31f454e75f76438a3b022821ca77ba32389e1c77d32ffc7ef06537aeaea24c48ab6e10b9a230cc2beab30c4c')
+b2sums=('dfa7f3d8b93f778dda754feddf4f4ab25d0e47eb805b85252b74625dc86508c8c94cf0f4e9cb499bdc77b93fba1f1330f17a6d917f44466985ef20eee1543826')
 
 build() {
   cd $pkgname-$pkgver
@@ -67,7 +68,7 @@ check() {
   python -m installer --destdir=test_dir dist/*.whl
   export PYTHONPATH="test_dir/$site_packages:$PYTHONPATH"
   export PATH="test_dir/usr/bin:$PATH"
-  pytest -v "test_dir/$site_packages/molecule/test/a_unit/" -c /dev/null
+  pytest -v test/a_unit/ -c /dev/null
 }
 
 package() {

@@ -5,7 +5,7 @@
 # Contributor: mlq <mlq@pwmt.org>
 
 pkgname=girara
-pkgver=0.4.1
+pkgver=0.4.2
 pkgrel=1
 
 pkgdesc="User interface library focused on simplicity and minimalism"
@@ -23,7 +23,7 @@ checkdepends=('xorg-server-xvfb')
 
 source=(girara-$pkgver.tar.gz::https://github.com/pwmt/girara/archive/$pkgver.tar.gz)
 
-sha512sums=('8ee9f1701bbd73c28fdafb203325eb1a178ddbf077ebb75d9edb290bb09299d5c708d5a3409ca8a02759c4e94cc371cb5a47b00df33263e7863075ed568f4805')
+sha512sums=('02dfe097aec9dd6c3ebbcbc0e4ca1ddcc6aeb3085a411b9cb1db81d441d85a7eadec7c07773b7d7a63da2e30a8bca45bd8417e7e5cb5efe7bde39059e53b5e34')
 
 build() {
   cd girara-$pkgver

@@ -1,7 +1,8 @@
-# Maintainer: Jonas Witschel <diabonas@archlinux.org>
+# Maintainer:
+# Contributor: Jonas Witschel <diabonas@archlinux.org>
+
 pkgname=python-python-socks
-pkgver=2.4.3
-_tag=298d27f26676b0914360754de71e6d344c272ae2 # git rev-parse "v$pkgver"
+pkgver=2.4.4
 pkgrel=1
 pkgdesc='Core proxy client (SOCKS4, SOCKS5, HTTP) functionality for Python'
 arch=('any')
@@ -17,7 +18,7 @@ optdepends=('python-anyio: anyio support'
             'python-trio: trio support')
 provides=('python-python_socks')
 replaces=('python-python_socks')
-source=("git+$url.git?signed#tag=$_tag")
+source=("git+$url.git?signed#tag=v$pkgver")
 sha512sums=('SKIP')
 validpgpkeys=('706A8935FED55F3BFB7C188B5EEAD7400A5D80ED') # Roman Snegirev <rsng@mail.ru>
 

@@ -2,8 +2,8 @@
 
 _hkgname=tar-conduit
 pkgname=haskell-tar-conduit
-pkgver=0.4.0
-pkgrel=22
+pkgver=0.4.1
+pkgrel=9
 pkgdesc="Extract and create tar files using conduit for streaming"
 url="https://github.com/snoyberg/tar-conduit"
 license=('MIT')
@@ -11,11 +11,14 @@ arch=('loong64' 'x86_64')
 depends=('ghc-libs' 'haskell-conduit' 'haskell-safe-exceptions')
 makedepends=('ghc' 'haskell-conduit-extra' 'haskell-hspec' 'haskell-quickcheck' 'haskell-weigh')
 source=(https://hackage.haskell.org/packages/archive/${_hkgname}/${pkgver}/${_hkgname}-${pkgver}.tar.gz)
-sha512sums=('17380a6ccc0da6e55f4d4efbdd52d3e39b5f0f111918d38d8dcd86229f34dc67c9c1726e7a5ede62ad98a12dabf4d495d0e7328fafeb5f6818e6b8f5243febed')
+sha512sums=('cf11bdd4dee3666673a18a0e045524a9c697d9be6c631d0745ee4d791fbad334fc7291d735f972bce5c38996fc59ff365d59ebfdf3a71764d15837fa684524e0')
 
 prepare() {
     cd $_hkgname-$pkgver
     sed -i '/conduit-combinators/d' $_hkgname.cabal
+
+    # S8.toStrict is not available in our bytestring version
+    sed -i 's/S8.toStrict/LS8.toStrict/g' tests/Spec.hs
 }
 
 build() {

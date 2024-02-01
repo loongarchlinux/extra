@@ -4,7 +4,7 @@
 
 pkgname=deepin-file-manager
 pkgver=6.0.37
-pkgrel=2
+pkgrel=4
 epoch=1
 pkgdesc='Deepin File Manager'
 arch=('loong64' 'x86_64')
@@ -29,8 +29,17 @@ conflicts=('deepin-desktop')
 replaces=('deepin-desktop')
 # https://github.com/linuxdeepin/developer-center/issues/5725
 options=('!lto')
-source=("https://github.com/linuxdeepin/dde-file-manager/archive/$pkgver/$pkgname-$pkgver.tar.gz")
-sha512sums=('7b859034fbb4e2a61f1145b4be9b81b7e705a3d65272d27250c5c8632f7bb7930d2bf194ce2a1862cb9ea9985a9e6ada25367f6b81a8bc91e4619333a1704f55')
+source=("https://github.com/linuxdeepin/dde-file-manager/archive/$pkgver/$pkgname-$pkgver.tar.gz"
+         fix-missing-include.patch
+         taglib-2.patch)
+sha512sums=('7b859034fbb4e2a61f1145b4be9b81b7e705a3d65272d27250c5c8632f7bb7930d2bf194ce2a1862cb9ea9985a9e6ada25367f6b81a8bc91e4619333a1704f55'
+            'f80af19c25c14ec2528df28df4f7c3c30a34a797ba752933d1dcb2d851e01e8e1b6ecb9d79214bee761611075a753fd7a7b9ae7b64f8b4266b06ec331eaf8b59'
+            'd010d787b406fc66ccf8aa2f6544dcabf291e21969e94a2b77455084395b8fd1620d7c359bd915518be79fac685791b60d401b0e9e1ff6544a05cdb3e2791fd7')
+
+prepare() {
+  patch -d dde-file-manager-$pkgver -p1 < fix-missing-include.patch
+  patch -d dde-file-manager-$pkgver -p1 < taglib-2.patch
+}
 
 build() {
   # cmake confused with glob files, see https://github.com/linuxdeepin/developer-center/issues/5158

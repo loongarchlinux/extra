@@ -2,7 +2,9 @@
 # Contributor: nyanmisaka <nst799610810@gmail.com>
 
 pkgname=jellyfin-ffmpeg
-pkgver=6.0.6
+_tag='57db6d637f68f9e1c0e1152bff147742855a796a' # git rev-parse v${pkgver/p/-}
+epoch=1
+pkgver=6.0.1p1
 pkgrel=2
 pkgdesc='Jellyfin fork of ffmpeg'
 arch=('loong64' 'x86_64')
@@ -71,14 +73,15 @@ optdepends=(
   'vulkan-intel: for Intel ANV Vulkan support'
 )
 options=('!lto')
-_commit='a2ed32cd633a2665c62be6389ffbd49c708d4864'
-source=("$pkgname::git+$url#commit=$_commit")
+source=("$pkgname::git+$url#tag=$_tag")
 b2sums=('SKIP')
 
 pkgver() {
   cd "$pkgname"
 
-  git describe --tags | sed -e 's/^v//' -e 's/-/./'
+  # replace dash with 'p' für point release, to allow transition
+  # like 6.0-6 -> 6.0.1-1
+  git describe --tags | sed -e 's/^v//' -e 's/-/p/'
 }
 
 prepare() {

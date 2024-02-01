@@ -1,7 +1,7 @@
 # Maintainer: Jerome Leclanche <jerome@leclan.ch>
 
 pkgname=xonsh
-pkgver=0.14.3
+pkgver=0.14.4
 pkgrel=1
 pkgdesc="Python-powered, cross-platform, Unix-gazing shell"
 url="https://xon.sh/"
@@ -12,7 +12,7 @@ optdepends=("python-prompt_toolkit: support for SHELL_TYPE=prompt_toolkit")
 makedepends=("python-setuptools" "python-wheel")
 source=("https://github.com/xonsh/xonsh/releases/download/$pkgver/$pkgname-$pkgver.tar.gz")
 install=xonsh.install
-sha256sums=('b80ed0f670c04e64e9be6a609024dec467428520c08ad6b53608e412531e015d')
+sha256sums=('62b64849a56a9173787ef8bdf13a0a96a2f370a70f310e830c0b6a258836fb8b')
 
 package() {
   cd $pkgname-$pkgver

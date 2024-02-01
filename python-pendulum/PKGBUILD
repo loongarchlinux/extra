@@ -2,29 +2,54 @@
 
 _name=pendulum
 pkgname=python-pendulum
-pkgver=2.1.2
-pkgrel=8
+pkgver=3.0.0
+pkgrel=1
 pkgdesc="Python datetimes made easy"
 arch=(loong64 x86_64)
 url="https://pendulum.eustace.io/"
+_url="https://github.com/sdispater/pendulum"
 license=(MIT)
-depends=(python python-dateutil python-pytzdata)
-makedepends=(python-build python-installer python-poetry-core python-wheel)
-checkdepends=(python-babel python-freezegun python-pytest python-pytz)
-source=($pkgname-$pkgver.tar.gz::https://github.com/sdispater/$_name/archive/$pkgver.tar.gz)
-sha512sums=('c367320ade0d10b7eb9c880286176161b925d7df052f7de85ddd169594bbe778776ea74df451f00186df98be3e32b7399c68ca4b40123e2c456206410e3a1ab2')
-b2sums=('c95cd131fc95a0d19ef11f180cc42126cb8a6ea3aaf4b3bbedbc5ce4c1b37a6624f2a1be92f1a6fd6b1f14f5d20fa5f32e8230f896ab7a216f02f00e85b98738')
+depends=(
+  gcc-libs
+  glibc
+  python
+  python-dateutil
+  python-tzdata
+  python-time-machine
+)
+makedepends=(
+  python-build
+  python-installer
+  python-maturin
+  python-wheel
+)
+checkdepends=(
+  python-babel
+  python-freezegun
+  python-pytest
+  python-pytz
+  python-pytzdata
+)
+source=($pkgname-$pkgver.tar.gz::$_url/archive/$pkgver.tar.gz)
+sha512sums=('f4cab40bec00029ccda44f15c71cf07a4518b6d86570b2f3425db2e3bb96151b22aa5065b1e21cc4b2b0cfef216f6af1ae6a16eb4efdb811dbdb18a7eab6c24a')
+b2sums=('5cbf0e2e504964e75c45ad41fcdab5a2ef0be91d9f4a8898305d15a5dc124abc3dc0986c7559d45091325bf4819f5e854ce87f92d534b24d1ac8c0852097df09')
 
 build() {
   cd $_name-$pkgver
-  # NOTE: calling pyproject-build as we otherwise call the project's build.py script:
-  # https://github.com/sdispater/pendulum/issues/665
-  pyproject-build --wheel --no-isolation
+  python -m build --wheel --no-isolation
 }
 
 check() {
+  local pytest_options=(
+    -vv
+  )
+  local site_packages=$(python -c "import site; print(site.getsitepackages()[0])")
+
   cd $_name-$pkgver
-  pytest -vv
+  # install to temporary location, as importlib is used
+  python -m installer --destdir=test_dir dist/*.whl
+  export PYTHONPATH="$PWD/test_dir/$site_packages:$PYTHONPATH"
+  pytest "${pytest_options[@]}"
 }
 
 package() {

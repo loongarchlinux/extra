@@ -2,8 +2,8 @@
 
 _name=pynitrokey
 pkgname=python-pynitrokey
-_commit=49d0298d3e692640d3556c8801a3998a86390e1e  # v0.4.44
-pkgver=0.4.44
+_commit=2fe68f7c2a2e1cebd23f168d2748e16a640e6142  # v0.4.45
+pkgver=0.4.45
 pkgrel=1
 pkgdesc="A command line interface for the Nitrokey FIDO2 and Nitrokey Start"
 arch=(any)
@@ -54,6 +54,11 @@ validpgpkeys=(
   719EA31C3F1814DA787C8FD434F47D2F044B8F17  # Robin Krahl <robin@nitrokey.com>
 )
 
+pkgver() {
+  cd $_name
+  git describe --tags | sed 's/\([^-]*-g\)/r\1/;s/-/./g;s/v//g'
+}
+
 build() {
   cd $_name
   python -m build --wheel --skip-dependency-check --no-isolation
@@ -69,4 +74,5 @@ package() {
   cd $_name
   python -m installer --destdir="$pkgdir" dist/*.whl
   install -vDm 644 README.md -t "$pkgdir/usr/share/doc/$pkgname/"
+  install -vDm 644 LICENSE-MIT -t "$pkgdir/usr/share/licenses/$pkgname/"
 }

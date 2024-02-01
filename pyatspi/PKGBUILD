@@ -3,17 +3,20 @@
 
 pkgbase=pyatspi
 pkgname=(python-atspi)
-pkgver=2.46.0
-pkgrel=2
+pkgver=2.46.1
+pkgrel=1
 pkgdesc="Python bindings for D-Bus AT-SPI"
-url="https://wiki.linuxfoundation.org/accessibility/atk/at-spi/at-spi_on_d-bus"
+url="https://gitlab.gnome.org/GNOME/pyatspi2"
 arch=(any)
-license=(GPL2)
-depends=(python-gobject at-spi2-core)
+license=(LGPL-2.0-only)
+depends=(
+  at-spi2-core
+  python-gobject
+)
 makedepends=(git)
-_commit=c9cb2a2289a6eb1fb95b66c25d5351bfea54c47e  # tags/PYATSPI_2_46_0^0
+_commit=8c69016b38d0e4caaf4c986938ea3410fb7351b6  # tags/PYATSPI_2_46_1^0
 source=("git+https://gitlab.gnome.org/GNOME/pyatspi2.git#commit=$_commit")
-sha256sums=('SKIP')
+b2sums=('SKIP')
 
 pkgver() {
   cd pyatspi2
@@ -25,12 +28,18 @@ prepare() {
   NOCONFIGURE=1 ./autogen.sh
 }
 
-build() (
-  cd pyatspi2
-  ./configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var \
+build() {
+  local configure_options=(
+    --prefix=/usr
+    --sysconfdir=/etc
+    --localstatedir=/var
     --with-python=/usr/bin/python
+  )
+
+  cd pyatspi2
+  ./configure "${configure_options[@]}"
   make
-)
+}
 
 package_python-atspi() {
   cd pyatspi2

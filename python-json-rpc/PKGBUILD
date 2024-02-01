@@ -1,0 +1,33 @@
+# Maintainer: Felix Yan <felixonmars@archlinux.org>
+# Contributor: Jake <aur@ja-ke.tech>
+# Contributor: Morten Linderud <foxboron@archlinux.org>
+# Contributor: Andy Weidenbaum <archbaum@gmail.com>
+
+pkgname=python-json-rpc
+pkgver=1.13.0
+pkgrel=3
+pkgdesc="JSON-RPC transport realisation"
+arch=('any')
+license=('MIT')
+url="https://github.com/pavlov99/json-rpc"
+depends=('python')
+makedepends=('python-setuptools')
+checkdepends=('python-pytest')
+source=("https://github.com/pavlov99/json-rpc/archive/$pkgver/$pkgname-$pkgver.tar.gz")
+sha256sums=('34c62ecc94b50af754d6326858d5c2f3938fa762054e795ef8d67c7691f00380')
+
+build() {
+  cd json-rpc-$pkgver
+  python setup.py build
+}
+
+check() {
+  cd json-rpc-$pkgver
+  pytest
+}
+
+package() {
+  cd json-rpc-$pkgver
+  python setup.py install --root="$pkgdir" --optimize=1 --skip-build
+  install -Dm644 LICENSE.txt -t "$pkgdir"/usr/share/licenses/$pkgname/
+}

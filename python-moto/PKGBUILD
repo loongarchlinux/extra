@@ -4,12 +4,13 @@
 pkgname=python-moto
 _pkgname=moto
 # https://github.com/spulec/moto/blob/master/CHANGELOG.md
-pkgver=4.2.12
+pkgver=4.2.13
 pkgrel=1
 pkgdesc='Moto is a library to mock out the boto library.'
 arch=(any)
 url='https://github.com/spulec/moto'
-license=(Apache)
+# https://github.com/getmoto/moto/blob/4.2.13/setup.cfg#L9
+license=('Apache-2.0')
 # NOTE: Keep the order of dependencies matching setup.cfg
 # setup.cfg includes setuptools, which is a work around for missing dependencies in aws-xray-sdk [1].
 # I use the correct dependency in python-aws-xray-sdk, so python-setuptools is not needed here.
@@ -50,7 +51,7 @@ checkdepends+=(python-yaml python-jose python-openapi-spec-validator python-dock
                python-flask python-flask-cors python-multipart)
 source=("https://github.com/getmoto/moto/archive/refs/tags/$pkgver/$pkgname-$pkgver.tar.gz"
         "fix-tests.diff")
-sha256sums=('55e3bba30011512327389a86feeda7d820270849454be09e46c28f1239019451'
+sha256sums=('c7932fe2fad69559b7a900fe6ec5db8f4152b78b8300f273fb9a7674be8b08dd'
             '21305cdf3d650ced1acb1d0f7dde8760b26e32a94c56a5571e798d6b6976cf5a')
 
 prepare() {

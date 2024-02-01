@@ -1,0 +1,45 @@
+# Maintainer: David Runge <dvzrv@archlinux.org>
+
+pkgname=cargo-license
+pkgver=0.6.1
+pkgrel=1
+pkgdesc="Cargo subcommand to see license of dependencies"
+arch=(loong64 x86_64)
+url="https://github.com/onur/cargo-license"
+license=(MIT)
+depends=(
+  cargo
+  gcc-libs
+  glibc
+)
+makedepends=(rust)
+source=(
+  $pkgname-$pkgver.tar.gz::$url/archive/refs/tags/v$pkgver.tar.gz
+)
+sha512sums=('b98a4073846f57e2cbeccab20be1212dd0dc227e7c1ed41f6777e051335bb68469ac58c30e6cbb7d8180b7d6dc9203c0a700e9d59a9ca025168c23bf883a7f5c')
+b2sums=('eb2b543dd15ca1893b7397c97f81ecb7a891ca1dc0fd54c7f035eb98a4900aed9eff41caeb268f750f5b8ac3995c51a6d0ee50b4dc469cc4c44bb19c121c0c81')
+
+prepare() {
+  cd $pkgname-$pkgver
+  export RUSTUP_TOOLCHAIN=stable
+  cargo fetch --locked --target "$(rustc -vV | sed -n 's/host: //p')"
+}
+
+build() {
+  cd $pkgname-$pkgver
+  export RUSTUP_TOOLCHAIN=stable
+  export CARGO_TARGET_DIR=target
+  cargo build --frozen --release --all-features
+}
+
+check() {
+  cd $pkgname-$pkgver
+  export RUSTUP_TOOLCHAIN=stable
+  cargo test --frozen --all-features
+}
+
+package() {
+  cd $pkgname-$pkgver
+  install -vDm 755 target/release/$pkgname -t "$pkgdir/usr/bin/"
+  install -vDm 644 LICENSE -t "$pkgdir/usr/share/licenses/$pkgname/"
+}

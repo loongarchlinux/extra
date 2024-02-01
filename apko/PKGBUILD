@@ -1,7 +1,7 @@
 # Maintainer: kpcyrd <kpcyrd[at]archlinux[dot]org>
 
 pkgname=apko
-pkgver=0.13.1
+pkgver=0.14.0
 pkgrel=1
 pkgdesc="Declarative APK-based container building tool with support for sigstore signatures"
 url="https://github.com/chainguard-dev/apko"
@@ -10,15 +10,22 @@ license=('Apache-2.0')
 depends=('apk-tools' 'alpine-keyring')
 makedepends=('go')
 source=("https://github.com/chainguard-dev/apko/archive/v${pkgver}/apko-${pkgver}.tar.gz")
-sha256sums=('a0f501d26f0c61686429dce4177e3c3d67030e405544e7c278f7fa235fb1b06e')
-b2sums=('fe359df450c0c8598fe7b1b50c70ec48f6e28d329eb641335ae4d87f7c3e80b1c242e39e751d5be07039ea18a71cff7cbac6d44fe7dcc99d16dbdb31f9b36e0b')
+sha256sums=('fd3f0afd8864cdce87c30aa6f3ce85503ea5e2924da3be2219bf723bcc03877a')
+b2sums=('c9c69ad762a441e74a0499c8ee712c3d4d41cb78f21b187762f61e50aa14f5fe1be9e4cce26d00abc03faf58ad5db420196803008e8604437bdbb14d38cd4f25')
 
 build() {
   cd "${pkgname}-${pkgver}"
   mkdir build
-  CGO_LDFLAGS="${LDFLAGS}" \
-    GOFLAGS="-trimpath -buildmode=pie -mod=readonly" \
-    go build -o build/ -tags -tags=pivkey,pkcs11key ./...
+
+  go build \
+      -o build/ \
+      -tags=pivkey,pkcs11key \
+      -trimpath \
+      -buildmode=pie \
+      -mod=readonly \
+      -modcacherw \
+      -ldflags "-linkmode external -extldflags \"${LDFLAGS}\"" \
+      ./...
 
   for i in bash fish zsh; do
     build/apko completion ${i} > ./apko.${i}

@@ -1,24 +1,27 @@
 # Maintainer: Daniel Bermond <dbermond@archlinux.org>
 
 pkgname=kvazaar
-pkgver=2.2.0
-pkgrel=1
+pkgver=2.3.0
+pkgrel=2
 pkgdesc='An open-source HEVC encoder'
 arch=('loong64' 'x86_64')
 url='https://github.com/ultravideo/kvazaar/'
 license=('BSD')
 depends=('crypto++')
-makedepends=('git' 'yasm')
+makedepends=('git')
 checkdepends=('ffmpeg' 'hm')
 source=("git+https://github.com/ultravideo/kvazaar.git#tag=v${pkgver}"
-        'git+https://github.com/ultravideo/greatest.git')
+        'git+https://github.com/ultravideo/greatest.git'
+        '010-kvazaar-fix-pkgconfig.patch'::'https://github.com/ultravideo/kvazaar/commit/f6a9d92a30083b5e228ca1126418e12c515bfa69.patch')
 sha256sums=('SKIP'
-            'SKIP')
+            'SKIP'
+            'f227c39928fad5d34016babe4b017bbb943daa7fe214a673b823cdd9af72a1e3')
 
 prepare() {
     git -C kvazaar submodule init
     git -C kvazaar config --local submodule.greatest.url "${srcdir}/greatest"
     git -C kvazaar -c protocol.file.allow='always' submodule update
+    patch -d kvazaar -Np1 -i "${srcdir}/010-kvazaar-fix-pkgconfig.patch"
     autoreconf -fi kvazaar
 }
 

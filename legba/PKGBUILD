@@ -1,0 +1,46 @@
+# Maintainer: kpcyrd <kpcyrd[at]archlinux[dot]org>
+
+pkgname=legba
+pkgver=0.8.0
+pkgrel=1
+pkgdesc="A multiprotocol credentials bruteforcer / password sprayer and enumerator"
+url='https://github.com/evilsocket/legba'
+arch=('loong64' 'x86_64')
+license=('GPL-3.0-only')
+depends=(
+  'gcc-libs'
+  'glibc'
+  'libssl.so'
+  'smbclient'
+)
+makedepends=(
+  'cargo'
+  'cmake'
+)
+options=('!lto')
+source=(https://github.com/evilsocket/${pkgname}/archive/v${pkgver}/${pkgname}-${pkgver}.tar.gz)
+sha256sums=('5146eaa405b7d584d881ee6be252789228395e0e505e1ec61630c966105fa6cd')
+b2sums=('ddf7ef92616148c609f6e7aa9aeca5df0ca2f2898bbd22343086d22be09c862081dc56261fbb634bc5dc8f46fc5f195ba107861e5bdc08144bf613e46755b2ab')
+
+prepare() {
+  cd "${pkgname}-${pkgver}"
+  cargo fetch --locked --target "$CARCH-unknown-linux-gnu"
+}
+
+build() {
+  cd ${pkgname}-${pkgver}
+  cargo build --frozen --release
+}
+
+check() {
+  cd ${pkgname}-${pkgver}
+  cargo test --frozen
+}
+
+package() {
+  cd ${pkgname}-${pkgver}
+  install -Dm 755 -t "${pkgdir}/usr/bin" \
+    target/release/legba
+}
+
+# vim: ts=2 sw=2 et:

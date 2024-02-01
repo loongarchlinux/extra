@@ -2,12 +2,14 @@
 
 pkgname=python-cfn-lint
 # https://github.com/aws-cloudformation/cfn-lint/blob/main/CHANGELOG.md
-pkgver=0.83.6
+pkgver=0.84.0
 pkgrel=1
 pkgdesc='CloudFormation Linter'
 arch=(any)
 url='https://github.com/aws-cloudformation/cfn-lint'
-license=('custom:MIT No Attribution')
+# https://github.com/aws-cloudformation/cfn-lint/blob/v0.84.0/setup.py#L63 uses "MIT no attribution",
+# which corresponds to https://spdx.org/licenses/MIT-0.html
+license=('MIT-0')
 depends=(python python-yaml python-aws-sam-translator
          python-jsonpatch python-jsonschema python-networkx
          python-junit-xml python-jschema-to-python python-sarif-om
@@ -19,7 +21,7 @@ optdepends=(
 )
 source=("https://github.com/aws-cloudformation/cfn-lint/archive/v$pkgver/cfn-lint-$pkgver.tar.gz"
         'skip-tests-that-require-git.diff')
-sha256sums=('5ed18db9dfeb50cf8bd67dbcaaa257e1b87d812d386c9c6afbec18843d2ca89f'
+sha256sums=('d6e7711e71a0a27dce5a01cb6f417dd9338feda15327512a1f93c9f8cdc53826'
             '2c00f29edd290e5c0de741ebce53d7a4caa7509a91befc806296c897b0f0e879')
 
 prepare() {

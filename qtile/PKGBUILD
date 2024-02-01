@@ -1,8 +1,8 @@
 # Maintainer: David Runge <dvzrv@archlinux.org>
 
 pkgname=qtile
-pkgver=0.23.0
-_commit=951aa6345712b4f798e3e2669f7d905e23690405  # refs/tags/v0.23.0
+pkgver=0.24.0
+_commit=27255f207c4fed5df0b6d7319a18c001f7e885f7  # refs/tags/v0.24.0
 pkgrel=2
 pkgdesc="A full-featured, pure-Python tiling window manager"
 arch=(loong64 x86_64)
@@ -19,17 +19,17 @@ depends=(
   python-cairocffi
   python-cffi
   python-gobject
-  python-pywlroots
   python-xcffib
-  wlroots0.16
 )
 makedepends=(
   git
   libpulse
   python-build
   python-installer
+  python-pywlroots
   python-setuptools-scm
   python-wheel
+  wlroots0.16
 )
 checkdepends=(
   graphviz
@@ -40,6 +40,8 @@ checkdepends=(
   python-bowler
   python-dbus-next
   python-gobject
+  python-isort
+  python-libcst
   python-pytest
   python-xdg
   xorg-server-xephyr
@@ -61,11 +63,14 @@ optdepends=(
   'python-dbus-next: for utils, notifications and several widgets'
   'python-iwlib: for wlan widget'
   'python-keyring: for imapwidget widget'
+  'python-libcst: for migrations'
   'python-mpd2: mpd2widget widget'
   'python-psutil: graph, net and memory widget'
+  'python-pywayland: for Wayland backend'
   'python-pywlroots: for Wayland backend'
   'python-setproctitle: change process name to qtile'
   'python-xdg: launchbar widget'
+  'python-xkbcommon: for Wayland backend'
   'xorg-xwayland: for XWayland support'
 )
 install=$pkgname.install
@@ -77,6 +82,11 @@ validpgpkeys=(
   '35D92E7CC7357A81173EA1C974F9FDD20984FBEC' # Matt Colligan <mcol@posteo.net>
   'A6BAA1E17D2664ADB97B2C6F58A9AA7C86727DF7' # elParaguayo <elparaguayocode@gmail.com>
 )
+
+pkgver() {
+  cd $pkgname
+  git describe --tags | sed 's/\([^-]*-g\)/r\1/;s/-/./g;s/v//g'
+}
 
 build() {
   export CFLAGS="$CFLAGS -I/usr/include/wlroots0.16"
@@ -103,7 +113,9 @@ check() {
 }
 
 package() {
-  depends+=(libwlroots.so=11)
+  depends+=(
+    wlroots0.16 libwlroots.so
+  )
   cd $pkgname
   python -m installer --destdir="$pkgdir" dist/*.whl
   # license

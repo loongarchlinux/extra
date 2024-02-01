@@ -4,7 +4,7 @@
 # Contributor: Frederik “Freso” S. Olesen <freso.dk@gmail.com>
 
 pkgname=lutris
-pkgver=0.5.14
+pkgver=0.5.16
 pkgrel=1
 pkgdesc='Open Gaming Platform'
 arch=(any)
@@ -49,7 +49,6 @@ makedepends=(
 )
 checkdepends=(
   python-nose-cover3
-  wine
   xorg-server-xvfb
   xterm
   fluidsynth
@@ -70,23 +69,13 @@ optdepends=(
   'wine: Windows support'
   'xorg-xgamma: Restore gamma on game exit'
 )
-_tag=ba9c0aea5a9db54dca2bc39dc7e9bad5c6a566b5
-source=(git+https://github.com/lutris/lutris.git#tag=${_tag}
-        fix-scummvm-tests.patch::https://github.com/lutris/lutris/commit/7efc304f595a9547bb4f01a823250d95b7722506.patch)
-b2sums=('SKIP'
-        'ace0ada78a15e6b1f0540f6a9da83d272eb3810761ada8a0ed77b92cf86da1730e5d51aef9234e3103751aa48bb262fe3812c033cd68e483050459ce98bdcf20')
+_tag=85871982bc0b2852b4875374271547536fa1f6b1
+source=(git+https://github.com/lutris/lutris.git#tag=${_tag})
+b2sums=('SKIP')
 
 pkgver() {
   cd lutris
   git describe --tags | sed 's/^v//'
-}
-
-prepare() {
-  cd lutris
-
-  # The scummvm tests would fail on a system where scummvm is not available, because https://github.com/K900/lutris/blob/7efc304f595a9547bb4f01a823250d95b7722506/lutris/runners/scummvm.py#L487 attempted to access an element from an empty list. Fix that by propagating the empty list, and use mocks to ensure we test both cases.
-  # https://github.com/lutris/lutris/pull/5086
-  patch -Np1 <${srcdir}/fix-scummvm-tests.patch
 }
 
 build() {

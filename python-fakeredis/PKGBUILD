@@ -6,8 +6,8 @@ BUILDENV+=(!check)
 
 _pyname=fakeredis
 pkgname=python-fakeredis
-pkgver=2.20.1
-pkgrel=2
+pkgver=2.21.0
+pkgrel=1
 pkgdesc='Fake implementation of redis API (redis-py) for testing purposes'
 arch=(any)
 url="https://github.com/dsoftwareinc/${_pyname}-py"
@@ -29,7 +29,7 @@ optdepends=('python-packaging: for aioredis support'
 # source=("$url/archive/v$pkgver/$_archive.tar.gz")
 _archive="$_pyname-$pkgver"
 source=("https://files.pythonhosted.org/packages/source/${_pyname::1}/$_pyname/$_archive.tar.gz")
-sha256sums=('a2a5ccfcd72dc90435c18cde284f8cdd0cb032eb67d59f3fed907cde1cbffbbd')
+sha256sums=('1b3ff9c068e39c43725f2373b105228cd03e6a50fc79a5698e852b7601b1201b')
 
 build(){
 	cd "$_archive"

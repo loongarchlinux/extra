@@ -6,14 +6,14 @@
 # Contributor: Ben Alex <ben.alex@acegi.com.au>
 
 pkgname=influxdb
-pkgver=2.7.1
-_commit_sha=407fa62
+pkgver=2.7.5
+_commit_sha=09a9607 
 pkgrel=1
 pkgdesc='Scalable datastore for metrics, events, and real-time analytics'
 arch=('loong64' 'x86_64')
 url='https://github.com/InfluxData/influxdb'
 license=('MIT')
-makedepends=('go' 'go-tools' 'git' 'bzr' 'protobuf' 'yarn' 'cargo' 'clang' 'llvm')
+makedepends=('go' 'go-tools' 'git' 'protobuf' 'yarn' 'cargo' 'clang' 'llvm')
 options=('!lto')
 backup=('etc/influxdb/influxdb.conf')
 source=("git+https://github.com/influxdata/influxdb.git#tag=v${pkgver}"
@@ -25,6 +25,9 @@ build(){
   cd "$pkgname"
   export GOFLAGS="-trimpath -mod=readonly -modcacherw"
   export LDFLAGS=""
+  # Allow a rust lint introduced with 1.72+ so it is not converted to an error
+  # by #![deny(warnings)] resulting in a broken build
+  export RUSTFLAGS='-A hidden_glob_reexports'
   PATH="$(go env GOPATH)/bin:$PATH" make -j1 VERSION=$pkgver COMMIT=$_commit_sha INFLUXDB_SHA=$_commit_sha
 }
 

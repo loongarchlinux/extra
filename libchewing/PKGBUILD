@@ -4,32 +4,43 @@
 # Contributor: damir <damir@archlinux.org>
 
 pkgname=libchewing
-pkgver=0.5.1
-pkgrel=4
+pkgver=0.6.0
+pkgrel=1
 pkgdesc='Intelligent Chinese phonetic input method'
-url='http://chewing.im/'
+url='https://chewing.im/'
 arch=('loong64' 'x86_64')
-license=('LGPL2.1')
+# See discussions at https://github.com/chewing/libchewing/issues/433
+license=('LGPL-2.1-or-later')
 depends=('sqlite')
+makedepends=('cmake' 'minisign')
 optdepends=(
   'chewing-editor: view and modify libchewing user phrases database'
 )
-source=("https://github.com/chewing/${pkgname}/releases/download/v${pkgver}/${pkgname}-${pkgver}.tar.bz2")
-sha256sums=('9708c63415fa6034435c0f38100e7d30d0e1bac927f67bec6dfeb3fef016172b')
+source=("https://github.com/chewing/${pkgname}/releases/download/v${pkgver}/${pkgname}-${pkgver}.tar.xz"{,.minisig})
+sha256sums=('c2913bed55b7fdb25942b6a5832c254bc9bcb9c365d3cafa0a569b4b7cbd8f00'
+            '4f2c8cada59331add1366bd19842a60f996b02741f9c5dc19818c119886b5421')
+# The key is mentioned on https://github.com/chewing/libchewing
+_validminisignkey='RWRzJFnXiLZleAyCIv1talBjyRewelcy9gzYQq9pd3SKSFBPoy57sf5s'
+
+# XXX: move to verify() when pacman 7.0 is out
+# https://gitlab.archlinux.org/pacman/pacman/-/merge_requests/37
+prepare() {
+  minisign -Vm $pkgname-$pkgver.tar.xz -P $_validminisignkey
+}
 
 build() {
-  cd ${pkgname}-${pkgver}
-  ./configure --prefix=/usr
-  make
+  cmake -B build -S $pkgname-$pkgver \
+    -DCMAKE_BUILD_TYPE=None \
+    -DCMAKE_INSTALL_PREFIX=/usr \
+    -DBUILD_INFO=ON
+  make -C build
 }
 
 check() {
-  cd ${pkgname}-${pkgver}
   # parallel testing is broken (https://github.com/chewing/libchewing/issues/293)
-  make -j1 check
+  make -C build -j1 check
 }
 
 package() {
-  cd ${pkgname}-${pkgver}
-  make DESTDIR="${pkgdir}" install
+  make -C build DESTDIR="${pkgdir}" install
 }

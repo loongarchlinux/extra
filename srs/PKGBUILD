@@ -3,32 +3,31 @@
 # Contributor: heinrich5991 <heinrich5991@gmail.com>
 
 pkgname=srs
-pkgver=4.0_r5
+pkgver=5.0_r0
 pkgrel=1
 pkgdesc="High performance realtime video server"
-_pkgcommit=44f0c36b61bc7c3a1d51cb60be0ec184c840f09d
+_pkgcommit=55026a4fc79e70905e562e634701f09c6a1d1b2a
 arch=('loong64' 'x86_64')
 url="https://github.com/ossrs/srs"
 license=('MIT')
 depends=('gcc-libs'
          'openssl'
-         'srs-state-threads')
-makedepends=('zlib' 'unzip' 'net-tools' 'python' 'git')
+         'srs-state-threads'
+         'tcl')
+makedepends=('zlib'
+             'unzip'
+             'net-tools'
+             'python'
+             'git'
+             'cmake')
 backup=(etc/srs/srs.conf)
 options=('docs')
-source=("git+https://github.com/ossrs/srs/#commit=${_pkgcommit}"
-        "archlinux.patch")
-sha256sums=('SKIP'
-            '01af4fc5b393fe4c590215a8449ab10e7aefe1e377962ca35405baaa2ed43a90')
-
-prepare() {
-  cd "${srcdir}"/srs/trunk
-  patch -p2 -i "${srcdir}"/archlinux.patch
-}
+source=("git+https://github.com/ossrs/srs/#commit=${_pkgcommit}")
+sha256sums=('SKIP')
 
 build() {
   cd "${srcdir}"/srs/trunk
-  ./configure --prefix=/install --use-sys-ssl --use-shared-st
+  ./configure --prefix=/install --use-sys-ssl --use-shared-st --generic-linux=on
   make
   make DESTDIR="${srcdir}" install
 }

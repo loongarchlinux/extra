@@ -2,7 +2,7 @@
 # Maintainer: Levente Polyak <anthraxx[at]archlinux[dot]org>
 
 pkgname=ghidra
-pkgver=11.0
+pkgver=11.0.1
 _d2j=2.1
 _yajsw=13.09
 _jserif=2.1
@@ -25,7 +25,7 @@ source=(
 )
 noextract=(AXMLPrinter2.jar
            yajsw-beta-${_yajsw}.zip)
-sha512sums=('9c6ad91a71ea49ce90bff422f45d2ad076898d618614b7aded6dfabf8660ccf05fc6579e4f41d50e49ea6c1dc88c03260ff63210d411e405f88aa78bb2cce29b'
+sha512sums=('14a555c8bc6b66c02a92192f20abda1c8c82119894529bd7d14d40ae0bf22449d3a608102f641d282528ee070d069395092e02a3029468cfdcea7a9b6dbd5223'
             'SKIP'
             '44b4a51043ef608158e16f70d9a448ae0a37896da19bd9837e1124e197b7b41a7c37f074386b0cc03edd4f385066bf5ef04c553f6dec0b0cc2a11ecbf299b16f'
             'c1168ec913f1fbb0675915d4fd865ec9a8e8573f6c8aedcb6e68166f61f11aeaececc7548d54d78134843c0102c57d6350973f6d3027d0ffdae52a5c57a7f601'

@@ -3,9 +3,9 @@
 # Contributor: SpepS <dreamspepser at yahoo dot it>
 
 pkgname=ardour
-pkgver=8.1
-_commit=9138fb9913f6ead7516ac58d24ca81c795c225b9  # refs/tags/8.1^{}
-pkgrel=1
+pkgver=8.2
+_commit=92d6cb993391a37dcf3bd494707117ed63a4e7c4  # refs/tags/8.2^{}
+pkgrel=2
 pkgdesc="Professional-grade digital audio workstation"
 arch=(loong64 x86_64)
 url="https://ardour.org/"
@@ -73,7 +73,8 @@ makedepends=(
   suil
   unzip
   vamp-plugin-sdk
-  waf)
+  waf
+)
 optdepends=(
   'harvid: for video timeline and MP3 export'
   'new-session-manager: for session management'
@@ -90,14 +91,20 @@ source=(
   $pkgname::git+https://github.com/$pkgname/$pkgname.git#tag=$_commit
   $pkgname-midi-$pkgver.zip::http://stuff.ardour.org/loops/ArdourBundledMedia.zip
   $pkgname-7.0-re-vendor_qm-dsp.patch
+  $pkgname-8.2-revendor_libaaf.patch
+  taglib-2.patch
 )
 noextract=($pkgname-midi-$pkgver.zip)
 sha512sums=('SKIP'
             '94b681f989e834f5de25ce87da9c174b11d90617063f8c96147d7eb470391b35f6d54b85de16da8d963cacb01b50d1c1fab0fddd18eb3b086fe17124ecfa4f65'
-            'a3da14925bc25d8a57ba3e137c4b2b04010054667ac4ae2aec116ce6c157b03c9dd76bf4d73c313022282362d19b91683f062d6ab2ee0c73a576d3fa6272bd1d')
+            'a3da14925bc25d8a57ba3e137c4b2b04010054667ac4ae2aec116ce6c157b03c9dd76bf4d73c313022282362d19b91683f062d6ab2ee0c73a576d3fa6272bd1d'
+            '29e5ded8860f09ab477b2e198175e2efac406799a5de6711944c23cf6e8940d56d94120dae57d42cb57baf5cffbd2c880340655722a7f31c6a2ac3b81fac73ed'
+            '74b1c7759271f4c3b103195147a3649ec99056b49e897063977b3bce6c1f714526fa3f1a925186fe21c2d5c12af0455413ee879d07380613908873c85a56d089')
 b2sums=('SKIP'
         'e31be6b51a217e2f7f799aa1d6e8c3cd024d80ab2d8d4371496a2b8bf0215749979217b565909841a346d6b3128fbfd674d2fae64b9fe741a5b418cd184c23be'
-        '73845adce9a48938cd7aef5fbc65f492e470de316620d278365d247c80caef44531e850fbd3d2f5de65a8562e67aabfd982c938439bd3670726a27bc003be017')
+        '73845adce9a48938cd7aef5fbc65f492e470de316620d278365d247c80caef44531e850fbd3d2f5de65a8562e67aabfd982c938439bd3670726a27bc003be017'
+        'b3c1257d26eb89193b255c773b6a19de247056282dfffdf1d3c450600baab5671b0a7a3010870ac219e744250fedca742d9fde8b510b454730d4c4cbfa876502'
+        '1c2137970933c36c9580e9ebc66d9fb09919790c31afb325d94a4775aa2fd78d2d25ddadf7946749920eea43c0905853d39360e1ce749f0547834b99736b32ad')
 
 pkgver() {
   cd $pkgname
@@ -107,6 +114,12 @@ pkgver() {
 prepare() {
   # using vendored version of qm-dsp because qm-dsp >= 1.8.0 is not compatible
   patch -Np1 -d $pkgname -i ../$pkgname-7.0-re-vendor_qm-dsp.patch
+
+  # use vendored libaaf, as upstream is completely out-of-sync and would require a lot of patching on both sides
+  patch -Np1 -d $pkgname -i ../$pkgname-8.2-revendor_libaaf.patch
+
+  # Fix build with taglib 2
+  patch -d $pkgname -p1 < taglib-2.patch
 
   cd $pkgname
   # unsetting gtk2 rc (FS#54389)

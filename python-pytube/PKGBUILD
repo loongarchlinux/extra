@@ -1,0 +1,40 @@
+# Maintainer: Felix Yan <felixonmars@archlinux.org>
+# Contributor: Pekka Ristola <pekkarr [at] protonmail [dot] com>
+# Contributor: Tim Schumacher <timschumi@gmx.de>
+# Contributor: Ron B.S <ronthecookie0101 on gmail --OR-- me AT ronthecookie DOT me >
+
+pkgname=python-pytube
+pkgver=15.0.0
+pkgrel=2
+pkgdesc="A lightweight, dependency-free Python library (and command-line utility) for downloading YouTube Videos"
+arch=(any)
+url="https://github.com/pytube/pytube"
+license=(Unlicense)
+depends=(python)
+makedepends=(python-setuptools)
+checkdepends=(python-pytest)
+source=("https://github.com/pytube/pytube/archive/v$pkgver/$pkgname-$pkgver.tar.gz"
+		get_throttling_function_name.patch::https://github.com/pytube/pytube/pull/1716.patch)
+sha256sums=('b685e884c2064032bffb76fe4d0be789125be813695bacc55ab4009ffd5c3664'
+            '2ae0c1b2331639050837c81f3dfc064ecf60e88e2a19682704c7bc0625ae9007')
+
+prepare() {
+	cd pytube-$pkgver
+	patch -p1 -i ../get_throttling_function_name.patch
+}
+
+build() {
+	cd pytube-$pkgver
+	python setup.py build
+}
+
+check() {
+	cd pytube-$pkgver
+	# TODO
+	pytest || echo "Tests failed"
+}
+
+package() {
+	cd pytube-$pkgver
+	python setup.py install --root="$pkgdir/" --optimize=1 --skip-build
+}

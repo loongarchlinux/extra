@@ -2,7 +2,7 @@
 
 _name=unearth
 pkgname=python-unearth
-pkgver=0.12.1
+pkgver=0.14.0
 pkgrel=1
 pkgdesc="A utility to fetch and download python packages"
 arch=(any)
@@ -31,8 +31,8 @@ optdepends=('python-keyring: use keyring for authentication')
 source=(
   $pkgname-$pkgver.tar.gz::$url/archive/refs/tags/$pkgver.tar.gz
 )
-sha512sums=('0a5b396ac162f4e462048f978ad66f35190f63b580aa8752b191956dbbec3d392223bf15ef57bdb6b7027043cf14982db2c63cec13967126e132c53b03de5501')
-b2sums=('2538966e9de25f2f2762cf7542ed4e930843e6d9e0f89b79236aad8999fad96548b36c84da094df4ac48be0acc5a9bddd55242e05086bde12503e66104db0860')
+sha512sums=('a6a12020f056522e0a2f8c8547e56ab2fcd11b32dfc083f26a13f843aa871a801066294ae17d4202997a0fb1ab5a64cc83831eac174aa44b16b4d4973cc7566a')
+b2sums=('94145173756012a0f08744a706ab474d49fe09125b3e7b6ebf82e627194ceb9d0ea416b1a7ef6df72596d45bdd19bb5ee6b4659e6dbadb1df56c2e4e678c0e8d')
 
 build() {
   cd $_name-$pkgver

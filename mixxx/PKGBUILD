@@ -6,7 +6,7 @@
 
 pkgname=mixxx
 pkgver=2.3.6
-pkgrel=3
+pkgrel=4
 pkgdesc="Free, open source software for digital DJing"
 arch=(loong64 x86_64)
 url="https://www.mixxx.org"
@@ -19,6 +19,7 @@ depends=(
   hicolor-icon-theme
   hidapi
   lame
+  libkeyfinder
   libmad
   libmodplug
   libx11
@@ -42,7 +43,6 @@ makedepends=(
   cmake
   faad2
   ffmpeg
-  fftw
   flac
   glib2
   glu
@@ -62,9 +62,16 @@ makedepends=(
   vamp-plugin-sdk
 )
 checkdepends=(xorg-server-xvfb)
-source=(https://github.com/${pkgname}dj/$pkgname/archive/$pkgver/$pkgname-$pkgver.tar.gz)
-sha512sums=('a92c2c92dc7619ac135d940f23ffdc101c528eca6322517805afb9eb48a84c6339cefb88b96bdac6ffb23967c2f93f621daf3e98bfecbf7f3fe7626ddcec4398')
-b2sums=('35bedb5f41a56577bc59411ca979e3e780c1da2420bc0a7ad98d998c89f8c272202ba42e8b8089904ca8e1a1b6ac5155d08d556538245ce3242b4ea5a670e6d2')
+source=(https://github.com/${pkgname}dj/$pkgname/archive/$pkgver/$pkgname-$pkgver.tar.gz
+        taglib-2.patch)
+sha512sums=('a92c2c92dc7619ac135d940f23ffdc101c528eca6322517805afb9eb48a84c6339cefb88b96bdac6ffb23967c2f93f621daf3e98bfecbf7f3fe7626ddcec4398'
+            'ded7ebd30ee24da0e956a14201499a7e85e77ff898f500eeb999e843a02d4e693aa857a607dcf22112b2e2e808e54a64fc3d5199a3a0efa29010dfdac323a2b7')
+b2sums=('35bedb5f41a56577bc59411ca979e3e780c1da2420bc0a7ad98d998c89f8c272202ba42e8b8089904ca8e1a1b6ac5155d08d556538245ce3242b4ea5a670e6d2'
+        '3963647ae9514b713be9e083ce648fea4a2966c0368d61613124f6937ad3f603c0fb3e3bf471332eec60c61420b5388f092aaaaf164dbc73ded832ebff037b0a')
+
+prepare() {
+  patch -d $pkgname-$pkgver -p1 < taglib-2.patch
+}
 
 build() {
   local cmake_options=(
@@ -88,7 +95,6 @@ package() {
     chromaprint libchromaprint.so
     flac libFLAC.so
     ffmpeg libavcodec.so libavformat.so libavutil.so
-    fftw libfftw3.so
     glib2 libgobject-2.0.so
     libid3tag libid3tag.so
     libogg libogg.so

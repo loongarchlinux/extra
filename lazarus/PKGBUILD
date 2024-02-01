@@ -3,17 +3,17 @@
 # Contributor: Jens Adam <jra@byte.cx>
 
 pkgbase=lazarus
-pkgname=('lazarus' 'lazarus-gtk2' 'lazarus-qt5')
-_lazarus_tag=2_2_6
-pkgver=2.2.6
+pkgname=('lazarus' 'lazarus-gtk2' 'lazarus-gtk3' 'lazarus-qt5' 'lazarus-qt6')
+_lazarus_tag=3_0
+pkgver=3.0
 pkgrel=2
 url='http://www.lazarus.freepascal.org/'
 license=('GPL2' 'MPL' 'custom:modifiedLGPL')
 arch=('loong64' 'x86_64')
-makedepends=('fpc' 'fpc-src' 'gtk2' 'qt5pas' 'rsync')
+makedepends=('fpc' 'fpc-src' 'gtk2' 'gtk3' 'qt5pas' 'qt6pas' 'rsync')
 options=(!makeflags libtool staticlibs !strip)
 source=("https://gitlab.com/freepascal.org/lazarus/lazarus/-/archive/lazarus_${_lazarus_tag}/lazarus-lazarus_${_lazarus_tag}.tar.bz2")
-sha512sums=('ca618fed386ef09af15e1215cdc3f04d945dbbe1b40c477a5b3a0cee9fe791077b4e435dc798d27866221ef43732083511227de0cf6f96896166869280994af3')
+sha512sums=('131cc6ffc31fdc98a8ae3a9edd75d2e1d4e5cf1b963a5849c3e42aafea9ea1ae78ba0eaffd38c4ea6848cc58a024ebd878ae1771f2af65de7355f43a1b9b766c')
 
 build() {
   cd "lazarus-lazarus_${_lazarus_tag}"
@@ -24,11 +24,23 @@ build() {
   mv lazarus lazarus-gtk2
   mv startlazarus startlazarus-gtk2
 
+  # build gtk3 ide
+  make FPC=/usr/bin/fpc OPT='-gl -gw -Crtoi' LCL_PLATFORM=gtk3 clean bigide
+  # move gtk binaries
+  mv lazarus lazarus-gtk3
+  mv startlazarus startlazarus-gtk3
+
   # build qt5 ide
   make FPC=/usr/bin/fpc OPT='-gl -gw -Crtoi' LCL_PLATFORM=qt5 bigide
   # move qt binaries
   mv lazarus lazarus-qt5
   mv startlazarus startlazarus-qt5
+
+  # build qt6 ide
+  make FPC=/usr/bin/fpc OPT='-gl -gw -Crtoi' LCL_PLATFORM=qt6 bigide
+  # move qt binaries
+  mv lazarus lazarus-qt6
+  mv startlazarus startlazarus-qt6
 }
 
 package_lazarus() {
@@ -36,8 +48,9 @@ package_lazarus() {
   depends=('fpc' 'fpc-src' 'gdb')
   optdepends=(
     'perl: to run some scirpts in the tools directory'
-    'gtk2: to compile gtk2 apps'
-    'qt5pas: to compile qt5 apps and use help viewer'
+    'gtk3: to compile gtk3 apps'
+    'qt5pas: to compile Qt5 apps'
+    'qt6pas: to compile Qt6 apps'
   )
 
   cd "lazarus-lazarus_${_lazarus_tag}"
@@ -79,7 +92,7 @@ package_lazarus() {
 package_lazarus-gtk2() {
   pkgdesc='Delphi-like IDE for FreePascal gtk2 version'
   depends=('lazarus' 'desktop-file-utils' 'gtk2')
-  conflicts=('lazarus-qt5')
+  conflicts=('lazarus-gtk3' 'lazarus-qt5' 'lazarus-qt6')
 
   cd "lazarus-lazarus_${_lazarus_tag}"
 
@@ -100,10 +113,34 @@ package_lazarus-gtk2() {
   install -D -m644 COPYING.modifiedLGPL.txt "$pkgdir"/usr/share/licenses/$pkgname/COPYING.modifiedLGPL
 }
 
+package_lazarus-gtk3() {
+  pkgdesc='Delphi-like IDE for FreePascal gtk3 version'
+  depends=('lazarus' 'desktop-file-utils' 'gtk3')
+  conflicts=('lazarus-gtk2' 'lazarus-qt5' 'lazarus-qt6')
+
+  cd "lazarus-lazarus_${_lazarus_tag}"
+
+  # install gtk binaries
+  install -Dm755 lazarus-gtk3 "$pkgdir"/usr/lib/lazarus/lazarus
+  install -Dm755 startlazarus-gtk3 "$pkgdir"/usr/lib/lazarus/startlazarus
+  install -dm755 "$pkgdir"/usr/bin
+  ln -s /usr/lib/lazarus/lazarus "$pkgdir"/usr/bin/lazarus
+  ln -s /usr/lib/lazarus/startlazarus "$pkgdir"/usr/bin/startlazarus
+
+  # make 'desktop-file-validate' happy and fix missing .png icon
+  sed -e 's|\(Categories\).*|\1=IDE;Development;|' \
+    -e 's|\.png|\.xpm|' -i install/lazarus.desktop
+  install -Dm644 install/lazarus.desktop "$pkgdir"/usr/share/applications/lazarus.desktop
+  install -Dm644 images/ide_icon48x48.png "$pkgdir"/usr/share/pixmaps/lazarus.png
+
+  # license files: /usr/lib/lazarus/COPYING*
+  install -D -m644 COPYING.modifiedLGPL.txt "$pkgdir"/usr/share/licenses/$pkgname/COPYING.modifiedLGPL
+}
+
 package_lazarus-qt5() {
-  pkgdesc='Delphi-like IDE for FreePascal qt5 version'
+  pkgdesc='Delphi-like IDE for FreePascal Qt5 version'
   depends=('lazarus' 'qt5pas')
-  conflicts=('lazarus-gtk2')
+  conflicts=('lazarus-gtk2' 'lazarus-gtk3' 'lazarus-qt6')
   replaces=('lazarus-qt' 'lazarus-qt4')
 
   cd "lazarus-lazarus_${_lazarus_tag}"
@@ -111,6 +148,30 @@ package_lazarus-qt5() {
   # install qt binaries
   install -Dm755 lazarus-qt5 "$pkgdir"/usr/lib/lazarus/lazarus
   install -Dm755 startlazarus-qt5 "$pkgdir"/usr/lib/lazarus/startlazarus
+  install -dm755 "$pkgdir"/usr/bin
+  ln -s /usr/lib/lazarus/lazarus "$pkgdir"/usr/bin/lazarus
+  ln -s /usr/lib/lazarus/startlazarus "$pkgdir"/usr/bin/startlazarus
+
+  # make 'desktop-file-validate' happy and fix missing .png icon
+  sed -e 's|\(Categories\).*|\1=IDE;Development;|' \
+    -e 's|\.png|\.xpm|' -i install/lazarus.desktop
+  install -Dm644 install/lazarus.desktop "$pkgdir"/usr/share/applications/lazarus.desktop
+  install -Dm644 images/ide_icon48x48.png "$pkgdir"/usr/share/pixmaps/lazarus.png
+
+  # license files: /usr/lib/lazarus/COPYING*
+  install -D -m644 COPYING.modifiedLGPL.txt "$pkgdir"/usr/share/licenses/$pkgname/COPYING.modifiedLGPL
+}
+
+package_lazarus-qt6() {
+  pkgdesc='Delphi-like IDE for FreePascal Qt6 version'
+  depends=('lazarus' 'qt6pas')
+  conflicts=('lazarus-gtk2' 'lazarus-gtk3' 'lazarus-qt5')
+
+  cd "lazarus-lazarus_${_lazarus_tag}"
+
+  # install qt binaries
+  install -Dm755 lazarus-qt6 "$pkgdir"/usr/lib/lazarus/lazarus
+  install -Dm755 startlazarus-qt6 "$pkgdir"/usr/lib/lazarus/startlazarus
   install -dm755 "$pkgdir"/usr/bin
   ln -s /usr/lib/lazarus/lazarus "$pkgdir"/usr/bin/lazarus
   ln -s /usr/lib/lazarus/startlazarus "$pkgdir"/usr/bin/startlazarus

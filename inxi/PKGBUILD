@@ -6,11 +6,11 @@
 pkgname=inxi
 _pkgver=3.3.31-1
 pkgver=${_pkgver//-/.}
-pkgrel=1
+pkgrel=3
 pkgdesc="Full featured CLI system information tool"
 arch=(any)
 url="https://smxi.org/docs/inxi.htm"
-license=(GPL3)
+license=('GPL-3.0-or-later')
 depends=(coreutils pciutils perl procps-ng util-linux)
 optdepends=(
     "bind: dig: -i wlan IP"
@@ -48,7 +48,7 @@ optdepends=(
     "xorg-xrandr: xrandr: -G (X) monitors(s) resolution; -Ga monitor data"
 )
 source=("$pkgname-$pkgver.tar.gz::https://codeberg.org/smxi/$pkgname/archive/${_pkgver}.tar.gz")
-b2sums=('b6978da6aba70c6d34611806d5ae894091e62df3e60678e3fe16f51e8b20ab7d87cc2bd30efd7bef2e5a710df0325f4e5e9e17c627eefa28dd2817b828b0c556')
+b2sums=('2354a72f9b73ae2bc33baf3cfc7e21904f877bb5e6c7d97d7f7f777f166f8000f44a6c9441ddb5423b3bafb11f6d16a03895de3739a8773dc9ef0e02fc5ca7dc')
 
 package() {
     cd "$pkgname"

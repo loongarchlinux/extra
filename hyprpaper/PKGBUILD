@@ -2,38 +2,42 @@
 # Contributor: ThatOneCalculator <kainoa@t1c.dev>
 
 pkgname=hyprpaper
-pkgver=0.5.0
+pkgver=0.6.0
 pkgrel=1
 pkgdesc='a blazing fast wayland wallpaper utility with IPC controls'
 arch=(loong64 x86_64)
 url="https://github.com/hyprwm/$pkgname"
 license=(BSD)
-depends=(cairo
+depends=(cairo libcairo.so
+         file libmagic.so
+         gcc-libs
+         glibc
+         hyprlang libhyprlang.so
          libglvnd
-         libjpeg
+         libjpeg libjpeg.so
+         libwebp libwebp.so
          pango
-         wayland)
+         wayland # libwayland-cursor.so libwaylant-client.so
+         wlroots)
 makedepends=(cmake
              wayland-protocols
              xorgproto)
 _archive="$pkgname-$pkgver"
 source=("$url/archive/v$pkgver/$_archive.tar.gz")
-sha256sums=('683b63ca8a5268ab02a78bef8dff5dc4e5bd6f4009300bbbd5e5955dc5590b5f')
+sha256sums=('71d8294ffbcbaae628c4eabdcb3b7fb1974d6bed7794b787bb77934d0a3f4538')
 
 build() {
 	cd "$_archive"
-	cmake \
-		--no-warn-unused-cli \
-		-G "Unix Makefiles" \
-		-D CMAKE_BUILD_TYPE=Release \
+	cmake -B build \
 		-D CMAKE_INSTALL_PREFIX=/usr \
-		-B build
+		-D CMAKE_BUILD_TYPE=Release
 	make protocols
-	make -C build all
+	cmake --build build
 }
 
 package() {
 	cd "$_archive"
+	# DESTDIR="$pkgdir" cmake --install build
 	install -Dm0755 -t "$pkgdir/usr/bin/" "build/$pkgname"
 	install -Dm0644 -t "$pkgdir/usr/share/licenses/$pkgname" LICENSE
 }

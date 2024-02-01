@@ -2,19 +2,32 @@
 # Contributor: Jan de Groot <jgc@archlinux.org>
 
 pkgbase=pangomm-2.48
-pkgname=(pangomm-2.48 pangomm-2.48-docs)
-pkgver=2.50.1
+pkgname=(
+  pangomm-2.48
+  pangomm-2.48-docs
+)
+pkgver=2.50.2
 pkgrel=1
 pkgdesc="C++ bindings for Pango"
 url="https://www.gtkmm.org/"
 arch=(loong64 x86_64)
-license=(LGPL)
-depends=(pango glibmm-2.68 cairomm-1.16)
-makedepends=(git meson mm-common glibmm-2.68-docs cairomm-1.16-docs)
+license=(LGPL-2.1-or-later)
+depends=(
+  cairomm-1.16
+  glibmm-2.68
+  pango
+)
+makedepends=(
+  cairomm-1.16-docs
+  git
+  glibmm-2.68-docs
+  meson
+  mm-common
+)
 options=(!emptydirs)
-_commit=7083b4deaa6401bf1f5b771752a46632ecc8d303  # tags/2.50.1^0
+_commit=4b1bd46747433b5f58f03af0de94319294e5af4e  # tags/2.50.2^0
 source=("git+https://gitlab.gnome.org/GNOME/pangomm.git#commit=$_commit")
-sha256sums=('SKIP')
+b2sums=('SKIP')
 
 pkgver() {
   cd pangomm
@@ -26,7 +39,11 @@ prepare() {
 }
 
 build() {
-  arch-meson pangomm build -D maintainer-mode=true
+  local meson_options=(
+    -D maintainer-mode=true
+  )
+
+  arch-meson pangomm build "${meson_options[@]}"
   meson compile -C build
 }
 
@@ -35,7 +52,11 @@ check() {
 }
 
 package_pangomm-2.48() {
-  depends+=(libsigc-3.0.so libglibmm-2.68.so libcairomm-1.16.so)
+  depends+=(
+    libcairomm-1.16.so
+    libglibmm-2.68.so
+    libsigc-3.0.so
+  )
   provides=(libpangomm-2.48.so)
 
   meson install -C build --destdir "$pkgdir"

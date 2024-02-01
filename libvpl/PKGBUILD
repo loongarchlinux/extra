@@ -1,0 +1,51 @@
+# Maintainer: Daniel Bermond <dbermond@archlinux.org>
+
+pkgname=libvpl
+pkgver=2.10.1
+pkgrel=1
+pkgdesc='Intel Video Processing Library'
+arch=('loong64' 'x86_64')
+url='https://intel.github.io/libvpl/'
+license=('MIT')
+depends=('libdrm' 'libva' 'libx11' 'wayland')
+optdepends=('intel-media-sdk: runtime for legacy Intel GPUs'
+            'onevpl-intel-gpu: runtime for Tiger Lake and newer GPUs')
+makedepends=('cmake' 'libpciaccess' 'wayland-protocols')
+provides=('onevpl' 'libvpl.so')
+conflicts=('onevpl')
+replaces=('onevpl')
+source=("https://github.com/intel/libvpl/archive/v${pkgver}/${pkgname}-${pkgver}.tar.gz")
+sha256sums=('524299a7b920ac0de1f6913ca90515858ea3a8ea2daaea60f8e0be62f22c8041')
+
+build() {
+    export CFLAGS+=' -DNDEBUG'
+    export CXXFLAGS+=' -DNDEBUG'
+    cmake -B build -S "libvpl-${pkgver}" \
+        -G 'Unix Makefiles' \
+        -DCMAKE_BUILD_TYPE:STRING='None' \
+        -DCMAKE_INSTALL_PREFIX:PATH='/usr' \
+        -DCMAKE_INSTALL_SYSCONFDIR:PATH='/etc' \
+        -DBUILD_EXAMPLES:BOOL='OFF' \
+        -DBUILD_TESTS:BOOL='ON' \
+        -DINSTALL_EXAMPLE_CODE:BOOL='OFF' \
+        -DVPL_INSTALL_LICENSEDIR:PATH="share/licenses/${pkgname}" \
+        -Wno-dev
+    cmake --build build
+}
+
+check() {
+    ctest --test-dir build --output-on-failure
+}
+
+package() {
+    DESTDIR="$pkgdir" cmake --install build
+    
+    local _file
+    while read -r -d '' _file
+    do
+        if ! grep -q '^vpl-' <<< "$_file"
+        then
+            mv "${pkgdir}/usr/bin"/{,vpl-}"$_file"
+        fi
+    done < <(find "${pkgdir}/usr/bin" -mindepth 1 -maxdepth 1 -type f -print0 | sed -z 's|.*/||')
+}

@@ -2,7 +2,7 @@
 # Contributor: Dmytro Meleshko <qzlgeb.zryrfuxb@tznvy.pbz(rot13)>
 
 pkgname=eslint-language-server
-pkgver=2.4.2
+pkgver=2.4.4
 pkgrel=1
 pkgdesc='Language server for ESLint'
 arch=('any')
@@ -26,8 +26,9 @@ build() {
 }
 
 package() {
-  install -d "$pkgdir"/usr/{bin,lib/node_modules/$pkgname}
-  printf '%s\n' '#!/usr/bin/env node' "require('/usr/lib/node_modules/$pkgname/out/eslintServer.js');" >"$pkgdir"/usr/bin/$pkgname
+  local mod_dir=/usr/lib/node_modules/$pkgname
+  install -d "$pkgdir"/{usr/bin,$mod_dir}
+  printf '%s\n' '#!/usr/bin/env node' "require('$mod_dir/out/eslintServer.js');" >"$pkgdir"/usr/bin/$pkgname
   chmod +x "$pkgdir"/usr/bin/$pkgname
   ln -s $pkgname "$pkgdir"/usr/bin/vscode-$pkgname
 
@@ -36,5 +37,5 @@ package() {
   install -Dm644 -t "$pkgdir"/usr/share/licenses/$pkgname License.txt
 
   cd server
-  cp -r node_modules out package.json "$pkgdir"/usr/lib/node_modules/$pkgname
+  cp -r node_modules out package.json "$pkgdir"/$mod_dir
 }

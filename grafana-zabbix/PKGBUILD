@@ -2,29 +2,22 @@
 # Maintainer: Robin Candau <antiz@archlinux.org>
 
 pkgname=grafana-zabbix
-pkgver=4.4.3
-pkgrel=2
+pkgver=4.4.5
+pkgrel=1
 pkgdesc="Zabbix plugin for Grafana dashboard"
 arch=('any')
 url="https://github.com/alexanderzobnin/grafana-zabbix"
 license=('APACHE')
 depends=('grafana')
-makedepends=(yarn libfaketime go git nodejs-lts-hydrogen mage)
-source=("$pkgname-$pkgver-retagged-1.tar.gz::https://github.com/alexanderzobnin/grafana-zabbix/archive/v$pkgver.tar.gz"
-        "fix_prettier_issues_in_test_files.patch::https://github.com/grafana/grafana-zabbix/commit/43f2c6653bda5a0dcd9b824a11839d2531202906.patch")
-sha256sums=('023c5c143195df6f255132428e90bd8cd107b046f119d88d22538bc683f33eff'
-            '3c9d44cab26971417333ef5d1f7f331bed9e10b0048eb61c9b16ebcb7cc67a93')
+makedepends=(yarn libfaketime go git nodejs-lts-iron mage)
+source=("$pkgname-$pkgver-retagged-1.tar.gz::https://github.com/alexanderzobnin/grafana-zabbix/archive/v$pkgver.tar.gz")
+sha256sums=('7b93f15767c0142ba04d36924e02b597d006d77c2a239d9d5fb644dd752836de')
 
 prepare() {
 	cd "$pkgname-$pkgver"
 
 	# Fix tests not working without git clone
 	sed -i 's#jest --watch --onlyChanged#jest#' package.json
-
-	# Temporary patch to fix tests
-	# https://github.com/grafana/grafana-zabbix/issues/1709
-	# https://github.com/grafana/grafana-zabbix/pull/1710
-	patch -Np1 < "${srcdir}/fix_prettier_issues_in_test_files.patch"
 }
 
 build() {

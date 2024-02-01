@@ -6,7 +6,7 @@
 
 pkgname=zathura
 pkgver=0.5.4
-pkgrel=1
+pkgrel=2
 
 pkgdesc="Minimalistic document viewer"
 url="https://pwmt.org/projects/zathura/"
@@ -29,8 +29,11 @@ sha256sums=('a3037f7aa94d4096bfd97069f62ffcdca9f06431e8663548c1cd6b945c556f32'
             '15bf4be1a6c1dc539e2f034fa30d509d19b016ec130aaa4cbe506bf61bc343fe')
 
 prepare() {
-  # Patch to prevent xvfb-run tests to fail when trying to kill the process during check()
-  # See https://stackoverflow.com/questions/30504274/xvfb-run-line-171-kill-25939-no-such-process#comment64585805_35319908
+  # Arch's using the Fedora `xvfb` fork that deprecated the `-a` option in favor of the `-d` one.
+  # This patch makes the switch in upstream sources to prevent xvfb-run tests to fail when trying to kill the process during check().
+  # Upstream is implementing an auto-detect feature for that in the next release, so the right option will be used automatically.
+  # This patch can thus be dropped at next release.
+  # See https://git.pwmt.org/pwmt/zathura/-/issues/390#note_2321 & https://git.pwmt.org/pwmt/zathura/-/issues/390#note_2323
   cd zathura-$pkgver
   patch -Np1 <${srcdir}/fix-xvfb-run-tests.patch
 }

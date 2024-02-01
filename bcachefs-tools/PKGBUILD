@@ -3,8 +3,8 @@
 
 pkgname=bcachefs-tools
 epoch=3
-pkgver=1.4.0
-pkgrel=1
+pkgver=1.4.1
+pkgrel=2
 pkgdesc='BCacheFS filesystem utilities'
 arch=('loong64' 'x86_64')
 url='https://bcachefs.org/'
@@ -34,17 +34,27 @@ makedepends=(
 source=(
   "${pkgname}-${pkgver}.tar.gz"::https://github.com/koverstreet/bcachefs-tools/archive/refs/tags/v${pkgver}.tar.gz
 )
-b2sums=('c972de13e305b07910ab4acdfea05df85bfe70ed350dea5fb578a150a9e116f054dc99bf6dd185aa26dab799832939276a6248203717b918c1d7e0e9f2e0fdd9')
+b2sums=('7be0a343758a221a39dad5eca1c11c74d049e208712d30ffdfd919c97ef87e561983b85b2fbefa932cb69ef50418dce761a9c01afe0114f67b8ddd55b5d62a2c')
 
 build() {
   cd ${pkgname}-${pkgver}
-  BCACHEFS_FUSE=1 make
+  make
+  BCACHEFS_FUSE=1 make \
+    LIBEXECDIR=/usr/lib \
+    DESTDIR="${pkgdir}" \
+    ROOT_SBINDIR="/usr/bin" \
+    INITRAMFS_DIR="/etc/initcpio"
 }
 
 package() {
   cd ${pkgname}-${pkgver}
-  make DESTDIR="${pkgdir}" PREFIX="/usr" ROOT_SBINDIR="/usr/bin" \
-       INITRAMFS_DIR="/etc/initcpio" install
+  BCACHEFS_FUSE=1 make \
+    PREFIX="/usr" \
+    LIBEXECDIR=/usr/lib \
+    DESTDIR="${pkgdir}" \
+    ROOT_SBINDIR="/usr/bin" \
+    INITRAMFS_DIR="/etc/initcpio" \
+    install
   # remove initcpio hooks that seems incompatible with mkinitcpio
   rm -rf "${pkgdir}"/etc
 

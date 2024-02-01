@@ -1,7 +1,7 @@
 # Maintainer: Daniel M. Capella <polyzen@archlinux.org>
 
 pkgname=typescript-language-server
-pkgver=4.2.0
+pkgver=4.3.1
 pkgrel=1
 pkgdesc='Language Server Protocol (LSP) implementation for TypeScript using tsserver'
 url=https://github.com/typescript-language-server/typescript-language-server
@@ -20,12 +20,12 @@ prepare() {
 
 build() {
   cd $pkgname
-  yarn compile # Needs bin links
+  yarn build # Needs bin links
 }
 
 check() {
   cd $pkgname
-  yarn test
+  yarn test:commit
 }
 
 package() {
@@ -34,7 +34,7 @@ package() {
   ln -s $mod_dir/lib/cli.mjs "$pkgdir"/usr/bin/$pkgname
 
   cd $pkgname
-  # Emulate `npm prune --production`
+  # Prune unnecessary packages
   cp package.json{,.bak}
   read -ra devDependencies < <(jq -r '.devDependencies | keys | join(" ")' package.json)
   yarn remove --frozen-lockfile "${devDependencies[@]}"

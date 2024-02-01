@@ -1,0 +1,50 @@
+# Maintainer: Laurent Carlier <lordheavym@archlinux.org>
+# Contributor: Martin Tuma <tumic@cbox.cz>
+
+pkgbase=qtpbfimageplugin
+pkgname=(qtpbfimageplugin-qt5 qtpbfimageplugin-qt6)
+pkgver=3.0
+pkgrel=1
+pkgdesc='Qt image plugin for displaying Mapbox vector tiles'
+arch=(loong64 x86_64)
+url='https://github.com/tumic0/QtPBFImagePlugin'
+license=('LGPL3')
+depends=('protobuf' 'zlib')
+makedepends=('qt5-base' 'qt6-base')
+source=("${pkgbase}-${pkgver}.tar.gz::https://github.com/tumic0/QtPBFImagePlugin/archive/refs/tags/${pkgver}.tar.gz")
+sha256sums=('eeeabf61f60c559f536537105741dfa78dd39adbb1b266061cb3b7351b327da3')
+
+prepare() {
+  mkdir build5
+  mkdir build6
+}
+
+build() {
+  cd build5
+
+  qmake ../QtPBFImagePlugin-${pkgver}
+  make
+
+  cd  ../build6
+  qmake6 ../QtPBFImagePlugin-${pkgver}
+  make
+}
+
+package_qtpbfimageplugin-qt5() {
+  depends+=(qt5-base)
+  cd build5
+
+  make install INSTALL_ROOT="$pkgdir"
+  install -d 755 ${pkgdir}/usr/share/mime/packages
+  install -m 644 ../QtPBFImagePlugin-${pkgver}/pkg/pbfplugin.xml ${pkgdir}/usr/share/mime/packages/qtpbfimageplugin-qt5.xml
+}
+
+package_qtpbfimageplugin-qt6() {
+  depends+=(qt6-base)
+  cd build6
+
+  make install INSTALL_ROOT="$pkgdir"
+  install -d 755 ${pkgdir}/usr/share/mime/packages
+  install -m 644 ../QtPBFImagePlugin-${pkgver}/pkg/pbfplugin.xml ${pkgdir}/usr/share/mime/packages/qtpbfimageplugin-qt6.xml
+}
+

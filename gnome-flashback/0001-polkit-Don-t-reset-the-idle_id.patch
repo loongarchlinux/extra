@@ -1,0 +1,35 @@
+From 407f591d440e7391b97f37308d14d0af66db1cce Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Ball=C3=B3=20Gy=C3=B6rgy?= <ballogyor@gmail.com>
+Date: Wed, 24 Jan 2024 03:49:01 +0100
+Subject: [PATCH] polkit: Don't reset the idle_id
+
+It causes memory handling problems and leads to crash when the dialog is opened second time.
+
+Fixes #92.
+---
+ daemons/polkit/flashback-authenticator.c | 2 --
+ 1 file changed, 2 deletions(-)
+
+diff --git a/daemons/polkit/flashback-authenticator.c b/daemons/polkit/flashback-authenticator.c
+index f384119..39b0b2f 100644
+--- a/daemons/polkit/flashback-authenticator.c
++++ b/daemons/polkit/flashback-authenticator.c
+@@ -202,7 +202,6 @@ do_initiate (gpointer user_data)
+                              authenticator->gained_authorization,
+                              authenticator->was_cancelled);
+ 
+-      authenticator->idle_id = 0;
+       return G_SOURCE_REMOVE;
+     }
+ 
+@@ -279,7 +278,6 @@ do_initiate (gpointer user_data)
+                          authenticator->gained_authorization,
+                          authenticator->was_cancelled);
+ 
+-  authenticator->idle_id = 0;
+   return G_SOURCE_REMOVE;
+ }
+ 
+-- 
+2.43.0
+

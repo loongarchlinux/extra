@@ -3,7 +3,7 @@
 # Contributor: Jan de Groot <jgc@archlinux.org>
 
 pkgname=epiphany
-pkgver=45.1
+pkgver=45.2
 pkgrel=1
 pkgdesc="A GNOME web browser based on the WebKit rendering engine"
 url="https://wiki.gnome.org/Apps/Web"
@@ -38,7 +38,7 @@ checkdepends=(
   xorg-server-xvfb
 )
 groups=(gnome)
-_commit=1ab8e71bf2ad6ed4ff4c0c5a251edc10fdaedd95  # tags/45.1^0
+_commit=858715833358f35fc654af28defa8875cad9bee9  # tags/45.2^0
 source=("git+https://gitlab.gnome.org/GNOME/epiphany.git#commit=$_commit")
 b2sums=('SKIP')
 

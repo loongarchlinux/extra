@@ -4,7 +4,7 @@
 # Contributor: Sergej Pupykin <pupykin.s+arch@gmail.com>
 
 pkgname=python-pyopenssl
-pkgver=23.3.0
+pkgver=24.0.0
 pkgrel=1
 pkgdesc='Python wrapper around the OpenSSL library'
 arch=('any')
@@ -19,7 +19,7 @@ makedepends=(
   'python-wheel'
 )
 checkdepends=('python-pytest' 'python-pretend' 'python-flaky')
-_commit='5ba8ce10ed7c318e57516a7ec8447cbb5626d3f9'
+_commit='7f3e4f94701a5e19ec66e3601119dd6d62043cec'
 source=("$pkgname::git+https://github.com/pyca/pyopenssl#commit=$_commit")
 b2sums=('SKIP')
 

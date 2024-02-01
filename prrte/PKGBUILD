@@ -1,8 +1,9 @@
+# Maintainer: Jakub Klinkovský <lahwaacz at archlinux dot org>
 # Maintainer: David Runge <dvzrv@archlinux.org>
 
 pkgbase=prrte
 pkgname=(prrte{,-docs})
-pkgver=3.0.2
+pkgver=3.0.3
 pkgrel=1
 pkgdesc="PMIx Reference RunTime Environment"
 arch=(loong64 x86_64)
@@ -17,8 +18,8 @@ makedepends=(
 )
 conflicts=(putty)  # putty also provides a pterm: https://gitlab.archlinux.org/archlinux/packaging/packages/prrte/-/issues/1
 source=($pkgname-$pkgver.tar.gz::$url/releases/download/v$pkgver/$pkgname-$pkgver.tar.gz)
-sha512sums=('0b46704afedf2c1fb05f1556c78f5dfd68d79ee81cb90d6eb37117761f67c62cad651747da568aaafedfa0b6ac0c8eaed7683cb442d533ce6274094b324c9e09')
-b2sums=('2df4041b84508cfa7573b823d8e82d7d033ec396e880069230711990bc2ac7d0f72f0078cbceab6567e228a801abdf1245993ec3a4b797a2dba04b20079c692a')
+sha512sums=('b2443fa225b279ab31a5714b3f89c50e1b12667bc58357f885eee1e4fb8a6d22e533dea5cc2a2b6618334e0ed13b5dbc4c3ea88446dd454480f4300e08293a4d')
+b2sums=('5c68f6ca10089cc13fc326c2e65c86254f8063a4b5d3844c26c77d9ed47f4a939d72dd668959f7351a95144bf8c6289b5223cc262c8847913430263bcb6b77ac')
 
 _pick() {
   local p="$1" f d; shift
@@ -36,10 +37,13 @@ prepare() {
 }
 
 build() {
-  cd $pkgname-$pkgver
-  ./configure \
-    --prefix=/usr \
+  local configure_options=(
+    --prefix=/usr
     --sysconfdir=/etc/$pkgname
+  )
+
+  cd $pkgname-$pkgver
+  ./configure "${configure_options[@]}"
   # prevent excessive overlinking due to libtool
   sed -i -e 's/ -shared / -Wl,-O1,--as-needed\0/g' libtool
   make V=1
@@ -50,7 +54,7 @@ check() {
 }
 
 package_prrte() {
-  depends+=(
+  depends=(
     glibc
     hwloc
     libevent
@@ -60,6 +64,11 @@ package_prrte() {
     'prrte-docs: for documentation'
   )
   provides=(libprrte.so)
+  backup=(
+    etc/$pkgname/prte-default-hostfile
+    etc/$pkgname/prte-mca-params.conf
+    etc/$pkgname/prte.conf
+  )
 
   make DESTDIR="$pkgdir" install -C $pkgname-$pkgver
   (
@@ -70,7 +79,7 @@ package_prrte() {
 }
 
 package_prrte-docs() {
-  pkgdesc=" - documentation"
+  pkgdesc+=" - documentation"
 
   mv -v $pkgname/* "$pkgdir"
   install -vDm 644 $pkgbase-$pkgver/LICENSE -t "$pkgdir/usr/share/licenses/$pkgname/"

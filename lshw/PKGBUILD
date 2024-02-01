@@ -3,9 +3,9 @@
 # Contributor: Chuck Yang <Chuck.Yang@gmail.com>
 
 pkgname=lshw
-pkgver=B.02.19.2
-_commit=b4e067307906ec6f277cce5c8a882f5edd03cbbc
-pkgrel=6
+pkgver=B.02.20
+_commit=4c6497c8b0a67cd9fa9693e9101a7cafd3297e81
+pkgrel=1
 pkgdesc="A small tool to provide detailed information on the hardware configuration of the machine."
 url="https://ezix.org/project/wiki/HardwareLiSter"
 license=('GPL')

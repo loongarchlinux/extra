@@ -1,7 +1,7 @@
 # Maintainer: Jan Alexander Steffens (heftig) <heftig@archlinux.org>
 
 pkgname=python-dbusmock
-pkgver=0.30.0
+pkgver=0.30.2
 pkgrel=1
 pkgdesc="Mock D-Bus objects for tests"
 url="https://github.com/martinpitt/python-dbusmock"
@@ -19,7 +19,7 @@ makedepends=(
   python-setuptools-scm
   python-wheel
 )
-_commit=6368b5f5c206377e187b75e36fdf73f62293c551  # tags/0.30.0^0
+_commit=d70b68ca144e3d3d9518dde80dd9f0e086f20714  # tags/0.30.2^0
 source=(
   "git+https://github.com/martinpitt/python-dbusmock#commit=$_commit"
 )

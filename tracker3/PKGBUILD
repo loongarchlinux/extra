@@ -8,11 +8,11 @@ pkgname=(
   tracker3-docs
 )
 pkgver=3.6.0
-pkgrel=2
+pkgrel=3
 pkgdesc="SQLite-based RDF triplestore database with SPARQL interface"
 url="https://tracker.gnome.org/"
 arch=(loong64 x86_64)
-license=(GPL)
+license=(LGPL-2.1-or-later)
 depends=(
   glib2
   icu
@@ -52,6 +52,14 @@ pkgver() {
 
 prepare() {
   cd tracker
+
+  # Fix bad code in a meson compile test
+  git cherry-pick -n f7393d61803815b19a1f210b197cce423ae3cc01
+
+  # SQLite 3.44.x fixes
+  # https://gitlab.archlinux.org/archlinux/packaging/packages/tracker3/-/issues/1
+  # https://gitlab.gnome.org/GNOME/tracker/-/merge_requests/640
+  git cherry-pick -n -m 1 02b7ae6e2fa005d84d5a55ba3500c10a84acb7de
 
   git submodule init
   git submodule set-url subprojects/gvdb "$srcdir/gvdb"

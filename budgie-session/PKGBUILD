@@ -1,0 +1,45 @@
+# Maintainer: Campbell Jones <serebit at archlinux dot org>
+# Contributor: Fabian Bornschein <fabiscafe@archlinux.org>
+# Contributor: Jan Alexander Steffens (heftig) <heftig@archlinux.org>
+
+pkgname=budgie-session
+pkgver=0.9.1
+pkgrel=1
+pkgdesc="The Budgie Desktop session handler"
+arch=('loong64' 'x86_64')
+url="https://github.com/BuddiesOfBudgie/budgie-session"
+license=('GPL-2.0-or-later')
+groups=(budgie)
+depends=(
+    dconf
+    gnome-desktop
+    gsettings-desktop-schemas
+    json-glib
+    libgl
+    libsm
+    libxtst
+    systemd
+)
+makedepends=(
+    docbook-xsl
+    git
+    gtk-doc
+    mesa
+    meson
+    python
+    python-packaging
+    xmlto
+    xtrans
+)
+source=("https://github.com/BuddiesOfBudgie/$pkgname/releases/download/v0.9.1/${pkgname}-v${pkgver}.tar.xz"{,.asc})
+b2sums=('e11d0a508f86fe3e946dacf627e31bbd909ee85a7726d28c64c3dc126ffa48f022edad075dfd3c7ff628514d8e8123369540bffafb1421b0d3cb224ea729fb48'
+        'SKIP')
+
+build() {
+    arch-meson "$pkgname-$pkgver" build
+    meson compile -C build
+}
+
+package() {
+    meson install -C build --destdir "$pkgdir"
+}

@@ -9,8 +9,8 @@
 # Contributor: loqs <bugs-archlinux@entropy-collector.net>
 
 pkgname=gitlab
-pkgver=16.7.0
-pkgrel=2
+pkgver=16.8.1
+pkgrel=1
 pkgdesc='Project management and code hosting application'
 arch=(loong64 x86_64)
 url='https://gitlab.com/gitlab-org/gitlab-foss'
@@ -28,11 +28,13 @@ depends=(git
          redis
          ruby
          ruby-bundler)
-makedepends=(clang
+makedepends=(cargo
+             clang
              cmake
              go
              nodejs
              postgresql
+             ruby-rake
              rust
              yarn)
 optdepends=('postgresql: database backend'
@@ -105,7 +107,7 @@ prepare() {
 		sed -i "s|<LOGDIR>|${_logdir}|g" "${srcdir}/${service_file}"
 	done
 
-	# Gemfile.lock contains BUNDLED WITH 2.4.21 and using a newer ruby-bundler later fails
+	# Gemfile.lock contains pinned BUNDLED WITH and we are sometimes using a newer ruby-bundler
 	# https://gitlab.archlinux.org/archlinux/packaging/packages/gitlab/-/issues/6
 	sed -i '/BUNDLED WITH/,+1d' Gemfile.lock
 }
@@ -133,7 +135,7 @@ build() {
 	make -C workhorse
 
 	yarn install --production --pure-lockfile
-	bundle exec rake gitlab:assets:compile RAILS_ENV=production NODE_ENV=production USE_DB=false SKIP_STORAGE_VALIDATION=true NODE_OPTIONS="--max_old_space_size=3584"
+	rake gitlab:assets:compile RAILS_ENV=production NODE_ENV=production USE_DB=false SKIP_STORAGE_VALIDATION=true NODE_OPTIONS="--max_old_space_size=3584"
 }
 
 package() {

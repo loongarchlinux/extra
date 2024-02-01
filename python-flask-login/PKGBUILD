@@ -1,8 +1,8 @@
 # Maintainer: Felix Yan <felixonmars@archlinux.org>
 
 pkgname=python-flask-login
-pkgver=0.6.2
-pkgrel=4
+pkgver=0.6.3
+pkgrel=1
 pkgdesc="User session management for Flask"
 arch=('any')
 url="https://pythonhosted.org/Flask-Login/"
@@ -11,7 +11,7 @@ depends=('python' 'python-flask' 'python-werkzeug')
 makedepends=('python-setuptools')
 checkdepends=('python-nose' 'python-blinker' 'python-semantic-version' 'python-asgiref')
 source=("https://github.com/maxcountryman/flask-login/archive/$pkgver/$pkgname-$pkgver.tar.gz")
-sha512sums=('b286272ad5f7de2cfc913bee4a3eac46e4c1ce274bb12467009e1abae422f1a855aa49fd898778b8a2e937eebe9fbb387af11815267a2bc120cde943939111ec')
+sha512sums=('c421f85387b9ba0ba2ad98053cae596dd9bf6119c0a366d2b13c483d4fbf45afc0c0e4d46f35368f42fa088398ace9a0a0aab931826d8612d94f55b95afef71b')
 
 build() {
   cd flask-login-$pkgver

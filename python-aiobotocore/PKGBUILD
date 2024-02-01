@@ -3,7 +3,7 @@
 pkgname=python-aiobotocore
 _pkgname=aiobotocore
 # https://github.com/aio-libs/aiobotocore/releases
-pkgver=2.9.0
+pkgver=2.11.0
 pkgrel=1
 pkgdesc='asyncio support for botocore library using aiohttp'
 arch=(any)
@@ -17,7 +17,7 @@ checkdepends=(python-moto python-pytest python-pytest-asyncio python-dill
               # moto optdepends
               python-docker python-openapi-spec-validator python-yaml python-flask python-flask-cors)
 source=("https://github.com/aio-libs/aiobotocore/archive/$pkgver/$pkgname-$pkgver.tar.gz")
-sha256sums=('5e12756dba0f46033b29a064a620df7438f39315c733cc33aa5957fd3c621aa9')
+sha256sums=('16548fd9beccca212867b0fc2d959b28b164c6b01c26f67c472f8698f8c149b6')
 
 build() {
   cd $_pkgname-$pkgver

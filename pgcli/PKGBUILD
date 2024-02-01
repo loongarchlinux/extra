@@ -5,27 +5,39 @@
 
 pkgname=pgcli
 pkgver=4.0.1
-pkgrel=1
+pkgrel=2
 pkgdesc='A command line interface for PostgreSQL with auto-completion and syntax highlighting'
 url='https://www.pgcli.com/'
 arch=('any')
-license=('BSD')
+license=('BSD-3-Clause')
 depends=(
   'python'
-  'python-sqlparse'
-  'python-psycopg'
-  'python-click'
-  'python-prompt_toolkit'
-  'python-configobj'
-  'python-pgspecial'
-  'python-setproctitle'
   'python-cli_helpers'
-  'python-keyring'
-  'python-pygments'
+  'python-click'
+  'python-configobj'
   'python-pendulum'
-  'python-setuptools'
+  'python-pgspecial'
+  'python-prompt_toolkit'
+  'python-psycopg'
+  'python-pygments'
+  'python-setproctitle'
+  'python-sqlparse'
 )
-makedepends=('git')
+makedepends=(
+  'git'
+  'python-build'
+  'python-installer'
+  'python-setuptools'
+  'python-wheel'
+)
+checkdepends=(
+  'python-pytest'
+  'python-sshtunnel'
+)
+optdepends=(
+  'python-keyring: for keyring integration'
+  'python-sshtunnel: for accessing remote instances over SSH'
+)
 _commit='04ca41a26259a83ebc027e8d16e4a63856ec6055'
 source=("$pkgname::git+https://github.com/dbcli/pgcli.git#commit=$_commit")
 b2sums=('SKIP')
@@ -39,18 +51,26 @@ pkgver() {
 build() {
   cd "$pkgname"
 
-  python setup.py build
+  python -m build --wheel --no-isolation
 }
 
 check() {
-  cd "$pkgname"
+  local pytest_options=(
+    -vv
+  )
+  local site_packages=$(python -c "import site; print(site.getsitepackages()[0])")
 
+  cd $pkgname
+  # install to temporary location, as importlib is used
+  python -m installer --destdir=test_dir dist/*.whl
+  export PYTHONPATH="$PWD/test_dir/$site_packages:$PYTHONPATH"
+  pytest "${pytest_options[@]}"
 }
 
 package() {
   cd "$pkgname"
 
-  python setup.py install --root="$pkgdir" --optimize=1 --skip-build
+  python -m installer --destdir="$pkgdir" dist/*.whl
 
   install -vDm644 -t "$pkgdir/usr/share/licenses/$pkgname" LICENSE.txt
 }

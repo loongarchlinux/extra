@@ -4,8 +4,8 @@
 # Contributor: Wesley Moore <wes@wezm.net>
 
 pkgname=difftastic
-pkgver=0.53.0
-_commit=2cab9ac1d64e67376ef4e9c354b035478dde11eb
+pkgver=0.54.0
+_commit=35c1b4171f1133a8e7102a93b47e2245ac1b0421
 pkgrel=1
 pkgdesc='An experimental diff tool that compares files based on their syntax'
 arch=('loong64' 'x86_64')
@@ -30,7 +30,7 @@ prepare() {
   cd "$pkgname"
 
   # download dependencies
-  cargo fetch --locked --target "$CARCH-unknown-linux-gnu"
+  cargo fetch --locked --target "$(rustc -vV | sed -n 's/host: //p')"
 
   # remove makedepends on jq
   patch -p1 -i "$srcdir/remove-makedepends-jq.patch"
@@ -52,11 +52,12 @@ build() {
 check() {
   cd "$pkgname"
 
-  cargo test --frozen --all-features
-
-  # run all ignored tests
-  # https://github.com/Wilfred/difftastic/commit/34f21c6d9f256f16cc5f77294bcca9e61cee3fd6
-  cargo test --frozen --all-features -- --ignored
+  # Skip tests that expect to detect interactive terminal
+  # Run ignored tests that *are* expected to work if MIME database present
+  # c.f. https://github.com/Wilfred/difftastic/commit/34f21c6d
+  cargo test --frozen --all-features -- \
+    --ignored \
+    --skip 'options::tests::test_detect_display_width'
 }
 
 package() {

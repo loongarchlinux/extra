@@ -5,35 +5,33 @@
 
 pkgbase=mattermost
 pkgname=($pkgbase mmctl)
-pkgver=9.3.0
-pkgrel=1
+pkgver=9.4.2
+pkgrel=2
 pkgdesc="Open source Slack-alternative in Golang and React"
 arch=(loong64 x86_64)
 url="https://mattermost.com"
-license=(AGPL Apache)
+license=(AGPL-3.0-only Apache-2.0)
 depends=(glibc)
 makedepends=(git
              go
              jq
              libpng
-             nodejs-lts-iron # upstream specs 16 (gallium) but Arch's npm min is 18
+             nodejs-lts-iron # upstream specs 18 (hydrogene) but Arch’s is trying to get rid of it
              moreutils
              npm
              python)
-options=(!lto)
-backup=("etc/webapps/$pkgname/config.json")
-_archive="$pkgname-$pkgver"
-source=("https://github.com/$pkgname/$pkgname-server/archive/v$pkgver/$_archive.tar.gz"
-        "$pkgname.service"
-        "$pkgname.sysusers"
-        "$pkgname.tmpfiles")
-sha256sums=('b6b50b06fb6f56b3b276e2ac0343b75532ebe11e95b03d8550ac97f4c96edbc9'
+_archive=$pkgname-$pkgver
+source=(https://github.com/$pkgname/$pkgname-server/archive/v$pkgver/$_archive.tar.gz
+        $pkgname.service
+        $pkgname.sysusers
+        $pkgname.tmpfiles)
+sha256sums=('84e0fdf3100bfa044e3bbf79ff7c8204ceceb236e9e477e33ae2f5b105065854'
             '9e73dc5e9ab9a95049352bd504fb4e0d6becbd5c715026d8c1df4f515d258b68'
             'f7bd36f6d7874f1345d205c6dcb79af1804362fc977a658db88951a172d1dfa0'
             '8dfeee28655b91dc75aca2317846284013ac3d5a837d360eba9641e9fbcf3aa2')
 
 prepare() {
-    cd "$_archive/server"
+    cd $_archive/server
     go mod vendor
 
     # The configuration isn’t available at this time yet, modify the default.
@@ -60,13 +58,13 @@ prepare() {
 }
 
 build() {
-    cd "$_archive/server"
+    cd $_archive/server
     export CGO_CPPFLAGS="$CPPFLAGS"
     export CGO_CFLAGS="$CFLAGS"
     export CGO_CXXFLAGS="$CXXFLAGS"
     export CGO_LDFLAGS="$LDFLAGS"
     export GOFLAGS="-buildmode=pie -trimpath -mod=readonly -modcacherw"
-    local _config=github.com/mattermost/mattermost-server/v6/model
+    local _config=github.com/mattermost/mattermost/server/public/model
     # https://github.com/mattermost/mattermost/issues/24582
     make setup-go-work
     go build -v \
@@ -85,76 +83,77 @@ build() {
 }
 
 package_mattermost() {
-	optdepends=('mariadb: SQL server storage'
-	            'mmctl: CLI admin tool'
-	            'percona-server: SQL server storage'
-	            'postgresql: SQL server storage')
+    backup=(etc/webapps/$pkgname/config.json)
+    optdepends=('mariadb: SQL server storage'
+                'mmctl: CLI admin tool'
+                'percona-server: SQL server storage'
+                'postgresql: SQL server storage')
 
-	# systemd files
-	install -Dm644 $pkgname.service -t "$pkgdir/usr/lib/systemd/system/"
-	install -Dm644 $pkgname.sysusers "$pkgdir/usr/lib/sysusers.d/$pkgname.conf"
-	install -Dm644 $pkgname.tmpfiles "$pkgdir/usr/lib/tmpfiles.d/$pkgname.conf"
+    # systemd files
+    install -Dm644 $pkgname.service -t "$pkgdir/usr/lib/systemd/system/"
+    install -Dm644 $pkgname.sysusers "$pkgdir/usr/lib/sysusers.d/$pkgname.conf"
+    install -Dm644 $pkgname.tmpfiles "$pkgdir/usr/lib/tmpfiles.d/$pkgname.conf"
 
-	cd "$_archive"
+    cd $_archive
 
-	install -dm0755 "$pkgdir/usr/share/webapps"
-	cp -a server/dist/$pkgname "$pkgdir/usr/share/webapps/"
+    install -dm0755 "$pkgdir/usr/share/webapps"
+    cp -a server/dist/$pkgname "$pkgdir/usr/share/webapps/"
 
-	install -Dm0755 -t "$pkgdir/usr/bin" "server/bin/$pkgname"
-	install -dm0755 "$pkgdir/usr/share/webapps/$pkgname/bin/"
-	ln -sf /usr/bin/$pkgname "$pkgdir/usr/share/webapps/$pkgname/bin/$pkgname"
+    install -Dm0755 -t "$pkgdir/usr/bin" "server/bin/$pkgname"
+    install -dm0755 "$pkgdir/usr/share/webapps/$pkgname/bin/"
+    ln -sf /usr/bin/$pkgname "$pkgdir/usr/share/webapps/$pkgname/bin/$pkgname"
 
-	install -Dm0644 -t "$pkgdir/usr/share/licenses/$pkgname/" LICENSE.txt
+    install -Dm0644 -t "$pkgdir/usr/share/licenses/$pkgname/" LICENSE.txt
 
-	# fixes
-	pushd "$pkgdir/usr/share/webapps/$pkgname"
+    # fixes
+    pushd "$pkgdir/usr/share/webapps/$pkgname"
 
-	# Move logs to right location
-	rm -rf logs
-	ln -s "/var/log/$pkgname" logs
+    # Move logs to right location
+    rm -rf logs
+    ln -s /var/log/$pkgname logs
 
-	# Readme and docs
-	install -dm755 "$pkgdir/usr/share/doc/$pkgname"
-	mv NOTICE.txt README.md "$pkgdir/usr/share/doc/$pkgname"
+    # Readme and docs
+    install -dm755 "$pkgdir/usr/share/doc/$pkgname"
+    mv NOTICE.txt README.md "$pkgdir/usr/share/doc/$pkgname"
 
-	# Config file management
-	cp config/default.json config/config.json
+    # Config file management
+    cp config/default.json config/config.json
 
-	# Hashtags are needed to escape the Bash escape sequence. jq will consider
-	# it as a comment and won't interpret it.
-	jq --arg mmVarLib '/var/lib/mattermost' \
-			'.FileSettings.Directory |= $mmVarLib + "/files/" | # \
-			.ComplianceSettings.Directory |= $mmVarLib + "/compliance/" | # \
-			.PluginSettings.Directory |= $mmVarLib + "/plugins/" | # \
-			.PluginSettings.ClientDirectory |= $mmVarLib + "/client/plugins/" | # \
-			.LogSettings.FileLocation |= "/var/log/mattermost/" | # \
-			.NotificationLogSettings.FileLocation |= "/var/log/mattermost/"' \
-		config/config.json > config/config-new.json
-	mv config/config-new.json config/config.json
-	install -dm0755 "$pkgdir/etc/webapps"
-	mv config "$pkgdir/etc/webapps/$pkgname"
-	ln -sf /etc/webapps/$pkgname config
+    # Hashtags are needed to escape the Bash escape sequence. jq will consider
+    # it as a comment and won't interpret it.
+    jq --arg mmVarLib '/var/lib/mattermost' \
+            '.FileSettings.Directory |= $mmVarLib + "/files/" | # \
+            .ComplianceSettings.Directory |= $mmVarLib + "/compliance/" | # \
+            .PluginSettings.Directory |= $mmVarLib + "/plugins/" | # \
+            .PluginSettings.ClientDirectory |= $mmVarLib + "/client/plugins/" | # \
+            .LogSettings.FileLocation |= "/var/log/mattermost/" | # \
+            .NotificationLogSettings.FileLocation |= "/var/log/mattermost/"' \
+        config/config.json > config/config-new.json
+    mv config/config-new.json config/config.json
+    install -dm0755 "$pkgdir/etc/webapps"
+    mv config "$pkgdir/etc/webapps/$pkgname"
+    ln -sf /etc/webapps/$pkgname config
 
-	# Avoid access denied when Mattermost tries to rewrite its asset data
-	# (root.html, manifest.json and *.css) during runtime. Reuse var tmpfile
-	# directory SELinux security context.
-	# cf. https://github.com/mattermost/mattermost-server/blob/f8d31def8eb463fcd866ebd08f3e6ef7a24e2109/utils/subpath.go#L48
-	# cf. https://wiki.archlinux.org/index.php/Web_application_package_guidelines
-	install -dm0770 "$pkgdir/var/lib/mattermost/client/files"
+    # Avoid access denied when Mattermost tries to rewrite its asset data
+    # (root.html, manifest.json and *.css) during runtime. Reuse var tmpfile
+    # directory SELinux security context.
+    # cf. https://github.com/mattermost/mattermost-server/blob/f8d31def8eb463fcd866ebd08f3e6ef7a24e2109/utils/subpath.go#L48
+    # cf. https://wiki.archlinux.org/index.php/Web_application_package_guidelines
+    install -dm0770 "$pkgdir/var/lib/mattermost/client/files"
 
-	# We want recursivity as Mattermost wants to modify files in
-	# client/files/code_themes/ as well.
-	# Not recursive: for file in root.html manifest.json *.css; do
-	find client -type f -iname 'root.html' -o -iname 'manifest.json' -o -iname '*.css' |
-		while IFS= read -r fileAndPath; do
-			install -Dm0660 "$fileAndPath" "$pkgdir/var/lib/mattermost/${fileAndPath%/*}"
-			rm "$fileAndPath"
-			ln -s "/var/lib/mattermost/$fileAndPath" "$fileAndPath"
-		done
+    # We want recursivity as Mattermost wants to modify files in
+    # client/files/code_themes/ as well.
+    # Not recursive: for file in root.html manifest.json *.css; do
+    find client -type f -iname 'root.html' -o -iname 'manifest.json' -o -iname '*.css' |
+        while IFS= read -r fileAndPath; do
+            install -Dm0660 "$fileAndPath" "$pkgdir/var/lib/mattermost/${fileAndPath%/*}"
+            rm "$fileAndPath"
+            ln -s "/var/lib/mattermost/$fileAndPath" "$fileAndPath"
+        done
 }
 
 package_mmctl() {
-	cd "$_archive"
-	install -Dm0755 -t "$pkgdir/usr/bin/" "server/bin/$pkgname"
-	install -Dm0644 -t "$pkgdir/usr/share/licenses/$pkgname/" LICENSE.txt
+    cd $_archive
+    install -Dm0755 -t "$pkgdir/usr/bin/" "server/bin/$pkgname"
+    install -Dm0644 -t "$pkgdir/usr/share/licenses/$pkgname/" LICENSE.txt
 }

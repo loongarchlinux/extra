@@ -1,0 +1,25 @@
+# Maintainer: Robin Candau <antiz@archlinux.org>
+# Contributor: David Vernet <void@manifault.com>
+
+pkgname=retsnoop
+pkgver=0.9.8
+pkgrel=1
+pkgdesc="A tool for investigating kernel error call stacks"
+arch=('loong64' 'x86_64')
+url="https://github.com/anakryiko/retsnoop"
+license=('BSD-2-Clause')
+depends=('glibc' 'libelf' 'zlib')
+makedepends=('clang' 'cargo' 'llvm')
+source=("${pkgname}-${pkgver}.tar.gz::${url}/releases/download/v${pkgver}/srcs-full-v${pkgver}.tar.gz")
+sha256sums=('8e0df545a436c7007f4a8ef42165493e2705bbfb7ed5ac9da832a848c42e0aa6')
+
+build() {
+	cd "srcs-full-v${pkgver}"
+	make -C src
+}
+
+package() {
+	cd "srcs-full-v${pkgver}"
+	install -Dm 755 "src/${pkgname}" "${pkgdir}/usr/bin/${pkgname}"
+	install -Dm 644 LICENSE "${pkgdir}/usr/share/licenses/${pkgname}/LICENSE"
+}

@@ -1,0 +1,50 @@
+# Maintainer: Caleb Maclennan <caleb@alerque.com>
+# Contributor: Daniel Peukert <daniel@peukert.cc>
+
+pkgname=rage-encryption
+_pkgname=${pkgname%-*}
+pkgver=0.9.2
+pkgrel=3
+pkgdesc='Rust implementation of the age encryption tool'
+arch=(loong64 x86_64 i686 arm armv6h armv7h aarch64)
+url="https://github.com/str4d/$_pkgname"
+license=(Apache-2.0 MIT)
+depends=(bzip2
+         fuse3)
+makedepends=(cargo)
+conflicts=(rage)
+replaces=(rust-rage)
+provides=("rust-rage=$pkgver")
+_archive="$_pkgname-$pkgver"
+source=("$url/archive/v$pkgver/$_archive.tar.gz")
+sha256sums=('3bd287372eb6226b246459c1b5c39ecdb36b3495d7af4d2bee93bb3aad9ccf65')
+
+prepare() {
+	cd "$_archive"
+	cargo fetch --locked --target "$(rustc -vV | sed -n 's/host: //p')"
+}
+
+build() {
+	cd "$_archive"
+	export CFLAGS+=" -ffat-lto-objects"
+	cargo build --frozen --release --all-features
+	cargo run --frozen --release --all-features --example generate-completions
+	cargo run --frozen --release --all-features --example generate-docs
+}
+
+check() {
+	cd "$_archive"
+	cargo test --frozen --all-features
+}
+
+package() {
+	cd "$_archive"
+	for bin in "$_pkgname"{,-keygen,-mount}; do
+		install -Dm0755 -t "$pkgdir/usr/bin/" "target/release/$bin"
+		install -Dm0644 -t "$pkgdir/usr/share/man/man1/" "target/manpages/$bin.1.gz"
+		install -Dm0644 -t "$pkgdir/usr/share/fish/vendor_completions.d/" "target/completions/$bin.fish"
+		install -Dm0644 "target/completions/$bin.bash" "$pkgdir/usr/share/bash-completion/completions/$bin"
+		install -Dm0644 "target/completions/$bin.zsh" "$pkgdir/usr/share/zsh/site-functions/_$bin"
+	done
+	install -Dm0644 -t "$pkgdir/usr/share/licenses/$pkgname/" LICENSE-MIT
+}

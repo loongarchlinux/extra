@@ -1,0 +1,32 @@
+# Maintainer: Felix Yan <felixonmars@archlinux.org>
+# Contributor: Qirui Wang <wqr.prg@gmail.com>
+# Contributor: Carl George < arch at cgtx dot us >
+
+pkgname=python-sanic-routing
+pkgver=22.8.0
+pkgrel=2
+pkgdesc='Core routing component for Sanic'
+arch=("any")
+url='https://sanicframework.org/'
+license=(MIT)
+depends=(python)
+makedepends=(python-setuptools)
+checkdepends=(python-pytest python-sanic python-pytest-asyncio)
+source=("https://github.com/sanic-org/sanic-routing/archive/v$pkgver/$pkgname-$pkgver.tar.gz")
+sha256sums=('728cd7009803d81872f5dbf49b4f795d503c6056522f0d0aaf525607b7217849')
+
+build() {
+    cd sanic-routing-$pkgver
+    python setup.py build
+}
+
+check() {
+    cd sanic-routing-$pkgver
+    pytest
+}
+
+package() {
+    cd sanic-routing-$pkgver
+    python setup.py install --skip-build --root="$pkgdir" --optimize=1
+    install -Dm644 LICENSE -t "$pkgdir"/usr/share/licenses/$pkgname/
+}

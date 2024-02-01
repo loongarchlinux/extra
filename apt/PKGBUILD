@@ -8,8 +8,8 @@
 
 pkgbase=apt
 pkgname=('apt' 'apt-docs')
-_commit=c8de7f44a106a34dc4d220adfc9d34242c2d2a9e
-pkgver=2.7.6
+_commit=75dcb4516bc2b5eccd05970461628be52bcbf6b5
+pkgver=2.7.10
 pkgrel=1
 pkgdesc='Command-line package manager used on Debian-based systems'
 arch=('loong64' 'x86_64')
@@ -25,6 +25,8 @@ makedepends=('cmake' 'docbook-xsl' 'doxygen' 'git' 'gtest' 'w3m' 'triehash'
              'perl-yaml-tiny' 'perl-syntax-keyword-try' 'dpkg' 'git' 'gnutls'
              'perl-term-readkey' 'perl-sgmls' 'perl-module-build'
              'perl-unicode-linebreak' 'perl-pod-parser')
+# tests need /etc/os-release
+checkdepends=('systemd')
 options=('emptydirs')
 source=("git+https://salsa.debian.org/apt-team/apt.git?signed#tag=${_commit}"
         "apt-sysusers.conf"
@@ -33,6 +35,11 @@ sha256sums=('SKIP'
             'f4528114112f05ce7e78d5b64e77d20053a6ce29a59588345985be7335cf63d6'
             '424ca4feab152d7f5ce73a2ddd29bcd3e482cfe1c96cffb969d7542d19da0455')
 validpgpkeys=('AEE1C8AAAAF0B7684019C546021B361B6B031B00') # Julian Andres Klode <jak@debian.org>
+
+pkgver() {
+  cd "${pkgname}"
+  git describe --tags | sed 's/^[vV]//;s/-/+/g'
+}
 
 build() {
   # docbook xsl is stored with the version on Arch
@@ -47,6 +54,10 @@ build() {
     -DDOCBOOK_XSL="/usr/share/xml/docbook/xsl-stylesheets-$docbook_xsl_version-nons/"
 
   make -C build all
+}
+
+check() {
+  make -C build test
 }
 
 package_apt() {

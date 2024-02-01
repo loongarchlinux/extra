@@ -6,32 +6,19 @@
 # Contributor: Hiroshi Yui <hiroshiyui@gmail.com>
 
 pkgname=ibus-chewing
-pkgver=1.6.1+12+gc1e7f0d
-_commit=c1e7f0d97aa8bb1a1166621c3f0780daa0db06c1
-pkgrel=4
+pkgver=1.6.2
+pkgrel=1
 pkgdesc='Chinese Chewing Engine for IBus Framework'
 arch=('loong64' 'x86_64')
 license=('GPL')
 url='https://github.com/definite/ibus-chewing'
-depends=('ibus' 'libchewing' 'libxtst' 'gtk3')
-makedepends=('gob2' 'cmake-fedora' 'git')
-source=("git+https://github.com/definite/ibus-chewing.git#commit=$_commit")
-sha512sums=('SKIP')
-
-pkgver() {
-  cd $pkgname
-  git describe --always | sed 's/-/+/g'
-}
-
-prepare() {
-  cd $pkgname
-
-  # Revert an incomplete feature, see https://github.com/definite/ibus-chewing/issues/154
-  git revert -n 70a1935290c9e8bcb8e098b91711f97269619c6f
-}
+depends=('ibus' 'libchewing' 'gtk3')
+makedepends=('gob2' 'cmake-fedora')
+source=("https://github.com/definite/ibus-chewing/archive/$pkgver/$pkgname-$pkgver.tar.gz")
+sha512sums=('b723202fa844d3f94171a4bf44467f7bacaee7283866698903b705ba26344bf844c5d6df0fd73e875bb5cff0aa6764a881a4633c36ef5585015a63ec01e639bf')
 
 build() {
-  cd $pkgname
+  cd $pkgname-$pkgver
 
   cmake -B build -S . \
     -DCMAKE_INSTALL_PREFIX=/usr \
@@ -47,6 +34,6 @@ build() {
 }
 
 package() {
-  cd $pkgname/build
+  cd $pkgname-$pkgver/build
   make DESTDIR="$pkgdir" install
 }

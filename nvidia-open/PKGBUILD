@@ -2,7 +2,7 @@
 pkgbase=nvidia-open
 pkgname=(nvidia-open nvidia-open-dkms)
 pkgver=545.29.06
-pkgrel=7
+pkgrel=15
 pkgdesc="NVIDIA open kernel modules"
 arch=('loong64' 'x86_64')
 url="https://github.com/NVIDIA/open-gpu-kernel-modules"
@@ -11,15 +11,20 @@ makedepends=('linux-headers')
 license=('GPL')
 options=('!lto' '!buildflags')
 source=("$pkgname-$pkgver.tar.gz::https://github.com/NVIDIA/open-gpu-kernel-modules/archive/refs/tags/${pkgver}.tar.gz"
-        nvidia-open-gcc-ibt-sls.patch)
+        nvidia-open-gcc-ibt-sls.patch
+        nvidia-open-tfm-ctx-aligned.patch)
 sha512sums=('f8df8516d00ee3210b3a844493f74f0337cf50cd88884ff11ba6a1de58384674dc7ab7390f98765ecb805fa792e0b5eee71f7384ddb55a739e4292cad8774302'
-            '263c4c5e75ef8cb8ca2641c022dfaf8bd9222fadf68ed15120b0ae7dd9cc901a04ce2e55625d513a0995759c9d82dfbdc4c33d4751159124915d7404b1400e34')
+            '263c4c5e75ef8cb8ca2641c022dfaf8bd9222fadf68ed15120b0ae7dd9cc901a04ce2e55625d513a0995759c9d82dfbdc4c33d4751159124915d7404b1400e34'
+            'e45e2e588298e15e6ab114b88181431189b79ca8454ac8ead666deaa48fd49f11953acb32ce365a429112827e889c30e4a0bc89027a0164f6c211088dd7cad5b')
 
 prepare() {
   cd open-gpu-kernel-modules-${pkgver}
 
   # Fix for https://bugs.archlinux.org/task/74886
   patch -Np1 --no-backup-if-mismatch -i "$srcdir"/nvidia-open-gcc-ibt-sls.patch
+
+  # Fix for https://github.com/NVIDIA/open-gpu-kernel-modules/issues/574
+  patch -Np1 --no-backup-if-mismatch -i "$srcdir"/nvidia-open-tfm-ctx-aligned.patch
 
   # Attempt to make this reproducible
   sed -i "s/^HOSTNAME.*/HOSTNAME = echo archlinux"/ utils.mk

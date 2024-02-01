@@ -2,7 +2,7 @@
 # Contributor: William Giokas <1007380@gmail.com>
 
 pkgname=pypy
-pkgver=7.3.14
+pkgver=7.3.15
 pkgrel=1
 pkgdesc="A Python implementation written in Python, JIT enabled"
 url="https://pypy.org"
@@ -14,7 +14,7 @@ optdepends=('sqlite: sqlite module'
 options=(!buildflags)
 license=('MIT')
 source=("https://downloads.python.org/pypy/pypy2.7-v${pkgver}-src.zip")
-sha512sums=('bd26b46c35317528055fb85d2bba5abd7c6574023fb7e7694e970c7bfaaf40195d2d0cce480601f40eb5812aaa9ad5ea3f7e7dbb8e911a0db30d4b75a804e275')
+sha512sums=('da34d39a30653f59dd0bd527f73182daa5df9791b6013272d239e2e5453165531c61ea9d7716aaae05d1fdc2039cc10d9342519fc9b689abc3b4e738e7191f3d')
 
 build() {
   cd pypy2.7-v${pkgver}-src/pypy/goal

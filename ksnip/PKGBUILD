@@ -3,15 +3,20 @@
 
 pkgname=ksnip
 pkgver=1.10.1
-pkgrel=1
+pkgrel=2
 pkgdesc='Qt-based screenshot tool that provides many annotation features'
 arch=('loong64' 'x86_64')
 url='https://github.com/ksnip/ksnip'
 license=('GPL2')
-depends=('hicolor-icon-theme' 'kimageannotator' 'qt5-x11extras')
+depends=('hicolor-icon-theme' 'kimageannotator-qt5' 'qt5-x11extras')
 makedepends=('cmake' 'extra-cmake-modules' 'ninja' 'qt5-tools')
 source=("https://github.com/ksnip/$pkgname/archive/v$pkgver/$pkgname-$pkgver.tar.gz")
 sha256sums=('41fa6a54b0a88095ccdf7f8f3a96617e91fb15dcedae2aadaf2ee24677e9a88c')
+
+prepare() {
+  cd $pkgname-$pkgver
+  sed -e 's|kColorPicker::kColorPicker|kColorPicker::kColorPicker-Qt5|g' -i src/CMakeLists.txt # Fix build with kcolorpicker 0.3
+}
 
 build() {
   cmake -S $pkgname-$pkgver -B build -G Ninja -DCMAKE_INSTALL_PREFIX='/usr'

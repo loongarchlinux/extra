@@ -14,8 +14,8 @@ pkgname=(
  aspnet-targeting-pack
  dotnet-source-built-artifacts
 )
-pkgver=8.0.0.sdk100
-pkgrel=3
+pkgver=8.0.1.sdk101
+pkgrel=1
 arch=(loong64 x86_64)
 url=https://www.microsoft.com/net/core
 license=(MIT)
@@ -45,7 +45,7 @@ options=(
   !lto
   staticlibs
 )
-_tag=40e7f014ff784457efffa58074549735e30772ae
+_tag=b27976e5a6850466ee5b4ce24f91ee93bef645f7
 source=(git+https://github.com/dotnet/dotnet.git#tag=${_tag})
 b2sums=(SKIP)
 
@@ -55,14 +55,14 @@ prepare() {
   # fix bootstrap
   git remote set-url origin https://github.com/dotnet/dotnet.git
 
-  local _bootstrapver=$(xmllint --xpath "//*[local-name()='PrivateSourceBuiltArtifactsPackageVersion']/text()" eng/Versions.props)
+  local _bootstrapver=$(xmllint --xpath "//*[local-name()='PrivateSourceBuiltArtifactsPackageVersion']/text()" src/installer/eng/Versions.props)
   local _previousver=$(pacman -Q dotnet-source-built-artifacts | sed -r 's/.*([0-9]+\.[0-9]+)\.[0-9]+\.sdk([0-9]+)-.*/\1.\2/')
 
-  if [[ $_bootstrapver == $_previousver ]]; then
+#  if [[ $_bootstrapver == $_previousver ]]; then
     cp -r /usr/share/dotnet .dotnet
     ln -sf /usr/share/dotnet/source-built-artifacts/Private.SourceBuilt.Artifacts.*.tar.gz prereqs/packages/archive/
     ln -sf /usr/share/dotnet/source-built-artifacts/Private.SourceBuilt.Prebuilts.*.tar.gz prereqs/packages/archive/
-  fi
+#  fi
   ./prep.sh
 }
 

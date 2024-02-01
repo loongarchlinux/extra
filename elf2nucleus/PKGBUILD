@@ -1,0 +1,48 @@
+# Maintainer: kpcyrd <kpcyrd[at]archlinux[dot]org>
+
+pkgname=elf2nucleus
+pkgver=0.1.0
+pkgrel=1
+pkgdesc="Flash an AVR firmware from an elf file"
+url='https://github.com/kpcyrd/elf2nucleus'
+arch=('loong64' 'x86_64')
+license=('GPL-3.0-or-later')
+depends=(
+  'micronucleus'
+)
+makedepends=(
+  'cargo'
+)
+source=(https://github.com/kpcyrd/${pkgname}/archive/v${pkgver}/${pkgname}-${pkgver}.tar.gz
+        https://github.com/kpcyrd/${pkgname}/releases/download/v${pkgver}/${pkgname}-${pkgver}.tar.gz.asc)
+sha256sums=('7430a1525b73c61b6a8cad19e2aa303b5d46d080b6adffcdff34cd3ddb5ca05c'
+            'SKIP')
+b2sums=('fe0f76820cfd0e2d0937c80d37a60513b2b9ec13ecfd3cc2942ffa25c47facf798a94ad3d01562ed64be7dc42475c391a1df9b09fb6554284cb76de590d8ce0f'
+        'SKIP')
+validpgpkeys=("64B13F7117D6E07D661BBCE0FE763A64F5E54FD6")
+
+prepare() {
+  cd "${pkgname}-${pkgver}"
+  cargo fetch --locked --target "$CARCH-unknown-linux-gnu"
+}
+
+build() {
+  cd ${pkgname}-${pkgver}
+  cargo build --frozen --release
+}
+
+package() {
+  cd ${pkgname}-${pkgver}
+  install -Dm 755 target/release/${pkgname} -t "${pkgdir}/usr/bin"
+
+  install -d "${pkgdir}/usr/share/bash-completion/completions" \
+             "${pkgdir}/usr/share/zsh/site-functions" \
+             "${pkgdir}/usr/share/fish/vendor_completions.d"
+  "${pkgdir}/usr/bin/elf2nucleus" --completions bash > "${pkgdir}/usr/share/bash-completion/completions/elf2nucleus"
+  "${pkgdir}/usr/bin/elf2nucleus" --completions zsh > "${pkgdir}/usr/share/zsh/site-functions/_elf2nucleus"
+  "${pkgdir}/usr/bin/elf2nucleus" --completions fish > "${pkgdir}/usr/share/fish/vendor_completions.d/elf2nucleus.fish"
+
+  install -Dm644 LICENSE -t "${pkgdir}/usr/share/licenses/${pkgname}"
+}
+
+# vim: ts=2 sw=2 et:

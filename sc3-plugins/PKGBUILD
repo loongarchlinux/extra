@@ -2,15 +2,23 @@
 
 pkgname=sc3-plugins
 pkgver=3.13.0
-pkgrel=1
+pkgrel=3
 pkgdesc="Extension plugins for the SuperCollider3 audio synthesis server."
 arch=(loong64 x86_64)
 url="https://github.com/supercollider/sc3-plugins"
-license=(GPL2)
+license=(GPL-2.0-or-later)
 groups=(pro-audio)
-depends=(gcc-libs glibc supercollider)
-makedepends=(cmake fftw stk)
-source=("https://github.com/supercollider/${pkgname}/releases/download/Version-${pkgver}/${pkgname}-${pkgver}-Source.tar.bz2"{,.asc})
+depends=(
+  gcc-libs
+  glibc
+  supercollider
+)
+makedepends=(
+  cmake
+  fftw
+  stk
+)
+source=($url/releases/download/Version-$pkgver/$pkgname-$pkgver-Source.tar.bz2{,.asc})
 sha512sums=('4a89bb7d76d60983a8c5ea6560dc9993f585e7dc47593adc2686b772cdb7649423e2cf2c170340c0c7ee16d4a6348877a6572faacfc593a9075da60b9a06988f'
             'SKIP')
 b2sums=('55e34ff7cdae5ef48199c529e2a55c72fcb4c462d5e6f0001513e0b0d9b9e902f3e117e10fe9063b1e0f22d8d950e087059f2ca8bf1d4d794302d6dda22326bd'
@@ -20,27 +28,28 @@ validpgpkeys=(
     '2E1C4FC2F6BB58FA157B21B8064B501EB7405F04' # Marcin Paczkowski <marcin.piotr.paczkowski@gmail.com>
 )
 
-prepare() {
-  mv -v "$pkgname-$pkgver-Source" "${pkgname}-${pkgver}"
-}
-
 build() {
-  cd "$pkgname-$pkgver"
-  cmake -DCMAKE_INSTALL_PREFIX=/usr \
-        -DCMAKE_BUILD_TYPE=None \
-        -DSC_PATH=/usr/include/SuperCollider/ \
-        -DSYSTEM_STK=ON \
-        -DSUPERNOVA=ON \
-        -W no-dev \
-        -B build \
-        -S .
-  make VERBOSE=1 -C build
+  local cmake_options=(
+    -B build
+    -D CMAKE_BUILD_TYPE=None
+    -D CMAKE_INSTALL_PREFIX=/usr
+    -D SC_PATH=/usr/include/SuperCollider/
+    -D SUPERNOVA=ON
+    -D SYSTEM_STK=ON
+    -S $pkgname-$pkgver-Source
+    -W no-dev
+  )
+
+  cmake "${cmake_options[@]}"
+  cmake --build build --verbose
 }
 
 package() {
-  depends+=(libfftw3f.so libstk-4.6.2.so)
+  depends+=(
+    fftw libfftw3f.so
+    stk libstk-5.0.0.so
+  )
 
-  cd "$pkgname-$pkgver"
-  make VERBOSE=1 DESTDIR="$pkgdir/" install -C build
-  install -vDm 644 {{DEVELOPING,README}.md,TODO} -t "${pkgdir}/usr/share/doc/${pkgname}/"
+  DESTDIR="$pkgdir" cmake --install build
+  install -vDm 644 $pkgname-$pkgver-Source/{{DEVELOPING,README}.md,TODO} -t "$pkgdir/usr/share/doc/$pkgname/"
 }

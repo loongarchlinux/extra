@@ -1,0 +1,42 @@
+# Maintainer: David Runge <dvzrv@archlinux.org>
+
+pkgname=tangler
+pkgver=0.2.0
+pkgrel=1
+pkgdesc="Extracts (tangles) code fragments from Markdown documents"
+arch=(loong64 x86_64)
+url="https://github.com/wiktor-k/tangler/"
+license=(Apache-2.0 MIT)
+depends=(
+  gcc-libs
+  glibc
+)
+makedepends=(rust)
+source=($pkgname-$pkgver.tar.gz::$url/archive/refs/tags/v$pkgver.tar.gz)
+sha512sums=('ca115f697e978401158ed4c8f70b749fe050983b3c35857b39d3db8de82b1717fd724853888de0bc279f3f9d6bebc3f98bf797334bd6e106e02be7b58afdec89')
+b2sums=('1eb58eeb99ebb25f960a13b6ac2766a0c263eebbcf7f06ac7c1a2acb3832ae6a4b77da067da03d47c3fce0565423afc1dc191309510974ac5c704d24edc23d3e')
+
+prepare() {
+  cd $pkgname-$pkgver
+  export RUSTUP_TOOLCHAIN=stable
+  cargo fetch --locked --target "$(rustc -vV | sed -n 's/host: //p')"
+}
+
+build() {
+  cd $pkgname-$pkgver
+  export RUSTUP_TOOLCHAIN=stable
+  export CARGO_TARGET_DIR=target
+  cargo build --frozen --release --all-features
+}
+
+check() {
+  cd $pkgname-$pkgver
+  export RUSTUP_TOOLCHAIN=stable
+  cargo test --frozen --all-features
+}
+
+package() {
+  cd $pkgname-$pkgver
+  install -vDm 755 target/release/$pkgname -t "$pkgdir/usr/bin/"
+  install -vDm 644 LICENSES/MIT.txt -t "$pkgdir/usr/share/licenses/$pkgname/"
+}

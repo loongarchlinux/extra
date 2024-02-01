@@ -7,14 +7,15 @@
 # Contributor: xduugu
 
 pkgbase=mupdf
-pkgname=(libmupdf mupdf mupdf-gl mupdf-tools)
-pkgver=1.23.7
-pkgrel=1
+pkgname=(libmupdf mupdf mupdf-gl mupdf-tools python-mupdf)
+pkgver=1.23.9
+pkgrel=4
 pkgdesc='Lightweight PDF and XPS viewer'
 arch=('loong64' 'x86_64')
 url='https://mupdf.com/'
 license=('AGPL-3.0-or-later')
 makedepends=(
+  'clang'
   'curl'
   'desktop-file-utils'
   'freeglut'
@@ -32,6 +33,8 @@ makedepends=(
   # 'mujs'  # is hardcoded and needs a patch to debundle
   'openjpeg2'
   'openssl'
+  'python'
+  'swig'
   'tesseract'
   'zlib'
 )
@@ -40,18 +43,32 @@ source=(
   "https://mupdf.com/downloads/archive/$pkgbase-${pkgver/_/}-source.tar.gz"
   $pkgbase.desktop
   $pkgbase.xpm
+  $pkgbase-1.23.9-no_venv.patch
+  $pkgbase-1.23.9-cpp_ldflags.patch
+  $pkgbase-1.23.9-install_targets.patch
 )
-sha256sums=('35a54933f400e89667a089a425f1c65cd69d462394fed9c0679e7c52efbaa568'
+sha256sums=('d4a5d66801d85f97d76da978b155f66a5659d1131070c0400f076883f604e297'
             'ccff66979249bd4ab4ba8918660f194eb90eb0ae231b16e36a6cecdcf471883f'
-            'a435f44425f5432c074dee745d8fbaeb879038ec1f1ec64f037c74662f09aca8')
+            'a435f44425f5432c074dee745d8fbaeb879038ec1f1ec64f037c74662f09aca8'
+            'fed5ccebf5c8d3a4f4b777ce058f647cde673826b465c777994fc436dc1dca5a'
+            '152222c0bc066404d9e38be7abbba20748b0a4bbc9cb30403d19e3b176ab257f'
+            '87fd0544112ca8e8396dd3eb989907c110bad35de02ea425677b99a5d2532666')
 
 prepare() {
   cd $pkgbase-${pkgver/_/}-source
+
+  # do not use a venv for building language bindings
+  patch -Np1 -i ../$pkgbase-1.23.9-no_venv.patch
+  # use our LDFLAGS when building the C++ bindings to have full RELRO
+  patch -Np1 -i ../$pkgbase-1.23.9-cpp_ldflags.patch
+  # alter install-shared-* targets to not call one another (which fails on installing headers twice) and install libmupdfcpp.so with soname postfix
+  patch -Np1 -i ../$pkgbase-1.23.9-install_targets.patch
 
   # remove bundled packages, we want our system libraries
   rm -rf thirdparty/{curl,freeglut,freetype,gumbo-parser,harfbuzz,jbig2dec,leptonica,libjpeg,openjpeg,tesseract,zlib}
 
   {
+    printf "LINUX_OR_OPENBSD := yes\n"  # required so that Makefile sets soname symlink
     printf "USE_SYSTEM_CURL := yes\n"
     printf "USE_SYSTEM_FREETYPE := yes\n"
     printf "USE_SYSTEM_GLUT := yes\n"
@@ -62,6 +79,7 @@ prepare() {
     printf "USE_SYSTEM_LCMS2 := no\n"  # need lcms2-art fork
     printf "USE_SYSTEM_LEPTONICA := yes\n"
     printf "USE_SYSTEM_LIBJPEG := yes\n"
+    printf "USE_SYSTEM_LIBS := yes\n"
     printf "USE_SYSTEM_MUJS := no\n"  # needs patch to debundle
     printf "USE_SYSTEM_OPENJPEG := yes\n"
     printf "USE_SYSTEM_TESSERACT := yes\n"
@@ -72,7 +90,8 @@ prepare() {
 
 build() {
   cd $pkgbase-${pkgver/_/}-source
-  make shared=yes build=release libs apps
+  # Enforce -j1 to avoid concurrency issue during build
+  make -j1 shared=yes build=release libs apps c++ python
 }
 
 package_libmupdf() {
@@ -90,16 +109,26 @@ package_libmupdf() {
     'tesseract'
     'zlib'
   )
+  provides=(
+    'libmupdf.so'
+    'libmupdfcpp.so'
+  )
 
   cd $pkgbase-${pkgver/_/}-source
+  make prefix=/usr DESTDIR="$pkgdir" install-shared-c install-shared-c++
+}
 
-  make shared=yes build=release prefix="$pkgdir"/usr install
+package_python-mupdf() {
+  pkgdesc='Library for Lightweight PDF and XPS viewer - Python bindings'
+  depends=(
+    'gcc-libs'
+    'glibc'
+    'libmupdf'
+    'python'
+  )
 
-  rm -rf "$pkgdir"/usr/{bin,share/man}
-  mv "$pkgdir"/usr/share/doc/$pkgbase "$pkgdir"/usr/share/doc/$pkgname
-
-  # work around find-libdeps bug: https://gitlab.archlinux.org/archlinux/devtools/-/issues/102
-  chmod +x "$pkgdir/usr/lib/$pkgname.so"
+  cd $pkgbase-${pkgver/_/}-source
+  make prefix=/usr DESTDIR="$pkgdir" install-shared-python
 }
 
 package_mupdf() {

@@ -5,8 +5,8 @@
 # Contributor: David Keogh <davekeogh@archlinux.us>
 
 pkgname=pycharm-community-edition
-pkgver=2023.1.3
-_build=231.9161.41
+pkgver=2023.3.2
+_build=233.13135.95
 _jrever=17
 _jdkver=17
 pkgrel=1
@@ -38,13 +38,12 @@ source=(
   idea-android::"git+https://github.com/JetBrains/android.git#tag=pycharm/${_build}"
   pycharm.desktop
   pycharm.sh
-  enable-no-jdr.patch
+  # enable-no-jdr.patch
 )
 sha256sums=('SKIP'
             'SKIP'
             '70ae8df10243db2dbc454c0d8e273235707ecb1821a9e8a2e70669a1739fc1af'
-            'f4c4f1dfac7fa89ac1ea407904b19d0513d481b2f6f562672d02bfa4ce32c1ff'
-            'af736aad3e3df7e6196944860521dfbdad1e9f7ecc04ac4f38a067f1b63963e5')
+            '447714bf41a215b38f8c31418e09bf65145bb3d9427d6966772c9b2b8ae16f1d')
 
 prepare() {
   cd intellij-community
@@ -55,13 +54,13 @@ prepare() {
   sed -e 's/var targetOs: String/var targetOs: String = OS_LINUX/' \
       -e 's/System.getProperty(TARGET_OS_PROPERTY, OS_ALL)/OS_LINUX/' \
       -i "platform/build-scripts/src/org/jetbrains/intellij/build/BuildOptions.kt"
-  sed 's|../build/plugins-autoupload.txt|plugins-autoupload.txt|' \
-      -i "platform/build-scripts/src/org/jetbrains/intellij/build/impl/DistributionJARsBuilder.kt"
-  touch plugins-autoupload.txt
+  # sed 's|../build/plugins-autoupload.txt|plugins-autoupload.txt|' \
+  #     -i "platform/build-scripts/src/org/jetbrains/intellij/build/impl/DistributionJARsBuilder.kt"
+  # touch plugins-autoupload.txt
   # Fix pycharm python/installer.cmd & python/plugin.cmd
-  sed 's|intellij.pycharm.community.build|"$(cd "$(dirname "$0")"; pwd)/../" intellij.pycharm.community.build|' -i python/installers.cmd
+  # sed 's|intellij.pycharm.community.build|"$(cd "$(dirname "$0")"; pwd)/../" intellij.pycharm.community.build|' -i python/installers.cmd
   #sed 's|intellij.pycharm.community.build|"$(cd "$(dirname "$0")"; pwd)/../" intellij.pycharm.community.build|' -i python/plugin.cmd
-  patch -Np1 < "${srcdir}/enable-no-jdr.patch"
+  #patch -Np1 < "${srcdir}/enable-no-jdr.patch"
 }
 
 build() {
@@ -74,7 +73,7 @@ build() {
   ./python/installers.cmd -Dintellij.build.use.compiled.classes=false -Dintellij.build.target.os=linux
   #./python/plugin.cmd -Dintellij.build.target.os=linux
 
-  tar -xf out/pycharm-ce/artifacts/pycharmPC-${_build}-no-jbr.tar.gz -C "${srcdir}"
+  tar -xf out/pycharm-ce/artifacts/pycharmPC-${_build}.tar.gz -C "${srcdir}"
 
   # Issues with cython and 3.11 -> https://youtrack.jetbrains.com/issues/PY?q=cython%203.11
   # cd ../pycharm-community-${pkgver}
@@ -88,7 +87,7 @@ package() {
   sed -i 's/lcd/on/' bin/*.vmoptions
 
   install -dm 755 "${pkgdir}"/usr/share/{licenses,pixmaps,pycharm}
-  cp -dr --no-preserve='ownership' bin lib plugins "${pkgdir}"/usr/share/pycharm/
+  cp -dr --no-preserve='ownership' bin lib plugins jbr "${pkgdir}"/usr/share/pycharm/
   cp -dr --no-preserve='ownership' license "${pkgdir}"/usr/share/licenses/pycharm/
   ln -s /usr/share/pycharm/bin/pycharm.png "${pkgdir}"/usr/share/pixmaps/
   install -Dm 644 ../pycharm.desktop -t "${pkgdir}"/usr/share/applications/

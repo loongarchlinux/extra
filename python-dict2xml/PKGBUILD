@@ -1,8 +1,8 @@
 # Maintainer: Felix Yan <felixonmars@archlinux.org>
 
 pkgname=python-dict2xml
-pkgver=1.7.3
-pkgrel=2
+pkgver=1.7.4
+pkgrel=1
 pkgdesc="Small utility to convert a python dictionary into an XML string"
 arch=('any')
 url="https://github.com/delfick/python-dict2xml"
@@ -11,7 +11,7 @@ depends=('python')
 makedepends=('python-build' 'python-installer' 'python-hatchling')
 checkdepends=('python-pytest' 'python-noseofyeti')
 source=("https://github.com/delfick/python-dict2xml/archive/release-$pkgver/$pkgname-$pkgver.tar.gz")
-sha512sums=('5520c10fe9965c507684d282adbf31a80604c0f043d9cfe912a235779536af2a671d34570a0fea31d16b686c679ceca54a3641f727a4ba4f2036d6c5784df433')
+sha512sums=('a16337774146a5c3acdd7930ca22bae139be184e78d0b3ee6982728c1737db1ad28dd4f7b8eccaeb5ab8b9e4a0a22a38c7d1e88c985a0186613a3b12880c5de7')
 
 build() {
   cd python-dict2xml-release-$pkgver

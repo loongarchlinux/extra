@@ -3,12 +3,12 @@
 # Contributor: Lukas Jirkovsky <l.jirkovsky@gmail.com>
 
 pkgname=geeqie
-pkgver=2.1
-pkgrel=3
+pkgver=2.2
+pkgrel=1
 pkgdesc='Lightweight image viewer'
 arch=('loong64' 'x86_64')
 url="http://www.geeqie.org/"
-license=('GPL2')
+license=('GPL-2.0-or-later')
 # https://github.com/BestImageViewer/geeqie#optional-libraries
 depends=('exiv2' 'gtk3' 'ffmpegthumbnailer'
          'djvulibre' 'libheif' 'libchamplain'
@@ -39,36 +39,13 @@ optdepends=('librsvg: SVG rendering'
             'evince: for print preview'
             'libwebp: for WebP image format')
 source=(#"http://www.geeqie.org/${pkgname}-${pkgver}.tar.xz"{,.asc}
-        https://github.com/BestImageViewer/geeqie/releases/download/v${pkgver}/${pkgname}-${pkgver}.tar.xz{,.asc}
-        exiv2-0.28.0_1.patch::https://github.com/BestImageViewer/geeqie/commit/c45cca777aa3477eaf297db99f337e18d9683c61.patch
-        exiv2-0.28.0_2.patch::https://github.com/BestImageViewer/geeqie/commit/b04f7cd0546976dc4f7ea440648ac0eedd8df3ce.patch
-        geeqie-2.1-lua.patch
-        geeqie-2.1-webp-pixbuf-loader.patch
-)
-sha256sums=('d0511b7840169d37e457880d1ab2a787c52b609a0ab8fa1a8a391e841fdd2dde'
-            'SKIP'
-            '8349ad93bc06b970412b2e7a7e9cae0cceca1f1273e322eb656d1747dcdade65'
-            'cfd3cbd0acf71718cca00da8d00a916e4e870a607e67e47c53fcf2c4e7ec16f0'
-            '135d82097edac120c63fc895f720d84e23a1ed8c19e5e1523c181ea6cde5f247'
-            'de8139f11eb0e6910f54adfbd73aa7279836ea023ce30a64056e39fec7d33e8d')
+        https://github.com/BestImageViewer/geeqie/releases/download/v${pkgver}/${pkgname}-${pkgver}.tar.xz{,.asc})
+sha256sums=('899ac33b801e0e83380f79e9094bc2615234730ccf6a02d93fd6da3e6f8cfe94'
+            'SKIP')
 validpgpkeys=('91EC400226201276E2ADCEC7D0DA6F44C936D1DA') # "Colin Clark <colin.clark@cclark.uk>"
 
 # main repo: http://www.geeqie.org/cgi-bin/gitweb.cgi?p=geeqie.git
 # bug tracker: https://github.com/BestImageViewer/geeqie/issues
-
-prepare(){
-  cd $pkgname-$pkgver
-  # fix segfault + build with exiv2 v0.28.0
-  # https://github.com/Exiv2/exiv2/issues/2638
-  patch -Np1 -i ../exiv2-0.28.0_1.patch
-  patch -Np1 -i ../exiv2-0.28.0_2.patch
-  # fix build with lua
-  # https://github.com/BestImageViewer/geeqie/pull/1130
-  patch -Np1 -i ../geeqie-2.1-lua.patch
-  # fix webp images showing up as black
-  # https://github.com/BestImageViewer/geeqie/commit/4b159311f17c666c51ceca994b63b12eee841a23
-  patch -Np1 -i ../geeqie-2.1-webp-pixbuf-loader.patch
-}
 
 build() {
   arch-meson $pkgname-$pkgver build

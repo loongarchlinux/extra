@@ -4,7 +4,7 @@
 _name=pydantic
 pkgname=python-$_name
 # WARNING: upstream pins pydantic-core down to the patch-level and using other versions breaks tests! only update in lock-step with python-pydantic-core!
-pkgver=2.5.2
+pkgver=2.5.3
 pkgrel=1
 pkgdesc='Data parsing and validation using Python type hints'
 arch=(any)
@@ -47,8 +47,8 @@ optdepends=(
   'python-hypothesis: for hypothesis plugin when using legacy v1'
 )
 source=($url/archive/v$pkgver/$_name-v$pkgver.tar.gz)
-sha512sums=('e5b156387d3ac569dc61b8fc13f3996b4abd5d0fd8b5a0e5d041c2b52c5bb3ec253d74b95557ebd317da8ddc315608c839b580e2011ea180ed30020fab1204b5')
-b2sums=('2f4a55870d18e5e01621a0f017b960ce1887b78adef57d0a91361c0553dbf8d64c2256f6f2ce1bb35e1592333295a7b996b077d774c8b35f299eef3ebc85d60b')
+sha512sums=('6c920e4ccbb4212e298731f9947dd9af4b7f44006a17c75f8084674e719108dd4e23e36bf9e3d948e4acb4db7f279c78ee6d769796abf0e4cc1f9c320d2f40db')
+b2sums=('20d990bfabbee242212c77b9270c091c202819a9a973afce06024078fc502dc2967194b812884a5941adcf91f2e7ea5b5e0d33142af958be6dbe8da10cfa4131')
 
 build() {
   cd $_name-$pkgver
@@ -57,7 +57,7 @@ build() {
 
 check() {
   local pytest_options=(
-    # disable broken tests: https://github.com/pydantic/pydantic/issues/8180
+    # disable broken tests: https://github.com/pydantic/pydantic/issues/8459
     --deselect tests/benchmarks/test_north_star.py::test_north_star_validate_json
     --deselect tests/benchmarks/test_north_star.py::test_north_star_validate_json_strict
     --deselect tests/benchmarks/test_north_star.py::test_north_star_dump_json
@@ -66,6 +66,8 @@ check() {
     --deselect tests/benchmarks/test_north_star.py::test_north_star_dump_python
     --deselect tests/benchmarks/test_north_star.py::test_north_star_json_loads
     --deselect tests/benchmarks/test_north_star.py::test_north_star_json_dumps
+    # disable broken doc test: https://github.com/pydantic/pydantic/issues/8460
+    --deselect 'tests/test_docs.py::test_docs_examples[docs/concepts/serialization.md:354-391]'
     -vv
   )
   local site_packages=$(python -c "import site; print(site.getsitepackages()[0])")

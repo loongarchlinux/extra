@@ -3,7 +3,7 @@
 # Contributor: Alexandre Filgueira <alexfilgueira@antergos.com>
 
 pkgname=cinnamon-translations
-pkgver=6.0.1
+pkgver=6.0.2
 pkgrel=1
 pkgdesc="Translations for Cinnamon and Nemo"
 arch=(any)
@@ -11,8 +11,8 @@ url="https://github.com/linuxmint/${pkgname}"
 license=(GPL2)
 options=(!emptydirs)
 source=(${url}/archive/${pkgver}/${pkgname}-${pkgver}.tar.gz)
-sha512sums=('b0f064362733db1f1359f27a0df7258477f4ab8f04131f8e9a5bae36b3e534e9dac9d0a4708bb881443878427162182d6f5d646142f88ed767c768641ab6d7cb')
-b2sums=('af54f45bf071ecbbb24a49f3a84aacef675db9bab00490382aaec7f1c0de66054de26acd6640afeed1bfcb2215f6fb211ba0bf5e92713306c93da8edbc3751ae')
+sha512sums=('e23fe7f7da8856f3794c970671242bfdda1d84fee7357a7d30e09de15f988b9293b49dcbb44687ba4c495708b4fe067d6e8b851fac190b7f1f123ae19745f375')
+b2sums=('50b9813c608935830c772466ad01f5818d7775467127c486c1543e2c51f4b828b536436939cd50cb68adb562aa043edaed4d10839b8e17038668e0cd87253197')
 
 build() {
   cd ${pkgname}-${pkgver}

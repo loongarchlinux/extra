@@ -1,0 +1,70 @@
+diff --git a/src/GMAbout.cpp b/src/GMAbout.cpp
+index 73dfb5e4..ec1718d9 100644
+--- a/src/GMAbout.cpp
++++ b/src/GMAbout.cpp
+@@ -16,6 +16,7 @@
+ * You should have received a copy of the GNU General Public License            *
+ * along with this program.  If not, see http://www.gnu.org/licenses.           *
+ ********************************************************************************/
++#include <tag.h>
+ #include "gmdefs.h"
+ #include "gmutils.h"
+ #include "GMAbout.h"
+@@ -27,7 +28,6 @@
+ #endif
+ #include <FXPNGIcon.h>
+ #include <sqlite3.h>
+-#include <tag.h>
+ 
+ #define UTF8_COPYRIGHT_SIGN "\xc2\xa9"
+ 
+diff --git a/src/GMTag.cpp b/src/GMTag.cpp
+index 72c6188c..039a0d62 100644
+--- a/src/GMTag.cpp
++++ b/src/GMTag.cpp
+@@ -19,13 +19,6 @@
+ #include <math.h>
+ #include <errno.h>
+ 
+-#include "gmdefs.h"
+-#include "gmutils.h"
+-#include "GMTrack.h"
+-#include "GMCover.h"
+-#include "GMTag.h"
+-#include "GMAudioPlayer.h"
+-
+ /// TagLib
+ 
+ 
+@@ -59,7 +52,12 @@
+ #include <synchronizedlyricsframe.h>
+ #endif
+ 
+-
++#include "gmdefs.h"
++#include "gmutils.h"
++#include "GMTrack.h"
++#include "GMCover.h"
++#include "GMTag.h"
++#include "GMAudioPlayer.h"
+ 
+ #include "FXPNGImage.h"
+ #include "FXJPGImage.h"
+@@ -353,7 +351,7 @@ GMFileTag::~GMFileTag() {
+ 
+ FXbool GMFileTag::open(const FXString & filename,FXuint opts) {
+ 
+-  file = TagLib::FileRef::create(filename.text(),(opts&FILETAG_AUDIOPROPERTIES));
++  file = TagLib::FileRef(filename.text(),(opts&FILETAG_AUDIOPROPERTIES)).file();
+   if (file==nullptr || !file->isValid() || file->tag()==nullptr) {
+     if (file) {
+       delete file;
+@@ -519,7 +517,7 @@ FXbool GMFileTag::ape_get_field(const FXchar * field,FXStringList & list)  const
+   FXASSERT(field);
+   FXASSERT(ape);
+   if (ape->itemListMap().contains(field)) {
+-    const TagLib::StringList fieldlist = ape->itemListMap()[field].toStringList();
++    const TagLib::StringList fieldlist = ape->itemListMap()[field].values();
+     list.no(fieldlist.size());
+     FXint item=0;
+     for(TagLib::StringList::ConstIterator it = fieldlist.begin(); it != fieldlist.end(); it++) {

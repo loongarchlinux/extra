@@ -1,0 +1,42 @@
+From 2a80eb7fc06db20b0ac487d65f70896508bfd669 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Ball=C3=B3=20Gy=C3=B6rgy?= <ballogyor@gmail.com>
+Date: Wed, 24 Jan 2024 11:39:35 +0100
+Subject: [PATCH 1/2] layout: Load the default layout if all toplevels were
+ removed
+
+This makes it possible to reset the panel layout without restarting the gnome-panel.
+---
+ gnome-panel/panel-layout.c | 10 ++++++++++
+ 1 file changed, 10 insertions(+)
+
+diff --git a/gnome-panel/panel-layout.c b/gnome-panel/panel-layout.c
+index 36325a2bd..64eab34be 100644
+--- a/gnome-panel/panel-layout.c
++++ b/gnome-panel/panel-layout.c
+@@ -62,6 +62,8 @@ static void panel_layout_load_object      (PanelLayout *self,
+                                            const char  *object_id);
+ static void panel_layout_changed_toplevel (PanelLayout *self);
+ static void panel_layout_changed_object   (PanelLayout *self);
++static char **panel_layout_load_default   (PanelLayout  *self,
++                                           GError      **error);
+ 
+ static GQuark
+ panel_layout_error_quark (void)
+@@ -977,6 +979,14 @@ panel_layout_changed_toplevel (PanelLayout *self)
+         ids = g_settings_get_strv (self->settings,
+                                    PANEL_LAYOUT_TOPLEVEL_ID_LIST_KEY);
+ 
++        /* Load the default layout if all toplevels were removed */
++        if (!ids[0])
++          {
++            g_strfreev (ids);
++
++            ids = panel_layout_load_default (self, NULL);
++          }
++
+         /* Remove what is not in the layout anymore */
+ 
+         toplevels = gp_application_get_toplevels (self->application);
+-- 
+2.43.0
+

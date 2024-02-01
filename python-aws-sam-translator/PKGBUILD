@@ -2,7 +2,7 @@
 
 pkgname=python-aws-sam-translator
 # https://github.com/aws/serverless-application-model/releases
-pkgver=1.82.0
+pkgver=1.83.0
 pkgrel=1
 pkgdesc='AWS Serverless Application Model (AWS SAM) prescribes rules for expressing Serverless applications on AWS'
 arch=(any)
@@ -12,10 +12,8 @@ depends=(python python-botocore python-boto3 python-jsonschema python-pydantic p
 makedepends=(python-build python-installer python-setuptools python-wheel)
 # python-yaml is needed by samtranslator.yaml_helper, while the latter is used in tests only
 checkdepends=(python-pytest python-pytest-rerunfailures python-yaml python-parameterized)
-# Upstream intentionally exclude tests from sdist
-# https://github.com/aws/serverless-application-model/pull/381#issuecomment-382143094
 source=("https://github.com/aws/serverless-application-model/archive/v$pkgver/$pkgname-$pkgver.tar.gz")
-sha256sums=('6812b670d7a2560d82f36785d735abc63e72c9aee63f42dfd76709cd5d7f841c')
+sha256sums=('c2b62e20ce0ce9a12e5589b5dd6dad466253860cf95fe42b578e732d3cef53d4')
 
 prepare() {
   cd serverless-application-model-$pkgver

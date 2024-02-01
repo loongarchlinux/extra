@@ -3,7 +3,7 @@
 # Contributor: Sebastien Binet <binet@lblbox>
 
 pkgname=python-numexpr
-pkgver=2.8.7
+pkgver=2.8.8
 pkgrel=1
 pkgdesc="Fast numerical array expression evaluator for Python, NumPy, PyTables, pandas"
 url="https://github.com/pydata/numexpr"
@@ -12,7 +12,7 @@ license=(MIT)
 depends=(python-numpy)
 makedepends=(python-setuptools)
 source=(https://github.com/pydata/numexpr/archive/v$pkgver/$pkgname-$pkgver.tar.gz)
-sha256sums=('df5131349ec1e4b080a3e2df7abbb7bce20d023adff633d259e1ce1549a60ed1')
+sha256sums=('10b377c6ec6d9c01349d00e16dd82e6a6f4439c8c2b1945e490df1436c1825f5')
 
 build() {
   cd numexpr-$pkgver

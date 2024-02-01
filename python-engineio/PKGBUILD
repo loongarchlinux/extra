@@ -2,7 +2,7 @@
 
 pkgname=python-engineio
 pkgver=4.8.0
-pkgrel=1
+pkgrel=2
 pkgdesc='Python implementation of the Engine.IO realtime server'
 url='https://github.com/miguelgrinberg/python-engineio'
 arch=('any')
@@ -16,7 +16,7 @@ optdepends=('python-eventlet: eventlet driver'
 makedepends=('python-setuptools' 'python-sphinx' 'python-six' 'python-eventlet' 'python-aiohttp' 'python-tornado'
              'python-urllib3' 'python-gevent' 'python-gevent-websocket'
              'python-build' 'python-installer' 'python-wheel')
-checkdepends=('python-pytest' 'python-pytest-runner')
+checkdepends=('python-pytest')
 options=('!makeflags')
 source=(https://github.com/miguelgrinberg/python-engineio/archive/v${pkgver}/${pkgname}-${pkgver}.tar.gz)
 sha512sums=('351d982bf729a9747215d5845d9b547ecc5dd031cb3c32cd98d75b42374455e625ba0a8f7edf0db63354f7d905eedeb749145a851f8744571f0f2ab9d1142b47')

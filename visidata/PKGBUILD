@@ -4,7 +4,7 @@
 # Contributor: Javier Tiá <javier dot tia at gmail dot com>
 
 pkgname=visidata
-pkgver=2.11.1
+pkgver=3.0.2
 pkgrel=1
 pkgdesc='Terminal spreadsheet multitool for discovering and arranging data'
 arch=(any)
@@ -15,35 +15,56 @@ depends=(python
          python-dateutil
          python-importlib-metadata
          python-setuptools)
-optdepends=('python-dnslib: pcap support'
+optdepends=('python-beautifulsoup4: scraper support'
+            'python-boto3: rds support'
+            'python-conlu: connl/conllu support'
+            # 'python-datapackage: frictionless json support' # unpackaged
+            'python-dnslib: pcap support'
+            'python-faker: fake data support'
             'python-fonttools: ttf/otf support'
             'python-h5py: hdf5 support'
+            # 'python-pyshp: shapefiles support' # AUR
+            'python-dpkt: pcap support'
             'python-lxml: html/xml support'
+            # 'python-mapbox-vector-tile: mbtiles support' # AUR
+            'python-matplotlib: svg support'
+            # 'python-matrix-client: matrix support' # unpackaged
+            'python-mysqlclient: mysql support'
+            # 'python-namestand: graphviz support' # AUR
+            'python-numpy: npy pandas hdf5 arrow support'
+            'python-odfpy: odf support'
             'python-openpyxl: xlsx support'
             'python-pandas: dta (Stata) support'
             'python-pdfminer: pdf support'
+            'python-praw: reddit support'
+            'python-psutil: procmgr support'
             'python-psycopg2: postgres support'
+            # 'python-pyairtable: airtable support' # AUR
             'python-pyaml: yaml/yml support'
             'python-pyarrow: parquet support'
             'python-pypng: png support'
             'python-requests: http support'
+            'python-requests-cache: scraper support'
+            # 'python-sas7bdat: sas7bdat support' # unpackaged
+            'python-seaborn: seaborn plot support'
+            'python-sh: ping support'
+            # 'python-tabula: pdf tables support' # AUR
             'python-tabulate: tabulate saver support'
             'python-urllib3: remote zip support'
             'python-vobject: vcf support'
             'python-wcwidth: tabulate saver with unicode support'
-            'python-xlrd: xls support')
-# optdepends+=( # AUR only optdepends
-#             'python-dpkt: pcap support'
-#             'python-mapbox-vector-tile: mbtiles support'
-#             'python-namestand: graphviz support'
-#             'python-pyshp: shapefiles support')
+            'python-xlrd: xls support'
+            'python-xlwt: xls support'
+            # 'python-xport: sas support' # unpackaged
+            # 'python-zulix-api: zulix support' # AUR
+        )
 makedepends=(python-{build,installer,wheel})
 checkdepends=(python-pytest)
 _archive="$pkgname-$pkgver"
 # pypi sources don’t have scripts to generate completions
 # source=("https://files.pythonhosted.org/packages/source/${pkgname::1}/$pkgname/$_archive.tar.gz")
 source=("$_url/archive/v$pkgver/$_archive.tar.gz")
-sha256sums=('8d4f3f7453c1914a40eb00edc4196db0b88819d9d4d1ae3a22f603f8b7d5126d')
+sha256sums=('cc1506b96192de49419a77a3f9606999779ff77d37a7be0806506c32e16d57f7')
 
 build() {
 	cd "$_archive"
@@ -54,7 +75,8 @@ build() {
 check() {
 	cd "$_archive"
 	# Testing commands assumes reading an rc file not present in chroot build env
-	pytest -k 'not test_baseCommands'
+        # Testing keys assumes access to a terminal environment where they can be simulated
+	pytest -k 'not test_baseCommands' -k 'not test_keys'
 }
 
 package() {

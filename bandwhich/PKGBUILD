@@ -2,17 +2,20 @@
 # Contributor: Aram Drevekenin <aram@poor.dev>
 
 pkgname=bandwhich
-pkgver=0.21.1
+pkgver=0.22.2
 pkgrel=1
 pkgdesc='Terminal bandwidth utilization tool'
 url='https://github.com/imsnif/bandwhich'
 arch=('loong64' 'x86_64')
 license=('MIT')
-depends=('gcc-libs')
+depends=(
+  'gcc-libs'
+  'glibc'
+)
 makedepends=('cargo')
 source=(${pkgname}-${pkgver}.tar.gz::https://github.com/imsnif/${pkgname}/archive/refs/tags/v${pkgver}.tar.gz)
-sha512sums=('4bd48c598e643c5541884fab5df8534138078820833c3248dcf778616b1149fa074e43a8448e8dc92bc8d06f5e76baa8df9e7f4f2c5eccd21ab15190e17b0cf2')
-b2sums=('93467029a003356786e3a49d00062ee42b9a3f0f805bb42dbe0c37aed24303c1d7ac3907ed064af29584e3311d217c70c4027f6e35e20f68ce0292052b23b83b')
+sha256sums=('4c41719549e05dbaac1bc84828269e59b2f2032e76ae646da9b9e3b87e5a5fd1')
+b2sums=('faa9bc5620e9e2a7d5ddd8c715934b2eefc6f4f069348fc14d983ac9c7b22e43b1d167c09dc33c987a3e4a2bdd2ac4f42d1e8e42e492ab21bb57257423c36785')
 
 prepare() {
   cd "${pkgname}-${pkgver}"
@@ -21,18 +24,19 @@ prepare() {
 
 build() {
   cd "${pkgname}-${pkgver}"
-  cargo build --release --frozen
+  BANDWHICH_GEN_DIR="${srcdir}/${pkgname}-${pkgver}" \
+    cargo build --release --frozen
 }
 
 check() {
   cd "${pkgname}-${pkgver}"
-  cargo test --release --frozen -- --skip layout_under_50_width_under_50_height
+  cargo test --frozen -- --skip layout_under_50_width_under_50_height
 }
 
 package() {
   cd "${pkgname}-${pkgver}"
   install -Dm 755 "target/release/${pkgname}" "${pkgdir}/usr/bin/${pkgname}"
-  install -Dm 644 "docs/bandwhich.1" -t "${pkgdir}/usr/share/man/man1"
+  install -Dm 644 "bandwhich.1" -t "${pkgdir}/usr/share/man/man1"
   install -Dm 644 LICENSE.md "${pkgdir}/usr/share/licenses/${pkgname}/LICENSE"
 }
 
