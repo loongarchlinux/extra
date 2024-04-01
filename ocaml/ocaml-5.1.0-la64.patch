@@ -1,23 +1,56 @@
+diff --git a/.gitignore b/.gitignore
+index 9e7022db80..d7416f9a4b 100644
+--- a/.gitignore
++++ b/.gitignore
+@@ -71,6 +71,9 @@ META
+ /asmcomp/reload.ml
+ /asmcomp/scheduling.ml
+ /asmcomp/CSE.ml
++/asmcomp/loongarch64/CSE.ml
++/asmcomp/loongarch64/reload.ml
++/asmcomp/loongarch64/scheduling.ml
+ 
+ /boot/ocamlrun
+ /boot/ocamlruns
+@@ -331,3 +334,4 @@ META
+ /yacc/ocamlyacc
+ /yacc/version.h
+ /yacc/.gdb_history
++
 diff --git a/Makefile b/Makefile
-index bb2c245ea..db03683fb 100644
+index bc12f75dfb..9ec39ef6a7 100644
 --- a/Makefile
 +++ b/Makefile
-@@ -528,6 +528,14 @@ partialclean::
+@@ -31,7 +31,7 @@ include stdlib/StdlibModules
+ 
+ CAMLC = $(BOOT_OCAMLC) $(BOOT_STDLIBFLAGS) -use-prims runtime/primitives
+ CAMLOPT=$(OCAMLRUN) ./ocamlopt$(EXE) $(STDLIBFLAGS) -I otherlibs/dynlink
+-ARCHES=amd64 arm64 power s390x riscv
++ARCHES=amd64 arm64 loongarch64 power s390x riscv
+ VPATH = utils parsing typing bytecomp file_formats lambda middle_end \
+   middle_end/closure middle_end/flambda middle_end/flambda/base_types \
+   asmcomp driver toplevel tools
+@@ -557,8 +557,18 @@ partialclean::
  
  beforedepend:: lambda/runtimedef.ml
  
+-# Choose the right machine-dependent files
++# If any of these loongarch files need to be modified, please copy the
++# corresponding file from asmcomp/riscv64 to asmcomp/loongarch64, delete the
++# corresponding rule below, update the clean target accordingly, and remove
++# the file from .gitignore.
 +asmcomp/loongarch64/CSE.ml: asmcomp/riscv/CSE.ml
 +	cp $< $@
 +asmcomp/loongarch64/reload.ml: asmcomp/riscv/reload.ml
 +	cp $< $@
 +asmcomp/loongarch64/scheduling.ml: asmcomp/riscv/scheduling.ml
 +	cp $< $@
-+
-+
- # Choose the right machine-dependent files
  
- asmcomp/arch.ml: asmcomp/$(ARCH)/arch.ml
-@@ -1031,6 +1039,7 @@ clean::
++# Choose the right machine-dependent files
+ asmcomp/arch.mli: asmcomp/$(ARCH)/arch.mli
+ 	cd asmcomp; $(LN) $(ARCH)/arch.mli .
+ 
+@@ -1061,6 +1071,7 @@ clean::
  	rm -f runtime/domain_state*.inc
  	rm -rf $(DEPDIR)
  	rm -f stdlib/libcamlrun.a stdlib/libcamlrun.lib
@@ -27,13 +60,15 @@ index bb2c245ea..db03683fb 100644
  runtimeopt: stdlib/libasmrun.$(A)
 diff --git a/asmcomp/loongarch64/NOTES.md b/asmcomp/loongarch64/NOTES.md
 new file mode 100644
-index 000000000..f9b63dd62
+index 0000000000..aacca61de0
 --- /dev/null
 +++ b/asmcomp/loongarch64/NOTES.md
-@@ -0,0 +1,11 @@
+@@ -0,0 +1,13 @@
 +# Supported platforms
 +
 +LoongArch in 64-bit mode
++
++Debian architecture name: `loongarch64`
 +
 +# Reference documents
 +
@@ -44,7 +79,7 @@ index 000000000..f9b63dd62
 +  - https://loongson.github.io/LoongArch-Documentation/LoongArch-ELF-ABI-EN.html
 diff --git a/asmcomp/loongarch64/arch.ml b/asmcomp/loongarch64/arch.ml
 new file mode 100644
-index 000000000..fee052684
+index 0000000000..44bb39d2ea
 --- /dev/null
 +++ b/asmcomp/loongarch64/arch.ml
 @@ -0,0 +1,96 @@
@@ -63,7 +98,7 @@ index 000000000..fee052684
 +(*                                                                        *)
 +(**************************************************************************)
 +
-+(* Specific operations for the Loongarch processor *)
++(* Specific operations for the LoongArch processor *)
 +
 +open Format
 +
@@ -146,7 +181,7 @@ index 000000000..fee052684
 +let operation_can_raise _ = false
 diff --git a/asmcomp/loongarch64/arch.mli b/asmcomp/loongarch64/arch.mli
 new file mode 100644
-index 000000000..57174fabe
+index 0000000000..57174fabea
 --- /dev/null
 +++ b/asmcomp/loongarch64/arch.mli
 @@ -0,0 +1,76 @@
@@ -228,10 +263,10 @@ index 000000000..57174fabe
 +val operation_can_raise : specific_operation -> bool
 diff --git a/asmcomp/loongarch64/emit.mlp b/asmcomp/loongarch64/emit.mlp
 new file mode 100644
-index 000000000..b80b4f172
+index 0000000000..92a2ab2695
 --- /dev/null
 +++ b/asmcomp/loongarch64/emit.mlp
-@@ -0,0 +1,772 @@
+@@ -0,0 +1,775 @@
 +(**************************************************************************)
 +(*                                                                        *)
 +(*                                 OCaml                                  *)
@@ -284,9 +319,6 @@ index 000000000..b80b4f172
 +      ("$s8", n + Domainstate.(idx_of_field Domain_extra_params) * 8)
 +
 +(* Output a symbol *)
-+
-+let emit_symbol s =
-+  emit_symbol '$' s
 +
 +let emit_jump op s =
 +  if !Clflags.dlcode || !Clflags.pic_code
@@ -518,6 +550,8 @@ index 000000000..b80b4f172
 +            `	move      {emit_reg dst}, {emit_reg src}\n`
 +        | {loc = Reg _; typ = Float}, {loc = Reg _; typ = Float} ->
 +            `	fmov.d   {emit_reg dst}, {emit_reg src}\n`
++        | {loc = Reg _; typ = Float}, {loc = Reg _; typ = (Val | Int | Addr)} ->
++            `	movfr2gr.d {emit_reg dst}, {emit_reg src}\n`
 +        | {loc = Reg _; typ = (Val | Int | Addr)}, {loc = Stack s} ->
 +            let (base, ofs) = slot_offset env s (register_class dst) in
 +            emit_store src ofs base
@@ -530,7 +564,6 @@ index 000000000..b80b4f172
 +        | {loc = Stack s; typ = Float}, {loc = Reg _} ->
 +            let (base, ofs) = slot_offset env s (register_class src) in
 +            emit_float_load dst ofs base
-+        | {loc = Reg _; typ = Float}, {loc = Reg _; typ = (Val | Int | Addr)}
 +        | {loc = Stack _}, {loc = Stack _}
 +        | {loc = Unknown}, _ | _, {loc = Unknown} ->
 +            Misc.fatal_error "Emit: Imove"
@@ -645,7 +678,8 @@ index 000000000..b80b4f172
 +        let offset = Domainstate.(idx_of_field Domain_young_limit) * 8 in
 +        emit_addimm reg_alloc_ptr reg_alloc_ptr n;
 +        `	ld.d	{emit_reg reg_tmp}, {emit_reg reg_domain_state_ptr}, {emit_int offset}\n`;
-+        `	bltu	{emit_reg reg_alloc_ptr}, {emit_reg reg_tmp}, {emit_label lbl_call_gc}\n`;
++        `   sltu    {emit_reg reg_tmp}, {emit_reg reg_alloc_ptr}, {emit_reg reg_tmp}\n`;
++        `   bnez    {emit_reg reg_tmp}, {emit_label lbl_call_gc}\n`;
 +        `{emit_label lbl_after_alloc}:\n`;
 +        `	addi.d	{emit_reg i.res.(0)}, {emit_reg reg_alloc_ptr}, 8\n`;
 +        env.call_gc_sites <-
@@ -711,6 +745,9 @@ index 000000000..b80b4f172
 +          `	sltu	{emit_reg i.res.(0)}, {emit_reg i.arg.(1)}, {emit_reg i.arg.(0)}\n`;
 +          `	xori	{emit_reg i.res.(0)}, {emit_reg i.res.(0)}, 1\n`;
 +      end
++  | Lop(Icompf cmp) ->
++      let negated = emit_float_test cmp ~res:i.res.(0) ~arg:i.arg in
++      if negated then `	xori	{emit_reg i.res.(0)}, {emit_reg i.res.(0)}, 1\n`;
 +  | Lop(Iintop (Icheckbound)) ->
 +      let lbl = bound_error_label env i.dbg in
 +      `	bleu	{emit_reg i.arg.(0)}, {emit_reg i.arg.(1)}, {emit_label lbl}\n`
@@ -875,24 +912,25 @@ index 000000000..b80b4f172
 +    preproc_stack_check
 +      ~fun_body:fundecl.fun_body ~frame_size:(frame_size env) ~trap_size:16
 +  in
-+  let handle_overflow = ref None in
-+  if contains_nontail_calls || max_frame_size >= stack_threshold_size then begin
-+    let overflow = new_label () and ret = new_label () in
-+    let threshold_offset = Domainstate.stack_ctx_words * 8 + stack_threshold_size in
-+    let f = max_frame_size + threshold_offset in
-+    let offset = Domainstate.(idx_of_field Domain_current_stack) * 8 in
-+    `	ld.d	{emit_reg reg_tmp}, {emit_reg reg_domain_state_ptr}, {emit_int offset}\n`;
-+    emit_addimm reg_tmp reg_tmp f;
-+    `	bltu	$sp, {emit_reg reg_tmp}, {emit_label overflow}\n`;
-+    `{emit_label ret}:\n`;
-+    handle_overflow := Some (overflow, ret)
-+  end;
++  let handle_overflow =
++    if contains_nontail_calls || max_frame_size >= stack_threshold_size then begin
++      let overflow = new_label () and ret = new_label () in
++      let threshold_offset = Domainstate.stack_ctx_words * 8 + stack_threshold_size in
++      let f = max_frame_size + threshold_offset in
++      let offset = Domainstate.(idx_of_field Domain_current_stack) * 8 in
++      `	ld.d	{emit_reg reg_tmp}, {emit_reg reg_domain_state_ptr}, {emit_int offset}\n`;
++      emit_addimm reg_tmp reg_tmp f;
++      `	bltu	$sp, {emit_reg reg_tmp}, {emit_label overflow}\n`;
++      `{emit_label ret}:\n`;
++      Some (overflow, ret)
++    end else None
++  in
 +
 +  emit_all env fundecl.fun_body;
 +  List.iter emit_call_gc env.call_gc_sites;
 +  List.iter emit_call_bound_error env.bound_error_sites;
 +
-+  begin match !handle_overflow with
++  begin match handle_overflow with
 +  | None -> ()
 +  | Some (overflow, ret) ->
 +      `{emit_label overflow}:\n`;
@@ -1006,10 +1044,10 @@ index 000000000..b80b4f172
 +     }
 diff --git a/asmcomp/loongarch64/proc.ml b/asmcomp/loongarch64/proc.ml
 new file mode 100644
-index 000000000..62666c748
+index 0000000000..0380761184
 --- /dev/null
 +++ b/asmcomp/loongarch64/proc.ml
-@@ -0,0 +1,319 @@
+@@ -0,0 +1,318 @@
 +# 2 "asmcomp/loongarch64/proc.ml"
 +(**************************************************************************)
 +(*                                                                        *)
@@ -1051,8 +1089,8 @@ index 000000000..62666c748
 +    s0           18        general purpose (preserved by C)
 +    t0, t1       19-20     temporaries (used by call veneers)
 +    s1           21        trap pointer (preserved by C)
-+    s7          22        allocation pointer (preserved by C)
-+    s8          23        domain pointer (preserved by C)
++    s7           22        allocation pointer (preserved by C)
++    s8           23        domain pointer (preserved by C)
 +
 +  Floating-point register map
 +  ---------------------------
@@ -1222,6 +1260,9 @@ index 000000000..62666c748
 +        if !float <= last_float then begin
 +          loc.(i) <- [| phys_reg !float |];
 +          incr float
++        end else if !int <= last_int then begin
++          loc.(i) <- [| phys_reg !int |];
++          incr int
 +        end else begin
 +          loc.(i) <- [| stack_slot (make_stack !ofs) Float |];
 +          ofs := !ofs + size_float
@@ -1240,10 +1281,6 @@ index 000000000..62666c748
 +(* Exceptions are in a0 *)
 +
 +let loc_exn_bucket = phys_reg 0
-+
-+(* Volatile registers: none *)
-+
-+let regs_are_volatile _ = false
 +
 +(* Registers destroyed by operations *)
 +
@@ -1331,7 +1368,7 @@ index 000000000..62666c748
 +let init () = ()
 diff --git a/asmcomp/loongarch64/selection.ml b/asmcomp/loongarch64/selection.ml
 new file mode 100644
-index 000000000..be29364c1
+index 0000000000..be29364c16
 --- /dev/null
 +++ b/asmcomp/loongarch64/selection.ml
 @@ -0,0 +1,70 @@
@@ -1406,13 +1443,13 @@ index 000000000..be29364c1
 +let fundecl ~future_funcnames f =
 +  (new selector)#emit_fundecl ~future_funcnames f
 diff --git a/configure b/configure
-index 19764d19a..6415b4cc1 100755
+index 4c3b5fda20..f748759c9a 100755
 Binary files a/configure and b/configure differ
 diff --git a/configure.ac b/configure.ac
-index a7974b042..069a931d7 100644
+index aba3569f7c..335f1fbe00 100644
 --- a/configure.ac
 +++ b/configure.ac
-@@ -1079,7 +1079,8 @@ AS_IF([test x"$supports_shared_libraries" = 'xtrue'],
+@@ -1163,7 +1163,8 @@ AS_IF([test x"$supports_shared_libraries" = 'xtrue'],
      [aarch64-*-freebsd*], [natdynlink=true],
      [aarch64-*-openbsd*], [natdynlink=true],
      [aarch64-*-netbsd*], [natdynlink=true],
@@ -1422,18 +1459,18 @@ index a7974b042..069a931d7 100644
  
  AS_CASE([$enable_native_toplevel,$natdynlink],
    [yes,false],
-@@ -1199,7 +1200,9 @@ AS_CASE([$host],
+@@ -1285,7 +1286,9 @@ AS_CASE([$host],
    [x86_64-*-cygwin*],
-     [arch=amd64; system=cygwin],
+     [has_native_backend=yes; arch=amd64; system=cygwin],
    [riscv64-*-linux*],
--    [arch=riscv; model=riscv64; system=linux]
-+    [arch=riscv; model=riscv64; system=linux],
+-    [has_native_backend=yes; arch=riscv; model=riscv64; system=linux]
++    [has_native_backend=yes; arch=riscv; model=riscv64; system=linux],
 +  [loongarch64-*-linux*],
 +    [has_native_backend=yes; arch=loongarch64; system=linux]
  )
  
- AS_CASE([$ccomptype],
-@@ -1302,7 +1305,7 @@ default_aspp="$CC -c"
+ native_cflags=''
+@@ -1394,7 +1397,7 @@ default_aspp="$CC -c"
  AS_CASE([$as_target,$ocaml_cv_cc_vendor],
    [*-*-linux*,gcc-*],
      [AS_CASE([$as_cpu],
@@ -1442,7 +1479,7 @@ index a7974b042..069a931d7 100644
          [default_as="${toolpref}as"])],
    [i686-pc-windows,*],
      [default_as="ml -nologo -coff -Cp -c -Fo"
-@@ -1940,7 +1943,7 @@ AS_IF([$native_compiler],
+@@ -2073,7 +2076,7 @@ AS_IF([$native_compiler],
  
  AS_IF([test x"$enable_frame_pointers" = "xyes"],
    [AS_CASE(["$host,$cc_basename"],
@@ -1452,11 +1489,11 @@ index a7974b042..069a931d7 100644
        frame_pointers=true
        AC_DEFINE([WITH_FRAME_POINTERS])
 diff --git a/runtime/caml/stack.h b/runtime/caml/stack.h
-index 0c2e0b2fe..ebdc1d55a 100644
+index d595abd0da..59d72a0aca 100644
 --- a/runtime/caml/stack.h
 +++ b/runtime/caml/stack.h
-@@ -70,6 +70,17 @@
- #define Saved_return_address(sp) *((intnat *)((sp) - 8))
+@@ -75,6 +75,17 @@
+ #define Pop_frame_pointer(sp) sp += sizeof(value)
  #endif
  
 +#ifdef TARGET_loongarch64
@@ -1475,7 +1512,7 @@ index 0c2e0b2fe..ebdc1d55a 100644
  extern intnat caml_globals_inited;
 diff --git a/runtime/loongarch64.S b/runtime/loongarch64.S
 new file mode 100644
-index 000000000..d2289f821
+index 0000000000..e51eadb940
 --- /dev/null
 +++ b/runtime/loongarch64.S
 @@ -0,0 +1,827 @@
@@ -2294,21 +2331,21 @@ index 000000000..d2289f821
 +
 +/* GC roots for callback */
 +
-+
-+        .section .data
++OBJECT(caml_system.frametable)
++        .quad   2                 /* two descriptors */
++        .quad   L(caml_retaddr)   /* return address into callback */
++        .short  -1                /* negative frame size => use callback link */
++        .short  0                 /* no roots */
 +        .align  3
-+        .globl  caml_system__frametable
-+        .type   caml_system__frametable, @object
-+caml_system__frametable:
-+        .quad   1               /* one descriptor */
-+        .quad   .Lcaml_retaddr  /* return address into callback */
-+        .short  -1              /* negative frame size => use callback link */
-+        .short  0               /* no roots */
++        .quad   L(frame_runstack) /* return address into fiber handler */
++        .short  -1                /* negative frame size => use callback link */
++        .short  0                 /* no roots */
 +        .align  3
-+        .size   caml_system__frametable, .-caml_system__frametable
++END_OBJECT(caml_system.frametable)
++.end
 diff --git a/testsuite/tools/asmgen_loongarch64.S b/testsuite/tools/asmgen_loongarch64.S
 new file mode 100644
-index 000000000..97fbeae04
+index 0000000000..97fbeae046
 --- /dev/null
 +++ b/testsuite/tools/asmgen_loongarch64.S
 @@ -0,0 +1,75 @@

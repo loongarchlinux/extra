@@ -39,6 +39,7 @@ options=(!emptydirs !lto)
 _libdir=usr/lib/gcc/$CHOST/${pkgver%%+*}
 source=(git+https://sourceware.org/git/gcc.git#commit=${_commit}
         c89 c99
+	gcc-12-loong64.patch
 )
 validpgpkeys=(F3691687D867B81B51CE07D9BBE43771487328A9  # bpiotrowski@archlinux.org
               86CFFCA918CF3AF47147588051E8B148A9999C34  # evangelos@foutrelis.com
@@ -46,7 +47,8 @@ validpgpkeys=(F3691687D867B81B51CE07D9BBE43771487328A9  # bpiotrowski@archlinux.
               D3A93CAD751C2AF4F8C7AD516C35B99309B5FA62) # Jakub Jelinek <jakub@redhat.com>
 sha256sums=('SKIP'
             'de48736f6e4153f03d0a5d38ceb6c6fdb7f054e8f47ddd6af0a3dbf14f27b931'
-            '2513c6d9984dd0a2058557bf00f06d8d5181734e41dcfe07be7ed86f2959622a')
+            '2513c6d9984dd0a2058557bf00f06d8d5181734e41dcfe07be7ed86f2959622a'
+            '4018da43b2cb96145557af4409a009c63c95d4986fd16bee021ea76142615b23')
 
 prepare() {
   [[ ! -d gcc ]] && ln -s gcc-${pkgver/+/-} gcc
@@ -58,6 +60,7 @@ prepare() {
   # Arch Linux installs x86_64 libraries /lib
   sed -i '/m64=/s/lib64/lib/' gcc/config/i386/t-linux64
 
+  patch -p1 -i $srcdir/gcc-12-loong64.patch
   mkdir -p "$srcdir/gcc-build"
 }
 
