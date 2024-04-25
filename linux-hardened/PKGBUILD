@@ -4,8 +4,8 @@
 # Contributor: Thomas Baechler <thomas@archlinux.org>
 
 pkgbase=linux-hardened
-_ver=6.7.0
-_rdate=20231226
+_ver=6.8.6
+_rdate=20240424
 pkgver=${_ver}.hardened1
 pkgrel=1
 pkgdesc='Security-Hardened Linux'
@@ -27,6 +27,7 @@ makedepends=(
   graphviz
   imagemagick
   python-sphinx
+  python-yaml
   texlive-latexextra
 )
 options=('!strip')
@@ -43,12 +44,12 @@ validpgpkeys=(
   E240B57E2C4630BA768E2F26FC1B547C8D8172C8  # Levente Polyak
 )
 # https://www.kernel.org/pub/linux/kernel/v6.x/sha256sums.asc
-sha256sums=('d0e6ce60f0ccd162aabe130c00509590de790e33642a12ed4249aa08ac14f674'
+sha256sums=('16533ee5666746c21d76e965cda3a6264f03fc58ada09546f928003890541e18'
             '79aa07a1108582118c5e4721b9b5440053791d7a98ceb9538d42a511e39097eb'
-            'c9b26d463e27257d6ad13e59d489db5bd9b103e506dc80d7917bf48471480c85')
-b2sums=('15b6b33c6fdac5329d56424afc09a722053f045ca1a1553d583d80296a20a3e545d6ac1fd7950e575816df3e2d1c1033aeba779aa374ee25406f05d284d56815'
+            'a46f20931d23513ef039c934eadb60d08a67bbda480db2e42bbe18c921373a19')
+b2sums=('40820d8b5a0c9023313f0a8a54f7bceed5ed7267965b6f0699d5aab267d699900adb66587ee09c1a0dd53d039cd11f4314c42afa32ab31767b82470040e6b116'
         'ca79cea706454ee6aab3bfbc01d3067cef4fdfd49413c8bca52480596ec394d932a4e252b4bbcc3a605bd3a56b4b73493c47a7cdd3e984a5b42767fce0f1c025'
-        'd285dfd1304c9bc42f9fdaa18f8a393fc599be5d6144abe43959c8f63de7b8973821c50135ce81764428659ddd0eb634d7cce6da697cab9752311ad05dee2df6')
+        '5b0588b23784f492861deeaa4a3803c1d1cfc342049551f3a4992e95662cba7827f46cc313bfbdabc7f6d6a1da0be2672e55690ef89ad605d6a1ef2ff1339d30')
 
 export KBUILD_BUILD_HOST=archlinux
 export KBUILD_BUILD_USER=$pkgbase
@@ -82,12 +83,8 @@ prepare() {
 
 build() {
   cd $_srcname
-
-  make htmldocs &
-  local pid_docs=$!
-
   make all
-  wait "${pid_docs}"
+  make htmldocs
 }
 
 _package() {
