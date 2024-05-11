@@ -3,25 +3,25 @@
 
 pkgname=srs-state-threads
 pkgver=1.9.5
-pkgrel=1
+pkgrel=2
 pkgdesc="Fork of state-threads, patched for SRS"
 _pkgcommit=843e74b038b53bde526dbf0ef35d008d1f3ff85b
 arch=('loong64' 'x86_64')
 url="https://github.com/ossrs/state-threads/"
-license=('GPL2' 'MPL')
+license=('GPL-2.0-or-later' 'MPL-1.1')
+depends=('glibc')
 makedepends=('git')
 source=("git+https://github.com/ossrs/state-threads/#commit=${_pkgcommit}")
 sha256sums=('SKIP')
 
 prepare() {
   cd "${srcdir}"/state-threads
-  ldFlags="$(echo "$LDFLAGS" | sed 's|-Wl,||;s|,| |g') -z noexecstack"
-  sed -ie "s|LDFLAGS     =|LDFLAGS     = ${ldFlags}|" Makefile
+  sed -r 's|(LDFLAGS     )=|\1+=|;s|(-shared )(-soname)|\1-Wl,\2|' -i Makefile
 }
 
 build() {
   cd "${srcdir}"/state-threads
-  make STATIC_ONLY=no linux-optimized
+  make STATIC_ONLY=no linux-optimized LD=gcc EXTRA_CFLAGS="$CFLAGS"
 }
 
 package() {

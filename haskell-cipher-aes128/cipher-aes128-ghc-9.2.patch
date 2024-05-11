@@ -1,0 +1,36 @@
+From 4f30d283de04a65cde5aab4500dd7d7b409602d5 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Jan=20Syn=C3=A1=C4=8Dek?= <jan.synacek@scrive.com>
+Date: Tue, 31 May 2022 19:25:37 +0200
+Subject: [PATCH] Fix build with ghc-9.2.3
+
+---
+ Setup.hs | 16 ++++++++--------
+ 1 file changed, 8 insertions(+), 8 deletions(-)
+
+diff --git a/Setup.hs b/Setup.hs
+index b6719a8..ecd9fed 100644
+--- a/Setup.hs
++++ b/Setup.hs
+@@ -34,14 +34,14 @@ aesArgsHC = map ("-optc" ++) aesArgs
+ canUseAesIntrinsicsFlag :: FilePath -> IO Bool
+ canUseAesIntrinsicsFlag cc = do
+         withTempDirectory normal "" "testIntrinsic" $ \tmpDir -> do
+-        writeFile (tmpDir ++ "/testIntrinsic.c")
+-                (unlines        [ "#include <wmmintrin.h>"
+-                                , "int real_main() {"
+-                                , "return 0; }"
+-                                ])
+-        ec <- myRawSystemExitCode normal cc (aesArgsHC ++ ["-c", tmpDir ++ "/testIntrinsic.c"])
+-        notice normal $ "Result of NI Intrinsics Test: " ++ show (ec == ExitSuccess)
+-        return (ec == ExitSuccess)
++          writeFile (tmpDir ++ "/testIntrinsic.c")
++                  (unlines        [ "#include <wmmintrin.h>"
++                                  , "int real_main() {"
++                                  , "return 0; }"
++                                  ])
++          ec <- myRawSystemExitCode normal cc (aesArgsHC ++ ["-c", tmpDir ++ "/testIntrinsic.c"])
++          notice normal $ "Result of NI Intrinsics Test: " ++ show (ec == ExitSuccess)
++          return (ec == ExitSuccess)
+ 
+ myRawSystemExitCode :: Verbosity -> FilePath -> [String] -> IO ExitCode
+ #if __GLASGOW_HASKELL__ >= 704

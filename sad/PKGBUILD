@@ -5,19 +5,19 @@
 # Contributor: Matthew Gamble <internet@matthewgamble.net>
 
 pkgname=sad
-pkgver=0.4.23
+pkgver=0.4.28
 pkgrel=1
 pkgdesc='Space Age seD'
 arch=('loong64' 'x86_64')
 url='https://github.com/ms-jpq/sad'
 license=('MIT')
 depends=(
-  'glibc'
   'gcc-libs'
+  'glibc'
 )
 makedepends=(
+  'cargo'
   'git'
-  'rust'
   'python'
 )
 optdepends=(
@@ -26,21 +26,14 @@ optdepends=(
   'git-delta: for diff colourizer'
 )
 options=('!lto')
-_commit='ecbb27100bfbcc7773ce17312ae17d3775a96c23'
-source=("$pkgname::git+$url#commit=$_commit")
-b2sums=('SKIP')
-
-pkgver() {
-  cd "$pkgname"
-
-  git describe --tags | sed 's/^v//'
-}
+source=("$pkgname::git+$url#tag=v$pkgver")
+sha256sums=('b81373976f3d1fd89d3284b8cea38a3ff8dbdfa7b49a28c5d3c7366a29ce9629')
 
 prepare() {
   cd "$pkgname"
 
   # download dependencies
-  cargo fetch --locked --target "$CARCH-unknown-linux-gnu"
+  cargo fetch --locked --target "$(rustc -vV | sed -n 's/host: //p')"
 }
 
 build() {

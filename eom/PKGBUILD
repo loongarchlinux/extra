@@ -3,7 +3,7 @@
 # Contributor: Martin Wimpress <code@flexion.org>
 
 pkgname=eom
-pkgver=1.26.1
+pkgver=1.28.0
 pkgrel=1
 pkgdesc="An image viewing and cataloging program for MATE"
 url="https://mate-desktop.org"
@@ -16,7 +16,7 @@ groups=('mate-extra')
 conflicts=('eom-gtk3')
 replaces=('eom-gtk3')
 source=("https://pub.mate-desktop.org/releases/${pkgver%.*}/${pkgname}-${pkgver}.tar.xz")
-sha256sums=('b5251229494f7e6c62e09fb211e43308df4f074c551ba0a233dc2cd6864b9960')
+sha256sums=('9a01cab2995a1a8c7258c865eae5f182ed4730c44672afdc3a07e423edd53abc')
 
 build() {
     	cd "${pkgname}-${pkgver}"

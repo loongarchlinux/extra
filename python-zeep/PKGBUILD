@@ -2,14 +2,14 @@
 
 pkgname=python-zeep
 pkgver=4.2.1
-pkgrel=2
+pkgrel=4
 pkgdesc="A fast and modern Python SOAP client"
 arch=('any')
 license=('MIT')
 url="https://docs.python-zeep.org"
 depends=('python-attrs' 'python-isodate' 'python-lxml' 'python-platformdirs' 'python-requests'
          'python-requests-toolbelt' 'python-requests-file' 'python-pytz')
-makedepends=('python-setuptools')
+makedepends=('python-setuptools' 'python-wheel' 'python-build' 'python-installer')
 checkdepends=('python-pytest' 'python-freezegun' 'python-pretend' 'python-pytest-cov'
               'python-requests-mock' 'python-pytest-httpx' 'python-pytest-asyncio' 'python-aiohttp'
               'python-aioresponses' 'python-xmlsec')
@@ -22,7 +22,7 @@ prepare() {
 
 build() {
   cd python-zeep-$pkgver
-  python setup.py build
+  python -m build --wheel --no-isolation
 } 
 
 check() {
@@ -32,6 +32,6 @@ check() {
 
 package() {
   cd python-zeep-$pkgver
-  python setup.py install --root="$pkgdir" --optimize=1
+  python -m installer --destdir="$pkgdir" dist/*.whl
   install -Dm644 LICENSE -t "$pkgdir"/usr/share/licenses/$pkgname/
 }

@@ -2,18 +2,18 @@
 # Contributor: Tommaso Sardelli <lacapannadelloziotom at gmail dot com>
 
 pkgname=bpftrace
-pkgver=0.19.1
-pkgrel=1
+pkgver=0.20.3
+pkgrel=2
 pkgdesc='High-level tracing language for Linux eBPF'
 arch=('loong64' 'x86_64')
 url='https://github.com/iovisor/bpftrace'
-license=('Apache')
-depends=('libelf' 'zlib' 'llvm-libs' 'clang' 'bcc' 'libbpf' 'libpcap' 'libsframe.so')
-makedepends=('cmake' 'llvm' 'git' 'linux-headers' 'ninja' 'gtest' 'cereal'
+license=('Apache-2.0')
+depends=('glibc' 'gcc-libs' 'libelf' 'zlib' 'llvm-libs' 'clang' 'bcc' 'libbpf' 'libpcap' 'zstd')
+makedepends=('binutils' 'cmake' 'llvm' 'git' 'linux-headers' 'ninja' 'gtest' 'cereal'
              'asciidoctor' 'xxd')
 options=('!strip' '!debug')
 source=("https://github.com/iovisor/bpftrace/archive/v$pkgver/bpftrace-$pkgver.tar.gz")
-sha512sums=('2f56b8fb7abfa58631ebc93c7a98cc066446808cbc0116902e43ebefa5f9625232da5ee3ede1d14a236296660a2f4c0907fa1ef24d383b4e32c70dcc3988c765')
+sha512sums=('218a1bfac7e1a2b7eef5b0ed3e7403eed4bc932f2aa03c5f4c8924246c09088f5074ab3d54031e582cb4f8e7d0c7df1bb30007c2421c44d2c2506364f0ba5a0e')
 
 build() {
   cmake -S bpftrace-$pkgver -B build -G Ninja \
@@ -24,5 +24,9 @@ build() {
 }
 
 package() {
+  depends+=(
+    'binutils' 'libsframe.so'
+  )
+
   DESTDIR="$pkgdir" cmake --install build
 }

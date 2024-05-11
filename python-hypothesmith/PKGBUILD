@@ -3,7 +3,7 @@
 
 pkgname=python-hypothesmith
 pkgver=0.3.2
-pkgrel=1
+pkgrel=2
 pkgdesc="Hypothesis strategies for generating Python programs, something like CSmith"
 url="https://github.com/Zac-HD/hypothesmith"
 license=('MPL')

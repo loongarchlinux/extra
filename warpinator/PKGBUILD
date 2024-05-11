@@ -4,7 +4,7 @@
 
 pkgname=warpinator
 pkgver=1.8.3
-pkgrel=1
+pkgrel=2
 pkgdesc='LAN file sender, send and receive files across the network'
 arch=('any')
 url='https://github.com/linuxmint/warpinator'

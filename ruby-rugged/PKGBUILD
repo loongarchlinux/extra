@@ -4,10 +4,10 @@
 
 _name=rugged
 # ideally this should match $pkgver, as package() might fail otherwise. thanks, github
-_libgit2_pkgver=1.7.1
+_libgit2_pkgver=1.7.2
 pkgname=ruby-rugged
-pkgver=1.7.1
-pkgrel=1
+pkgver=1.7.2
+pkgrel=2
 pkgdesc="A Ruby binding to the libgit2 linkable library"
 arch=(loong64 x86_64)
 url="https://github.com/libgit2/rugged"
@@ -32,11 +32,11 @@ source=(
   libgit2-$_libgit2_pkgver.tar.gz::https://github.com/libgit2/libgit2/archive/v$_libgit2_pkgver.tar.gz
   $pkgname-1.6.2-remove_broken_libgit2_detection.patch
 )
-sha512sums=('8ed87294e9d780b19e338d6d68c4e839fb5d53a4adc4baf893164d18435cc8681eb6db509582a67dc4cbf9c9f71861181641483f6ed84ed71ae8c9db593529c0'
-            '08e60dde0cdf57006cf0c5f27a82220aba8d701bf7d6d709ffe312975ffa5dbef009ccb1e7cbe570b9502f4361d06ace44dbfd9a5f5f8ad08e9b0ca05bef765e'
+sha512sums=('e179c99c968496f32004bdb799d96cf5d81f7b5dc242f52d2f89b2dd10d56a9bb1e6e7774e07628f146d4bbbf4d95b9530b62cce2d18f6f4a2836b200de4ff09'
+            '825737e4a1991fba50ea535f15b0e560ebe76ead752e04aeba36925b944d0da77fe9826a70980a1aa3d0bf9afbedfab79dd92e799c9252931384c89ebec9b012'
             '955a01271852fcae00750f2bc155e7697e033429fa4f47615d7a611eab5e9296038324d0c486942d878ade118872d1f895f580c08e463b854ab405419673824e')
-b2sums=('0ff8618fc64679b60dde1e42dc502fed5f2a43c0a82e4d15db971ab08e4c8bf233f8086f0412eb9b265c15659e7e32c0544a9e5337e5d66d19c23f25fb6ad347'
-        '9c50d3c25d1cc58e5fab60b4c438c91479dd57138a14a48a8b692bb6b43733f59759172043c94198df63fa1e4eb40c548bb78c94bc57fb99682059be57a5c3e2'
+b2sums=('497ad4180e962db1a2e2557852f19fac358981268cb8aa175519e4d26306a7e6ab5518825ca501896ffeeb4fc6024692af3dcc48c1a7549a2d3f288af1a443d7'
+        'c27870124c7e63a37794014a802a6fce46c577313f3b6081580f920fa842a65305b5bc56aa6ab02cf87c533d6052afdc37317f96aa1fd67387b07f52415ccbe3'
         'bf6339a9e4cf26336ea8c693e0ef115b7e4afb1dc56d8b7a5ee3faff7e07eac4b420c67d694c690e78328780730787eec64e816e4c840391500af29a5f4818b0')
 
 prepare() {
@@ -54,6 +54,8 @@ prepare() {
   rm -rv test/online/*
   # remove deprecated `date` element from gemspec. Removing it makes the package reproducible
   sed --in-place '/s\.date/d' "${_name}.gemspec"
+  # disable broken test: https://github.com/libgit2/rugged/issues/978
+  sed 's/test_each_line_patch_header/off/' -i test/diff_test.rb
 }
 
 build() {

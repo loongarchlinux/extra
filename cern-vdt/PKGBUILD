@@ -4,28 +4,35 @@
 pkgname=cern-vdt
 _pkgname=vdt
 pkgver=0.4.4
-pkgrel=1
+pkgrel=2
 pkgdesc='A vectorised math library from CERN'
 arch=('loong64' 'x86_64')
 url='https://github.com/dpiparo/vdt'
-license=('LGPL3')
+license=('LGPL-3.0-or-later')
 depends=('glibc')
 makedepends=('cmake' 'python')
 source=("${pkgname}-${pkgver}.tar.gz::https://github.com/dpiparo/${_pkgname}/archive/v${pkgver}.tar.gz")
 sha256sums=('8b1664b45ec82042152f89d171dd962aea9bb35ac53c8eebb35df1cb9c34e498')
 
-build() {
-    cd "${srcdir}/${_pkgname}-${pkgver}"
+prepare() {
+  # remove scripts incompatible with Python 3.12: https://github.com/dpiparo/vdt/issues/18
+  rm -v $_pkgname-$pkgver/src/vdt.py
+  rm -v $_pkgname-$pkgver/progs/{{vdtNumpytest,vdtNumpyTime,testExp}.py,{vdtTiming,vdtTest}.ipynb}
+}
 
-    mkdir build && cd build
-    cmake .. -DCMAKE_INSTALL_PREFIX=/usr
-    make
+build() {
+  local cmake_options=(
+    -B build
+    -D CMAKE_BUILD_TYPE=None
+    -D CMAKE_INSTALL_PREFIX=/usr
+    -S $_pkgname-$pkgver
+    -W no-dev
+  )
+
+  cmake "${cmake_options[@]}"
+  cmake --build build --verbose
 }
 
 package() {
-    cd "${srcdir}/${_pkgname}-${pkgver}/build"
-
-    make DESTDIR="${pkgdir}/" install
-
-    install -Dm644 ../Licence.txt "${pkgdir}/usr/share/licenses/${pkgname}/LICENSE"
+  DESTDIR="$pkgdir" cmake --install build
 }

@@ -2,21 +2,21 @@
 # Contributor: Daniel Micay <danielmicay@gmail.com>
 
 pkgname=python-scrypt
-pkgver=0.8.20
-pkgrel=4
+pkgver=0.8.24
+pkgrel=2
 pkgdesc='Bindings for the scrypt key derivation function library'
 url='https://github.com/holgern/py-scrypt'
 arch=('loong64' 'x86_64')
-license=('BSD')
+license=('BSD-2-Clause')
 depends=('python' 'glibc' 'openssl')
-makedepends=('python-setuptools')
+makedepends=('python-setuptools' 'python-build' 'python-installer' 'python-wheel')
 source=("${url}/archive/v${pkgver}/${pkgname}-${pkgver}.tar.gz")
-sha512sums=('2bde277a8f55195743758bf8a4c6054ae8da9a4db977f5562d19b82181a8fc6420d2d5ce6e0c0d22fbb4ceaf63909172979dcf744540cac63a3cf355f99de085')
-b2sums=('020d70a7a35c8361f1831b59b67ba2443ab5c075f88348dc0fb3f87e2244162087bddf369be162f421241a9cc3d31ce77db73d553e47f5d3a76f71710d6fa888')
+sha512sums=('55a3f5e30992e89f68f35269bcffe977d799e353eff4d5e7a72159850fc838c28c68e6d008cf2470cc7c554755fd81c022543ab2860e9a93504c99d95409c2a3')
+b2sums=('3290c361750fb12409f6d507cd1cc00549cb77edfe2eacc273881642aea9a9f7a42727e138654a2a968d9e8c7819351fb61b7a63266ef36695153670f4e2ac82')
 
 build() {
   cd py-scrypt-${pkgver}
-  python setup.py build
+  python -m build --wheel --no-isolation
 }
 
 check() {
@@ -27,7 +27,7 @@ check() {
 
 package() {
   cd py-scrypt-${pkgver}
-  python setup.py install --root="${pkgdir}" -O1 --skip-build
+  python -m installer --destdir="$pkgdir" dist/*.whl
   rm -r "${pkgdir}"/usr/lib/python*/site-packages/scrypt/tests
   install -Dm 644 README.rst -t "${pkgdir}/usr/share/doc/${pkgname}"
   install -Dm 644 LICENSE -t "${pkgdir}/usr/share/licenses/${pkgname}"

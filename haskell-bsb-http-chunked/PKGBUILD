@@ -3,20 +3,23 @@
 _hkgname=bsb-http-chunked
 pkgname=haskell-bsb-http-chunked
 pkgver=0.0.0.4
-pkgrel=374
+pkgrel=381
 pkgdesc="Chunked HTTP transfer encoding for bytestring builders"
 url="https://github.com/sjakobi/bsb-http-chunked"
 license=('BSD')
 arch=('loong64' 'x86_64')
 depends=('ghc-libs')
-makedepends=('ghc' 'haskell-attoparsec' 'haskell-blaze-builder' 'haskell-hedgehog' 'haskell-tasty'
+makedepends=('ghc' 'uusi' 'haskell-attoparsec' 'haskell-blaze-builder' 'haskell-hedgehog' 'haskell-tasty'
              'haskell-tasty-hedgehog' 'haskell-tasty-hunit' 'haskell-doctest')
-source=(https://hackage.haskell.org/packages/archive/${_hkgname}/${pkgver}/${_hkgname}-${pkgver}.tar.gz)
-sha512sums=('74c04c2fd372067c42d3631cdfc2ad7093c0c3af1145833ab307c538dbb936d2042492d4e81c520c3adde8634df29ff8558822f06f226c52d16abb4a35ab1a13')
+source=(https://hackage.haskell.org/packages/archive/${_hkgname}/${pkgver}/${_hkgname}-${pkgver}.tar.gz
+        "fix-doctests.patch")
+sha512sums=('74c04c2fd372067c42d3631cdfc2ad7093c0c3af1145833ab307c538dbb936d2042492d4e81c520c3adde8634df29ff8558822f06f226c52d16abb4a35ab1a13'
+            'b89dd9fff663cde2cc95c8abb73290816815b2f5da7b4c1a7287792c8136cf8c5df9636f8e4a130b1fa37081e817fc859ee91dff3ebc52a787c60280fe46327f')
 
 prepare() {
     cd $_hkgname-$pkgver
-    sed -i 's/< *4.13/<5/' $_hkgname.cabal
+    uusi -u base -u bytestring
+    patch -p1 -i ../fix-doctests.patch
 }
 
 build() {
@@ -24,7 +27,7 @@ build() {
     
     runhaskell Setup configure -O --enable-shared --enable-executable-dynamic --disable-library-vanilla \
         --prefix=/usr --docdir=/usr/share/doc/$pkgname --datasubdir=$pkgname --enable-tests \
-        --dynlibdir=/usr/lib --libsubdir=\$compiler/site-local/\$pkgid --ghc-option=-fllvm
+        --dynlibdir=/usr/lib --libsubdir=\$compiler/site-local/\$pkgid
     runhaskell Setup build $MAKEFLAGS
     runhaskell Setup register --gen-script
     runhaskell Setup unregister --gen-script

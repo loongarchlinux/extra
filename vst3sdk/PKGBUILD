@@ -3,18 +3,17 @@
 
 pkgbase=vst3sdk
 pkgname=(vst3sdk vst3sdk-docs)
-pkgver=3.7.9_build_61
-_commit=dfff2e399c1a638bd7f5e334440a61e7262eed3f  # v3.7.9_build_61
-pkgrel=1
+pkgver=3.7.11_build_10
+pkgrel=2
 pkgdesc="VST 3 Plug-In SDK"
 arch=(any)
 url="https://github.com/steinbergmedia/vst3sdk"
-license=(GPL3)
+license=('LicenseRef-Proprietary-Steinberg-VST3-License OR GPL-3.0-only')
 makedepends=(git rsync)
 # upstream does not provide proper tarballs:
 # https://github.com/steinbergmedia/vst3sdk/issues/65
 source=(
-  git+https://github.com/steinbergmedia/$pkgname#commit=$_commit
+  "git+https://github.com/steinbergmedia/$pkgname#tag=v${pkgver}"
   git+https://github.com/steinbergmedia/vst3_base
   git+https://github.com/steinbergmedia/vst3_cmake
   git+https://github.com/steinbergmedia/vst3_doc
@@ -22,10 +21,10 @@ source=(
   git+https://github.com/steinbergmedia/vst3_public_sdk
   git+https://github.com/steinbergmedia/vstgui
   git+https://github.com/steinbergmedia/vst3_tutorials
-  "vst3sdk-3.7.9_build_61-cmake-build-type-none.patch"
+  vst3sdk-3.7.9_build_61-cmake-build-type-none.patch
   $pkgname.pc
 )
-sha512sums=('SKIP'
+sha512sums=('f7336fd605798810201df0556302f675d518045749986c24f7b6ee2c1294a4641685a8814f9697f3b2728cda21f4713e35b2b8f13cb5bbea2caf3f1080298dba'
             'SKIP'
             'SKIP'
             'SKIP'
@@ -35,7 +34,7 @@ sha512sums=('SKIP'
             'SKIP'
             'cef7f0a3d977bd51890de7d0bcf11703d80ffb0997e8a5f9b5854134479ab2b6971658797bfa7cdd8cc2a52d928ec4dc4b542500de04b0d0f825179597b28e1f'
             '501dff8299ccf9aeba61a64331c3ac74ece89eee956bffff0e303653b566acfca5cba4957c8bafb883efe6cc78c34da64ec9870daf9f2c37e2734110b9cad1dd')
-b2sums=('SKIP'
+b2sums=('a6441a6d0dbb33dbd4d59c6d9b536e9190fa4f39f51cf5a70ad0539716d1c30684febe1bdd1f8974ad02eb1d18f25e9b2c08a831b878857dc204f94801933f84'
         'SKIP'
         'SKIP'
         'SKIP'
@@ -65,24 +64,29 @@ prepare() {
   # the build currently fails for packages that set -DCMAKE_BUILD_TYPE other
   # than Debug, Release or ReleaseLTO as the release modes are hardcoded in
   # vst3sdk. This patch also adds support for build type "None"
-  patch --forward --strip=1 --dir=public.sdk --input="${srcdir}/vst3sdk-3.7.9_build_61-cmake-build-type-none.patch"
+  patch --forward --strip=1 --dir=public.sdk --input="$srcdir/vst3sdk-3.7.9_build_61-cmake-build-type-none.patch"
 }
 
 package_vst3sdk() {
-  license+=(BSD)
+  license+=(BSD-3-Clause)
 
   cd $pkgbase
   install -vDm 644 ../$pkgname.pc -t "$pkgdir/usr/lib/pkgconfig/"
   install -vdm 755 "$pkgdir/usr/src/$pkgname/"
   rsync -r --exclude doc --exclude .git --exclude .github --exclude .gitignore --exclude .gitattributes . "$pkgdir/usr/src/$pkgname/"
   install -vDm 644 LICENSE.txt -t "$pkgdir/usr/share/licenses/$pkgname/"
-  install -vDm 644 base/LICENSE.txt "$pkgdir/usr/share/licenses/$pkgname/LICENSE.base.txt"
-  install -vDm 644 public.sdk/LICENSE.txt "$pkgdir/usr/share/licenses/$pkgname/LICENSE.public.sdk.txt"
+  install -vDm 644 base/LICENSE.txt "$pkgdir/usr/share/licenses/$pkgname/vst3_base.BSD-3-Clause.txt"
+  install -vDm 644 cmake/LICENSE.txt "$pkgdir/usr/share/licenses/$pkgname/vst3_cmake.BSD-3-Clause.txt"
+  install -vDm 644 public.sdk/LICENSE.txt "$pkgdir/usr/share/licenses/$pkgname/vst3_public_sdk.BSD-3-Clause.txt"
+  install -vDm 644 vstgui4/LICENSE "$pkgdir/usr/share/licenses/$pkgname/vstgui.BSD-3-Clause.txt"
+
   install -vDm 644 cmake/modules/*.cmake -t "$pkgdir/usr/lib/cmake/$pkgname/"
 }
 
 package_vst3sdk-docs() {
   pkgdesc+=" - documentation"
+
+  install -vDm 644 $pkgbase/doc/LICENSE.txt "$pkgdir/usr/share/licenses/$pkgname/vst3_doc.LicenseRef-Proprietary-Steinberg-VST3-License.txt"
 
   install -vdm 755 "$pkgdir/usr/share/doc/$pkgname/"
   cd $pkgbase/doc

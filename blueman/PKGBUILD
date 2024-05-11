@@ -1,43 +1,43 @@
 # Maintainer: Balló György <ballogyor+arch at gmail dot com>
+# Maintainer: Robin Candau <antiz@archlinux.org>
 # Contributor: Arthur Zamarin <arthurzam@gmail.com>
 # Contributor: Martin Wimpress <code@flexion.org>
 
 pkgname=blueman
-pkgver=2.3.5
+pkgver=2.4.1
 pkgrel=2
 pkgdesc="GTK+ Bluetooth Manager"
 arch=('loong64' 'x86_64')
 url="https://github.com/blueman-project/blueman"
-license=('GPL')
+license=('GPL-3.0-or-later')
 depends=('bluez' 'bluez-libs' 'gtk3' 'libnm' 'python-cairo' 'python-gobject')
 makedepends=('cython' 'intltool' 'iproute2')
 optdepends=('dnsmasq: Network Access Point (NAP) support'
             'iproute2: Network Access Point (NAP) support'
             'networkmanager: Dial Up Networking (DUN) and Personal Area Networking (PAN) support'
             'pulseaudio-bluetooth: audio devices support')
-source=(https://github.com/blueman-project/$pkgname/releases/download/$pkgver/$pkgname-$pkgver.tar.xz)
-sha256sums=('b2d21afdf77a06cd86daf5402406f7d2a53459817e29e0bebc4911d4f0dcfda1')
+source=("${pkgname}-${pkgver}.tar.gz::${url}/archive/refs/tags/${pkgver}.tar.gz")
+sha256sums=('89a8cd453152c8cabbb63ad91432c68263dec15cd17f1ea14d56aec24cf25949')
 
 prepare() {
-  cd $pkgname-$pkgver
-
-  # Use correct D-Bus config location
-  sed -i '/^dbusdir =/ s/sysconfdir/datadir/' data/configs/Makefile.{am,in}
+	cd "${pkgname}-${pkgver}"
+	./autogen.sh
+	# Use correct D-Bus config location
+	sed -i '/^dbusdir =/ s/sysconfdir/datadir/' data/configs/Makefile.{am,in}
 }
 
 build() {
-  cd $pkgname-$pkgver
-  ./configure \
-    --prefix=/usr \
-    --sysconfdir=/etc \
-    --libexecdir=/usr/lib/$pkgname \
-    --disable-schemas-compile \
-    --with-dhcp-config='/etc/dhcpd.conf'
-  make
+	cd "${pkgname}-${pkgver}"
+	./configure \
+	  --prefix=/usr \
+	  --sysconfdir=/etc \
+	  --libexecdir=/usr/lib/"${pkgname}" \
+	  --disable-schemas-compile \
+	  --with-dhcp-config='/etc/dhcpd.conf'
+	make
 }
 
 package() {
-  cd $pkgname-$pkgver
-  make DESTDIR="$pkgdir" install
-  install -d -o root -g 102 -m 750 "$pkgdir/usr/share/polkit-1/rules.d"
+	cd "${pkgname}-${pkgver}"
+	make DESTDIR="${pkgdir}" install
 }

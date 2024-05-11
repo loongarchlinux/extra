@@ -1,29 +1,30 @@
 # Maintainer: Felix Yan <felixonmars@archlinux.org>
 
 pkgname=python-wsaccel
-pkgver=0.6.4
+pkgver=0.6.6
 pkgrel=2
 pkgdesc='Accelerator for ws4py and AutobahnPython'
 arch=('loong64' 'x86_64')
 url='https://github.com/methane/wsaccel'
 license=('Apache')
 depends=('python')
-makedepends=('python-setuptools' 'cython')
+makedepends=('python-setuptools' 'cython' 'python-build' 'python-installer' 'python-wheel')
 checkdepends=('python-pytest')
 source=("https://github.com/methane/wsaccel/archive/v$pkgver/$pkgname-$pkgver.tar.gz")
-sha512sums=('980364fab8a661c8a2b406f9eb6c99fb5f3a1308bbcf6267fa63f002d8dfbb4a3ad027d83a2088d69324cab05bdc56138d7e66e2602aeb8864dfe49ad9218d07')
+sha512sums=('4a107db921f6f6549fb9f2f0b5c698331274171ef509136fc2d83cb6ca8bedbde32a14aaca4e38e16af3054337774dbd6aa7d8caee7866a51ded751d7d3764be')
 
 build() {
   cd wsaccel-$pkgver
-  python setup.py build
+  python -m build --wheel --no-isolation
 }
 
 check() {
   cd wsaccel-$pkgver
-  PYTHONPATH="$PWD/build/lib.linux-$CARCH-cpython-311" pytest
+  local python_version=$(python -c 'import sys; print("".join(map(str, sys.version_info[:2])))')
+  PYTHONPATH="$PWD/build/lib.linux-$CARCH-cpython-$python_version" pytest
 }
 
 package() {
   cd wsaccel-$pkgver
-  python setup.py install --root="$pkgdir" -O1
+  python -m installer --destdir="$pkgdir" dist/*.whl
 }

@@ -3,17 +3,17 @@
 # Contributor: acxz <akashpatel2008 at yahoo dot com>
 
 pkgname=rccl
-pkgver=5.7.1
+pkgver=6.0.2
 pkgrel=1
 pkgdesc="ROCm Communication Collectives Library"
 arch=('loong64' 'x86_64')
 url='https://rocm.docs.amd.com/projects/rccl/en/latest/index.html'
-license=('custom')
-depends=('hip' 'rocm-smi-lib')
-makedepends=('rocm-cmake' 'hipify-clang' 'python')
-_git='https://github.com/ROCmSoftwarePlatform/rccl'
+license=('BSD-3-Clause')
+depends=('rocm-core' 'glibc' 'gcc-libs' 'hip' 'rocm-smi-lib')
+makedepends=('cmake' 'rocm-cmake' 'hipify-clang' 'python')
+_git='https://github.com/ROCm/rccl'
 source=("$pkgname-$pkgver.tar.gz::$_git/archive/rocm-$pkgver.tar.gz")
-sha256sums=('fb4c1f0084196d1226ce8a726d0f012d3890b54508a06ca87bbda619be8b90b1')
+sha256sums=('5c8495acba3d620b751e729d1157e7b4eea8f5e5692c50ce47c5204d3dfd443c')
 options=(!lto)
 _dirname="$(basename $_git)-$(basename ${source[0]} .tar.gz)"
 
@@ -22,23 +22,22 @@ build() {
   export HIPCC_COMPILE_FLAGS_APPEND="-parallel-jobs=$(nproc)"
   export HIPCC_LINK_FLAGS_APPEND="-parallel-jobs=$(nproc)"
   # -fcf-protection is not supported by HIP, see
-  # https://rocm.docs.amd.com/en/latest/reference/rocmcc/rocmcc.html#support-status-of-other-clang-options
-  CXXFLAGS="${CXXFLAGS} -fcf-protection=none" \
-  cmake \
-    -Wno-dev \
-    -B build \
-    -S "$_dirname" \
-    -DCMAKE_BUILD_TYPE=None \
-    -DCMAKE_CXX_COMPILER=/opt/rocm/bin/hipcc \
-    -DCMAKE_INSTALL_PREFIX=/opt/rocm
+  # https://rocm.docs.amd.com/en/latest/reference/rocmcc.html#support-status-of-other-clang-options
+  local cmake_args=(
+    -Wno-dev
+    -S "$_dirname"
+    -B build
+    -D CMAKE_BUILD_TYPE=None
+    -D CMAKE_CXX_COMPILER=/opt/rocm/bin/hipcc
+    -D CMAKE_CXX_FLAGS="${CXXFLAGS} -fcf-protection=none"
+    -D CMAKE_INSTALL_PREFIX=/opt/rocm
+  )
+  cmake "${cmake_args[@]}"
   cmake --build build
 }
 
 package() {
   DESTDIR="$pkgdir" cmake --install build
-
-  echo "/opt/rocm/$pkgname/lib" > "$pkgname.conf"
-  install -Dm644 "$pkgname.conf" "$pkgdir/etc/ld.so.conf.d/$pkgname.conf"
 
   install -Dm644 "$srcdir/$_dirname/LICENSE.txt" "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
 }

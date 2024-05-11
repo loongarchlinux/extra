@@ -2,34 +2,39 @@
 # Contributor: Daniel Wallace <danielwallace at gtmanfred dot com>
 
 pkgname=python-magnumclient
-pkgver=4.3.0
-_commit=aa0d180dda6a88fb0034dfc8f466b9fb7598aa80
-pkgrel=1
+pkgver=4.4.0
+pkgrel=2
 pkgdesc="Client library for Magnum API"
 arch=('any')
 url="https://docs.openstack.org/python-magnumclient/latest/"
-license=('Apache')
-depends=('python-pbr' 'python-keystoneauth1' 'python-stevedore' 'python-requests'
+license=('Apache-2.0')
+depends=('python' 'python-pbr' 'python-keystoneauth1' 'python-stevedore' 'python-requests'
          'python-oslo-i18n' 'python-oslo-log' 'python-oslo-serialization' 'python-oslo-utils'
          'python-os-client-config' 'python-osc-lib' 'python-prettytable' 'python-cryptography'
          'python-decorator')
-makedepends=('git')
+makedepends=('git' 'python-build' 'python-installer' 'python-setuptools' 'python-wheel')
 checkdepends=('python-openstackclient' 'python-oslotest' 'python-osprofiler' 'python-stestr'
               'python-testscenarios' 'python-testtools')
-source=("git+https://github.com/openstack/python-magnumclient.git#commit=$_commit")
-sha512sums=('SKIP')
+source=("git+https://github.com/openstack/python-magnumclient.git#tag=$pkgver")
+sha512sums=('54b8ff2a92a5a1605e85832ae27513b5ad010f2a053f95922b2437cec3d087e1fa12c7b87b1053e964fefb650cbd1ee7a6b2cc76d73d22914c6ccc53bec74140')
+b2sums=('c9e7b194b20f1517ed3099eb53b1bfbe5cf7c870b0d6057287a806175c55792dd5e69c1fec7987d228920f9a8b9c0384f8affc13e5684d8c4502850550f74c99')
 
 build() {
   cd python-magnumclient
-  python setup.py build
+  python -m build --wheel --no-isolation
 }
 
 check() {
+  local stestr_run_options=(
+    # breaks with Python 3.12
+    -E 'magnumclient.tests.test_httpclient.HttpClientTest.test_get_connection'
+  )
+
   cd python-magnumclient
-  stestr run
+  stestr run "${stestr_run_options[@]}"
 }
 
 package() {
   cd python-magnumclient
-  python setup.py install --root="$pkgdir" --optimize=1
+  python -m installer --destdir="$pkgdir" dist/*.whl
 }

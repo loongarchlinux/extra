@@ -2,7 +2,7 @@
 
 pkgname=liquidctl
 pkgver=1.13.0
-pkgrel=1
+pkgrel=2
 arch=('any')
 url='https://github.com/liquidctl/liquidctl'
 license=('GPL3')
@@ -13,6 +13,12 @@ checkdepends=('python-pytest')
 source=("git+$url.git?signed#tag=v$pkgver")
 validpgpkeys=('23F335ED4E829797734B22F65841AF7406AF7AD0') # Jonas Tadeu Silva Malaco Filho <jonas@jonasmalaco.com>
 sha512sums=('SKIP')
+
+prepare() {
+  cd "${pkgname}"
+  #/ https://github.com/liquidctl/liquidctl/commit/c50afa4e610bd2e268e85c347e2644794c817a78
+  git cherry-pick -n -m1 c50afa4e610bd2e268e85c347e2644794c817a78
+}
 
 build() {
   cd "${pkgname}"

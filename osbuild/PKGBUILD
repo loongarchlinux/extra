@@ -3,17 +3,17 @@
 
 pkgname=osbuild
 pkgdesc='Build Pipelines for Operating System Artifacts'
-pkgver=104
+pkgver=118
 pkgrel=1
 url="https://www.osbuild.org"
 arch=(any)
-license=(Apache)
+license=(Apache-2.0)
 depends=(bubblewrap curl e2fsprogs qemu-img python util-linux python-yaml python-jsonschema python-toml skopeo)
-makedepends=(make python-docutils python-setuptools)
+makedepends=(make python-docutils python-build python-installer python-setuptools python-wheel)
 optdepends=('dnf: build rpm/dnf images'
             'pacman: build pacman images')
 source=($pkgname-$pkgver.tar.gz::https://github.com/osbuild/osbuild/archive/refs/tags/v${pkgver}.tar.gz)
-sha256sums=('e782e66bb7a72cb88411da901baed5d832b6e10d9b05c9f0f91296ed0566b806')
+sha256sums=('729e637dc26aea8b08ae44a61e12c49436fe7b2319654cca27ceee7f077bc8e1')
 
 prepare() {
   cd $pkgname-$pkgver
@@ -21,13 +21,13 @@ prepare() {
 
 build() {
   cd $pkgname-$pkgver
-  python setup.py build
+  python -m build --wheel --no-isolation
 }
 
 package() {
   cd $pkgname-$pkgver
   make man
-  python setup.py install --skip-build --root="$pkgdir"
+  python -m installer --destdir="$pkgdir" dist/*.whl
 
   install -m 0755 -d "$pkgdir/usr/lib/osbuild/osbuild"
 

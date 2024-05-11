@@ -3,22 +3,27 @@
 _hkgname=openssl-streams
 pkgname=haskell-openssl-streams
 pkgver=1.2.3.0
-pkgrel=208
+pkgrel=213
 pkgdesc="OpenSSL network support for io-streams"
 url="https://github.com/snapframework/openssl-streams"
 license=('BSD')
 arch=('loong64' 'x86_64')
 depends=('ghc-libs' 'haskell-hsopenssl' 'haskell-io-streams' 'haskell-network')
-makedepends=('ghc' 'haskell-hunit' 'haskell-test-framework' 'haskell-test-framework-hunit')
+makedepends=('ghc' 'uusi' 'haskell-hunit' 'haskell-test-framework' 'haskell-test-framework-hunit')
 source=(https://hackage.haskell.org/packages/archive/${_hkgname}/${pkgver}/${_hkgname}-${pkgver}.tar.gz)
 sha512sums=('86c5f9348af82ad0ac9e8103ee078c78647e61345ecf0c48b02749206147a82a3a798f681b9cd20ec866276aca75a3739965ca2b76a0b302da4792bf1fc4917e')
+
+prepare() {
+    cd $_hkgname-$pkgver
+    uusi -u bytestring
+}
 
 build() {
     cd $_hkgname-$pkgver
     
     runhaskell Setup configure -O --enable-shared --enable-executable-dynamic --disable-library-vanilla \
         --prefix=/usr --docdir=/usr/share/doc/$pkgname --datasubdir=$pkgname --enable-tests \
-        --dynlibdir=/usr/lib --libsubdir=\$compiler/site-local/\$pkgid --ghc-option=-fllvm
+        --dynlibdir=/usr/lib --libsubdir=\$compiler/site-local/\$pkgid
     runhaskell Setup build $MAKEFLAGS
     runhaskell Setup register --gen-script
     runhaskell Setup unregister --gen-script

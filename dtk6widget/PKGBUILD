@@ -3,7 +3,7 @@
 # Contributor: Xu Fasheng <fasheng.xu[AT]gmail.com>
 
 pkgname=dtk6widget
-pkgver=6.0.4
+pkgver=6.0.10
 pkgrel=1
 pkgdesc='Deepin base graphical widgets library'
 arch=('loong64' 'x86_64')
@@ -12,12 +12,18 @@ license=('LGPL3')
 # qt6-imageformats is needed for webp (dci) icons
 depends=('dtk6core' 'dtk6gui' 'gcc-libs' 'glibc' 'libx11' 'libxcb' 'libxext' 'libxi'
          'qt6-base' 'qt6-imageformats' 'qt6-svg' 'startup-notification' 'xcb-util')
-makedepends=('cmake' 'ninja' 'qt6-tools' 'gtest' 'doxygen')
-source=("https://github.com/linuxdeepin/dtk6widget/archive/$pkgver/$pkgname-$pkgver.tar.gz")
-sha512sums=('13847b426d6843e0fc80c1e9effcd75cda0cf718392f5818419677a3554445ae4ef3927f5b8b25a8d612a48e121411d6457b29c2a1b6a4fc59061d4c8aa5ca92')
+makedepends=('git' 'cmake' 'ninja' 'qt6-tools' 'gtest' 'doxygen')
+source=("git+https://github.com/linuxdeepin/dtk6widget.git#tag=$pkgver"
+         qt-6.7.patch)
+sha512sums=('ae25708b4e8a5beba5abb6bbc780e74d8436705c4830f386d012320e33efe2e9db7153cf105f0f2ec59a4609ac5284a09205c2d880aa8bba70c40cdd1df3370d'
+            'e6cdd45b6e83b4dc86aec9e7784b51d84d0a074582eb04ac084cbe90e9c58d25399ebc8b52d401cf7d8cb9abd4ec7a3b5b2646b99b8814cfcca5faffd1b8f18d')
+
+prepare() {
+  patch -d $pkgname -p1 < qt-6.7.patch # Fix build with Qt 6.7
+}
 
 build() {
-  cd dtk6widget-$pkgver
+  cd dtk6widget
   # Disable plugins because they are not going to be installed
   cmake . -GNinja \
       -DBUILD_DOCS=ON \
@@ -30,12 +36,12 @@ build() {
 }
 
 check() {
-  cd dtk6widget-$pkgver
+  cd dtk6widget
   # TODO
-  # ninja test || echo "Tests failed"
+  ninja test || echo "Tests failed"
 }
 
 package() {
-  cd dtk6widget-$pkgver
+  cd dtk6widget
   DESTDIR="$pkgdir" ninja install
 }

@@ -1,7 +1,7 @@
 # Maintainer: Morten Linderud <foxboron@archlinux.org>
 
 pkgname=staticcheck
-pkgver=2023.1.6
+pkgver=2023.1.7
 pkgrel=1
 pkgdesc="The advanced Go linter"
 arch=('loong64' 'x86_64')
@@ -11,16 +11,16 @@ depends=('glibc')
 makedepends=('go' 'git')
 options=('!lto')
 source=("$pkgname-$pkgver.tar.gz::https://github.com/dominikh/go-tools/archive/$pkgver.tar.gz")
-sha512sums=('f6b777f5b36cfbfa41bee4242215e235a6ca8d61b075197018d7e404ab79d886067a4a8f63055e5191f3a57d529ccb15f04801c5999b86708b0cb767711366ba')
-b2sums=('0c0251fba269c3e74ebfceeb32b85d1b69ce876ac05389f64a64b2fefce34ac90fd727ac7705a03efb91e3ad0ba04944d30a13277c94f8cac0bca8583a71e282')
+sha512sums=('1a45decc0082d4c8428a401a5919c23dc3da8cd74f553d3dc8f5402fa86d3e360239ecc5604f62ff73774a1c40443ab8a865cb4cf9e2512b189889bbd4c4b3ee')
+b2sums=('c2d8708d6f3339ad2bd04126e6d0e9e9ab0c48f958992325b4db7d367508b7107fd52c17fff0b86292e358938044b2fa367e141cb03bed50ff97b18e8c89da17')
 
 prepare(){
-	cd "go-tools-$pkgver"
-	mkdir -p bin
+  cd "go-tools-$pkgver"
+  mkdir -p bin
 }
 
 build(){
-	cd "go-tools-$pkgver"
+  cd "go-tools-$pkgver"
 
   # set Go flags
   export CGO_CPPFLAGS="${CPPFLAGS}"
@@ -34,19 +34,19 @@ build(){
     -modcacherw \
     -ldflags "-compressdwarf=false \
     -linkmode external \
-    -extldflags ${LDFLAGS}" \
+    -extldflags \"${LDFLAGS}\"" \
     -o bin\
     ./cmd/staticcheck
 }
 
 check(){
-	cd "go-tools-$pkgver"
-	GOROOT="/usr/lib/go" go test -v ./...
+  cd "go-tools-$pkgver"
+  GOROOT="/usr/lib/go" go test -v ./...
 }
 
 package(){
-	cd "go-tools-$pkgver"
-	install -p -Dm755 bin/staticcheck "${pkgdir}/usr/bin/staticcheck"
-	install -Dm644 "LICENSE"  "${pkgdir}/usr/share/licenses/${pkgname}/LICENCE"
-	install -Dm644 "LICENSE-THIRD-PARTY"  "${pkgdir}/usr/share/licenses/${pkgname}/LICENCE-THIRD-PARTY"
+  cd "go-tools-$pkgver"
+  install -p -Dm755 bin/staticcheck "${pkgdir}/usr/bin/staticcheck"
+  install -Dm644 "LICENSE"  "${pkgdir}/usr/share/licenses/${pkgname}/LICENCE"
+  install -Dm644 "LICENSE-THIRD-PARTY"  "${pkgdir}/usr/share/licenses/${pkgname}/LICENCE-THIRD-PARTY"
 }

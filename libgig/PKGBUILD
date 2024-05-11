@@ -4,19 +4,22 @@
 # Contributor: Shinlun Hsieh <yngwiexx@yahoo.com.tw>
 
 pkgname=libgig
-pkgver=4.3.0
-pkgrel=4
+pkgver=4.4.1
+pkgrel=1
 pkgdesc="C++ library for loading, modifying and creating .gig, .ksf, .kmp, .sf2 and DLS files"
 arch=(loong64 x86_64)
 url="https://www.linuxsampler.org/libgig/"
-license=(GPL2)
+license=(
+  GPL-2.0-or-later
+  LGPL-2.1-or-later
+)
 depends=(
   gcc-libs
   glibc
   util-linux-libs
-  libsndfile libsndfile.so
 )
 makedepends=(
+  libsndfile
   util-linux
 )
 provides=(libgig.so)
@@ -24,9 +27,9 @@ source=(
   https://download.linuxsampler.org/packages/$pkgname-$pkgver.tar.bz2
   $pkgname-4.3.0-libdir.patch
 )
-sha512sums=('683c09b1d17acf69020c631452b7dfb25ac54c3701db5e97471d4e7973e9a06267667bf19bfe4eb00d2964223e8446f248d93b4cf29c062dec2588758b4dfba2'
+sha512sums=('7844d31acba4bd2f2a499511c3f45ec0a883336193a1422d6d0cd1a8d0c2e97f9f89230176969e5a80b483890914d424eb778338afd583197fdea8bee3c08627'
             '7bc339ff8fddc7e35ab8a58a591038bc06b8fb3acc895b471968e8731608e1524d74c3e58f6e5cff06ca1a4fd0c09de85e6ffedff0336df31270aeaf5aef6f81')
-b2sums=('9d1482b4e704dc96bdc44b2b95ed1479f27488567e5f5216dfdf84e7eb51a07a9f8b9550ce6208156e9f2bc43a3495ab6a77c2672e564e2f36fd9734cb4a88fd'
+b2sums=('7b59256c48d810cf93c7f7ee2ade45df01334a935ed71d16e4f3776f13176cf47d497bbcb2c95f303a08bc3ad97df2d08833d52035732b81f5a5c48cfb7199dc'
         '67790271997b476b4fdd6eb82c69d889de3a2d0f419d5338fa552d8ebdaef37f12596307fc1831af3e2bae1e270e714f41358a71f518d912bed2200917957c74')
 
 prepare() {
@@ -43,6 +46,9 @@ build() {
 }
 
 package() {
+  depends+=(
+    libsndfile libsndfile.so
+  )
   make DESTDIR="$pkgdir" install -C $pkgname-$pkgver
   install -vDm 644 $pkgname-$pkgver/{AUTHORS,ChangeLog,NEWS,README,TODO} -t "$pkgdir/usr/share/doc/$pkgname/"
 }

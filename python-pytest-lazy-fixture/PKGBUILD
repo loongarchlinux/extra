@@ -3,18 +3,24 @@
 _pkg=pytest-lazy-fixture
 pkgname=python-${_pkg}
 pkgver=0.6.3
-pkgrel=6
+pkgrel=7
 pkgdesc="Use fixtures in @pytest.mark.parametrize"
 arch=(any)
 url="https://github.com/tvorog/pytest-lazy-fixture"
 license=(MIT)
 depends=(python-pytest)
 makedepends=(python-setuptools)
-source=(https://files.pythonhosted.org/packages/source/${_pkg::1}/${_pkg}/${_pkg}-${pkgver}.tar.gz)
-sha256sums=('0e7d0c7f74ba33e6e80905e9bfd81f9d15ef9a790de97993e34213deb5ad10ac')
+source=(https://files.pythonhosted.org/packages/source/${_pkg::1}/${_pkg}/${_pkg}-${pkgver}.tar.gz
+        https://github.com/gabloe/pytest-lazy-fixture/commit/c4a4b20c481015799d3e2c20b2b861e18a37984b.patch)
+sha256sums=('0e7d0c7f74ba33e6e80905e9bfd81f9d15ef9a790de97993e34213deb5ad10ac'
+            '1ceb5ec446c2e975c8cd111bd4cbeff83087a4d78219db7549f74a6cd9b35325')
 
 build() {
   cd ${_pkg}-${pkgver}
+  # https://github.com/TvoroG/pytest-lazy-fixture/issues/65
+  # https://gitlab.archlinux.org/archlinux/packaging/packages/python-pytest-lazy-fixture/-/issues/1
+  # [PATCH] Fix for pytest 8
+  patch -Np1 -i ../c4a4b20c481015799d3e2c20b2b861e18a37984b.patch
   python setup.py build
 }
 

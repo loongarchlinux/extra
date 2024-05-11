@@ -4,40 +4,36 @@
 
 pkgname=zettlr
 _pkgname=${pkgname^}
-pkgver=3.0.3
-pkgrel=2
+pkgver=3.1.1
+pkgrel=1
 pkgdesc='A Markdown Editor for the 21st century'
 arch=(loong64 x86_64)
 url=https://www.zettlr.com
 _url="https://github.com/$_pkgname/$_pkgname"
-license=(GPL)
-_electron=electron25
+license=(GPL-3.0-only)
+_electron=electron29
 depends=(crimson-font
-         $_electron
-         pandoc
+         "$_electron"
+         pandoc-cli
          ttf-inconsolata
          ttf-liberation)
 makedepends=(gendesk
              git
-             nodejs-lts-iron # grep NODE_VERSION .github/workflows/build.yml
+             nodejs-lts-iron # grep NODE_VERSION: .github/workflows/build.yml
              node-gyp
              yarn
              jq)
-optdepends=('texlive-bin: For Latex support')
-# Migration path for soon to be deleted AUR package; remove if ever reinstated
-replaces=(zettlr-bin)
+optdepends=('texlive-latex: For Latex support')
 _archive="$_pkgname-$pkgver"
 source=("$_url/archive/v$pkgver/$_archive.tar.gz"
         "$pkgname.sh"
         "$pkgname.xml")
-sha256sums=('1bf24d8ab9153c63bc8335a27b64f7372ef6d155eb64b26951e5d997bd54c93b'
+sha256sums=('fc33a748c4bbe629e5b3dc8752190f190d740bdcf17621233d5f4f1ea0a4e630'
             'e300f2cac217f98ab5c365dccc7581410bc296f2842d52f7f1520dd6679d20cf'
             'c3ecbb490a1d4fa5bc42f7166cc375e5629a452d25bb1d4facb5541938681292')
 
-#_yarnargs="--cache-folder '$srcdir/cache' --link-folder '$srcdir/link'"
-
 prepare() {
-	local _electronVersion=$($_electron --version | sed -e 's/^v//')
+	local commit=$(zcat ${source[1]##*/} | git get-tar-commit-id)
 	gendesk -q -f -n \
 		--pkgname "$pkgname" \
 		--pkgdesc "$pkgdesc" \
@@ -46,19 +42,21 @@ prepare() {
 		--mimetypes 'text/markdown' \
 		--custom StartupWMClass="$_pkgname"
 	cd "$_archive"
+	local _electronVersion="$(cat /usr/lib/$_electron/version)"
 	readarray -t _oldElectron <  <(yarn info --cache --json 'electron' | jq -r '.children | .Version,.Cache.Checksum')
+	sed -i -e '/get-git-hash/d' -e "/GIT_COMMIT_HASH/s/await getGitHash()/\"$commit\"/" forge.config.js
 	sed -i "/${_oldElectron[1]:3}/d" yarn.lock
-	sed -i "s/\([\^ :]\)${_oldElectron[0]}/\1$_electronVersion/"  package.json yarn.lock
+	sed -i "s/\([\^ :]\)${_oldElectron[0]}/\1$_electronVersion/" package.json yarn.lock
 	echo -ne '#!/usr/bin/env bash\n\nexit 0' > scripts/get-pandoc.sh
 	sed -e "s/@ELECTRON@/$_electron/" "../${source[1]}" > $pkgname.sh
-	yarn $_yarnargs install --immutable # postinstall script installs electron-builder deps
+	yarn install --immutable # postinstall script installs electron-builder deps
 	ln -sf /usr/bin/pandoc resources/pandoc-linux-x64
 }
 
 build() {
 	cd "$_archive"
 	local NODE_ENV=''
-	yarn $_yarnargs package:linux-x64
+	yarn package:linux-x64
 }
 
 package() {

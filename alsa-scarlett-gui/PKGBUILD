@@ -1,8 +1,8 @@
 # Maintainer: George Rawlinson <grawlinson@archlinux.org>
 
 pkgname=alsa-scarlett-gui
-pkgver=0.3.3
-pkgrel=1
+pkgver=0.4.0
+pkgrel=2
 pkgdesc='GUI for the ALSA controls presented by the Focusrite Scarlett Gen 2/3 mixer driver'
 arch=('loong64' 'x86_64')
 url='https://github.com/geoffreybennett/alsa-scarlett-gui'
@@ -22,6 +22,10 @@ b2sums=('SKIP')
 build() {
   cd "$pkgname"
 
+  # Upstream states fortification level 2 is necessary
+  # https://github.com/geoffreybennett/alsa-scarlett-gui/commit/4cb1cd6e5765918f7eaad82a3370b693125e892b
+  export CFLAGS="${CFLAGS/_FORTIFY_SOURCE=3/_FORTIFY_SOURCE=2}"
+
   make \
     -C src \
     PREFIX=/usr \
@@ -31,6 +35,10 @@ build() {
 package() {
   cd "$pkgname"
 
+  # Upstream states fortification level 2 is necessary
+  # https://github.com/geoffreybennett/alsa-scarlett-gui/commit/4cb1cd6e5765918f7eaad82a3370b693125e892b
+  export CFLAGS="${CFLAGS/_FORTIFY_SOURCE=3/_FORTIFY_SOURCE=2}"
+
   make \
     -C src \
     PREFIX="$pkgdir/usr" \
@@ -38,7 +46,7 @@ package() {
     install
 
   # documentation
-  install -vDm644 -t "$pkgdir/usr/share/doc/$pkgname" ./*.md
+  install -vDm644 -t "$pkgdir/usr/share/doc/$pkgname" ./*.md ./docs/*.md
   install -vDm644 -t "$pkgdir/usr/share/doc/$pkgname/img" img/*
   install -vDm644 -t "$pkgdir/usr/share/doc/$pkgname/demo" demo/*
 }

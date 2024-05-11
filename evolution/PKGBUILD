@@ -8,24 +8,42 @@ pkgname=(
   evolution-bogofilter
   evolution-spamassassin
 )
-pkgver=3.50.3
-pkgrel=2
+pkgver=3.52.1
+pkgrel=1
 pkgdesc="Manage your email, contacts and schedule"
 url="https://wiki.gnome.org/Apps/Evolution"
 arch=(loong64 x86_64)
 license=(LGPL-2.1-or-later)
 depends=(
+  at-spi2-core
+  cairo
   cmark
+  dconf
   enchant
   evolution-data-server
+  gdk-pixbuf2
+  geocode-glib-2
+  glib2
+  glibc
   gnome-autoar
   gnome-desktop
   gspell
+  gtk3
+  hicolor-icon-theme
   libcanberra
   libgweather-4
+  libical
+  libldap
   libnotify
   libpst
+  libsecret
+  libsoup3
+  libxml2
   libytnef
+  nspr
+  nss
+  pango
+  sqlite
   webkit2gtk-4.1
 )
 makedepends=(
@@ -43,14 +61,8 @@ makedepends=(
   yelp-tools
 )
 options=(!emptydirs)
-_commit=d74dd6532ae531580f01bd85d98abaa0f22841e7  # tags/3.50.3^0
-source=("git+https://gitlab.gnome.org/GNOME/evolution.git#commit=$_commit")
-b2sums=('SKIP')
-
-pkgver() {
-  cd $pkgbase
-  git describe --tags | sed 's/[^-]*-g/r&/;s/-/+/g'
-}
+source=("git+https://gitlab.gnome.org/GNOME/evolution.git#tag=$pkgver")
+b2sums=('6a3abaad1d08b7031716fa68c2c43d179a6ae268fc07c9a342532df1e51d7a2e92a8b082ee230f04b983a780453b603c5a203da53165a0cc55214f0e1722230d')
 
 prepare() {
   cd $pkgbase
@@ -115,6 +127,10 @@ package_evolution-bogofilter() {
   depends=(
     "evolution=$pkgver"
     bogofilter
+    evolution-data-server
+    glib2
+    glibc
+    gtk3
   )
 
   mv bogofilter/* "$pkgdir"
@@ -124,6 +140,10 @@ package_evolution-spamassassin() {
   pkgdesc="Spam filtering for Evolution, using SpamAssassin"
   depends=(
     "evolution=$pkgver"
+    evolution-data-server
+    glib2
+    glibc
+    gtk3
     spamassassin
   )
 

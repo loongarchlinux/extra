@@ -1,0 +1,69 @@
+# Maintainer: Justin Kromlinger <hashworks@archlinux.org>
+# Contributor: Manuel Hüsers <aur@huesers.de>
+# Contributor: Nils Czernia <nils@czserver.de>
+
+pkgname=prometheus-postgres-exporter
+pkgver=0.15.0
+pkgrel=2
+
+pkgdesc="Prometheus exporter for PostgreSQL"
+url="https://github.com/prometheus-community/postgres_exporter"
+arch=('loong64' 'x86_64')
+license=('Apache-2.0')
+
+replaces=('prometheus-postgresql-exporter') # Superseded AUR package
+
+depends=('glibc')
+makedepends=('git' 'go')
+options=('!lto')
+
+backup=('etc/conf.d/prometheus-postgres-exporter')
+
+source=("https://github.com/prometheus-community/postgres_exporter/archive/v${pkgver}/postgres_exporter-${pkgver}.tar.gz"
+    "prometheus-postgres-exporter.conf"
+    "prometheus-postgres-exporter.service"
+    "prometheus-postgres-exporter.sysusers"
+    "prometheus-postgres-exporter.tmpfiles")
+
+sha512sums=('332700809454dba11e1e6b9cbc46be9683925a6c692e110efa1204ce1ad1457a8d2237ee8af20f1ee6d5c663266fc1629da6f4f5ff9151faf294a26af8be7682'
+            'd314ede0009fe920f1454a3ec640ec37b2963888f84e609f2fff2ecd2160fdb1b1321e3a02a0a039b31811003edb948073d2c0bb668c93522df041eb8708c85b'
+            '3a3621e5ff39615f7b9ff9f0dd21e8a5e0a60952174e035efec8109f5f080aaf520eb507d71e956d858809c9666831760adb95918e84bf5213ca7b062e829775'
+            'f5826c7784edd1d11c58dba0e3bf8ceb80ab9142c2996cc2cf4f0749aab4384ae3b263364f190ed82adb37af02fd446721143739677342242fcde477e34d297c'
+            '4d0a7dfcd8ba945dbe9613b04b063b641043fd0d463e1d27e9ada2f2dee1ffec621de1fc6be405478b3c7e75214a8f10f08dae5c42f21c04332c1d511e8b8159')
+
+build() {
+    cd "postgres_exporter-${pkgver}"
+
+    go build \
+        -trimpath \
+        -buildmode=pie \
+        -mod=readonly \
+        -modcacherw \
+        -ldflags "-linkmode external -extldflags ${LDFLAGS} \
+            -X "github.com/prometheus/common/version.Version=${pkgver}" \
+            -X "github.com/prometheus/common/version.Revision=${pkgver}" \
+            -X github.com/prometheus/common/version.Branch=tarball \
+            -X github.com/prometheus/common/version.BuildUser=someone@builder \
+            -X github.com/prometheus/common/version.BuildDate=$(date --date="@${SOURCE_DATE_EPOCH:-$(date +%s)}" +%Y%m%d-%H:%M:%S)" \
+        ./cmd/postgres_exporter
+
+}
+check() {
+    cd "postgres_exporter-${pkgver}"
+
+    go test -race  ./...
+}
+
+package() {
+    install -Dm640 prometheus-postgres-exporter.conf "${pkgdir}/etc/conf.d/prometheus-postgres-exporter"
+    install -Dm644 prometheus-postgres-exporter.service "${pkgdir}/usr/lib/systemd/system/prometheus-postgres-exporter.service"
+    install -Dm644 prometheus-postgres-exporter.sysusers "${pkgdir}/usr/lib/sysusers.d/prometheus-postgres-exporter.conf"
+    install -Dm644 prometheus-postgres-exporter.tmpfiles "${pkgdir}/usr/lib/tmpfiles.d/prometheus-postgres-exporter.conf"
+
+    cd "postgres_exporter-${pkgver}"
+
+    install -Dm644 README.md "$pkgdir/usr/share/doc/$pkgname/README.md"
+    install -Dm644 LICENSE "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
+
+    install -Dm755 "postgres_exporter" "${pkgdir}/usr/bin/prometheus-postgres-exporter"
+}

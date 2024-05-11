@@ -2,8 +2,8 @@
 
 _pkg=dask
 pkgname=python-${_pkg}
-pkgver=2023.8.0
-pkgrel=1
+pkgver=2024.4.1
+pkgrel=2
 pkgdesc="Parallel computing with task scheduling"
 arch=(any)
 url="https://dask.org"
@@ -84,12 +84,16 @@ checkdepends=(
     python-xxhash
 )
 #source=(https://files.pythonhosted.org/packages/source/${_pkg::1}/${_pkg}/${_pkg}-${pkgver}.tar.gz)
-source=(https://github.com/dask/dask/archive/${pkgver}/${pkgname}-${pkgver}.tar.gz)
-sha256sums=('6060414a7c52c6559c5b5114852a72c622399f4d1fe65188d09c2523e35bd5d9')
+source=(https://github.com/dask/dask/archive/${pkgver}/${pkgname}-${pkgver}.tar.gz
+        test-pandas-2.0)
+sha256sums=('66dbfb2c0d8e7a6ccc5df669215efe99eaa3283878577311daf3736335fb8586'
+            '9ddb45fefbfb1aaa3af20a6a2c6d4fcb20da5b3761e70313c92ae4f4f86634a2')
 
 prepare() {
   cd ${_pkg}-${pkgver}
   sed -e 's|versioneer\[toml\].*\"|versioneer[toml]\"|g' -i pyproject.toml
+
+  patch -p1 -i ../test-pandas-2.0 # Fix test with pandas 2.0 (Fedora)
 }
 
 build() {
@@ -101,15 +105,15 @@ check() {
   local site_packages=$(python -c "import site; print(site.getsitepackages()[0])")
   local pytest_options=(
     -vv
-    --ignore test_dir/$site_packages/$_pkg/tests/test_distributed.py
+    --deselect dask/dataframe/io/tests/test_sql.py::test_division_or_partition
     -k 'not test_RandomState_only_funcs'
     -W ignore::DeprecationWarning
-  )
+  ) # https://github.com/dask/dask/issues/10418
 
   cd ${_pkg}-${pkgver}
-  python -m installer --destdir=test_dir dist/*.whl
-  export PYTHONPATH="$PWD/test_dir/$site_packages:$PYTHONPATH"
-  pytest "${pytest_options[@]}" "$PWD/test_dir/$site_packages/$_pkg/"
+  python -m venv --system-site-packages test-env
+  test-env/bin/python -m installer dist/*.whl
+  test-env/bin/python -m pytest "${pytest_options[@]}"
 }
 
 package() {

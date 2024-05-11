@@ -2,35 +2,31 @@
 
 pkgname=libvirt-dbus
 pkgver=1.4.1
-pkgrel=2
+pkgrel=3
 pkgdesc="Wrapper around libvirt API to provide a high-level object-oriented API better suited for dbus-based applications"
 arch=('loong64' 'x86_64')
 url="https://libvirt.org/dbus.html"
-license=('LGPL')
+license=('LGPL-2.1-or-later')
 depends=('libvirt-glib' 'dbus' 'libssh')
-makedepends=('meson' 'ninja' 'python-docutils')
-options=('debug')
+makedepends=('meson' 'python-docutils')
+checkdepends=('dbus-python' 'python-gobject' 'python-pytest')
 validpgpkeys=('4252D86A52041137C291CADFC85C5E957062A701')
 source=("https://libvirt.org/sources/dbus/${pkgname}-${pkgver}.tar.xz"{,.asc})
 sha512sums=('8215df988ae5c60a179c8be2f181f2c0c64b23e20e0575110ee64a0e60fd03e1523ac27a854192990cd94c76b3b771358e350d7c1bceccb9c05e9e0bf9143563'
             'SKIP')
 
 build() {
-  cd "${srcdir}/${pkgname}-${pkgver}"
-  meson build \
-    --prefix=/usr \
-    --sbindir=/usr/bin \
-    --sysconfdir=/etc \
-    --localstatedir=/var
-  ninja -C build
+  arch-meson ${pkgname}-${pkgver} build
+  meson compile -C build
+}
+
+check() {
+  meson test -C build --print-errorlogs
 }
 
 package() {
-  cd "${srcdir}/${pkgname}-${pkgver}/build"
-  DESTDIR="$pkgdir" ninja install
+  meson install -C build --destdir "${pkgdir}"
 
-  chmod 750 "${pkgdir}/usr/share/polkit-1/rules.d"
-
-  install -dm0755 "${pkgdir}/usr/lib/sysusers.d"
-  echo "u libvirtdbus - -" > "${pkgdir}/usr/lib/sysusers.d/libvirtdbus.conf"
+  echo "u libvirtdbus - -" |
+    install -Dm0755 /dev/stdin "${pkgdir}/usr/lib/sysusers.d/libvirtdbus.conf"
 }

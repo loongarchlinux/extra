@@ -3,25 +3,25 @@
 # Contributor: Antoine Pierlot-Garcin <antoine at bokbox dot com>
 
 pkgname=python-pykka
-pkgver=3.1.1
+pkgver=4.0.2
 pkgrel=2
 pkgdesc="Easy to use concurrency abstractions for Python using the actor model"
 arch=('any')
 url="http://pykka.readthedocs.org/"
-license=('Apache')
+license=('Apache-2.0')
 depends=('python')
-makedepends=('python-setuptools')
+makedepends=('python-build' 'python-installer' 'python-poetry-core')
 optdepends=('python-gevent: Use gevent based actors from pykka.gevent')
 source=("https://pypi.python.org/packages/source/p/pykka/pykka-$pkgver.tar.gz")
-sha512sums=('7ca7885664598ba31dd7180f2a365d2fbb225a6dac26d09911b6bf0cafc55ea87d7e6212c4fff297bf4ca8d5b14134c656ea929e0869978bcd661309e2442908')
+sha512sums=('7c2acb8ccf2039269dd8d41f9aa74981c353618ee6c7eab1e8e6af9efc9897d8b8b6ec4d7de2b98447b051cdc5bdd59d79a3f76685b7a45826e8e01d90548108')
 
 build() {
   cd "pykka-$pkgver"
-  python setup.py build
+  python -m build --wheel --no-isolation
 }
 
 package() {
   cd "pykka-$pkgver"
-  python setup.py install --prefix=/usr --root="$pkgdir"/ --optimize=1 --skip-build
+  python -m installer --destdir="$pkgdir" dist/*.whl
   install -Dm644 LICENSE "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
 }

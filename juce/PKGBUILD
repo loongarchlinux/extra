@@ -3,7 +3,7 @@
 _name=JUCE
 pkgbase=juce
 pkgname=(juce{,-docs})
-pkgver=7.0.9
+pkgver=7.0.12
 pkgrel=1
 pkgdesc="Cross-platform C++ framework"
 arch=(loong64 x86_64)
@@ -13,6 +13,8 @@ license=(
   BSD-3-Clause
   GPL-3.0-only
   ISC
+  LicenseRef-Public-Domain
+  MIT
   Zlib
 )
 makedepends=(
@@ -41,23 +43,26 @@ source=(
   $pkgname-6.1.2-devendor_libs.patch
   $pkgname-6.1.2-projucer_disable_update_check.patch
   $pkgname-6.1.2-projucer_juce_paths.patch
+  $pkgname-7.0.11-helper_install_dir.patch
   ${pkgname}_VSTInterface.h
 )
-sha512sums=('e8519ca4ee55f126e14d7c927e2f36e7c30117a34da84f2b4e730afcea4a864b07455ad3f89d751fa47c8c155548b0c3150a667f1a9d199e582eadd146b6c697'
+sha512sums=('2ca0d143ae1106271f6b1d6542e5388d5c57d471de5c9cac1f09b06d2de0662c03b354dea83860008526ec70cc0843115ab546481ce9af0a2c3f298adc02b328'
             '52aba043ad3e5154b67f4d140f1d1e936962325763b47bbec57e1ef0a9cccbe6fa0b99598a756cb76853b5c1c5084b32055fc6a76f992b10323d867c82023399'
             '0cad32e728e40f59565f57a9d0369db5388f11fb62412a18950fc31f7cf2be679917c143e0d073b6f9a3728e13a3040dc11b18713657c90a0c9c12d60e3ab2a4'
             '8d5105e7ea0977cba598c13e53708ca88cdea52c3fc92cca8849eb4e64209d4902d8eef6a1bda0894138f2e1fe4247156b1d39e74207d978534768f92490f2e8'
             'ccec528a1daaf255a4686dad2d59314adab03a935a79893b04a8f04256179a2b1ba84fa563fd6781b314b9d2fc1ddf4892576f77d748e40577747013b3a60bc3'
             '2e1b823d9e5611e2c9efa1459f309f9add76d163411bb32cbd8c93f9751c6b97842af430f866f9ebce02d7602a655fd1f9d62f0530e5dc4d2621cbbd5444aad8'
             '766b761bf60a09fd01e9e6422df5b34c5305d41672b82b2c54819c581a952af5d7c8c39868c8615b57b14f772624bae4545ec878f2098ab5b8afb2ecf59146a1'
+            '600b84e83d2a736db95871017fa25ae8563185f03b4559d4cd9f1c43d492f0883239bfecfb63d7667b1444b62594914e28d36d0af85abfecf4a1e40b5760792c'
             '36a244740872cd203db3e1cebba5a5e245a3300a8c6c76046455ecc38083348f069987d0cba8f569390b4f0ba855799b8ff559cb540f02382b67a46d5b9cc420')
-b2sums=('1b6c42276b8cd08453f81a8463bdcea523d150988052d1c1beb81b6cc40831c4255e89024d39f5f768a84ad56feb16a63a3c6069c7805a30687ef815fabe9d00'
+b2sums=('d12ea992e2eb520e917ddde850eeeb517dfe1d8282b28eeea19b6cb7ad532f06bc82d68880ef7c7c65419677bd4e0f9dc700dee89ab342fc543845a4ce86f9ef'
         '2419fd707b03a5e33cef03576cbeddb99ab4fd67f4fbec8047668ffb1daf78803cd608d7255893394e6d83dce5afd51608793384567228130a0082bcc9a67f60'
         '56434fb5e2ed1db25963b8046963edcf5b0074d1f52810bb57f0348b6d38251b3c976683f1450399646d2999082f953d60416f2871d43bc6cc4d76edc9ab34d7'
         'cc766ff15858ed1d66c4f79b182903931e9bcfb0c83ab7ef5fccb487185b9ea31284764c232df962b1438671d79710f9a8d5a0e1d36ffeea43fca23b446c80e8'
         'ee72102ecdf57490e9aec0fe6368d61e3c9f86a8b13fd35b3889eac591d716cc98c19b87d6d09360848202b4a108bbc39639d36e28d69908c80ee514b2cf40ee'
         'cd6c59deed414529c49dbf8506905cc7848bb48073e054d4cf2450c17c7268860330bd2d2e6d30e5a2a68cec2106e3498619e85ce602439f75ba9393084498f6'
         '4d42e73b4d15f0ef16a55d927de43127518f4420fe54f78b2c2a0e57a08eb192138f65f381017d0f1e6ca286009f63f16c269b58e7405c35894c0bc3ac91de7b'
+        '6f8c7751375ec1c4ccf23ca47dbd7ff948a5997300379d9d4200d584e2428e26ccb7219c84793dfd96f5fd7d6445d4f15df01747f3116047fcb3e29fdc71b2f3'
         'f56e59984bde66d482fdeae3cefc0d4dc9e25c9c170f2f0b46ec53bd63ec72432b1764ff282ef8093c1029a427852c09087827d22023b526786a03977cbb7a32')
 
 prepare() {
@@ -70,6 +75,14 @@ prepare() {
     --icon "Projucer" \
     --genericname "Code manager and editor" \
     --categories "Development"
+
+  # extract licenses from vendored sources
+  sed -n '42,69p' $_name-$pkgver/modules/juce_opengl/opengl/juce_gl.h > glew.BSD-3-Clause.txt
+  sed -n '72,92p' $_name-$pkgver/modules/juce_opengl/opengl/juce_gl.h > mesa.MIT.txt
+  sed -n '95,114p' $_name-$pkgver/modules/juce_opengl/opengl/juce_gl.h > khronos.MIT.txt
+  sed -n '2,16p' $_name-$pkgver/modules/juce_box2d/box2d/Box2D.h > box2d.Zlib.txt
+  sed -n '3,8p' $_name-$pkgver/modules/juce_audio_processors/format_types/pslextensions/ipslcontextinfo.h > pslextensions.LicenseRef-Public-Domain.txt
+  cp -v $_name-$pkgver/modules/juce_audio_processors/format_types/LV2_SDK/lv2/COPYING lv2.ISC.txt
 
   cd $_name-$pkgver
   for _patch in ../*.patch; do
@@ -130,6 +143,7 @@ package_juce() {
   install -vDm 644 $_name-$pkgver/{BREAKING_CHANGES,CHANGE_LIST,README}.md -t "$pkgdir/usr/share/doc/$pkgname/"
   # license
   install -vDm 644 $_name-$pkgver/LICENSE.md -t "$pkgdir/usr/share/licenses/$pkgname/"
+  install -vDm 644 ./*.txt -t "$pkgdir/usr/share/licenses/$pkgname/"
 }
 
 package_juce-docs() {
@@ -139,4 +153,5 @@ package_juce-docs() {
   )
   # license
   install -vDm 644 $_name-$pkgver/LICENSE.md -t "$pkgdir/usr/share/licenses/$pkgname/"
+  install -vDm 644 ./*.txt -t "$pkgdir/usr/share/licenses/$pkgname/"
 }

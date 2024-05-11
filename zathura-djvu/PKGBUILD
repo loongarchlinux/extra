@@ -6,28 +6,24 @@
 
 pkgname=zathura-djvu
 pkgver=0.2.9
-pkgrel=4
-
+pkgrel=7
 pkgdesc="DjVu support for Zathura"
 url="https://pwmt.org/projects/zathura-djvu/"
 arch=('loong64' 'x86_64')
-license=('custom')
-
+license=('Zlib')
 depends=('djvulibre' 'zathura' 'desktop-file-utils')
 makedepends=('meson' 'ninja')
+source=("${pkgname}-${pkgver}.tar.gz::https://github.com/pwmt/${pkgname}/archive/refs/tags/${pkgver}.tar.gz")
+sha512sums=('54fca6bac30b73caf5ba882b2a52538845b9f2c5bcdc671071b2324ba6e1844510a400c87f17ea91ee5dbb768bc94a989df6657ee701041c924607fa846ba3f7')
 
-source=(zathura-djvu-$pkgver.tar.gz::https://github.com/pwmt/zathura-djvu/archive/$pkgver.tar.gz)
-
-sha256sums=('84fae6da42e7cdc2e49ed4cd4f0315ac09716e95358b9c7487803a2cff47dbca')
-
-build(){
-  cd zathura-djvu-$pkgver
-  arch-meson build
-  ninja -C build
+build() {
+        cd "${pkgname}-${pkgver}"
+        arch-meson build
+        ninja -C build
 }
 
-package(){
-  DESTDIR="$pkgdir" ninja -C zathura-djvu-$pkgver/build install
-  install -Dm0644 zathura-djvu-$pkgver/LICENSE "$pkgdir"/usr/share/licenses/$pkgname/LICENSE
+package() {
+        cd "${pkgname}-${pkgver}"
+        DESTDIR="${pkgdir}" ninja -C build install
+        install -Dm 664 LICENSE "${pkgdir}/usr/share/licenses/${pkgname}/LICENSE"
 }
-

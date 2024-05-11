@@ -4,14 +4,15 @@
 # Contributor: Nick Østergaard
 # Contributor: Rachel Mant <aur@dragonmux.network>
 # Contributor: Kyle Keen <keenerd@gmail.com>
+# Contributor: Alexander Lutsai <s.lyra@ya.ru>
 
 pkgname=kicad
-pkgver=7.0.10
-pkgrel=1
+pkgver=8.0.2
+pkgrel=2
 pkgdesc='Electronic schematic and printed circuit board (PCB) design tools'
 arch=('loong64' 'x86_64')
 url='http://kicad.org/'
-license=('GPL')
+license=('GPL-3.0-or-later')
 depends=(
   'curl'
   'glew'
@@ -22,6 +23,7 @@ depends=(
   'python-wxpython'
   'wxwidgets-gtk3'
   'unixodbc'
+  'libgit2'
 )
 makedepends=(
   'git'
@@ -35,16 +37,15 @@ optdepends=(
   'kicad-library: for footprints, symbols and templates'
   'kicad-library-3d: for 3D models of components'
 )
-_commit='567c5bc8db09d04b9fab77f94d88e6493a903636'
+_commit='ef34436d7d4bb488a9559d7fae32dc956d37c669'
 source=(
-  "$pkgname::git+https://gitlab.com/kicad/code/kicad.git#commit=$_commit"
+  "$pkgname::git+https://gitlab.com/kicad/code/kicad.git#tag=$pkgver"
   'fix-archive-permissions.patch'
   'fix-version-string.patch'
 )
-sha512sums=('SKIP'
+sha512sums=('22d45247a71ae338cc5ce3986f609c050bb795853fb35581efb363f76fb983e78d26021cd002d395e822940e8cc42b0a7143b9a6ae77fb5a92e4e6c4e70db93b'
             'e36912e4144c6debe33f1711ca7a2da020389a6e376282c70f534ce9e685d0b35b58d88b810327d8baeb3466e87eda246ebf181c18e134e80bc73b91dae4bf02'
             '17100967610c85ce2e8a860dcf703a87dc0c20f52d3f056cdb5d16323160e8594698bd51e095aea63c00a75ce8b121be681e93cec1bab72a8d1d4eb8065a91f5')
-b2sums=()
 
 pkgver() {
   cd "$pkgname"
@@ -57,6 +58,7 @@ prepare() {
 
   patch -p1 -i "$srcdir/fix-archive-permissions.patch"
   patch -p1 -i "$srcdir/fix-version-string.patch"
+  git cherry-pick -n 1cbf6a1872c71d3bb8c00e02783cbf84b74714b3 # fix build with libgit2 1.8
 }
 
 build() {
@@ -67,6 +69,7 @@ build() {
     -D CMAKE_BUILD_TYPE=Release \
     -D CMAKE_INSTALL_PREFIX=/usr \
     -D KICAD_USE_EGL=ON \
+    -D KICAD_USE_BUNDLED_GLEW=OFF \
     -D KICAD_BUILD_I18N=ON \
     -D KICAD_I18N_UNIX_STRICT_PATH=ON \
     -D KICAD_BUILD_QA_TESTS=OFF \

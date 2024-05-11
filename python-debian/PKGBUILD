@@ -5,48 +5,40 @@
 
 pkgname=python-debian
 pkgver=0.1.49
-pkgrel=2
+pkgrel=3
 pkgdesc='Python module to work with Debian-related data formats'
 arch=('any')
 url='https://salsa.debian.org/python-debian-team/python-debian'
-license=('GPL')
+license=('GPL-2.0-or-later')
 depends=(
   'python'
   'python-chardet'
   'python-six'
 )
 makedepends=(
-  'git'
   'python-build'
   'python-installer'
   'python-wheel'
   'python-setuptools'
 )
 checkdepends=('python-pytest')
-_commit='23f50416fce5ee7f1590b3ad1a49ec52e2e986d7'
-source=("$pkgname::git+$url.git#commit=$_commit")
-b2sums=('SKIP')
-
-pkgver() {
-  cd "$pkgname"
-
-  git describe --tags
-}
+source=("$url/-/archive/$pkgver/$pkgname-$pkgver.tar.gz")
+b2sums=('2536651e743ad5102e70f27f0a2358ab1ea0b43c70a729c5122fd81973787898ef7518ac3c6c75adaf3ca422b3db1385f1bc10bc545139f9d74cd242079ea45a')
 
 build() {
-  cd "$pkgname"
+  cd "$pkgname-$pkgver"
 
   python -m build --wheel --no-isolation
 }
 
 check() {
-  cd "$pkgname"
+  cd "$pkgname-$pkgver"
 
   pytest -v
 }
 
 package() {
-  cd "$pkgname"
+  cd "$pkgname-$pkgver"
 
   python -m installer --destdir="$pkgdir" dist/*.whl
 }

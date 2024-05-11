@@ -5,7 +5,7 @@
 pkgname=python-proxmoxer
 _name=${pkgname#python-}
 pkgver=2.0.1
-pkgrel=4
+pkgrel=5
 pkgdesc="Python Wrapper for the Proxmox 2.x API (HTTP and SSH)"
 arch=('any')
 url="https://github.com/proxmoxer/proxmoxer"
@@ -13,7 +13,7 @@ license=('MIT')
 depends=('python')
 optdepends=('python-requests: for https backend'
 			'python-paramiko: for ssh_paramiko backend')
-makedepends=('python-setuptools')
+makedepends=('python-setuptools' 'python-build' 'python-installer' 'python-wheel')
 source=("https://files.pythonhosted.org/packages/source/${_name::1}/${_name}/${_name}-${pkgver}.tar.gz")
 sha256sums=('088923f1a81ee27631e88314c609bfe22b33d8a41271b5f02e86f996f837fe31')
 
@@ -21,11 +21,11 @@ build() {
   cd "${srcdir}/${_name}-${pkgver}"
   # remove tests because they interfere with other system packages
   sed -i "s/, 'tests', 'tests.base'//" setup.py
-  python setup.py build
+  python -m build --wheel --no-isolation
 }
 
 package() {
   cd "${srcdir}/${_name}-${pkgver}"
-  python setup.py install --root="${pkgdir}"/ --optimize=1 --skip-build
+  python -m installer --destdir="$pkgdir" dist/*.whl
   install -Dm 644 LICENSE.txt "${pkgdir}/usr/share/licenses/${pkgname}/LICENSE"
 }

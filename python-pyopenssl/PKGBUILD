@@ -5,7 +5,7 @@
 
 pkgname=python-pyopenssl
 pkgver=24.0.0
-pkgrel=1
+pkgrel=2
 pkgdesc='Python wrapper around the OpenSSL library'
 arch=('any')
 url='https://pyopenssl.org/'

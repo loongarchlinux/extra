@@ -1,37 +1,45 @@
 # Maintainer: Antonio Rojas <arojas@archlinux.org>
 
 pkgname=falkon
-pkgver=23.08.4
-pkgrel=2
+pkgver=24.02.2
+pkgrel=4
 pkgdesc='Cross-platform QtWebEngine browser'
 arch=(loong64 x86_64)
 url='https://www.falkon.org/'
-license=(GPL3)
-depends=(qt5-webengine qt5-x11extras qt5-svg karchive5)
-makedepends=(extra-cmake-modules qt5-tools kio5 purpose5 libgnome-keyring pyside2 shiboken2)
-optdepends=('kio5: KDE integration'
-            'purpose5: KDE integration'
+license=(GPL-2.0-or-later)
+depends=(gcc-libs
+         glibc
+         karchive
+         libxcb
+         openssl
+         qt6-5compat
+         qt6-base
+         qt6-declarative
+         qt6-webchannel
+         qt6-webengine)
+makedepends=(extra-cmake-modules
+             kio
+             libgnome-keyring
+             purpose
+             pyside6
+             qt6-tools
+             shiboken6)
+optdepends=('kcoreaddons: KDE integration'
+            'kcrash: KDE integration'
+            'kio: KDE integration'
+            'kjobwidgets: KDE integration'
+            'kwallet: KDE integration'
             'libgnome-keyring: gnome keyring integration'
-            'pyside2: Python plugins')
-groups=(kde-applications kde-network)
-source=(https://download.kde.org/stable/release-service/$pkgver/src/$pkgname-$pkgver.tar.xz{,.sig}
-        https://invent.kde.org/network/falkon/-/commit/27c59ed.patch
-        https://invent.kde.org/network/falkon/-/commit/bfba0a5.patch)
-sha256sums=('f08484b768ccc7cfc097d473c1ccc66986f839f79b5f3516a9aeba4ee7286d63'
-            'SKIP'
-            '1e751930e29d21074ea4629bc670bbe313697fdff7766b1026b9758819eb00fb'
-            '254bbd5c03ba64b42a079358ef851e2a142ebe0425129b6784c8363b3e6b3692')
+            'purpose: KDE integration'
+            'pyside6: Python plugins')
+groups=(kde-applications
+        kde-network)
+source=(https://download.kde.org/stable/release-service/$pkgver/src/$pkgname-$pkgver.tar.xz{,.sig})
+sha256sums=('f8607830d99759f55336ad7d8e8f3bf9df9696cb5632a4e308586e8920d7e9cb'
+            'SKIP')
 validpgpkeys=(CA262C6C83DE4D2FB28A332A3A6A4DB839EAA6D7  # Albert Astals Cid <aacid@kde.org>
               F23275E4BF10AFC1DF6914A6DBD2CE893E2D1C87  # Christoph Feck <cfeck@kde.org>
               D81C0CB38EB725EF6691C385BB463350D6EF31EF) # Heiko Becker <heiko.becker@kde.org>
-
-prepare() {
-  cd $pkgname-$pkgver
-  # Fix form detection for password managers
-  patch -Np1 -i ../27c59ed.patch
-  # MainApplication: Enable localStorage for private -- https://bugs.kde.org/show_bug.cgi?id=393677
-  patch -Np1 -i ../bfba0a5.patch
-}
 
 build() {
   cmake -B build -S $pkgname-$pkgver \

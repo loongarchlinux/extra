@@ -5,8 +5,8 @@
 # Contributor: Peter Garceau <RockyChimp@gmail.com>
 
 pkgname=python-sympy
-pkgver=1.12
-pkgrel=2
+pkgver=1.12.1rc1
+pkgrel=1
 arch=('any')
 pkgdesc='Symbolic manipulation package (Computer Algebra System), written in pure Python'
 url='https://sympy.org/en/index.html'
@@ -19,7 +19,7 @@ makedepends=('python-build'
              'python-setuptools'
              'python-wheel')
 source=("https://github.com/sympy/sympy/archive/sympy-$pkgver/sympy-$pkgver.tar.gz")
-sha512sums=('96a89b88f6912d70c56f5bd1903dd3c518963118ff25d033cdcb7da2f260b8ee209d3ab4a4394dd2b5dc0b4585b71ccd55d55c8e5c6e28024cccbedf07ee4360')
+sha512sums=('38c4271c602bc8563a070d5f55122ace6baec5b72bc71a666c7a54cebcbc45833de0826f7d390fce84cba478c9ead12f2ee8040c19ca8d4f98d787f608aefdf0')
 
 build() {
   cd sympy-sympy-$pkgver
@@ -28,7 +28,7 @@ build() {
 
 check() {
   cd sympy-sympy-$pkgver
-  python bin/test
+  bin/test -v
 }
 
 package() {

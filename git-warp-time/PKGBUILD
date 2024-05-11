@@ -1,21 +1,23 @@
 # Maintainer: Caleb Maclennan <caleb@alerque.com>
 
 pkgname=git-warp-time
-pkgver=0.7.2
-pkgrel=2
+pkgver=0.7.6
+pkgrel=4
 pkgdesc='reset timestamps of Git repository files to the time of the last modifying commit'
 arch=(loong64 x86_64)
 url="https://github.com/alerque/$pkgname"
 license=(GPL-3.0-only)
-depends=(gcc-libs
-         glibc
-         libgit2 libgit2.so)
+depends=(gcc-libs # libgcc_s.so 
+         glibc # libc.so libm.so
+         libgit2)
 makedepends=(cargo
              git
              jq)
 _archive="$pkgname-$pkgver"
-source=("$url/releases/download/v$pkgver/$_archive.tar.xz")
-sha256sums=('8acada8b564e5a725640ecbc66051415b5bd3376c5f9cce4c7c6e83bce8e6b06')
+source=("$url/releases/download/v$pkgver/$_archive.tar.zst"{,.asc})
+sha256sums=('5d4d1f6abaad6af76fcad356cc5882e5ca3583e916e50dbbff2d2a5acede4b0f'
+            'SKIP')
+validpgpkeys=('9F377DDB6D3153A48EB3EB1E63CC496475267693') # Caleb Maclennan <caleb@alerque.com> (@alerque)
 
 prepare() {
 	cd "$_archive"
@@ -25,25 +27,20 @@ prepare() {
 	cargo fetch --locked --target "$(rustc -vV | sed -n 's/host: //p')"
 }
 
-_srcenv() {
-	cd "$_archive"
-	export RUSTUP_TOOLCHAIN=stable
-	export CARGO_TARGET_DIR=target
-}
-
 build() {
-	_srcenv
+	cd "$_archive"
 	CFLAGS+=' -ffat-lto-objects'
 	./configure --prefix /usr --enable-shared
 	make
 }
 
 check() {
-	_srcenv
+	cd "$_archive"
 	make check
 }
 
 package() {
+	depends+=(libgit2.so)
 	cd "$_archive"
 	make DESTDIR="$pkgdir" install
 }

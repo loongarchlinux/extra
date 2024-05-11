@@ -1,43 +1,49 @@
-# Maintainer: Jonas Witschel <diabonas@archlinux.org>
+# Maintainer:
+# Contributor Jonas Witschel <diabonas@archlinux.org>
+
 pkgname=texworks
-pkgver=0.6.8
-_tag=605a1c74393fb84acdf7dc9d8cf42d154d9de719 # git rev-parse "release-$pkgver"
-pkgrel=2
+pkgver=0.6.9
+pkgrel=3
 pkgdesc='Unicode-based, TeX-aware editor with integrated PDF viewer'
 arch=('loong64' 'x86_64')
 url='https://www.tug.org/texworks/'
 license=('GPL')
-depends=('hunspell' 'libsynctex' 'poppler-qt5' 'qt5-base' 'qt5-declarative' 'qt5-script' 'libpoppler-qt5.so')
-makedepends=('git' 'cmake' 'lua' 'python' 'qt5-tools')
-checkdepends=('gsfonts' 'poppler-data' 'xorg-server-xvfb')
+depends=('hunspell' 'libsynctex' 'poppler-qt6' 'qt6-base' 'qt6-declarative' 'qt6-tools' 'qt6-5compat' 'libpoppler-qt6.so')
+makedepends=('cmake' 'lua' 'python')
+checkdepends=('gsfonts' 'poppler-data')
 optdepends=('gsfonts: correctly display PDF files without embedded fonts'
             'lua: Lua scripts support'
             'poppler-data: correctly display certain CJK documents'
             'python: Python scripts support'
             'texlive-basic: typeset TeX documents')
-source=("git+https://github.com/TeXworks/texworks.git?signed#tag=$_tag")
-sha512sums=('SKIP')
+source=("https://github.com/TeXworks/texworks/archive/release-$pkgver/$pkgname-$pkgver.tar.gz"
+         https://github.com/TeXworks/texworks/commit/dae1586a.patch
+         https://github.com/TeXworks/texworks/commit/f8962bca.patch)
+sha512sums=('54677205e7767f377fa66be6b2c43bec2d3c3981ea1a24eb11f45608c1cb3ddc98852c43611680273601eb8e8ae4a6095c9b9a9338ee69ef0475a43f2191551e'
+            'a9d6d16ffc234337ed3a09b52792bedb1aeeac5f1dc3bd293548aa595904176d946b4566e2007a2f25d3efdcd2452f80080bd9ac1972d256d3f1b0665293a937'
+            '74004758c45226f76c9eba8d702d8473f650ef74f9df3cb5a2b8bccfe30f06f1aac4b65acf2e14038818332e0955bf111d974ea0e684ac74ef42a2412f91cfda')
 validpgpkeys=('8740ED04AF6A4FCC6BC51C426806F10000582F84'
               '21BC42D38D1B03BE59F7A8F15016D150EA64A3D9') # Stefan Löffler (TeXworks) <st.loeffler@gmail.com>
 
-pkgver() {
-	cd "$pkgname"
-	git describe | sed 's/^release-//;s/\([^-]*-\)g/r\1/;s/-/./g'
+prepare() {
+  patch -d $pkgname-release-$pkgver -p1 < dae1586a.patch # Fix finding Python
+  patch -d $pkgname-release-$pkgver -p1 < f8962bca.patch # Fix build of Python plugin
 }
 
 build() {
 	cmake -B build \
-	      -S "$pkgname" \
+	      -S "$pkgname-release-$pkgver" \
 	      -DCMAKE_BUILD_TYPE=None \
 	      -DCMAKE_INSTALL_PREFIX=/usr \
 	      -DTW_BUILD_ID='Arch Linux' \
-	      -DWITH_PYTHON=ON
+	      -DWITH_PYTHON=ON \
+              -DQT_DEFAULT_MAJOR_VERSION=6
 	cmake --build build
 }
 
 check() {
 	cd build
-	xvfb-run ctest --output-on-failure
+	QT_QPA_PLATFORM=offscreen ctest --output-on-failure
 }
 
 package() {

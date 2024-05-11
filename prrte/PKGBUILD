@@ -3,8 +3,8 @@
 
 pkgbase=prrte
 pkgname=(prrte{,-docs})
-pkgver=3.0.3
-pkgrel=1
+pkgver=3.0.5
+pkgrel=3
 pkgdesc="PMIx Reference RunTime Environment"
 arch=(loong64 x86_64)
 url="https://github.com/openpmix/prrte"
@@ -16,10 +16,17 @@ makedepends=(
   openpmix
   perl
 )
-conflicts=(putty)  # putty also provides a pterm: https://gitlab.archlinux.org/archlinux/packaging/packages/prrte/-/issues/1
-source=($pkgname-$pkgver.tar.gz::$url/releases/download/v$pkgver/$pkgname-$pkgver.tar.gz)
-sha512sums=('b2443fa225b279ab31a5714b3f89c50e1b12667bc58357f885eee1e4fb8a6d22e533dea5cc2a2b6618334e0ed13b5dbc4c3ea88446dd454480f4300e08293a4d')
-b2sums=('5c68f6ca10089cc13fc326c2e65c86254f8063a4b5d3844c26c77d9ed47f4a939d72dd668959f7351a95144bf8c6289b5223cc262c8847913430263bcb6b77ac')
+source=(
+  $pkgname-$pkgver.tar.gz::$url/releases/download/v$pkgver/$pkgname-$pkgver.tar.gz
+  prte-mca-params.conf
+  prrte-ssh
+)
+sha512sums=('ee463e8733f28512b7057ed856ec4dcdd0808895fb30e7abda6b4c6e9bcae34be79936e243f33171e686dfa1942f8099432ebe892d05b04e312c723bf6176894'
+            '7a1c9d8785bf9bd51a72e526bcdceb8e7bea382528ac67989c56b0b5643d2b86cef04414136d5f959630da1eb67ae5dddb87e074aa28e974f01edadb492e9e7a'
+            'ababfc5afa98c1f050b2f3f40a923e3fd83b2048c96689efa9f2f032670253136dcae800117875bf46fb5625e2dacee45b036eb7df807cceb98b059b6fab913a')
+b2sums=('a3a77877ae967ce28d47a6589ec7f5caabc2f25f98b2d282bff37524b35f43e24c827e94a1972634bcb3e15db30f44746c27162744bfc546ebbdde036f55b0f7'
+        'ebdad2a0c220c6ecd10df0804f5bd2afa9aa50652fdb38d45ebf8f1402cbbb6521ac358371d2055011e907e3ed4b0269e5f92880bb4f1758ef2ecc184110ccb7'
+        'cdac9def9d40d3df5e13449cfb8f0c977eaf5da5884135221c29b7add01c0b9bc151558f038ae972344cea242130ee6baa32f2b769f004c5517edf4200869337')
 
 _pick() {
   local p="$1" f d; shift
@@ -34,6 +41,8 @@ _pick() {
 prepare() {
   cd $pkgname-$pkgver
   ./autogen.pl
+  # append our options to the system config file
+  cat ../prte-mca-params.conf >> src/etc/prte-mca-params.conf
 }
 
 build() {
@@ -41,6 +50,11 @@ build() {
     --prefix=/usr
     --sysconfdir=/etc/$pkgname
   )
+
+  # set environment variables for reproducible build
+  # see https://docs.prrte.org/en/latest/release-notes.html
+  export HOSTNAME=buildhost
+  export USER=builduser
 
   cd $pkgname-$pkgver
   ./configure "${configure_options[@]}"
@@ -57,10 +71,11 @@ package_prrte() {
   depends=(
     glibc
     hwloc
-    libevent
+    libevent libevent_{core,pthreads}-2.1.so
     openpmix libpmix.so
   )
   optdepends=(
+    'openssh: for execution on remote hosts via plm_ssh_agent'
     'prrte-docs: for documentation'
   )
   provides=(libprrte.so)
@@ -76,6 +91,13 @@ package_prrte() {
     _pick $pkgbase-docs usr/share/{doc,prte/rst}
   )
   install -vDm 644 $pkgname-$pkgver/LICENSE -t "$pkgdir/usr/share/licenses/$pkgname/"
+
+  # avoid a conflict with putty which also provides pterm: https://gitlab.archlinux.org/archlinux/packaging/packages/prrte/-/issues/1
+  mv "$pkgdir"/usr/bin/{,prrte-}pterm
+  mv "$pkgdir"/usr/share/man/man1/{,prrte-}pterm.1
+
+  # install our dummy ssh wrapper
+  install -vDm 755 prrte-ssh -t "$pkgdir/usr/bin/"
 }
 
 package_prrte-docs() {

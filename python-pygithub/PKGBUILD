@@ -1,22 +1,22 @@
 # Maintainer: Felix Yan <felixonmars@archlinux.org>
 
 pkgname=python-pygithub
-pkgver=2.1.1
-pkgrel=1
+pkgver=2.3.0
+pkgrel=2
 pkgdesc="Use the full Github API v3"
 arch=('any')
 license=('LGPL')
 url="https://github.com/PyGithub/PyGithub"
 depends=('python-deprecated' 'python-pyjwt' 'python-requests' 'python-pynacl' 'python-dateutil')
-makedepends=('python-setuptools-scm')
+makedepends=('python-build' 'python-installer' 'python-setuptools-scm' 'python-wheel')
 checkdepends=('python-pytest' 'python-cryptography' 'python-httpretty' 'python-parameterized')
 source=("$pkgname-$pkgver.tar.gz::https://github.com/PyGithub/PyGithub/archive/v$pkgver.tar.gz")
-sha512sums=('a98da47b3c4cef564ebb746f83a26cedd17fae28da64c55484e7e6df0ccad91527a5fc138ea5436215462aed9844bd8a8b718ac4ebaa813243f2d821835d940f')
+sha512sums=('aa0496b57550923fa304bd22100ed480cd2a9e909e9030014252e9106f7bde7ba16b1f693b88c9f17c672e58e1ae9a2a5f11adcf97fc6f4c7258eacbaf6fafc0')
 
 build() {
   cd PyGithub-$pkgver
   SETUPTOOLS_SCM_PRETEND_VERSION=${pkgver} \
-  python setup.py build
+  python -m build --wheel --no-isolation
 }
 
 check() {
@@ -26,6 +26,5 @@ check() {
 
 package() {
   cd PyGithub-$pkgver
-  SETUPTOOLS_SCM_PRETEND_VERSION=${pkgver} \
-  python setup.py install --root="$pkgdir" --optimize=1
+  python -m installer --destdir="$pkgdir" dist/*.whl
 }

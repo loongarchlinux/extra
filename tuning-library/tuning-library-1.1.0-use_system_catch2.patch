@@ -1,21 +1,45 @@
-diff -ruN a/CMakeLists.txt b/CMakeLists.txt
---- a/CMakeLists.txt	2021-07-01 20:32:19.000000000 +0200
-+++ b/CMakeLists.txt	2021-10-10 00:56:11.485842867 +0200
-@@ -14,7 +14,6 @@
+diff --git i/CMakeLists.txt w/CMakeLists.txt
+index e3cf7f0..7ea6513 100644
+--- i/CMakeLists.txt
++++ w/CMakeLists.txt
+@@ -13,9 +13,9 @@ target_sources(tuning-library-symbolcheck PRIVATE
+         tests/symbolcheck2.cpp)
  
  
++find_package(Catch2 3 REQUIRED)
  add_executable(tuning-library-tests)
 -target_include_directories(tuning-library-tests PRIVATE libs/catch2)
- target_link_libraries(tuning-library-tests PRIVATE ${PROJECT_NAME})
+-target_link_libraries(tuning-library-tests PRIVATE ${PROJECT_NAME})
++target_link_libraries(tuning-library-tests PRIVATE ${PROJECT_NAME} Catch2::Catch2WithMain)
  target_sources(tuning-library-tests PRIVATE
          tests/alltests.cpp)
-diff -ruN a/tests/alltests.cpp b/tests/alltests.cpp
---- a/tests/alltests.cpp	2021-07-01 20:32:19.000000000 +0200
-+++ b/tests/alltests.cpp	2021-10-10 00:57:22.469112753 +0200
+ 
+diff --git i/tests/alltests.cpp w/tests/alltests.cpp
+index 03c7cff..857a9d3 100644
+--- i/tests/alltests.cpp
++++ w/tests/alltests.cpp
 @@ -1,5 +1,5 @@
  #define CATCH_CONFIG_RUNNER
 -#include "catch2.hpp"
-+#include <catch2/catch.hpp>
++#include "catch2/catch_all.hpp"
  
  #include "Tunings.h"
  #include <iomanip>
+@@ -14,6 +14,8 @@
+ ** few known tunings across the whole spectrun
+ */
+ 
++using namespace Catch;
++
+ std::string testFile(std::string fn) { return std::string("tests/data/") + fn; }
+ 
+ std::vector<std::string> testSCLs()
+@@ -769,7 +771,7 @@ TEST_CASE("Dos Line Endings and Blanks")
+     {
+         auto s = Tunings::readSCLFile(testFile("31edo_dos_lineends.scl"));
+         REQUIRE(s.count == 31);
+-        INFO("If coded with std::getline this will contain a \\r on unixes")
++        INFO("If coded with std::getline this will contain a \\r on unixes");
+         REQUIRE(s.description == "31 equal divisions of octave");
+ 
+         // the parsing should ive the same floatvalues independent of crlf status obviously

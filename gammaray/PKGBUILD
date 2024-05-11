@@ -2,15 +2,37 @@
 
 pkgname=gammaray
 pkgver=3.0.0
-pkgrel=5
+pkgrel=9
 pkgdesc='A tool for examining the internals of a Qt application and to some extent also manipulate it'
 arch=(loong64 x86_64)
 url='https://www.kdab.com/gammaray/'
-license=(GPL)
-depends=(qt6-tools qt6-svg)
-makedepends=(cmake qt5-svg qt5-script qt5-wayland qt5-webengine qt5-scxml qt5-location qt5-connectivity syntax-highlighting5
-             qt6-shadertools qt6-wayland qt6-webengine qt6-scxml qt6-location qt6-connectivity doxygen)
+license=(GPL-2.0-or-later)
+depends=(gcc-libs
+         glibc
+         libelf
+         qt6-base
+         qt6-svg
+         qt6-tools
+         syntax-highlighting)
+makedepends=(cmake
+             doxygen
+             qt5-connectivity
+             qt5-location
+             qt5-script
+             qt5-scxml
+             qt5-svg
+             qt5-wayland
+             qt5-webengine
+             syntax-highlighting5
+             qt6-connectivity
+             qt6-location
+             qt6-scxml
+             qt6-shadertools
+             qt6-wayland
+             qt6-webengine)
 optdepends=('qt5-base: Qt5 applications support'
+            'qt5-svg: Qt5 applications support'
+            'syntax-highlighting5: Qt5 applications support'
             'qt5-wayland: Qt5 Wayland compositor inspector plugin'
             'qt5-webengine: Qt5 web inspector plugin'
             'qt5-scxml: Qt5 state machine viewer plugin'
@@ -21,14 +43,26 @@ optdepends=('qt5-base: Qt5 applications support'
             'qt6-wayland: Wayland compositor inspector plugin'
             'qt6-webengine: web inspector plugin'
             'qt6-connectivity: bluetooth plugin')
-source=(https://github.com/KDAB/GammaRay/releases/download/v$pkgver/gammaray-$pkgver.tar.gz{,.asc})
+source=(https://github.com/KDAB/GammaRay/releases/download/v$pkgver/gammaray-$pkgver.tar.gz{,.asc}
+        https://github.com/KDAB/GammaRay/commit/9978a0a7.patch
+        https://github.com/KDAB/GammaRay/commit/45e025e3.patch
+        https://github.com/KDAB/GammaRay/commit/4d0974f4.patch
+        https://github.com/KDAB/GammaRay/commit/cf8f77f0.patch)
 sha256sums=('acd27dbbcbdf73fed497e0b5d6c477f2e11b59c48499752602677037dcd64ba5'
-            'SKIP')
+            'SKIP'
+            '55ff7ffe5a81c750790873a1468d2b63a19e4e86f801ea29f98b13694b5d1f61'
+            'b964a60b4210b1fcb015eaf8983f960cf3694dc7cbae0aacb405653151c98899'
+            '11abea17e8ba489b005d480d96422f9be570661c17ccd005b53b213a8df714f5'
+            '5b668a2bd47fced920c478f8d5476021bf37f6695a3bce499d1976b578bc52f7')
 validpgpkeys=(E86C000370B1B9E2A9191AD53DBFB6882C9358FB) # KDAB Products <info@kdab.com>
 
 prepare() {
 # Fix plugin install dir
   sed -e 's|plugins/gammaray|lib/qt6/plugins/gammaray|' -i $pkgname-$pkgver/CMakeLists.txt
+  patch -d $pkgname-$pkgver -p1 < 9978a0a7.patch # Fix build with Qt 6.7
+  patch -d $pkgname-$pkgver -p1 < 45e025e3.patch
+  patch -d $pkgname-$pkgver -p1 < 4d0974f4.patch
+  patch -d $pkgname-$pkgver -p1 < cf8f77f0.patch
 }
 
 build() {

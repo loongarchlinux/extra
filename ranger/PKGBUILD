@@ -5,7 +5,7 @@
 
 pkgname=ranger
 pkgver=1.9.3
-pkgrel=9
+pkgrel=11
 pkgdesc='Simple, vim-like file manager'
 arch=('any')
 url='https://ranger.github.io'
@@ -38,6 +38,14 @@ sha512sums=('5cd7bea714a6542d0a5445f5f0cf929b2df4377df3ef710f3786c6c46dd58b017a8
 validpgpkeys=('1E9B36EC051FF6F7FFC969A7F08CE1E200FB5CDF'
               '66FA95C0F1619BDA520A41F60D63346A5D15D055') # huterich
 
+prepare() {
+  cd "${pkgname}-${pkgver}"
+  # fixes https://github.com/ranger/ranger/issues/1853
+  # upsteam fix was never released:
+  # https://github.com/ranger/ranger/commit/2241cac899536a94c032a58bb7f1bf921980687e
+  sed -i 's/xdg-open -- /xdg-open /' "ranger/config/rifle.conf"
+}
+
 build() {
   cd ${pkgname}-${pkgver}
   python -m build -wn
@@ -48,7 +56,7 @@ check() {
   local _pyver=$(python -c 'import sys; print("".join(map(str, sys.version_info[:2])))')
   export PYTHONPATH="$PWD/lib.linux-$CARCH-cpython-$_pyver"
   export TERM=linux
-  python -m unittest discover
+  pytest
 }
 
 package() {

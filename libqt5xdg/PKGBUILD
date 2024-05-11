@@ -1,0 +1,54 @@
+# Maintainer: Jerome Leclanche <jerome@leclan.ch>
+# Co-Maintainer: Chih-Hsuan Yen <yan12125@archlinux.org>
+
+_pkgname=libqtxdg
+pkgname=libqt5xdg
+pkgver=3.12.0
+pkgrel=1
+pkgdesc="Library providing freedesktop.org XDG specs implementations for Qt"
+arch=("loong64" "x86_64")
+url="https://github.com/lxqt/$_pkgname"
+license=("LGPL" "custom")
+depends=("libsm" "libxkbcommon-x11" "qt5-base" "qt5-svg")
+makedepends=("cmake" "lxqt-build-tools-qt5")
+checkdepends=("xorg-server-xvfb")
+optdepends=(
+  'xterm: the default terminal for running .desktop files'
+)
+provides=("libQt5Xdg.so" "libQt5XdgIconLoader.so")
+conflicts=("$_pkgname<4.0")
+source=(
+  "https://github.com/lxqt/$_pkgname/releases/download/$pkgver/$_pkgname-$pkgver.tar.xz"
+  "https://github.com/lxqt/$_pkgname/releases/download/$pkgver/$_pkgname-$pkgver.tar.xz.asc"
+)
+sha256sums=('726856ff447220575c84461800b151328e784c6c326a5065ef3f9a7f9506d4dc'
+            'SKIP')
+validpgpkeys=(
+  "19DFDF3A579BD509DBB572D8BE793007AD22DF7E"  # Pedram Pourang <tsujan2000@gmail.com>
+)
+
+
+build() {
+  mkdir -p build
+  cd build
+  # -DQTXDG_INSTALL_DEFAPPS_CONFIG=OFF to avoid conflicts with libqtxdg
+  # See https://github.com/lxqt/qtxdg-tools/issues/1
+  cmake "$srcdir/$_pkgname-$pkgver" \
+    -DCMAKE_INSTALL_PREFIX=/usr \
+    -DQTXDG_INSTALL_DEFAPPS_CONFIG=OFF \
+    -DBUILD_TESTS=ON
+  make
+}
+
+check() {
+  cd build
+
+  xvfb-run --auto-display make test
+}
+
+package() {
+  cd build
+  make DESTDIR="$pkgdir" install
+  install -Dm644 "$srcdir/$_pkgname-$pkgver"/{AUTHORS,COPYING,Digia-Qt-LGPL-Exception-1.1} \
+    -t "$pkgdir"/usr/share/licenses/$pkgname
+}

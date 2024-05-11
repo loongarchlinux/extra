@@ -1,18 +1,43 @@
 # Maintainer: Felix Yan <felixonmars@archlinux.org>
 
 pkgname=python-jieba
+_name="${pkgname#python-}"
 pkgver=0.42.1
-pkgrel=4
+pkgrel=7
 pkgdesc="Chinese Words Segementation Utilities"
 arch=('any')
 url='https://github.com/fxsjy/jieba'
 license=('MIT')
 depends=('python')
-source=("$pkgname-$pkgver.tar.gz::https://github.com/fxsjy/jieba/archive/v$pkgver.tar.gz")
-sha512sums=('fd2f44e7e87e29390975bc1c3400aa5527221d82a5e8771dec4ba6d02e7c68807ccccd5b743ada9c856955c0f3bf7eade697bb7212ab2eef37fb78bee48d99ca')
+checkdepends=('python-whoosh')
+makedepends=('python-build' 'python-installer' 'python-setuptools' 'python-wheel')
+source=(
+  "$pkgname-$pkgver.tar.gz::https://github.com/fxsjy/jieba/archive/v$pkgver.tar.gz"
+  $pkgname-0.42.1-remove_imp.patch
+  $pkgname-0.42.1-remove_distutils.patch
+)
+sha512sums=('fd2f44e7e87e29390975bc1c3400aa5527221d82a5e8771dec4ba6d02e7c68807ccccd5b743ada9c856955c0f3bf7eade697bb7212ab2eef37fb78bee48d99ca'
+            '2359feb1d4898ed7785e067f145093050b9e587c26187c746a1fbed9bdb57456e1b09cfea5918376b5f4c6882095241ecd1695716f6b5b40943452a266087ace'
+            'c66c779422e3dd2b4d68505d9acfdaa4d81160eeeb6ecfd1bd0a2931b9c5321df9d41a5a1edb2c2cbd6ba8c10ce58765b000a9a637faf4065a94d15d24bb87ae')
+
+prepare() {
+  patch -Np1 -d $_name-$pkgver -i ../$pkgname-0.42.1-remove_imp.patch
+  patch -Np1 -d $_name-$pkgver -i ../$pkgname-0.42.1-remove_distutils.patch
+}
+
+build() {
+  cd $_name-$pkgver
+  python -m build --wheel --no-isolation
+}
+
+check() {
+  cd $_name-$pkgver
+  export PYTHONPATH="$PWD:$PYTHONPATH"
+  find test -type f -iname "test*.py" -exec python {} \;
+}
 
 package() {
-  cd jieba-$pkgver
-  python setup.py install -O1 --root="$pkgdir"
+  cd $_name-$pkgver
+  python -m installer --destdir="$pkgdir" dist/*.whl
   install -Dm644 LICENSE "$pkgdir"/usr/share/licenses/$pkgname/LICENSE
 }

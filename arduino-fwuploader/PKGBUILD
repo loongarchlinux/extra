@@ -1,0 +1,43 @@
+# Maintainer: Maxime Gauduin <alucryd@archlinux.org>
+# Contributor: Martin Rodriguez Reboredo <yakoyoku@gmail.com>
+
+pkgname=arduino-fwuploader
+pkgver=2.4.1
+pkgrel=2
+pkgdesc='Update the firmware or add SSL certificates for any Arduino with WINC or NINA Wi-Fi'
+arch=(loong64 x86_64)
+url=https://github.com/arduino/arduino-fwuploader
+license=(AGPL-3.0-or-later)
+depends=(glibc)
+makedepends=(
+  git
+  go
+)
+optdepends=('arduino-cli: Arduino command line interface')
+_tag=d945078fb1beffcb762070b756b388b4b08f0004
+source=(git+https://github.com/arduino/arduino-fwuploader.git#tag=${_tag})
+b2sums=('c0801b65e6afd902b3d2627e5db4d8546c549d5284a6d4800515dd1108ce5a8d745fbfe8340e357a1d6ed8b3a2e1d807e470e1ace55222e6fd735657966da50b')
+
+build() {
+  cd arduino-fwuploader
+  export CGO_CPPFLAGS="${CPPFLAGS}"
+  export CGO_CFLAGS="${CFLAGS}"
+  export CGO_CXXFLAGS="${CXXFLAGS}"
+  export CGO_LDFLAGS="${LDFLAGS}"
+  export GOFLAGS="-buildmode=pie -trimpath -ldflags=-linkmode=external -mod=readonly -modcacherw"
+  go build -o arduino-fwuploader .
+  ./arduino-fwuploader completion bash > arduino-fwuploader.bash
+  ./arduino-fwuploader completion fish > arduino-fwuploader.fish
+  ./arduino-fwuploader completion zsh > arduino-fwuploader.zsh
+}
+
+package() {
+  cd arduino-fwuploader
+  install -Dm 755 arduino-fwuploader -t "${pkgdir}"/usr/bin/
+  install -Dm 644 arduino-fwuploader.bash "${pkgdir}"/usr/share/bash-completion/completions/arduino-fwuploader
+  install -Dm 644 arduino-fwuploader.fish -t "${pkgdir}"/usr/share/fish/vendor_completions.d/
+  install -Dm 644 arduino-fwuploader.zsh "${pkgdir}"/usr/share/zsh/site-functions/_arduino-fwuploader
+  install -Dm 644 README.md -t "${pkgdir}"/usr/share/doc/arduino-fwuploader/
+}
+
+# vim: ts=2 sw=2 et:

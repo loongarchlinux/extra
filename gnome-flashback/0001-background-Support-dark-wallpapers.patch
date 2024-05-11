@@ -1,16 +1,16 @@
-From 3219d37af48446298a5a7bb01b43c9af0792b61f Mon Sep 17 00:00:00 2001
+From 9fb57870a74e60a6e833dd2663ddff8de63f2f71 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Ball=C3=B3=20Gy=C3=B6rgy?= <ballogyor@gmail.com>
 Date: Tue, 23 Jan 2024 13:20:54 +0100
 Subject: [PATCH] background: Support dark wallpapers
 
 Use the 'picture-uri-dark' setting introduced in GNOME 42 to read the filename of the wallpaper when the 'color-scheme' is 'prefer-dark'. This follows the logic implemented in gnome-shell. Use the same background settings for the screensaver wallpaper to make it consistent.
 ---
- gnome-flashback/libcommon/gf-bg.c             | 21 ++++++++++++++-----
- gnome-flashback/libcommon/gf-bg.h             |  3 ++-
- gnome-flashback/libdesktop/gf-background.c    | 11 ++++++++--
- .../libroot-background/gf-root-background.c   | 18 ++++++++++++++--
- gnome-flashback/libscreensaver/gf-manager.c   | 13 +++++++++---
- 5 files changed, 53 insertions(+), 13 deletions(-)
+ gnome-flashback/libcommon/gf-bg.c             | 21 ++++++++++----
+ gnome-flashback/libcommon/gf-bg.h             |  3 +-
+ gnome-flashback/libdesktop/gf-background.c    | 21 ++++++++++++--
+ .../libroot-background/gf-root-background.c   | 28 +++++++++++++++++--
+ gnome-flashback/libscreensaver/gf-manager.c   | 23 +++++++++++++--
+ 5 files changed, 83 insertions(+), 13 deletions(-)
 
 diff --git a/gnome-flashback/libcommon/gf-bg.c b/gnome-flashback/libcommon/gf-bg.c
 index 27e1dca..7bcae91 100644
@@ -73,7 +73,7 @@ index 48d0648..98faaae 100644
  void             gf_bg_save_to_preferences            (GfBG                      *self,
                                                         GSettings                 *settings);
 diff --git a/gnome-flashback/libdesktop/gf-background.c b/gnome-flashback/libdesktop/gf-background.c
-index 25a42e6..def5a17 100644
+index 25a42e6..fe28f26 100644
 --- a/gnome-flashback/libdesktop/gf-background.c
 +++ b/gnome-flashback/libdesktop/gf-background.c
 @@ -42,6 +42,7 @@ struct _GfBackground
@@ -84,16 +84,26 @@ index 25a42e6..def5a17 100644
  
    GfBG            *bg;
  
-@@ -266,7 +267,7 @@ change_event_cb (GSettings    *settings,
+@@ -266,7 +267,17 @@ change_event_cb (GSettings    *settings,
                   gint          n_keys,
                   GfBackground *self)
  {
 -  gf_bg_load_from_preferences (self->bg, self->settings1);
 +  gf_bg_load_from_preferences (self->bg, self->settings1, self->interface_settings);
++
++  return TRUE;
++}
++
++static gboolean
++color_scheme_changed_cb (GSettings    *interface_settings,
++                         const char   *key,
++                         GfBackground *self)
++{
++  gf_bg_load_from_preferences (self->bg, self->settings1, self->interface_settings);
  
    return TRUE;
  }
-@@ -299,6 +300,7 @@ gf_background_constructed (GObject *object)
+@@ -299,6 +310,7 @@ gf_background_constructed (GObject *object)
  
    self->settings1 = g_settings_new ("org.gnome.desktop.background");
    self->settings2 = g_settings_new ("org.gnome.gnome-flashback.desktop.background");
@@ -101,18 +111,18 @@ index 25a42e6..def5a17 100644
  
    self->bg = gf_bg_new ();
  
-@@ -314,6 +316,10 @@ gf_background_constructed (GObject *object)
+@@ -314,6 +326,10 @@ gf_background_constructed (GObject *object)
                      G_CALLBACK (change_event_cb),
                      self);
  
-+  g_signal_connect (self->interface_settings, "change-event",
-+                    G_CALLBACK (change_event_cb),
++  g_signal_connect (self->interface_settings, "changed::color-scheme",
++                    G_CALLBACK (color_scheme_changed_cb),
 +                    self);
 +
    g_signal_connect (self->bg, "changed",
                      G_CALLBACK (changed_cb),
                      self);
-@@ -322,7 +328,7 @@ gf_background_constructed (GObject *object)
+@@ -322,7 +338,7 @@ gf_background_constructed (GObject *object)
                      G_CALLBACK (transitioned_cb),
                      self);
  
@@ -121,7 +131,7 @@ index 25a42e6..def5a17 100644
  }
  
  static void
-@@ -334,6 +340,7 @@ gf_background_dispose (GObject *object)
+@@ -334,6 +350,7 @@ gf_background_dispose (GObject *object)
  
    g_clear_object (&self->settings1);
    g_clear_object (&self->settings2);
@@ -130,14 +140,14 @@ index 25a42e6..def5a17 100644
  
    G_OBJECT_CLASS (gf_background_parent_class)->dispose (object);
 diff --git a/gnome-flashback/libroot-background/gf-root-background.c b/gnome-flashback/libroot-background/gf-root-background.c
-index a2a0add..aa4d39e 100644
+index a2a0add..7bf4b52 100644
 --- a/gnome-flashback/libroot-background/gf-root-background.c
 +++ b/gnome-flashback/libroot-background/gf-root-background.c
 @@ -29,12 +29,14 @@ struct _GfRootBackground
    gulong     monitors_changed_id;
    gulong     size_changed_id;
    gulong     change_event_id;
-+  gulong     interface_change_event_id;
++  gulong     color_scheme_changed_id;
  
    guint      change_idle_id;
  
@@ -148,29 +158,39 @@ index a2a0add..aa4d39e 100644
  };
  
  G_DEFINE_TYPE (GfRootBackground, gf_root_background, G_TYPE_OBJECT)
-@@ -95,7 +97,7 @@ change_event_cb (GSettings        *settings,
+@@ -95,7 +97,17 @@ change_event_cb (GSettings        *settings,
                   gint              n_keys,
                   GfRootBackground *self)
  {
 -  gf_bg_load_from_preferences (self->bg, self->settings);
 +  gf_bg_load_from_preferences (self->bg, self->settings, self->interface_settings);
++
++  return TRUE;
++}
++
++static gboolean
++color_scheme_changed_cb (GSettings        *interface_settings,
++                         const char       *key,
++                         GfRootBackground *self)
++{
++  gf_bg_load_from_preferences (self->bg, self->settings, self->interface_settings);
  
    return TRUE;
  }
-@@ -177,6 +179,12 @@ gf_root_background_dispose (GObject *object)
+@@ -177,6 +189,12 @@ gf_root_background_dispose (GObject *object)
        self->change_event_id = 0;
      }
  
-+  if (self->interface_change_event_id != 0)
++  if (self->color_scheme_changed_id != 0)
 +    {
 +      g_signal_handler_disconnect (self->settings, self->change_event_id);
-+      self->interface_change_event_id = 0;
++      self->color_scheme_changed_id = 0;
 +    }
 +
    if (self->change_idle_id != 0)
      {
        g_source_remove (self->change_idle_id);
-@@ -185,6 +193,7 @@ gf_root_background_dispose (GObject *object)
+@@ -185,6 +203,7 @@ gf_root_background_dispose (GObject *object)
  
    g_clear_object (&self->bg);
    g_clear_object (&self->settings);
@@ -178,7 +198,7 @@ index a2a0add..aa4d39e 100644
  
    G_OBJECT_CLASS (gf_root_background_parent_class)->dispose (object);
  }
-@@ -223,12 +232,17 @@ gf_root_background_init (GfRootBackground *self)
+@@ -223,12 +242,17 @@ gf_root_background_init (GfRootBackground *self)
                      G_CALLBACK (transitioned_cb), self);
  
    self->settings = g_settings_new ("org.gnome.desktop.background");
@@ -189,16 +209,16 @@ index a2a0add..aa4d39e 100644
                        G_CALLBACK (change_event_cb), self);
  
 -  gf_bg_load_from_preferences (self->bg, self->settings);
-+  self->interface_change_event_id =
-+    g_signal_connect (self->interface_settings, "change-event",
-+                      G_CALLBACK (change_event_cb), self);
++  self->color_scheme_changed_id =
++    g_signal_connect (self->interface_settings, "changed::color-scheme",
++                      G_CALLBACK (color_scheme_changed_cb), self);
 +
 +  gf_bg_load_from_preferences (self->bg, self->settings, self->interface_settings);
  }
  
  GfRootBackground *
 diff --git a/gnome-flashback/libscreensaver/gf-manager.c b/gnome-flashback/libscreensaver/gf-manager.c
-index c8604c6..d392579 100644
+index c8604c6..151742a 100644
 --- a/gnome-flashback/libscreensaver/gf-manager.c
 +++ b/gnome-flashback/libscreensaver/gf-manager.c
 @@ -31,6 +31,7 @@ struct _GfManager
@@ -209,16 +229,26 @@ index c8604c6..d392579 100644
    GfBG             *bg;
  
    GfGrab           *grab;
-@@ -250,7 +251,7 @@ settings_change_event_cb (GSettings *settings,
+@@ -250,7 +251,17 @@ settings_change_event_cb (GSettings *settings,
                            gint       n_keys,
                            GfManager *self)
  {
 -  gf_bg_load_from_preferences (self->bg, self->settings);
 +  gf_bg_load_from_preferences (self->bg, self->settings, self->interface_settings);
++
++  return FALSE;
++}
++
++static gboolean
++color_scheme_changed_cb (GSettings  *interface_settings,
++                         const char *key,
++                         GfManager  *self)
++{
++  gf_bg_load_from_preferences (self->bg, self->settings, self->interface_settings);
  
    return FALSE;
  }
-@@ -575,6 +576,7 @@ gf_manager_dispose (GObject *object)
+@@ -575,6 +586,7 @@ gf_manager_dispose (GObject *object)
    self = GF_MANAGER (object);
  
    g_clear_object (&self->settings);
@@ -226,7 +256,7 @@ index c8604c6..d392579 100644
    g_clear_object (&self->bg);
  
    G_OBJECT_CLASS (gf_manager_parent_class)->dispose (object);
-@@ -679,7 +681,8 @@ gf_manager_class_init (GfManagerClass *self_class)
+@@ -679,7 +691,8 @@ gf_manager_class_init (GfManagerClass *self_class)
  static void
  gf_manager_init (GfManager *self)
  {
@@ -236,13 +266,13 @@ index c8604c6..d392579 100644
    self->bg = gf_bg_new ();
  
    g_signal_connect (self->bg, "changed",
-@@ -690,7 +693,11 @@ gf_manager_init (GfManager *self)
+@@ -690,7 +703,11 @@ gf_manager_init (GfManager *self)
                      G_CALLBACK (settings_change_event_cb),
                      self);
  
 -  gf_bg_load_from_preferences (self->bg, self->settings);
-+  g_signal_connect (self->interface_settings, "change-event",
-+                    G_CALLBACK (settings_change_event_cb),
++  g_signal_connect (self->interface_settings, "changed::color-scheme",
++                    G_CALLBACK (color_scheme_changed_cb),
 +                    self);
 +
 +  gf_bg_load_from_preferences (self->bg, self->settings, self->interface_settings);
@@ -250,5 +280,5 @@ index c8604c6..d392579 100644
  
  GfManager *
 -- 
-2.43.0
+2.44.0
 

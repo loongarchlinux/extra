@@ -2,31 +2,41 @@
 # Contributor: Daniel Wallace <danielwallace at gtmanfred dot com>
 
 pkgname=python-email-validator
-pkgver=2.1.0
-pkgrel=1
+pkgver=2.1.1
+pkgrel=2
 pkgdesc="A robust email address syntax and deliverability validation library"
-arch=('any')
+arch=(any)
 url="https://github.com/JoshData/python-email-validator"
-license=('custom:CC0')
-depends=('python-dnspython' 'python-idna')
-makedepends=('python-setuptools')
-checkdepends=('python-pytest')
-source=("$pkgname-$pkgver.tar.gz::https://github.com/JoshData/python-email-validator/archive/v$pkgver.tar.gz")
-sha512sums=('d285404f6735e0cd33385060c483a4dd4e12ace4b2e7027f8cd360901bc640ae999eb5d3ec2b98530e53af48f8e6c180d65cb53eec4de5a1617149ab76027901')
+license=(Unlicense)
+depends=(
+  python
+  python-dnspython
+  python-idna
+)
+makedepends=(
+  python-build
+  python-installer
+  python-setuptools
+  python-wheel
+)
+checkdepends=(python-pytest)
+source=($pkgname-$pkgver.tar.gz::$url/archive/v$pkgver.tar.gz)
+sha512sums=('fbc34d63a2fd7004a1efd7ce88cce8279069a7e2008666a06da173cb807f3cf51fbec16b6b26385de45b6b024e9359769147947f2a560e9ada614be162d51534')
+b2sums=('251440b934625144b0aca7c5767187d2b1b5d8ac40fee41746e797736d0958b4fc4ffe810b623627357c43241cb6baec923d1467af735bbac92f7159c277e6dc')
 
 build() {
-  cd python-email-validator-$pkgver
-  python setup.py build
+  cd $pkgname-$pkgver
+  python -m build --wheel --no-isolation
 }
 
 check() {
-  cd python-email-validator-$pkgver
+  cd $pkgname-$pkgver
   python -m pytest
 }
 
 package() {
-  cd python-email-validator-$pkgver
-  python setup.py install --root="$pkgdir/" --optimize=1
+  cd $pkgname-$pkgver
+  python -m installer --destdir="$pkgdir" dist/*.whl
   install -Dm644 LICENSE -t "$pkgdir"/usr/share/licenses/$pkgname/
 }
 

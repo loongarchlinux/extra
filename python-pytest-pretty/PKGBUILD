@@ -1,9 +1,9 @@
 # Maintainer: David Runge <dvzrv@archlinux.org>
 
-_name=pytest-pretty
 pkgname=python-pytest-pretty
+_name="${pkgname#python-}"
 pkgver=1.2.0
-pkgrel=1
+pkgrel=2
 pkgdesc="Pytest plugin for pretty printing the test summary"
 arch=(any)
 url="https://github.com/samuelcolvin/pytest-pretty"
@@ -18,8 +18,6 @@ makedepends=(
   python-hatchling
   python-installer
 )
-# no tests in sdist tarball: https://github.com/samuelcolvin/pytest-pretty/issues/14
-# source=(https://files.pythonhosted.org/packages/source/${_name::1}/$_name/$_name-$pkgver.tar.gz)
 source=($_name-$pkgver.tar.gz::$url/archive/refs/tags/v$pkgver.tar.gz)
 sha512sums=('b22ba6f29842d5170d52c2ed5de99e2779dcd8cef1e01dde281c9dffce4a38e37404489c7cccd667bfcf572c427ba055764f458faf2bd670a06ece969db9d2c6')
 b2sums=('3b157ad3772e8190b3bf19ca06bdc78ee55d3584296378ed9b17b306efa66deb22e9429786422ea5e258f4e6284a4f1ea68914be6944772d75e527292b514bbe')

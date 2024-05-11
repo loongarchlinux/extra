@@ -1,0 +1,1206 @@
+diff --git a/data/schemas/org.gnome.gnome-applets.mini-commander.gschema.xml.in b/data/schemas/org.gnome.gnome-applets.mini-commander.gschema.xml.in
+index 9f7d78ea5..ea628d281 100644
+--- a/data/schemas/org.gnome.gnome-applets.mini-commander.gschema.xml.in
++++ b/data/schemas/org.gnome.gnome-applets.mini-commander.gschema.xml.in
+@@ -7,9 +7,9 @@
+ 				'^(ftp://.*)',
+ 				'^(www\\..*)$',
+ 				'^(ftp\\..*)$',
+-				'^av: *(.*)$',
+-				'^yahoo: *(.*)$',
+-				'^fm: *(.*)$',
++				'^bing: *(.*)$',
++				'^ddg: *(.*)$',
++				'^w: *(.*)$',
+ 				'^dictionary: *(.*)$',
+ 				'^google: *(.*)$'
+ 			]
+@@ -20,15 +20,15 @@
+ 		<key name="macro-commands" type="as">
+ 			<default>
+ 			[
+-				'gnome-open \\1',
+-				'gnome-open \\1',
+-				'gnome-open http://\\1',
+-				'gnome-open ftp://\\1',
+-				"gnome-open http://www.altavista.net/cgi-bin/query?pg=q\\&amp;kl=XX\\&amp;q=$(echo '\\1'|sed -e ': p;s/+/%2B/;t p;: s;s/\\ /+/;t s;: q;s/\\\"/%22/;t q')",
+-				"gnome-open http://ink.yahoo.com/bin/query?p=$(echo '\\1'|sed -e ': p;s/+/%2B/;t p;: s;s/\\ /+/;t s;: q;s/\\\"/%22/;t q')",
+-				"gnome-open http://core.freshmeat.net/search.php3?query=$(echo '\\1'|tr \" \" +)",
++				'gio open "\\1"',
++				'gio open "\\1"',
++				'gio open "http://\\1"',
++				'gio open "ftp://\\1"',
++				'gio open "https://www.bing.com/search?q=\\1"',
++				'gio open "https://duckduckgo.com/?q=\\1"',
++				'gio open "https://en.wikipedia.org/w/index.php?title=Special:Search&amp;search=\\1"',
+ 				'gnome-dictionary "\\1"',
+-				'gnome-open http://www.google.com/search?q=\\1'
++				'gio open "https://www.google.com/search?q=\\1"'
+ 			]
+ 			</default>
+ 			<summary>Macro command list</summary>
+diff --git a/gnome-applets/battstat/battstat-applet.c b/gnome-applets/battstat/battstat-applet.c
+index af80f20ee..f162140b3 100644
+--- a/gnome-applets/battstat/battstat-applet.c
++++ b/gnome-applets/battstat/battstat-applet.c
+@@ -329,23 +329,27 @@ get_remaining (BatteryStatus *info)
+ 	else
+ 		if (hours == 0)
+ 			if (!info->on_ac_power)
+-				return g_strdup_printf (ngettext (
++				return g_strdup_printf (dngettext (
++						GETTEXT_PACKAGE,
+ 						"%d minute (%d%%) remaining",
+ 						"%d minutes (%d%%) remaining",
+ 						mins), mins, info->percent);
+ 			else
+-				return g_strdup_printf (ngettext (
++				return g_strdup_printf (dngettext (
++						GETTEXT_PACKAGE,
+ 						"%d minute until charged (%d%%)",
+ 						"%d minutes until charged (%d%%)",
+ 						mins), mins, info->percent);
+ 		else if (mins == 0)
+ 			if (!info->on_ac_power)
+-				return g_strdup_printf (ngettext (
++				return g_strdup_printf (dngettext (
++						GETTEXT_PACKAGE,
+ 						"%d hour (%d%%) remaining",
+ 						"%d hours (%d%%) remaining",
+ 						hours), hours, info->percent);
+ 			else
+-				return g_strdup_printf (ngettext (
++				return g_strdup_printf (dngettext (
++						GETTEXT_PACKAGE,
+ 						"%d hour until charged (%d%%)",
+ 						"%d hours until charged (%d%%)",
+ 						hours), hours, info->percent);
+@@ -354,15 +358,15 @@ get_remaining (BatteryStatus *info)
+ 				/* TRANSLATOR: "%d %s %d %s" are "%d hours %d minutes"
+ 				 * Swap order with "%2$s %2$d %1$s %1$d if needed */
+ 				return g_strdup_printf (_("%d %s %d %s (%d%%) remaining"),
+-						hours, ngettext ("hour", "hours", hours),
+-						mins, ngettext ("minute", "minutes", mins),
++						hours, dngettext (GETTEXT_PACKAGE, "hour", "hours", hours),
++						mins, dngettext (GETTEXT_PACKAGE, "minute", "minutes", mins),
+ 						info->percent);
+ 			else
+ 				/* TRANSLATOR: "%d %s %d %s" are "%d hours %d minutes"
+ 				 * Swap order with "%2$s %2$d %1$s %1$d if needed */
+ 				return g_strdup_printf (_("%d %s %d %s until charged (%d%%)"),
+-						hours, ngettext ("hour", "hours", hours),
+-						mins, ngettext ("minute", "minutes", mins),
++						hours, dngettext (GETTEXT_PACKAGE, "hour", "hours", hours),
++						mins, dngettext (GETTEXT_PACKAGE, "minute", "minutes", mins),
+ 						info->percent);
+ }
+ 
+@@ -522,7 +526,8 @@ battery_low_update_text( ProgressData *battstat, BatteryStatus *info )
+   }
+   else
+   {
+-	  remaining = g_strdup_printf( ngettext(
++	  remaining = g_strdup_printf( dngettext(
++                                 GETTEXT_PACKAGE,
+                                  "You have %d minute of battery power "
+ 				   "remaining (%d%% of the total capacity).",
+                                  "You have %d minutes of battery power "
+diff --git a/gnome-applets/battstat/properties.c b/gnome-applets/battstat/properties.c
+index 921e3fd33..0ba6da9dc 100644
+--- a/gnome-applets/battstat/properties.c
++++ b/gnome-applets/battstat/properties.c
+@@ -213,7 +213,9 @@ prop_cb (GSimpleAction *action,
+      return;
+    } 
+ 
+-  builder = gtk_builder_new_from_resource (GRESOURCE_PREFIX "/ui/battstat-applet.ui");
++  builder = gtk_builder_new ();
++  gtk_builder_set_translation_domain (builder, GETTEXT_PACKAGE);
++  gtk_builder_add_from_resource (builder, GRESOURCE_PREFIX "/ui/battstat-applet.ui", NULL);
+ 
+   battstat->prop_win = GTK_WIDGET (gtk_builder_get_object (builder,
+   				   "battstat_properties"));
+diff --git a/gnome-applets/brightness/brightness-applet.c b/gnome-applets/brightness/brightness-applet.c
+index 9dcbc062c..f49c9196a 100644
+--- a/gnome-applets/brightness/brightness-applet.c
++++ b/gnome-applets/brightness/brightness-applet.c
+@@ -625,16 +625,6 @@ gpm_applet_destroy_cb (GtkWidget *widget)
+ 	g_bus_unwatch_name (applet->bus_watch_id);
+ }
+ 
+-/**
+- * gpm_brightness_applet_class_init:
+- * @klass: Class instance
+- **/
+-static void
+-gpm_brightness_applet_class_init (GpmBrightnessAppletClass *class)
+-{
+-	/* nothing to do here */
+-}
+-
+ static void
+ brightness_changed_cb (GDBusProxy *proxy,
+ 		       GVariant   *changed_properties,
+@@ -714,12 +704,8 @@ gpm_brightness_applet_name_vanished_cb (GDBusConnection *connection, const gchar
+ 	gpm_applet_update_icon (applet);
+ }
+ 
+-/**
+- * gpm_brightness_applet_init:
+- * @applet: Brightness applet instance
+- **/
+ static void
+-gpm_brightness_applet_init (GpmBrightnessApplet *applet)
++gpm_brightness_applet_setup (GpmBrightnessApplet *applet)
+ {
+ 	const char *menu_resource;
+ 
+@@ -773,6 +759,28 @@ gpm_brightness_applet_init (GpmBrightnessApplet *applet)
+ 			  G_CALLBACK(gpm_applet_destroy_cb), NULL);
+ }
+ 
++static void
++gpm_brightness_applet_constructed (GObject *object)
++{
++	G_OBJECT_CLASS (gpm_brightness_applet_parent_class)->constructed (object);
++	gpm_brightness_applet_setup (GPM_BRIGHTNESS_APPLET (object));
++}
++
++static void
++gpm_brightness_applet_class_init (GpmBrightnessAppletClass *class)
++{
++	GObjectClass *object_class;
++
++	object_class = G_OBJECT_CLASS (class);
++
++	object_class->constructed = gpm_brightness_applet_constructed;
++}
++
++static void
++gpm_brightness_applet_init (GpmBrightnessApplet *applet)
++{
++}
++
+ void
+ gpm_brightness_applet_setup_about (GtkAboutDialog *dialog)
+ {
+diff --git a/gnome-applets/command/command-applet.c b/gnome-applets/command/command-applet.c
+index ff07d087b..20f5e13b2 100644
+--- a/gnome-applets/command/command-applet.c
++++ b/gnome-applets/command/command-applet.c
+@@ -57,6 +57,9 @@ struct _CommandApplet
+   GtkLabel    *label;
+   GtkImage    *image;
+   GtkBox      *box;
++  GtkEntry    *command_entry;
++
++  GtkWidget   *preferences_dialog;
+ 
+   guint        width;
+ 
+@@ -82,41 +85,73 @@ command_about_callback (GSimpleAction *action,
+   gp_applet_show_about (GP_APPLET (user_data));
+ }
+ 
++static void
++apply_command_callback (GtkButton *button,
++                        gpointer   data)
++{
++  CommandApplet *command_applet;
++
++  command_applet = (CommandApplet *) data;
++
++  g_settings_set_string (command_applet->settings, COMMAND_KEY, gtk_entry_get_text (command_applet->command_entry));
++}
++
++static void
++command_preferences_dialog_response_cb (GtkDialog *dialog,
++                                        gint       response_id,
++                                        gpointer   data)
++{
++    CommandApplet *command_applet;
++
++    command_applet = (CommandApplet *) data;
++
++    gtk_widget_destroy (command_applet->preferences_dialog);
++    command_applet->preferences_dialog = NULL;
++}
++
+ /* Show the preferences dialog */
+ static void
+ command_settings_callback (GSimpleAction *action, GVariant *parameter, gpointer data)
+ {
+     CommandApplet *command_applet;
+-    GtkDialog *dialog;
+     GtkGrid *grid;
+     GtkWidget *widget;
+-    GtkWidget *command;
++    GtkWidget *button;
+     GtkWidget *interval;
+     GtkWidget *width;
+     GtkWidget *showicon;
+ 
+     command_applet = (CommandApplet *) data;
+ 
+-    dialog = GTK_DIALOG (gtk_dialog_new_with_buttons(_("Command Applet Preferences"),
++    if (command_applet->preferences_dialog != NULL) {
++        gtk_window_present (GTK_WINDOW (command_applet->preferences_dialog));
++        return;
++    }
++
++    command_applet->preferences_dialog = gtk_dialog_new_with_buttons(_("Command Applet Preferences"),
+                                                      NULL,
+                                                      0,
+                                                      _("_Close"),
+                                                      GTK_RESPONSE_CLOSE,
+-                                                     NULL));
++                                                     NULL);
+     grid = GTK_GRID (gtk_grid_new ());
+     gtk_grid_set_row_spacing (grid, 12);
+     gtk_grid_set_column_spacing (grid, 12);
+ 
+-    gtk_window_set_default_size (GTK_WINDOW (dialog), 350, 150);
+-    gtk_container_set_border_width (GTK_CONTAINER (dialog), 10);
++    gtk_window_set_default_size (GTK_WINDOW (command_applet->preferences_dialog), 350, 150);
++    gtk_container_set_border_width (GTK_CONTAINER (command_applet->preferences_dialog), 10);
+ 
+     widget = gtk_label_new (_("Command:"));
+     gtk_label_set_xalign (GTK_LABEL (widget), 1.0);
+     gtk_label_set_yalign (GTK_LABEL (widget), 0.5);
+     gtk_grid_attach (grid, widget, 1, 0, 1, 1);
+ 
+-    command = gtk_entry_new ();
+-    gtk_grid_attach (grid, command, 2, 0, 1, 1);
++    command_applet->command_entry = GTK_ENTRY (gtk_entry_new ());
++    gtk_grid_attach (grid, GTK_WIDGET (command_applet->command_entry), 2, 0, 1, 1);
++
++    button = gtk_button_new_with_mnemonic (_("_Apply"));
++    gtk_widget_set_tooltip_text (button, _("Click to apply the new command."));
++    gtk_grid_attach (grid, button, 3, 0, 1, 1);
+ 
+     widget = gtk_label_new (_("Interval (seconds):"));
+     gtk_label_set_xalign (GTK_LABEL (widget), 1.0);
+@@ -124,7 +159,7 @@ command_settings_callback (GSimpleAction *action, GVariant *parameter, gpointer
+     gtk_grid_attach (grid, widget, 1, 1, 1, 1);
+ 
+     interval = gtk_spin_button_new_with_range (1.0, 600.0, 1.0);
+-    gtk_grid_attach (grid, interval, 2, 1, 1, 1);
++    gtk_grid_attach (grid, interval, 2, 1, 2, 1);
+ 
+     widget = gtk_label_new (_("Maximum width (chars):"));
+     gtk_label_set_xalign (GTK_LABEL (widget), 1.0);
+@@ -132,22 +167,24 @@ command_settings_callback (GSimpleAction *action, GVariant *parameter, gpointer
+     gtk_grid_attach (grid, widget, 1, 2, 1, 1);
+ 
+     width = gtk_spin_button_new_with_range(1.0, 100.0, 1.0);
+-    gtk_grid_attach (grid, width, 2, 2, 1, 1);
++    gtk_grid_attach (grid, width, 2, 2, 2, 1);
+ 
+     showicon = gtk_check_button_new_with_label (_("Show icon"));
+-    gtk_grid_attach (grid, showicon, 2, 3, 1, 1);
++    gtk_grid_attach (grid, showicon, 2, 3, 2, 1);
+ 
+-    gtk_box_pack_start (GTK_BOX (gtk_dialog_get_content_area (dialog)), GTK_WIDGET (grid), TRUE, TRUE, 0);
++    gtk_box_pack_start (GTK_BOX (gtk_dialog_get_content_area (GTK_DIALOG (command_applet->preferences_dialog))), GTK_WIDGET (grid), TRUE, TRUE, 0);
+ 
+-    g_signal_connect (dialog, "response", G_CALLBACK (gtk_widget_destroy), dialog);
++    gtk_entry_set_text (command_applet->command_entry, g_settings_get_string (command_applet->settings, COMMAND_KEY));
++
++    g_signal_connect (button, "clicked", G_CALLBACK (apply_command_callback), command_applet);
++    g_signal_connect (command_applet->preferences_dialog, "response", G_CALLBACK (command_preferences_dialog_response_cb), command_applet);
+ 
+     /* use g_settings_bind to manage settings */
+-    g_settings_bind (command_applet->settings, COMMAND_KEY, command, "text", G_SETTINGS_BIND_DEFAULT);
+     g_settings_bind (command_applet->settings, INTERVAL_KEY, interval, "value", G_SETTINGS_BIND_DEFAULT);
+     g_settings_bind (command_applet->settings, WIDTH_KEY, width, "value", G_SETTINGS_BIND_DEFAULT);
+     g_settings_bind (command_applet->settings, SHOW_ICON_KEY, showicon, "active", G_SETTINGS_BIND_DEFAULT);
+ 
+-    gtk_widget_show_all (GTK_WIDGET (dialog));
++    gtk_widget_show_all (command_applet->preferences_dialog);
+ }
+ 
+ static void
+@@ -377,6 +414,8 @@ command_applet_dispose (GObject *object)
+   g_clear_object (&self->settings);
+   g_clear_object (&self->command);
+ 
++  g_clear_pointer (&self->preferences_dialog, gtk_widget_destroy);
++
+   G_OBJECT_CLASS (command_applet_parent_class)->dispose (object);
+ }
+ 
+diff --git a/gnome-applets/cpufreq/cpufreq-prefs.c b/gnome-applets/cpufreq/cpufreq-prefs.c
+index c21520814..92cc8cd0b 100644
+--- a/gnome-applets/cpufreq/cpufreq-prefs.c
++++ b/gnome-applets/cpufreq/cpufreq-prefs.c
+@@ -500,7 +500,9 @@ cpufreq_prefs_dialog_create (CPUFreqPrefs *prefs)
+ {
+ 	GtkBuilder *builder;
+ 
+-	builder = gtk_builder_new_from_resource (GRESOURCE_PREFIX "/ui/cpufreq-preferences.ui");
++	builder = gtk_builder_new ();
++	gtk_builder_set_translation_domain (builder, GETTEXT_PACKAGE);
++	gtk_builder_add_from_resource (builder, GRESOURCE_PREFIX "/ui/cpufreq-preferences.ui", NULL);
+ 
+ 	prefs->dialog = GTK_WIDGET (gtk_builder_get_object (builder, "prefs_dialog"));
+ 
+diff --git a/gnome-applets/gweather/gweather-applet.c b/gnome-applets/gweather/gweather-applet.c
+index 7c677f039..b95f7f289 100644
+--- a/gnome-applets/gweather/gweather-applet.c
++++ b/gnome-applets/gweather/gweather-applet.c
+@@ -380,7 +380,7 @@ void gweather_applet_create (GWeatherApplet *gw_applet)
+     gweather_info_set_contact_info (gw_applet->gweather_info, contact_info);
+ 
+     gweather_info_set_enabled_providers (gw_applet->gweather_info,
+-                                         GWEATHER_PROVIDER_ALL);
++                                         GWEATHER_PROVIDER_METAR | GWEATHER_PROVIDER_MET_NO);
+ 
+     g_signal_connect (gw_applet->gweather_info, "updated",
+                       G_CALLBACK (update_finish), gw_applet);
+diff --git a/gnome-applets/inhibit/inhibit-applet.c b/gnome-applets/inhibit/inhibit-applet.c
+index b88bc9f30..41653220c 100644
+--- a/gnome-applets/inhibit/inhibit-applet.c
++++ b/gnome-applets/inhibit/inhibit-applet.c
+@@ -319,33 +319,7 @@ gpm_inhibit_applet_name_vanished_cb (GDBusConnection *connection,
+ }
+ 
+ static void
+-inhibit_applet_dispose (GObject *object)
+-{
+-  InhibitApplet *self;
+-
+-  self = INHIBIT_APPLET (object);
+-
+-  if (self->bus_watch_id != 0)
+-    {
+-      g_bus_unwatch_name (self->bus_watch_id);
+-      self->bus_watch_id = 0;
+-    }
+-
+-  G_OBJECT_CLASS (inhibit_applet_parent_class)->dispose (object);
+-}
+-
+-static void
+-inhibit_applet_class_init (InhibitAppletClass *self_class)
+-{
+-  GObjectClass *object_class;
+-
+-  object_class = G_OBJECT_CLASS (self_class);
+-
+-  object_class->dispose = inhibit_applet_dispose;
+-}
+-
+-static void
+-inhibit_applet_init (InhibitApplet *applet)
++inhibit_applet_setup (InhibitApplet *applet)
+ {
+ 	const char *menu_resource;
+ 
+@@ -388,6 +362,45 @@ inhibit_applet_init (InhibitApplet *applet)
+ 			  G_CALLBACK(gpm_applet_size_allocate_cb), NULL);
+ }
+ 
++static void
++inhibit_applet_constructed (GObject *object)
++{
++  G_OBJECT_CLASS (inhibit_applet_parent_class)->constructed (object);
++  inhibit_applet_setup (INHIBIT_APPLET (object));
++}
++
++static void
++inhibit_applet_dispose (GObject *object)
++{
++  InhibitApplet *self;
++
++  self = INHIBIT_APPLET (object);
++
++  if (self->bus_watch_id != 0)
++    {
++      g_bus_unwatch_name (self->bus_watch_id);
++      self->bus_watch_id = 0;
++    }
++
++  G_OBJECT_CLASS (inhibit_applet_parent_class)->dispose (object);
++}
++
++static void
++inhibit_applet_class_init (InhibitAppletClass *self_class)
++{
++  GObjectClass *object_class;
++
++  object_class = G_OBJECT_CLASS (self_class);
++
++  object_class->constructed = inhibit_applet_constructed;
++  object_class->dispose = inhibit_applet_dispose;
++}
++
++static void
++inhibit_applet_init (InhibitApplet *applet)
++{
++}
++
+ void
+ inhibit_applet_setup_about (GtkAboutDialog *dialog)
+ {
+diff --git a/gnome-applets/mini-commander/command-line.c b/gnome-applets/mini-commander/command-line.c
+index 11c5623b5..9495d66ce 100644
+--- a/gnome-applets/mini-commander/command-line.c
++++ b/gnome-applets/mini-commander/command-line.c
+@@ -520,6 +520,10 @@ mc_create_command_entry (MCData *mc)
+     mc->entry = gtk_entry_new ();
+     gtk_entry_set_max_length (GTK_ENTRY (mc->entry), MC_MAX_COMMAND_LENGTH);
+ 
++    gtk_style_context_add_provider (gtk_widget_get_style_context (mc->entry),
++				    GTK_STYLE_PROVIDER (mc->provider),
++				    GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
++
+     g_signal_connect (mc->entry, "key_press_event",
+ 		      G_CALLBACK (command_key_event), mc);
+ 
+@@ -547,40 +551,22 @@ mc_command_update_entry_color (MCData *mc)
+ {
+     GdkRGBA fg_color;
+     GdkRGBA bg_color;
+-    GdkColor fg;
+-    GdkColor bg;
+-    char *rc_string;
++    gchar *css_string;
+ 
+     gdk_rgba_parse (&fg_color, mc->preferences.cmd_line_color_fg);
+     gdk_rgba_parse (&bg_color, mc->preferences.cmd_line_color_bg);
+ 
+-    fg.red   = fg_color.red;
+-    fg.green = fg_color.green;
+-    fg.blue  = fg_color.blue;
+-
+-    bg.red   = bg_color.red;
+-    bg.green = bg_color.green;
+-    bg.blue  = bg_color.blue;
+-
+-    /* FIXME: wish we had an API for this, see bug #79585 */
+-    rc_string = g_strdup_printf (
+-		    "\n"
+-		    " style \"minicommander-applet-entry-style\"\n"
+-		    " {\n"
+-		    "  GtkWidget::cursor-color=\"#%04x%04x%04x\"\n"
+-		    " }\n"
+-		    " widget \"*.minicommander-applet-entry\" "
+-		    "style \"minicommander-applet-entry-style\"\n"
+-		    "\n",
+-		    fg.red, fg.green, fg.blue);
+-    gtk_rc_parse_string (rc_string);
+-    g_free (rc_string);
+-
+-    gtk_widget_modify_text (mc->entry, GTK_STATE_NORMAL, &fg);
+-    gtk_widget_modify_text (mc->entry, GTK_STATE_PRELIGHT, &fg);
+-
+-    gtk_widget_modify_base (mc->entry, GTK_STATE_NORMAL, &bg);
+-    gtk_widget_modify_base (mc->entry, GTK_STATE_PRELIGHT, &bg);
++    css_string = g_strdup_printf ("#minicommander-applet-entry {\n"
++                                  "\tcolor: %s;\n"
++                                  "\tcaret-color: %s;\n"
++                                  "\tbackground-color: %s;\n"
++                                  "}\n",
++                                  gdk_rgba_to_string (&fg_color),
++                                  gdk_rgba_to_string (&fg_color),
++                                  gdk_rgba_to_string (&bg_color));
++
++    gtk_css_provider_load_from_data (mc->provider, css_string, -1, NULL);
++    g_free (css_string);
+ }
+ 
+ void
+diff --git a/gnome-applets/mini-commander/exec.c b/gnome-applets/mini-commander/exec.c
+index f40435517..28db86cfd 100644
+--- a/gnome-applets/mini-commander/exec.c
++++ b/gnome-applets/mini-commander/exec.c
+@@ -33,16 +33,6 @@
+ 
+ static void beep (void);
+ 
+-/*
+- * Set the DISPLAY variable, to be use by g_spawn_async.
+- */
+-static void
+-set_environment (gpointer display)
+-{
+-	if (!g_setenv ("DISPLAY", display, TRUE))
+-		g_warning ("Failed to set DISPLAY environment variable");
+-}
+-
+ void
+ mc_exec_command (MCData     *mc,
+ 		 const char *cmd)
+@@ -51,7 +41,6 @@ mc_exec_command (MCData     *mc,
+ 	char command [1000];
+ 	char **argv = NULL;
+ 	gchar *str;
+-	gchar *display;
+ 
+ 	strncpy (command, cmd, sizeof (command));
+ 	command [sizeof (command) - 1] = '\0';
+@@ -67,14 +56,12 @@ mc_exec_command (MCData     *mc,
+ 		return;
+ 	}
+ 
+-	display = gdk_screen_make_display_name (gtk_widget_get_screen (GTK_WIDGET (mc)));
+-
+ 	if(!g_spawn_async (NULL, /* working directory */
+ 	                   argv,
+ 	                   NULL, /* envp */
+ 	                   G_SPAWN_SEARCH_PATH,
+-	                   set_environment,
+-	                   &display,
++	                   NULL,
++	                   NULL,
+ 	                   NULL,
+ 	                   &error)) {
+ 		str = g_strconcat ("(?)", command, NULL);
+@@ -87,7 +74,6 @@ mc_exec_command (MCData     *mc,
+ 		gtk_entry_set_text (GTK_ENTRY (mc->entry), (gchar *) "");
+ 		append_history_entry (mc, cmd, FALSE);
+ 		}
+-	g_free (display);
+ 	g_strfreev (argv);
+ 
+ 	if (error != NULL)
+diff --git a/gnome-applets/mini-commander/mini-commander-applet-private.h b/gnome-applets/mini-commander/mini-commander-applet-private.h
+index 7c5650ca1..8fbb0627b 100644
+--- a/gnome-applets/mini-commander/mini-commander-applet-private.h
++++ b/gnome-applets/mini-commander/mini-commander-applet-private.h
+@@ -47,6 +47,8 @@ struct _MiniCommanderApplet
+     GtkWidget     *entry;
+     GtkWidget     *file_select;
+ 
++    GtkCssProvider *provider;
++
+     int            label_timeout;
+     int            cmd_line_size_y;
+ 
+diff --git a/gnome-applets/mini-commander/mini-commander-applet.c b/gnome-applets/mini-commander/mini-commander-applet.c
+index 985da09ba..e49087428 100644
+--- a/gnome-applets/mini-commander/mini-commander-applet.c
++++ b/gnome-applets/mini-commander/mini-commander-applet.c
+@@ -395,6 +395,7 @@ mini_commander_applet_dispose (GObject *object)
+ 
+   g_clear_object (&self->global_settings);
+   g_clear_object (&self->settings);
++  g_clear_object (&self->provider);
+ 
+   if (self->preferences.macros != NULL)
+     {
+@@ -432,6 +433,7 @@ mini_commander_applet_class_init (MiniCommanderAppletClass *self_class)
+ static void
+ mini_commander_applet_init (MiniCommanderApplet *self)
+ {
++  self->provider = gtk_css_provider_new ();
+ }
+ 
+ void
+diff --git a/gnome-applets/mini-commander/preferences.c b/gnome-applets/mini-commander/preferences.c
+index b2a87f601..938d9ab73 100644
+--- a/gnome-applets/mini-commander/preferences.c
++++ b/gnome-applets/mini-commander/preferences.c
+@@ -323,6 +323,7 @@ macro_add (GtkWidget *button,
+ 	GtkBuilder *builder;
+ 
+ 	builder = gtk_builder_new ();
++	gtk_builder_set_translation_domain (builder, GETTEXT_PACKAGE);
+ 	gtk_builder_add_from_resource (builder, GRESOURCE_PREFIX "/ui/mini-commander.ui", NULL);
+ 
+ 	mc->prefs_dialog.macro_add_dialog = GTK_WIDGET (gtk_builder_get_object (builder, "mc_macro_add_dialog"));
+@@ -642,6 +643,7 @@ mc_show_preferences (GSimpleAction *action,
+ 	GtkBuilder *builder;
+ 
+ 	builder = gtk_builder_new ();
++	gtk_builder_set_translation_domain (builder, GETTEXT_PACKAGE);
+ 	gtk_builder_add_from_resource (builder, GRESOURCE_PREFIX "/ui/mini-commander.ui", NULL);
+ 
+ 	mc->prefs_dialog.dialog = GTK_WIDGET (gtk_builder_get_object (builder,
+diff --git a/gnome-applets/multiload/multiload-applet.c b/gnome-applets/multiload/multiload-applet.c
+index 74e6a1cf8..c2ef8add0 100644
+--- a/gnome-applets/multiload/multiload-applet.c
++++ b/gnome-applets/multiload/multiload-applet.c
+@@ -253,9 +253,10 @@ multiload_applet_tooltip_update(LoadGraph *g)
+ 		percent = 100.0f * total_used / g->draw_height;
+ 		percent = MIN(percent, 100);
+ 
+-		tooltip_text = g_strdup_printf (ngettext ("%s:\n%u%% in use",
+-		                                          "%s:\n%u%% in use",
+-		                                          percent),
++		tooltip_text = g_strdup_printf (dngettext (GETTEXT_PACKAGE,
++		                                           "%s:\n%u%% in use",
++		                                           "%s:\n%u%% in use",
++		                                           percent),
+ 		                                name,
+ 		                                percent);
+ 	}
+diff --git a/gnome-applets/sticky-notes/sticky-notes-applet.c b/gnome-applets/sticky-notes/sticky-notes-applet.c
+index 0a1887729..7be8cff10 100644
+--- a/gnome-applets/sticky-notes/sticky-notes-applet.c
++++ b/gnome-applets/sticky-notes/sticky-notes-applet.c
+@@ -132,6 +132,7 @@ menu_destroy_all_cb (GSimpleAction *action,
+ 	GtkBuilder *builder;
+ 
+ 	builder = gtk_builder_new ();
++	gtk_builder_set_translation_domain (builder, GETTEXT_PACKAGE);
+ 	gtk_builder_add_from_resource (builder,
+ 	                               GRESOURCE_PREFIX "/ui/sticky-notes-delete-all.ui",
+ 	                               NULL);
+@@ -776,7 +777,7 @@ stickynotes_applet_update_tooltips (StickyNotesApplet *self)
+ 
+ 	num = g_list_length (self->notes);
+ 
+-	no_notes = g_strdup_printf (ngettext ("%d note", "%d notes", num), num);
++	no_notes = g_strdup_printf (dngettext (GETTEXT_PACKAGE, "%d note", "%d notes", num), num);
+ 	tooltip = g_strdup_printf ("%s\n%s", _("Show sticky notes"), no_notes);
+ 
+ 	gtk_widget_set_tooltip_text (GTK_WIDGET (self), tooltip);
+diff --git a/gnome-applets/sticky-notes/sticky-notes.c b/gnome-applets/sticky-notes/sticky-notes.c
+index 00556bf7b..dc8091832 100644
+--- a/gnome-applets/sticky-notes/sticky-notes.c
++++ b/gnome-applets/sticky-notes/sticky-notes.c
+@@ -107,9 +107,11 @@ setup_note_menu (StickyNote *note)
+ 	                                 note);
+ 
+ 	resource_name = GRESOURCE_PREFIX "/ui/sticky-notes-note-menu.ui";
+-	builder = gtk_builder_new_from_resource (resource_name);
+-
++	builder = gtk_builder_new ();
+ 	gtk_builder_set_translation_domain (builder, GETTEXT_PACKAGE);
++	gtk_builder_add_from_resource (builder,
++	                               resource_name,
++	                               NULL);
+ 
+ 	gmenu = G_MENU (gtk_builder_get_object (builder, "note-popup"));
+ 	note->w_menu = gtk_menu_new_from_model (G_MENU_MODEL (gmenu));
+@@ -393,6 +395,7 @@ stickynote_new_aux (StickyNotesApplet *applet,
+ 	note->buffer_changed_id = 0;
+ 
+ 	builder = gtk_builder_new ();
++	gtk_builder_set_translation_domain (builder, GETTEXT_PACKAGE);
+ 	gtk_builder_add_from_resource (builder,
+ 	                               GRESOURCE_PREFIX "/ui/sticky-notes-note.ui",
+ 	                               NULL);
+@@ -764,6 +767,7 @@ append_font_color (StickyNote *note,
+   g_string_append_printf (string, "#%s textview text,\n", note->name);
+   g_string_append_printf (string, "#%s textview text:backdrop {\n", note->name);
+   g_string_append_printf (string, "\tcolor: %s;\n", font_color);
++  g_string_append_printf (string, "\tcaret-color: %s;\n", font_color);
+   g_string_append (string, "}\n");
+ 
+   g_free (font_color);
+@@ -1109,6 +1113,7 @@ void stickynotes_remove(StickyNote *note)
+ 	GtkWidget *dialog;
+ 
+ 	builder = gtk_builder_new ();
++	gtk_builder_set_translation_domain (builder, GETTEXT_PACKAGE);
+ 	gtk_builder_add_from_resource (builder,
+ 	                               GRESOURCE_PREFIX "/ui/sticky-notes-delete.ui",
+ 	                               NULL);
+diff --git a/gnome-applets/sticky-notes/ui/sticky-notes-delete-all.ui b/gnome-applets/sticky-notes/ui/sticky-notes-delete-all.ui
+index 0bf2c3fc5..830dc23f9 100644
+--- a/gnome-applets/sticky-notes/ui/sticky-notes-delete-all.ui
++++ b/gnome-applets/sticky-notes/ui/sticky-notes-delete-all.ui
+@@ -20,7 +20,7 @@
+             <property name="layout_style">end</property>
+             <child>
+               <object class="GtkButton" id="button3">
+-                <property name="label">_Cancel</property>
++                <property name="label" translatable="yes">_Cancel</property>
+                 <property name="visible">True</property>
+                 <property name="can_focus">True</property>
+                 <property name="can_default">True</property>
+diff --git a/gnome-applets/sticky-notes/ui/sticky-notes-delete.ui b/gnome-applets/sticky-notes/ui/sticky-notes-delete.ui
+index 9db836a16..d1e4c7daa 100644
+--- a/gnome-applets/sticky-notes/ui/sticky-notes-delete.ui
++++ b/gnome-applets/sticky-notes/ui/sticky-notes-delete.ui
+@@ -21,7 +21,7 @@
+             <property name="layout_style">end</property>
+             <child>
+               <object class="GtkButton" id="button1">
+-                <property name="label">_Cancel</property>
++                <property name="label" translatable="yes">_Cancel</property>
+                 <property name="visible">True</property>
+                 <property name="can_focus">True</property>
+                 <property name="can_default">True</property>
+@@ -36,7 +36,7 @@
+             </child>
+             <child>
+               <object class="GtkButton" id="button2">
+-                <property name="label">_Delete</property>
++                <property name="label" translatable="yes">_Delete</property>
+                 <property name="visible">True</property>
+                 <property name="can_focus">True</property>
+                 <property name="can_default">True</property>
+diff --git a/gnome-applets/sticky-notes/ui/sticky-notes-preferences.ui b/gnome-applets/sticky-notes/ui/sticky-notes-preferences.ui
+index b25d5f66f..9cfe06fb9 100644
+--- a/gnome-applets/sticky-notes/ui/sticky-notes-preferences.ui
++++ b/gnome-applets/sticky-notes/ui/sticky-notes-preferences.ui
+@@ -1,6 +1,6 @@
+ <?xml version="1.0" encoding="UTF-8"?>
+ <!-- Generated with glade 3.22.2 -->
+-<interface>
++<interface domain="gnome-applets">
+   <requires lib="gtk+" version="3.20"/>
+   <object class="GtkAdjustment" id="adjustment1">
+     <property name="lower">1</property>
+@@ -38,7 +38,7 @@
+             <property name="layout_style">end</property>
+             <child>
+               <object class="GtkButton" id="helpbutton1">
+-                <property name="label">_Help</property>
++                <property name="label" translatable="yes">_Help</property>
+                 <property name="visible">True</property>
+                 <property name="can_focus">True</property>
+                 <property name="can_default">True</property>
+@@ -53,7 +53,7 @@
+             </child>
+             <child>
+               <object class="GtkButton" id="closebutton1">
+-                <property name="label">_Close</property>
++                <property name="label" translatable="yes">_Close</property>
+                 <property name="visible">True</property>
+                 <property name="can_focus">True</property>
+                 <property name="can_default">True</property>
+diff --git a/gnome-applets/sticky-notes/ui/sticky-notes-properties.ui b/gnome-applets/sticky-notes/ui/sticky-notes-properties.ui
+index a834f39b1..24d260923 100644
+--- a/gnome-applets/sticky-notes/ui/sticky-notes-properties.ui
++++ b/gnome-applets/sticky-notes/ui/sticky-notes-properties.ui
+@@ -21,7 +21,7 @@
+             <property name="layout_style">end</property>
+             <child>
+               <object class="GtkButton" id="helpbutton2">
+-                <property name="label">_Help</property>
++                <property name="label" translatable="yes">_Help</property>
+                 <property name="visible">True</property>
+                 <property name="can_focus">True</property>
+                 <property name="can_default">True</property>
+@@ -36,7 +36,7 @@
+             </child>
+             <child>
+               <object class="GtkButton" id="closebutton2">
+-                <property name="label">_Close</property>
++                <property name="label" translatable="yes">_Close</property>
+                 <property name="visible">True</property>
+                 <property name="can_focus">True</property>
+                 <property name="can_default">True</property>
+diff --git a/gnome-applets/timer/timer-applet.c b/gnome-applets/timer/timer-applet.c
+index 8123a718d..93d52bf6b 100644
+--- a/gnome-applets/timer/timer-applet.c
++++ b/gnome-applets/timer/timer-applet.c
+@@ -58,6 +58,8 @@ struct _TimerApplet
+     GtkSpinButton      *minutes;
+     GtkSpinButton      *seconds;
+ 
++    GtkWidget          *preferences_dialog;
++
+     gboolean            active;
+     gboolean            pause;
+     gint                elapsed;
+@@ -224,6 +226,7 @@ timer_stop_callback (GSimpleAction *action, GVariant *parameter, gpointer data)
+     applet = (TimerApplet *) data;
+ 
+     applet->active = FALSE;
++    applet->pause = FALSE;
+     if (applet->timeout_id != 0)
+     {
+         g_source_remove(applet->timeout_id);
+@@ -253,35 +256,52 @@ timer_spin_button_value_changed (GtkSpinButton *spinbutton, TimerApplet *applet)
+     g_settings_set_int (applet->settings, DURATION_KEY, duration);
+ }
+ 
++static void
++timer_preferences_dialog_response_cb (GtkDialog *dialog,
++                                      gint       response_id,
++                                      gpointer   data)
++{
++    TimerApplet *applet;
++
++    applet = (TimerApplet *) data;
++
++    gtk_widget_destroy (GTK_WIDGET (applet->preferences_dialog));
++    applet->preferences_dialog = NULL;
++}
++
+ /* Show the preferences dialog */
+ static void
+ timer_preferences_callback (GSimpleAction *action, GVariant *parameter, gpointer data)
+ {
+     TimerApplet *applet;
+-    GtkDialog *dialog;
+     GtkGrid *grid;
+     GtkWidget *widget;
+     gint duration, hours, minutes, seconds;
+ 
+     applet = (TimerApplet *) data;
+ 
++    if (applet->preferences_dialog != NULL) {
++        gtk_window_present (GTK_WINDOW (applet->preferences_dialog));
++        return;
++    }
++
+     duration = g_settings_get_int (applet->settings, DURATION_KEY);
+     hours = duration / 60 / 60;
+     minutes = duration / 60 % 60;
+     seconds = duration % 60;
+ 
+-    dialog = GTK_DIALOG (gtk_dialog_new_with_buttons(_("Timer Applet Preferences"),
++    applet->preferences_dialog = gtk_dialog_new_with_buttons(_("Timer Applet Preferences"),
+                                                      NULL,
+-                                                     GTK_DIALOG_MODAL,
++                                                     0,
+                                                      _("_Close"),
+                                                      GTK_RESPONSE_CLOSE,
+-                                                     NULL));
++                                                     NULL);
+     grid = GTK_GRID (gtk_grid_new ());
+     gtk_grid_set_row_spacing (grid, 12);
+     gtk_grid_set_column_spacing (grid, 12);
+ 
+-    gtk_window_set_default_size (GTK_WINDOW (dialog), 350, 150);
+-    gtk_container_set_border_width (GTK_CONTAINER (dialog), 10);
++    gtk_window_set_default_size (GTK_WINDOW (applet->preferences_dialog), 350, 150);
++    gtk_container_set_border_width (GTK_CONTAINER (applet->preferences_dialog), 10);
+ 
+     widget = gtk_label_new (_("Name:"));
+     gtk_label_set_xalign (GTK_LABEL (widget), 1.0);
+@@ -333,11 +353,11 @@ timer_preferences_callback (GSimpleAction *action, GVariant *parameter, gpointer
+     gtk_grid_attach (grid, widget, 2, 5, 1, 1);
+     g_settings_bind (applet->settings, SHOW_DIALOG_KEY, widget, "active", G_SETTINGS_BIND_DEFAULT);
+ 
+-    gtk_box_pack_start (GTK_BOX (gtk_dialog_get_content_area (dialog)), GTK_WIDGET (grid), TRUE, TRUE, 0);
++    gtk_box_pack_start (GTK_BOX (gtk_dialog_get_content_area (GTK_DIALOG (applet->preferences_dialog))), GTK_WIDGET (grid), TRUE, TRUE, 0);
+ 
+-    g_signal_connect (dialog, "response", G_CALLBACK (gtk_widget_destroy), dialog);
++    g_signal_connect (applet->preferences_dialog, "response", G_CALLBACK (timer_preferences_dialog_response_cb), applet);
+ 
+-    gtk_widget_show_all (GTK_WIDGET (dialog));
++    gtk_widget_show_all (applet->preferences_dialog);
+ }
+ 
+ static void
+@@ -416,6 +436,8 @@ timer_applet_finalize (GObject *object)
+ 
+   g_object_unref (self->settings);
+ 
++  g_clear_pointer (&self->preferences_dialog, gtk_widget_destroy);
++
+   notify_uninit ();
+ 
+   G_OBJECT_CLASS (timer_applet_parent_class)->finalize (object);
+diff --git a/gnome-applets/tracker-search-bar/tracker-applet.c b/gnome-applets/tracker-search-bar/tracker-applet.c
+index d95ae7b84..7ea98fa82 100644
+--- a/gnome-applets/tracker-search-bar/tracker-applet.c
++++ b/gnome-applets/tracker-search-bar/tracker-applet.c
+@@ -33,8 +33,6 @@ struct _TrackerApplet
+ {
+   GpApplet        parent;
+ 
+-  GtkBuilder     *builder;
+-
+   GtkWidget      *results;
+ 
+   GtkWidget      *box;
+@@ -322,11 +320,6 @@ tracker_applet_setup (TrackerApplet *applet)
+ {
+ 	const gchar *resource_name;
+ 
+-	applet->builder = gtk_builder_new ();
+-
+-	resource_name = GRESOURCE_PREFIX "/ui/tracker-search-bar.ui";
+-	gtk_builder_add_from_resource (applet->builder, resource_name, NULL);
+-
+ 	applet->icon = gtk_icon_theme_load_icon (gtk_icon_theme_get_default (),
+ 	                                         "edit-find",
+ 	                                         48,
+@@ -379,7 +372,6 @@ tracker_applet_dispose (GObject *object)
+ 
+   g_clear_pointer (&self->results, gtk_widget_destroy);
+ 
+-  g_clear_object (&self->builder);
+   g_clear_object (&self->icon);
+ 
+   G_OBJECT_CLASS (tracker_applet_parent_class)->dispose (object);
+diff --git a/gnome-applets/tracker-search-bar/tracker-results-window.c b/gnome-applets/tracker-search-bar/tracker-results-window.c
+index 065d29347..9c35fa82b 100644
+--- a/gnome-applets/tracker-search-bar/tracker-results-window.c
++++ b/gnome-applets/tracker-search-bar/tracker-results-window.c
+@@ -441,6 +441,7 @@ results_window_finalize (GObject *object)
+ 	 * g_cancellable_cancel() on each query still running.
+ 	 */
+ 	g_list_free_full (self->search_queries, (GDestroyNotify) search_query_free);
++	self->search_queries = NULL;
+ 
+ 	G_OBJECT_CLASS (tracker_results_window_parent_class)->finalize (object);
+ }
+@@ -676,6 +677,7 @@ search_query_free (SearchQuery *sq)
+ 		g_object_unref (sq->cancellable);
+ 	}
+ 
++	sq->window->queries_pending--;
+ 	g_slist_free_full (sq->results, (GDestroyNotify) item_data_free);
+ 	g_free (sq);
+ }
+@@ -1214,14 +1216,18 @@ search_get_cb (GObject      *source_object,
+ 	GError *error = NULL;
+ 
+ 	sq = user_data;
+-	window = sq->window;
+-
+-	window->queries_pending--;
+ 
+ 	cursor = tracker_sparql_connection_query_finish (TRACKER_SPARQL_CONNECTION (source_object),
+ 							 res,
+ 							 &error);
+ 
++	if (g_error_matches (error, G_IO_ERROR, G_IO_ERROR_CANCELLED)) {
++		g_error_free (error);
++		return;
++	}
++
++	window = sq->window;
++
+ 	/* If request IDs don't match, data is no longer needed */
+ 	if (window->request_id != sq->request_id) {
+ 		g_message ("Received data from request id:%d, now on request id:%d",
+@@ -1402,6 +1408,7 @@ search_start (TrackerResultsWindow *window)
+ 	 * g_cancellable_cancel() on each query still running.
+ 	 */
+ 	g_list_free_full (window->search_queries, (GDestroyNotify) search_query_free);
++	window->search_queries = NULL;
+ 
+ 	/* SPARQL requests */
+ 	search_get (window, CATEGORY_IMAGE);
+diff --git a/gnome-applets/trash/trash-applet.c b/gnome-applets/trash/trash-applet.c
+index c2eeaeecd..378e0b0b5 100644
+--- a/gnome-applets/trash/trash-applet.c
++++ b/gnome-applets/trash/trash-applet.c
+@@ -120,9 +120,10 @@ trash_applet_monitor_changed (TrashApplet *applet)
+         {
+           char *text;
+ 
+-          text = g_strdup_printf (ngettext ("%d Item in Trash",
+-                                            "%d Items in Trash",
+-                                            items), items);
++          text = g_strdup_printf (dngettext (GETTEXT_PACKAGE,
++                                             "%d Item in Trash",
++                                             "%d Items in Trash",
++                                             items), items);
+           gtk_widget_set_tooltip_text (GTK_WIDGET (applet), text);
+           g_free (text);
+         }
+@@ -181,6 +182,51 @@ trash_applet_size_allocate (GtkWidget    *widget,
+     ->size_allocate (widget, allocation);
+ }
+ 
++static void
++trash_applet_setup (TrashApplet *self)
++{
++  const GtkTargetEntry drop_types[] = { { (char *) "text/uri-list" } };
++  const gchar *resource_name;
++
++  /* needed to clamp ourselves to the panel size */
++  gp_applet_set_flags (GP_APPLET (self), GP_APPLET_FLAGS_EXPAND_MINOR);
++
++  /* Set up the menu */
++  resource_name = GRESOURCE_PREFIX "/ui/trash-menu.ui";
++  gp_applet_setup_menu_from_resource (GP_APPLET (self),
++                                      resource_name,
++                                      trash_applet_menu_actions);
++
++  /* setup the image */
++  self->image = g_object_ref_sink (gtk_image_new ());
++  gtk_container_add (GTK_CONTAINER (self), self->image);
++  gtk_widget_show (self->image);
++
++  /* setup the trash backend */
++  self->trash = g_file_new_for_uri ("trash:/");
++  self->trash_monitor = g_file_monitor_file (self->trash, 0, NULL, NULL);
++  g_file_monitor_set_rate_limit (self->trash_monitor, 200);
++  g_signal_connect_swapped (self->trash_monitor, "changed",
++                            G_CALLBACK (trash_applet_monitor_changed),
++                            self);
++
++  /* setup drag and drop */
++  gtk_drag_dest_set (GTK_WIDGET (self), GTK_DEST_DEFAULT_ALL,
++                     drop_types, G_N_ELEMENTS (drop_types),
++                     GDK_ACTION_MOVE);
++
++  /* synthesise the first update */
++  self->items = -1;
++  trash_applet_monitor_changed (self);
++}
++
++static void
++trash_applet_constructed (GObject *object)
++{
++  G_OBJECT_CLASS (trash_applet_parent_class)->constructed (object);
++  trash_applet_setup (TRASH_APPLET (object));
++}
++
+ static void
+ trash_applet_dispose (GObject *object)
+ {
+@@ -388,16 +434,18 @@ confirm_delete_immediately (GtkWidget *parent_view,
+   if (all)
+     {
+       prompt = _("Cannot move items to trash, do you want to delete them immediately?");
+-      detail = g_strdup_printf (ngettext ("The selected item cannot be moved to the trash",
+-                                          "None of the %d selected items can be moved to the Trash",
+-                                          num_files), num_files);
++      detail = g_strdup_printf (dngettext (GETTEXT_PACKAGE,
++                                           "The selected item cannot be moved to the trash",
++                                           "None of the %d selected items can be moved to the Trash",
++                                           num_files), num_files);
+     }
+   else
+     {
+       prompt = _("Cannot move some items to trash, do you want to delete these immediately?");
+-      detail = g_strdup_printf (ngettext ("The selected item cannot be moved to the Trash",
+-                                          "%d of the selected items cannot be moved to the Trash",
+-                                          num_files) , num_files);
++      detail = g_strdup_printf (dngettext (GETTEXT_PACKAGE,
++                                           "The selected item cannot be moved to the Trash",
++                                           "%d of the selected items cannot be moved to the Trash",
++                                           num_files) , num_files);
+     }
+ 
+   str = g_strconcat ("<span weight=\"bold\" size=\"larger\">",
+@@ -507,6 +555,7 @@ trash_applet_class_init (TrashAppletClass *self_class)
+   object_class = G_OBJECT_CLASS (self_class);
+   widget_class = GTK_WIDGET_CLASS (self_class);
+ 
++  object_class->constructed = trash_applet_constructed;
+   object_class->dispose = trash_applet_dispose;
+ 
+   widget_class->size_allocate = trash_applet_size_allocate;
+@@ -519,39 +568,6 @@ trash_applet_class_init (TrashAppletClass *self_class)
+ static void
+ trash_applet_init (TrashApplet *self)
+ {
+-  const GtkTargetEntry drop_types[] = { { (char *) "text/uri-list" } };
+-  const gchar *resource_name;
+-
+-  /* needed to clamp ourselves to the panel size */
+-  gp_applet_set_flags (GP_APPLET (self), GP_APPLET_FLAGS_EXPAND_MINOR);
+-
+-  /* Set up the menu */
+-  resource_name = GRESOURCE_PREFIX "/ui/trash-menu.ui";
+-  gp_applet_setup_menu_from_resource (GP_APPLET (self),
+-                                      resource_name,
+-                                      trash_applet_menu_actions);
+-
+-  /* setup the image */
+-  self->image = g_object_ref_sink (gtk_image_new ());
+-  gtk_container_add (GTK_CONTAINER (self), self->image);
+-  gtk_widget_show (self->image);
+-
+-  /* setup the trash backend */
+-  self->trash = g_file_new_for_uri ("trash:/");
+-  self->trash_monitor = g_file_monitor_file (self->trash, 0, NULL, NULL);
+-  g_file_monitor_set_rate_limit (self->trash_monitor, 200);
+-  g_signal_connect_swapped (self->trash_monitor, "changed",
+-                            G_CALLBACK (trash_applet_monitor_changed),
+-                            self);
+-
+-  /* setup drag and drop */
+-  gtk_drag_dest_set (GTK_WIDGET (self), GTK_DEST_DEFAULT_ALL,
+-                     drop_types, G_N_ELEMENTS (drop_types),
+-                     GDK_ACTION_MOVE);
+-
+-  /* synthesise the first update */
+-  self->items = -1;
+-  trash_applet_monitor_changed (self);
+ }
+ 
+ void
+diff --git a/gnome-applets/trash/trash-empty.c b/gnome-applets/trash/trash-empty.c
+index 0646f95a9..b947e5fad 100644
+--- a/gnome-applets/trash/trash-empty.c
++++ b/gnome-applets/trash/trash-empty.c
+@@ -233,6 +233,7 @@ trash_empty_start (GtkWidget *parent)
+ 
+   resource_name = GRESOURCE_PREFIX "/ui/trash-empty.ui";
+ 
++  gtk_builder_set_translation_domain (builder, GETTEXT_PACKAGE);
+   gtk_builder_add_from_resource (builder, resource_name, NULL);
+ 
+   for (i = 0; i < G_N_ELEMENTS (widgets); i++)
+diff --git a/gnome-applets/window-buttons/preferences.c b/gnome-applets/window-buttons/preferences.c
+index 0d4c4fa9b..5dc620130 100644
+--- a/gnome-applets/window-buttons/preferences.c
++++ b/gnome-applets/window-buttons/preferences.c
+@@ -455,6 +455,7 @@ wb_applet_properties_cb (GSimpleAction *action,
+ 		gtk_window_present(GTK_WINDOW(wbapplet->window_prefs)); // CRASHES HERE BECAUSE window_prefs IS NOT NULL WHEN IT SHOULD BE!!!
+ 	} else {
+ 		// Create window from builder
++		gtk_builder_set_translation_domain (wbapplet->prefbuilder, GETTEXT_PACKAGE);
+ 		gtk_builder_add_from_resource (wbapplet->prefbuilder, GRESOURCE_PREFIX "/ui/window-buttons.ui", NULL);
+ 		wbapplet->window_prefs = GTK_WIDGET (gtk_builder_get_object (wbapplet->prefbuilder, "properties"));
+ 	}
+diff --git a/gnome-applets/window-buttons/window-buttons.c b/gnome-applets/window-buttons/window-buttons.c
+index 541c63e7b..9c8e50a96 100644
+--- a/gnome-applets/window-buttons/window-buttons.c
++++ b/gnome-applets/window-buttons/window-buttons.c
+@@ -253,19 +253,19 @@ wb_applet_update_images (WBApplet *wbapplet)
+ 	if (controlledwindow && wnck_window_is_maximized(controlledwindow)) {
+ 		gtk_image_set_from_pixbuf (wbapplet->button[WB_BUTTON_UMAXIMIZE]->image, wbapplet->pixbufs[getImageState(wbapplet->button[WB_BUTTON_UMAXIMIZE]->state)][WB_IMAGE_UNMAXIMIZE]);
+ 		if (wbapplet->prefs->show_tooltips)
+-			gtk_widget_set_tooltip_text (GTK_WIDGET(wbapplet->button[WB_BUTTON_UMAXIMIZE]->image), N_("Unmaximize")); // Set correct tooltip
++			gtk_widget_set_tooltip_text (GTK_WIDGET(wbapplet->button[WB_BUTTON_UMAXIMIZE]->image), _("Unmaximize")); // Set correct tooltip
+ 	} else {
+ 		gtk_image_set_from_pixbuf (wbapplet->button[WB_BUTTON_UMAXIMIZE]->image, wbapplet->pixbufs[getImageState(wbapplet->button[WB_BUTTON_UMAXIMIZE]->state)][WB_IMAGE_MAXIMIZE]);
+ 		if (wbapplet->prefs->show_tooltips)
+-			gtk_widget_set_tooltip_text (GTK_WIDGET(wbapplet->button[WB_BUTTON_UMAXIMIZE]->image), N_("Maximize")); // Set correct tooltip
++			gtk_widget_set_tooltip_text (GTK_WIDGET(wbapplet->button[WB_BUTTON_UMAXIMIZE]->image), _("Maximize")); // Set correct tooltip
+ 	}
+ 	//update close button
+ 	gtk_image_set_from_pixbuf (wbapplet->button[WB_BUTTON_CLOSE]->image, wbapplet->pixbufs[getImageState(wbapplet->button[WB_BUTTON_CLOSE]->state)][WB_IMAGE_CLOSE]);
+ 
+ 	//set remaining tooltips
+ 	if (wbapplet->prefs->show_tooltips) {
+-		gtk_widget_set_tooltip_text (GTK_WIDGET(wbapplet->button[WB_BUTTON_MINIMIZE]->image), N_("Minimize"));
+-		gtk_widget_set_tooltip_text (GTK_WIDGET(wbapplet->button[WB_BUTTON_CLOSE]->image), N_("Close"));
++		gtk_widget_set_tooltip_text (GTK_WIDGET(wbapplet->button[WB_BUTTON_MINIMIZE]->image), _("Minimize"));
++		gtk_widget_set_tooltip_text (GTK_WIDGET(wbapplet->button[WB_BUTTON_CLOSE]->image), _("Close"));
+ 	}
+ }
+ 
+diff --git a/gnome-applets/window-picker/wp-preferences-dialog.ui b/gnome-applets/window-picker/wp-preferences-dialog.ui
+index 190a4f913..0f9d9abdb 100644
+--- a/gnome-applets/window-picker/wp-preferences-dialog.ui
++++ b/gnome-applets/window-picker/wp-preferences-dialog.ui
+@@ -1,6 +1,6 @@
+ <?xml version="1.0" encoding="UTF-8"?>
+ <!-- Generated with glade 3.18.3 -->
+-<interface>
++<interface domain="gnome-applets">
+   <requires lib="gtk+" version="3.16"/>
+   <template class="WpPreferencesDialog" parent="GtkDialog">
+     <property name="can_focus">False</property>
+diff --git a/gnome-applets/window-title/preferences.c b/gnome-applets/window-title/preferences.c
+index 195e6c0d8..9f1f88ae9 100644
+--- a/gnome-applets/window-title/preferences.c
++++ b/gnome-applets/window-title/preferences.c
+@@ -227,6 +227,7 @@ wt_applet_properties_cb (GSimpleAction *action,
+ 	if(wtapplet->window_prefs) {
+ 		gtk_window_present(GTK_WINDOW(wtapplet->window_prefs));
+ 	} else {
++		gtk_builder_set_translation_domain (wtapplet->prefbuilder, GETTEXT_PACKAGE);
+ 		gtk_builder_add_from_resource (wtapplet->prefbuilder, GRESOURCE_PREFIX "/ui/window-title.ui", NULL);
+ 		wtapplet->window_prefs = GTK_WIDGET (gtk_builder_get_object (wtapplet->prefbuilder, "properties"));
+ 	}
+diff --git a/gnome-applets/window-title/window-title.c b/gnome-applets/window-title/window-title.c
+index 47a91f131..4c32ef5da 100644
+--- a/gnome-applets/window-title/window-title.c
++++ b/gnome-applets/window-title/window-title.c
+@@ -233,7 +233,7 @@ wt_applet_update_title (WTApplet *wtapplet)
+ 		} else {
+ 			// display "custom" icon/title (TODO: customization via preferences?)
+ 			icon_pixbuf = gtk_widget_render_icon(GTK_WIDGET(wtapplet),GTK_STOCK_HOME,GTK_ICON_SIZE_MENU,NULL); // This has to be unrefed!
+-			title_text = ("Desktop");
++			title_text = _("Desktop");
+ 		}
+ 	} else {
+ 		icon_pixbuf = wnck_window_get_icon(controlledwindow); // This only returns a pointer - it SHOULDN'T be unrefed!

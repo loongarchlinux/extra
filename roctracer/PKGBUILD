@@ -1,28 +1,30 @@
 # Maintainer: Torsten Keßler <tpkessler at archlinux dot org>
 # Contributor: acxz <akashpatel2008 at yahoo dot com>
 pkgname=roctracer
-pkgver=5.7.1
+pkgver=6.0.2
 pkgrel=1
 pkgdesc='ROCm tracer library for performance tracing'
 arch=('loong64' 'x86_64')
 url='https://rocm.docs.amd.com/projects/roctracer/en/latest'
 license=('MIT')
-depends=('hip')
+depends=('rocm-core' 'glibc' 'gcc-libs' 'hip' 'hsa-rocr' 'comgr')
 makedepends=('cmake' 'python-cppheaderparser' 'python-ply')
-_git='https://github.com/ROCm-Developer-Tools/roctracer'
+_git='https://github.com/ROCm/roctracer'
 source=("$pkgname-$pkgver.tar.gz::$_git/archive/refs/tags/rocm-$pkgver.tar.gz")
-sha256sums=('ec0453adac7e62b142eb0df1e1e2506863aac4c3f2ce9d117c3184c08c0c6b48')
+sha256sums=('1e0105b32fdd9c010aab304bb2ca1a5a38ba323cea610afe1135657edda8f26e')
 options=('!lto')
 _dirname="$(basename "$_git")-$(basename "${source[0]}" ".tar.gz")"
 
 build() {
-  cmake \
-    -B build \
-    -Wno-dev \
-    -S "$_dirname" \
-    -DCMAKE_BUILD_TYPE=None \
-    -DCMAKE_INSTALL_PREFIX=/opt/rocm \
-    -DHIP_ROOT_DIR=/opt/rocm/hip
+  local cmake_args=(
+    -Wno-dev
+    -B build
+    -S "$_dirname"
+    -D CMAKE_BUILD_TYPE=None
+    -D CMAKE_INSTALL_PREFIX=/opt/rocm
+    -D HIP_ROOT_DIR=/opt/rocm
+  )
+  cmake "${cmake_args[@]}"
   cmake --build build
 }
 

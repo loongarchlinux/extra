@@ -2,34 +2,35 @@
 # Contributor: Tavian Barnes <tavianator@tavianator.com>
 
 pkgname=bfs
-pkgver=3.0.4
+pkgver=3.2
 pkgrel=1
 pkgdesc='A breadth-first version of find'
 arch=('loong64' 'x86_64')
 url='https://tavianator.com/projects/bfs.html'
 license=('BSD')
-depends=('glibc' 'acl' 'libcap' 'oniguruma')
+depends=(
+  'glibc'
+  'acl'
+  'libcap'
+  'liburing'
+  'oniguruma'
+)
 makedepends=('git')
-_commit='c25fa4fb5e58e20ce97c3747c05d26307a70baaa'
-source=("$pkgname::git+https://github.com/tavianator/bfs#commit=$_commit")
-b2sums=('SKIP')
-
-pkgver() {
-  cd "$pkgname"
-
-  git describe --tags | sed 's/^v//'
-}
+source=("$pkgname::git+https://github.com/tavianator/bfs#tag=$pkgver")
+sha512sums=('db8150ba9a3bd267314d2912417074989ffef2fb34f34aba7df751811eef0fb8ddb660dcd96d8321c090dd448fa7bc3049367d6f4d283c137ef2de50d49cbdf4')
+b2sums=('29aa47c47a4e661cb0857e18d7989676225b98238777b8bfb598ef5c08fdb200736ab51797171915942d7e8170dad1c61829f54d7ca639b2935a1b7b47cbe9c0')
 
 build() {
   cd "$pkgname"
 
-  make release CFLAGS="$CFLAGS"
+  ./configure RELEASE=y
+  make CFLAGS="$CFLAGS"
 }
 
 check() {
   cd "$pkgname"
 
-  make -k release check CFLAGS="$CFLAGS"
+  make -k check CFLAGS="$CFLAGS"
 }
 
 package() {

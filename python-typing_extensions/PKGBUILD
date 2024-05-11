@@ -3,48 +3,40 @@
 # Contributor: Michael Yeatts <mwyeatts@gmail.com>
 
 pkgname=python-typing_extensions
-pkgver=4.9.0
+_name=${pkgname#python-}
+pkgver=4.11.0
 pkgrel=1
 pkgdesc='Backported and Experimental Type Hints for Python 3.8+'
 arch=(any)
 url=https://github.com/python/typing_extensions
-license=(custom)
+license=(Python-2.0.1)
 depends=(python)
 makedepends=(git python-build python-flit-core python-installer)
 checkdepends=(python-tests)
-provides=(python-typing-extensions)
-conflicts=(python-typing-extensions)
-_tag=fc461d6faf4585849b561f2e4cbb06e9db095307
-source=("git+${url}.git#tag=${_tag}")
-b2sums=(SKIP)
-
-pkgver() {
-  cd typing_extensions
-
-  git describe --tags
-}
+source=("git+${url}.git#tag=${pkgver}")
+b2sums=('8dce052fdc4e67ddcdabfc2f71e5a7806201a13f03e4aad65c4bac78e25c30369ce507cdeb24c4289fdc06c40524d5f56ad8b7568f8172e3de12b5cadbcfe925')
 
 build() {
-  cd typing_extensions
+  cd "${_name}"
 
   python -m build --wheel --skip-dependency-check --no-isolation
 }
 
 check() {
-  cd typing_extensions
+  cd "${_name}"
 
   python -m unittest discover src
 }
 
 package() {
-  cd typing_extensions
+  cd "${_name}"
 
   python -m installer --destdir="${pkgdir}" dist/*.whl
 
   # Symlink license file
   local site_packages=$(python -c "import site; print(site.getsitepackages()[0])")
   install -d "${pkgdir}"/usr/share/licenses/${pkgname}
-  ln -s "${site_packages}"/typing_extensions-${pkgver}.dist-info/LICENSE \
+  ln -s "${site_packages}"/"${_name}"-${pkgver}.dist-info/LICENSE \
     "${pkgdir}"/usr/share/licenses/${pkgname}/LICENSE
 }
 

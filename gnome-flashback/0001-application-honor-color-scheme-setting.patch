@@ -1,16 +1,30 @@
-From e8b891c60567bc8cd47401b2f129a45b2f09b307 Mon Sep 17 00:00:00 2001
+From ba2d15d56325f50caa140c9c54f40fc107a0c35e Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Ball=C3=B3=20Gy=C3=B6rgy?= <ballogyor@gmail.com>
 Date: Wed, 24 Jan 2024 16:56:46 +0100
 Subject: [PATCH] application: honor 'color-scheme' setting
 
 The color-scheme setting is the new system-wide dark preference introduced in GNOME 42. Set the dark theme based on this setting.
 ---
- daemons/polkit/gf-polkit-main.c  | 36 ++++++++++++++++++++++-
+ configure.ac                     |  2 +-
+ daemons/polkit/gf-polkit-main.c  | 34 ++++++++++++++++++++++
  gnome-flashback/gf-application.c | 50 ++++++++++++++++++++++++++++----
- 2 files changed, 79 insertions(+), 7 deletions(-)
+ 3 files changed, 79 insertions(+), 7 deletions(-)
 
+diff --git a/configure.ac b/configure.ac
+index 844d6f0..6a9ccca 100644
+--- a/configure.ac
++++ b/configure.ac
+@@ -94,7 +94,7 @@ LIBGNOME_DESKTOP_REQUIRED=43
+ LIBGNOME_PANEL_REQUIRED=3.35.2
+ CANBERRA_REQUIRED=0.13
+ GLIB_REQUIRED=2.67.3
+-GSETTINGS_DESKTOP_SCHEMAS_REQUIRED=3.31.0
++GSETTINGS_DESKTOP_SCHEMAS_REQUIRED=42.0
+ POLKIT_AGENT_REQUIRED=0.97
+ POLKIT_GOBJECT_REQUIRED=0.97
+ IBUS_REQUIRED=1.5.2
 diff --git a/daemons/polkit/gf-polkit-main.c b/daemons/polkit/gf-polkit-main.c
-index 51fb915..baddf21 100644
+index 51fb915..29543fe 100644
 --- a/daemons/polkit/gf-polkit-main.c
 +++ b/daemons/polkit/gf-polkit-main.c
 @@ -180,12 +180,38 @@ session_manager_ready_cb (GObject      *source_object,
@@ -20,7 +34,7 @@ index 51fb915..baddf21 100644
 +static void
 +color_scheme_changed (GSettings  *interface_settings,
 +                      const char *key,
-+                      gpointer    user_data)
++                      void       *user_data)
 +{
 +  char *color_scheme;
 +
@@ -46,10 +60,9 @@ index 51fb915..baddf21 100644
  main (int argc,
        char *argv[])
  {
--  const char *autostart_id;
-+  const char      *autostart_id;
+   const char *autostart_id;
    FlashbackPolkit *polkit;
-+  GSettings       *interface_settings;
++  GSettings *interface_settings;
  
    autostart_id = g_getenv ("DESKTOP_AUTOSTART_ID");
    startup_id = g_strdup (autostart_id != NULL ? autostart_id : "");
@@ -182,5 +195,5 @@ index 36d57ae..be1fb17 100644
  
    application->bus_name = g_bus_own_name (G_BUS_TYPE_SESSION,
 -- 
-2.43.0
+2.44.0
 

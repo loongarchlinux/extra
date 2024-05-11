@@ -6,7 +6,7 @@
 
 pkgname=ddclient
 pkgver=3.11.2
-pkgrel=3
+pkgrel=5
 pkgdesc="Update dynamic DNS entries for accounts on many dynamic DNS services"
 url="https://github.com/ddclient/ddclient"
 arch=('any')
@@ -15,11 +15,17 @@ backup=('etc/ddclient/ddclient.conf')
 depends=('curl' 'perl-digest-sha1' 'net-tools')
 makedepends=('git')
 optdepends=('smtp-forwarder: email support requires sendmail binary')
-source=("git+https://github.com/ddclient/ddclient.git?signed#tag=v${pkgver}")
-sha512sums=('SKIP')
+source=("git+https://github.com/ddclient/ddclient.git?signed#tag=v${pkgver}"
+         permission.patch)
+sha256sums=('SKIP'
+            '2e02b1c41a270f20fc3ef5d6e9bf230338be7a371bdf73c9d1eb34db20c8fe00')
 validpgpkeys=('53B26AEDC08246715E15504B236B6291555E8401' # Sandro Jäckel
               'D852004BCC1AEC6F2449631D394799890605C42A' # Lenard Heß
 )
+
+prepare() {
+  patch -Np1 -d ${pkgname} -i "${srcdir}/permission.patch"
+}
 
 build() {
   cd ${pkgname}

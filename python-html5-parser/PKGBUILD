@@ -3,37 +3,37 @@
 
 _pkgname=html5-parser
 pkgname=python-html5-parser
-pkgver=0.4.11
-pkgrel=1
+pkgver=0.4.12
+pkgrel=2
 pkgdesc="Fast C based HTML 5 parsing for python"
 arch=('loong64' 'x86_64')
 url="https://github.com/kovidgoyal/${_pkgname}"
-license=('Apache')
+license=('Apache-2.0')
 depends=('python-chardet' 'python-lxml')
-makedepends=('python-setuptools')
+makedepends=('python-setuptools' 'python-build' 'python-installer' 'python-wheel' 'git')
 checkdepends=('python-beautifulsoup4')
 optdepends=('python-beautifulsoup4: to use the soup treebuilder')
-source=("https://files.pythonhosted.org/packages/source/${_pkgname:0:1}/${_pkgname}/${_pkgname}-${pkgver}.tar.gz"{,.asc})
-sha256sums=('85bb16faa3cdf3c6c6842e0cb2ce02807cbaefc6e3bb0f3b8e18dabe51070763'
-            'SKIP')
-b2sums=('a2c1037b5bf6dcb8e69f18b3404273993ee325f05a0c5e194ace3f68e0034fa1ac119bb3dde4c4f26dea62928b4dfda9ed1453760a5bb5f8faa9397fb0276a1a'
-        'SKIP')
+source=("git+${url}#tag=v${pkgver}?signed")
+sha256sums=('57c3a8bc8454cd7ddb7f579f291545edc59076c1c6011501814be83e7ca9bf0c')
+b2sums=('a2685a57d95be31bdca22ac3a8dc1c41d454da10940f4c0e018cb8e3eeea8ce69d31edcb53b17f547f3923a7328dc0728bc3839fdbf4e29e585a7a2312b6b7b1')
 validpgpkeys=('3CE1780F78DD88DF45194FD706BC317B515ACE7C') # Kovid Goyal (New longer key) <kovid@kovidgoyal.net>
 
 build() {
-    cd "${srcdir}"/${_pkgname}-${pkgver}
+    cd "${srcdir}"/${_pkgname}
 
-    python setup.py build
+    python -m build --wheel --no-isolation
 }
 
 check() {
-    cd "${srcdir}"/${_pkgname}-${pkgver}
+    cd "${srcdir}"/${_pkgname}
+    local python_version=$(python -c 'import sys; print("".join(map(str, sys.version_info[:2])))')
 
-    python -m unittest discover -vs test
+    # For pytest
+    PYTHONPATH="$PWD/build/lib.linux-$CARCH-cpython-$python_version" python run_tests.py
 }
 
 package() {
-    cd "${srcdir}"/${_pkgname}-${pkgver}
+    cd "${srcdir}"/${_pkgname}
 
-    python setup.py install --root="${pkgdir}" --optimize=1 --skip-build
+    python -m installer --destdir="$pkgdir" dist/*.whl
 }

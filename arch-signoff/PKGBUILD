@@ -2,25 +2,26 @@
 
 pkgname=arch-signoff
 pkgver=0.5.2
-pkgrel=3
+pkgrel=4
 pkgdesc='Sign off Arch Linux testing packages'
 arch=(any)
 url="https://github.com/archlinux/arch-signoff"
-license=("custom:ISC")
+license=("ISC")
 depends=('python' 'pyalpm' 'python-click' 'python-dateutil'
          'python-requests')
-makedepends=('python-setuptools-scm' 'asciidoc' 'git')
+makedepends=('python-setuptools-scm' 'python-setuptools' 'python-build'
+             'python-installer' 'python-wheel' 'asciidoc' 'git')
 checkdepends=('python-pytest-pacman' 'python-pytest' 'python-pytest-cov')
 groups=('archlinux-tools')
 source=("$pkgname::git+https://github.com/archlinux/arch-signoff.git?signed#tag=$pkgver")
 validpgpkeys=(
     'E499C79F53C96A54E572FEE1C06086337C50773E' # Jelle van der Waa
 )
-md5sums=('SKIP')
+sha256sums=('ad9eeaaa26f64b8a9d7a4bcf06ed38fa80090cc4b95adac5c0f71305f7e57316')
 
 build() {
   cd "$pkgname"
-  python setup.py build
+  python -m build --wheel --no-isolation
   make -C man
 }
 
@@ -31,7 +32,7 @@ check() {
 
 package() {
   cd "$pkgname"
-  python setup.py install --root="$pkgdir/" --optimize=1 --skip-build
+  python -m installer --destdir="$pkgdir" dist/*.whl
 
   install -Dm644 "LICENSE" "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
   install -Dm644 "man/signoff.1" "$pkgdir/usr/share/man/man1/signoff.1"

@@ -1,0 +1,46 @@
+# Maintainer: Daniel Bermond <dbermond@archlinux.org>
+
+pkgname=libvpl-tools
+pkgver=1.0.0
+pkgrel=2
+pkgdesc='Tools for Intel Video Processing Library'
+arch=('loong64' 'x86_64')
+url='https://github.com/intel/libvpl-tools/'
+license=('MIT')
+depends=('libdrm' 'libva' 'libvpl' 'libx11' 'wayland')
+optdepends=('intel-media-sdk: runtime implementation for legacy Intel GPUs'
+            'vpl-gpu-rt: runtime implementation for Tiger Lake and newer GPUs')
+makedepends=('cmake' 'ninja' 'libpciaccess' 'wayland-protocols')
+source=("https://github.com/intel/libvpl-tools/archive/v${pkgver}/${pkgname}-${pkgver}.tar.gz")
+sha256sums=('2a74f089e4e711a3ab61240ae500e54ea5e0f392c03e419d2f3e0e2c035fdf5c')
+
+build() {
+    # NOTE: fails with 'None' build type
+    # NOTE: fails with 'Unix Makefiles' generator
+    cmake -B build -S "${pkgname}-${pkgver}" \
+        -G 'Ninja' \
+        -DCMAKE_BUILD_TYPE:STRING='Release' \
+        -DCMAKE_INSTALL_PREFIX='/usr' \
+        -DBUILD_TESTS:BOOL='ON' \
+        -DTOOLS_ENABLE_OPENCL:BOOL='ON' \
+        -DVPL_INSTALL_LICENSEDIR:PATH="share/licenses/${pkgname}" \
+        -Wno-dev
+    cmake --build build
+}
+
+check() {
+    ctest --test-dir build --output-on-failure
+}
+
+package() {
+    DESTDIR="$pkgdir" cmake --install build
+    
+    local _file
+    while read -r -d '' _file
+    do
+        if ! grep -q '^vpl-' <<< "$_file"
+        then
+            mv "${pkgdir}/usr/bin"/{,vpl-}"$_file"
+        fi
+    done < <(find "${pkgdir}/usr/bin" -mindepth 1 -maxdepth 1 -type f -print0 | sed -z 's|.*/||')
+}

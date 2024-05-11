@@ -1,39 +1,30 @@
 # Maintainer: Felix Yan <felixonmars@archlinux.org>
 
 pkgname=python-pytest-sugar
-pkgver=0.9.7
-_commit=20d8ad26024521392b61f95c7ca12db0f2c4bd04
-pkgrel=2
+pkgver=1.0.0
+pkgrel=4
 pkgdesc='A plugin for py.test that changes the default look and feel of py.test'
 arch=('any')
-license=('BSD')
-url='https://pivotfinland.com/pytest-sugar/'
-depends=('python-pytest' 'python-termcolor' 'python-packaging')
-makedepends=('python-setuptools')
-source=("https://github.com/Frozenball/pytest-sugar/archive/$_commit/$pkgname-$_commit.tar.gz")
-sha512sums=('38097a6efe2e614e093c979f8a5a56bbf1e4640401c1778b4244bc1ff87d5a211c5a3e3863c0a0d90b14ed426ec50e306965516b97fdf4ab0891051906f7aac8')
-
-prepare() {
-  mv pytest-sugar-{$_commit,$pkgver}
-}
+license=('BSD-3-Clause')
+url='https://github.com/Teemu/pytest-sugar'
+depends=('python' 'python-pytest' 'python-termcolor' 'python-packaging')
+makedepends=('python-setuptools' 'python-build' 'python-installer' 'python-wheel')
+source=("$pkgname-$pkgver.tar.gz::https://github.com/Teemu/pytest-sugar/archive/refs/tags/v$pkgver.tar.gz")
+sha512sums=('5c19411e103d86675788f64f10406f5261c63003874e359d455c0c980605320dc8a26d8343d512f1cf8d895d801d985e2c8a4b7ed509637750a6cdb076355471')
 
 build() {
   cd pytest-sugar-$pkgver
-  python setup.py build
+  python -m build --wheel --no-isolation
 }
 
 check() {
-  # Hack entry points by installing it
-
   cd pytest-sugar-$pkgver
-  local site_packages=$(python -c "import site; print(site.getsitepackages()[0])")
-  python setup.py install --root="$PWD/tmp_install" --optimize=1
-  PYTHONPATH="$PWD/tmp_install$site_packages:$PYTHONPATH" pytest
+  pytest -v
 }
 
 package() {
   cd pytest-sugar-$pkgver
-  python setup.py install --root="$pkgdir" --optimize=1
+  python -m installer --destdir="$pkgdir" dist/*.whl
   install -Dm644 LICENSE -t "$pkgdir"/usr/share/licenses/$pkgname/
 }
 

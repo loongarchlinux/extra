@@ -2,7 +2,7 @@
 # Contributor: Piotr Miller <nwg.piotr@gmail.com>
 
 pkgname=nwg-look
-pkgver=0.2.6
+pkgver=0.2.7
 pkgrel=1
 pkgdesc="GTK3 settings editor adapted to work on wlroots-based compositors"
 url="https://github.com/nwg-piotr/nwg-look"
@@ -33,8 +33,8 @@ makedepends=(
   'go'
 )
 source=(https://github.com/nwg-piotr/${pkgname}/archive/v${pkgver}/${pkgname}-${pkgver}.tar.gz)
-sha256sums=('ac3cb75ece7058120a5ed6b4ec8a321af0a66b522fdc7627bbab44dc1aaac8f8')
-b2sums=('23235ec75bdf89fb59f4893597b059fbee778fcf6b380a7348835141a779bc2bff12fd424e74b79e85cb5848af6029d451cf0831f138613b95e4542257f60415')
+sha256sums=('20a7773b1bae7ae013efa359e73dcefc89bfb516d45bba4375f59c8a9216c9c3')
+b2sums=('da1eedf00c5eafe5e5e4b8890c1a98366a20d50fa2da4ab07965fac54c9d92ea4d871ce75e83c3d1d5e35a075a585f8f22cbad7aa42b7504e63e842034af85b4')
 
 build() {
   cd ${pkgname}-${pkgver}
@@ -44,18 +44,12 @@ build() {
     -mod=readonly \
     -modcacherw \
     -ldflags "-linkmode external -extldflags \"${LDFLAGS}\"" \
+    -o bin/nwg-look \
     .
 }
 
 package() {
-  cd ${pkgname}-${pkgver}
-  install -Dm 755 -t "${pkgdir}/usr/bin" nwg-look
-  install -Dm 644 -t "${pkgdir}/usr/share/${pkgname}" stuff/main.glade
-  install -Dm 644 -t "${pkgdir}/usr/share/${pkgname}/langs" langs/*
-  install -Dm 644 -t "${pkgdir}/usr/share/applications" stuff/nwg-look.desktop
-  install -Dm 644 -t "${pkgdir}/usr/share/pixmaps" stuff/nwg-look.svg
-  install -Dm 644 -t "${pkgdir}/usr/share/doc/${pkgname}" README.md
-  install -Dm 644 -t "${pkgdir}/usr/share/licenses/${pkgname}" LICENSE
+  make DESTDIR="${pkgdir}" install -C "${pkgname}-${pkgver}"
 }
 
 # vim: ts=2 sw=2 et:

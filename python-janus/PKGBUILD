@@ -3,20 +3,20 @@
 
 pkgname=python-janus
 pkgver=1.0.0
-pkgrel=2
+pkgrel=4
 pkgdesc="Thread-safe asyncio-aware queue for Python"
 arch=('any')
 url="https://github.com/aio-libs/janus"
-license=('Apache')
+license=('Apache-2.0')
 depends=('python-typing_extensions')
-makedepends=('python-setuptools')
+makedepends=('python-setuptools' 'python-build' 'python-installer' 'python-wheel')
 checkdepends=('python-pytest-asyncio')
 source=("https://github.com/aio-libs/janus/archive/v$pkgver/$pkgname-$pkgver.tar.gz")
 sha512sums=('dc3e59e0280917168ee8ef289e87f7320a4b39411b643157712dba46d580d6ce514e82f46dcc5501304e4685a035a1de87b39c4681c832d6a0930a446a70d96d')
 
 build() {
   cd janus-$pkgver
-  python setup.py build
+  python -m build --wheel --no-isolation
 }
 
 check() {
@@ -26,5 +26,5 @@ check() {
 
 package() {
   cd janus-$pkgver
-  python setup.py install --root="$pkgdir/" --optimize=1 --skip-build
+  python -m installer --destdir="$pkgdir" dist/*.whl
 }

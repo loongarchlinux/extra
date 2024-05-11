@@ -5,23 +5,23 @@
 # Contributor: Alexander Fehr <pizzapunk@gmail.com>
 
 pkgname=python-fuse
-pkgver=1.0.5
+pkgver=1.0.7
 pkgrel=2
 arch=('loong64' 'x86_64')
 pkgdesc="Python bindings for FUSE"
 url="https://github.com/libfuse/python-fuse"
-license=('LGPL')
-makedepends=('python-setuptools' 'fuse2')
+license=('LGPL-3.0-or-later')
 depends=('fuse2' 'python')
+makedepends=('python-setuptools' 'python-build' 'python-installer' 'python-wheel')
 source=("$pkgname-$pkgver.tar.gz::https://github.com/libfuse/python-fuse/archive/v$pkgver.tar.gz")
-sha512sums=('e0d0cc0f3dee9416eefe430119e8f2f5a9bbc88a214d36d1d23c7e1f7ce78cc977a173f6d22c05cb928715d5c657ba29738f60453323b25299dddc08d57595d2')
+sha512sums=('d7ef0ea52fadb9cd5dd64ca4e493bc61956b47b39e078edaf8c6e9c1dc4c298ae269f2c15b13882a7b1fbd907f61b6d3cd3aabef729657946dde4edf72554b5f')
 
 build() {
   cd python-fuse-$pkgver
-  python setup.py build
+  python -m build --wheel --no-isolation
 }
 
 package() {
   cd python-fuse-$pkgver
-  python setup.py install --prefix=/usr --root="$pkgdir" --optimize=1
+  python -m installer --destdir="$pkgdir" dist/*.whl
 }

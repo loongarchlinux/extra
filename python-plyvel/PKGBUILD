@@ -2,17 +2,17 @@
 # Contributor: Andy Weidenbaum <archbaum@gmail.com>
 
 pkgname=python-plyvel
-pkgver=1.5.0
-pkgrel=2
+pkgver=1.5.1
+pkgrel=1
 pkgdesc="A fast and feature-rich Python interface to LevelDB"
 arch=('loong64' 'x86_64')
 license=('BSD')
 url="https://github.com/wbolster/plyvel"
 depends=('leveldb' 'python')
 makedepends=('cython' 'python-setuptools')
-checkdepends=('python-pytest-runner')
+checkdepends=('python-pytest')
 source=("https://pypi.io/packages/source/p/plyvel/plyvel-$pkgver.tar.gz")
-sha512sums=('3f12b1d17a7b4b52fc2874b091a7378f3e8c0f895a3993f86ce6a686f7f94d28b585c5e6aa9b48ebb7d9106cae2b148aa15a87f07dfb232a0678ed151d8e09c1')
+sha512sums=('8f613197e85d085ea47e5a5d6b2bf0310f52fb51eeda6ed7f8cb559c192583f3cb25b66227876c01a08f6a355aafd5092673b7d5341b9b6e5d24546b7755d275')
 
 prepare() {
   # Shipped egg-info has wrong permission etc
@@ -28,7 +28,8 @@ build() {
 
 check() {
   cd plyvel-$pkgver
-  python setup.py pytest
+  local python_version=$(python -c 'import sys; print("".join(map(str, sys.version_info[:2])))')
+  PYTHONPATH="$PWD/build/lib.linux-$CARCH-cpython-$python_version" pytest --import-mode append
 }
 
 package() {

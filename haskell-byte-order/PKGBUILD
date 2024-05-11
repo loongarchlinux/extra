@@ -2,23 +2,28 @@
 
 _hkgname=byte-order
 pkgname=haskell-byte-order
-pkgver=0.1.3.0
-pkgrel=82
+pkgver=0.1.3.1
+pkgrel=9
 pkgdesc="Portable big-endian and little-endian conversions"
-url="https://github.com/andrewthad/byte-order"
+url="https://github.com/byteverse/byte-order"
 license=("BSD")
 arch=('loong64' 'x86_64')
 depends=('ghc-libs' 'haskell-primitive' 'haskell-primitive-unaligned' 'haskell-wide-word')
-makedepends=('ghc')
+makedepends=('ghc' 'uusi')
 source=("https://hackage.haskell.org/packages/archive/$_hkgname/$pkgver/$_hkgname-$pkgver.tar.gz")
-sha256sums=('1476caf60eea817e6c0f0dbbb03800a4cc753fa096cea5e286b898c0a08c2553')
+sha256sums=('eb98ea478d1a6b196f36c5e3673dbbd261728c5423cbeb0703d80f3560061f7a')
+
+prepare() {
+  cd $_hkgname-$pkgver
+  gen-setup
+}
 
 build() {
   cd $_hkgname-$pkgver
 
   runhaskell Setup configure -O --enable-shared --enable-executable-dynamic --disable-library-vanilla \
     --prefix=/usr --docdir=/usr/share/doc/$pkgname --datasubdir=$pkgname --enable-tests \
-    --dynlibdir=/usr/lib --libsubdir=\$compiler/site-local/\$pkgid --ghc-option=-fllvm \
+    --dynlibdir=/usr/lib --libsubdir=\$compiler/site-local/\$pkgid \
     --ghc-option=-optl-Wl\,-z\,relro\,-z\,now \
     --ghc-option='-pie' 
 

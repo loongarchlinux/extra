@@ -2,17 +2,34 @@
 
 pkgname=thefuck
 pkgver=3.32
-pkgrel=5
+pkgrel=9
 pkgdesc="Magnificent app which corrects your previous console command"
 arch=('any')
 url="https://github.com/nvbn/thefuck"
 license=('MIT')
-depends=('python-colorama' 'python-decorator' 'python-psutil' 'python-pyte'
+depends=('python' 'python-colorama' 'python-decorator' 'python-psutil' 'python-pyte'
 'python-six')
 makedepends=('python-build' 'python-installer' 'python-setuptools' 'python-wheel')
-checkdepends=('python-pytest-mock' 'python-mock' 'python-pexpect' 'go')
-source=("https://github.com/nvbn/thefuck/archive/$pkgver/$pkgname-$pkgver.tar.gz")
-sha512sums=('961b9b6dc374cc0b854698455f688cf110adb21cfebd4cb645eb5f1ce11c14de6699bb4d40de86a5f9461273cbfc2eea318a9d437f803dc578dd431966cf26c1')
+checkdepends=('python-pytest-mock' 'python-pexpect' 'go' 'python-pytest7')
+source=(
+  "https://github.com/nvbn/thefuck/archive/$pkgver/$pkgname-$pkgver.tar.gz"
+  $pkgname-3.32-remove_mock.patch
+  $pkgname-3.32-remove_imp.patch
+  https://github.com/nvbn/thefuck/commit/dd26fb91a0fdec42fc1990bb91eab21e2c44a0a8.patch
+)
+sha512sums=('961b9b6dc374cc0b854698455f688cf110adb21cfebd4cb645eb5f1ce11c14de6699bb4d40de86a5f9461273cbfc2eea318a9d437f803dc578dd431966cf26c1'
+            'f3dcbfae6a8061d44dd47196ff00e4d5ae065e938ce4c3cf009f107f195e0ea3bcbac2bfb9a2e86ad471c14c9b8991e61490884631291aee41d6a5ad257a4d0a'
+            '0adbde0af4ddbeb9f109da7ba7fe616c04ce1a5ed9f78f7eb14b6f0e6aa68da6d615794907e2ac88c5f162a9cabd9218bc2dc7e2cdf91558363d546507b21d68'
+            '63dfa603f674e94e795fe5771c9fcd3314a74724e7368fb787059ae7a5af4e89fa7b44b67e287fb95e8c6798fe1ae49a0c4bcf0ec9741a51aecf3b9387e7ac67')
+
+prepare() {
+  # remove the use of python-mock: https://github.com/nvbn/thefuck/pull/1437
+  patch -Np1 -d $pkgname-$pkgver -i ../$pkgname-3.32-remove_mock.patch
+  # remove the use of imp module: https://github.com/nvbn/thefuck/pull/1248
+  patch -Np1 -d $pkgname-$pkgver -i ../$pkgname-3.32-remove_imp.patch
+  # remove the use of distutils module: https://github.com/nvbn/thefuck/pull/1404
+  patch -Np1 -d $pkgname-$pkgver -i ../dd26fb91a0fdec42fc1990bb91eab21e2c44a0a8.patch
+}
 
 build() {
   cd thefuck-$pkgver

@@ -1,0 +1,59 @@
+# Maintainer: Caleb Maclennan <caleb@alerque.com>
+# Contributor: Carl Smedstad <carl.smedstad at protonmail dot com>
+# Contributor: George Rawlinson <grawlinson@archlinux.org>
+# Contributor: Thomas <thomas at 6f dot io>
+
+pkgname=jujutsu
+_pkgname=jj
+pkgver=0.17.1
+pkgrel=1
+pkgdesc='Git-compatible VCS that is both simple and powerful'
+arch=(loong64 x86_64)
+url="https://github.com/martinvonz/$_pkgname"
+license=(Apache-2.0)
+depends=(gcc-libs # libgcc_s.so
+         glibc # libc.so libm.so
+         openssl
+         libgit2
+         zstd)
+replaces=("$pkgname-bin")
+makedepends=(cargo)
+_archive="$_pkgname-$pkgver"
+source=("$url/archive/refs/tags/v$pkgver/$_archive.tar.gz")
+sha256sums=('653e1190a82a39dae733487a11aa641ba62a36ae1e221c21844f822575961919')
+
+prepare() {
+	cd "$_archive"
+	cargo fetch --locked --target "$(rustc -vV | sed -n 's/host: //p')"
+}
+
+build() {
+	cd "$_archive"
+	CFLAGS+=' -ffat-lto-objects'
+	cargo build --frozen --release --all-features --package jj-cli
+	target/release/jj util completion bash > jj.bash
+	target/release/jj util completion zsh > _jj
+	target/release/jj util completion fish > jj.fish
+	target/release/jj util completion elvish > jj.elv
+}
+
+check() {
+	depends+=(libgit2.so
+	          libz.so)
+	cd "$_archive"
+	cargo test --frozen --all-features --package jj-cli -- \
+		--skip test_diff_command
+}
+
+package() {
+	cd "$_archive"
+	install -Dm0755 -t "$pkgdir/usr/bin" target/release/jj
+	install -Dm0644 jj.bash "$pkgdir/usr/share/bash-completion/completions/jj"
+	install -Dm0644 -t "$pkgdir/usr/share/zsh/site-functions/" _jj
+	install -Dm0644 -t "$pkgdir/usr/share/fish/completions/" jj.fish
+	install -Dm0644 -t "$pkgdir/usr/share/elvish/lib/" jj.elv
+	install -Dm0644 -t "$pkgdir/usr/share/doc/$pkgname" ./*.md
+	cp -at "$pkgdir/usr/share/doc/$pkgname" docs
+	# Avoid namcap warning for dead symlink
+	rm "$pkgdir/usr/share/doc/jujutsu/docs/cli-reference.md"
+}

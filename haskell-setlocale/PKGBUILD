@@ -4,22 +4,27 @@
 pkgname=haskell-setlocale
 _hkgname=setlocale
 pkgver=1.0.0.10
-pkgrel=4
+pkgrel=5
 pkgdesc="Haskell bindings to setlocale"
 url="https://gitlab.com/Kritzefitz/haskell-setlocale/"
 license=('BSD')
 arch=('loong64' 'x86_64')
 depends=('ghc-libs')
-makedepends=('ghc')
+makedepends=('ghc' 'uusi')
 source=(https://hackage.haskell.org/packages/archive/setlocale/${pkgver}/setlocale-${pkgver}.tar.gz)
 sha512sums=('ef05da7ed2acfa6f4b7acd988282d545897428272e5d5a9818563afc5138df32268f705946093ba33628ad42de2c19ed9cce139f0e1fa15e4a87c6cd18da02ef')
+
+prepare() {
+    cd $_hkgname-$pkgver
+    uusi -u base
+}
 
 build() {
     cd $_hkgname-$pkgver
     
     runhaskell Setup configure -O --enable-shared --enable-executable-dynamic --disable-library-vanilla \
-        --prefix=/usr --docdir=/usr/share/doc/$pkgname \
-        --dynlibdir=/usr/lib --libsubdir=\$compiler/site-local/\$pkgid --ghc-option=-fllvm
+        --prefix=/usr --docdir=/usr/share/doc/$pkgname --datasubdir=$pkgname \
+        --dynlibdir=/usr/lib --libsubdir=\$compiler/site-local/\$pkgid
     runhaskell Setup build $MAKEFLAGS
     runhaskell Setup register --gen-script
     runhaskell Setup unregister --gen-script

@@ -4,21 +4,24 @@
 # Contributor: Dhananjay Balan <mail@dbalan.in>
 
 pkgname=minio-client
-pkgver=2024.01.31
-_timever=T08-59-40Z
+pkgver=2024.05.09
+_timever=T17-04-24Z
 _pkgver="${pkgver//./-}${_timever//:/-}"
 pkgrel=1
 pkgdesc='Replacement for ls, cp, mkdir, diff and rsync commands for filesystems and object storage'
 arch=('loong64' 'x86_64')
 url='https://minio.io/downloads/#minio-client'
-license=('Apache')
+license=('AGPL-3.0-or-later')
 makedepends=('go' 'git')
 depends=('glibc')
+options=(!lto)
 install=minio-client.install
 source=(git+https://github.com/minio/mc.git#tag=RELEASE.${_pkgver})
-sha512sums=('SKIP')
+sha512sums=('f8e3d12ea981a60a80d95ab9ccaeb27c373abd76aeab12565f2b0890e01f2f6be04c988221299971ffea5347a2a9d7866fae1e4ddcad156b165f950d07bb174b')
 
 build() {
+  cd mc
+
   export CGO_LDFLAGS="${LDFLAGS}"
   export CGO_CFLAGS="${CFLAGS}"
   export CGO_CPPFLAGS="${CPPFLAGS}"
@@ -26,13 +29,8 @@ build() {
   export GOFLAGS="-buildmode=pie -trimpath -mod=readonly -modcacherw"
   GO_LDFLAGS="\
       -linkmode=external \
-      -compressdwarf=false"
-
-  cd mc
-
-  sed -i "s/Version.*/Version = \"${pkgver//./-}${_timever}\"/g" cmd/build-constants.go
-  sed -i "s/ReleaseTag.*/ReleaseTag = \"RELEASE.${_pkgver}\"/g" cmd/build-constants.go
-  sed -i "s/CommitID.*/CommitID = \"$(git rev-parse HEAD)\"/g" cmd/build-constants.go
+      -compressdwarf=false \
+      $(go run buildscripts/gen-ldflags.go)"
 
   go build -ldflags "$GO_LDFLAGS" .
 }

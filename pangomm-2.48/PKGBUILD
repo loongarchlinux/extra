@@ -6,7 +6,7 @@ pkgname=(
   pangomm-2.48
   pangomm-2.48-docs
 )
-pkgver=2.50.2
+pkgver=2.52.0
 pkgrel=1
 pkgdesc="C++ bindings for Pango"
 url="https://www.gtkmm.org/"
@@ -25,7 +25,7 @@ makedepends=(
   mm-common
 )
 options=(!emptydirs)
-_commit=4b1bd46747433b5f58f03af0de94319294e5af4e  # tags/2.50.2^0
+_commit=a767b1b98003ae3d7defa838af789616395d2602  # tags/2.52.0^0
 source=("git+https://gitlab.gnome.org/GNOME/pangomm.git#commit=$_commit")
 b2sums=('SKIP')
 

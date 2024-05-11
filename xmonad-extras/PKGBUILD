@@ -1,33 +1,43 @@
 # Maintainer: Felix Yan <felixonmars@archlinux.org>
 
 pkgname=xmonad-extras
-pkgver=0.17.0
-pkgrel=165
+pkgver=0.17.1
+pkgrel=12
 pkgdesc="Third party extensions for xmonad with wacky dependencies"
 url="https://github.com/xmonad/xmonad-extras"
 license=("BSD")
 arch=('loong64' 'x86_64')
-depends=('ghc-libs' 'haskell-x11' 'haskell-alsa-mixer' 'haskell-hint' 'haskell-libmpd'
-         'haskell-network' 'haskell-regex-posix' 'xmonad' 'xmonad-contrib')
-makedepends=('ghc')
+depends=('ghc-libs' 'haskell-x11' 'haskell-alsa-mixer' 'haskell-dbus' 'haskell-hint'
+         'haskell-libmpd' 'haskell-network' 'haskell-regex-posix' 'xmonad' 'xmonad-contrib')
+makedepends=('ghc' 'uusi')
 source=("https://hackage.haskell.org/packages/archive/$pkgname/$pkgver/$pkgname-$pkgver.tar.gz")
-sha256sums=('9d3a73472f3a65e2760cca25062cd3e96938ec39fe246e13db295c48d0b37c4e')
+sha256sums=('903dfd7a6392173e33af72e9d46a40fe83f2e3f275e1dac4e2964c89064f7822')
+
+prepare() {
+  cd $pkgname-$pkgver
+  uusi -u bytestring -u dbus
+}
 
 build() {
   cd $pkgname-$pkgver
 
   runhaskell Setup configure -O --enable-shared --enable-executable-dynamic --disable-library-vanilla \
     --prefix=/usr --docdir=/usr/share/doc/$pkgname --datasubdir=$pkgname --enable-tests \
-    --dynlibdir=/usr/lib --libsubdir=\$compiler/site-local/\$pkgid --ghc-option=-fllvm \
+    --dynlibdir=/usr/lib --libsubdir=\$compiler/site-local/\$pkgid \
     --ghc-option=-optl-Wl\,-z\,relro\,-z\,now \
     --ghc-option='-pie' \
-    -f-testing -fwith_brightness -fwith_hint -f-with_hlist -fwith_mpd -fwith_regex_posix -fwith_sound -fwith_template_haskell
+    -f-testing -fwith_dbus -fwith_brightness -fwith_hint -f-with_hlist -fwith_mpd -fwith_regex_posix -fwith_sound -fwith_template_haskell
 
   runhaskell Setup build $MAKEFLAGS
   runhaskell Setup register --gen-script
   runhaskell Setup unregister --gen-script
   sed -i -r -e "s|ghc-pkg.*update[^ ]* |&'--force' |" register.sh
   sed -i -r -e "s|ghc-pkg.*unregister[^ ]* |&'--force' |" unregister.sh
+}
+
+check() {
+  cd $pkgname-$pkgver
+  runhaskell Setup test --show-details=direct
 }
 
 package() {

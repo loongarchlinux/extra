@@ -1,8 +1,8 @@
 # Maintainer: Johannes Löthberg <johannes@kyriasis.com>
 
 pkgname=python-hiredis
-pkgver=2.0.0
-pkgrel=4
+pkgver=2.3.2
+pkgrel=1
 
 pkgdesc='Non-blocking redis client for python'
 url='https://pypi.org/project/hiredis/'
@@ -14,7 +14,7 @@ makedepends=('python-setuptools')
 
 source=("https://pypi.org/packages/source/h/hiredis/hiredis-$pkgver.tar.gz")
 
-sha256sums=('81d6d8e39695f2c37954d1011c0480ef7cf444d4e3ae24bc5e89ee5de360139a')
+sha256sums=('733e2456b68f3f126ddaf2cd500a33b25146c3676b97ea843665717bda0c5d43')
 
 build() {
 	cd "$srcdir"/hiredis-$pkgver

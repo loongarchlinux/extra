@@ -1,42 +1,64 @@
 # Maintainer: Felix Yan <felixonmars@archlinux.org>
+# Maintainer: Jakub Klinkovský <lahwaacz at archlinux dot org>
 # Contributor: Gordian Edenhofer <gordian.edenhofer@gmail.com>
 # Contributor: Alan Orth <alan.orth[at]gmail[dot]com >
 # Contributor: Fredrik Tegenfeldt <fredrik.tegenfeldt@unige.ch>
 
 pkgname=slurm-llnl
-pkgver=22.05.11.1
+pkgver=23.11.3.1
 # Hyphens (-) are prohibited however they are used by the package author
 # therefore it is necessary to invoke ${pkgver} like ${pkgver//./-}
 # this will substitute any full stops (.) with hyphens
-pkgrel=1
+pkgrel=5
 pkgdesc="Simple Linux Utility for Resource Management"
 arch=('loong64' 'x86_64')
 url="https://www.schedmd.com"
-license=('GPL')
-depends=('hwloc' 'lz4' 'munge' 'numactl')
-optdepends=("lua: the lua API will be available in various plugins"
-            "mariadb-libs: support for accounting"
-            "postgresql-libs: support for PostgreSQL"
-            "hdf5: support for acct_gather_profile/hdf5 job profiling"
-            "openssl: support for the crypto/openssl CryptoType plugin"
-            "pam: PAM support"
-            "readline: Readline support in scontrol and sacctmgr's interactive modes"
-            "rdma-core: support for the acct_gather_infiniband/ofed InfiniBand accounting plugin"
-            "rrdtool: support for the ext_sensors/rrd plugin"
-            "ncurses: adds the smap command "
-            "gtk2: enables the sview command, a simple graphical frontend"
-            "openpmix: support Open MPI applications using PMIx"
-            "json-c: JSON serializer support"
-            "libyaml: YAML serializer support"
-            "http-parser: for slurmrestd"
-            "freeipmi: for the acct_gather_energy_xcc plugin")
-makedepends=('python' 'gtk2' 'rrdtool' 'hdf5' 'lua' 'json-c' 'http-parser' 'freeipmi' 'openpmix'
-             'level-zero-headers' 'level-zero-loader' 'mariadb-libs' 'rdma-core' 'numactl' 'libyaml')
+license=('GPL-2.0-or-later')
+depends=(
+  curl
+  dbus
+  glibc
+  hwloc
+  lz4
+  munge
+  numactl
+  pam
+  readline
+)
+makedepends=(
+  freeipmi
+  gtk2
+  hdf5
+  http-parser
+  json-c
+  level-zero-headers
+  level-zero-loader
+  libyaml
+  lua
+  mariadb-libs
+  openpmix
+  python
+  rdma-core
+  rrdtool
+)
+optdepends=(
+  "mariadb-libs: support for accounting"
+  "openpmix: support Open MPI applications using PMIx"
+  "freeipmi: for the acct_gather_energy_xcc plugin"
+  "hdf5: support for acct_gather_profile/hdf5 job profiling"
+  "lua: the lua API will be available in various plugins"
+  "rdma-core: support for the acct_gather_infiniband/ofed InfiniBand accounting plugin"
+  "rrdtool: support for the ext_sensors/rrd plugin"
+  "gtk2: enables the sview command, a simple graphical frontend"
+  "http-parser: for slurmrestd"
+  "json-c: JSON serializer support"
+  "libyaml: YAML serializer support"
+)
 backup=('etc/default/slurmd' 'etc/default/slurmctld' 'etc/default/slurmdbd')
 source=("https://github.com/SchedMD/slurm/archive/slurm-${pkgver//./-}.tar.gz"
         "slurm-llnl.sysusers"
         "slurm-llnl.tmpfiles")
-sha512sums=('0c6bed501062bc653f7a85364528cc2a299e55a5961a33c79d768a560a9101b629dbbf4a1258f2895aefbe6fec1267ec1a4cec22cd3ff2d2beeb14fd7fb83389'
+sha512sums=('8464661789ac0acd8168269e040d6efa75bcb222e1de2b2dc74ceb9ec03a6d54c499cc026698495834547cd51ee6ed117a06b6d5df3f8b8f04a31a8ee544c071'
             '8373ef791d68a7e0b2114f5ce670da1936bd8d96fd51fa7319d4feb85f16a673f89abcb823a114455d32d8fd9eee3e121c313a0aa986542540f120e6d35686e6'
             '4f7d1e36abc2ca5aa38b40403292b68f769238766ecdd44ea5d29f8106bd9b7c3e0d2236208f92e00818e37dd24c9520b6e9fe06e01b6e552ac485a1df682edd')
 
@@ -70,7 +92,11 @@ build() {
     --with-hdf5 \
     --with-hwloc \
     --with-rrdtool \
-    --with-munge
+    --with-munge \
+    --with-pmix
+
+  # prevent excessive overlinking due to libtool
+  sed -i -e 's/ -shared / -Wl,-O1,--as-needed\0/g' libtool
 
   make
 }

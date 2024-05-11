@@ -4,7 +4,7 @@
 _pyname=pytest-datafiles
 pkgname=python-$_pyname
 pkgver=3.0.0
-pkgrel=2
+pkgrel=3
 pkgdesc="py.test plugin to create a 'tmpdir' containing predefined files/directories."
 arch=(any)
 url='https://github.com/omarkohl/pytest-datafiles'

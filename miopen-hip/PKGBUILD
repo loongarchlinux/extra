@@ -3,24 +3,24 @@
 # Contributor: JP-Ellis <josh@jpellis.me>
 
 pkgname=miopen-hip
-pkgver=5.7.1
+pkgver=6.0.2
 pkgrel=1
 pkgdesc="AMD's Machine Intelligence Library (HIP backend)"
 arch=('loong64' 'x86_64')
-url='https://rocmsoftwareplatform.github.io/MIOpen/doc/html/'
+url="https://rocm.docs.amd.com/projects/MIOpen/en/latest/index.html"
 license=('MIT')
-depends=('rocblas' 'rocm-clang-ocl' 'hip' 'composable-kernel' 'sqlite')
+depends=('rocm-core' 'glibc' 'gcc-libs' 'rocblas' 'rocm-clang-ocl' 'hip'
+         'comgr' 'bzip2' 'composable-kernel' 'roctracer' 'sqlite')
 makedepends=('cmake' 'ninja' 'rocm-cmake' 'boost' 'lbzip2'
              'nlohmann-json' 'eigen' 'half' 'functional-plus' 'frugally-deep')
 provides=('miopen')
 conflicts=('miopen')
-_git='https://github.com/ROCmSoftwarePlatform/MIOpen'
-_mlir='https://github.com/ROCmSoftwarePlatform/rocMLIR'
-_mlirver=5.7.1
+_git='https://github.com/ROCm/MIOpen'
+_mlir='https://github.com/ROCm/rocMLIR'
 source=("$pkgname-$pkgver.tar.gz::$_git/archive/rocm-$pkgver.tar.gz"
-        "$pkgname-rocmlir-$pkgver.tar.gz::$_mlir/archive/rocm-$_mlirver.tar.gz")
-sha256sums=('912a658fe21ce6f1982b0f2ff251c3f7bb618f2e7e9876d983bcb54e3cd7129e'
-            '87b1d28db1ccc921aed31f06fb0df4e85881f8e5fb5ea8d3f9bb9d9df476637e')
+        "$pkgname-rocmlir-$pkgver.tar.gz::$_mlir/archive/rocm-$pkgver.tar.gz")
+sha256sums=('e6f671bd6af59f7470f42cda2ff9e77441d8f6c2105772bbf855d31da1085ffa'
+            '6ed039e8045169bb64c10fb063c2e1753b8d52d6d56c60e001c929082be1f20b')
 options=(!lto)
 _dirname="$(basename "$_git")-$(basename "${source[0]}" .tar.gz)"
 _mlirname="$(basename "$_mlir")-$(basename "${source[1]}" .tar.gz)"
@@ -34,43 +34,43 @@ build() {
   export CC=/opt/rocm/llvm/bin/clang
   export CXX=/opt/rocm/llvm/bin/clang++
   # -fcf-protection is not supported by HIP, see
-  # https://rocm.docs.amd.com/en/latest/reference/rocmcc/rocmcc.html#support-status-of-other-clang-options
-  # define NDEBUG to silence internal logging (mimics cmake release build)
-  # https://rocmsoftwareplatform.github.io/MIOpen/doc/html/DebugAndLogging.html
-  export CXXFLAGS="${CXXFLAGS} -fcf-protection=none -DNDEBUG"
-
+  # https://rocm.docs.amd.com/en/latest/reference/rocmcc.html#support-status-of-other-clang-options
   # Set ROCm test chipset to Vega in order to pass the configuration step.
-  cmake \
-    -Wno-dev \
-    -G Ninja \
-    -B build-mlir \
-    -S "$_mlirname" \
-    -DCMAKE_INSTALL_PREFIX=/usr \
-    -DCMAKE_BUILD_TYPE=Release \
-    -DMLIR_MIOPEN_SQLITE_ENABLED=ON \
-    -DROCM_TEST_CHIPSET=gfx900 \
-    -DBUILD_FAT_LIBROCKCOMPILER=ON
+  local llvm_args=(
+    -Wno-dev
+    -G Ninja
+    -B build-mlir
+    -S "$_mlirname"
+    -D CMAKE_CXX_FLAGS="${CXXFLAGS} -fcf-protection=none"
+    -D CMAKE_INSTALL_PREFIX=/usr
+    -D CMAKE_BUILD_TYPE=Release
+    -D ROCM_TEST_CHIPSET=gfx900
+    -D BUILD_FAT_LIBROCKCOMPILER=ON
+  )
+  cmake "${llvm_args[@]}"
   cmake --build build-mlir
   DESTDIR="$srcdir/deps" cmake --install build-mlir
 
-  cmake \
-    -Wno-dev \
-    -G Ninja \
-    -B build \
-    -S "$_dirname" \
-    -DMIOPEN_BACKEND=HIP \
-    -DCMAKE_BUILD_TYPE=None \
-    -DHALF_INCLUDE_DIR=/usr/include/half \
-    -DCMAKE_PREFIX_PATH="$srcdir/deps/usr/lib/cmake" \
-    -DCMAKE_INSTALL_PREFIX=/opt/rocm
+  # define NDEBUG to silence internal logging (mimics cmake release build)
+  # https://rocmsoftwareplatform.github.io/MIOpen/doc/html/DebugAndLogging.html
+  local cmake_args=(
+     -Wno-dev
+    -G Ninja
+    -B build
+    -S "$_dirname"
+    -D CMAKE_CXX_FLAGS="${CXXFLAGS} -fcf-protection=none -DNDEBUG"
+    -D CMAKE_INSTALL_PREFIX=/opt/rocm
+    -D CMAKE_BUILD_TYPE=None
+    -D MIOPEN_BACKEND=HIP
+    -D HALF_INCLUDE_DIR=/usr/include/half
+    -D CMAKE_PREFIX_PATH="$srcdir/deps/usr/lib/cmake"
+  )
+  cmake "${cmake_args[@]}"
   cmake --build build
 }
 
 package() {
   DESTDIR="$pkgdir" cmake --install build
-
-  echo '/opt/rocm/miopen/lib' > 'miopen.conf'
-  install -Dm644 "miopen.conf" "$pkgdir/etc/ld.so.conf.d/miopen.conf"
 
   install -Dm644 "$_dirname/LICENSE.txt" "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
 }

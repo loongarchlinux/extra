@@ -1,44 +1,49 @@
 # Maintainer: David Runge <dvzrv@archlinux.org>
 
-_name=iwlib
 pkgname=python-iwlib
 pkgver=1.7.0
-pkgrel=5
+pkgrel=6
 pkgdesc='Python module to interface with iwlib'
-arch=('loong64' 'x86_64')
+arch=(loong64 x86_64)
 url="https://github.com/nathan-hoad/python-iwlib"
-license=('GPL2')
-depends=('python-cffi' 'wireless_tools')
-makedepends=('python-setuptools')
-checkdepends=('python-pytest')
-source=("https://files.pythonhosted.org/packages/source/${_name::1}/${_name}/${_name}-${pkgver}.tar.gz")
-sha512sums=('c9909449f8b52fdd75e3135951fde2085abc5be622acd7be045a281f108b4f0bc5623f97b7b57a6b91f17170ea524bbb6a52626fa87877621873fe8b6b9f0bca')
+license=(GPL-2.0-only)
+depends=(
+  glibc
+  python
+  python-cffi
+  wireless_tools
+)
+makedepends=(
+  python-build
+  python-installer
+  python-setuptools
+  python-wheel
+)
+checkdepends=(python-pytest)
+source=($pkgname-$pkgver.tar.gz::$url/archive/refs/tags/$pkgver.tar.gz)
+sha512sums=('f88776702e6e26c3f682eed618917ff559b3678628ac8c149f12cad12144b208c79d3ee4c027f31a20fa3811bc89eb92db1cd7cc181c0b52002d4bde2ad98fdf')
+b2sums=('616cc4788eb7098547c2cc0feed5a16add2d8bd418fd1145c04e8138b6fa0988d7e407dacb64fd11295b388c6c5b8db3652fa9cf8f9e0f89f9132671d20a46e3')
 
 prepare() {
-  cd "${_name}-${pkgver}"
+  cd $pkgname-$pkgver
   # fixing include discovery: https://github.com/nhoad/python-iwlib/issues/11
   rm -v test/__init__.py
 }
 
 build() {
-  cd "${_name}-${pkgver}"
-  python setup.py build
+  cd $pkgname-$pkgver
+  python -m build --wheel --no-isolation
 }
 
 check() {
-  cd "${_name}-${pkgver}"
+  cd $pkgname-$pkgver
   local _py3_ver=$(python3 -c "import sys; print(str(sys.version_info.major)+str(sys.version_info.minor))")
-  export PYTHONPATH="build/lib.linux-$CARCH-cpython-${_py3_ver}/:${PYTHONPATH}"
-  py.test
+  export PYTHONPATH="build/lib.linux-$CARCH-cpython-$_py3_ver/:$PYTHONPATH"
+  pytest -vv
 }
 
 package() {
-  cd "${_name}-${pkgver}"
-  python setup.py install --skip-build \
-    --optimize=1 \
-    --prefix=/usr \
-    --root="${pkgdir}"
-  # docs
-  install -vDm 644 {AUTHORS,README.rst} \
-    -t "${pkgdir}/usr/share/doc/${pkgname}/"
+  cd $pkgname-$pkgver
+  python -m installer --destdir="$pkgdir" dist/*.whl
+  install -vDm 644 {AUTHORS,README.rst} -t "$pkgdir/usr/share/doc/$pkgname/"
 }

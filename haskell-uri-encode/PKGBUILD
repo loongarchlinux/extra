@@ -4,22 +4,27 @@
 _hkgname=uri-encode
 pkgname=haskell-uri-encode
 pkgver=1.5.0.7
-pkgrel=207
+pkgrel=213
 pkgdesc="Unicode aware uri-encoding"
 url="https://github.com/silkapp/uri-encode"
 license=("BSD")
 arch=('loong64' 'x86_64')
 depends=('ghc-libs' 'haskell-network-uri' 'haskell-utf8-string')
-makedepends=('ghc')
+makedepends=('ghc' 'uusi')
 source=("https://hackage.haskell.org/packages/archive/${_hkgname}/${pkgver}/${_hkgname}-${pkgver}.tar.gz")
 sha512sums=('da8d816a2c9586bd09762b914a6c4da2c3688fd1d1b31aa34bfae0291db9e0f639c4c7e7bdfa2adcd4f44c39860697a8c6f4f1955cde6c4db74269bbc7308661')
+
+prepare() {
+    cd $_hkgname-$pkgver
+    uusi -u bytestring
+}
 
 build() {
     cd $_hkgname-$pkgver
 
     runhaskell Setup configure -O --enable-shared --enable-executable-dynamic --disable-library-vanilla \
         --prefix=/usr --docdir=/usr/share/doc/$pkgname --datasubdir=$pkgname \
-        --dynlibdir=/usr/lib --libsubdir=\$compiler/site-local/\$pkgid --ghc-option=-fllvm \
+        --dynlibdir=/usr/lib --libsubdir=\$compiler/site-local/\$pkgid \
             -f-tools -fnetwork-uri
     runhaskell Setup build $MAKEFLAGS
     runhaskell Setup register --gen-script

@@ -2,33 +2,33 @@
 
 pkgname=python-zope-security
 pkgver=6.2
-_commit=dfdce15e432208fd8f01cc2072818a2847663bc6
-pkgrel=1
+pkgrel=3
 pkgdesc="Zope Security Framework"
 arch=('loong64' 'x86_64')
 url="https://github.com/zopefoundation/zope.security"
-license=('ZPL')
+license=('ZPL-2.1')
 depends=('python-setuptools' 'python-zope-component' 'python-zope-i18nmessageid'
          'python-zope-interface' 'python-zope-location' 'python-zope-proxy' 'python-zope-schema')
-makedepends=('git')
-checkdepends=('python-btrees' 'python-nose' 'python-zope-configuration' 'python-zope-testing'
+makedepends=('git' 'python-build' 'python-installer' 'python-wheel')
+checkdepends=('python-btrees' 'python-zope-configuration' 'python-zope-testing'
               'python-zope-testrunner')
-source=("git+https://github.com/zopefoundation/zope.security.git#commit=$_commit")
-sha512sums=('SKIP')
+source=("git+https://github.com/zopefoundation/zope.security.git#tag=$pkgver")
+sha512sums=('fa2aaeb9738018ca694d9bbfb0276a0eae90a7095908b13322d0a84706ef52fc98eec7208a66b322bb29f12013b40673138857f8f8df0ccd3e3370a8abde969b')
 
 build() {
   cd zope.security
-  python setup.py build
+  python -m build --wheel --no-isolation
 }
 
 check() {
   cd zope.security
-  PYTHONPATH="$PWD/build/lib.linux-$CARCH-cpython-311" python -m zope.testrunner --test-path=src
+  local python_version=$(python -c 'import sys; print("".join(map(str, sys.version_info[:2])))')
+  PYTHONPATH="$PWD/build/lib.linux-$CARCH-cpython-$python_version" python -m zope.testrunner --test-path=src
 }
 
 package() {
   cd zope.security
-  python setup.py install --root="$pkgdir" --optimize=1
+  python -m installer --destdir="$pkgdir" dist/*.whl
 }
 
 # vim:set ts=2 sw=2 et:

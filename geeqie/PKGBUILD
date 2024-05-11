@@ -1,24 +1,21 @@
 # Maintainer: AndyRTR <andyrtr@archlinux.org>
+# Maintainer: Caleb Maclennan <caleb@alerque.com>
 # Contributor: Eric Bélanger <eric@archlinux.org>
 # Contributor: Lukas Jirkovsky <l.jirkovsky@gmail.com>
 
 pkgname=geeqie
-pkgver=2.2
+pkgver=2.4
 pkgrel=1
 pkgdesc='Lightweight image viewer'
 arch=('loong64' 'x86_64')
 url="http://www.geeqie.org/"
 license=('GPL-2.0-or-later')
 # https://github.com/BestImageViewer/geeqie#optional-libraries
-depends=('exiv2' 'gtk3' 'ffmpegthumbnailer'
-         'djvulibre' 'libheif' 'libchamplain'
-         'poppler-glib' 'libarchive' 'libraw' 'lua'
-         'libjxl' 'gspell'
-         'glib2' 'glibc' 'gcc-libs' 'lcms2'
-         'openjpeg2' 'clutter-gtk' 'clutter'
-         'gdk-pixbuf2' 'libtiff' 'cairo' 'pango'
-         'libjpeg-turbo'
-         'hicolor-icon-theme')
+depends=('exiv2' 'gtk3' 'ffmpegthumbnailer' 'djvulibre' 'libheif' 'libchamplain'
+         'poppler-glib' 'libarchive' 'libraw' 'lua' 'libjxl' 'gspell'
+         'glib2' 'glibc' 'gcc-libs' 'lcms2' 'openjpeg2' 'clutter-gtk' 'clutter'
+         'gdk-pixbuf2' 'libtiff' 'cairo' 'pango' 'libjpeg-turbo'
+         'sh' 'hicolor-icon-theme')
 makedepends=('meson'
              'intltool' 'python' 'librsvg'
              'vim' 'evince'
@@ -39,13 +36,22 @@ optdepends=('librsvg: SVG rendering'
             'evince: for print preview'
             'libwebp: for WebP image format')
 source=(#"http://www.geeqie.org/${pkgname}-${pkgver}.tar.xz"{,.asc}
-        https://github.com/BestImageViewer/geeqie/releases/download/v${pkgver}/${pkgname}-${pkgver}.tar.xz{,.asc})
-sha256sums=('899ac33b801e0e83380f79e9094bc2615234730ccf6a02d93fd6da3e6f8cfe94'
-            'SKIP')
+        https://github.com/BestImageViewer/geeqie/releases/download/v${pkgver}/${pkgname}-${pkgver}.tar.xz{,.asc}
+        Skip-failing-tests.patch)
+sha256sums=('f2b7d1290786fdd1afec09bbe0217f327ff1ee7c80363563e8a108d03aec77da'
+            'SKIP'
+            '068adc807c17fadba0c7ff7f34f5647862d6562ebe8a22ac379fc2122230e823')
 validpgpkeys=('91EC400226201276E2ADCEC7D0DA6F44C936D1DA') # "Colin Clark <colin.clark@cclark.uk>"
 
 # main repo: http://www.geeqie.org/cgi-bin/gitweb.cgi?p=geeqie.git
 # bug tracker: https://github.com/BestImageViewer/geeqie/issues
+
+prepare() {
+  cd $pkgname-$pkgver
+  # disable "Ancillary files" test
+  # https://github.com/BestImageViewer/geeqie/issues/1274
+  patch -Np1 -i $srcdir/Skip-failing-tests.patch
+}
 
 build() {
   arch-meson $pkgname-$pkgver build
@@ -58,4 +64,7 @@ check() {
 
 package(){
   DESTDIR="$pkgdir" meson install -C build
+  # add Changelog listed in help menu
+  install -m755 -d "${pkgdir}/usr/share/doc/${pkgname}"
+  install -m644 $pkgname-$pkgver/ChangeLog.gqview "${pkgdir}/usr/share/doc/${pkgname}/ChangeLog"
 }

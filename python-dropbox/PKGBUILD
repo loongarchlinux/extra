@@ -5,7 +5,7 @@
 _name=dropbox-sdk-python
 pkgname=python-dropbox
 pkgver=11.36.2
-pkgrel=1
+pkgrel=2
 pkgdesc="Python SDK for Dropbox Core APIs"
 url="https://github.com/dropbox/dropbox-sdk-python"
 arch=(any)
@@ -22,7 +22,6 @@ makedepends=(
   python-build
   python-installer
   python-setuptools-scm
-  python-pytest-runner
   python-wheel
 )
 checkdepends=(
@@ -43,6 +42,8 @@ prepare() {
   sed -e 's/import mock/from unittest import mock/' -i test/unit/test_dropbox_unit.py
   # Fix version
   sed -e "s|0.0.0|$pkgver|" -i dropbox/dropbox_client.py
+  # Remove pytest-runner
+  sed -i 's|pytest-runner|pytest|' setup.py requirements.txt
 }
 
 build() {

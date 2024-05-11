@@ -1,0 +1,37 @@
+# Maintainer: Antonio Rojas <arojas@archlinux.org>
+
+pkgname=kirigami-addons
+pkgver=1.2.0
+pkgrel=1
+pkgdesc='Add-ons for the Kirigami framework'
+url='https://invent.kde.org/libraries/kirigami-addons'
+arch=(loong64 x86_64)
+license=(GPL-2.0-or-later
+         LGPL-2.1-or-later)
+depends=(gcc-libs
+         glibc
+         kconfig
+         kcoreaddons
+         kirigami
+         kitemmodels
+         ksvg
+         qt6-base
+         qt6-declarative
+         qt6-multimedia)
+makedepends=(extra-cmake-modules)
+source=(https://download.kde.org/stable/$pkgname/$pkgname-$pkgver.tar.xz{,.sig})
+sha256sums=('8ff36458aa90ff1d980629357b6ddf5e88ab6bc917b011a7f9fa5d5e12acf51a'
+            'SKIP')
+validpgpkeys=(0AAC775BB6437A8D9AF7A3ACFE0784117FBCE11D  # Bhushan Shah (mykolab address) <bshah@mykolab.com>
+              39FFA93CAE9C6AFC212AD00202325448204E452A) # Carl Schwan <carl@carlschwan.eu>
+
+build() {
+  cmake -B build -S $pkgname-$pkgver \
+    -DBUILD_TESTING=OFF \
+    -DBUILD_QCH=ON
+  cmake --build build
+}
+
+package() {
+  DESTDIR="$pkgdir" cmake --install build
+}

@@ -4,7 +4,7 @@
 pkgbase=pyatspi
 pkgname=(python-atspi)
 pkgver=2.46.1
-pkgrel=1
+pkgrel=2
 pkgdesc="Python bindings for D-Bus AT-SPI"
 url="https://gitlab.gnome.org/GNOME/pyatspi2"
 arch=(any)
@@ -14,14 +14,8 @@ depends=(
   python-gobject
 )
 makedepends=(git)
-_commit=8c69016b38d0e4caaf4c986938ea3410fb7351b6  # tags/PYATSPI_2_46_1^0
-source=("git+https://gitlab.gnome.org/GNOME/pyatspi2.git#commit=$_commit")
-b2sums=('SKIP')
-
-pkgver() {
-  cd pyatspi2
-  git describe --tags | sed 's/^PYATSPI_//;s/_/./g;s/[^-]*-g/r&/;s/-/+/g'
-}
+source=("git+https://gitlab.gnome.org/GNOME/pyatspi2.git#tag=PYATSPI_${pkgver//./_}")
+b2sums=('be2d581223a2994def5e0e650166245258da157e5b6708b97f2ac4896f12070dc2af77562d14bc07849c3cc0c9ae92427914cc7c72b7331686798c4108ed791a')
 
 prepare() {
   cd pyatspi2

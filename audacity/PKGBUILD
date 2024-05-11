@@ -8,7 +8,7 @@ pkgname=(
   audacity
   audacity-docs
 )
-pkgver=3.4.2
+pkgver=3.5.1
 pkgrel=2
 epoch=1
 pkgdesc="A program that lets you manipulate digital audio waveforms"
@@ -19,6 +19,7 @@ makedepends=(
   alsa-lib
   chrpath
   cmake
+  catch2-v2
   ffmpeg
   flac
   gcc-libs
@@ -60,19 +61,20 @@ makedepends=(
 )
 source=(
   https://github.com/audacity/audacity/archive/refs/tags/$_name-$pkgver.tar.gz
-  https://github.com/$pkgbase/$pkgbase/releases/download/$_name-$pkgver/$pkgbase-manual-$pkgver.zip
-  audacity_3_4_2_update_vst3_cmake_args.patch
+  https://github.com/$pkgbase/$pkgbase/releases/download/$_name-$pkgver/$pkgbase-manual-$pkgver.tar.gz
+  audacity_3_4_2_enable_tests_without_conan.patch
 )
-sha512sums=('a4a3bc68e46988e5538edbe6d8f42428b69e3f294b8d65337600e6806b516100d20a92135954f073c863d29767b904b781bd3a09cec40b8a85ee4463f52e1759'
-            'a840409a98ba570113e445264feac22555585c9a6e64191a3d90d693f55325d9bf0a028869828f0ad3074e451087563ef47064d2774348184fe62bbd88dfde5f'
-            '075ab510b28ce96be049bc62d11d4f978090268376e76865fc41424d2f76ec79f9625ab5479aee488bf357c773346fefd2e0cc3884acb5ba14083c4e79276e35')
-b2sums=('f5bcf6adb925c22b74d6bb1f9605e428f00d776715dd221ae2e2026ffe65a03410279f01690c9b671df9a4924940e5a93dc3535b6a41626663ccdda5ccf7554f'
-        '3b49bd9ac0ceb8ee36ac8506fbec159ad6ed884ed1a1b5619a7f309c951400699fd92e1e79771bd5ca23055e2b6d24138007e613eddd8cc97ed4b443da4b5f6d'
-        'c3da5f1c01f712053ada2101d489dfab0dcd2a6cafa65a29c17de12274a4373d2e63de65888b1ffaccac85b64508f260596beb301d36d7e305002cd3a76eb679')
+sha512sums=('053a4b81b0f61e6a3070e8517e9faac47b1597afb81c6a0d993006905dca0cd605e6a40833e85386b24d4957194d6903f025a984b624446957207c7cfde8211e'
+            '39f14c23d9ea259ba3a1db2a5fd9c98b41148db86f7803cb132be33bdcc171fc8e45cf49f66d98c65ca2a173154fc1c116bfeeb5fc1ba31690dc96c30ea2b601'
+            'ab92475e599fd4345d33a7ae6cd47231ab614b92ca9a71e732a073b31ec18ad92f3d1384183b0821e75b4ba1bb4987c5369c1398604d6c4ea01a20f94fb7b976')
+b2sums=('fddc01938e137a639eb0b27889f279706cfd0e257f720084a3e2f818cd2e678dda65a28937cc44846ab15b0095ed30bddf5b75be3f254533870303ee830c7683'
+        '7f1cf4c3e7bb30e307c3029984813f96d00dbab8afb32491777dc8fa3ec2de6b9c59273e98db3c9b232ec5363277589ae890fc2c78555f463f1ba24031558baa'
+        '0c176336ca8df12f443e6935e8293afa3408e0e7b6a290417007bbbc0500c8eb8716ae3265665a80d85d689f9b369e5edf7986e8507288af77e8eea4ebedd624')
 
 prepare() {
     cd "$pkgname-$_name-$pkgver"
-    patch --forward --strip=1 --input="${srcdir}/audacity_3_4_2_update_vst3_cmake_args.patch"
+    # https://github.com/audacity/audacity/discussions/5841#discussioncomment-8138725
+    patch --forward --strip=1 --input="${srcdir}/audacity_3_4_2_enable_tests_without_conan.patch"
 }
 
 build() {
@@ -89,6 +91,7 @@ build() {
     -D audacity_lib_preference=system
     -D audacity_obey_system_dependencies=ON
     -D audacity_use_vst3sdk=system
+    -D audacity_has_tests=ON
     -S $pkgname-$_name-$pkgver
     -W no-dev
   )
@@ -101,7 +104,8 @@ build() {
 }
 
 check() {
-  ctest --test-dir build --output-on-failure
+  # disable two tests which do not work without an alsa/jack instance
+  ctest --test-dir build --output-on-failure --exclude-regex "lib-stretching-sequence|journal_sanity"
 }
 
 package_audacity() {
@@ -167,5 +171,5 @@ package_audacity-docs() {
   pkgdesc+=" - documentation"
 
   install -vdm 755 "$pkgdir/usr/share/doc/$pkgbase/html/"
-  cp -av $pkgbase-manual-$pkgver/* "$pkgdir/usr/share/doc/$pkgbase/html/"
+  cp -av help/manual/* "$pkgdir/usr/share/doc/$pkgbase/html/"
 }

@@ -3,24 +3,24 @@
 
 pkgname=committed
 pkgver=1.0.20
-pkgrel=1
+pkgrel=5
 pkgdesc="Nitpicking your commit history"
 arch=('loong64' 'x86_64')
 url="https://github.com/crate-ci/committed"
-license=('Apache' 'MIT')
-depends=('gcc-libs' 'libgit2.so')
+license=('Apache-2.0' 'MIT')
+depends=('gcc-libs' 'glibc' 'libgit2' 'zlib')
 makedepends=('cargo')
-source=("$pkgname-$pkgver.tar.gz::$url/archive/v$pkgver.tar.gz")
+source=("$url/archive/v$pkgver/$pkgname-$pkgver.tar.gz")
 sha256sums=('bb89632260499ae9dbbf1b2cd43dc9d43337e75259f84f762f821b1eb358849b')
 
 prepare() {
   cd "$pkgname-$pkgver"
-  cargo fetch --locked --target "$CARCH-unknown-linux-gnu"
+  cargo fetch --locked --target "$(rustc -vV | sed -n 's/host: //p')"
 }
 
 build() {
   cd "$pkgname-$pkgver"
-  CFLAGS+=" -ffat-lto-objects"
+  CFLAGS+=' -ffat-lto-objects'
   cargo build --release --frozen
 }
 
@@ -30,6 +30,8 @@ check() {
 }
 
 package() {
+  depends+=(libgit2.so
+            libz.so)
   cd "$pkgname-$pkgver"
   install -Dm 755 "target/release/$pkgname" -t "$pkgdir/usr/bin"
   install -Dm 644 README.md -t "$pkgdir/usr/share/doc/$pkgname"

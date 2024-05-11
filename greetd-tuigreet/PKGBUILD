@@ -3,8 +3,8 @@
 
 pkgname=greetd-tuigreet
 _pkgname=${pkgname#*-}
-pkgver=0.8.0
-pkgrel=2
+pkgver=0.9.0
+pkgrel=1
 pkgdesc='A console UI greeter for greetd'
 url="https://github.com/apognu/$_pkgname"
 license=(GPL3)
@@ -18,7 +18,7 @@ makedepends=(cargo
 _archive="$_pkgname-$pkgver"
 source=("$url/archive/$pkgver/$_archive.tar.gz"
         "$_pkgname.tmpfiles")
-sha256sums=('ed371ebe288a3e5782f01681c6c4ed4786b470184af286fa0e7b8898e47c154e'
+sha256sums=('721254c3173d3f5cd360d1ddb2d57139022f2d75d561818fad68d01f89bc5ce3'
             '8f83aee7874aab5d06981a1d1cd05df906368a79dbca90d157a33a2f023b67d3')
 
 prepare() {
@@ -34,7 +34,11 @@ build() {
 
 check() {
 	cd "$_archive"
-	cargo test --frozen --all-features
+	local skipped=(
+		# Requires libnss_wrapper to mockup data, see https://github.com/apognu/tuigreet/issues/138
+		'info::nsswrapper_tests::nsswrapper_get_users_from_nss stdout'
+	)
+	cargo test --frozen --all-features -- ${skipped[@]/#/--skip }
 }
 
 package() {

@@ -2,7 +2,7 @@
 
 _name=pdm
 pkgname=python-pdm
-pkgver=2.12.2
+pkgver=2.15.2
 pkgrel=1
 pkgdesc="A modern Python package manager with PEP 582 support"
 arch=(any)
@@ -11,27 +11,30 @@ license=(MIT)
 depends=(
   python
   python-blinker
-  python-cachecontrol
   python-certifi
   python-dep-logic
   python-dotenv
+  python-filelock
   python-findpython
+  python-hishel
+  python-httpcore  # pulled in by python-httpx
+  python-httpx
   python-installer
-  python-lockfile  # required optdepends of python-cachecontrol
+  python-msgpack
   python-packaging
+  python-pbs-installer
   python-pdm-backend
   python-platformdirs
   python-pyproject-hooks
-  python-requests  # required by python-requests-toolbelt
-  python-requests-toolbelt
   python-resolvelib
   python-rich
   python-shellingham
+  python-socksio  # required via python-httpx feature
   python-tomlkit
   python-truststore
   python-unearth
-  python-urllib3  # required by pdm/models/session.py
   python-virtualenv
+  python-zstandard  # required by python-pbs-installer
 )
 makedepends=(
   python-build
@@ -51,8 +54,8 @@ optdepends=(
   'python-setuptools: for parsing setup.py files'
 )
 source=($_name-$pkgver.tar.gz::$url/archive/refs/tags/$pkgver.tar.gz)
-sha512sums=('7a5cfeb61625c7f18f025e387018784560da9e4ab53dce062a3ce77cb7b704aa2b7e9eb70267d5139b528872b964c45050b689fff022faab845ad777212c187b')
-b2sums=('06b3d86634436ff47cc28dbd9b9ae5a10a73bc564abc214ca1b2872ae56c1eac1de7b2501fbae2f1e285bfc3c7a4eedc62ad68882503097c1d9b1fc35d83e18d')
+sha512sums=('46b967038111d5e5aa19bfe27aefdfa4e82288f3f67a466f87dd8ae69d8d88723096c89514783c73cdc42d91ed80f3e399792bacd9be932d6925500b2405a012')
+b2sums=('fba4a7459ce98f7511ae8f399a326f3772c9c3e22aaf0573c24a313dd8757f87f469a3750a723b84b74a04155bfbcd39569d8e087cfaf212981dae71a1d70297')
 
 build() {
   cd $_name-$pkgver
@@ -71,18 +74,19 @@ check() {
   cd $_name-$pkgver
   # install to temporary location, as importlib is used
   python -m installer --destdir=test_dir dist/*.whl
-  export PYTHONPATH="$PWD/test_dir/$site_packages:$PYTHONPATH"
-  pytest "${pytest_options[@]}"
+  PYTHONPATH="$PWD/test_dir/$site_packages:$PYTHONPATH" pytest "${pytest_options[@]}"
 }
 
 package() {
+  local site_packages=$(python -c "import site; print(site.getsitepackages()[0])")
+
   cd $_name-$pkgver
   python -m installer --destdir="$pkgdir" dist/*.whl
   install -vDm 644 LICENSE -t "$pkgdir/usr/share/licenses/$pkgname/"
   install -vDm 644 README.md -t "$pkgdir/usr/share/doc/$pkgname/"
   # completions
   install -vd "$pkgdir/usr/share/"{bash-completion/completions,fish/vendor_completions.d,zsh/site-functions}
-  "$pkgdir"/usr/bin/pdm completion bash > "$pkgdir/usr/share/bash-completion/completions/$_name"
-  "$pkgdir"/usr/bin/pdm completion fish > "$pkgdir/usr/share/fish/vendor_completions.d/$_name.fish"
-  "$pkgdir"/usr/bin/pdm completion zsh > "$pkgdir/usr/share/zsh/site-functions/_$_name"
+  PYTHONPATH="$pkgdir/$site_packages:$PYTHONPATH" "$pkgdir"/usr/bin/pdm completion bash > "$pkgdir/usr/share/bash-completion/completions/$_name"
+  PYTHONPATH="$pkgdir/$site_packages:$PYTHONPATH" "$pkgdir"/usr/bin/pdm completion fish > "$pkgdir/usr/share/fish/vendor_completions.d/$_name.fish"
+  PYTHONPATH="$pkgdir/$site_packages:$PYTHONPATH" "$pkgdir"/usr/bin/pdm completion zsh > "$pkgdir/usr/share/zsh/site-functions/_$_name"
 }

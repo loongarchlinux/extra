@@ -3,28 +3,32 @@
 # Contributor: Jason Rodriguez <jason-aur@catloaf.net>
 
 pkgname=sslh
-pkgver=2.0.1
-pkgrel=1
+pkgver=2.1.1
+pkgrel=3
 pkgdesc='SSL/SSH/OpenVPN/XMPP/tinc port multiplexer'
 arch=('loong64' 'x86_64')
 url='https://www.rutschle.net/tech/sslh/README.html'
-license=('GPL2')
+license=('GPL-2.0-only')
 makedepends=('systemd')
 depends=('glibc' 'libcap' 'libconfig' 'pcre2' 'systemd-libs' 'libev' 'libbsd')
 backup=('etc/sslh.cfg')
 install=$pkgname.install
 source=("https://www.rutschle.net/tech/sslh/$pkgname-v$pkgver.tar.gz"{,.asc}
+        "sslh-2_1_2-fix-buffer-len.patch"
         'sslh.cfg'
         'sslh.service'
         'sslh-select.service'
+        'sslh-ev.service'
         'sslh-fork.service')
 validpgpkeys=('CDDDBADBEA4B72748E007D326C056F7AC7934136') # Yves Rutschle <yves@rutschle.net>
-sha256sums=('d88d43ee11cf1324983c196c894b41766c33d957b6af53b62c8479703bbbd26c'
+sha256sums=('0ad3526e072d0f0d4f77ddcdbade4bf315ebd45d468848fd3367996f414d06d7'
             'SKIP'
+            'ea508d01c1f5256727b7f7514ba73ef63c33b9f296ee6f65e5ba64506d8fb071'
             '7db2e873ed4c8770e3c38d7ac3ced94221356a3ceafa9d6c8cdc65dd8f09a18e'
-            '49ed1c88b0de079bc31a94e600b63edd7ea95b4aa9b5f533c15db1221d0892db'
-            '885dfa4a4de75e28d0471debcb0473ecaf813eb21b83db4e855caf76a6d5cb3b'
-            '46114de034266ea953eecb825730e4382faa8a97718f23df2a3ab2189623eb00')
+            '3d084889cb671df22382767d181e25f1c0a0d63b6937cadb550af0153c488c74'
+            '42182146dfe6ca99c5e07e1009f017567a276c504308ed39ecc05b304f28f107'
+            '6580a61b81a0a1a9806a9d23a82dcc2e601f237bd1e4bd66a550e385cca13d51'
+            'a6aabd7ad68c9c1fdb0e2f5dcb9f8e108651a77d5422e718a1186607b8657bea')
 
 prepare() {
   cd $pkgname-v$pkgver
@@ -41,12 +45,13 @@ prepare() {
 
 build() {
   cd $pkgname-v$pkgver
+  ./configure --prefix=/usr --bindir=/usr/bin
   make \
     VERSION=\"$pkgver-$pkgrel\" \
     USELIBCAP=1 \
     USESYSTEMD=1 \
     USELIBBSD=1 \
-    all systemd-sslh-generator
+    all
 }
 
 package() {
@@ -56,11 +61,13 @@ package() {
   cd $pkgname-v$pkgver
   install -Dm 755 sslh-fork "$pkgdir/usr/bin/sslh-fork"
   install -Dm 755 sslh-select "$pkgdir/usr/bin/sslh-select"
+  install -Dm 755 sslh-ev "$pkgdir/usr/bin/sslh-ev"
   ln -s sslh-fork "$pkgdir/usr/bin/sslh"
   # install manpage
   install -Dm 644 sslh.8.gz "$pkgdir/usr/share/man/man8/sslh.8.gz"
   ln -s sslh.8.gz "$pkgdir/usr/share/man/man8/sslh-fork.8.gz"
   ln -s sslh.8.gz "$pkgdir/usr/share/man/man8/sslh-select.8.gz"
+  ln -s sslh.8.gz "$pkgdir/usr/share/man/man8/sslh-ev.8.gz"
   # install examples files
   install -Dm 644 basic.cfg "$pkgdir/usr/share/doc/$pkgname/basic.cfg"
   install -Dm 644 example.cfg "$pkgdir/usr/share/doc/$pkgname/example.cfg"

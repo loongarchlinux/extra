@@ -6,7 +6,7 @@
 
 pkgname=python-prompt_toolkit
 pkgver=3.0.43
-pkgrel=1
+pkgrel=2
 pkgdesc='Library for building powerful interactive command lines in Python'
 arch=('any')
 url='https://github.com/prompt-toolkit/python-prompt-toolkit'
@@ -24,9 +24,8 @@ makedepends=(
   'python-setuptools'
 )
 checkdepends=('python-pytest')
-_commit=4432d6233fd8e0efba5920a9650e515f54a20300
-source=("$pkgname::git+$url#commit=$_commit")
-b2sums=('SKIP')
+source=("$pkgname::git+$url#tag=$pkgver")
+b2sums=('563ab76470af512362ba4bfa2372d48cd24000eb6d67ccd1b0824ba4e3099485ea587a0b2983b57fb24fa82a62b02409e1d7b88c06cee6b225c5c2a46d4b5d3b')
 
 pkgver() {
   cd "$pkgname"

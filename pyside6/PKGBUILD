@@ -5,15 +5,16 @@ pkgbase=pyside6
 pkgname=(pyside6
          pyside6-tools
          shiboken6)
-_qtver=6.6.1
-_clangver=16.0.6
+_qtver=6.7.0
+_clangver=17.0.6
 pkgver=${_qtver/-/}
-pkgrel=1
+pkgrel=5
 arch=(loong64 x86_64)
 url='https://www.qt.io'
 license=(LGPL)
 makedepends=(clang
              cmake
+             git
              llvm
              ninja
              python-numpy
@@ -41,22 +42,24 @@ makedepends=(clang
              qt6-webchannel
              qt6-webengine
              qt6-websockets)
-_pkgfn=pyside-setup-everywhere-src-$_qtver
-source=(https://download.qt.io/official_releases/QtForPython/pyside6/PySide6-$pkgver-src/${_pkgfn}.tar.xz
+source=(git+https://code.qt.io/pyside/pyside-setup#tag=v$pkgver
         fix-build.patch)
-sha256sums=('341f42483fbe58c88fa5b353eefa83ffcc4ec440bf6e87c1c7ffd278ed54d1ca'
+sha256sums=('63e85c9d7d66182d05d841eff56d9062a11f26970c34afb6dc6630ca27d60306'
             '77b83cb164ea87d826259864f6a81fb33199510e1948d6daaf5c8d5ab55735a7')
 
 prepare() {
-  patch -d $_pkgfn -p1 < fix-build.patch
+  cd pyside-setup
+  git cherry-pick -n 556bc8d158b06546343ae2f51b05f555d47442c0 # Fix star imports (PYSIDE-2675)
+  patch -p1 < ../fix-build.patch
 }
 
 build() {
-  cmake -B build -S $_pkgfn -G Ninja \
+  cmake -B build -S pyside-setup -G Ninja \
     -DCMAKE_INSTALL_PREFIX=/usr \
     -DCMAKE_BUILD_TYPE=None \
     -DSHIBOKEN_PYTHON_LIBRARIES=`pkgconf python3-embed --libs` \
     -DBUILD_TESTS=OFF \
+    -DFORCE_LIMITED_API=no \
     -DNO_QT_TOOLS=yes
   PYTHONPATH="$PWD"/build/sources \
   cmake --build build
@@ -78,8 +81,7 @@ package_shiboken6() {
 
 # Install egg-info
   export PATH="/usr/lib/qt6/bin:$PATH"
-  export SETUPTOOLS_USE_DISTUTILS=stdlib
-  cd $_pkgfn
+  cd pyside-setup
   python setup.py egg_info --build-type=shiboken6
   python setup.py egg_info --build-type=shiboken6-generator
   _pythonpath=`python -c "from sysconfig import get_path; print(get_path('platlib'))"`
@@ -122,7 +124,7 @@ package_pyside6() {
 
 # Install egg-info
   export PATH="/usr/lib/qt6/bin:$PATH"
-  cd $_pkgfn
+  cd pyside-setup
   python setup.py egg_info --build-type=pyside6
   _pythonpath=`python -c "from sysconfig import get_path; print(get_path('platlib'))"`
   cp -r PySide6.egg-info "$pkgdir"/$_pythonpath

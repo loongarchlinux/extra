@@ -2,9 +2,8 @@
 
 _name=geopy
 pkgname=python-geopy
-_commit=b93ffa7ae48eccb99565812f2a82a774c0d8a720  # refs/tags/2.4.1
 pkgver=2.4.1
-pkgrel=2
+pkgrel=3
 pkgdesc="Geocoding library for Python"
 arch=(any)
 url="https://github.com/geopy/geopy"
@@ -33,9 +32,9 @@ optdepends=(
   'python-requests: for requests support'
   'python-pytz: for timezone support'
 )
-source=("git+$url#tag=$_commit?signed")
-sha512sums=('SKIP')
-b2sums=('SKIP')
+source=("git+$url?signed#tag=$pkgver")
+sha512sums=('2f7d64d2568e18ade7fb799e9ee12786e3ab9093f633db189143ba0eff7c5e72bd3e8c3c929fba864ec111f4f28e446eec60432482bb61ad371bb05e71fa638b')
+b2sums=('9a6a4a42828cfe48265cb3bf7792c788e5ae1d7e3199db4ca077df8f45285b962942ae4fb72b7229ac336a1f429b9d45f402a088a0ff8d5e29b5ba07f33f3b8f')
 validpgpkeys=('A18FE9F6F570D5B4E1E1853FAA7B5406547AF062') # Kostya Esmukov <kostya@esmukov.ru>
 
 pkgver() {

@@ -1,29 +1,27 @@
 # Maintainer: Alexander F. Rødseth <xyproto@archlinux.org>
 
 pkgname=jomon
-pkgver=0.3.0
+pkgver=0.3.1
 pkgrel=1
 pkgdesc='Network forensics and sniffer tool'
 arch=(loong64 x86_64)
 url='https://github.com/jo-lund/jomon'
 license=(MIT)
 depends=(geoip ncurses)
-makedepends=(git re2c setconf)
+makedepends=(git python re2c)
 optdepends=("geoip-database-extra: for extra geolocation data")
-source=("git+$url#commit=b9e1c175e9a03a6d00bd3ce2c4edc728e0fb50ed") # tag: v0.3.0
-b2sums=(SKIP)
+source=("git+$url#commit=62a404326767cc4f31f599aa973f73cf38fbeb79") # tag: v0.3.1
+b2sums=('SKIP')
 
 build() {
   cd $pkgname
-
   ./configure --prefix /usr
-  make CFLAGS+='-Wl,-z,now'
+  make CFLAGS+='-Wl,-z,now -w'
 }
 
 package() {
   cd $pkgname
-
-  setconf config.mk PREFIX="$pkgdir/usr"
+  sed -i "s,X=/,X=\"$pkgdir/\",g" config.mk
   make install
   install -Dm644 LICENSE "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
 }

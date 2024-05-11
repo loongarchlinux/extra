@@ -7,14 +7,14 @@ pkgname=(
   liblightdm-qt5
 )
 pkgver=1.32.0
-pkgrel=5
+pkgrel=6
 epoch=1
 pkgdesc='A lightweight display manager'
 arch=(loong64 x86_64)
 url=https://github.com/canonical/lightdm
 license=(
-  GPL3
-  LGPL3
+  # liblightdm is under "LGPL 2 or 3"
+  'GPL-3.0-or-later AND (LGPL-2.0-only OR LGPL-3.0-only)'
 )
 makedepends=(
   glib2
@@ -58,7 +58,7 @@ b2sums=('SKIP'
         'eb8341389e8654ecad5c9608c133f6d5c2c7611c75c97ad0b3244281b7f6d7605757207eaae29b4793fbe2ede9131df5cfe0c144abd52070ee93cf3e88c04974'
         '9e7b4f2adacfa18e9c029f93b922da45e3326266495a1919465f299fa630d769eaaa2101d76966cea496f66c4bd8469c73ef55acde5cd19fa559921c192acd04'
         'd404466a551a42ac486564c5016baaae2276ec4126ae237538836e27e58b645dccf3ad3197c5c89d637d9bb678c3d7c0568a114d22fea2abec2d5e4eb0fb2721'
-        '7785c19bb2343732d75dd2abd744148ae8baa6d8ad2b295a8e28d5eb78d7bd525e17784ae8a75784ab4cdb3fde73c66789b1bc033c53dafe13f8d19988e5ba18')
+        'c376a6426bfd9c8eddcd9cdd9fcde9d137ba297e467b6c3b24a0ca155accf9530d6f526f0338da22559e1e151e238192d3c47752d70e899f11eec1a768d1a822')
 
 prepare() {
   cd lightdm
@@ -131,7 +131,7 @@ package_lightdm() {
   install -m 644 ../lightdm-autologin.pam "${pkgdir}"/etc/pam.d/lightdm-autologin
 
   # PolicyKit
-  install -dm 750 -g 102 "${pkgdir}"/usr/share/polkit-1/rules.d
+  install -dm 755 "${pkgdir}"/usr/share/polkit-1/rules.d
   install -m 644 ../lightdm.rules "${pkgdir}"/usr/share/polkit-1/rules.d/lightdm.rules
 
   # Systemd
@@ -143,6 +143,7 @@ package_lightdm() {
 
 package_liblightdm-qt5() {
   pkgdesc='LightDM Qt client library'
+  license=('LGPL-2.0-only OR LGPL-3.0-only')
   depends=(
     lightdm
     qt5-base

@@ -2,7 +2,7 @@
 
 pkgname=python-jsonschema-path
 pkgver=0.3.2
-pkgrel=2
+pkgrel=3
 pkgdesc="JSONSchema Spec with object-oriented paths"
 url="https://github.com/p1c2u/jsonschema-path"
 license=('Apache')

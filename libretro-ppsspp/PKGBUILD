@@ -3,8 +3,8 @@
 # Contributor: Duck Hunt <vaporeon@tfwno.gf>
 
 pkgname=libretro-ppsspp
-pkgver=39481
-pkgrel=1
+pkgver=39784
+pkgrel=2
 pkgdesc='Sony PlayStation Portable core'
 arch=(loong64 x86_64)
 url=https://github.com/hrydgard/ppsspp
@@ -31,7 +31,7 @@ makedepends=(
   ninja
   python
 )
-_commit=10d16ea48885fc0c65a070a2b3779af21b03167b
+_commit=83bd9fd665a217c7f79c15e1b30311fb2f2f50ba
 source=(
   libretro-ppsspp::git+https://github.com/hrydgard/ppsspp.git#commit=${_commit}
   git+https://github.com/Kingcom/armips.git
@@ -42,12 +42,14 @@ source=(
   git+https://github.com/hrydgard/ppsspp-lang.git
   git+https://github.com/rtissera/libchdr.git
   ppsspp-miniupnp::git+https://github.com/hrydgard/miniupnp.git
+  git+https://github.com/KhronosGroup/OpenXR-SDK.git
   git+https://github.com/Tencent/rapidjson.git
-  git+https://github.com/RetroAchievements/rcheevos.git
+  ppsspp-rcheevos::git+https://github.com/hrydgard/rcheevos.git
   git+https://github.com/KhronosGroup/SPIRV-Cross.git
   libretro-ppsspp-assets-path.patch
 )
 b2sums=('SKIP'
+        'SKIP'
         'SKIP'
         'SKIP'
         'SKIP'
@@ -73,12 +75,12 @@ prepare() {
 
   git config --global protocol.file.allow always
 
-  for submodule in ffmpeg assets/lang ext/miniupnp; do
+  for submodule in ffmpeg assets/lang ext/{miniupnp,rcheevos}; do
     git submodule init ${submodule}
     git config submodule.${submodule}.url ../ppsspp-${submodule#*/}
     git submodule update ${submodule}
   done
-  for submodule in ext/{armips,cpu_features,glslang,libchdr,rapidjson,rcheevos,SPIRV-Cross}; do
+  for submodule in ext/{armips,cpu_features,glslang,libchdr,OpenXR-SDK,rapidjson,SPIRV-Cross}; do
     git submodule init ${submodule}
     git config submodule.${submodule}.url ../${submodule#*/}
     git submodule update ${submodule}

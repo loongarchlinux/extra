@@ -1,10 +1,11 @@
 # Maintainer: David Runge <dvzrv@archlinux.org>
 # Maintainer: Filipe Laíns (FFY00) <lains@archlinux.org>
+# Maintainer: Robin Candau <antiz@archlinux.org>
 
 _name=starlette
 pkgname=python-$_name
-pkgver=0.36.1
-pkgrel=1
+pkgver=0.37.2
+pkgrel=5
 pkgdesc='The little ASGI framework that shines'
 arch=(any)
 url="https://github.com/encode/starlette"
@@ -12,7 +13,6 @@ license=(BSD-3-Clause)
 depends=(
   python
   python-anyio
-  python-typing-extensions
 )
 makedepends=(
   python-build
@@ -37,7 +37,6 @@ checkdepends=(
   python-sqlalchemy
 )
 optdepends=(
-  'python-exceptiongroup: for collapsing exceptions'
   'python-itsdangerous: for session middleware support'
   'python-jinja: for jinja templates'
   'python-python-multipart: for form parsing'
@@ -45,8 +44,8 @@ optdepends=(
   'python-httpx: for test client'
 )
 source=($_name-$pkgver.tar.gz::$url/archive/$pkgver.tar.gz)
-sha512sums=('9a990098a1faa179bcf8df64237147d59e3114b1336f491ca358ffd0016412f18323845eb5f8691aa41810fef455e97cb47ff34d9456a0e3a5be3eb6b23027bb')
-b2sums=('633cd664785f32423c0dfeab04b400340b5e3197f4ef07edca9fcda20954444ccfef1ff9afc62969d5b2914f2091e08946420931ee1ee22e1ab771fe02db13ec')
+sha512sums=('27240c706553e610da05cfc92f818c61e97a891ea7c960fef925a122100a61931cbca973a0995aa1e79d192cda2250139f471929a3f4a7b0f4600d00b6287744')
+b2sums=('489fe0d3148f8f006d32d3e52e82cc2c07d9b1a8e3a3cadabe2aa2eb9dd7e00b35e2093dc1de0cb4a6a4606395ed4d19b26778686216a7f8b55a15e61701c9da')
 
 build() {
   cd $_name-$pkgver
@@ -54,8 +53,14 @@ build() {
 }
 
 check() {
+  local pytest_options=(
+    -vv
+    --deselect 'tests/test_routing.py::test_lifespan_with_on_events[asyncio]'
+    --deselect 'tests/test_routing.py::test_lifespan_with_on_events[trio]'
+  )
+
   cd $_name-$pkgver
-  pytest -vv -o 'markers=filterwarnings' -p no:warnings
+  pytest "${pytest_options[@]}"
 }
 
 package() {

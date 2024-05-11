@@ -4,15 +4,17 @@
 
 pkgname=python-magic-wormhole-mailbox-server
 pkgver=0.4.1
-pkgrel=10
+pkgrel=11
 pkgdesc="the rendezvous/mailbox server for magic-wormhole clients "
 arch=('any')
 url="https://github.com/magic-wormhole/magic-wormhole-mailbox-server"
 license=('MIT')
 depends=('python-twisted' 'python-autobahn')
 makedepends=(python-{build,installer,wheel}
-             python-setuptools)
-checkdepends=('python-treq')
+             python-setuptools
+             python-versioneer)
+checkdepends=(python-pytest
+              python-treq)
 source=(${pkgname}-${pkgver}.tar.gz::"${url}/archive/refs/tags/${pkgver}.tar.gz"
         "00-no-universal-newlines-mode.patch")
 sha512sums=('d174d1bf901e7d21d7cb77ceffd6b9c7aa3c15433e11862365883d93437225c7c655b8338a5cad7bd5c60d7dd7d3dd017ef7e26213b535c043ce75000a540597'
@@ -22,6 +24,8 @@ b2sums=('4bf6bc9fa6dacaafb532d9d0ee069bb89ba63feb790f0f9c0d1117b1de4f075eb9dd3bf
 
 prepare() {
 	cd "${pkgname#python-}-$pkgver"
+	# vendored versioneer is too old for Python 3.12
+	rm -f versioneer.py
 	patch -Np1 -i ../00-no-universal-newlines-mode.patch
 	# https://github.com/magic-wormhole/magic-wormhole/issues/439
 	sed -i -E '/^import mock$/s/.*/from unittest import mock/' src/wormhole_mailbox_server/test/*.py
@@ -34,7 +38,8 @@ build() {
 
 check() {
 	cd "${pkgname#python-}-$pkgver"
-	python -m unittest discover
+	export PYTHONPATH='src'
+	pytest
 }
 
 package() {

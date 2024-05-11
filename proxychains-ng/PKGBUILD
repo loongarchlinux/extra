@@ -3,7 +3,7 @@
 
 pkgname=proxychains-ng
 pkgver=4.17
-pkgrel=1
+pkgrel=2
 pkgdesc="A hook preloader that allows to redirect TCP traffic of existing dynamically linked programs through one or more SOCKS or HTTP proxies"
 arch=('loong64' 'x86_64')
 url="https://github.com/rofl0r/proxychains-ng"
@@ -11,19 +11,20 @@ license=('GPL')
 provides=('proxychains')
 replaces=('proxychains')
 conflicts=('proxychains')
+makedepends=('git')
 depends=('glibc')
 backup=('etc/proxychains.conf')
-source=("https://github.com/rofl0r/proxychains-ng/archive/v$pkgver/$pkgname-$pkgver.tar.gz")
-sha512sums=('14404449a5ab50920a5d16e70db4e8025075b03146df86ca5833eb22d5bd56428b038ac5daf2a17e0687e036ca496a8bfd88fc654be09b9dfad6d5d0b2273b95')
+source=("git+https://github.com/rofl0r/proxychains-ng.git#tag=v${pkgver}")
+sha512sums=('7199ea179e93d4fb079001ed399c9ac73791636203beda19271a3c55854fef26383d292d17354fa98b303fbd2c798cfd629db3dbe96c44036968cc64da926d8c')
 
 build() {
-  cd proxychains-ng-$pkgver
+  cd proxychains-ng
   ./configure --prefix=/usr --sysconfdir=/etc
   make
 }
 
 package() {
-  cd proxychains-ng-$pkgver
+  cd proxychains-ng
   make DESTDIR="$pkgdir/" install install-config
   ln -s proxychains4 "$pkgdir/usr/bin/proxychains"
 }

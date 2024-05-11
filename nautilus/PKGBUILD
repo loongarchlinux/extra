@@ -1,4 +1,4 @@
-# Maintainer: Fabian Bornschein <fabiscafe-at-mailbox-dot-org>
+# Maintainer: Fabian Bornschein <fabiscafe@archlinux.org>
 # Maintainer: Jan Alexander Steffens (heftig) <heftig@archlinux.org>
 # Contributor: Jan de Groot <jgc@archlinux.org>
 
@@ -8,21 +8,24 @@ pkgname=(
   libnautilus-extension
   libnautilus-extension-docs
 )
-pkgver=45.2.1
+pkgver=46.1
 pkgrel=1
 pkgdesc="Default file manager for GNOME"
-url="https://wiki.gnome.org/Apps/Files"
+url="https://apps.gnome.org/Nautilus/"
 arch=(loong64 x86_64)
-license=(GPL)
+license=(GPL-3.0-or-later)
 depends=(
   cairo
   dconf
+  gcc-libs
   gdk-pixbuf2
   glib2
+  glibc
   gnome-autoar
   gnome-desktop-4
-  gstreamer
+  graphene
   gst-plugins-base-libs
+  gstreamer
   gtk4
   gvfs
   hicolor-icon-theme
@@ -43,19 +46,21 @@ makedepends=(
   tracker3-miners
 )
 checkdepends=(python-gobject)
-_commit=46c13f34bf1008ad79bf5f52d772afd296a58c94  # tags/45.2.1^0
 source=(
-  "git+https://gitlab.gnome.org/GNOME/nautilus.git#commit=$_commit"
+  "git+https://gitlab.gnome.org/GNOME/nautilus.git?signed#tag=${pkgver/[a-z]/.&}"
+  0001-Disable-tracker-test.patch
 )
-b2sums=('SKIP')
-
-pkgver() {
-  cd nautilus
-  git describe --tags | sed 's/[^-]*-g/r&/;s/-/+/g'
-}
+b2sums=('8e2d9c788788892ea72c2732d6d5ace27243abee0ec9b4232feb8b39a9ecdf14a152a73c8dcf03f91d0ebefee93917a3d01a95900831703aba666e33cfef8291'
+        'c840dc4de2f7c23b49adb0ba88b88c13ddc59ba8b10818ed3ba5ed7cda93d69da9d47d7c7f8c39153d4535c9785ff7c0fd89992a87b09e7cc6e8a5492c2d9a7f')
+validpgpkeys=(
+  6B211753AC950672287226800538577822AE4B17 # António Fernandes <antoniof@gnome.org>
+)
 
 prepare() {
   cd nautilus
+
+  # Tracker test is broken in our build containers
+  git apply -3 ../0001-Disable-tracker-test.patch
 }
 
 build() {
@@ -106,6 +111,7 @@ package_libnautilus-extension() {
   depends=(
     gcc-libs
     glib2
+    glibc
   )
   provides=(libnautilus-extension.so)
 

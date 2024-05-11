@@ -1,0 +1,106 @@
+# Maintainer: kpcyrd <kpcyrd[at]archlinux[dot]org>
+# Contributor: Dave Reisner <dreisner@archlinux.org>
+# Contributor: Angel Velasquez <angvp@archlinux.org>
+# Contributor: Eric Belanger <eric@archlinux.org>
+# Contributor: Lucien Immink <l.immink@student.fnt.hvu.nl>
+# Contributor: Daniel J Griffiths <ghost1227@archlinux.us>
+
+pkgname=curl-rustls
+pkgver=8.7.1
+pkgrel=4
+pkgdesc='command line tool and library for transferring data with URLs (with rustls)'
+arch=('loong64' 'x86_64')
+url='https://curl.se/'
+license=('MIT')
+depends=('ca-certificates'
+         'brotli' 'libbrotlidec.so'
+         'glibc'
+         'krb5' 'libgssapi_krb5.so'
+         'libidn2' 'libidn2.so'
+         'libnghttp2' 'libnghttp2.so'
+         'libpsl' 'libpsl.so'
+         'librustls' 'librustls.so'
+         'libssh2' 'libssh2.so'
+         'zlib' 'libz.so'
+         'zstd' 'libzstd.so')
+makedepends=('git' 'patchelf')
+validpgpkeys=('27EDEAF22F3ABCEB50DB9A125CC908FDB71E12C2') # Daniel Stenberg
+source=("git+https://github.com/curl/curl.git#tag=curl-${pkgver//./_}?signed"
+        https://gitlab.archlinux.org/archlinux/packaging/packages/curl/-/raw/e7f7ceae4ddaa664026f8f5bd5ee7aaa650a51d3/0001-bump-version-to-match-last-tag.patch)
+sha512sums=('38b55dc916a64a1fd40a8af3e9a694ae918f8efb714430834491ebbe0ceeee4b58ba804afa15da966cbcf9cd7100ce373aed7b2101dff56f742996072caaf09a'
+            '51df4903eff9f1a15b1317ea4a8ee2b8537f347984f2524f42213b09344cd6109c621a4b81b37d2fcf2027387bb81cf0a744a48e96b86c4e268c43261ff86845')
+
+_backports=(
+  # content_encoding: brotli and others, pass through 0-length writes
+  'b30d694a027eb771c02a3db0dee0ca03ccab7377'
+)
+
+_reverts=(
+  '647e86a3efe1eea7a2a456c009cfe1eb55fe48eb'
+)
+
+prepare() {
+  cd "curl"
+
+  local _c
+  for _c in "${_backports[@]}"; do
+    if [[ $_c == *..* ]]; then
+      git log --oneline --reverse "${_c}"
+    else
+      git log --oneline -1 "${_c}"
+    fi
+    git cherry-pick -n -m1 "${_c}"
+  done
+  for _c in "${_reverts[@]}"; do
+    git log --oneline -1 "${_c}"
+    git revert -n "${_c}"
+  done
+
+  patch -Np1 < ../0001-bump-version-to-match-last-tag.patch
+
+  # no '-DEV' in version, release date from tagged commit...
+  sed -i \
+    -e "/\WLIBCURL_VERSION\W/c #define LIBCURL_VERSION \"${pkgver}\"" \
+    -e "/\WLIBCURL_TIMESTAMP\W/c #define LIBCURL_TIMESTAMP \"$(git log -1 --format=%cs "curl-${pkgver//./_}")\"" \
+    include/curl/curlver.h
+
+  autoreconf -fi
+}
+
+build() {
+  local _configure_options=(
+    --prefix='/usr'
+    --mandir='/usr/share/man'
+    --disable-ldap
+    --disable-ldaps
+    --disable-manual
+    --enable-ipv6
+    --enable-threaded-resolver
+    --with-gssapi
+    --with-libssh2
+    --with-random='/dev/urandom'
+    --with-ca-bundle='/etc/ssl/certs/ca-certificates.crt'
+  )
+
+  mkdir build-curl
+
+  # build curl
+  cd "${srcdir}"/build-curl
+
+  "${srcdir}/curl"/configure \
+    "${_configure_options[@]}" \
+    --with-rustls \
+    --without-openssl \
+    --disable-shared
+  sed -i -e 's/ -shared / -Wl,-O1,--as-needed\0/g' libtool
+  make
+}
+
+package() {
+  install -Dm 755 build-curl/src/curl "${pkgdir}/usr/lib/curl-rustls/curl"
+  install -d "${pkgdir}/usr/bin"
+  ln -s "../lib/${pkgname}/curl" "${pkgdir}/usr/bin/curl-rustls"
+  install -Dt "${pkgdir}/usr/share/licenses/${pkgname}" -m0644 curl/COPYING
+}
+
+# vim: ts=2 sw=2 et:

@@ -2,26 +2,29 @@
 
 pkgname=foomatic-db-engine
 arch=('loong64' 'x86_64')
-pkgver=20220521
+pkgver=20200131
 pkgrel=1
-epoch=4
+epoch=5
 url="http://www.linuxprinting.org/foomatic.html"
 pkgdesc="Foomatic - Foomatic's database engine generates PPD files from the data in Foomatic's XML database. It also contains scripts to directly generate print queues and handle jobs."
-license=('GPL2')
-depends=('perl' 'libxml2' "cups-filters>=1.0.42" 'bash' 'perl-xml-libxml' 'perl-clone' 'perl-dbi')
-makedepends=('cups' 'ghostscript' 'a2ps' 'wget' 'perl-xml-libxml' 'foomatic-db' 'git')
+license=('GPL-2.0-or-later')
+depends=('perl' 'libxml2' 'cups-filters' 'glibc' 'bash' 'perl-xml-libxml' 'perl-clone' 'perl-dbi')
+makedepends=('cups' 'ghostscript' 'a2ps' 'wget' 'foomatic-db' 'git')
 optdepends=('foomatic-db:	linuxprinting.org xml files database to create ppd driver files')
 backup=('etc/foomatic/defaultspooler')
 
 # check https://github.com/OpenPrinting/foomatic-db-engine
 
-#source=(foomatic-db-engine::git+https://github.com/OpenPrinting/foomatic-db-engine#commit=068c92311018a75c621c57328845b439d789bf50	#20200131  # master development branch
-source=(foomatic-db-engine::git+https://github.com/OpenPrinting/foomatic-db-engine-4#commit=bd265b77a9f66f672bf1e3f0803145f2eccabf06	#20200131  # master stable branch
+#source=(foomatic-db-engine::git+https://github.com/OpenPrinting/foomatic-db-engine#commit=068c92311018a75c621c57328845b439d789bf50	#20200131  # master development branch (4.1.x)
+source=(foomatic-db-engine::git+https://github.com/OpenPrinting/foomatic-db-engine-4#commit=bd265b77a9f66f672bf1e3f0803145f2eccabf06	#20200131  # master stable branch (4.0.x)
 )
 sha256sums=('SKIP')
 
 pkgver() {
-  date +%Y%m%d
+#  date +%Y%m%d
+  # use latest commit date (no automated tag date)
+  cd "$pkgname"
+  git log --pretty="format:%ci %d" | head -n 1 | cut -c 1-10 | sed 's/-//g'
 }
 
 build() {

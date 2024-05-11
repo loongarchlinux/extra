@@ -2,14 +2,14 @@
 
 pkgname=python-flask-nav
 pkgver=0.6
-pkgrel=7
+pkgrel=8
 pkgdesc="Easily create navigation for Flask applications"
 url="https://github.com/mbr/flask-nav"
 license=('MIT')
 arch=('any')
 depends=('python-flask' 'python-visitor' 'python-dominate')
-makedepends=('python-setuptools')
-checkdepends=('python-pytest-runner')
+makedepends=('python-setuptools' 'python-build' 'python-installer' 'python-wheel')
+checkdepends=('python-pytest')
 source=("$pkgname-$pkgver.tar.gz::https://github.com/mbr/flask-nav/archive/$pkgver.tar.gz"
         python310.patch)
 sha512sums=('a7930687425a53fac9ad9a7cb65c2e2a759a0c9660189965bf37ea6e9925dd869074d37a283801631b3e6c3391f9f4167e0a36294104f72970e876b5a7a0930c'
@@ -22,16 +22,16 @@ prepare() {
 
 build() {
   cd flask-nav-$pkgver
-  python setup.py build
+  python -m build --wheel --no-isolation
 }
 
 check() {
   cd flask-nav-$pkgver
-  python setup.py pytest
+  PYTHONPATH="$PWD" pytest
 }
 
 package() {
   cd flask-nav-$pkgver
-  python setup.py install --root="$pkgdir" --optimize=1
+  python -m installer --destdir="$pkgdir" dist/*.whl
   install -Dm644 LICENSE "$pkgdir"/usr/share/licenses/$pkgname/LICENSE
 }

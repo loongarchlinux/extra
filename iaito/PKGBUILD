@@ -3,33 +3,28 @@
 # Contributor: Aaron McDaniel (mcd1992) <'aur' at the domain 'fgthou.se'>
 
 pkgname=iaito
-_gitcommit=1c984ae94b128e9f9c526cc418956801cd035d6e
 _transcommit=e66b3a962a7fc7dfd730764180011ecffbb206bf
-pkgver=5.8.8
-pkgrel=1
+pkgver=5.9.0
+pkgrel=2
 pkgdesc='Qt and C++ GUI for radare2 reverse engineering framework'
 url='https://github.com/radareorg/iaito'
 arch=('loong64' 'x86_64')
 license=('GPL3')
-depends=('radare2' 'capstone' 'qt5-base' 'qt5-svg' 'python'
-         'pyside2' 'python-shiboken2' 'graphviz' 'gcc-libs')
-makedepends=('git' 'shiboken2' 'qt5-tools')
+depends=('radare2' 'capstone' 'qt6-base' 'qt6-svg' 'python'
+         'pyside6' 'graphviz' 'gcc-libs')
+makedepends=('git' 'qt6-tools')
 optdepends=('r2ghidra: ghidra decompiler plugin')
 replaces=('r2cutter')
-source=("git+https://github.com/radareorg/iaito#commit=${_gitcommit}"
+source=("git+https://github.com/radareorg/iaito#tag=${pkgver}"
         "git+https://github.com/radareorg/iaito-translations#commit=${_transcommit}")
 sha512sums=('SKIP'
             'SKIP')
 b2sums=('SKIP'
         'SKIP')
 
-pkgver() {
-  cd iaito
-  git describe --tags | sed 's/^v//;s/\([^-]*-g\)/r\1/;s/-/./g'
-}
-
 prepare() {
   cp -r iaito-translations iaito/src/translations
+  sed -e 's|lrelease|/usr/lib/qt6/bin/lrelease|' -i iaito/src/translations/Makefile # Fix build with Qt6
 }
 
 build() {
@@ -37,7 +32,7 @@ build() {
   ./configure --prefix=/usr
   mkdir build
   cd build
-  qmake-qt5 ../src PREFIX=/usr
+  qmake6 ../src PREFIX=/usr
   make
 }
 

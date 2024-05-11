@@ -1,24 +1,24 @@
---- a/librepo/CMakeLists.txt
-+++ b/librepo/CMakeLists.txt
-@@ -50,7 +50,7 @@ TARGET_LINK_LIBRARIES(librepo
-                         ${LIBXML2_LIBRARIES}
-                         ${CURL_LIBRARY}
-                         ${LIBCRYPTO_LIBRARIES}
--                        ${GPGME_VANILLA_LIBRARIES}
-+                        ${GPGME_LIBRARIES}
+diff -aur librepo-1.17.0.old/CMakeLists.txt librepo-1.17.0/CMakeLists.txt
+--- librepo-1.17.0.old/CMakeLists.txt	2024-03-25 21:20:16.874681785 +0100
++++ librepo-1.17.0/CMakeLists.txt	2024-03-25 21:20:42.054785557 +0100
+@@ -37,7 +37,7 @@
+ FIND_PACKAGE(CURL 7.52.0 REQUIRED)
+ 
+ IF (USE_GPGME)
+-    FIND_PACKAGE(Gpgme REQUIRED)
++    PKG_SEARCH_MODULE(GPGME REQUIRED gpgme)
+     IF (ENABLE_SELINUX)
+         PKG_CHECK_MODULES(SELINUX REQUIRED libselinux)
+     ENDIF(ENABLE_SELINUX)
+diff -aur librepo-1.17.0.old/librepo/CMakeLists.txt librepo-1.17.0/librepo/CMakeLists.txt
+--- librepo-1.17.0.old/librepo/CMakeLists.txt	2024-03-25 21:20:16.874681785 +0100
++++ librepo-1.17.0/librepo/CMakeLists.txt	2024-03-25 21:21:00.624861703 +0100
+@@ -70,7 +70,7 @@
                          ${GLIB2_LIBRARIES}
                       )
- IF (WITH_ZCHUNK)
---- a/CMakeLists.txt
-+++ b/CMakeLists.txt
-@@ -31,9 +31,8 @@
- PKG_CHECK_MODULES(GLIB2 glib-2.0>=2.28 gio-2.0 REQUIRED)
- PKG_SEARCH_MODULE(LIBCRYPTO REQUIRED libcrypto openssl)
- PKG_CHECK_MODULES(LIBXML2 libxml-2.0 REQUIRED)
-+PKG_SEARCH_MODULE(GPGME REQUIRED gpgme)
- FIND_PACKAGE(CURL 7.52.0 REQUIRED)
--FIND_PACKAGE(Gpgme REQUIRED)
--
-
- IF (WITH_ZCHUNK)
- PKG_CHECK_MODULES(ZCHUNKLIB zck>=0.9.11 REQUIRED)
+ IF (USE_GPGME)
+-    TARGET_LINK_LIBRARIES(librepo ${GPGME_VANILLA_LIBRARIES})
++    TARGET_LINK_LIBRARIES(librepo ${GPGME_LIBRARIES})
+     IF (ENABLE_SELINUX)
+         TARGET_LINK_LIBRARIES(librepo ${SELINUX_LIBRARIES})
+     ENDIF(ENABLE_SELINUX)

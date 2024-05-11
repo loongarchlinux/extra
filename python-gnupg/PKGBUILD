@@ -1,11 +1,12 @@
-# Maintainer: David Runge <dvzrv@archlinux.org>
+# Maintainer: Robin Candau <antiz@archlinux.org>
+# Contributor: David Runge <dvzrv@archlinux.org>
 # Contributor: NicoHood <archlinux {cat} nicohood {dog} de>
 # Contributor: Sven Klomp <mail@klomp.eu>
 
 pkgname=python-gnupg
 pkgdesc="A wrapper for the Gnu Privacy Guard (GPG or GnuPG)"
 pkgver=0.5.2
-pkgrel=1
+pkgrel=2
 arch=(any)
 url="https://github.com/vsajip/python-gnupg/"
 license=(BSD-3-Clause)

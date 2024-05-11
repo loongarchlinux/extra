@@ -3,8 +3,8 @@
 
 _hkgname=hackage-security
 pkgname=haskell-hackage-security
-pkgver=0.6.2.4
-pkgrel=6
+pkgver=0.6.2.5
+pkgrel=2
 pkgdesc="Hackage security library"
 url="https://github.com/well-typed/hackage-security"
 license=("BSD")
@@ -16,11 +16,12 @@ makedepends=('ghc' 'uusi' 'haskell-quickcheck' 'haskell-aeson' 'haskell-tasty' '
              'haskell-tasty-quickcheck' 'haskell-temporary' 'haskell-unordered-containers'
              'haskell-vector')
 source=("https://hackage.haskell.org/packages/archive/${_hkgname}/${pkgver}/${_hkgname}-${pkgver}.tar.gz")
-sha512sums=('dd11473de44870c52f9df1d724274811a71235b15dd230830d52951a5d2a272ace25d82abe00b072eca05562b74d7e9cc0920bac37aae573b49f93e9793a733e')
+sha512sums=('7c00bf138690a64cac41408625185e365cafd7e812121f8f255890fca4d9e3ec0c4db7da7aa4cd15d946d8ea7c7aaed5437e31052c4c43817a2308693c908334')
 
 prepare() {
     cd $_hkgname-$pkgver
     uusi -d Cabal-syntax $_hkgname.cabal
+    sed -i 's/Tar.GenEntry Tar.TarPath linkTarget/Tar.Entry/' tests/TestSuite.hs
 }
 
 build() {
@@ -28,7 +29,7 @@ build() {
 
     runhaskell Setup configure -O --enable-shared --enable-executable-dynamic --disable-library-vanilla \
         --prefix=/usr --docdir=/usr/share/doc/$pkgname --datasubdir=$pkgname --enable-tests \
-        --dynlibdir=/usr/lib --libsubdir=\$compiler/site-local/\$pkgid --ghc-option=-fllvm \
+        --dynlibdir=/usr/lib --libsubdir=\$compiler/site-local/\$pkgid \
             -fuse-network-uri -flukko
     runhaskell Setup build $MAKEFLAGS
     runhaskell Setup register --gen-script

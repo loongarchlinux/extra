@@ -7,28 +7,50 @@
 _pkgname=magma
 pkgbase=$_pkgname
 pkgname=(magma-cuda magma-hip)
-pkgver=2.7.2
-pkgrel=2
+pkgver=2.8.0
+pkgrel=1
 _pkgdesc="Matrix Algebra on GPU and Multicore Architectures"
 arch=('loong64' 'x86_64')
 url="https://icl.utk.edu/magma/"
-license=('custom')
+license=('BSD-3-Clause')
 depends=('blas' 'lapack')
-makedepends=('gcc-fortran' 'cmake' 'ninja' 'cuda' 'hip-runtime-amd' 'hipblas' 'hipsparse')
+makedepends=('git' 'cmake' 'ninja' 'python' 'gcc-fortran'
+             'cuda'
+             'rocm-core' 'hip-runtime-amd' 'hipblas' 'hipsparse')
 optdepends=('python: for examples and tests'
             'gcc-fortran: Fortran interface')
-source=("${_pkgname}-${pkgver}.tar.gz::https://icl.utk.edu/projectsfiles/${_pkgname}/downloads/${_pkgname}-${pkgver}.tar.gz"
-        'add_cuda_archs.patch')
-sha256sums=('729bc1a70e518a7422fe7a3a54537a4741035a77be3349f66eac5c362576d560'
-            '1ed3706a65a124ecef71012273687307aac70bfc80bc99a978002dfb0ee000cc')
+source=("${_pkgname}::git+https://bitbucket.org/icl/magma.git#tag=v${pkgver}"
+        'add_cuda_archs.patch'
+        'hip_device.patch')
+sha256sums=('781bafd605579512b441664f76c9ba5559268f95f9357247cb8e04b76a72061e'
+            '1ed3706a65a124ecef71012273687307aac70bfc80bc99a978002dfb0ee000cc'
+            '86739e85b015f8919e404ad32f5f57a446be86d2b728dba4eff17c536fbaef62')
 options=(!lto)
 
+_valid_sm() {
+  echo "sm_52 sm_53 sm_60 sm_61 sm_62 sm_70 sm_72 sm_75 sm_80 sm_86 sm_87 sm_89 sm_90"
+}
+
+_valid_gfx() {
+  #List of GPU targets from rocBLAS
+  echo "gfx900 gfx906:xnack- gfx908:xnack- gfx90a:xnack+ gfx90a:xnack- gfx940 gfx941 gfx942 gfx1010 gfx1012 gfx1030 gfx1100 gfx1101 gfx1102"
+}
+
 prepare() {
-  cp -r "${_pkgname}-${pkgver}" "${_pkgname}-${pkgver}-cuda"
-  cp -r "${_pkgname}-${pkgver}" "${_pkgname}-${pkgver}-hip"
+  cp -r "${_pkgname}" "${_pkgname}-${pkgver}-cuda"
+  cp -r "${_pkgname}" "${_pkgname}-${pkgver}-hip"
 
   cd "${_pkgname}-${pkgver}-cuda"
+  echo -e "BACKEND = cuda\nFORT = true\nGPU_TARGET=$(_valid_sm)" > make.inc
+  make generate
   patch -Np1 -i "${srcdir}/add_cuda_archs.patch"
+
+  cd "${srcdir}"
+
+  cd "${_pkgname}-${pkgver}-hip"
+  echo -e "BACKEND = hip\nFORT = true\nGPU_TARGET=$(_valid_gfx)" > make.inc
+  make generate
+  patch -Np1 -i "${srcdir}/hip_device.patch"
 }
 
 build() {
@@ -40,14 +62,22 @@ build() {
     -DCMAKE_BUILD_TYPE=Release \
     -DCMAKE_INSTALL_PREFIX=/opt/cuda/targets/x86_64-linux \
     -DBUILD_SHARED_LIBS=ON \
-    -DGPU_TARGET="sm_52 sm_53 sm_60 sm_61 sm_62 sm_70 sm_72 sm_75 sm_80 sm_86 sm_87 sm_89 sm_90"
+    -DGPU_TARGET="$(_valid_sm | tr ' ' ';')"
   ninja -C build
+
 
   echo "Build with rocm/hip backend"
   cd "${srcdir}/${_pkgname}-${pkgver}-hip"
+  local _rocm_ver=$(./tools/get-rocm-version.sh)
   # -fcf-protection is not supported by HIP, see
   # https://docs.amd.com/bundle/ROCm-Compiler-Reference-Guide-v5.5/page/Compiler_Options_and_Features.html#d2e2018
-  CXXFLAGS="${CXXFLAGS} -fcf-protection=none" \
+  CXXFLAGS+=" -fcf-protection=none"
+  # ROCm version needs to be passed to the compiler since it's not part of the
+  # cmake toolchain yet.
+  CXXFLAGS+=" -DROCM_VERSION=$_rocm_ver"
+  # With ROCm 6.0.0 the header moved from /opt/rocm/include to the subfolder hipsparse.
+  # magma still uses the old location.
+  CXXFLAGS+=" -isystem /opt/rocm/include/hipsparse"
   cmake \
     -Bbuild \
     -GNinja \
@@ -56,8 +86,8 @@ build() {
     -DCMAKE_INSTALL_PREFIX=/opt/rocm \
     -DBUILD_SHARED_LIBS=ON \
     -DMAGMA_ENABLE_HIP=ON \
-    -DGPU_TARGET="gfx803 gfx900 gfx906:xnack- gfx908:xnack- gfx90a:xnack+ gfx90a:xnack- gfx1010 gfx1012 gfx1030 gfx1100 gfx1101 gfx1102"
-    #List of GPU targets from rocBLAS
+    -DGPU_TARGET="$(_valid_gfx | tr ' ' ';')" \
+    -DAMDGPU_TARGETS="$(_valig_gfx | tr ' ' ';')"
   ninja -C build
 }
 
@@ -66,10 +96,10 @@ _package() {
 
   local _prefix="$1"
   install -d "${pkgdir}/${_prefix}"/share/magma/example
-  cp -r "${srcdir}"/magma-${pkgver}/example/* "${pkgdir}/${_prefix}"/share/magma/example/
+  cp -r "${srcdir}"/magma/example/* "${pkgdir}/${_prefix}"/share/magma/example/
   install -d "${pkgdir}/${_prefix}"/share/magma/testing
-  cp -r "${srcdir}"/magma-${pkgver}/testing/* "${pkgdir}/${_prefix}"/share/magma/testing/
-  install -Dm644 "${srcdir}"/magma-${pkgver}/COPYRIGHT "${pkgdir}"/usr/share/licenses/${pkgname}/LICENSE
+  cp -r "${srcdir}"/magma/testing/* "${pkgdir}/${_prefix}"/share/magma/testing/
+  install -Dm644 "${srcdir}"/magma/COPYRIGHT "${pkgdir}"/usr/share/licenses/${pkgname}/LICENSE
   echo "${_prefix}/lib" > "${pkgname}.conf"
   install -Dm644 "${pkgname}.conf" "${pkgdir}"/etc/ld.so.conf.d/"${pkgname}.conf"
 }

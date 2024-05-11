@@ -1,0 +1,47 @@
+# Maintainer: kpcyrd <kpcyrd[at]archlinux[dot]org>
+
+pkgname=archlinux-userland-fs-cmp
+pkgver=0.1.0
+pkgrel=1
+pkgdesc="Forensic tool to read all installed packages from a mounted Arch Linux drive and compare the filesystem to a trusted source"
+url='https://github.com/kpcyrd/archlinux-userland-fs-cmp'
+arch=('loong64' 'x86_64')
+license=('GPL-3.0-or-later')
+depends=(
+  'gcc-libs'
+  'glibc'
+  'liblzma.so'
+)
+makedepends=('cargo')
+options=(!lto)
+source=(https://github.com/kpcyrd/${pkgname}/archive/v${pkgver}/${pkgname}-${pkgver}.tar.gz
+        https://github.com/kpcyrd/${pkgname}/releases/download/v${pkgver}/${pkgname}-${pkgver}.tar.gz.asc)
+sha256sums=('a5dbfdf55ebdb3353eb4a276a9560cfb023003f0a4e4226de045ad959ed99100'
+            'SKIP')
+b2sums=('6a522754338d017a604d3acc747b605c866cbade12d949354221d03a414aec82acf4f819933b7c8fdf0d5f80270dcbfb93992311671b43cb96c6be5455fb6aa2'
+        'SKIP')
+
+validpgpkeys=("64B13F7117D6E07D661BBCE0FE763A64F5E54FD6")
+
+prepare() {
+  cd "${pkgname}-${pkgver}"
+  cargo fetch --locked --target "$(rustc -vV | sed -n 's/host: //p')"
+}
+
+build() {
+  cd ${pkgname}-${pkgver}
+  cargo build --frozen --release
+}
+
+check() {
+  cd ${pkgname}-${pkgver}
+  cargo test --frozen
+}
+
+package() {
+  cd ${pkgname}-${pkgver}
+  install -Dm 755 -t "${pkgdir}/usr/bin" \
+    target/release/archlinux-userland-fs-cmp
+}
+
+# vim: ts=2 sw=2 et:

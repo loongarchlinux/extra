@@ -1,20 +1,21 @@
 # Maintainer: Balló György <ballogyor+arch at gmail dot com>
 # Contributor: Jan Alexander Steffens (heftig) <jan.steffens@gmail.com>
 
-pkgname=gom
-pkgver=0.4
-pkgrel=7
+pkgbase=gom
+pkgname=(gom gom-docs)
+pkgver=0.5.1
+pkgrel=1
 pkgdesc='GObject to SQLite object mapper library'
 arch=('loong64' 'x86_64')
 url='https://wiki.gnome.org/Projects/Gom'
-license=('LGPL')
+license=('LGPL-2.1-or-later')
 depends=('glib2' 'glibc' 'sqlite')
-makedepends=('gdk-pixbuf2' 'gobject-introspection' 'gtk-doc' 'meson' 'python-gobject')
-source=("https://download.gnome.org/sources/$pkgname/$pkgver/$pkgname-$pkgver.tar.xz")
-sha256sums=('68d08006aaa3b58169ce7cf1839498f45686fba8115f09acecb89d77e1018a9d')
+makedepends=('gdk-pixbuf2' 'gi-docgen' 'git' 'gobject-introspection' 'meson' 'python-gobject')
+source=("git+https://gitlab.gnome.org/GNOME/gom.git#tag=$pkgver")
+b2sums=('5cf75e36680d2865b37c042177f1ef4e3cd35c79a4f9fa3c79150d3a218415e2f4fc8ba592e16e4bd776cb40174ffaba04425defee2caea6477108cf04f28fe7')
  
 build() {
-  arch-meson $pkgname-$pkgver build -D enable-gtk-doc=true
+  arch-meson gom build -D enable-gtk-doc=true
   meson compile -C build
 }
 
@@ -22,6 +23,16 @@ check() {
   meson test -C build --print-errorlogs
 }
 
-package() {
+package_gom() {
   meson install -C build --destdir "$pkgdir"
+
+  mkdir -p doc/usr/share
+  mv {"$pkgdir",doc}/usr/share/doc
+}
+
+package_gom-docs() {
+  pkgdesc+=" - documentation"
+  depends=()
+
+  mv doc/* "$pkgdir"
 }

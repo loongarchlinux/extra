@@ -2,12 +2,12 @@
 
 _pkg=geopandas
 pkgname=python-${_pkg}
-pkgver=0.14.1
-pkgrel=1
+pkgver=0.14.3
+pkgrel=5
 pkgdesc="Python tools for geographic data"
 arch=(any)
 url="https://geopandas.org"
-license=(BSD)
+license=(BSD-3-Clause)
 depends=(
     gdal
     python-fiona
@@ -18,7 +18,6 @@ depends=(
     python-shapely
 )
 optdepends=(
-    'python-pygeos: alternative backend'
     'python-pyogrio: vectorized IO for GDAL/OGR'
     'python-rtree: spatial access methods'
     'python-psycopg2: PostGIS access'
@@ -27,11 +26,15 @@ optdepends=(
     'python-matplotlib: plotting'
 #    'python-mapclassify: plotting'
 )
-makedepends=(python-setuptools)
+makedepends=(
+    python-build
+    python-installer
+    python-setuptools
+    python-wheel
+)
 checkdepends=(
     python-pytest
     python-fsspec
-    python-pygeos
     python-pyogrio
     python-rtree
     python-matplotlib
@@ -51,11 +54,11 @@ checkdepends=(
 # No tests data in Pypi
 #source=(https://files.pythonhosted.org/packages/source/${_pkg::1}/${_pkg}/${_pkg}-${pkgver}.tar.gz)
 source=(https://github.com/geopandas/geopandas/archive/refs/tags/v${pkgver}/${pkgname}-${pkgver}.tar.gz)
-sha256sums=('7269fdee9c585c5dd96bd96a2235d0520a9e34189a014ee54e9dc4e926da3c03')
+sha256sums=('e4c3bac0f9db6c28c65d1c96bcd75a7906b6c45b6da184ca4d635fb39268794b')
 
 build() {
   cd ${_pkg}-${pkgver}
-  python setup.py build
+  python -m build --wheel --no-isolation
 }
 
 check() {
@@ -66,6 +69,6 @@ check() {
 
 package() {
   cd ${_pkg}-${pkgver}
-  python setup.py install --prefix=/usr --root="${pkgdir}" --skip-build --optimize=1
+  python -m installer --destdir="$pkgdir" dist/*.whl
   install -Dm644 LICENSE.txt -t "${pkgdir}"/usr/share/licenses/${pkgname}
 }

@@ -1,9 +1,10 @@
 # Maintainer: David Runge <dvzrv@archlinux.org>
 # Maintainer: Filipe Laíns (FFY00) <lains@archlinux.org>
+# Maintainer: Robin Candau <antiz@archlinux.org>
 
 _name=fastapi
 pkgname=python-$_name
-pkgver=0.109.0
+pkgver=0.111.0
 pkgrel=1
 pkgdesc='FastAPI framework, high performance, easy to learn, fast to code, ready for production'
 arch=(any)
@@ -18,12 +19,12 @@ depends=(
   python-pydantic-extra-types
   python-pydantic-settings
   python-starlette
-  python-typing-extensions
+  python-typing_extensions
 )
 makedepends=(
   python-build
   python-installer
-  python-hatchling
+  python-pdm-backend
   python-wheel
 )
 checkdepends=(
@@ -67,8 +68,8 @@ optdepends=(
   'uvicorn: for Uvicorn as ASGI server'
 )
 source=($_name-$pkgver.tar.gz::$url/archive/$pkgver.tar.gz)
-sha512sums=('678dc090a341dbb6e771100cedecdd7b1d16e259e3990a8f3edb422fcf4c72b643b94699e1f385a71722ccb4d581564f38ef5895bfb283bf49fdecb750c2d896')
-b2sums=('de51bd5677bec0fd0c713a1e684c364dcbbe1ede92a0c2855e57d6f738c651388d2a906cef387891e431e30f71679e1064bb63061497d93914c4d7c9632cdbe9')
+sha512sums=('3b613e4b2e7253fa08c09f961e69d384d2f44d07dc7f045b669c3e78f21a161715f3e9a0cb813a1c6e793f4a322160ec3eeb4eef90ba59db64bde9baaa539c13')
+b2sums=('39bd63a5db723e5a79c45e0f4e969c3dc0ba65b43540a2e12be0cb30bd629fa6c293da6645fe29599527f3773544df9f93c18a08d51d6003fb7f501139d3c26d')
 
 prepare() {
   cd $_name-$pkgver
@@ -85,6 +86,13 @@ check() {
   local site_packages=$(python -c "import site; print(site.getsitepackages()[0])")
   local pytest_options=(
     -vv
+    # These tests are failing with "DeprecationWarning: The 'app' shortcut is now deprecated. Use the explicit style 'transport=ASGITransport(app=...)'"
+    # It should have been addressed by upstream by then, but for some reason it is still failing
+    # Will try to reselect them at next release
+    --deselect tests/test_tutorial/test_async_tests/test_main.py::test_root[asyncio]
+    --deselect tests/test_tutorial/test_async_tests/test_main.py::test_async_testing[asyncio]
+    --deselect tests/test_tutorial/test_async_tests/test_main.py::test_root[trio]
+    --deselect tests/test_tutorial/test_async_tests/test_main.py::test_async_testing[trio]
   )
 
   cd $_name-$pkgver

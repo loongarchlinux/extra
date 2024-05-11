@@ -1,20 +1,28 @@
 # Maintaier: Antonio Rojas <arojas@archlinux.org>
 
 pkgname=vector-blf
-pkgver=2.4.1
+pkgver=2.4.2
 pkgrel=1
-_commit=0e44244f0dc8df85c58260227d0649bbf3154f01
 pkgdesc='A library to access Binary Log File (BLF) files from Vector Informatik'
 arch=(loong64 x86_64)
-license=(GPL3)
+license=(GPL-3.0-or-later)
 url='https://github.com/Technica-Engineering/vector_blf'
-depends=(gcc-libs zlib)
-makedepends=(cmake doxygen git)
-source=(git+https://github.com/Technica-Engineering/vector_blf#commit=$_commit)
-sha256sums=('SKIP')
+depends=(gcc-libs
+         glibc
+         zlib)
+makedepends=(cmake
+             doxygen)
+source=(https://github.com/Technica-Engineering/vector_blf/archive/v$pkgver/$pkgname-$pkgver.tar.gz
+        fix-build.patch)
+sha256sums=('02d4bdccc2a4bfa93a3d2f62d95c77c3166bc94d2df55dd49298e8099dc7c090'
+            '904614c3265bc586eafad16fffb977ba162f0e3881d67a0d7797e1a8bc55b8c8')
+
+prepare() {
+  patch -d ${pkgname//-/_}-$pkgver -p1 < fix-build.patch
+}
 
 build() {
-  cmake -B build -S ${pkgname//-/_} \
+  cmake -B build -S ${pkgname//-/_}-$pkgver \
     -DCMAKE_INSTALL_PREFIX=/usr
   cmake --build build
 }

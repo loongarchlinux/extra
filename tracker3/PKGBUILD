@@ -1,4 +1,5 @@
 # Maintainer: Jan Alexander Steffens (heftig) <heftig@archlinux.org>
+# Maintainer: Fabian Bornschein <fabiscafe@archlinux.org>
 # Contributor: Sergej Pupykin <pupykin.s+arch@gmail.com>
 # Contributor: Alexander Fehr <pizzapunk gmail com>
 
@@ -7,19 +8,24 @@ pkgname=(
   tracker3
   tracker3-docs
 )
-pkgver=3.6.0
-pkgrel=3
+pkgver=3.7.3
+pkgrel=1
 pkgdesc="SQLite-based RDF triplestore database with SPARQL interface"
 url="https://tracker.gnome.org/"
 arch=(loong64 x86_64)
 license=(LGPL-2.1-or-later)
 depends=(
+  avahi
+  bash
+  gcc-libs
   glib2
+  glibc
   icu
   json-glib
   libsoup3
   libstemmer
   libxml2
+  python
   sqlite
 )
 makedepends=(
@@ -37,33 +43,19 @@ makedepends=(
   systemd
   vala
 )
-_commit=624ef729966f2d9cf748321bd7bac822489fa8ed  # tags/3.6.0^0
 source=(
-  "git+https://gitlab.gnome.org/GNOME/tracker.git#commit=$_commit"
+  "git+https://gitlab.gnome.org/GNOME/tracker.git#tag=$pkgver"
   "git+https://gitlab.gnome.org/GNOME/gvdb.git"
 )
-b2sums=('SKIP'
+b2sums=('9c6a1dff13973ed3ae56cef27af13d4402644d47fb12ce11ed27f6c547673ad8f93b4781890f7d235197591ba9b29424bacb0fda3861e181dc7862791cf7b884'
         'SKIP')
-
-pkgver() {
-  cd tracker
-  git describe --tags | sed 's/[^-]*-g/r&/;s/-/+/g'
-}
 
 prepare() {
   cd tracker
 
-  # Fix bad code in a meson compile test
-  git cherry-pick -n f7393d61803815b19a1f210b197cce423ae3cc01
-
-  # SQLite 3.44.x fixes
-  # https://gitlab.archlinux.org/archlinux/packaging/packages/tracker3/-/issues/1
-  # https://gitlab.gnome.org/GNOME/tracker/-/merge_requests/640
-  git cherry-pick -n -m 1 02b7ae6e2fa005d84d5a55ba3500c10a84acb7de
-
   git submodule init
   git submodule set-url subprojects/gvdb "$srcdir/gvdb"
-  git -c protocol.file.allow=always submodule update
+  git -c protocol.file.allow=always -c protocol.allow=never submodule update
 }
 
 build() {

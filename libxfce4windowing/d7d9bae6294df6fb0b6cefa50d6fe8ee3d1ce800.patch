@@ -1,0 +1,362 @@
+From d7d9bae6294df6fb0b6cefa50d6fe8ee3d1ce800 Mon Sep 17 00:00:00 2001
+From: "Brian J. Tarricone" <brian@tarricone.org>
+Date: Sun, 25 Feb 2024 22:10:47 -0800
+Subject: [PATCH] Remove xfw_(window|application)_get_id()
+
+This always returned zero on Wayland, which is not useful at all, and
+the XID on X11, which is useful, but maybe should be a backend-specific
+function.
+---
+ .../libxfce4windowing-sections.txt            |  2 --
+ libxfce4windowing/xfw-application-private.h   |  1 -
+ libxfce4windowing/xfw-application-wayland.c   |  7 ----
+ libxfce4windowing/xfw-application-x11.c       |  7 ----
+ libxfce4windowing/xfw-application.c           | 35 -------------------
+ libxfce4windowing/xfw-application.h           |  1 -
+ libxfce4windowing/xfw-window-private.h        |  1 -
+ libxfce4windowing/xfw-window-wayland.c        |  8 -----
+ libxfce4windowing/xfw-window-x11.c            |  7 ----
+ libxfce4windowing/xfw-window.c                | 34 ------------------
+ libxfce4windowing/xfw-window.h                |  1 -
+ 11 files changed, 104 deletions(-)
+
+diff --git a/docs/reference/libxfce4windowing/libxfce4windowing-sections.txt b/docs/reference/libxfce4windowing/libxfce4windowing-sections.txt
+index 3669406..d5a36ae 100644
+--- a/docs/reference/libxfce4windowing/libxfce4windowing-sections.txt
++++ b/docs/reference/libxfce4windowing/libxfce4windowing-sections.txt
+@@ -109,7 +109,6 @@ XfwWindow
+ XfwWindowCapabilities
+ XfwWindowState
+ XfwWindowType
+-xfw_window_get_id
+ xfw_window_get_class_ids
+ xfw_window_get_name
+ xfw_window_get_icon
+@@ -167,7 +166,6 @@ xfw_window_type_get_type
+ <FILE>xfw-application</FILE>
+ XfwApplication
+ XfwApplicationInstance
+-xfw_application_get_id
+ xfw_application_get_class_id
+ xfw_application_get_name
+ xfw_application_get_icon
+diff --git a/libxfce4windowing/xfw-application-private.h b/libxfce4windowing/xfw-application-private.h
+index aa2f71b..5e211ac 100644
+--- a/libxfce4windowing/xfw-application-private.h
++++ b/libxfce4windowing/xfw-application-private.h
+@@ -40,7 +40,6 @@ struct _XfwApplicationClass {
+     void (*icon_changed)(XfwApplication *app);
+ 
+     /* Virtual Table */
+-    guint64 (*get_id)(XfwApplication *app);
+     const gchar *(*get_class_id)(XfwApplication *app);
+     const gchar *(*get_name)(XfwApplication *app);
+     GIcon *(*get_gicon)(XfwApplication *app);
+diff --git a/libxfce4windowing/xfw-application-wayland.c b/libxfce4windowing/xfw-application-wayland.c
+index 04da1d3..b8ceb13 100644
+--- a/libxfce4windowing/xfw-application-wayland.c
++++ b/libxfce4windowing/xfw-application-wayland.c
+@@ -45,7 +45,6 @@ static void xfw_application_wayland_constructed(GObject *obj);
+ static void xfw_application_wayland_set_property(GObject *obj, guint prop_id, const GValue *value, GParamSpec *pspec);
+ static void xfw_application_wayland_get_property(GObject *obj, guint prop_id, GValue *value, GParamSpec *pspec);
+ static void xfw_application_wayland_finalize(GObject *obj);
+-static guint64 xfw_application_wayland_get_id(XfwApplication *app);
+ static const gchar *xfw_application_wayland_get_class_id(XfwApplication *app);
+ static const gchar *xfw_application_wayland_get_name(XfwApplication *app);
+ static GIcon *xfw_application_wayland_get_gicon(XfwApplication *app);
+@@ -69,7 +68,6 @@ xfw_application_wayland_class_init(XfwApplicationWaylandClass *klass) {
+     gklass->get_property = xfw_application_wayland_get_property;
+     gklass->finalize = xfw_application_wayland_finalize;
+ 
+-    app_class->get_id = xfw_application_wayland_get_id;
+     app_class->get_class_id = xfw_application_wayland_get_class_id;
+     app_class->get_name = xfw_application_wayland_get_name;
+     app_class->get_gicon = xfw_application_wayland_get_gicon;
+@@ -166,11 +164,6 @@ xfw_application_wayland_finalize(GObject *obj) {
+     G_OBJECT_CLASS(xfw_application_wayland_parent_class)->finalize(obj);
+ }
+ 
+-static guint64
+-xfw_application_wayland_get_id(XfwApplication *app) {
+-    return xfw_window_get_id(XFW_APPLICATION_WAYLAND(app)->priv->windows->data);
+-}
+-
+ static const gchar *
+ xfw_application_wayland_get_class_id(XfwApplication *app) {
+     return XFW_APPLICATION_WAYLAND(app)->priv->app_id;
+diff --git a/libxfce4windowing/xfw-application-x11.c b/libxfce4windowing/xfw-application-x11.c
+index 2b35525..ac11fdd 100644
+--- a/libxfce4windowing/xfw-application-x11.c
++++ b/libxfce4windowing/xfw-application-x11.c
+@@ -45,7 +45,6 @@ static void xfw_application_x11_constructed(GObject *obj);
+ static void xfw_application_x11_set_property(GObject *obj, guint prop_id, const GValue *value, GParamSpec *pspec);
+ static void xfw_application_x11_get_property(GObject *obj, guint prop_id, GValue *value, GParamSpec *pspec);
+ static void xfw_application_x11_finalize(GObject *obj);
+-static guint64 xfw_application_x11_get_id(XfwApplication *app);
+ static const gchar *xfw_application_x11_get_class_id(XfwApplication *app);
+ static const gchar *xfw_application_x11_get_name(XfwApplication *app);
+ static GIcon *xfw_application_x11_get_gicon(XfwApplication *app);
+@@ -71,7 +70,6 @@ xfw_application_x11_class_init(XfwApplicationX11Class *klass) {
+     gklass->get_property = xfw_application_x11_get_property;
+     gklass->finalize = xfw_application_x11_finalize;
+ 
+-    app_class->get_id = xfw_application_x11_get_id;
+     app_class->get_class_id = xfw_application_x11_get_class_id;
+     app_class->get_name = xfw_application_x11_get_name;
+     app_class->get_gicon = xfw_application_x11_get_gicon;
+@@ -158,11 +156,6 @@ xfw_application_x11_finalize(GObject *obj) {
+     G_OBJECT_CLASS(xfw_application_x11_parent_class)->finalize(obj);
+ }
+ 
+-static guint64
+-xfw_application_x11_get_id(XfwApplication *app) {
+-    return xfw_window_get_id(XFW_APPLICATION_X11(app)->priv->windows->data);
+-}
+-
+ static const gchar *
+ xfw_application_x11_get_class_id(XfwApplication *app) {
+     return wnck_class_group_get_id(XFW_APPLICATION_X11(app)->priv->wnck_group);
+diff --git a/libxfce4windowing/xfw-application.c b/libxfce4windowing/xfw-application.c
+index 75263f0..9e44b0b 100644
+--- a/libxfce4windowing/xfw-application.c
++++ b/libxfce4windowing/xfw-application.c
+@@ -42,7 +42,6 @@
+ 
+ enum {
+     PROP0,
+-    PROP_ID,
+     PROP_CLASS_ID,
+     PROP_NAME,
+     PROP_WINDOWS,
+@@ -95,19 +94,6 @@ xfw_application_class_init(XfwApplicationClass *klass) {
+                  g_cclosure_marshal_VOID__VOID,
+                  G_TYPE_NONE, 0);
+ 
+-    /**
+-     * XfwApplication:id:
+-     *
+-     * The #XfwWindow:id of the first window in #XfwApplication:windows.
+-     **/
+-    g_object_class_install_property(gobject_class,
+-                                    PROP_ID,
+-                                    g_param_spec_uint64("id",
+-                                                        "id",
+-                                                        "id",
+-                                                        0, G_MAXUINT64, 0,
+-                                                        G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
+-
+     /**
+      * XfwApplication:class-id:
+      *
+@@ -195,10 +181,6 @@ xfw_application_get_property(GObject *object,
+     XfwApplication *app = XFW_APPLICATION(object);
+ 
+     switch (prop_id) {
+-        case PROP_ID:
+-            g_value_set_uint64(value, xfw_application_get_id(app));
+-            break;
+-
+         case PROP_CLASS_ID:
+             g_value_set_string(value, xfw_application_get_class_id(app));
+             break;
+@@ -231,23 +213,6 @@ xfw_application_finalize(GObject *object) {
+     G_OBJECT_CLASS(xfw_application_parent_class)->finalize(object);
+ }
+ 
+-/**
+- * xfw_application_get_id:
+- * @app: an #XfwApplication.
+- *
+- * Fetches this application's ID, which is the #XfwWindow:id of the first window
+- * in #XfwApplication:windows.
+- *
+- * Return value: A unique integer identifying the application.
+- **/
+-guint64
+-xfw_application_get_id(XfwApplication *app) {
+-    XfwApplicationClass *klass;
+-    g_return_val_if_fail(XFW_IS_APPLICATION(app), 0);
+-    klass = XFW_APPLICATION_GET_CLASS(app);
+-    return (*klass->get_id)(app);
+-}
+-
+ /**
+  * xfw_application_get_class_id:
+  * @app: an #XfwApplication.
+diff --git a/libxfce4windowing/xfw-application.h b/libxfce4windowing/xfw-application.h
+index 0a81fb5..69f4cd8 100644
+--- a/libxfce4windowing/xfw-application.h
++++ b/libxfce4windowing/xfw-application.h
+@@ -43,7 +43,6 @@ typedef struct _XfwApplicationInstance XfwApplicationInstance;
+  **/
+ typedef struct _XfwApplicationInstance XfwApplicationInstance;
+ 
+-guint64 xfw_application_get_id(XfwApplication *app);
+ const gchar *xfw_application_get_class_id(XfwApplication *app);
+ const gchar *xfw_application_get_name(XfwApplication *app);
+ GdkPixbuf *xfw_application_get_icon(XfwApplication *app, gint size, gint scale);
+diff --git a/libxfce4windowing/xfw-window-private.h b/libxfce4windowing/xfw-window-private.h
+index e991db3..180c7b8 100644
+--- a/libxfce4windowing/xfw-window-private.h
++++ b/libxfce4windowing/xfw-window-private.h
+@@ -48,7 +48,6 @@ struct _XfwWindowClass {
+     void (*closed)(XfwWindow *window);
+ 
+     /* Virtual Table */
+-    guint64 (*get_id)(XfwWindow *window);
+     const gchar *const *(*get_class_ids)(XfwWindow *window);
+     const gchar *(*get_name)(XfwWindow *window);
+     GIcon *(*get_gicon)(XfwWindow *window);
+diff --git a/libxfce4windowing/xfw-window-wayland.c b/libxfce4windowing/xfw-window-wayland.c
+index a7201ac..7500bb8 100644
+--- a/libxfce4windowing/xfw-window-wayland.c
++++ b/libxfce4windowing/xfw-window-wayland.c
+@@ -40,7 +40,6 @@ struct _XfwWindowWaylandPrivate {
+     struct zwlr_foreign_toplevel_handle_v1 *handle;
+     gboolean created_emitted;
+ 
+-    guint64 id;
+     const gchar **class_ids;
+     gchar *app_id;
+     gchar *name;
+@@ -56,7 +55,6 @@ static void xfw_window_wayland_set_property(GObject *obj, guint prop_id, const G
+ static void xfw_window_wayland_get_property(GObject *obj, guint prop_id, GValue *value, GParamSpec *pspec);
+ static void xfw_window_wayland_finalize(GObject *obj);
+ 
+-static guint64 xfw_window_wayland_get_id(XfwWindow *window);
+ static const gchar *const *xfw_window_wayland_get_class_ids(XfwWindow *window);
+ static const gchar *xfw_window_wayland_get_name(XfwWindow *window);
+ static GIcon *xfw_window_wayland_get_gicon(XfwWindow *window);
+@@ -118,7 +116,6 @@ xfw_window_wayland_class_init(XfwWindowWaylandClass *klass) {
+     gklass->get_property = xfw_window_wayland_get_property;
+     gklass->finalize = xfw_window_wayland_finalize;
+ 
+-    window_class->get_id = xfw_window_wayland_get_id;
+     window_class->get_class_ids = xfw_window_wayland_get_class_ids;
+     window_class->get_name = xfw_window_wayland_get_name;
+     window_class->get_gicon = xfw_window_wayland_get_gicon;
+@@ -212,11 +209,6 @@ xfw_window_wayland_finalize(GObject *obj) {
+     G_OBJECT_CLASS(xfw_window_wayland_parent_class)->finalize(obj);
+ }
+ 
+-static guint64
+-xfw_window_wayland_get_id(XfwWindow *window) {
+-    return XFW_WINDOW_WAYLAND(window)->priv->id;
+-}
+-
+ static const gchar *const *
+ xfw_window_wayland_get_class_ids(XfwWindow *window) {
+     return XFW_WINDOW_WAYLAND(window)->priv->class_ids;
+diff --git a/libxfce4windowing/xfw-window-x11.c b/libxfce4windowing/xfw-window-x11.c
+index aadbd77..875f251 100644
+--- a/libxfce4windowing/xfw-window-x11.c
++++ b/libxfce4windowing/xfw-window-x11.c
+@@ -54,7 +54,6 @@ static void xfw_window_x11_set_property(GObject *obj, guint prop_id, const GValu
+ static void xfw_window_x11_get_property(GObject *obj, guint prop_id, GValue *value, GParamSpec *pspec);
+ static void xfw_window_x11_finalize(GObject *obj);
+ 
+-static guint64 xfw_window_x11_get_id(XfwWindow *window);
+ static const gchar *const *xfw_window_x11_get_class_ids(XfwWindow *window);
+ static const gchar *xfw_window_x11_get_name(XfwWindow *window);
+ static GIcon * xfw_window_x11_get_gicon(XfwWindow *window);
+@@ -114,7 +113,6 @@ xfw_window_x11_class_init(XfwWindowX11Class *klass) {
+     gklass->get_property = xfw_window_x11_get_property;
+     gklass->finalize = xfw_window_x11_finalize;
+ 
+-    window_class->get_id = xfw_window_x11_get_id;
+     window_class->get_class_ids = xfw_window_x11_get_class_ids;
+     window_class->get_name = xfw_window_x11_get_name;
+     window_class->get_gicon = xfw_window_x11_get_gicon;
+@@ -261,11 +259,6 @@ xfw_window_x11_finalize(GObject *obj) {
+     G_OBJECT_CLASS(xfw_window_x11_parent_class)->finalize(obj);
+ }
+ 
+-static guint64
+-xfw_window_x11_get_id(XfwWindow *window) {
+-    return wnck_window_get_xid(XFW_WINDOW_X11(window)->priv->wnck_window);
+-}
+-
+ static const gchar *const *
+ xfw_window_x11_get_class_ids(XfwWindow *window) {
+     return XFW_WINDOW_X11(window)->priv->class_ids;
+diff --git a/libxfce4windowing/xfw-window.c b/libxfce4windowing/xfw-window.c
+index 6467da6..7dca67c 100644
+--- a/libxfce4windowing/xfw-window.c
++++ b/libxfce4windowing/xfw-window.c
+@@ -54,7 +54,6 @@
+ enum {
+     PROP0,
+     PROP_SCREEN,
+-    PROP_ID,
+     PROP_CLASS_IDS,
+     PROP_NAME,
+     PROP_TYPE,
+@@ -290,19 +289,6 @@ xfw_window_class_init(XfwWindowClass *klass) {
+                                                         XFW_TYPE_SCREEN,
+                                                         G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY | G_PARAM_STATIC_STRINGS));
+ 
+-    /**
+-     * XfwWindow:id:
+-     *
+-     * A windowing-platform dependent window ID.
+-     **/
+-    g_object_class_install_property(gobject_class,
+-                                    PROP_ID,
+-                                    g_param_spec_uint64("id",
+-                                                        "id",
+-                                                        "id",
+-                                                        0, UINT64_MAX, 0,
+-                                                        G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
+-
+     /**
+      * XfwWindow:class-ids:
+      *
+@@ -462,10 +448,6 @@ xfw_window_get_property(GObject *object,
+             g_value_set_object(value, priv->screen);
+             break;
+ 
+-        case PROP_ID:
+-            g_value_set_uint64(value, xfw_window_get_id(window));
+-            break;
+-
+         case PROP_CLASS_IDS:
+             g_value_set_boxed(value, xfw_window_get_class_ids(window));
+             break;
+@@ -518,22 +500,6 @@ xfw_window_finalize(GObject *object) {
+     G_OBJECT_CLASS(xfw_window_parent_class)->finalize(object);
+ }
+ 
+-/**
+- * xfw_window_get_id:
+- * @window: an #XfwWindow.
+- *
+- * Fetches the windowing-platform dependent window ID.
+- *
+- * Return value: a 64-bit unsigned integer.
+- **/
+-guint64
+-xfw_window_get_id(XfwWindow *window) {
+-    XfwWindowClass *klass;
+-    g_return_val_if_fail(XFW_IS_WINDOW(window), 0);
+-    klass = XFW_WINDOW_GET_CLASS(window);
+-    return (*klass->get_id)(window);
+-}
+-
+ /**
+  * xfw_window_get_class_ids:
+  * @window: an #XfwWindow.
+diff --git a/libxfce4windowing/xfw-window.h b/libxfce4windowing/xfw-window.h
+index e84a799..1849fff 100644
+--- a/libxfce4windowing/xfw-window.h
++++ b/libxfce4windowing/xfw-window.h
+@@ -149,7 +149,6 @@ GType xfw_window_type_get_type(void) G_GNUC_CONST;
+ GType xfw_window_state_get_type(void) G_GNUC_CONST;
+ GType xfw_window_capabilities_get_type(void) G_GNUC_CONST;
+ 
+-guint64 xfw_window_get_id(XfwWindow *window);
+ const gchar *const *xfw_window_get_class_ids(XfwWindow *window);
+ const gchar *xfw_window_get_name(XfwWindow *window);
+ GdkPixbuf *xfw_window_get_icon(XfwWindow *window, gint size, gint scale);
+-- 
+GitLab
+

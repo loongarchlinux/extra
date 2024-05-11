@@ -3,10 +3,10 @@
 
 pkgname=python-pgpy
 pkgver=0.6.0
-pkgrel=2
+pkgrel=4
 pkgdesc='Pretty Good Privacy for Python'
 arch=('any')
-license=('BSD')
+license=('BSD-3-Clause')
 url='https://github.com/SecurityInnovation/PGPy'
 depends=(
   'python'
@@ -15,7 +15,10 @@ depends=(
 )
 makedepends=(
   'git'
+  'python-build'
+  'python-installer'
   'python-setuptools'
+  'python-wheel'
 )
 checkdepends=(
   'python-pytest'
@@ -34,7 +37,7 @@ pkgver() {
 build() {
   cd "$pkgname"
 
-  python setup.py build
+  python -m build --wheel --no-isolation
 }
 
 check() {
@@ -46,7 +49,7 @@ check() {
 package() {
   cd "$pkgname"
 
-  python setup.py install --root="$pkgdir" --optimize=1 --skip-build
+  python -m installer --destdir="$pkgdir" dist/*.whl
 
   install -vDm644 -t "$pkgdir/usr/share/licenses/$pkgname" LICENSE
 }

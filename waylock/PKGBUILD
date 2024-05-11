@@ -2,7 +2,7 @@
 # Maintainer: Daurnimator <daurnimator@archlinux.org>
 
 pkgname=waylock
-pkgver=0.6.4
+pkgver=1.0.0
 pkgrel=1
 pkgdesc="A simple screenlocker for wayland compositors"
 arch=(loong64 x86_64)
@@ -21,24 +21,29 @@ makedepends=(
   zig
 )
 source=(
-  $url/releases/download/v$pkgver/$pkgname-$pkgver.tar.gz{,.sig}
-  git+https://codeberg.org/ifreund/zig-wayland.git#commit=65475badb37fdfa06ac091554fdc81689a37a72a
-  git+https://codeberg.org/ifreund/zig-xkbcommon.git#commit=7b188de0ba794b52eb70340abf2469b858630816
+  "git+$url?signed#tag=v$pkgver"
+  git+https://codeberg.org/ifreund/zig-wayland.git
+  git+https://codeberg.org/ifreund/zig-xkbcommon.git
 )
-sha512sums=('c663223cdfd99c4bc730ae06d75c4a8e75f068f07245d15fa7c463e468b2dcfaae2e8a46f83f380cc4b86059045337ed00b1eae223bc4ea67058831f6f6febd0'
-            'SKIP'
+sha512sums=('0c9a3ba2431b087fcb5a5747abf59bb8097dc4f599c10f351707a60f829075ef36cda45f9204c75e0151530b9266923ad782546e2ae8f871fc29c8e17b3e2810'
             'SKIP'
             'SKIP')
-b2sums=('13db129aa65294f4ec3b955b31581f9ba57bd9af115bc332e0eaaf2d1ea7d425a18c7daf754a097cdf178a104731179bb46f13a9d708e1db8b36515036440902'
-        'SKIP'
+b2sums=('a9f292e53762a2e2e3ab93d2b6727b9496de087dfe45a160ec4f66311964df84fee81a4e39a84eb1f0917dd9e9137987132b6ed1b0e3cd71826475a85cb6cefd'
         'SKIP'
         'SKIP')
 validpgpkeys=('5FBDF84DD2278DB2B8AD8A5286DED400DDFD7A11') # Isaac Freund <mail@isaacfreund.com>
 
+pkgver() {
+  cd $pkgname
+  git describe --tags | sed 's/\([^-]*-g\)/r\1/;s/-/./g;s/v//g'
+}
+
 prepare() {
-  cd $pkgname-$pkgver
-  ln -s ../zig-wayland deps/zig-wayland
-  ln -s ../zig-xkbcommon deps/zig-xkbcommon
+  cd $pkgname
+  git submodule init
+  git config submodule.deps/zig-wayland.url "../zig-wayland"
+  git config submodule.deps/zig-xkbcommon.url "../zig-xkbcommon"
+  git -c protocol.file.allow=always submodule update
 }
 
 build() {
@@ -51,7 +56,11 @@ build() {
     --verbose
   )
 
-  cd $pkgname-$pkgver
+  # this uses malloc_usable_size, which is incompatible with fortification level 3
+  export CFLAGS="${CFLAGS/_FORTIFY_SOURCE=3/_FORTIFY_SOURCE=2}"
+  export CXXFLAGS="${CXXFLAGS/_FORTIFY_SOURCE=3/_FORTIFY_SOURCE=2}"
+
+  cd $pkgname
   DESTDIR=build zig build "${zig_options[@]}"
 }
 
@@ -62,7 +71,7 @@ package() {
     wayland libwayland-client.so
   )
 
-  cd $pkgname-$pkgver
+  cd $pkgname
 
   mv -v build/* "$pkgdir"
 

@@ -1,12 +1,12 @@
 # Maintainer: George Rawlinson <grawlinson@archlinux.org>
+# Maintainer: Caleb Maclennan <caleb@alerque.com>
 # Contributor: Haochen Tong <i at hexchain dot org>
 # Contributor: Qi Xiao <xiaqqaix at gmail dot com>
 
 pkgname=elvish
-pkgver=0.19.2
-_commit='fbc4e5036924ea4a6356a67a0d0c6ca7456b524a'
-pkgrel=1
-pkgdesc="A friendly and expressive Unix shell"
+pkgver=0.20.1
+pkgrel=4
+pkgdesc='Versatile interactive shell & powerful scripting language in one'
 arch=('loong64' 'x86_64')
 url="https://elv.sh"
 license=('BSD')
@@ -14,14 +14,10 @@ depends=('glibc')
 makedepends=('git' 'go')
 install="$pkgname.install"
 options=('!lto')
-source=("$pkgname::git+https://github.com/elves/elvish.git#commit=$_commit")
-b2sums=('SKIP')
+source=("$pkgname::git+https://github.com/elves/elvish.git#tag=v$pkgver")
+sha256sums=('8f2cab9dd64595b4fcdb3054911e8d6a7c6a494fa0b04dcf9fac195699a0fdcc')
 
-pkgver() {
-  cd "$pkgname"
-
-  git describe --tags | sed 's/^v//'
-}
+_variant="archlinux$pkgrel"
 
 prepare() {
   cd "$pkgname"
@@ -37,24 +33,26 @@ build() {
   cd "$pkgname"
 
   # set Go flags
-  export CGO_CPPFLAGS="${CPPFLAGS}"
-  export CGO_CFLAGS="${CFLAGS}"
-  export CGO_CXXFLAGS="${CXXFLAGS}"
+  export CGO_CPPFLAGS="$CPPFLAGS"
+  export CGO_CFLAGS="$CFLAGS"
+  export CGO_CXXFLAGS="$CXXFLAGS"
 
+  # See https://github.com/elves/elvish/blob/master/PACKAGING.md for the
+  # src.elv.sh/pkg/buildinfo.BuildVariant variable
   go build -v \
     -trimpath \
     -buildmode=pie \
     -mod=readonly \
     -modcacherw \
-    -ldflags "-linkmode external -extldflags ${LDFLAGS} \
-    -X github.com/elves/elvish/pkg/buildinfo.Reproducible=true \
-    -X github.com/elves/elvish/pkg/buildinfo.Version=$pkgver" \
+    -ldflags "-linkmode external -extldflags \"$LDFLAGS\" \
+      -X src.elv.sh/pkg/buildinfo.BuildVariant=$_variant" \
     -o build \
     ./cmd/...
 }
 
 check() {
   cd "$pkgname"
+  build/elvish --version | grep -Fqx "$pkgver+$_variant"
   go test -v -race ./...
 }
 

@@ -1,46 +1,39 @@
 # Maintainer: George Rawlinson <grawlinson@archlinux.org>
 
 pkgname=python-pydrive2
-_pkgname="${pkgname#python-}"
-pkgver=1.17.0
-pkgrel=1
+_name=PyDrive2
+pkgver=1.19.0
+pkgrel=2
 pkgdesc='Google Drive API Python wrapper library (maintained fork of PyDrive)'
 arch=('any')
 url='https://github.com/iterative/PyDrive2'
-license=('Apache')
+license=('Apache-2.0')
 depends=(
   'python'
   'python-google-api-python-client'
+  'python-httplib2'  # explicitly required: https://github.com/iterative/PyDrive2/issues/336
   'python-oauth2client'
-  'python-pyaml'
-  'python-pyopenssl'
+  'python-pyopenssl'  # probably not needed: https://github.com/iterative/PyDrive2/issues/335
+  'python-pyyaml'
 )
 makedepends=(
-  'git'
   'python-build'
   'python-installer'
-  'python-wheel'
   'python-setuptools'
   'python-setuptools-scm'
+  'python-wheel'
 )
-_commit='c473d631d9c47559d66943ecedfaec46af1aa78a'
-source=("$pkgname::git+$url#commit=$_commit")
-b2sums=('SKIP')
-
-pkgver() {
-  cd "$pkgname"
-
-  git describe --tags | sed 's/^v//'
-}
+source=("$_name-$pkgver.tar.gz::$url/archive/refs/tags/$pkgver.tar.gz")
+b2sums=('0c32baaa3a1ed8805c3a082c4a8a31d50084d8b4a3b76e35f055f65e34535dbcee6e1dbd14eb4fb56ca76616dd59805d0bf3a31073a8707f15ee517e344aff1b')
 
 build() {
-  cd "$pkgname"
+  cd "$_name-$pkgver"
 
-  python -m build --wheel --no-isolation
+  SETUPTOOLS_SCM_PRETEND_VERSION=$pkgver python -m build --wheel --no-isolation
 }
 
 package() {
-  cd "$pkgname"
+  cd "$_name-$pkgver"
 
   python -m installer --destdir="$pkgdir" dist/*.whl
 }

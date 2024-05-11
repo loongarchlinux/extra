@@ -3,8 +3,8 @@
 # Contributor: Oliver Sherouse <oliver DOT sherouse AT gmail DOT com>
 
 pkgname=python-seaborn
-pkgver=0.12.2
-pkgrel=3
+pkgver=0.13.2
+pkgrel=1
 pkgdesc="Statistical data visualization"
 arch=(any)
 url="https://seaborn.pydata.org/"
@@ -14,14 +14,8 @@ makedepends=(python-build python-installer python-flit-core)
 optdepends=('python-scipy: clustering matrices and some advanced options'
             'python-statsmodels: advanced regression plots')
 checkdepends=(python-pytest python-scipy python-statsmodels)
-source=(https://github.com/mwaskom/seaborn/archive/v$pkgver/$pkgname-$pkgver.tar.gz
-        https://github.com/mwaskom/seaborn/commit/db7ae117.patch)
-sha256sums=('e11b9b136b583bbbb8b692dcd23ec539ea58c0325f7502cd049392352b815788'
-            '17b591c70d063e6c32805ac06afee557464978a0c24924a90014b659bab187da')
-
-prepare() {
-  patch -d seaborn-$pkgver -p1 < db7ae117.patch # Fix test with matplotlib 3.7
-}
+source=(https://github.com/mwaskom/seaborn/archive/v$pkgver/$pkgname-$pkgver.tar.gz)
+sha256sums=('16de5648993d8e74f9a0f000e5646c10b0c90c037d2625c55ae2c6955a5e6333')
 
 build() {
   cd seaborn-$pkgver
@@ -30,7 +24,10 @@ build() {
 
 check() {
   cd seaborn-$pkgver
-  pytest -vv --color=yes
+  PYTHONWARNINGS="ignore" \
+  pytest -vv --color=yes \
+    --deselect tests/test_relational.py::TestScatterPlotter::test_unfilled_marker_edgecolor_warning \
+    --deselect tests/test_distributions.py::TestHistPlotUnivariate::test_kde_singular_data # broken by numpy deprecation warnings
 }
 
 package() {

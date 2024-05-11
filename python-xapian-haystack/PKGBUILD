@@ -1,15 +1,15 @@
 # Maintainer: David Runge <dvzrv@archlinux.org>
 
-_name=xapian-haystack
 _haystack_name=django-haystack
 _django_haystack_pkgver=3.2.1
 pkgname=python-xapian-haystack
+_name="${pkgname#python-}"
 pkgver=3.1.0
-pkgrel=1
+pkgrel=2
 pkgdesc="Xapian backend for Django-Haystack"
 arch=(any)
 url="https://github.com/notanumber/xapian-haystack"
-license=(GPL2)
+license=(GPL-2.0-only)
 depends=(
   python
   python-django
@@ -25,13 +25,13 @@ makedepends=(
 )
 checkdepends=(python-pytest)
 source=(
-  https://files.pythonhosted.org/packages/source/${_name::1}/$_name/$_name-$pkgver.tar.gz
-  https://files.pythonhosted.org/packages/source/${_haystack_name::1}/$_haystack_name/$_haystack_name-$_django_haystack_pkgver.tar.gz
+  $pkgname-$pkgver.tar.gz::$url/archive/refs/tags/$pkgver.tar.gz
+  python-$_haystack_name-$_django_haystack_pkgver.tar.gz::https://github.com/django-haystack/django-haystack/archive/refs/tags/v$pkgver.tar.gz
 )
-sha512sums=('6ab09e683587699900c7cd00069e37f36bc62ea40bc92acb5b821f32e9d358068502fe690394c37090108e741a434d86ed4d84bc0dfe96e9456171443269c2d6'
-            '60ce7297243ab5a43780b0aed6f25970ef0438aaadf8f7c92f89970e58c045d3f6ba7a5a635a275e21dc73b116fb33cad32a41991a677bd0a9c66aef4b7ff0c2')
-b2sums=('008d1c98ab028f55e3edb863822c3a76df0fdb006a0d9739f1f6ed140945922dd19f605fc36b31c78806c31e2070da932bfc5dc420a0903cadbfc5c9f5232857'
-        '6071ae9502a3bad885e95b79a1969b6ca6dd044a6d113726045d722168aa05d88b12047b0fbf7d7710936bd32158f2f9c27a6f29868e70e00f88ded1bc3b740a')
+sha512sums=('dec3855ff28548dafd1f09ff7bd42f61b2392ff2eedac1d44090e186745c063991a8d2bd699778dde4ef1f21ccebcffab9aba0ac9197342048da3a20539cc467'
+            '3d7dc23bf9a65062626f2860da009fdffb7cdd81cbed4f521ff00047f4d96f25702ffab032bf5d8605502b1825f1c82f867ea796583b7bf0c94ef96699a00135')
+b2sums=('7a67058a8fa15222f5a9d3a251db3ea8f3866d0a4d6632382e1eef077a7105761d526d9035334d02c80557c8595ed60605d9b7c529726369150a7c79b36e519b'
+        'cfdeec43014955c7b2e9ac988691c3102a752c75f3b87a57d20360c0e57db92afaff20413510f8405f0a3c8b246532aa54c3e9b1953ea32e10bc252dc3793f0f')
 
 build() {
   cd $_name-$pkgver

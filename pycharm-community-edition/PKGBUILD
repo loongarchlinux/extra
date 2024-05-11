@@ -5,8 +5,8 @@
 # Contributor: David Keogh <davekeogh@archlinux.us>
 
 pkgname=pycharm-community-edition
-pkgver=2023.3.2
-_build=233.13135.95
+pkgver=2024.1.1
+_build=241.15989.155
 _jrever=17
 _jdkver=17
 pkgrel=1
@@ -14,7 +14,7 @@ pkgdesc='Python IDE for Professional Developers'
 arch=(loong64 x86_64)
 options=(!debug)
 url=https://www.jetbrains.com/pycharm/
-license=(Apache)
+license=(Apache-2.0)
 depends=(
   giflib
   glib2
@@ -48,18 +48,13 @@ sha256sums=('SKIP'
 prepare() {
   cd intellij-community
 
-  echo ${_build} > build.txt
+  sed -e "s/buildNumber = null/buildNumber = \"${_build}\"/" \
+      -i "python/build/src/PyCharmCommunityInstallersBuildTarget.kt"
   mv "${srcdir}"/idea-android android
 
-  sed -e 's/var targetOs: String/var targetOs: String = OS_LINUX/' \
-      -e 's/System.getProperty(TARGET_OS_PROPERTY, OS_ALL)/OS_LINUX/' \
+  sed -e 's/System.getProperty(TARGET_OS_PROPERTY, OS_ALL)/OS_LINUX/' \
       -i "platform/build-scripts/src/org/jetbrains/intellij/build/BuildOptions.kt"
-  # sed 's|../build/plugins-autoupload.txt|plugins-autoupload.txt|' \
-  #     -i "platform/build-scripts/src/org/jetbrains/intellij/build/impl/DistributionJARsBuilder.kt"
-  # touch plugins-autoupload.txt
-  # Fix pycharm python/installer.cmd & python/plugin.cmd
-  # sed 's|intellij.pycharm.community.build|"$(cd "$(dirname "$0")"; pwd)/../" intellij.pycharm.community.build|' -i python/installers.cmd
-  #sed 's|intellij.pycharm.community.build|"$(cd "$(dirname "$0")"; pwd)/../" intellij.pycharm.community.build|' -i python/plugin.cmd
+  # Disabled until we package JBR outselves
   #patch -Np1 < "${srcdir}/enable-no-jdr.patch"
 }
 
@@ -71,13 +66,8 @@ build() {
   export MAVEN_REPOSITORY=/build/.m2/repository
 
   ./python/installers.cmd -Dintellij.build.use.compiled.classes=false -Dintellij.build.target.os=linux
-  #./python/plugin.cmd -Dintellij.build.target.os=linux
 
   tar -xf out/pycharm-ce/artifacts/pycharmPC-${_build}.tar.gz -C "${srcdir}"
-
-  # Issues with cython and 3.11 -> https://youtrack.jetbrains.com/issues/PY?q=cython%203.11
-  # cd ../pycharm-community-${pkgver}
-  # python3 plugins/python-ce/helpers/pydev/setup_cython.py build_ext --build-temp build --build-lib .
 }
 
 package() {

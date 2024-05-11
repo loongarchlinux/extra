@@ -3,7 +3,7 @@
 
 pkgbase=bemenu
 pkgname=(bemenu bemenu-ncurses bemenu-x11 bemenu-wayland)
-pkgver=0.6.16
+pkgver=0.6.20
 pkgrel=1
 
 # Wayland without wlroots is not supported.
@@ -25,7 +25,7 @@ source=(
 )
 
 # Checksums provided by packager makepkg -g
-sha256sums=('04569f1c9717e4dd060287a9f279f8c101b8ed53704d086485d4020b99b61062'
+sha256sums=('fc219c8482e8e1cd149ff84c6d5980dd788c5854cde69366d02cc3d63537cc77'
             'SKIP')
 validpgpkeys=(16B6B7CACAF339DECE9F154729317348D687B86B)
 

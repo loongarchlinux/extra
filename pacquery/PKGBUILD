@@ -1,0 +1,47 @@
+# Maintainer: Jelle van der Waa <jelle@archlinux.org>
+
+pkgname=pacquery
+pkgver=0.0.2
+pkgrel=1
+pkgdesc="A CLI tool to get JSON output of pacman packages from the system's syncdb"
+url='https://github.com/jelly/pacquery'
+arch=('loong64' 'x86_64')
+license=('MIT')
+depends=('glibc' 'libalpm.so')
+makedepends=('cargo' 'git')
+groups=('archlinux-tools')
+source=(git+https://github.com/jelly/pacquery.git#tag=v$pkgver?signed)
+sha512sums=('SKIP')
+validpgpkeys=("E499C79F53C96A54E572FEE1C06086337C50773E")
+
+prepare() {
+  cd ${pkgname}
+  mkdir -p completions
+  mkdir -p man
+  cargo fetch --locked --target "$(rustc -vV | sed -n 's/host: //p')"
+}
+
+build() {
+  cd ${pkgname}
+  cargo build --frozen --release --all-features
+  OUT_DIR=completions/ "./target/release/$pkgname-completions"
+  OUT_DIR=man/ "./target/release/$pkgname-mangen"
+}
+
+check() {
+  cd ${pkgname}
+  cargo test --frozen --all-features
+}
+
+package() {
+  cd ${pkgname}
+
+  install -Dm0755 -t "$pkgdir/usr/bin/" "target/release/$pkgname"
+  install -Dm644 LICENSE "${pkgdir}/usr/share/licenses/${pkgname}/LICENSE"
+
+  install -Dm 644 "completions/$pkgname.bash" "$pkgdir/usr/share/bash-completion/completions/$pkgname"
+  install -Dm 644 "completions/$pkgname.fish" -t "$pkgdir/usr/share/fish/vendor_completions.d"
+  install -Dm 644 "completions/_$pkgname" -t "$pkgdir/usr/share/zsh/site-functions"
+  install -Dm 644 "man/$pkgname.1" -t "$pkgdir/usr/share/man/man1"
+
+}

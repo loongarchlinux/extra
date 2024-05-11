@@ -3,7 +3,7 @@
 # Contributor: Martin Wimpress <code@flexion.org>
 
 pkgname=mate-notification-daemon
-pkgver=1.26.1
+pkgver=1.28.0
 pkgrel=1
 provides=('notification-daemon')
 pkgdesc="Notification daemon for MATE"
@@ -16,7 +16,7 @@ makedepends=('python')
 conflicts=('mate-notification-daemon-gtk3')
 replaces=('mate-notification-daemon-gtk3')
 source=("https://pub.mate-desktop.org/releases/${pkgver%.*}/${pkgname}-${pkgver}.tar.xz")
-sha256sums=('0eae9296c48a3c71fd56f1931961f92d29e45a045fe5f1a05f83c7400c319924')
+sha256sums=('a4310348ead866cbcb9b4c463f4d265cc6a96a1a782a9411a08b23bd65dbb2e0')
 
 build() {
     cd "${pkgname}-${pkgver}"

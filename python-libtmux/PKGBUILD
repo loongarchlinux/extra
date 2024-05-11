@@ -2,15 +2,17 @@
 
 _name=libtmux
 pkgname=python-libtmux
-pkgver=0.25.0
-pkgrel=1
+pkgver=0.37.0
+_pkgver=${pkgver/.post0/post0}
+pkgrel=2
 pkgdesc="Python api for tmux"
 arch=(any)
 url="https://libtmux.git-pull.com/"
+_url="https://github.com/tmux-python/libtmux"
 license=(MIT)
 depends=(
   python
-  python-typing-extensions
+  python-typing_extensions
   tmux
 )
 makedepends=(
@@ -26,18 +28,12 @@ checkdepends=(
   procps-ng
 )
 optdepends=('python-pytest: for pytest plugin')
-source=($_name-$pkgver.tar.gz::https://github.com/tmux-python/libtmux/archive/refs/tags/v$pkgver.tar.gz)
-sha512sums=('72cf2a24af0407baa775f1be13490c45b573cfaabc6803b57d77cc0eac5de0ef9b8c3a8923437163d1b6b9486a86b71076df40761f302d3534d36d94c68bd6bb')
-b2sums=('ac9da378491acbb91eb8e67e47ef213206d77f618a35fd6cba1014435c70b82eca712f764ccc4f2fa14f4027001678e31743ade9b28ffbc9e5509e2592afab48')
-
-prepare() {
-  cd $_name-$pkgver
-  # we do not want to package python-gp-libs: https://github.com/tmux-python/libtmux/issues/496
-  sed '/addopts/d' -i pyproject.toml
-}
+source=($_name-$_pkgver.tar.gz::$_url/archive/refs/tags/v$_pkgver.tar.gz)
+sha512sums=('8876ad13613d367d6a6ea5945b5a0a495460b5ad68a14d89d20a41f0e5b421e0007041e4e8356e88a8eefb2b2422be306aebd2452e3be556f1cc4fd232327499')
+b2sums=('ef8c9c05cc20f549fc13ffb05276e1ba5b24c366c9cf44eb5ffe609cfe0e603ab7a90747b5df03afa62a6a9d8c81904e7fa7e4598092d3b11c0e9295e413d88d')
 
 build() {
-  cd $_name-$pkgver
+  cd $_name-$_pkgver
   python -m build --wheel --skip-dependency-check --no-isolation
 }
 
@@ -45,17 +41,19 @@ check() {
   local pytest_options=(
     --deselect tests/test_pane.py::test_capture_pane_start
     -vv
+    # we do not want to package python-gp-libs: https://github.com/tmux-python/libtmux/issues/496
+    -o addopts=''
   )
   local _site_packages=$(python -c "import site; print(site.getsitepackages()[0])")
 
-  cd $_name-$pkgver
+  cd $_name-$_pkgver
   python -m installer --destdir=test_dir dist/*.whl
   export PYTHONPATH="$PWD/test_dir/$_site_packages"
   pytest "${pytest_options[@]}" tests
 }
 
 package() {
-  cd $_name-$pkgver
+  cd $_name-$_pkgver
   python -m installer --destdir="$pkgdir" dist/*.whl
   install -vDm 644 LICENSE -t "$pkgdir/usr/share/licenses/$pkgname"
   install -vDm 644 {CHANGES,README.md} -t "$pkgdir/usr/share/doc/$pkgname"

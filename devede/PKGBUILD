@@ -6,28 +6,46 @@
 
 pkgname=devede
 _pkgname=devedeng
-pkgver=4.17.0
-pkgrel=2
+pkgver=4.18.0
+pkgrel=1
 pkgdesc='Program to create VideoDVDs and CDs'
 arch=('any')
 url='https://rastersoft.com/programas/devede.html'
-license=('GPL3')
-depends=('gtk3' 'python-cairo' 'python-gobject' 'python-setuptools' 'ffmpeg' 'cdrtools' 'dvdauthor'
-         'vcdimager')
-source=("https://gitlab.com/rastersoft/$_pkgname/-/archive/$pkgver/$_pkgname-$pkgver.tar.gz")
-sha256sums=('ef50effc72404c6cc4e87244ab8f622179e82368da422756d70316feb94de032')
+license=('GPL-3.0-only')
+depends=(
+  'cdrtools'
+  'dvdauthor'
+  'ffmpeg'
+  'gdk-pixbuf2'
+  'glib2'
+  'gtk3'
+  'hicolor-icon-theme'
+  'python'
+  'python-cairo'
+  'python-gobject'
+  'python-setuptools'
+  'vcdimager'
+)
+makedepends=(
+  'git'
+  'python-build'
+  'python-installer'
+  'python-wheel'
+)
+source=("git+https://gitlab.com/rastersoft/$_pkgname.git#tag=$pkgver")
+b2sums=('238b35e2f01e90ab436c1f0eb8f196fcaf4d5a30663c0045cae5ff26d676e210b78aff89b34be4eed85b2f9583988a91e8c2a405fc2760d48d2c2f98d30d7543')
 
 prepare() {
-  cd $_pkgname-$pkgver
-  sed -i "/share', 'pixmaps/d" setup.py
+  cd $_pkgname
+  sed -i "/share', 'pixmaps/d;s|/usr', 'share|share|" setup.py
 }
 
 build() {
-  cd $_pkgname-$pkgver
-  python setup.py build
+  cd $_pkgname
+  python -m build --wheel --no-isolation
 }
 
 package() {
-  cd $_pkgname-$pkgver
-  python setup.py install --root="$pkgdir" --optimize=1 --skip-build
+  cd $_pkgname
+  python -m installer --destdir="$pkgdir" dist/*.whl
 }

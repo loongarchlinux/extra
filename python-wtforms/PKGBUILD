@@ -5,33 +5,33 @@
 
 _pyname=wtforms
 pkgname=python-wtforms
-pkgver=3.0.1
+pkgver=3.1.2
 pkgrel=2
 pkgdesc='Flexible forms validation and rendering library for python web development'
 url='https://wtforms.readthedocs.io/'
 arch=('any')
 license=('BSD')
 depends=('python' 'python-markupsafe')
-makedepends=('python-setuptools' 'python-babel')
+makedepends=('python-build' 'python-installer' 'python-babel' 'python-hatchling' 'python-setuptools')
 checkdepends=('python-pytest' 'python-email-validator')
 optdepends=('python-email-validator: Email validation')
 source=(https://github.com/wtforms/wtforms/archive/${pkgver}/${pkgname}-${pkgver}.tar.gz)
-sha512sums=('3e8b78026e3f0252113951aca20699477a753bdc0b0f7f01b934ddc8281ee89fc7a559ee519bc8501ff61dc7984b7ec3248d63ea57dd1c1b2c71d845a4479a49')
-b2sums=('57bd60cad3955a6097108c6f5bd151ee044812bd3830213a4c8470a168ef27d42336cb75341bdfa8a8b779faab318585f0760bd652115480b8441bf11c07c912')
+sha512sums=('90120caa2e303c680177a6662e418e06c958c72c73f5bea0358381be9f674d2a850e81269772ae4e50db7cd3a03697a8b8e766a9b9291ff84aaa4ad78361a276')
+b2sums=('1fa847135bc6cd27e8784e84864e2f86ffb81e251cc80070e99340b746e797f7a04b44cd67726e2a65da912725b1d20c990953c96fc50650862258053d894c35')
 
 build() {
   cd ${_pyname}-${pkgver}
-  python setup.py compile_catalog build
+  python -m build --wheel --no-isolation
 }
 
 check() {
   cd ${_pyname}-${pkgver}
-  PYTHONPATH="build/lib" pytest
+  PYTHONPATH="$PWD/src" pytest
 }
 
 package() {
   cd ${_pyname}-${pkgver}
-  python setup.py install --root="${pkgdir}" -O1
+  python -m installer --destdir="${pkgdir}" dist/*.whl
   find "$pkgdir" -type f -name \*.po -delete
   install -Dm 644 LICENSE.rst -t "${pkgdir}/usr/share/licenses/${pkgname}"
   install -Dm 644 CHANGES.rst README.rst  -t "${pkgdir}/usr/share/doc/${pkgname}"

@@ -3,7 +3,7 @@
 
 pkgname=pyzo
 pkgver=4.13.3
-pkgrel=1
+pkgrel=3
 pkgdesc="Cross-platform Python IDE focused on interactivity and introspection, very suitable for scientific computing."
 arch=(any)
 url="https://pyzo.org"
@@ -11,14 +11,20 @@ license=(BSD)
 depends=(python-packaging)
 makedepends=(python-setuptools)
 optdepends=(
-    'pyside2: Qt5 backend'
     'pyside6: Qt6 backend'
-    'python-pyqt5: alternative Qt5 backend'
+    'python-pyqt5: Qt5 backend'
     'python-pyqt6: alternative Qt6 backend'
 )
-checkdepends=(python-pytest pyside2 pyside6 python-pyqt5 python-pyqt6 xorg-server-xvfb)
-source=(https://github.com/pyzo/pyzo/archive/v${pkgver}/${pkgname}-${pkgver}.tar.gz)
-sha256sums=('764a045c5d2a5a3ba407bd080bd405c6e4479a8620a6d12b1d4ed097014337e7')
+checkdepends=(python-pytest pyside6 python-pyqt5 python-pyqt6 xorg-server-xvfb)
+source=(https://github.com/pyzo/pyzo/archive/v${pkgver}/${pkgname}-${pkgver}.tar.gz
+        https://github.com/pyzo/pyzo/commit/ae11bb4e.patch)
+sha256sums=('764a045c5d2a5a3ba407bd080bd405c6e4479a8620a6d12b1d4ed097014337e7'
+            'b2980f4a9cb53f109f38b58a8d5851ca7183647928e16ed4cbed28dac7192f1e')
+
+prepare() {
+    cd $pkgname-$pkgver
+    patch -p1 -i ../ae11bb4e.patch # Port away form imp
+}
 
 build() {
     cd ${pkgname}-${pkgver}

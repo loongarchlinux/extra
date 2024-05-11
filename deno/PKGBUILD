@@ -2,8 +2,8 @@
 # Contributor: Metal A-wing <1 at 233 dot email>
 
 pkgname=deno
-pkgver=1.40.2
-_commit=9a55a72cf195b2d5cee1e8598c7d28e4b1e8013a
+pkgver=1.42.2
+_commit=04c0a4cbf7c00811d3ace3184c1cb8597a0e88f1
 pkgrel=1
 pkgdesc="A secure runtime for JavaScript and TypeScript"
 arch=('loong64' 'x86_64')
@@ -11,9 +11,9 @@ url="https://deno.land"
 license=('MIT')
 options=('!lto')
 depends=('gcc-libs')
-makedepends=('git' 'python' 'rust' 'nodejs' 'cmake' 'protobuf')
+makedepends=('git' 'python' 'rust' 'nodejs' 'gn' 'ninja' 'clang' 'lld' 'cmake' 'protobuf')
 source=("git+https://github.com/denoland/deno.git#commit=$_commit")
-sha512sums=('SKIP')
+sha512sums=('8c25d2906cb9209c31fb1fd3950f39323010acb56e8b47e9351bcdf1b1722b98925faa89485e6c35c120a0d515b8597d7463d6561b71a8a95e069c2d822a6089')
 
 build() {
   cd $pkgname
@@ -22,12 +22,25 @@ build() {
   export CFLAGS="${CFLAGS/_FORTIFY_SOURCE=3/_FORTIFY_SOURCE=2}"
   export CXXFLAGS="${CXXFLAGS/_FORTIFY_SOURCE=3/_FORTIFY_SOURCE=2}"
 
+  local _extra_gn_args=(
+    'custom_toolchain="//build/toolchain/linux/unbundle:default"'
+    'host_toolchain="//build/toolchain/linux/unbundle:default"'
+  )
+
+  export CC=clang CXX=clang++ AR=ar NM=nm
+  export CFLAGS="${CFLAGS//-fstack-clash-protection/}"
+  export CXXFLAGS="${CXXFLAGS//-fstack-clash-protection/}"
+  export V8_FROM_SOURCE=1
+  export CLANG_BASE_PATH=/usr
+  export GN=/usr/bin/gn NINJA=/usr/bin/ninja
+  export EXTRA_GN_ARGS="${_extra_gn_args[@]}"
+
   cargo build --release
 }
 
 check() {
   cd $pkgname
-  ./target/release/deno run cli/tests/testdata/run/002_hello.ts
+  ./target/release/deno run tests/testdata/run/002_hello.ts
 }
 
 package() {

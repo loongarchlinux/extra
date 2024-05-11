@@ -7,7 +7,7 @@
 
 pkgbase=incus
 pkgname=(incus incus-tools)
-pkgver=0.5
+pkgver=6.1
 pkgrel=1
 pkgdesc="Powerful system container and virtual machine manager"
 arch=('loong64' 'x86_64')
@@ -30,7 +30,7 @@ optdepends=(
     'apparmor: apparmor support'
     'xdelta3: support delta downloads of images'
 )
-source=("https://github.com/lxc/incus/releases/download/v${pkgver}.0/${pkgname}-${pkgver}.tar.xz"{,.asc}
+source=("https://linuxcontainers.org/downloads/incus/incus-$pkgver.tar.xz"{,.asc}
         "incus.socket"
         "incus.service"
         "incus-user.socket"
@@ -38,7 +38,7 @@ source=("https://github.com/lxc/incus/releases/download/v${pkgver}.0/${pkgname}-
         "incus.sysusers")
 validpgpkeys=('602F567663E593BCBD14F338C638974D64792D67'  # Stéphane Graber <stgraber@stgraber.org>
              )
-sha256sums=('43c29ad1bac5c906db0e283c0b879402e24603fc81d1aef4a0e38e660f51a80a'
+sha256sums=('935869f90948aff1f27d60de6fd2ea39f1c9b479b2cdd4023d8927102da4e455'
             'SKIP'
             '602a8035cc51b8e0c4ca265e31ebf96c7977db4239d384d8f60fed0d2d0317c4'
             '646b0a9b38954890bc8706b41dfb93c7fdc83cbee1a3632c7258d77a1fddd725'
@@ -47,14 +47,14 @@ sha256sums=('43c29ad1bac5c906db0e283c0b879402e24603fc81d1aef4a0e38e660f51a80a'
             '90beead5dbde947936a58df8773519c49d92a2028881ae0ec81ee5402510e39a')
 
 prepare() {
-  cd "$pkgname-$pkgver"
+  cd "$pkgbase-${pkgver}"
 
   mkdir bin
   go mod verify
 }
 
 build() {
-  cd "$pkgname-$pkgver"
+  cd "$pkgbase-${pkgver}"
 
   export GOFLAGS="-buildmode=pie -modcacherw"
   export CGO_LDFLAGS_ALLOW="-Wl,-z,now"
@@ -74,7 +74,7 @@ build() {
 }
 
 package_incus() {
-  cd "$pkgbase-$pkgver"
+  cd "$pkgbase-${pkgver}"
 
   for tool in incus incusd incus-agent incus-user lxd-to-incus; do
     install -v -p -Dm755 "bin/$tool" "${pkgdir}/usr/bin/$tool"
@@ -97,12 +97,14 @@ package_incus() {
   cp -vr doc/* "${pkgdir}/usr/share/doc/incus/"
 
   # Bash completions
-  install -v -p -Dm644 "scripts/bash/incus" "${pkgdir}/usr/share/bash-completion/completions/incus"
+	./bin/incus completion bash | install -Dm644 /dev/stdin "$pkgdir/usr/share/bash-completion/completions/incus"
+	./bin/incus completion zsh | install -Dm644 /dev/stdin "$pkgdir/usr/share/zsh/site-functions/_incus"
+	./bin/incus completion fish | install -Dm644 /dev/stdin "$pkgdir/usr/share/fish/vendor_completions.d/incus.fish"
 }
 
 package_incus-tools() {
   conflicts=('lxd')
-  cd "$pkgbase-$pkgver"
+  cd "$pkgbase-${pkgver}"
   for tool in fuidshift lxc-to-incus incus-benchmark; do
     install -v -p -Dm755 "bin/$tool" "${pkgdir}/usr/bin/$tool"
   done

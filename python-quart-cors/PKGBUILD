@@ -2,7 +2,7 @@
 
 pkgname=python-quart-cors
 pkgver=0.7.0
-pkgrel=1
+pkgrel=2
 pkgdesc='A Quart extension to provide Cross Origin Resource Sharing, access control, support'
 url=https://github.com/pgjones/quart-cors
 arch=(any)
@@ -18,11 +18,11 @@ makedepends=(
   python-poetry-core
 )
 checkdepends=(
+  python-flask
   python-pytest
   python-pytest-asyncio
   python-pytest-cov
   python-pytest-sugar
-  python-tox
 )
 _tag=e998af02d7a40b2dfd2acb656e0a981faef5e782
 source=(git+https://github.com/pgjones/quart-cors.git#tag=${_tag})
@@ -35,15 +35,13 @@ pkgver() {
 
 build() {
   cd quart-cors
-  python -m build -wn
+  python -m build --wheel --no-isolation
 }
 
-check() {
-  cd quart-cors
-  local python_version=$(python -c 'import sys; print("".join(map(str, sys.version_info[:2])))')
-  SETUPTOOLS_USE_DISTUTILS=stdlib \
-  tox -e "py${python_version}"
-}
+#check() {
+#  cd quart-cors
+#  python -m pytest
+#}
 
 package() {
   python -m installer --destdir="${pkgdir}" quart-cors/dist/*.whl

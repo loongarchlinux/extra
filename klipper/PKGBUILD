@@ -2,7 +2,7 @@
 
 pkgname=klipper
 pkgver=0.12.0
-pkgrel=2
+pkgrel=3
 pkgdesc='3D printer firmware with motion planning on the host'
 arch=(loong64 x86_64)
 url=https://www.klipper3d.org/
@@ -26,6 +26,8 @@ optdepends=(
   'python-numpy: for resonance measurement'
   'python-matplotlib: for resonance measurement'
   'dfu-util: for flashing firmware on STM32 MCUs'
+  'arm-none-eabi-gcc: for RPi firmware compilation'
+  'arm-none-eabi-newlib: for RPi firmware compilation'
 )
 makedepends=(git)
 _tag=0d67d9c45d2dc39f8b4be7d1bb54b94b2698a2b6
@@ -46,6 +48,12 @@ b2sums=('SKIP'
 pkgver() {
   cd klipper
   git describe --tags | sed 's/^v//'
+}
+
+prepare() {
+  cd klipper
+# Fix tests with python 3.12
+  git cherry-pick -n 187cc2f1b89e3870d694f8db6a64b116992106b7
 }
 
 build() {

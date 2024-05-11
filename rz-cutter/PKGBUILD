@@ -3,9 +3,9 @@
 # Contributor: Aaron McDaniel (mcd1992) <'aur' at the domain 'fgthou.se'>
 
 pkgname=rz-cutter
-_gitcommit=1d07ebc513d140e715fd04c5e5fa6908c05042ee
-pkgver=2.3.2
-pkgrel=2
+_gitcommit=209c26b862ab0bb3b7308618243a9796d3f1109a
+pkgver=2.3.4
+pkgrel=5
 pkgdesc='Qt and C++ GUI for rizin reverse engineering framework'
 url='https://github.com/rizinorg/cutter'
 arch=('loong64' 'x86_64')
@@ -13,23 +13,26 @@ license=('GPL3')
 depends=(
   rizin
   capstone
-  qt5-base
-  qt5-svg
+  qt6-base
+  qt6-svg
+  qt6-5compat
   python
-  pyside2
-  python-shiboken2
+  pyside6
   graphviz
   gcc-libs
-  syntax-highlighting5
+  syntax-highlighting
 )
-makedepends=('git' 'cmake' 'ninja' 'shiboken2' 'qt5-tools')
+makedepends=('git' 'cmake' 'ninja' 'shiboken6' 'qt6-tools')
 optdepends=('rz-ghidra: ghidra decompiler plugin')
 source=("git+https://github.com/rizinorg/cutter#commit=${_gitcommit}"
-        "git+https://github.com/rizinorg/cutter-translations")
-sha512sums=('SKIP'
-            'SKIP')
-b2sums=('SKIP'
-        'SKIP')
+        "git+https://github.com/rizinorg/cutter-translations"
+         pyside-6.7.patch)
+sha512sums=('4b3e053eb1914ffed353c5534b65a305b13af043336ba409def663824767b6f36d78e47a2fe573babfa7a8cfc3dda609a18d4268d5b9416e49be890c8144c40f'
+            'SKIP'
+            'e5df6bd527b4f22d7f267ade8a6c57f1aad29e7fdd8e851f7d1bded403df9cb0846cf6dabce09f4d37a4fe64a7bd4119ba86628fcdc8f56c130c5c57b7e81062')
+b2sums=('450145432e0d09c482d9ead14d57bf94ef32843c99538e8c53264e1952c2b58bfb7954f89555c46d80d09a5cd154af5ba8385f6763175df3fa6f17eb7bc788a8'
+        'SKIP'
+        '13803cee4eb9ac8f1a41f45bad51e1aa23e30bfb8b79118bfad1357cbd21695844ed1a0b6c0a8f750118c47c00a0d8e8fc815fd829e758a1de25b34ad5c334f3')
 
 pkgver() {
   cd cutter
@@ -40,6 +43,8 @@ prepare() {
   cd cutter
   git config 'submodule.src/translations.url' "${srcdir}/cutter-translations"
   git -c protocol.file.allow=always submodule update --init src/translations
+
+  patch -p1 -i ../pyside-6.7.patch # Fix build with PySide 6.7
 }
 
 build() {
@@ -53,6 +58,7 @@ build() {
     -DCUTTER_USE_ADDITIONAL_RIZIN_PATHS=OFF \
     -DCUTTER_ENABLE_CRASH_REPORTS=OFF \
     -DCUTTER_ENABLE_GRAPHVIZ=ON \
+    -DCUTTER_QT6=ON \
     -Wno-dev \
     -G Ninja
   ninja -C build

@@ -4,24 +4,33 @@
 # Contributor: Douglas Soares de Andrade <douglas@archlinux.org>
 
 pkgname=meld
-pkgver=3.22.0
-pkgrel=2
+pkgver=3.22.2
+pkgrel=3
 pkgdesc="Compare files, directories and working copies"
 url="https://meldmerge.org/"
-license=(GPL)
+license=(GPL-2.0-or-later)
 arch=(any)
-depends=(python-gobject python-cairo gtksourceview4 gsettings-desktop-schemas
-         dconf)
-makedepends=(meson yelp-tools git)
+depends=(
+  dconf
+  gdk-pixbuf2
+  glib2
+  gsettings-desktop-schemas
+  gtk3
+  gtksourceview4
+  hicolor-icon-theme
+  pango
+  python
+  python-cairo
+  python-gobject
+)
+makedepends=(
+  git
+  meson
+  yelp-tools
+)
 checkdepends=(appstream-glib)
-_commit=322f05876e841d1fa7a162d4c5a4e15226823b7c  # tags/3.22.0^0
-source=("git+https://gitlab.gnome.org/GNOME/meld.git#commit=$_commit")
-sha256sums=('SKIP')
-
-pkgver() {
-  cd meld
-  git describe --tags | sed 's/[^-]*-g/r&/;s/-/+/g'
-}
+source=("git+https://gitlab.gnome.org/GNOME/meld.git#tag=$pkgver")
+b2sums=('05edce3ee1b4bf14c494290f46a39fafc6683337ef71187bf4d1b6d4ce5e8fa8657e88f865ad159dfebc26aa6ea060f451869f989684cd411e19fa2153e1d5c8')
 
 prepare() {
   cd meld
@@ -38,6 +47,6 @@ check() {
 
 package() {
   meson install -C build --destdir "$pkgdir"
-  python -m compileall -d /usr/lib "$pkgdir/usr/lib"
-  python -O -m compileall -d /usr/lib "$pkgdir/usr/lib"
 }
+
+# vim:set sw=2 sts=-1 et:

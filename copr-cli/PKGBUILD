@@ -2,7 +2,7 @@
 
 pkgname=copr-cli
 pkgver=1.105
-pkgrel=1
+pkgrel=2
 pkgdesc="CLI tool to run copr"
 url="https://github.com/fedora-copr/copr"
 license=('GPL-2.0-or-later')

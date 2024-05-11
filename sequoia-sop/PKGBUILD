@@ -1,22 +1,32 @@
 # Maintainer: Levente Polyak <anthraxx[at]archlinux[dot]org>
 
 pkgname=sequoia-sop
-pkgver=0.31.0
-_commit=687d254e54b1d3222126b3f92784714c4203a24d  # refs/tags/0.31.0^{}
+pkgver=0.32.0
 pkgrel=1
 pkgdesc='Implementation of the Stateless OpenPGP Interface using Sequoia'
-url='https://sequoia-pgp.org/'
+url='https://gitlab.com/sequoia-pgp/sequoia-sop'
 arch=('loong64' 'x86_64')
-license=('GPL2')
-groups=('sequoia')
-depends=('glibc' 'nettle' 'libnettle.so' 'libhogweed.so'
-         'bzip2' 'libbz2.so' 'gcc-libs' 'gmp')
-makedepends=('git' 'cargo' 'clang')
-source=(sequoia-sop::"git+https://gitlab.com/sequoia-pgp/sequoia-sop.git#commit=$_commit?signed")
-sha512sums=('SKIP')
+license=('GPL-2.0-or-later')
+groups=(
+  'sequoia'
+  'stateless-openpgp'
+)
+depends=(
+  'glibc'
+  'gcc-libs'
+  'gmp'
+)
+makedepends=(
+  'bzip2'
+  'git'
+  'cargo'
+  'clang'
+  'nettle'
+)
+source=(sequoia-sop::"git+$url#tag=v$pkgver?signed")
+sha512sums=('25cbc8dc083bccd29c81121e0d8a29f5132936825b7c60c7e059a5928918d572624a7cfa8a2e01b24a6fe6acd3698948fd93d2eb483d8c5982b598dd01df4703')
 validpgpkeys=(
-  D2F2C5D45BE9FDE6A4EE0AAF31855247603831FD # justus@sequoia-pgp.org
-  CBCD8F030588653EEDD7E2659B7DD433F254904A # justus@sequoia-pgp.org
+  CBCD8F030588653EEDD7E2659B7DD433F254904A  # Justus Winter <justus@sequoia-pgp.org>
 )
 
 prepare() {
@@ -28,16 +38,21 @@ build() {
   export RUSTUP_TOOLCHAIN=stable
   export CARGO_TARGET_DIR=target
   cd ${pkgname}
-  cargo build --release --frozen --features 'cli crypto-nettle compression'
+  cargo build --release --frozen --all-features
 }
 
 check() {
   export RUSTUP_TOOLCHAIN=stable
   cd ${pkgname}
-  cargo test --release --frozen --features 'cli crypto-nettle compression'
+  cargo test --release --frozen --all-features
 }
 
 package() {
+  depends+=(
+    'bzip2' 'libbz2.so'
+    'nettle' 'libnettle.so' 'libhogweed.so'
+  )
+
   cd ${pkgname}
   install -Dm 755 target/release/sqop -t "${pkgdir}/usr/bin"
   install -Dm 644 man-sqop/*.1 -t "${pkgdir}/usr/share/man/man1"

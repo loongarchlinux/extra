@@ -4,7 +4,7 @@
 _hkgname=shake
 pkgname=haskell-shake
 pkgver=0.19.6
-pkgrel=157
+pkgrel=175
 pkgdesc="Build system library, like Make, but more accurate dependencies."
 url="https://shakebuild.com"
 license=("BSD")
@@ -26,6 +26,8 @@ prepare() {
         -i src/Test/Docs.hs
     sed -i 's/cmd "ghc" flags/cmd "ghc" "-dynamic" flags/' src/Test/Self.hs src/Test/SelfMake.hs
     sed -i 's/ghc --make/ghc -dynamic --make/' docs/manual/build.sh
+    sed -i 's/LANGUAGE NoMonomorphismRestriction/LANGUAGE NoMonomorphismRestriction, NondecreasingIndentation/' src/Test/Docs.hs
+    sed -i 's/,"-Werror"//' src/Test/SelfMake.hs
 
     # Not sure about this one:
     sed -i 's/at cmd, called at/at want, called at/' src/Test/Errors.hs
@@ -36,7 +38,7 @@ build() {
 
     runhaskell Setup configure -O --enable-shared --enable-executable-dynamic --disable-library-vanilla \
         --prefix=/usr --docdir=/usr/share/doc/$pkgname --datasubdir=$pkgname --enable-tests \
-        --dynlibdir=/usr/lib --libsubdir=\$compiler/site-local/\$pkgid --ghc-option=-fllvm \
+        --dynlibdir=/usr/lib --libsubdir=\$compiler/site-local/\$pkgid \
             -f-portable -f-cloud -f-embed-files
     runhaskell Setup build $MAKEFLAGS
     runhaskell Setup register --gen-script

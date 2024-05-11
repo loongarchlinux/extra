@@ -2,18 +2,22 @@
 # Contributor: Nikolay Rysev <mad.f3ka@gmail.com>
 
 pkgname=fprintd
-pkgver=1.94.2
-pkgrel=2
+pkgver=1.94.3
+pkgrel=1
 pkgdesc="D-Bus service to access fingerprint readers"
 url="https://fprint.freedesktop.org/"
 arch=(loong64 x86_64)
-license=(GPL)
+license=(GPL-2.0-or-later)
 depends=(
   dbus
+  gcc-libs
   glib2
+  glibc
   libfprint
+  pam
   polkit
   systemd
+  systemd-libs
 )
 makedepends=(
   git
@@ -23,29 +27,23 @@ makedepends=(
   python-cairo
   python-dbus
   python-dbusmock
+  python-packaging
 )
 groups=(fprint)
-_commit=0d2e2a6742cbec847aa756da25afd4b73d9ec53f  # tags/v1.94.2^0
 source=(
-  "git+https://gitlab.freedesktop.org/libfprint/fprintd.git#commit=$_commit"
+  "git+https://gitlab.freedesktop.org/libfprint/fprintd.git?signed#tag=v$pkgver"
   tests.diff
 )
-b2sums=('SKIP'
-        '9ba7936569a76537168274c086d7ae164d14deda3f71baa5a570cc16b0cc3c5e9eb18c84ba8b34f8185b7f1664024a9cbaeca61d016e9d60c88f1744d0877847')
-
-pkgver() {
-  cd fprintd
-  git describe --tags | sed 's/^v//;s/^V_//;s/_/./g;s/-/+/g'
-}
+b2sums=('53d98459f3049f584adf3ae206397ee276704e3c6f555c48b94dc09078585eea827ba46c30662b1bed81881f0b1f6ec59031fcadc38c8c80ed871e04a3d5b6c8'
+        '119ee0ebc02a3bf62bb6704aa0229a5bb383bc3fcb8b86501cf94551274532cf5578fca2aba2dc17b45f98683f1445f25b4fe3cb756be5fddb46d61f7b95f198')
+validpgpkeys=(
+  D4C501DA48EB797A081750939449C2F50996635F # Marco Trevisan (Treviño) <mail@3v1n0.net>
+)
 
 prepare() {
   cd fprintd
 
-  # Unbreak tests
-  git cherry-pick -n 3633dbaa630d4734f3c63721eecbf935315cb80d \
-                     ae04fa989720279e5558c3b8ff9ebe1959b1cf36
-
-  # https://gitlab.freedesktop.org/libfprint/fprintd/-/issues/151
+  # PAM tests succeed but time out?
   git apply -3 ../tests.diff
 }
 
@@ -60,7 +58,7 @@ build() {
 }
 
 check() {
-  meson test -C build --print-errorlogs -t 4
+  meson test -C build --print-errorlogs
 }
 
 package() {

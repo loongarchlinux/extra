@@ -5,28 +5,30 @@
 # Contributor: acxz <akashpatel2008 at yahoo dot com>
 
 pkgname=rocminfo
-pkgver=5.7.1
+pkgver=6.0.2
 pkgrel=1
 pkgdesc='ROCm Application for Reporting System Info '
 arch=('loong64' 'x86_64')
-url='https://github.com/RadeonOpenCompute/rocminfo'
-license=('custom:NCSAOSL')
-depends=('pciutils' 'python' 'hsa-rocr')
-makedepends=('rocm-cmake')
+url='https://github.com/ROCm/rocminfo'
+license=('NCSA')
+depends=('rocm-core' 'glibc' 'gcc-libs' 'pciutils' 'python' 'hsa-rocr')
+makedepends=('cmake' 'rocm-cmake')
 source=("$pkgname-$pkgver.tar.gz::$url/archive/rocm-$pkgver.tar.gz")
-sha256sums=('642dc2ec4254b3c30c43064e6690861486db820b25f4906ec78bdb47e68dcd0b')
+sha256sums=('e616d364a48de18eaee661bdce999d095086905f49777663ca99312f40a63da1')
 _dirname="$(basename "$url")-$(basename "${source[0]}" .tar.gz)"
 
 build() {
   # ROCRTST_BLD_TYPE=Release fixes a build error regarding _FORTIFY_SOURCE=2
-  cmake \
-    -Wno-dev \
-    -B build \
-    -S "$_dirname" \
-    -DCMAKE_PREFIX_PATH=/opt/rocm \
-    -DROCRTST_BLD_TYPE=Release \
-    -DCMAKE_INSTALL_PREFIX=/opt/rocm \
-    -DCMAKE_INSTALL_LIBDIR=lib
+  local cmake_args=(
+    -Wno-dev
+    -S "$_dirname"
+    -B build
+    -D CMAKE_PREFIX_PATH=/opt/rocm
+    -D ROCRTST_BLD_TYPE=Release
+    -D CMAKE_INSTALL_PREFIX=/opt/rocm
+    -D CMAKE_INSTALL_LIBDIR=lib
+  )
+  cmake "${cmake_args[@]}"
   cmake --build build
 }
 

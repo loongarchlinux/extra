@@ -1,39 +1,38 @@
 # Maintainer: Torsten Keßler <tpkessler at archlinux dot org>
 
 pkgname=hipsolver
-pkgver=5.7.1
+pkgver=6.0.2
 pkgrel=1
 pkgdesc='rocSOLVER marshalling library.'
 arch=('loong64' 'x86_64')
-url='https://hipsolver.readthedocs.io/en/latest/index.html'
+url='https://rocm.docs.amd.com/projects/hipSOLVER/en/latest/index.html'
 license=('MIT')
-depends=('hip' 'rocsolver')
-makedepends=('rocm-cmake' 'gcc-fortran')
-_git='https://github.com/ROCmSoftwarePlatform/hipSOLVER'
+depends=('rocm-core' 'glibc' 'gcc-libs' 'hip' 'rocsolver' 'rocblas')
+makedepends=('cmake' 'rocm-cmake' 'gcc-fortran')
+_git='https://github.com/ROCm/hipSOLVER'
 source=("$pkgname-$pkgver.tar.gz::$_git/archive/rocm-$pkgver.tar.gz")
-sha256sums=('5592e965c0dc5722931302289643d1ece370220af2c7afc58af97b3395295658')
+sha256sums=('8215e55c3a5bc9c7eeb141cefdc6a6eeba94d8bc3aeae9e685ab7904965040d4')
 options=(!lto)
 _dirname="$(basename "$_git")-$(basename "${source[0]}" ".tar.gz")"
 
 build() {
   # -fcf-protection is not supported by HIP, see
-  # https://docs.amd.com/bundle/ROCm-Compiler-Reference-Guide-v5.5/page/Compiler_Options_and_Features.html#d2e2018
-  CXXFLAGS="${CXXFLAGS} -fcf-protection=none" \
-  cmake \
-    -Wno-dev \
-    -B build \
-    -S "$_dirname" \
-    -DCMAKE_BUILD_TYPE=None \
-    -DCMAKE_CXX_COMPILER=/opt/rocm/bin/hipcc  \
-    -DCMAKE_INSTALL_PREFIX=/opt/rocm
+  # https://rocm.docs.amd.com/en/latest/reference/rocmcc.html#support-status-of-other-clang-options
+  local cmake_args=(
+    -Wno-dev
+    -S "$_dirname"
+    -B build
+    -D CMAKE_BUILD_TYPE=None
+    -D CMAKE_CXX_COMPILER=/opt/rocm/bin/hipcc
+    -D CMAKE_CXX_FLAGS="${CXXFLAGS} -fcf-protection=none"
+    -D CMAKE_INSTALL_PREFIX=/opt/rocm
+  )
+  cmake "${cmake_args[@]}"
   cmake --build build
 }
 
 package() {
   DESTDIR="$pkgdir" cmake --install build
-
-  echo "/opt/rocm/$pkgname/lib" > "$pkgname.conf"
-  install -Dm644 "$pkgname.conf" "$pkgdir/etc/ld.so.conf.d/$pkgname.conf"
 
   install -Dm644 "$srcdir/$_dirname/LICENSE.md" "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
 }

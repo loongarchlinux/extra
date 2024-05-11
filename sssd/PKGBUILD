@@ -2,12 +2,12 @@
 # Maintainer: Mantas M. <grawity@gmail.com>
 
 pkgname=sssd
-pkgver=2.9.3
-pkgrel=1
+pkgver=2.9.4
+pkgrel=4
 pkgdesc="System Security Services Daemon"
 arch=('loong64' 'x86_64')
 url="https://github.com/SSSD/sssd"
-license=('GPL3')
+license=('GPL-3.0-or-later')
 depends=(
   'bind'          # for nsupdate
   'c-ares'
@@ -33,6 +33,7 @@ makedepends=(
   'tevent'
   'ldb'
   'bc'
+  'python-setuptools'
 )
 checkdepends=(
   'check'
@@ -43,9 +44,16 @@ checkdepends=(
 )
 options=('!lto')
 backup=('etc/logrotate.d/sssd')
-source=("https://github.com/SSSD/$pkgname/releases/download/$pkgver/$pkgname-$pkgver.tar.gz"{,.asc})
-sha512sums=('e1c3e107c98ac2cbc4f38e435910ebd560464773e7e93c8982db37d1ccdf78bc5e3f514bbcd2aaae54074ca6197b2067531180b83ee8c0e7f94878a824834a21'
-            'SKIP')
+source=("https://github.com/SSSD/$pkgname/releases/download/$pkgver/$pkgname-$pkgver.tar.gz"{,.asc}
+        "https://patch-diff.githubusercontent.com/raw/SSSD/sssd/pull/7151/sssd-openssl3-no-ext.patch"
+        "https://github.com/SSSD/sssd/commit/1bf51929a48b84d62ac54f2a42f17e7fbffe1612.patch" # samba 4.20
+        "https://github.com/SSSD/sssd/commit/9efd79b010dbb46d9968c3d3ab073b8e585cb2ad.patch" # setuptools
+       )
+sha512sums=('9546cf074628f32137b16ca0c763988785271124244b645d1e786762e8578f10d983793a29bffcc004b064452fe8d465476a3041688d2f3c11c2751fb5bec3e2'
+            'SKIP'
+            '4b2024d01d5f4a718f3aa954909941baa74c00769c087296934bdc7502ca1b18e26697d0406aa4e8708ec7e460d88a9457ce8471496b45522b50e727fc2891f2'
+            'bbd546fb580f496b4a766029ac67b42fed485c3bcca867a1ec5533e169cd2d04a4badc701d5b33c3b2216939c5d050081758658f71a797bf7c90b1682c39cbaa'
+            '8433f4a7ed7064690ce67cf209b9e7ab97d509a27df29374bbb86e3489b42154b34e7361418de8a1741d91e8b12a68b139bc365c58037e58263bd8f3494e9e73')
 validpgpkeys=('C13CD07FFB2DB1408E457A3CD3D21B2910CF6759')
 
 prepare() {

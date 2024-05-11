@@ -8,7 +8,7 @@
 # Contributor: Larry Hajali <larryhaja@gmail.com>
 
 pkgname=calibre
-pkgver=7.4.0
+pkgver=7.10.0
 pkgrel=1
 pkgdesc='Ebook management application'
 arch=(loong64 x86_64)
@@ -67,6 +67,9 @@ makedepends=(cmake
              rapydscript-ng
              sip
              xdg-utils)
+checkdepends=(poppler
+              python-fonttools
+              speech-dispatcher)
 optdepends=('poppler: required for converting pdf to html'
             'python-fonttools: required for font subset feature in epub editor'
             'speech-dispatcher: TTS support in the viewer')
@@ -76,20 +79,18 @@ replaces=("${conflicts[@]}")
 _archive="$pkgname-$pkgver"
 source=("https://download.calibre-ebook.com/$pkgver/$_archive.tar.xz"
         "$url/signatures/$_archive.tar.xz.sig")
-sha256sums=('c58333d15dde04a01936d57ff13a9199a69340ae8b7954636757da902a14481f'
+sha256sums=('1afbefa2a2c1cdaa6f78a152aa5103e3bd695324632e862a53962337f2ff9c4b'
             'SKIP')
 validpgpkeys=('3CE1780F78DD88DF45194FD706BC317B515ACE7C') # Kovid Goyal (New longer key) <kovid@kovidgoyal.net>
 
 prepare(){
 	cd "$_archive"
-
 	# Desktop integration (e.g. enforce arch defaults)
 	# Use uppercase naming scheme, don't delete config files under fakeroot.
 	sed -e "/import config_dir/,/os.rmdir(config_dir)/d" \
 		-e "s/'ctc-posml'/'text' not in mt and 'pdf' not in mt and 'xhtml'/" \
 		-e "s/^Name=calibre/Name=Calibre/g" \
 		-i  src/calibre/linux.py
-
 	# Remove unneeded files
 	rm -f resources/$pkgname-portable.*
 }
@@ -108,31 +109,27 @@ build() {
 check() {
 	cd "$_archive"
 	export LANG='en_US.UTF-8'
-	python -m unittest discover
+	python setup.py test --under-sanitize
+	python setup.py test_rs
 }
 
 package() {
 	cd "$_archive"
 	export LANG='en_US.UTF-8'
-
 	# If this directory doesn't exist, zsh completion won't install.
-	install -d "${pkgdir}/usr/share/zsh/site-functions"
-
+	install -d "$pkgdir/usr/share/zsh/site-functions"
 	python setup.py install \
-		--staging-root="${pkgdir}/usr" \
+		--staging-root="$pkgdir/usr" \
 		--prefix=/usr \
 		--system-plugins-location=/usr/share/calibre/system-plugins
-
-	cp -a man-pages/ "${pkgdir}/usr/share/man"
-
+	cp -a man-pages/ "$pkgdir/usr/share/man"
 	# not needed at runtime
-	rm -r "${pkgdir}"/usr/share/calibre/rapydscript/
-
+	rm -r "$pkgdir/usr/share/calibre/rapydscript/"
 	# Compiling bytecode FS#33392
 	# This is kind of ugly but removes traces of the build root.
 	while read -rd '' _file; do
 		_destdir="$(dirname "${_file#${pkgdir}}")"
 		python -m compileall -d "${_destdir}" "${_file}"
 		python -O -m compileall -d "${_destdir}" "${_file}"
-	done < <(find "${pkgdir}"/usr/lib/ -name '*.py' -print0)
+	done < <(find "$pkgdir/usr/lib/" -name '*.py' -print0)
 }

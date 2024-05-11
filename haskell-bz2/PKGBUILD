@@ -2,23 +2,24 @@
 
 _hkgname=bz2
 pkgname=haskell-bz2
-pkgver=1.0.1.0
-pkgrel=214
+pkgver=1.0.1.1
+pkgrel=2
 pkgdesc="Bindings to libbz2"
 url="https://hub.darcs.net/vmchale/bz2"
 license=('BSD')
 arch=('loong64' 'x86_64')
 depends=('ghc-libs' 'bzip2')
-makedepends=('ghc' 'c2hs' 'haskell-tasty' 'haskell-tasty-golden' 'haskell-tasty-hunit')
+makedepends=('ghc' 'uusi' 'c2hs' 'haskell-tasty' 'haskell-tasty-golden' 'haskell-tasty-hunit')
 source=(https://hackage.haskell.org/packages/archive/${_hkgname}/${pkgver}/${_hkgname}-${pkgver}.tar.gz)
-sha512sums=('3e2b8550c878645fe49446abd31ae12ba1fce252c2e1d626b2be42d083f835338ce9def9af43884f12d30292f2e560b98a9783e772f7b1a87cbbf2e860a08b9f')
+sha512sums=('ba4222f1ab2a718ecc3f0d84111561f37436a904d4d4ec6f750403c24cb5e55855dc8092eb06efdc831ab4bde8ecadd7a3b9a5af3d1409a8fc97588f8413555d')
 
 prepare() {
     cd $_hkgname-$pkgver
-    echo -e "import Distribution.Simple\nmain = defaultMain" > Setup.hs
+    gen-setup
+    uusi -d bzip2-clib
 
     # Use system libbz2
-    sed -i -e '/cbits/d' -e '/c-sources/d' -e '/hs-source-dirs/i \    extra-libraries: bz2' $_hkgname.cabal
+    sed -i -e '/hs-source-dirs/i \    extra-libraries: bz2' $_hkgname.cabal
 }
 
 build() {
@@ -26,7 +27,7 @@ build() {
 
     runhaskell Setup configure -O --enable-shared --enable-executable-dynamic --disable-library-vanilla \
         --prefix=/usr --docdir=/usr/share/doc/$pkgname --datasubdir=$pkgname --enable-tests \
-        --dynlibdir=/usr/lib --libsubdir=\$compiler/site-local/\$pkgid --ghc-option=-fllvm
+        --dynlibdir=/usr/lib --libsubdir=\$compiler/site-local/\$pkgid
     runhaskell Setup build $MAKEFLAGS
     runhaskell Setup register --gen-script
     runhaskell Setup unregister --gen-script

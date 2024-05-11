@@ -2,24 +2,23 @@
 
 _hkgname=fourmolu
 pkgname=haskell-fourmolu
-pkgver=0.4.0.0
-pkgrel=113
+pkgver=0.9.0.0
+pkgrel=11
 pkgdesc="A formatter for Haskell source code"
 url="https://github.com/parsonsmatt/fourmolu"
 license=("BSD")
 arch=('loong64' 'x86_64')
-depends=('ghc-libs' 'haskell-diff' 'haskell-hsyaml' 'haskell-hsyaml-aeson' 'haskell-aeson'
-         'haskell-ansi-terminal' 'haskell-dlist' 'haskell-ghc-lib-parser' 'haskell-gitrev'
-         'haskell-optparse-applicative' 'haskell-syb')
-makedepends=('ghc' 'uusi' 'haskell-hspec' 'haskell-hspec-discover' 'haskell-path' 'haskell-path-io'
-             'haskell-temporary')
+depends=('ghc-libs' 'haskell-diff' 'haskell-aeson' 'haskell-ansi-terminal' 'haskell-dlist'
+         'haskell-ghc-lib-parser' 'haskell-gitrev' 'haskell-megaparsec' 'haskell-memotrie'
+         'haskell-optparse-applicative' 'haskell-syb' 'haskell-th-lift-instances' 'haskell-yaml')
+makedepends=('ghc' 'uusi' 'haskell-quickcheck' 'haskell-hspec' 'haskell-hspec-discover'
+             'haskell-hspec-megaparsec' 'haskell-path' 'haskell-path-io' 'haskell-temporary')
 source=("https://hackage.haskell.org/packages/archive/$_hkgname/$pkgver/$_hkgname-$pkgver.tar.gz")
-sha256sums=('8b7bfe613a42b11a398fa5d2aa2bb25b04c18f921ee26f20775a1faaad8100d7')
+sha256sums=('3440cf67fd333a2bb5d6a67ce80e7a348807297948f297238ba77eedcb76097f')
 
 prepare() {
   cd $_hkgname-$pkgver
-  uusi -rghc-lib-parser:ghc,ghc-boot,ghc-boot-th -u aeson -u optparse-applicative $_hkgname.cabal
-  sed -i 's/using ghc-lib-parser/using ghc/;s/VERSION_ghc_lib_parser/VERSION_ghc/' app/Main.hs
+  uusi -u aeson -u optparse-applicative $_hkgname.cabal
 }
 
 build() {
@@ -27,7 +26,7 @@ build() {
 
   runhaskell Setup configure -O --enable-shared --enable-executable-dynamic --disable-library-vanilla \
     --prefix=/usr --docdir=/usr/share/doc/$pkgname --datasubdir=$pkgname --enable-tests \
-    --dynlibdir=/usr/lib --libsubdir=\$compiler/site-local/\$pkgid --ghc-option=-fllvm \
+    --dynlibdir=/usr/lib --libsubdir=\$compiler/site-local/\$pkgid \
     --ghc-option=-optl-Wl\,-z\,relro\,-z\,now \
     --ghc-option='-pie'
 
@@ -40,6 +39,7 @@ build() {
 
 check() {
   cd $_hkgname-$pkgver
+  PATH="$PWD/dist/build/$_hkgname:$PATH" LD_LIBRARY_PATH="$PWD/dist/build" \
   runhaskell Setup test --show-details=direct
 }
 

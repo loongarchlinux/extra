@@ -1,7 +1,7 @@
 # Maintainer: Maxime Gauduin <alucryd@archlinux.org>
 
 pkgname=oxyromon
-pkgver=0.17.0
+pkgver=0.18.1
 pkgrel=1
 pkgdesc='Rusty ROM OrgaNizer'
 arch=(loong64 x86_64)
@@ -12,6 +12,7 @@ depends=(
   glibc
 )
 makedepends=(
+  bchunk
   cmake
   ctrtool
   dolphin-emu-tool
@@ -20,17 +21,20 @@ makedepends=(
   maxcso
   p7zip
   rust
+  wit
   yarn
 )
 optdepends=(
+  'bchunk: BIN to ISO support'
   'cdrtools: IRD support'
   'ctrtool: CIA support'
   'dolphin-emu-tool: RVZ support'
   'mame-tools: CHD support'
   'maxcso: CSO support'
   'p7zip: 7Z and ZIP support'
+  'wit: WBFS support'
 )
-_tag=bb3bbae6cd326c25def0386f26ad1778c3a17665
+_tag=f415026b9dd63f97f303728bfe342292586a1fb8
 source=(git+https://github.com/alucryd/oxyromon.git#tag=${_tag})
 validpgpkeys=(95220BE99CE6FF778AE0DC670F65C7D881506130) # Maxime Gauduin <alucryd@archlinux.org>
 b2sums=(SKIP)
@@ -53,14 +57,14 @@ build() {
   cd oxyromon
   yarn build
   cargo build \
-    --features benchmark,server \
+    --features server \
     --release \
     --frozen
 }
 
 check() {
   cargo test \
-    --features benchmark,server \
+    --features server \
     --release \
     --frozen \
     --manifest-path oxyromon/Cargo.toml
@@ -68,7 +72,7 @@ check() {
 
 package() {
   cargo install \
-    --features benchmark,server \
+    --features server \
     --frozen \
     --offline \
     --no-track \

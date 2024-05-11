@@ -2,11 +2,12 @@
 # Contributor: Hoream <hoream@qq.com>
 # Contributor: Asuka Minato
 
-# https://github.com/ekzhang/sshx/issues/50
-_sha=bd81c86d52f35c6056cf8c2bf560e71573290244
+# Switched to crates source since repo still not tagged even after raising
+# upstream issue: https://github.com/ekzhang/sshx/issues/50
+_sha=7393800564e87ba8cfd80a42d51eba199c0a391d
 
 pkgname=sshx
-pkgver=0.2.0
+pkgver=0.2.4
 pkgrel=1
 pkgdesc='A secure web-based, collaborative terminal'
 url="https://github.com/ekzhang/$pkgname"
@@ -19,11 +20,14 @@ makedepends=(cargo
 options=(!lto) # https://github.com/briansmith/ring/issues/1444
 _archive="$pkgname-$_sha"
 source=("$url/archive/$_sha/$_archive.tar.gz")
-sha256sums=('5773c2c65dea72ec4b98d22b0c0534b745c2c536ea5b1267ced5c668b3a6736f')
+# _archive="$pkgname-$pkgver"
+# source=("$_archive.tar.gz::https://static.crates.io/crates/$pkgname/$_archive.crate"
+        # "$pkgname-LICENSE::$url/raw/$_sha/LICENSE")
+sha256sums=('73555ab4544fec7214da6a2b35f4b2412688e0a0e5c372cd663bee7934404982')
 
 prepare() {
 	cd "$_archive"
-	cargo fetch --locked --target "$CARCH-unknown-linux-gnu"
+	cargo fetch --locked --target "$(rustc -vV | sed -n 's/host: //p')"
 }
 
 build() {

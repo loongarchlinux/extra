@@ -1,12 +1,12 @@
 # Maintainer: David Runge <dvzrv@archlinux.org>
 
 pkgname=adljack
-pkgver=1.2.0
-pkgrel=5
+pkgver=1.3.1
+pkgrel=2
 pkgdesc="A standalone synthesizer for ADLMIDI and OPNMIDI on the text console"
 arch=(loong64 x86_64)
 url="https://github.com/jpcima/adljack"
-license=(Boost)
+license=(BSL-1.0)
 groups=(pro-audio)
 depends=(
   bash
@@ -22,32 +22,19 @@ makedepends=(
   rtmidi
 )
 source=(
-  $url/releases/download/v$pkgver/$pkgname-$pkgver.tar.gz
-  $pkgname-1.2.0-devendor-rtaudio-rtmidi.patch
-  $pkgname-1.2.0-include_string.patch::https://github.com/jpcima/adljack/commit/be5456eb5212b98dda8e45e9c2087b5f475aa518.patch
-  $pkgname-1.2.0-rtaudio-6.patch::https://github.com/jpcima/adljack/commit/bc2c374c8c8b05716ba41416f92b72b627879bb3.patch
+  $url/releases/download/v$pkgver/$pkgname-$pkgver-src.tar.gz
 )
-sha512sums=('2b579fbb3b47c814bc33b68c749b3335c39feee88115cfe41eb9261775d4b296eebf09905adab8cbba1879af13eff3d0f6af390a29b13c6485eca113851012ae'
-            '59991d9e55dab988668c644f856fb37bbb01d551ef9c8fe6bd51d414c0c1c1fadef0602409c37cd6f97cbb3fff4ea8cb74e6456cbde42f4e88e0fd46c9fd03bf'
-            '7fa19aaed161623c8bb1f488b9d999026641f73a55a3da47c8387c36698f81b90b3b4be116bdba35d4119df4222965c193e843b1665b9f4c1a80323ed869dba9'
-            '3c8721f87b9cae783224578b46fc9571e3c0b50b3c45d381cce7495f3339318ec9dec2be2188081189f4ad534880f95680362f2a9b6f2366c7e12f0c2ec32c3a')
-b2sums=('143a17f8b0ce96227962201adaac4bde1e5bced8fca2370bcb6486a58e4a04cac27fddf3b2e5a2f60f992bfae1ad28445b80fc72ea3398bb849e23dfe34f28e2'
-        '1ffc1b5545de087ff3432abb92bf6b66f181b177ba84254bb85472df34705033cc20ab0b01f9f37445bf47c70fe57e416460655b23f1aeca675a70febcfab866'
-        '6035202f55f4d2b89fcff0e8bba8e40354a28c572b24a938ac92ffb9a081a15888354b5c47c48d5f73619c9daaab6ab7b266e03e973bdf0f8d9fc93625245b2f'
-        '5d5ecdf1bea106866d2b811cae6cd91a6e1e6b7f7108c6ea80e17479e7c85cf6657527d97ee5b348a55f3abc5b2df700660c03acce20da0f0de04dbf9ad98047')
-
-prepare() {
-  patch -Np1 -d $pkgname-$pkgver -i ../$pkgname-1.2.0-devendor-rtaudio-rtmidi.patch
-  patch -Np1 -d $pkgname-$pkgver -i ../$pkgname-1.2.0-include_string.patch
-  patch -Np1 -d $pkgname-$pkgver -i ../$pkgname-1.2.0-rtaudio-6.patch
-}
+sha512sums=('106d73396574fb161e02e3d67b4fc21188f3258abbea8ab1c68b366f9f7521470fe248a0b1fb7f76932cd872c904d0fe9aa2f700f99308a83e985b488fdac92e')
+b2sums=('f7b85570461e40f35e93379559abf071e21fbddfd84b88136ada88553f9f1002c0d869de3259e4840f9056e2e1784e758620a9c5e167506c77b80ed5e97664d3')
 
 build() {
   local cmake_options=(
     -B build
-    -DCMAKE_INSTALL_PREFIX=/usr
-    -DCMAKE_BUILD_TYPE=None
-    -S $pkgname-$pkgver
+    -D CMAKE_BUILD_TYPE=None
+    -D CMAKE_INSTALL_PREFIX=/usr
+    -D USE_SYSTEM_RTAUDIO=ON
+    -D USE_SYSTEM_RTMIDI=ON
+    -S $pkgname-$pkgver-src
     -W no-dev
   )
 

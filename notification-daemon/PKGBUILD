@@ -4,30 +4,41 @@
 
 pkgname=notification-daemon
 pkgver=3.20.0
-pkgrel=5
+pkgrel=6
 pkgdesc="Server implementation of the freedesktop.org desktop notification specification"
 arch=(loong64 x86_64)
-license=(GPL2)
+license=(GPL-2.0-or-later)
 url="https://wiki.gnome.org/Attic/NotificationDaemon"
 depends=(gtk3)
 makedepends=(intltool)
-source=("https://download.gnome.org/sources/${pkgname}/${pkgver:0:4}/${pkgname}-${pkgver}.tar.xz")
-sha256sums=('dd13768f35fd8bba9c4920b0f8269f39270e5a3cfed1a34c3b940a492286ece5')
+source=("https://download.gnome.org/sources/${pkgname}/${pkgver:0:4}/${pkgname}-${pkgver}.tar.xz"
+        remove-notifications-limit.patch)
+sha256sums=('dd13768f35fd8bba9c4920b0f8269f39270e5a3cfed1a34c3b940a492286ece5'
+            '9acb71933441e54b16ca9a69a10ab3c2edbeb75b94dc637e8039e3fb2fe513bd')
+
+prepare() {
+	cd "${pkgname}-${pkgver}"
+	# Patch taken from the Gnome Flashback project to remove the default limit of 20 notifications at a time:
+	# https://gitlab.gnome.org/GNOME/gnome-flashback/-/commit/40c5db2e6b343c5afad78034a2fa93b9b000ef11
+	# See the following issue for more details:
+	# https://gitlab.gnome.org/GNOME/gnome-flashback/-/issues/75
+	patch -Np1 <${srcdir}/remove-notifications-limit.patch
+}
 
 build() {
-    cd "${pkgname}-${pkgver}"
-    ./configure --prefix=/usr --sysconfdir=/etc \
-        --libexecdir=/usr/lib/notification-daemon-1.0 \
-        --localstatedir=/var --disable-static
-    make
+	cd "${pkgname}-${pkgver}"
+    	./configure --prefix=/usr --sysconfdir=/etc \
+        	--libexecdir=/usr/lib/notification-daemon-1.0 \
+        	--localstatedir=/var --disable-static
+    	make
 }
 
 check() {
-    cd "${pkgname}-${pkgver}"
-    make check
+	cd "${pkgname}-${pkgver}"
+	make check
 }
 
 package() {
-    cd "${pkgname}-${pkgver}"
-    make DESTDIR="${pkgdir}" install
+	cd "${pkgname}-${pkgver}"
+	make DESTDIR="${pkgdir}" install
 }

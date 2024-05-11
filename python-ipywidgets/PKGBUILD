@@ -3,31 +3,49 @@
 
 pkgname=python-ipywidgets
 _pipname=ipywidgets
-pkgver=8.1.1
-pkgrel=1
+pkgver=8.1.2
+pkgrel=3
 pkgdesc='IPython HTML widgets for Jupyter'
 arch=(any)
 url='https://github.com/ipython/ipywidgets'
-license=(BSD)
-depends=(ipython python-comm python-jsonschema)
-makedepends=(python-build python-installer python-setuptools python-wheel)
+license=(BSD-3-Clause)
+depends=(ipython
+         python
+         python-comm
+         python-ipykernel
+         python-jsonschema
+         python-traitlets)
+makedepends=(git
+             python-build
+             python-installer
+             python-setuptools
+             python-wheel)
 optdepends=('jupyterlab-widgets: widgets for Jupyter lab')
-checkdepends=(python-pytest python-pytz python-ipykernel)
-source=(https://pypi.io/packages/source/${_pipname:0:1}/$_pipname/$_pipname-$pkgver.tar.gz)
-sha256sums=('40211efb556adec6fa450ccc2a77d59ca44a060f4f9f136833df59c9f538e6e8')
+checkdepends=(python-ipykernel
+              python-pytest
+              python-pytz)
+source=(git+https://github.com/jupyter-widgets/ipywidgets#tag=$pkgver
+        https://github.com/jupyter-widgets/ipywidgets/commit/bbc6c064.patch)
+sha256sums=('146cac83855ac40dd7264a654ebd8efbe81fff089405865f5456fd21afe5e1e6'
+            'df055ab534084dbcb88cfbf21a87e30bd63f0b22201fdbd531fd8c4177af45e2')
+
+prepare() {
+  cd ipywidgets
+  patch -p1 -i "$srcdir"/bbc6c064.patch # Fix tests with pytest 8
+}
 
 build() {
-  cd ipywidgets-$pkgver
+  cd ipywidgets/python/ipywidgets
   python -m build --wheel --no-isolation
 }
 
 check() {
-  cd ipywidgets-$pkgver
+  cd ipywidgets/python/ipywidgets
   pytest -v
 }
 
 package() {
-  cd ipywidgets-$pkgver
+  cd ipywidgets/python/ipywidgets
   python -m installer --destdir="$pkgdir" dist/*.whl
   install -Dm644 LICENSE -t "$pkgdir/usr/share/licenses/$pkgname"
 }

@@ -2,7 +2,7 @@
 
 pkgname=pdfslicer
 pkgver=1.8.8
-pkgrel=2
+pkgrel=3
 pkgdesc='Simple application to extract, merge, rotate and reorder pages of PDF documents'
 arch=('loong64' 'x86_64')
 url='https://junrrein.github.io/pdfslicer/'
@@ -34,7 +34,7 @@ prepare() {
   git submodule set-url third-party/range-v3 "$srcdir/range-v3"
   git submodule set-url third-party/GSL "$srcdir/GSL"
   git submodule set-url third-party/fmtlib "$srcdir/fmt"
-  git submodule update
+  git -c protocol.file.allow=always submodule update
 
   patch -Np1 -i ../qpdf-11.diff
   # https://patch-diff.githubusercontent.com/raw/prusa3d/PrusaSlicer/pull/6518.patch
@@ -42,7 +42,8 @@ prepare() {
 }
 
 build() {
-  cmake -S $pkgname -B build -G Ninja -DCMAKE_INSTALL_PREFIX='/usr'
+  cmake -S $pkgname -B build -G Ninja -DCMAKE_INSTALL_PREFIX='/usr' \
+    -DCMAKE_CXX_FLAGS="$CXXFLAGS -Wno-error=changes-meaning" # Fix build with GCC 14
   cmake --build build
 }
 

@@ -3,7 +3,7 @@
 _name=nethsm-sdk-py
 pkgname=python-nethsm-sdk-py
 pkgver=1.0.0
-pkgrel=1
+pkgrel=2
 pkgdesc="Client-side Python SDK for NetHSM"
 arch=(any)
 url="https://github.com/Nitrokey/nethsm-sdk-py"
@@ -13,7 +13,7 @@ depends=(
   python-certifi
   python-cryptography
   python-dateutil
-  python-typing-extensions
+  python-typing_extensions
   python-urllib3
 )
 makedepends=(

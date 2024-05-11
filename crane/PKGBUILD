@@ -2,17 +2,26 @@
 
 pkgname=crane
 _pkgname=go-containerregistry
-pkgver=0.19.0
-pkgrel=1
+pkgver=0.19.1
+pkgrel=2
 pkgdesc="Interacting with remote container images and registries."
 arch=('loong64' 'x86_64')
 url="https://github.com/google/go-containerregistry"
 license=('Apache-2.0')
 depends=('glibc')
 makedepends=('go')
+# we can not use LTO as otherwise we get no reproducible package with full RELRO
+options=(!lto)
 source=(https://github.com/google/${_pkgname}/archive/v${pkgver}/${pkgname}-${pkgver}.tar.gz)
-sha256sums=('c07dca10f60339d03e3a690daae8512741e9a2bc23c0bcb3104b9892b43179ae')
-b2sums=('1fd92a45b0669f695d6c8f99f53a2cf3e63f3407e73cac348246e491140f81b19dc017ad7795222275d9b9084627a51b334bdf9310774a1241af19f6fd61fa8d')
+sha256sums=('2a03430b0c9a8cf3fdfde2608aed99f851e5c57dfed8246bcc637d03a7ab0048')
+b2sums=('69bcda1da73504fe7635114c80d65a131ec65b8e0e2ab5a5f4944e116285c34a828bb1a46be4f57d6cbbbcd0f815cba405bb574267cd2452203acdcaf2b054a9')
+
+prepare() {
+  cd ${_pkgname}-${pkgver}
+  go mod download
+  cd cmd/krane
+  go mod download
+}
 
 build() {
   cd ${_pkgname}-${pkgver}
@@ -21,26 +30,31 @@ build() {
   export CGO_CFLAGS="${CFLAGS}"
   export CGO_CXXFLAGS="${CXXFLAGS}"
   export CGO_LDFLAGS="${LDFLAGS}"
-  export GOFLAGS="-buildmode=pie -trimpath -ldflags=-linkmode=external -mod=readonly -modcacherw"
+  export CGO_REQUIRED="1"
 
-  go build ./cmd/crane
-  go build ./cmd/gcrane
+  local go_options=(
+    -buildmode=pie
+    -mod=readonly
+    -modcacherw
+    -ldflags '-compressdwarf=false -linkmode=external'
+  )
 
+  go build "${go_options[@]}" -o build/ ./cmd/{crane,gcrane}
   cd cmd/krane
-  go build .
+  go build "${go_options[@]}" -o ../../build/ .
 }
 
 check() {
   cd ${_pkgname}-${pkgver}
-  ./crane --help
-  ./gcrane --help
-  ./cmd/krane/krane --help
+  ./build/crane --help
+  ./build/gcrane --help
+  ./build/krane --help
 }
 
 package() {
   cd ${_pkgname}-${pkgver}
   install -Dm755 -t "${pkgdir}/usr/bin" \
-    crane gcrane cmd/krane/krane
+    build/{crane,gcrane,krane}
 
   # setup completions
   install -dm 755 "${pkgdir}/usr/share/bash-completion/completions" \

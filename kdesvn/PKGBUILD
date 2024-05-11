@@ -2,7 +2,7 @@
 
 pkgname=kdesvn
 pkgver=2.1.0
-pkgrel=3
+pkgrel=4
 pkgdesc="A pure C++ SVN-client for KDE"
 arch=('loong64' 'x86_64')
 url="https://invent.kde.org/sdk/kdesvn"
@@ -12,6 +12,11 @@ makedepends=('extra-cmake-modules')
 changelog=$pkgname.changelog
 source=(https://download.kde.org/stable/$pkgname/$pkgver/$pkgname-$pkgver.tar.xz)
 sha256sums=('515eb95d5d2a51b495df01adf56ef0af703c5d344bb49bc2a6390ef57bba027b')
+
+prepare() {
+# Install service menus to modern path
+  sed -e 's|${SERVICES_INSTALL_DIR}/ServiceMenus|share/kio/servicemenus|g' -i $pkgname-$pkgver/src/kdesvnd/CMakeLists.txt
+}
 
 build() {
   cd "${srcdir}"/$pkgname-$pkgver

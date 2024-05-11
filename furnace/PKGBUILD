@@ -1,33 +1,34 @@
 # Maintainer: George Rawlinson <grawlinson@archlinux.org>
 
 pkgname=furnace
-pkgver=0.6
-pkgrel=1
+pkgver=0.6.1
+_commit=2957645d9d1bb1928bed007e79baa7d88dcf213b  # refs/tags/v0.6.1
+pkgrel=2
 pkgdesc='A multi-system chiptune tracker compatible with DefleMask modules'
 arch=('loong64' 'x86_64')
 url='https://github.com/tildearrow/furnace'
-license=('GPL2')
+license=('GPL-2.0-or-later')
+groups=('pro-audio')
 depends=(
+  'fftw'
+  'fmt'
+  'freetype2'
   'glibc'
   'gcc-libs'
-  'alsa-lib'
   'hicolor-icon-theme'
-  'sdl2'
-  'libsndfile'
-  'fmt'
-  'rtmidi'
-  'fftw'
-  'zlib'
   'libglvnd'
+  'libsndfile'
   'portaudio'
+  'rtmidi'
+  'sdl2'
+  'zlib'
 )
 makedepends=(
-  'git'
   'cmake'
+  'git'
   'jack'
 )
 optdepends=('jack: JACK audio support')
-_commit='fbc34fae02b2751b1ca21d71cac74af5e7aa24dd'
 source=(
   "$pkgname::git+$url#commit=$_commit"
   'github.com-superctr-adpcm::git+https://github.com/superctr/adpcm'
@@ -51,20 +52,25 @@ prepare() {
 }
 
 build() {
-  cmake \
-    -S "$pkgname" \
-    -B build \
-    -D CMAKE_INSTALL_PREFIX=/usr \
-    -D BUILD_GUI=ON \
-    -D SYSTEM_FFTW=ON \
-    -D SYSTEM_FMT=ON \
-    -D SYSTEM_LIBSNDFILE=ON \
-    -D SYSTEM_PORTAUDIO=ON \
-    -D SYSTEM_RTMIDI=ON \
-    -D SYSTEM_ZLIB=ON \
-    -D SYSTEM_SDL2=ON \
+  local cmake_options=(
+    -B build
+    -D CMAKE_BUILD_TYPE=None
+    -D CMAKE_INSTALL_PREFIX=/usr
+    -D BUILD_GUI=ON
+    -D SYSTEM_FFTW=ON
+    -D SYSTEM_FMT=ON
+    -D SYSTEM_FREETYPE=ON
+    -D SYSTEM_LIBSNDFILE=ON
+    -D SYSTEM_PORTAUDIO=ON
+    -D SYSTEM_RTMIDI=ON
+    -D SYSTEM_SDL2=ON
+    -D SYSTEM_ZLIB=ON
     -D WITH_JACK=ON
+    -S "$pkgname"
+    -W no-dev
+  )
 
+  cmake "${cmake_options[@]}"
   cmake --build build
 }
 

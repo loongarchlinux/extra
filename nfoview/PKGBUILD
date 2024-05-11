@@ -1,14 +1,14 @@
-# Maintainer: David Runge <dvzrv@archlinux.org>
+# Maintainer: Robin Candau <antiz@archlinux.org>
+# Contributor: David Runge <dvzrv@archlinux.org>
 # Contributor: Ray Rashif <schiv@archlinux.org>
 # Contributor: Wes Brewer <brewerw@gmail.com>
 # Contributor: VuDu <vudu.curse@gmail.com>
 
 pkgname=nfoview
-pkgver=1.99
-_commit=839fbd127765b1d608e3587321e0464d97adb4a2  # refs/tags/1.99
-pkgrel=2
+pkgver=2.0.1
+pkgrel=3
 pkgdesc="Simple NFO file viewer in GTK+ 3"
-arch=(any)
+arch=('any')
 url="https://otsaloma.io/nfoview/"
 license=(GPL-3.0-or-later)
 depends=(
@@ -31,27 +31,22 @@ makedepends=(
   python-wheel
 )
 optdepends=('ttf-cascadia-code: recommended font')
-source=($pkgname::git+https://github.com/otsaloma/$pkgname.git#tag=$_commit?signed)
-sha512sums=('SKIP')
+source=("git+https://github.com/otsaloma/${pkgname}.git?signed#tag=${pkgver}")
+sha256sums=('9d75dcbc2dade5c8225cc47dc6ee9c97773da8c5e54920867a7990f4d9b2c53b')
 validpgpkeys=('8DD6B3FCDAB33C91EA915B913A584A9504CACA67') # Osmo Salomaa <otsaloma@iki.fi>
 
-pkgver() {
-  cd $pkgname
-  git describe --tags | sed 's/\([^-]*-g\)/r\1/;s/-/./g'
-}
-
 build() {
-  make -C $pkgname
+	cd "${pkgname}"
+	make PREFIX=/usr build
 }
 
 check() {
-  cd $pkgname
-  xvfb-run pytest -v $pkgname
+	cd "${pkgname}"
+	xvfb-run pytest -v "${pkgname}"
 }
 
 package() {
-  make DESTDIR="$pkgdir" PREFIX=/usr install -C $pkgname
-  install -vDm 644 $pkgname/{AUTHORS,NEWS,README}.md -t "$pkgdir/usr/share/doc/$pkgname/"
+	cd "${pkgname}"
+	make PREFIX=/usr DESTDIR="${pkgdir}" install
+	install -Dm 644 {AUTHORS,NEWS,README}.md -t "${pkgdir}/usr/share/doc/${pkgname}/"
 }
-
-# vim:set ts=2 sw=2 et:

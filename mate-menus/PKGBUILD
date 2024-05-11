@@ -3,7 +3,7 @@
 # Contributor: Martin Wimpress <code@flexion.org>
 
 pkgname=mate-menus
-pkgver=1.26.1
+pkgver=1.28.0
 pkgrel=1
 pkgdesc="MATE menu specifications"
 url="https://mate-desktop.org"
@@ -13,7 +13,7 @@ depends=('glib2')
 makedepends=('gobject-introspection')
 groups=('mate')
 source=("https://pub.mate-desktop.org/releases/${pkgver%.*}/${pkgname}-${pkgver}.tar.xz")
-sha256sums=('458d599ae5b650c7d21740f9fe954c4a838be45ed62ab40e20e306faf5dd1d8c')
+sha256sums=('cf40c75c7d6f0aad1d4969828fc62025c6222bc6a84f0bb9d6ead7e45970508d')
 
 build() {
     cd "${pkgname}-${pkgver}"

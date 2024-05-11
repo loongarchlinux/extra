@@ -4,13 +4,13 @@ pkgname=python-junit-xml
 # The commit that bumps version in setup.py
 _commit=19d3cc333d35dfd2d17d75c506336c15e5c6685a
 pkgver=1.9
-pkgrel=7
+pkgrel=8
 pkgdesc='A Python module for creating JUnit XML test result documents'
 arch=(any)
 url='https://github.com/kyrus/python-junit-xml'
 license=(MIT)
 depends=(python python-six)
-makedepends=(python-setuptools git)
+makedepends=(python-build python-installer python-setuptools python-wheel git)
 checkdepends=(python-pytest)
 # There are neither tags nor PyPI source tarball...
 # https://github.com/kyrus/python-junit-xml/issues/68
@@ -22,7 +22,7 @@ validpgpkeys=(
 
 build() {
   cd python-junit-xml
-  python setup.py build
+  python -m build --wheel --no-isolation
 }
 
 check() {
@@ -32,7 +32,7 @@ check() {
 
 package() {
   cd python-junit-xml
-  python setup.py install --root="$pkgdir" --optimize=1 --skip-build
+  python -m installer --destdir="$pkgdir" dist/*.whl
 
   install -Dm644 LICENSE.txt -t "$pkgdir"/usr/share/licenses/$pkgname
 }

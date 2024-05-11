@@ -2,31 +2,29 @@
 # Contributor: Ľubomír 'The_K' Kučera <lubomir-dot-kucera-dot-jr-at-gmail-dot-com>
 
 pkgname=bully
-pkgver=1.1.12.g04185d7
-pkgrel=2
-_gitcommit=04185d7b1d1a7909f47f23fbd85691401c7fabd7
+pkgver=1.2
+pkgrel=1
 pkgdesc='Retrieve WPA/WPA2 passphrase from a WPS enabled access point'
 url='https://github.com/aanarchyy/bully'
 arch=('loong64' 'x86_64')
-license=('GPL3')
-depends=('glibc' 'libpcap' 'aircrack-ng')
+license=('GPL-3.0-or-later')
+depends=(
+  'aircrack-ng'
+  'glibc'
+  'libpcap'
+)
 optdepends=('pixiewps: pixiewps support')
-makedepends=('git')
-source=(${pkgname}::"git+https://github.com/aanarchyy/bully#commit=${_gitcommit}")
-sha512sums=('SKIP')
-
-pkgver() {
-  cd ${pkgname}
-  git describe --tags --always|sed 's/^v//;s/-/./g'
-}
+source=("${pkgname}-${pkgver}.tar.gz::https://github.com/aanarchyy/${pkgname}/archive/${pkgver}.tar.gz")
+sha256sums=('e0b325650060086bd8ea02c436db42050eb2ec07ac5c6cb674033b5dbe600897')
+b2sums=('c1057adda408b81b285cf4fd1febee34d85bd126ac8e5f1a78f4090ad644fc940d907bcff85d29b65f51e71e8b4689540eb29ef6881d9d814795f35e28c4c0ca')
 
 build() {
-  cd ${pkgname}
+  cd ${pkgname}-${pkgver}
   make -C src
 }
 
 package() {
-  cd ${pkgname}
+  cd ${pkgname}-${pkgver}
   make -C src install DESTDIR="${pkgdir}" prefix=/usr
 }
 

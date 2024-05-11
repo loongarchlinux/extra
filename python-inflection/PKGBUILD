@@ -2,29 +2,29 @@
 
 pkgname=python-inflection
 pkgver=0.5.1
-pkgrel=6
+pkgrel=7
 pkgdesc="A port of Ruby on Rails inflector to Python"
 url="https://github.com/jpvanhal/inflection"
 license=('MIT')
 arch=('any')
 depends=('python')
-makedepends=('python-setuptools')
-checkdepends=('python-pytest-runner')
+makedepends=('python-setuptools' 'python-build' 'python-installer' 'python-wheel')
+checkdepends=('python-pytest')
 source=("$pkgname-$pkgver.tar.gz::https://github.com/jpvanhal/inflection/archive/$pkgver.tar.gz")
 sha512sums=('a976cf40a79921f55fbf45b56febb59c6be9e840aac80213ab26915afe4699d96b99888a88e215f26af39497e8cfbe501a38ecf910b6c89d8c4edbf4e176406b')
 
 build() {
   cd inflection-$pkgver
-  python setup.py build
+  python -m build --wheel --no-isolation
 }
 
 check() {
   cd inflection-$pkgver
-  python setup.py pytest
+  PYTHONPATH=. pytest test_inflection.py
 }
 
 package() {
   cd inflection-$pkgver
-  python setup.py install --root="$pkgdir" --optimize=1
+  python -m installer --destdir="$pkgdir" dist/*.whl
   install -Dm644 LICENSE "$pkgdir"/usr/share/licenses/$pkgname/LICENSE
 }

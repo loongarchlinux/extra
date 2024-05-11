@@ -1,0 +1,49 @@
+# Maintainer: Frederik Schwan <freswa at archlinux dot org>
+# Contributor: Ovi Chis ovi@ovios.org
+
+pkgname=tgt
+pkgver=1.0.91
+pkgrel=1
+pkgdesc="iSCSI Target STGT for Arch Linux"
+arch=('loong64' 'x86_64')
+url='https://github.com/fujita/tgt'
+license=('GPL-2.0-only')
+depends=(
+  'bash'
+  'perl'
+  'perl-config-general'
+  'rdma-core'
+  'systemd-libs'
+)
+makedepends=(
+  'docbook-xsl'
+  'git'
+  'libxslt'
+  'linux-api-headers'
+)
+optdepends=(
+  'sg3_utils'
+)
+backup=(
+  'etc/tgt/targets.conf'
+)
+source=(git+https://github.com/fujita/tgt.git#tag=v${pkgver})
+b2sums=('0bb7b58073ee1e1783346099bb14d6c83384ec516ec87608b1c080814c29a472dec6764d0a35ba22eae29f388a5dfbe7aa6a58d295ff738b36f480dadd12b832')
+
+prepare() {
+  cd ${pkgname}
+  sed -i '/LDFLAGS =/d' usr/Makefile
+  sed -i 's#\$(CC) \$^ -o \$@$#\$(CC) \$^ -o \$@ $(LDFLAGS)#g' usr/Makefile
+}
+
+build() {
+  cd ${pkgname}
+  make sbindir=/usr/bin SD_NOTIFY=1 ISCSI=1 ISCSI_RDMA=1 PREFIX="${pkgdir}"
+}
+
+package() {
+  cd ${pkgname}
+  make DESTDIR="${pkgdir}" sbindir=/usr/bin install
+  install -Dm644 scripts/tgtd.service "${pkgdir}"/usr/lib/systemd/system/tgtd.service
+}
+

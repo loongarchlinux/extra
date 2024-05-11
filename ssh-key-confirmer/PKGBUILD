@@ -2,12 +2,14 @@
 
 pkgname=ssh-key-confirmer
 pkgver=0.1
-pkgrel=2
+pkgrel=3
 pkgdesc='Test ssh login key acceptance without having the private key'
 url='https://github.com/benjojo/ssh-key-confirmer'
 arch=('loong64' 'x86_64')
 license=('MIT')
 makedepends=('go')
+# we can not use LTO as otherwise we get no reproducible package with full RELRO
+options=(!lto)
 source=(https://github.com/benjojo/${pkgname}/archive/v${pkgver}/${pkgname}-${pkgver}.tar.gz)
 b2sums=('40d339e77a476f137eafc8b3b41880c05646cb58ef184d8ecde1f194148e23827ebec94555cc371769573823829f8a9333df7f79edcb3c7d91b4bc28a4068aee')
 
@@ -17,8 +19,15 @@ build() {
   export CGO_CFLAGS="${CFLAGS}"
   export CGO_CXXFLAGS="${CXXFLAGS}"
   export CGO_LDFLAGS="${LDFLAGS}"
-  export GOFLAGS="-buildmode=pie -ldflags=-linkmode=external -trimpath -mod=readonly -modcacherw"
-  go build -o ssh-key-confirmer .
+  export CGO_REQUIRED="1"
+
+  go build \
+    -buildmode=pie \
+    -mod=readonly \
+    -modcacherw \
+    -ldflags '-compressdwarf=false -linkmode=external' \
+    -o ssh-key-confirmer \
+    .
 }
 
 package() {

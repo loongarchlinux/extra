@@ -2,21 +2,54 @@
 # Maintainer: Felix Yan <felixonmars@archlinux.org>
 
 pkgname=krfb
-pkgver=23.08.4
-pkgrel=1
+pkgver=24.02.2
+pkgrel=2
 pkgdesc='Desktop Sharing'
 url='https://apps.kde.org/krfb/'
 arch=(loong64 x86_64)
-license=(LGPL)
-depends=(kdnssd5 kxmlgui5 kwallet5 libvncserver kwayland5 xdg-desktop-portal kpipewire)
-makedepends=(extra-cmake-modules kdoctools5 plasma-wayland-protocols)
-groups=(kde-applications kde-network)
-source=(https://download.kde.org/stable/release-service/$pkgver/src/$pkgname-$pkgver.tar.xz{,.sig})
-sha256sums=('bb15a302428c45f8331d25a91466744367cb382d4b2efa1e88a3cc73dacb6984'
-            'SKIP')
+license=(LGPL-2.0-or-later)
+depends=(gcc-libs
+         glibc
+         kconfig
+         kconfigwidgets
+         kcoreaddons
+         kdbusaddons
+         kdnssd
+         ki18n
+         knotifications
+         kpipewire
+         kstatusnotifieritem
+         kwallet
+         kwayland
+         kwidgetsaddons
+         kwindowsystem
+         kxmlgui
+         libvncserver
+         libx11
+         libxcb
+         libxtst
+         qt6-base
+         wayland
+         xcb-util-image
+         xdg-desktop-portal)
+makedepends=(extra-cmake-modules
+             kdoctools
+             libxdamage
+             plasma-wayland-protocols)
+groups=(kde-applications
+        kde-network)
+source=(https://download.kde.org/stable/release-service/$pkgver/src/$pkgname-$pkgver.tar.xz{,.sig}
+        https://invent.kde.org/network/krfb/-/commit/d2f4b34f.patch)
+sha256sums=('cf92dfc7867e33604757a59ff8d288693bbf5fbb0cf0bc379c3f975d0e4e98e4'
+            'SKIP'
+            '809b7592ef61438ef4a5056322278562111d62205bc8f982a8247be8c0d6a9b4')
 validpgpkeys=(CA262C6C83DE4D2FB28A332A3A6A4DB839EAA6D7  # Albert Astals Cid <aacid@kde.org>
               F23275E4BF10AFC1DF6914A6DBD2CE893E2D1C87  # Christoph Feck <cfeck@kde.org>
               D81C0CB38EB725EF6691C385BB463350D6EF31EF) # Heiko Becker <heiko.becker@kde.org>
+
+prepare() {
+  patch -d $pkgname-$pkgver -p1 < d2f4b34f.patch # Fix crash
+}
 
 build() {
   cmake -B build -S $pkgname-$pkgver \

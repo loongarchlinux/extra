@@ -2,27 +2,25 @@
 # Contributor: csslayer <wengxt AT gmail com>
 
 pkgname=fcitx5-unikey
-pkgver=5.1.2
+pkgver=5.1.4
 pkgrel=1
 pkgdesc="Unikey engine support for Fcitx5"
 arch=('loong64' 'x86_64')
 url="https://github.com/fcitx/fcitx5-unikey"
 license=('GPL')
 depends=('fcitx5-qt')
-makedepends=('extra-cmake-modules' 'ninja')
-source=("https://download.fcitx-im.org/fcitx5/$pkgname/$pkgname-$pkgver.tar.xz"{,.sig})
-sha512sums=('b7a7a3f9ce9a835662a1a973fc4094ca01c5030c63ea776b31188be0216af77e1f3197a644c84c1ea3a67fc8736a8f2f0f74657b82c2dfcc78a386f46c17cc10'
-            'SKIP')
+makedepends=('git' 'extra-cmake-modules' 'ninja')
+source=("git+https://github.com/fcitx/fcitx5-unikey.git#tag=$pkgver?signed")
+sha512sums=('d2c73cd4fef07c1bc1dee26f9ef90d0beb880cb494d6e637929afd9ea8511552d39ac4151e7a29b5bc8f4b77b87fb0b95e16ccf15bbbbec91dd87dc6857b9293')
 validpgpkeys=('2CC8A0609AD2A479C65B6D5C8E8B898CBF2412F9') # Weng Xuetian <wengxt@gmail.com>
 
-build(){
-  cd $pkgname-$pkgver
-
+build() {
+  cd $pkgname
   cmake -GNinja -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_INSTALL_LIBDIR=/usr/lib .
   ninja
 }
 
 package() {
-  cd $pkgname-$pkgver
+  cd $pkgname
   DESTDIR="$pkgdir" ninja install
 }

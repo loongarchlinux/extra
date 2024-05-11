@@ -2,24 +2,29 @@
 
 _name=tidal
 pkgname=haskell-tidal
-pkgver=1.9.4
-pkgrel=23
+pkgver=1.9.5
+pkgrel=2
 pkgdesc="A domain specific language for live coding pattern."
 arch=(loong64 x86_64)
 url="https://tidalcycles.org/"
 license=(GPL-3.0-or-later)
 groups=(pro-audio)
 depends=(
+  gcc-libs
   ghc
   ghc-libs
   glibc
+  gmp
+  haskell-blaze-builder
   haskell-clock
   haskell-colour
+  haskell-data-binary-ieee754
   haskell-hosc
   haskell-mwc-random
   haskell-network
   haskell-primitive
   haskell-random
+  haskell-splitmix
   haskell-tidal-link
   haskell-vector
   supercollider
@@ -29,8 +34,8 @@ optdepends=('sc3-plugins: Examples using special UGens')
 conflicts=(tidalcycles)
 replaces=(tidalcycles)
 source=(https://hackage.haskell.org/packages/archive/$_name/$pkgver/$_name-$pkgver.tar.gz)
-sha512sums=('006d4895ea6db1fd9a246c519b95416123450449903433e153f7bb6113507edb5127383ed15cfd8633b98f373d7677b40b67ca143cc443509e05dd71cf9aa54b')
-b2sums=('dd5e0b6e6dae2ac3d576af600ac9da0928681ed90a0698e7d09e02e3c412575708bc2c93d2fece86e75059dec087659805b0834b353bddd551ef0bdf598dd94a')
+sha512sums=('15a963eb17c38678e2d59fa08845cac270bf2a28a9dfe4cf4bfd2fe137c5bb9fbc18439e889743792b3448f0358dee3a787608e7385768616dce8171718fac32')
+b2sums=('6ba4f598be6b3e6800a6af15a72fbb044dcfb6de52e46dfc0db4cc9bd959bfdbf16d7ec74f884b4546ef3fca6a46a6af52a2cd294460436fdfeb97f51c1db3db')
 
 build() {
   local configure_options=(
@@ -42,9 +47,8 @@ build() {
     --enable-executable-dynamic
     --enable-shared
     --enable-tests
-    --ghc-option=-fllvm
+    --libsubdir=\$compiler/site-local/\$pkgid
     --prefix=/usr
-    --libsubdir=\$compiler/site-local/\$pkgid --ghc-option=-fllvm
   )
 
   cd $_name-$pkgver

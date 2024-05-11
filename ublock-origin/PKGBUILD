@@ -1,16 +1,16 @@
 # Maintainer: Daniel M. Capella <polyzen@archlinux.org>
 
-pkgname=('ublock-origin' 'firefox-ublock-origin')
+pkgname=('ublock-origin' 'firefox-ublock-origin' 'thunderbird-ublock-origin')
 pkgbase=ublock-origin
-pkgver=1.55.0
+pkgver=1.57.2
 pkgrel=1
 pkgdesc='Efficient blocker add-on for various browsers. Fast, potent, and lean'
 arch=('any')
 url=https://github.com/gorhill/uBlock
-license=('GPL3')
+license=('GPL-3.0-or-later')
 makedepends=('git' 'python' 'strip-nondeterminism' 'zip')
 source=("git+$url.git#commit=$pkgver?signed")
-b2sums=('SKIP')
+b2sums=('4d9815c11807e280ee43f255c7f97ac40e2657d7022a4107ff8f9989a2a0896c465d3503470de41a85cc9d05ea2f5cfd2169619beb17b0aca7419395dfd4a062')
 validpgpkeys=('603B28AA5D6CD687A554347425E1490B761470C2') # Raymond Hill <rhill@raymondhill.net>
 
 prepare() {
@@ -23,8 +23,12 @@ prepare() {
 
 build() {
   cd uBlock
-  make chromium firefox
-  strip-nondeterminism -t zip dist/build/uBlock0.firefox.xpi
+  ./tools/make-chromium.sh
+  ./tools/make-firefox.sh all
+  ./tools/make-thunderbird.sh all
+
+  cd dist/build
+  strip-nondeterminism -t zip uBlock0.*.xpi
 }
 
 package_ublock-origin() {
@@ -41,4 +45,11 @@ package_firefox-ublock-origin() {
   cd uBlock/dist/build
   install -Dm644 uBlock0.firefox.xpi \
     "$pkgdir"/usr/lib/firefox/browser/extensions/uBlock0@raymondhill.net.xpi
+}
+
+package_thunderbird-ublock-origin() {
+  groups=('thunderbird-addons')
+  cd uBlock/dist/build
+  install -Dm644 uBlock0.thunderbird.xpi \
+    "$pkgdir"/usr/lib/thunderbird/browser/extensions/uBlock0@raymondhill.net.xpi
 }

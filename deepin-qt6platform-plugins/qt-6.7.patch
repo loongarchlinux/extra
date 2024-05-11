@@ -1,0 +1,30 @@
+diff --git a/wayland/wayland-shell/dwaylandshellmanager.cpp b/wayland/wayland-shell/dwaylandshellmanager.cpp
+index ab8d7e1..7868946 100644
+--- a/wayland/wayland-shell/dwaylandshellmanager.cpp
++++ b/wayland/wayland-shell/dwaylandshellmanager.cpp
+@@ -659,7 +659,7 @@ void DWaylandShellManager::handleWindowStateChanged(QWaylandShellSurface *shellS
+     STATE_CHANGED(activeChanged);
+     QObject::connect(ddeShellSurface, &KCDFace::activeChanged, window, [window, ddeShellSurface](){
+         if (QWindow *w = ddeShellSurface->isActive() ? window->window() : nullptr)
+-            QWindowSystemInterface::handleWindowActivated(w, Qt::FocusReason::ActiveWindowFocusReason);
++            QWindowSystemInterface::handleFocusWindowChanged(w, Qt::FocusReason::ActiveWindowFocusReason);
+     });
+ 
+ #define SYNC_FLAG(sig, enableFunc, flag)                                                    \
+diff --git a/xcb/dplatformwindowhelper.cpp b/xcb/dplatformwindowhelper.cpp
+index 9e03d5c..f6de37a 100644
+--- a/xcb/dplatformwindowhelper.cpp
++++ b/xcb/dplatformwindowhelper.cpp
+@@ -586,10 +586,10 @@ bool DPlatformWindowHelper::eventFilter(QObject *watched, QEvent *event)
+             return true;
+         }
+         case QEvent::FocusIn:
+-            QWindowSystemInterface::handleWindowActivated(m_nativeWindow->window(), static_cast<QFocusEvent*>(event)->reason());
++            QWindowSystemInterface::handleFocusWindowChanged(m_nativeWindow->window(), static_cast<QFocusEvent*>(event)->reason());
+             return true;
+         case QEvent::WindowActivate:
+-            QWindowSystemInterface::handleWindowActivated(m_nativeWindow->window(), Qt::OtherFocusReason);
++            QWindowSystemInterface::handleFocusWindowChanged(m_nativeWindow->window(), Qt::OtherFocusReason);
+             return true;
+         case QEvent::Resize: {
+             updateContentWindowGeometry();

@@ -1,31 +1,32 @@
 # Maintainer: Torsten Keßler <tpkessler at archlinux dot org>
 # Contributor: Markus Näther <naetherm@informatik.uni-freiburg.de>
 pkgname=hipcub
-pkgver=5.7.1
+pkgver=6.0.2
 pkgrel=1
 pkgdesc='Header-only library on top of rocPRIM or CUB'
 arch=('loong64' 'x86_64')
 url='https://hipcub.readthedocs.io/en/latest/'
-license=('custom')
-depends=('rocprim' 'hip')
-makedepends=('rocm-cmake')
-_git='https://github.com/ROCmSoftwarePlatform/hipCUB'
+license=('NCSA')
+depends=('rocm-core' 'rocprim' 'hip')
+makedepends=('cmake' 'rocm-cmake')
+_git='https://github.com/ROCm/hipCUB'
 source=("$pkgname-$pkgver.tar.gz::$_git/archive/rocm-$pkgver.tar.gz")
-sha256sums=('9b23a58408bc4c549d3c754196cb3e2c1a50e177ab0a286101cbea2f7f173945')
+sha256sums=('3f912a23dc34510cf18d9097f6eda37e01d01724975c8149c92a64c92415968c')
 _dirname="$(basename $_git)-$(basename "${source[0]}" ".tar.gz")"
 
 build() {
   # -fcf-protection is not supported by HIP, see
-  # https://docs.amd.com/bundle/ROCm-Compiler-Reference-Guide-v5.5/page/Compiler_Options_and_Features.html#d2e2018
-
-  CXXFLAGS="${CXXFLAGS} -fcf-protection=none" \
-  cmake \
-    -Wno-dev \
-    -S "$_dirname" \
-    -B build \
-    -DCMAKE_BUILD_TYPE=None \
-    -DCMAKE_INSTALL_PREFIX=/opt/rocm \
-    -DCMAKE_CXX_COMPILER=/opt/rocm/bin/hipcc
+  # https://rocm.docs.amd.com/en/latest/reference/rocmcc.html#support-status-of-other-clang-options
+  local cmake_args=(
+    -Wno-dev
+    -S "$_dirname"
+    -B build
+    -D CMAKE_BUILD_TYPE=None
+    -D CMAKE_INSTALL_PREFIX=/opt/rocm
+    -D CMAKE_CXX_COMPILER=/opt/rocm/bin/hipcc
+    -D CMAKE_CXX_FLAGS="${CXXFLAGS} -fcf-protection=none"
+  )
+  cmake "${cmake_args[@]}"
   cmake --build build
 }
 

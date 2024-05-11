@@ -2,7 +2,7 @@
 
 pkgname=python-zope-location
 pkgver=5.0
-pkgrel=1
+pkgrel=2
 pkgdesc="Special objects that have a structural location"
 arch=('any')
 url="https://github.com/zopefoundation/zope.location"

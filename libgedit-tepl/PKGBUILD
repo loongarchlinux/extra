@@ -1,0 +1,48 @@
+# Maintainer: Fabian Bornschein <fabiscafe@archlinux.org>
+
+pkgname=libgedit-tepl
+pkgver=6.10.0
+pkgrel=2
+pkgdesc='Library that eases the development of GtkSourceView-based text editors and IDEs'
+arch=('loong64' 'x86_64')
+url='https://github.com/gedit-technology/libgedit-tepl'
+license=('LGPL-3.0-or-later')
+depends=(
+  cairo
+  glib2
+  glibc
+  gsettings-desktop-schemas
+  gtk3
+  icu
+  libgedit-amtk
+  libgedit-gfls
+  libgedit-gtksourceview
+  libhandy
+  pango
+)
+makedepends=(
+  git
+  gtk-doc
+  gobject-introspection
+  meson
+)
+checkdepends=(xorg-server-xvfb)
+conflicts=(tepl)
+replaces=(tepl)
+provides=(libgedit-tepl-6.so)
+source=("git+https://github.com/gedit-technology/libgedit-tepl#tag=${pkgver}")
+b2sums=('54a0e1e4927a90e295e7c681f1d3c3da0ed6da0ca1d864887cf59c6bf6f23baacf555f34cbece81a57efc114d64248c1a2a7d48820dd1e114376bfa5aebc6a1b')
+
+build() {
+  arch-meson $pkgname build
+  meson compile -C build
+}
+
+check() {
+  xvfb-run -s '-screen 0 1920x1080x24 -nolisten local' \
+    meson test -C build --print-errorlogs
+}
+
+package() {
+  meson install -C build --destdir "$pkgdir"
+}

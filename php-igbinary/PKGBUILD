@@ -4,7 +4,7 @@ _name=igbinary
 pkgbase=php-igbinary
 pkgname=(php-igbinary php-legacy-igbinary)
 pkgver=3.2.15
-pkgrel=2
+pkgrel=4
 pkgdesc="A drop in replacement for the standard php serializer"
 arch=(loong64 x86_64)
 url="https://github.com/igbinary/igbinary"
@@ -32,35 +32,30 @@ prepare() {
 }
 
 build() {
+  local configure_options=(
+    --prefix=/usr
+    --enable-igbinary
+  )
+
   (
     cd $pkgbase-$pkgver
-    ./configure --prefix=/usr \
-                --enable-igbinary
+    ./configure "${configure_options[@]}"
     make
   )
   (
     cd ${pkgname[1]}-$pkgver
-    ./configure --prefix=/usr \
-                --enable-igbinary
+    ./configure "${configure_options[@]}"
     make
   )
 }
 
 check() {
-  (
-    NO_INTERACTION=1 make -k test -C $pkgbase-$pkgver
-  )
-  (
-    NO_INTERACTION=1 make -k test -C ${pkgname[1]}-$pkgver
-  )
+  NO_INTERACTION=1 make -k test -C $pkgbase-$pkgver
+  NO_INTERACTION=1 make -k test -C ${pkgname[1]}-$pkgver
 }
 
 package_php-igbinary() {
-  local _interpreter_version="$(php --version |head -n1 |cut -d ' ' -f2)"
-
   depends+=(php)
-  _provides=(php-igbinary-interpreter=${_interpreter_version%.*})
-  provides=("${_provides[@]}")
   backup=(etc/php/conf.d/$_name.ini)
 
   cd $pkgname-$pkgver
@@ -71,11 +66,7 @@ package_php-igbinary() {
 }
 
 package_php-legacy-igbinary() {
-  local _interpreter_version="$(php-legacy --version |head -n1 |cut -d ' ' -f2)"
-
   depends+=(php-legacy)
-  _provides=(php-igbinary=$pkgver php-igbinary-interpreter=${_interpreter_version%.*})
-  provides=("${_provides[@]}")
   backup=(etc/php-legacy/conf.d/$_name.ini)
 
   cd $pkgname-$pkgver

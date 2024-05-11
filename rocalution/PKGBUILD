@@ -1,28 +1,22 @@
 # Maintainer: Torsten Keßler <tpkessler at archlinux dot org>
 # Contributor: Markus Näther <naetherm@informatik.uni-freiburg.de>
 pkgname=rocalution
-pkgver=5.7.1
-pkgrel=1
+pkgver=6.0.2
+pkgrel=2
 pkgdesc='Next generation library for iterative sparse solvers for ROCm platform'
 arch=('loong64' 'x86_64')
-url='https://rocalution.readthedocs.io/en/master'
+url='https://rocm.docs.amd.com/projects/rocALUTION/en/latest/index.html'
 license=('MIT')
-depends=('hip' 'rocsparse' 'rocblas' 'rocsolver' 'rocprim' 'rocrand')
+depends=('rocm-core' 'hip' 'glibc' 'gcc-libs'
+         'rocsparse' 'rocblas' 'rocsolver' 'rocprim' 'rocrand')
 makedepends=('rocm-cmake' 'openmp' 'openmpi')
 optdepends=('openmp: Multithreaded CPU applications'
             'openmpi: Distributed CPU and multi GPU applications')
-_git='https://github.com/ROCmSoftwarePlatform/rocALUTION'
-source=("$pkgname-$pkgver.tar.gz::$_git/archive/rocm-$pkgver.tar.gz"
-        "rocalution-disable-hip-property.patch")
-sha256sums=('b95afa1285759843c5fea1ad6e1c1edf283922e0d448db03a3e1f42b6942bc24'
-            '7335ce3fb8a8663cd2d393632fecab261239de3cbd00e7e7bbda2e1d217c7ec2')
+_git='https://github.com/ROCm/rocALUTION'
+source=("$pkgname-$pkgver.tar.gz::$_git/archive/rocm-$pkgver.tar.gz")
+sha256sums=('453f889677728b510286d4c72952b343cac63c45e2cb8b801d8388a2ec599d2a')
 options=(!lto)
 _dirname="$(basename "$_git")-$(basename "${source[0]}" ".tar.gz")"
-
-prepare() {
-  cd "$_dirname"
-  patch -Np1 -i "$srcdir/rocalution-disable-hip-property.patch"
-}
 
 build() {
   # Compile source code for supported GPU archs in parallel
@@ -30,28 +24,27 @@ build() {
   export HIPCC_LINK_FLAGS_APPEND="-parallel-jobs=$(nproc)"
   export ROCM_PATH=/opt/rocm
   # -fcf-protection is not supported by HIP, see
-  # https://rocm.docs.amd.com/en/latest/reference/rocmcc/rocmcc.html#support-status-of-other-clang-options
-  CXXFLAGS="${CXXFLAGS} -fcf-protection=none" \
-  cmake \
-    -Wno-dev \
-    -B build \
-    -S "$_dirname" \
-    -DCMAKE_BUILD_TYPE=None \
-    -DCMAKE_TOOLCHAIN_FILE="$srcdir/$_dirname/toolchain-linux.cmake" \
-    -DCMAKE_INSTALL_PREFIX=/opt/rocm \
-    -DROCM_PATH=/opt/rocm \
-    -DSUPPORT_HIP=ON \
-    -DSUPPORT_OMP=ON \
-    -DSUPPORT_MPI=ON \
-    -DBUILD_SHARED_LIBS=ON
+  # https://rocm.docs.amd.com/en/latest/reference/rocmcc.html#support-status-of-other-clang-options
+  local cmake_args=(
+    -Wno-dev
+    -S "$_dirname"
+    -B build
+    -D CMAKE_BUILD_TYPE=None
+    -D CMAKE_TOOLCHAIN_FILE="$srcdir/$_dirname/toolchain-linux.cmake"
+    -D CMAKE_CXX_FLAGS="${CXXLFLAGS} -fcf-protection=none"
+    -D CMAKE_INSTALL_PREFIX=/opt/rocm
+    -D ROCM_PATH=/opt/rocm
+    -D SUPPORT_HIP=ON
+    -D SUPPORT_OMP=ON
+    -D SUPPORT_MPI=ON
+    -D BUILD_SHARED_LIBS=ON
+  )
+  cmake "${cmake_args[@]}"
   cmake --build build
 }
 
 package() {
   DESTDIR="$pkgdir" cmake --install build
-
-  echo "/opt/rocm/$pkgname/lib" > "$pkgname.conf"
-  install -Dm644 "$pkgname.conf" "$pkgdir/etc/ld.so.conf.d/$pkgname.conf"
 
   install -Dm644 "$_dirname/LICENSE.md" "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
 }

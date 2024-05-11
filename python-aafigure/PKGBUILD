@@ -1,40 +1,45 @@
 # Maintainer: David Runge <dvzrv@archlinux.org>
 
-_name=aafigure
 pkgname=python-aafigure
+_name="${pkgname#python-}"
 pkgver=0.6
-pkgrel=4
+pkgrel=5
 pkgdesc="ASCII art to image converter"
-arch=('any')
+arch=(any)
 url="https://github.com/aafigure/aafigure"
-license=('BSD')
-depends=('python-pillow' 'python-reportlab')
-makedepends=('python-setuptools')
-checkdepends=('python-pytest')
-source=("https://files.pythonhosted.org/packages/source/${_name::1}/${_name}/${_name}-${pkgver}.tar.gz")
-sha512sums=('2547fe3ca401e2edd8f8b5b8fc0fa95d0a1392f9d31db2f509dedee4c48d1cf02c04fbb6a3a8e0a7713f675f02f51e460048c0e1f9fd702cebfe379ce30af316')
-b2sums=('3d7a431f03ef40cc1fc163cf17044e6b0775b1f9e0da5d9d57d3bc1f589c455b71eac3da7b3ab19553b83f61bfcf305fec87e1297590b17e99a9d33448b7656b')
-
-prepare() {
-  mv -v "${_name}-$pkgver" "$pkgname-$pkgver"
-}
+license=(BSD-3-Clause)
+depends=(
+  python
+  python-pillow
+  python-reportlab
+)
+makedepends=(
+  python-build
+  python-installer
+  python-setuptools
+  python-wheel
+)
+checkdepends=(
+  python-pytest
+)
+source=($pkgname-$pkgver.tar.gz::$url/archive/refs/tags/$pkgver.tar.gz)
+sha512sums=('89e11b94e6b5514245d9f70bd5237ed476321be2359dd8e02b486923ed7a63f7ea482d7c239593537da18d0dd5d9381e74995b028b94c86b48e3d63948e3db2b')
+b2sums=('59e1f1ae9dfc52a6cb22e090b13e3aecfb68f0592abb21ad7dca19db763ee2ff4524ed5b972cfb2534e119636443cc4f8a9de24c024b8a29a62af463a0d0c84b')
 
 build() {
-  cd "$pkgname-$pkgver"
-  python setup.py build
+  cd $_name-$pkgver
+  python -m build --wheel --no-isolation
 }
 
 check() {
-  cd "$pkgname-$pkgver"
-  export PYTHONPATH="build:${PYTHONPATH}"
+  cd $_name-$pkgver
+  export PYTHONPATH="build:$PYTHONPATH"
   pytest -v
 }
 
 package() {
-  cd "$pkgname-$pkgver"
-  python setup.py install --skip-build \
-                          --optimize=1 \
-                          --root="${pkgdir}"
-  install -vDm 644 {CHANGES.txt,README.rst} -t "${pkgdir}/usr/share/doc/${pkgname}"
-  install -vDm 644 LICENSE.txt -t "${pkgdir}/usr/share/licenses/${pkgname}"
+  cd $_name-$pkgver
+  python -m installer --destdir="$pkgdir" dist/*.whl
+  install -vDm 644 {CHANGES.txt,README.rst} -t "$pkgdir/usr/share/doc/$pkgname/"
+  install -vDm 644 LICENSE.txt -t "$pkgdir/usr/share/licenses/$pkgname/"
 }

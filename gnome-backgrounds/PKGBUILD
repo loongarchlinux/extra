@@ -1,27 +1,32 @@
-# Maintainer: Fabian Bornschein <fabiscafe-at-mailbox-dot-org>
+# Maintainer: Fabian Bornschein <fabiscafe@archlinux.org>
 # Maintainer: Jan Alexander Steffens (heftig) <heftig@archlinux.org>
 # Contributor: Jan de Groot <jgc@archlinux.org>
 
 pkgname=gnome-backgrounds
-pkgver=45.0
+pkgver=46.0
 pkgrel=1
 pkgdesc="Background images and data for GNOME"
 url="https://gitlab.gnome.org/GNOME/gnome-backgrounds"
 arch=(any)
-license=(CCPL:by-sa)
+license=(CC-BY-SA-3.0)
+depends=(libjxl)
 makedepends=(
   glib2
+  git
   meson
 )
 groups=(gnome)
-source=(https://download.gnome.org/sources/$pkgname/${pkgver%%.*}/$pkgname-$pkgver.tar.xz)
-b2sums=('f8ac82069fb6beb71c7776356c7d87e6b57c9de1c8dd1becdff6a60f22b73284b0231c10c6af5a64addb4a890704808c00757b5f71d6f3a9deeaf59d97441d88')
+_commit=8f907c75fffa246695334e72e794e16efbf7dd87  # tags/46.0^0
+source=("git+https://gitlab.gnome.org/GNOME/gnome-backgrounds.git#commit=$_commit")
+b2sums=('08d9105558fe73cbc6aef3c06b1a51dcd1350a7b8f238f3d7494c8f12b0bd5c7d0237c982b51cd6d18583074685c368c59a35ecf8de621f517ee53bd56e2cefa')
 
-# https://download.gnome.org/sources/gnome-backgrounds/
-sha256sums=('cee0e688fbae5ef7a75f335ada2d10779e08ebca9445f1586de32c5a9b6dee2d')
+pkgver() {
+  cd $pkgbase
+  git describe --tags | sed -r 's/\.([a-z])/\1/;s/([a-z])\./\1/;s/[^-]*-g/r&/;s/-/+/g'
+}
 
 build() {
-  arch-meson $pkgname-$pkgver build
+  arch-meson $pkgname build
   meson compile -C build
 }
 

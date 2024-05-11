@@ -2,32 +2,60 @@
 # Contributor: csslayer <wengxt AT gmail com>
 
 pkgname=libime
-pkgver=1.1.5
+pkgver=1.1.7
+_lmver=20230712
+_dictver=20240416
+_tablever=20240108
 pkgrel=1
 pkgdesc="A library to support generic input method implementation"
 arch=('loong64' 'x86_64')
 url="https://github.com/fcitx/libime"
-license=('GPL')
+license=('LGPL-2.1-or-later')
 depends=('boost-libs' 'fcitx5')
-makedepends=('boost' 'extra-cmake-modules' 'ninja' 'python')
-source=("https://download.fcitx-im.org/fcitx5/libime/libime-${pkgver}_dict.tar.xz"{,.sig})
-sha512sums=('d218025e5e40b87571a6285435c79d12f664ffef232bbb7a6698f99f36e62ee15e7d5da133fbc73e2b9b6443b6f5f7461f7b6f9feb3d18c49b8463d3aec786b2'
-            'SKIP')
+makedepends=('git' 'boost' 'extra-cmake-modules' 'ninja' 'python')
+source=("git+https://github.com/fcitx/libime.git#tag=$pkgver?signed"
+        "git+https://github.com/kpu/kenlm.git"
+        "https://download.fcitx-im.org/data/lm_sc.arpa-$_lmver.tar.xz"
+        "https://download.fcitx-im.org/data/dict-$_dictver.tar.zst"
+        "https://download.fcitx-im.org/data/table-$_tablever.tar.gz")
+noextract=("lm_sc.arpa-$_lmver.tar.xz"
+           "dict-$_dictver.tar.zst"
+           "table-$_tablever.tar.gz")
+sha512sums=('f53b27c26c882d266b0a5455bf26737a3f1f9d510a05c4bd67f4247d567a66af9a29e330777498ea2c86c5d3a0c448e9ef6e81f9bde05920b49c20967f47c4fa'
+            'SKIP'
+            '94c21052bbc2d8db2875a9daaa8b9b03326ec35082b829ec1891ac8f90032ecbe0740f902e624589a0539d8e59846c7f7779330403f2057e1997da49b83afcf6'
+            'e93e170f96e905c34d731832cd394254197e216f7d62607843f817d92ab3c4f77ce58d877446b56f121f5477874dea8bf08a81557660053bdc6dee29c6bad127'
+            '0268a4aaf7279e03938ec8165a57d92d7ef9f6cfd30be332eaa4286c5162754946d326444643c1a556ed615cc82c8851bb9a4d996ce432833c50ca23d2d6416a')
 validpgpkeys=('2CC8A0609AD2A479C65B6D5C8E8B898CBF2412F9') # Weng Xuetian <wengxt@gmail.com>
 
-build(){
-  cd $pkgname-$pkgver
+prepare() {
+  cd $pkgname
+  git submodule init
+  git config submodule.src/libime/kenlm.url "$srcdir"/kenlm
+  git -c protocol.file.allow=always submodule update
+
+  mv ../lm_sc.arpa-$_lmver.tar.xz data/
+  mv ../dict-$_dictver.tar.zst data/
+  mv ../table-$_tablever.tar.gz data/
+  # grep to make sure the version is correct
+  grep lm_sc.arpa-$_lmver.tar.xz data/CMakeLists.txt
+  grep dict-$_dictver.tar.zst data/CMakeLists.txt
+  grep table-$_tablever.tar.gz data/CMakeLists.txt
+}
+
+build() {
+  cd $pkgname
 
   cmake -GNinja -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_INSTALL_LIBDIR=/usr/lib .
   ninja
 }
 
 check() {
-  cd $pkgname-$pkgver
+  cd $pkgname
   ninja test
 }
 
 package() {
-  cd $pkgname-$pkgver
+  cd $pkgname
   DESTDIR="$pkgdir" ninja install
 }

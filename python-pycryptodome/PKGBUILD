@@ -4,7 +4,7 @@
 
 pkgname=python-pycryptodome
 pkgver=3.20.0
-pkgrel=1
+pkgrel=2
 license=('BSD')
 arch=('loong64' 'x86_64')
 pkgdesc="Collection of cryptographic algorithms and protocols, implemented for use from Python 3."
@@ -29,7 +29,8 @@ check() {
   cd pycryptodome-$pkgver
   python -m installer -d tmpinstall dist/*.whl
   python -m installer -d tmpinstall test_vectors/dist/*.whl
-  PYTHONPATH="$PWD/tmpinstall/usr/lib/python3.11/site-packages" python -m Crypto.SelfTest
+  local python_version=$(python -c 'import sys; print(".".join(map(str, sys.version_info[:2])))')
+  PYTHONPATH="$PWD/tmpinstall/usr/lib/python${python_version}/site-packages" python -m Crypto.SelfTest
 }
 
 package() {

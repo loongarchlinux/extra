@@ -5,17 +5,23 @@
 
 pkgbase=mediainfo
 pkgname=(mediainfo mediainfo-gui)
-pkgver=23.11
+pkgver=24.04
 pkgrel=1
 pkgdesc='Supplies technical and tag information about media files'
 arch=('loong64' 'x86_64')
 url='https://mediaarea.net'
-license=('BSD')
+license=('BSD-2-Clause')
 depends=("libmediainfo=$pkgver")
 makedepends=('wxwidgets-gtk3')
 source=("$pkgname-$pkgver.tar.gz::https://github.com/MediaArea/MediaInfo/archive/v$pkgver.tar.gz")
-sha512sums=('e5adb989bd9686d64c952794155993d7e7d9b0d81500e99cd9b7af61258bb71639ac1aa913dcd36ba51dca47e81ab8244de2bff37b603bd461cf13c42f59487a')
-b2sums=('9f0a1d1c0f9540be16963fb8f8d363f071efa25fcb2deb2494481d0eca58db79a29a6c5f8cc22eb01df30626ce44da7a0d921de24f6553e809e2588009445fa1')
+sha512sums=('33a539dfc870d3fb68a21fb2c4d44bbdd48f7d6403cd07b2c18b4fe477c3cd8191cd49be4bd980aea90954fb14ba5a522c968b9788e210c5bea542c7728e5861')
+b2sums=('d1dc75a6424be1cfe2ddd5da496ca3cea38cef2ffac1d750a47c6ea65a748ca52f5f492179fa9ade3f6b651f04ff55a380fe30e2508d4dabb023d08350499f12')
+
+prepare() {
+  cd MediaInfo-$pkgver
+# Install service menus in modern path
+  sed -e 's|kservices5/ServiceMenus|kio/servicemenus|g' -i Project/GNU/GUI/Makefile.am
+}
 
 build() {
   cd "MediaInfo-$pkgver"

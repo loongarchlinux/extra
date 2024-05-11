@@ -3,22 +3,29 @@
 _hkgname=cipher-aes128
 pkgname=haskell-cipher-aes128
 pkgver=0.7.0.6
-pkgrel=8
+pkgrel=9
 pkgdesc="AES and common modes using AES-NI when available."
 url="https://github.com/TomMD/cipher-aes128"
 license=('BSD')
 arch=('loong64' 'x86_64')
 depends=('ghc-libs' 'haskell-crypto-api' 'haskell-tagged' 'haskell-cereal')
 makedepends=('ghc')
-source=(https://hackage.haskell.org/packages/archive/${_hkgname}/${pkgver}/${_hkgname}-${pkgver}.tar.gz)
-sha512sums=('0cf5a7ef2a23e5ff22fc0304f5e774be0fa8688ef85e391c6d0d7ac2babf3ec8d581db9ca77daa640508ae897a691b1e04724b89b29dbcba6399a0ba882c1818')
+source=(https://hackage.haskell.org/packages/archive/${_hkgname}/${pkgver}/${_hkgname}-${pkgver}.tar.gz
+        cipher-aes128-ghc-9.2.patch)
+sha512sums=('0cf5a7ef2a23e5ff22fc0304f5e774be0fa8688ef85e391c6d0d7ac2babf3ec8d581db9ca77daa640508ae897a691b1e04724b89b29dbcba6399a0ba882c1818'
+            '84afa983676e97e21251bfd23defb932b38b0c4aa5c127b25262f34cfeb028d2e6690134b7dc6e70f3e3525023445faf714db0faaa0a035a51b4159ba9db95d7')
+
+prepare() {
+    cd $_hkgname-$pkgver
+    patch -p1 -i ../cipher-aes128-ghc-9.2.patch
+}
 
 build() {
     cd $_hkgname-$pkgver
     
     runhaskell Setup configure -O --enable-shared --enable-executable-dynamic --disable-library-vanilla \
         --prefix=/usr --docdir=/usr/share/doc/$pkgname --datasubdir=$pkgname \
-        --dynlibdir=/usr/lib --libsubdir=\$compiler/site-local/\$pkgid --ghc-option=-fllvm
+        --dynlibdir=/usr/lib --libsubdir=\$compiler/site-local/\$pkgid
     runhaskell Setup build $MAKEFLAGS
     runhaskell Setup register --gen-script
     runhaskell Setup unregister --gen-script

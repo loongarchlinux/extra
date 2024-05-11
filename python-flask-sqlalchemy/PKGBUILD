@@ -4,40 +4,41 @@
 
 _pyname=flask-sqlalchemy
 pkgname=python-flask-sqlalchemy
-pkgver=2.5.1
-pkgrel=5
+pkgver=3.0.5
+pkgrel=1
 pkgdesc='Adds SQLAlchemy support to your Flask application'
 url='http://flask-sqlalchemy.pocoo.org/'
 arch=('any')
-license=('BSD')
-depends=('python-flask' 'python-sqlalchemy')
-makedepends=('python-setuptools' 'python-sphinx' 'python-pallets-sphinx-themes' 'python-sphinx-issues')
-checkdepends=('python-pytest' 'python-blinker' 'python-mock')
-source=(${pkgname}-${pkgver}.tar.gz::https://github.com/mitsuhiko/flask-sqlalchemy/archive/${pkgver}.tar.gz
-        filter-warnings-test.patch)
-sha512sums=('6780213b959bbc43306bad97ff6d3bf120baeff26cdaeba84b98b1b5b288a78fcbe80884e5342e8907bdfd2a7acd87aa0a8e761018bf8662b9509c1227b443cd'
-            '9cc30ac4650bbd54ee44d3ce9be985edf8c23e1747bd608167afdedde400b7556096d608985e56033867453e0c196193506ba89f298b241fed0a68bc7c593513')
+license=('BSD-3-Clause')
+depends=('python' 'python-flask' 'python-sqlalchemy')
+makedepends=('python-build' 'python-installer' 'python-flit-core' 'python-sphinx' 'python-pallets-sphinx-themes' 'python-sphinx-issues')
+checkdepends=('python-pytest' 'python-blinker')
+source=(
+  ${pkgname}-${pkgver}.tar.gz::https://github.com/pallets-eco/flask-sqlalchemy/archive/${pkgver}.tar.gz
+)
+sha512sums=('f75008823ae84da4a0326d7909aaeeebafac8b5e25009b3802f00cc0ea14c9c600cfcde933dccc74e63a9f90bf6957e5375b8b82e80cb9f52b1bd52def534091')
 
 prepare() {
   sed -r "s|(release =)|\\1 '${pkgver}'  #|" -i ${_pyname}-${pkgver}/docs/conf.py
-  cd ${_pyname}-${pkgver}
-  patch -Np1 -i ${srcdir}/filter-warnings-test.patch
 }
 
 build() {
   cd ${_pyname}-${pkgver}
-  python setup.py build
-  make -j1 -C docs man text SPHINXBUILD=sphinx-build PYTHONPATH=..
+  python -m build --wheel --no-isolation
+  python -m installer --destdir=tmp_install dist/*.whl
+  PYTHONPATH="$PWD"/tmp_install/`python -c "import site; print(site.getsitepackages()[0])"` \
+  make -j1 -C docs man text SPHINXBUILD=sphinx-build
 }
 
 check() {
   cd ${_pyname}-${pkgver}
-  PYTHONPATH=".:${PYTHONPATH}" py.test -vs -Wignore --disable-pytest-warnings
+  PYTHONPATH="$PWD"/tmp_install/`python -c "import site; print(site.getsitepackages()[0])"` \
+  py.test -vs -Wignore --disable-pytest-warnings
 }
 
 package() {
   cd ${_pyname}-${pkgver}
-  python setup.py install --root="${pkgdir}" -O1 --skip-build
+  python -m installer --destdir="$pkgdir" dist/*.whl
   install -Dm 644 LICENSE.rst -t "${pkgdir}/usr/share/licenses/${pkgname}"
   install -Dm 644 CHANGES.rst README.rst  -t "${pkgdir}/usr/share/doc/${pkgname}"
   cp -r docs/_build/text "${pkgdir}/usr/share/doc/${pkgname}/text"

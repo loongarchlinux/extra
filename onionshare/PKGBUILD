@@ -3,37 +3,62 @@
 # Contributor: Ye Shu <shuye02 at outlook.com>
 
 pkgname=onionshare
-pkgver=2.6
+pkgver=2.6.2
 pkgrel=2
 pkgdesc='Share a file over Tor Hidden Services anonymously and securely'
 url='https://github.com/onionshare/onionshare'
 arch=('any')
-license=('GPL3')
-depends=('python' 'hicolor-icon-theme' 'tor' 'stem' 'python-requests' 'python-pysocks' 'python-flask' 'python-flask-httpauth' 'python-flask-socketio' 'python-gevent-websocket' 'python-psutil' 'python-pycryptodome' 'python-pyqt5' 'python-qrcode' 'python-unidecode' 'python-colorama' 'pyside2')
-makedepends=('python-setuptools')
+license=('GPL-3.0-only')
+depends=(
+  'hicolor-icon-theme'
+  'pyside6'
+  'python'
+  'python-colorama'
+  'python-flask'
+  'python-flask-compress'
+  'python-flask-socketio'
+  'python-packaging'
+  'python-psutil'
+  'python-pynacl'
+  'python-pysocks'
+  'python-qrcode'
+  'python-requests'
+  'python-setuptools'
+  'python-unidecode'
+  'python-waitress'
+  'python-werkzeug'
+  'stem'
+  'tor'
+)
+makedepends=(
+  'python-build'
+  'python-installer'
+  'python-poetry'
+  'python-wheel'
+)
 optdepends=(
   'python-nautilus: enable Nautilus right-click extension'
 )
-checkdepends=('python-pytest')
-source=(https://github.com/onionshare/${pkgname}/releases/download/v${pkgver}/${pkgname}-${pkgver}.tar.gz
-        https://github.com/onionshare/${pkgname}/releases/download/v${pkgver}/${pkgname}-${pkgver}.tar.gz.asc
+checkdepends=(
+  'python-pytest'
 )
-sha512sums=('8764688c902aab1681eb3c00e6bbf779fa1f419d96852ecd091da3d5bd60d86759835da21d06510c2d7f4456e1f7fb0014d5df0b9533f736ae2ff596a53ec75e'
-            'SKIP')
-b2sums=('43ab80d23b1b169d94fd9511298f282f9b61f61026bdb46c14b4f02315564898e8de919ba3c1737e96343fe0ddc2bf6737fbcdf9ce3f4c5cff16b58381a86314'
-        'SKIP')
+source=("${pkgname}-${pkgver}.tar.gz::https://github.com/onionshare/onionshare/archive/refs/tags/v${pkgver}.tar.gz")
+sha512sums=('544b288fbab26ea74fb4a23fb9e390ebf4b0a8854677f7dccfa1d2bf5119cc6fe539e7737cb926beb7ce31d08b45077011d9155926d7b52b5672c5c564684692')
+b2sums=('e9a85206a69c2c97b55d3f27afd231610b7272973868c0b359ea88f6f623fd1e68b9997f58b256f96c3e977aec6ce1eb1b54a687c79b939f5c3938c5a841f760')
 
-validpgpkeys=('927F419D7EC82C2F149C1BD1403C2657CD994F73')
+prepare() {
+  sed -i '/^onionshare-cli = /d' ${pkgname}-${pkgver}/desktop/pyproject.toml
+}
 
 build() {
-  cd ${pkgname}/cli
-  python setup.py build
+  cd ${pkgname}-${pkgver}/cli
+  python -m build --wheel --no-isolation
   cd ../desktop
-  python setup.py build
+  python -m build --wheel --no-isolation
 }
 
 check() {
-  cd ${pkgname}
+  cd ${pkgname}-${pkgver}
   pushd cli
   PYTHONPATH=".:${PYTHONPATH}" pytest tests/
   popd
@@ -42,14 +67,13 @@ check() {
 }
 
 package() {
-  cd ${pkgname}/cli
-  python setup.py install --skip-build -O1 --root="${pkgdir}"
-  cd ../desktop
-  python setup.py install --skip-build -O1 --root="${pkgdir}"
+  cd ${pkgname}-${pkgver}
+  python -m installer --destdir="${pkgdir}" cli/dist/*.whl
+  python -m installer --destdir="${pkgdir}" desktop/dist/*.whl
 
-  install -Dm 644 org.onionshare.OnionShare.desktop -t "${pkgdir}/usr/share/applications/"
-  install -Dm 644 org.onionshare.OnionShare.svg -t "${pkgdir}/usr/share/icons/hicolor/scalable/apps/"
-  install -Dm 644 org.onionshare.OnionShare.appdata.xml -t "${pkgdir}/usr/share/metainfo/"
+  install -Dm 644 desktop/org.onionshare.OnionShare.desktop -t "${pkgdir}/usr/share/applications/"
+  install -Dm 644 desktop/org.onionshare.OnionShare.svg -t "${pkgdir}/usr/share/icons/hicolor/scalable/apps/"
+  install -Dm 644 desktop/org.onionshare.OnionShare.appdata.xml -t "${pkgdir}/usr/share/metainfo/"
 }
 
 # vim: ts=2 sw=2 et:

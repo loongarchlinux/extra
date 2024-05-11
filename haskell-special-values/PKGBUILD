@@ -3,22 +3,27 @@
 _hkgname=special-values
 pkgname=haskell-special-values
 pkgver=0.1.0.0
-pkgrel=197
+pkgrel=202
 pkgdesc="Typeclass providing special values"
 url="https://github.com/minad/special-values"
 license=('MIT')
 arch=('loong64' 'x86_64')
 depends=('ghc-libs' 'haskell-ieee754' 'haskell-scientific')
-makedepends=('ghc')
+makedepends=('ghc' 'uusi')
 source=(https://hackage.haskell.org/packages/archive/${_hkgname}/${pkgver}/${_hkgname}-${pkgver}.tar.gz)
 sha512sums=('e45d4f04b3c50261077d084f9525677739543cad624870c4a28c5c6630a355d7c5def400031191d6f69e617856ffeb0ecc562a7d04df3bed827a7c93f0cf63cc')
+
+prepare() {
+    cd $_hkgname-$pkgver
+    uusi -u bytestring
+}
 
 build() {
     cd $_hkgname-$pkgver
 
     runhaskell Setup configure -O --enable-shared --enable-executable-dynamic --disable-library-vanilla \
         --prefix=/usr --docdir=/usr/share/doc/$pkgname --datasubdir=$pkgname --enable-tests \
-        --dynlibdir=/usr/lib --libsubdir=\$compiler/site-local/\$pkgid --ghc-option=-fllvm
+        --dynlibdir=/usr/lib --libsubdir=\$compiler/site-local/\$pkgid
     runhaskell Setup build $MAKEFLAGS
     runhaskell Setup register --gen-script
     runhaskell Setup unregister --gen-script

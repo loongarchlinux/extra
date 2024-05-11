@@ -3,25 +3,29 @@
 
 pkgname=gpodder
 pkgver=3.11.4
-pkgrel=1
+pkgrel=4
 pkgdesc='Podcast client written in Python using GTK'
 arch=('any')
 url='https://gpodder.github.io/'
 license=('GPL3')
 depends=('gtk3' 'python-cairo' 'dbus-python' 'python-gobject' 'python-mygpoclient'
          'python-podcastparser' 'python-requests')
-makedepends=('intltool')
+makedepends=('intltool' 'python-setuptools')
 optdepends=('libnotify: Gtk+ Desktop Notifications extension'
             'python-mutagen: Tag downloaded files, Remove cover art from OGG files extensions'
             'webkit2gtk: HTML show notes'
-            'youtube-dl: Youtube-dl extension')
-source=("https://github.com/gpodder/$pkgname/archive/$pkgver/$pkgname-$pkgver.tar.gz")
-sha256sums=('8022a6c29157dc287b5661f8915d04404767c33b6858e8d1a6c728904f8dae55')
+            'yt-dlp: Youtube-dl extension')
+source=("https://github.com/gpodder/$pkgname/archive/$pkgver/$pkgname-$pkgver.tar.gz"
+        "gpodder-3_11_4-fix-imp-module.patch::https://github.com/gpodder/gpodder/commit/dd9b594d24a541c0f1d3b096e47b6d7f1c11ca7e.patch")
+sha256sums=('8022a6c29157dc287b5661f8915d04404767c33b6858e8d1a6c728904f8dae55'
+            '974704a51dff3d5b727fe897e72e8d7994715f9a55d4dd0ca3a2f4742a950609')
 
 prepare() {
   cd $pkgname-$pkgver
   # Use gio open directly instead of xdg-open
   sed -i "s/\['xdg-open', filename\]/['gio', 'open', filename]/" src/gpodder/util.py
+
+  patch -Np1 < "${srcdir}/gpodder-3_11_4-fix-imp-module.patch"
 }
 
 build() {

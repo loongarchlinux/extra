@@ -4,7 +4,7 @@
 pkgname=python-tappy
 _pyname=tap.py
 pkgver=3.1
-pkgrel=4
+pkgrel=5
 pkgdesc="Test Anything Protocol (TAP) tools for Python"
 arch=(any)
 url="https://pypi.python.org/pypi/tap.py"

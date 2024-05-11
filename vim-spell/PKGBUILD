@@ -2,15 +2,24 @@
 # Contributor: Gaetan Bisson <bisson@archlinux.org>
 
 pkgbase=vim-spell
-pkgver=20200604
-pkgrel=4
+pkgver=20220628
+pkgrel=1
 pkgdesc='Language files for Vim spell checking'
 arch=(any)
 url='http://ftp.vim.org/pub/vim/runtime/spell'
-license=(LGPL2.1 custom)
+license=(LGPL-2.1-only)
 depends=(vim)
 
-#pkgname=($(curl $url | awk '(!/\./&&!/check/){print "vim-spell-"$NF}'))
+# bash
+# source PKGBUILD
+# _pkgname
+_pkgname() {
+        curl $url |
+                hq a text |
+                awk '(/\/$/&&!/check/){print "vim-spell-"$NF}' |
+                sed s,/,,
+}
+
 pkgname=(vim-spell-af
          vim-spell-am
          vim-spell-bg
@@ -64,16 +73,12 @@ pkgname=(vim-spell-af
          vim-spell-yi
          vim-spell-zu)
 
-for _i in ${pkgname[@]}; do
-	_j=${_i/vim-spell-/}
-	eval "package_$_i() {
-		pkgdesc+=\" ($_j)\"
-		install -Dm0644 -t \"\$pkgdir/usr/share/vim/vimfiles/spell\" $_j.*
-		install -Dm0644 -t \"\$pkgdir/usr/share/licenses/$_i/\" README_$_j.txt ||:
-	}"
-done
+_source() {
+        curl $url |
+                hq a text |
+                rg '\.(txt|spl|sug|vim)$'
+}
 
-#_source=($(curl $url | awk '(/\./){print "'$url'"$NF}'))
 _source=(README.txt
          README_af.txt
          README_am.txt
@@ -219,7 +224,6 @@ _source=(README.txt
          lt.utf-8.spl
          lv.iso-8859-13.spl
          lv.utf-8.spl
-         main.aap
          mg.latin1.spl
          mg.latin1.sug
          mg.utf-8.spl
@@ -448,7 +452,6 @@ sha256sums=('48454f614832caa6b861c0b2f85f40e27ee985e25267e44dfceb4301a82397fe'
             '9aada7fb91a622a0589375435e538f1672177872807713cdae00b6125d397609'
             '78a1c06245ce003a74ce83b10abda8937f2850e72e6a5c917292c6510e4de433'
             'ead53a2f16ccc0de517ac4af9ac2884779647f2786fb68e35671511bf9c28817'
-            '3f4dfd217e9ee8a68d186391e403332256a31ee15a6031d92df361789bcce00d'
             'fa5915451b904c62930aa711e66c0fc980293a1460b66ff05e1252c525725a9b'
             '994445b822a5f2a73f0897594e56d2b6cdd6edab9ed81e8ff29324e8ae40abc4'
             '146340cd3415168f3b0b90696ef9b62dce910fbfdb4b596e001b08b2ee3c0b18'
@@ -530,3 +533,12 @@ sha256sums=('48454f614832caa6b861c0b2f85f40e27ee985e25267e44dfceb4301a82397fe'
             '2e403223b2a0da57eb392ee8277aeb364f63700848c41018029867129c65b249'
             '7f8ee3a1531cb4c1cfb44e5e79a43f67a6faa1620d1dcd5aff39e1813a99d7df'
             'd2b5971f63d5df5ed5c529db814d26db31fd4fe9c702e14815e7ba744447ea96')
+
+for _i in ${pkgname[@]}; do
+	_j=${_i/vim-spell-/}
+	eval "package_$_i() {
+		pkgdesc+=\" ($_j)\"
+		install -Dm0644 -t \"\$pkgdir/usr/share/vim/vimfiles/spell\" $_j.*
+		install -Dm0644 -t \"\$pkgdir/usr/share/licenses/$_i/\" README_$_j.txt ||:
+	}"
+done

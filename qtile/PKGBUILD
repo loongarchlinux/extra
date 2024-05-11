@@ -1,8 +1,7 @@
 # Maintainer: David Runge <dvzrv@archlinux.org>
 
 pkgname=qtile
-pkgver=0.24.0
-_commit=27255f207c4fed5df0b6d7319a18c001f7e885f7  # refs/tags/v0.24.0
+pkgver=0.25.0
 pkgrel=2
 pkgdesc="A full-featured, pure-Python tiling window manager"
 arch=(loong64 x86_64)
@@ -74,9 +73,9 @@ optdepends=(
   'xorg-xwayland: for XWayland support'
 )
 install=$pkgname.install
-source=("git+$_url#tag=$_commit?signed")
-sha512sums=('SKIP')
-b2sums=('SKIP')
+source=("git+$_url?signed#tag=v$pkgver")
+sha512sums=('d1cebce6cd647235f2963d29aa504eda40000499797aaeff87e1f09bbb840077a3f5cf3060c86aea23074f7ae1ead1a1f9c775a7a12627a463f3ca95a0f8ed76')
+b2sums=('e59759158fa745a3f5f0a4abd319d242858a6500a4ff8f6911cf85cdefa383b06fd5853ac60a2b4252b7b8352bd793483098803e8ee7d0ea3053687dccc19847')
 validpgpkeys=(
   '3CCAB226289DE0160C61BDB418D18F1BC464DCA3' # Tycho Andersen <tycho@tycho.pizza>
   '35D92E7CC7357A81173EA1C974F9FDD20984FBEC' # Matt Colligan <mcol@posteo.net>
@@ -86,6 +85,11 @@ validpgpkeys=(
 pkgver() {
   cd $pkgname
   git describe --tags | sed 's/\([^-]*-g\)/r\1/;s/-/./g;s/v//g'
+}
+
+prepare() {
+  # adjust group used for udev rules from sudo to wheel
+  sed 's/sudo/wheel/g' -i $pkgname/resources/99-$pkgname.rules
 }
 
 build() {
@@ -101,6 +105,13 @@ check() {
     -vv
     --backend x11
     --backend wayland
+    # disable failing tests: https://github.com/qtile/qtile/issues/4762
+    --deselect test/backend/x11/test_window.py::test_urgent_hook_fire[wayland-2]
+    --deselect test/widgets/test_clock.py::test_clock_datetime_timezone
+    --deselect test/widgets/test_clock.py::test_clock_pytz_timezone
+    --deselect test/widgets/test_clock.py::test_clock_dateutil_timezone
+    --deselect test/widgets/test_clock.py::test_clock_change_timezones
+
   )
   local _site_packages=$(python -c "import site; print(site.getsitepackages()[0])")
 
@@ -125,6 +136,8 @@ package() {
   # desktop files
   install -vDm 644 "resources/$pkgname.desktop" -t "$pkgdir/usr/share/xsessions/"
   install -vDm 644 "resources/$pkgname-wayland.desktop" -t "$pkgdir/usr/share/wayland-sessions/"
+  # udev rules
+  install -vDm 644 resources/99-$pkgname.rules -t "$pkgdir/usr/lib/udev/rules.d/"
   # docs
   install -vDm 644 {CHANGELOG,README.rst} -t "$pkgdir/usr/share/doc/$pkgname/"
 }

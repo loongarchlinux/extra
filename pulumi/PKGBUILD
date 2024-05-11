@@ -3,7 +3,7 @@
 # Contributor: Christoph Gysin <christoph.gysin@gmail.com>
 
 pkgname=pulumi
-pkgver=3.104.0
+pkgver=3.115.2
 pkgrel=1
 pkgdesc='Modern Infrastructure as Code'
 arch=('loong64' 'x86_64')
@@ -12,8 +12,8 @@ license=('Apache')
 depends=('glibc')
 makedepends=('go')
 source=("$pkgname-$pkgver.tar.gz::$url/archive/v$pkgver.tar.gz")
-b2sums=('c61e3d8555fed3ca21bcaade5353a477cf3bb6f52c028bb0f04c7a4dff744c64123f90e81c700a1015d4277d4f4bcb346d1197ea59b8aeb914e5ae97175cf6f8')
-options=('!lto') # disable as soon as LTO problems are resolved
+b2sums=('f1b167690caaa14cb711d672b93c9f1949a8103c430566dbc4b344adc2a9c8cc02e907e5db4ad9d76fff449c9e86a30431687fde6d223f6b89668622e7a3efe1')
+options=() # disable as soon as LTO problems are resolved
 
 _plugin_dirs=(
   "python/cmd/pulumi-language-python"
@@ -33,7 +33,8 @@ build() {
   # Build the `pulumi` executable
   cd "${srcdir}/${pkgname}-${pkgver}/pkg"
   go build \
-    -ldflags "-X github.com/pulumi/pulumi/pkg/v${pkgver%%.*}/version.Version=${pkgver} -extldflags ${LDFLAGS}" \
+    -ldflags "-linkmode external
+              -X github.com/pulumi/pulumi/pkg/v${pkgver%%.*}/version.Version=${pkgver}" \
     -o "${srcdir}/${pkgname}-${pkgver}/bin/${pkgname}" \
     "./cmd/${pkgname}" \
 
@@ -45,7 +46,8 @@ build() {
     cd "${plugin_dir}"
 
     go build \
-      -ldflags "-X github.com/pulumi/pulumi/sdk/v${pkgver%%.*}/version.Version=${pkgver} -extldflags ${LDFLAGS}" \
+      -ldflags "-linkmode external
+                -X github.com/pulumi/pulumi/sdk/v${pkgver%%.*}/version.Version=${pkgver}" \
       -o "${srcdir}/${pkgname}-${pkgver}/bin/${plugin_name}" \
       .
 

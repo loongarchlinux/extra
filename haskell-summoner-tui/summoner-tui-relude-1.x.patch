@@ -1,0 +1,80 @@
+From 0e9343880171b81e515bc7bfebe8c6156330f9f2 Mon Sep 17 00:00:00 2001
+From: Dmitrii Kovanikov <kovanikov@gmail.com>
+Date: Sun, 14 Mar 2021 12:57:44 +0000
+Subject: [PATCH] Migrate to relude 1.0 (#541)
+
+* Migrate to relude 1.0
+
+* Fix more compilation errors
+---
+ summoner-tui/src/Summoner/Tui.hs            |  1 -
+ summoner-tui/src/Summoner/Tui/Form.hs       |  1 -
+ summoner-tui/src/Summoner/Tui/Validation.hs |  1 -
+ summoner-tui/summoner-tui.cabal             |  9 ++++-----
+ 4 files changed, 6 insertions(+), 10 deletions(-)
+
+diff --git a/summoner-tui/src/Summoner/Tui.hs b/summoner-tui/src/Summoner/Tui.hs
+index 28c4b4ad..7255baea 100644
+--- a/summoner-tui/src/Summoner/Tui.hs
++++ b/summoner-tui/src/Summoner/Tui.hs
+@@ -32,7 +32,6 @@ import Brick.Widgets.Edit (editAttr, editFocusedAttr)
+ import Brick.Widgets.List (listSelectedAttr, listSelectedFocusedAttr)
+ import Colourista (errorMessage, infoMessage)
+ import Lens.Micro ((.~), (^.))
+-import Relude.Extra.Enum (universe)
+ import System.Directory (doesDirectoryExist, doesFileExist, getCurrentDirectory, listDirectory)
+ 
+ import Summoner.CLI (Command (..), NewOpts (..), ShowOpts (..), getCustomLicenseText,
+diff --git a/summoner-tui/src/Summoner/Tui/Form.hs b/summoner-tui/src/Summoner/Tui/Form.hs
+index 944d9237..e91a5f71 100644
+--- a/summoner-tui/src/Summoner/Tui/Form.hs
++++ b/summoner-tui/src/Summoner/Tui/Form.hs
+@@ -23,7 +23,6 @@ import Brick.Focus (focusGetCurrent)
+ import Brick.Forms (Form, editField, editTextField, formFocus, formState, listField, newForm,
+                     setFieldConcat, setFormConcat, setFormFocus, (@@=))
+ import Lens.Micro ((^.))
+-import Relude.Extra.Enum (universe)
+ 
+ import Summoner.Default (defaultGHC)
+ import Summoner.GhcVer (parseGhcVer, showGhcVer)
+diff --git a/summoner-tui/src/Summoner/Tui/Validation.hs b/summoner-tui/src/Summoner/Tui/Validation.hs
+index 75c06a4a..1c19da8f 100644
+--- a/summoner-tui/src/Summoner/Tui/Validation.hs
++++ b/summoner-tui/src/Summoner/Tui/Validation.hs
+@@ -21,7 +21,6 @@ module Summoner.Tui.Validation
+ 
+ import Brick.Forms (formState, invalidFields, setFieldValid, setFormFocus)
+ import Lens.Micro (Lens', (%~), (.~), (^.))
+-import Relude.Extra.Enum (universe)
+ import Validation (Validation (..))
+ 
+ import Summoner.Text (moduleNameValid, packageNameValid, packageToModule)
+diff --git a/summoner-tui/summoner-tui.cabal b/summoner-tui/summoner-tui.cabal
+index 73d8ff61..73bac662 100644
+--- a/summoner-tui/summoner-tui.cabal
++++ b/summoner-tui/summoner-tui.cabal
+@@ -27,12 +27,12 @@ source-repository head
+ 
+ common common-options
+   build-depends:       base >= 4.11 && < 4.15
+-                     , relude ^>= 0.7.0.0
++                     , relude ^>= 1.2.0.0
+ 
+   mixins:              base hiding (Prelude)
+-                     , relude (Relude as Prelude
+-                              , Relude.Extra.Enum
+-                              )
++                     , relude (Relude as Prelude)
++                     , relude
++
+   ghc-options:         -Wall
+                        -Wcompat
+                        -Widentities
+@@ -85,7 +85,6 @@ library
+                      , microlens ^>= 0.4
+                      , microlens-th ^>= 0.4
+                      , summoner ^>= 2.0.0.0
+-                     , text ^>= 1.2.3.0
+                      , validation-selective >= 0.0.0.0 && < 0.2
+                      , vty >= 5.25 && < 5.32
+ 

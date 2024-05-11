@@ -5,21 +5,27 @@
 
 pkgname=python-bottleneck
 pkgver=1.3.7
-pkgrel=2
+pkgrel=4
 pkgdesc="Fast NumPy array functions written in Cython"
 arch=(loong64 x86_64)
 url="https://github.com/kwgoodman/bottleneck"
-license=(BSD)
+license=(BSD-2-Clause)
 depends=(python-numpy)
-makedepends=(python-setuptools)
+makedepends=(python-setuptools python-build python-installer python-wheel python-versioneer)
 checkdepends=(python-pytest)
 #source=(${url}/archive/v${pkgver}/${pkgname}-${pkgver}.tar.gz)
 source=($pkgname-$pkgver.tar.gz::${url}/archive/refs/tags/v${pkgver}.tar.gz) # https://bugs.archlinux.org/task/77683
 sha256sums=('12bd41b798b752d579d062b932aea4acc8a13729983b43ae7fcae1a0ec110c87')
 
+prepare() {
+  cd bottleneck-${pkgver}
+  # Drop build requirement on oldest-supported-numpy
+  sed -i '/oldest-supported-numpy/d' pyproject.toml
+}
+
 build() {
   cd bottleneck-${pkgver}
-  python setup.py build
+  python -m build --wheel --no-isolation
 }
 
 check() {
@@ -31,6 +37,6 @@ check() {
 
 package() {
   cd bottleneck-${pkgver}
-  python setup.py install --skip-build --root="${pkgdir}" --optimize=1
+  python -m installer --destdir="$pkgdir" dist/*.whl
   install -Dm644 LICENSE -t "${pkgdir}"/usr/share/licenses/${pkgname}/
 }

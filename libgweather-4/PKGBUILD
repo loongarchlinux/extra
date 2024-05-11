@@ -6,15 +6,19 @@ pkgname=(
   libgweather-4
   libgweather-4-docs
 )
-pkgver=4.4.0
-pkgrel=2
+pkgver=4.4.2
+pkgrel=1
 pkgdesc="Location and timezone database and weather-lookup library"
 url="https://wiki.gnome.org/Projects/LibGWeather"
 arch=(loong64 x86_64)
-license=(LGPL)
+license=(GPL-2.0-or-later)
 depends=(
   dconf
+  gcc-libs
   geocode-glib-2
+  glib2
+  glibc
+  json-glib
   libsoup3
   libxml2
 )
@@ -27,12 +31,12 @@ makedepends=(
   vala
 )
 checkdepends=(python-pylint)
-_commit=04da97b8f86b1d10540f7d907841bfb5fde6bd2d  # tags/4.4.0^0
+_commit=4b589e02df295b4932c122bf9328c5b2437b8d17  # tags/4.4.2^0
 source=(
   "git+https://gitlab.gnome.org/GNOME/libgweather.git#commit=$_commit"
   disable-metar-test.diff
 )
-b2sums=('SKIP'
+b2sums=('5403d04f881ef3234063b03286d8e584a17b752a7e74121fd485d4f7591327727bd3b66bfcd837e44a21d76bd91792c4b96cc4b0d0d0e6d02789f9bf51ab14a4'
         '3d920f17e3f82bd33791b1e9662242f90a13e3cb3832fea5b900046b0ad90f97c5cf8174a6e5905b134585f280706ab67d3b65c108ed99c8285e3f05293b2b73')
 
 pkgver() {
@@ -42,10 +46,6 @@ pkgver() {
 
 prepare() {
   cd libgweather
-
-  # metar: update dataserver URL
-  # https://gitlab.gnome.org/GNOME/libgweather/-/commit/e62b4f1790c525af6d565a2d6adf8a178e9e7153
-  git cherry-pick -n e62b4f1790c525af6d565a2d6adf8a178e9e7153
 
   # Disable metar test, depends on unstable online service
   git apply -3 ../disable-metar-test.diff

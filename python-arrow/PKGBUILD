@@ -2,12 +2,14 @@
 # Contributor: Tatsuyuki Ishi <ishitatsuyuki@gmail.com>
 
 pkgname=python-arrow
+_name="${pkgname#python-}"
 pkgver=1.3.0
-pkgrel=1
+pkgrel=3
 pkgdesc='Better dates and times for Python'
 arch=(any)
 url=https://arrow.readthedocs.io
-license=(APACHE)
+_url=https://github.com/arrow-py/arrow
+license=(Apache-2.0)
 depends=(
   python
   python-dateutil
@@ -19,28 +21,27 @@ makedepends=(
   python-flit-core
   python-installer
 )
-checkdepends=(python-tox)
-_tag=87a1a774aad0505d9da18ad1d16f6e571f262503
-source=(git+https://github.com/crsmithdev/arrow.git#tag=${_tag})
-sha256sums=(SKIP)
-
-pkgver() {
-  cd arrow
-  git describe --tags
-}
+checkdepends=(
+  python-pytest
+  python-pytest-mock
+  python-pytz
+  python-simplejson
+)
+source=($pkgname-$pkgver.tar.gz::$_url/archive/refs/tags/$pkgver.tar.gz)
+sha256sums=('108c9d0339dbb06f6a255d1e8399a9bd88ec53ae6ede044b4ca7b3c563184a1b')
 
 build() {
-  cd arrow
+  cd $_name-$pkgver
   python -m build --wheel --no-isolation
 }
 
 check() {
-  cd arrow
-  tox -e py311
+  cd $_name-$pkgver
+  pytest -vv -o addopts=''
 }
 
 package() {
-  python -m installer --destdir="${pkgdir}" arrow/dist/*.whl
+  python -m installer --destdir="${pkgdir}" $_name-$pkgver/dist/*.whl
 }
 
 # vim: ts=2 sw=2 et:

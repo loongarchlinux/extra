@@ -5,8 +5,8 @@
 # Contributor: Dobroslaw Kijowski
 
 pkgname=mitmproxy
-pkgver=10.2.2
-pkgrel=1
+pkgver=10.2.4
+pkgrel=3
 pkgdesc='SSL-capable man-in-the-middle HTTP proxy'
 arch=('any')
 url='https://mitmproxy.org'
@@ -39,7 +39,6 @@ depends=(
   'python-ruamel-yaml'
   'python-sortedcontainers'
   'python-tornado'
-  'python-typing_extensions'
   'python-urwid'
   'python-werkzeug'
   'python-wsproto'
@@ -52,7 +51,6 @@ makedepends=(
   'python-wheel'
 )
 checkdepends=(
-  'python-asynctest'
   'python-hypothesis'
   'python-parver'
   'python-pytest-asyncio'
@@ -63,8 +61,8 @@ provides=('pathod')
 conflicts=('pathod')
 replaces=('pathod')
 source=("https://github.com/mitmproxy/mitmproxy/archive/$pkgver/$pkgname-$pkgver.tar.gz")
-sha256sums=('04125906ec8b34c9ebb381ac2bdfe5f7bd00db859288e78b4a5e6c79a6a57e6e')
-b2sums=('d22b89e69a8fa5afb5975a4adec3ca22a9ba8dd974e4f84dbb6126d4cd203dd35be0ba95a840f8935df55a3dad30966a8cfa7106ba74debff5732f96ac883d83')
+sha256sums=('0792149add6660ae858b7d1151a63250a8f170933850aaa77f08a8d8a397b873')
+b2sums=('d038db3efa0c3caab7613c98fbbdb39f20112715495d67fa5633621f3ec1049171f55c455956870f9b19e5619c539829da78ca10f99f36b5980aa57104e4da05')
 
 build() {
   cd $pkgname-$pkgver
@@ -77,9 +75,7 @@ check() {
   cd $pkgname-$pkgver
   python -m installer --destdir=test_dir dist/*.whl
 
-  PATH="test_dir/usr/bin:$PATH" PYTHONPATH="test_dir/$_site_packages:$PYTHONPATH" pytest -vv \
-    --deselect test/mitmproxy/proxy/layers/test_tls.py::TestServerTLS::test_remote_speaks_no_tls \
-    --deselect test/mitmproxy/proxy/layers/test_tls.py::TestClientTLS::test_mitmproxy_ca_is_untrusted
+  PATH="test_dir/usr/bin:$PATH" PYTHONPATH="test_dir/$_site_packages:$PYTHONPATH" pytest -vv
 }
 
 package() {

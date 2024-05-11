@@ -2,7 +2,7 @@
 
 pkgname=python-hunter
 pkgver=3.6.0
-pkgrel=1
+pkgrel=2
 arch=('loong64' 'x86_64')
 pkgdesc='Hunter is a flexible code tracing toolkit'
 license=('BSD')
@@ -33,6 +33,7 @@ build() {
 check() {
   # Hack to process .pth files properly
   # ptrace needed to pass the remote tests
+  local python_version=$(python -c 'import sys; print("".join(map(str, sys.version_info[:2])))')
 
   cd python-hunter-$pkgver
   python tests/setup.py build_ext --inplace
@@ -40,11 +41,11 @@ check() {
   (
     . "$srcdir/pyvenv/bin/activate"
     python setup.py install
-    PYTHONPATH="$PWD/build/lib.linux-$CARCH-cpython-311" PATH="$srcdir/pyvenv/bin:$PATH" pytest
+    PYTHONPATH="$PWD/build/lib.linux-$CARCH-cpython-${python_version}" PATH="$srcdir/pyvenv/bin:$PATH" pytest
   ) || :
 
   # Clean up to prevent it from being installed
-  rm build/lib.linux-$CARCH-cpython-311/*.so
+  rm build/lib.linux-$CARCH-cpython-${python_version}/*.so
 }
 
 package() {

@@ -4,13 +4,14 @@
 pkgname=python-pyxattr
 _pkgname=pyxattr
 pkgver=0.8.1
-pkgrel=1
+pkgrel=2
 pkgdesc='A Python extension module that allows you to manipulate the extended attributes.'
 arch=('loong64' 'x86_64')
 url='https://pyxattr.k1024.org/'
 license=('GPL')
 makedepends=('python' 'python-pytest' 'python-setuptools')
 depends=('python')
+checkdepends=('python-pytest')
 source=("https://pyxattr.k1024.org/downloads/pyxattr-$pkgver.tar.gz"{,.asc})
 sha512sums=('98ba196b29b431ecacf0257712aa219175ba030e1c62fb388b4f3109d2d6b14ef09ed38f85177bd2991d3109c0af4cd2a108d17886dd51549e817727714f72f1'
             'SKIP')
@@ -23,7 +24,8 @@ build() {
 
 check() {
 	cd "${srcdir}/${_pkgname}-${pkgver}"
-	python setup.py test
+	local python_version=$(python -c 'import sys; print("".join(map(str, sys.version_info[:2])))')
+	PYTHONPATH="$PWD/build/lib.linux-$CARCH-cpython-${python_version}" pytest
 }
 
 package() {

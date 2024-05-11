@@ -1,0 +1,33 @@
+# Maintainer: Robin Candau <antiz@archlinux.org>
+# Contributor: Luca Weiss <luca (at) z3ntu (dot) xyz>
+# Contributor: Maxim Baz <$pkgname at maximbaz dot com>
+# Contributor: Christoph Gysin <christoph.gysin@gmail.com>
+
+pkgname=python-dasbus
+_pkgname=dasbus
+pkgver=1.7
+pkgrel=3
+pkgdesc="DBus library in Python 3"
+arch=('any')
+url="https://github.com/rhinstaller/dasbus"
+license=('LGPL-2.1-only')
+depends=('python' 'python-gobject' 'dbus' 'glib2')
+makedepends=('python-build' 'python-installer' 'python-wheel' 'python-setuptools')
+checkdepends=('python-pytest')
+source=("${_pkgname}-${pkgver}.tar.gz::${url}/archive/v${pkgver}.tar.gz")
+sha256sums=('442a8df9330d4f55704c92cbed066cf0918378418be89d6fff67721d3cba5590')
+
+build() {
+	cd "${_pkgname}-${pkgver}"
+	python -m build --wheel --no-isolation
+}
+
+check() {
+	cd "${_pkgname}-${pkgver}"
+    	pytest
+}
+
+package() {
+	cd "${_pkgname}-${pkgver}"
+	python -m installer --destdir="${pkgdir}" dist/*.whl
+}

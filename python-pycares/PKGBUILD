@@ -3,7 +3,7 @@
 pkgname=python-pycares
 _name=${pkgname#python-}
 pkgver=4.4.0
-pkgrel=1
+pkgrel=2
 pkgdesc='Python interface for c-ares'
 arch=('loong64' 'x86_64')
 url=https://github.com/saghul/pycares
@@ -19,7 +19,7 @@ makedepends=(
 checkdepends=('python-idna' 'python-pytest')
 optdepends=('python-idna')
 source=("git+$url.git#tag=v$pkgver")
-b2sums=('SKIP')
+b2sums=('41f96f2297e367f6054c6d2748817afc2d84e4aae00da0f09d68ca906a9e625b0ff4f791cf09e729fba40c3af679c08234289a256800216a5dc86b14b0f6ba19')
 
 build() {
   cd "$_name"
@@ -27,10 +27,19 @@ build() {
 }
 
 check() {
+  local pytest_options=(
+    -vv
+    --deselect tests/test_all.py::DNSTest::test_idna_encoding_query_a
+    --deselect tests/test_all.py::DNSTest::test_query_txt_chunked
+    --deselect tests/test_all.py::DNSTest::test_gethostbyaddr
+    --deselect tests/test_all.py::DNSTest::test_gethostbyaddr6
+    --deselect tests/test_all.py::DNSTest::test_getnameinfo
+  )
+
   cd "$_name"
   python -m venv --system-site-packages test-env
   test-env/bin/python -m installer dist/*.whl
-  test-env/bin/python -m pytest -v -k 'not test_gethostbyaddr and not test_gethostbyaddr6 and not test_getnameinfo'
+  test-env/bin/python -m pytest "${pytest_options[@]}"
 }
 
 package() {

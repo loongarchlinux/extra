@@ -5,7 +5,7 @@
 
 pkgname=python-nbdime
 pkgver=4.0.1
-pkgrel=1
+pkgrel=3
 pkgdesc='Diff and merge of Jupyter Notebooks'
 url='https://github.com/jupyter/nbdime'
 makedepends=(python-build python-installer
@@ -31,10 +31,13 @@ optdepends=(
   'python-packaging: support for notebook 6'
 )
 provides=(jupyterlab-extension-nbdime jupyter-nbdime)
-license=(BSD)
+# https://github.com/jupyter/nbdime/blob/4.0.1/LICENSE.md
+license=(BSD-3-Clause)
 arch=(any)
-source=(https://github.com/jupyter/nbdime/archive/$pkgver/nbdime-$pkgver.tar.gz)
-sha256sums=('e211c7ccc3e4e3026306efa3c1283326b08a0958ec0e2b894a95606bfaed8982')
+source=(https://github.com/jupyter/nbdime/archive/$pkgver/nbdime-$pkgver.tar.gz
+        jupyter-server-2.13.diff)
+sha256sums=('e211c7ccc3e4e3026306efa3c1283326b08a0958ec0e2b894a95606bfaed8982'
+            'c70b0842e79379d69c02bbe42c6f7a462bd580ee42fbb74b5b90aa7aac9d998a')
 
 prepare() {
   cd nbdime-$pkgver
@@ -45,6 +48,9 @@ prepare() {
     name = builduser
     email = builduser@archlinux
 EOF
+
+  # Work-around https://github.com/jupyter/nbdime/issues/749
+  patch -Np1 -i ../jupyter-server-2.13.diff
 }
 
 build() {

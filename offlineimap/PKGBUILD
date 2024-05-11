@@ -7,25 +7,31 @@
 pkgname=offlineimap
 _pkgname=${pkgname}3
 pkgver=8.0.0
-pkgrel=4
+pkgrel=5
 pkgdesc='Synchronizes emails between two repositories'
 arch=('any')
 url='http://offlineimap.org/'
 license=('GPL')
 depends=('python-imaplib2' 'python-distro' 'python-rfc6555')
-makedepends=('asciidoc')
+makedepends=('asciidoc' 'python-setuptools')
 optdepends=(
     "python-gssapi: for Kerberos authentication"
     "python-pysocks: for SOCKS5 proxy functionality")
 source=($pkgname-$pkgver.tar.gz::https://github.com/OfflineIMAP/offlineimap3/archive/v${pkgver}.tar.gz
 "$pkgname-$pkgver-py311.patch::https://github.com/OfflineIMAP/offlineimap3/commit/7cd32cf834b34a3d4675b29bebcd32dc1e5ef128.patch"
+safe-config-parser-removed.patch
+imp-module-removed.patch
 )
 sha256sums=('5d40c163ca2fbf89658116e29f8fa75050d0c34c29619019eee1a84c90fcab32'
-            '204a900b0854afaca85b0f0a8da4bd31c4b702103a8f315cd553c53c60be4ac2')
+            '204a900b0854afaca85b0f0a8da4bd31c4b702103a8f315cd553c53c60be4ac2'
+            'e565cd3ce94621b87ea93bb0978929475019de6d75395fca249b5f272dcf849f'
+            '4ec3cecd36c1f11a24dc2eacca6c6d801f914adcc8cdfa74e3a226e5325ac186')
 
 prepare() {
   cd "${_pkgname}-${pkgver}"
   patch -Np1 < "$srcdir/offlineimap-8.0.0-py311.patch"
+  patch -Np1 < "$srcdir/safe-config-parser-removed.patch"
+  patch -Np1 < "$srcdir/imp-module-removed.patch"
 }
 
 build() {

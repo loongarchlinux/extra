@@ -1,0 +1,100 @@
+From ac4a361b1f77d52dcb224fbca323f8b32452bd8f Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Ball=C3=B3=20Gy=C3=B6rgy?= <ballogyor@gmail.com>
+Date: Thu, 1 Feb 2024 18:40:31 +0100
+Subject: [PATCH] clock: Monitor changes for show-weather and show-temperature
+ settings
+
+It fixes the problem that the visibility settings of the weather and temperature are not respected immediately when the user sets these options in preferences.
+---
+ modules/clock/clock-applet.c | 36 ++++++++++++++++++++++++++++++++----
+ 1 file changed, 32 insertions(+), 4 deletions(-)
+
+diff --git a/modules/clock/clock-applet.c b/modules/clock/clock-applet.c
+index 76f26b044..7a6b36bfc 100644
+--- a/modules/clock/clock-applet.c
++++ b/modules/clock/clock-applet.c
+@@ -866,11 +866,15 @@ location_weather_updated_cb (ClockLocation  *location,
+ 	const gchar *icon_name;
+ 	const gchar *temp;
+ 
+-	if (!info || !gweather_info_is_valid (info))
++	if (!clock_location_is_current (location))
+ 		return;
+ 
+-	if (!clock_location_is_current (location))
++	if (!info || !gweather_info_is_valid (info)) {
++		clock_button_set_weather (CLOCK_BUTTON (cd->panel_button),
++		                          NULL,
++		                          NULL);
+ 		return;
++	}
+ 
+ 	icon_name = NULL;
+ 	if (g_settings_get_boolean (cd->applet_settings, "show-weather")) {
+@@ -929,12 +933,16 @@ locations_changed (GSettings   *settings,
+ 	ClockLocation *loc;
+ 	glong id;
+ 
+-	if (!cd->locations) {
++	if (cd->current != NULL && g_list_find (cd->locations, cd->current) == NULL) {
+ 		if (cd->panel_button) {
+ 			clock_button_set_weather (CLOCK_BUTTON (cd->panel_button),
+ 			                          NULL,
+ 			                          NULL);
+ 		}
++
++                clock_location_set_current (cd->current, FALSE);
++                g_object_unref (cd->current);
++                cd->current = NULL;
+ 	}
+ 
+ 	for (l = cd->locations; l; l = l->next) {
+@@ -969,6 +977,19 @@ show_week_changed (GSettings   *settings,
+ 	}
+ }
+ 
++static void
++show_weather_changed (GSettings   *settings,
++                      const gchar *key,
++                      ClockApplet *clock)
++{
++	GWeatherInfo  *info;
++
++	if (clock->panel_button != NULL && clock->current != NULL) {
++                info = clock_location_get_weather_info (clock->current);
++                location_weather_updated_cb (clock->current, info, clock);
++        }
++}
++
+ static void
+ migrate_cities_to_locations (ClockApplet *self)
+ {
+@@ -1089,6 +1110,10 @@ fill_clock_applet (ClockApplet *cd)
+                           G_CALLBACK (show_week_changed), cd);
+         g_signal_connect (cd->applet_settings, "changed::locations",
+                           G_CALLBACK (locations_changed), cd);
++        g_signal_connect (cd->applet_settings, "changed::show-weather",
++                          G_CALLBACK (show_weather_changed), cd);
++        g_signal_connect (cd->applet_settings, "changed::show-temperature",
++                          G_CALLBACK (show_weather_changed), cd);
+ 
+         cd->wall_clock = g_object_new (GNOME_TYPE_WALL_CLOCK, NULL);
+ 
+@@ -1291,10 +1316,13 @@ run_prefs_edit_save (GtkButton   *button,
+                                   TRUE,
+                                   lat,
+                                   lon,
+-                                  cd->locations == NULL);
++                                  cd->current == NULL);
+ 
+         cd->locations = g_list_append (cd->locations, loc);
+ 
++        if (cd->current == NULL && clock_location_is_current (loc))
++                cd->current = g_object_ref (loc);
++
+         g_free (city);
+ 
+ 	/* This will update everything related to locations to take into
+-- 
+GitLab
+

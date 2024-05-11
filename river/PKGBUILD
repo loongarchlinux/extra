@@ -2,30 +2,50 @@
 # Contributor: Andrea Feletto <andrea@andreafeletto.com>
 
 pkgname=river
-pkgver=0.2.6
-pkgrel=1
+pkgver=0.3.0
+pkgrel=2
 pkgdesc='A dynamic tiling wayland compositor'
 arch=('loong64' 'x86_64')
-url='https://github.com/riverwm/river'
-license=('GPL3')
+url='https://codeberg.org/river/river'
+license=('GPL-3.0-or-later')
 depends=('libevdev'
          'libxkbcommon'
          'mesa'
          'pixman'
          'wayland'
-         'wlroots0.16'
+         'wlroots'
          'xorg-xwayland')
-makedepends=('scdoc'
+makedepends=('git'
+             'scdoc'
              'wayland-protocols'
              'zig')
 optdepends=('polkit: access seat through systemd-logind')
-source=("https://github.com/riverwm/river/releases/download/v$pkgver/$pkgname-$pkgver.tar.gz"{,.sig})
+source=(
+  git+https://codeberg.org/river/river.git#tag=v${pkgver}?signed
+  git+https://github.com/ifreund/zig-pixman.git
+  git+https://github.com/ifreund/zig-wayland.git
+  git+https://codeberg.org/ifreund/zig-wlroots.git
+  git+https://github.com/ifreund/zig-xkbcommon.git
+)
 validpgpkeys=('5FBDF84DD2278DB2B8AD8A5286DED400DDFD7A11') # Isaac Freund <mail@isaacfreund.com>
-sha256sums=('430d6fd428e5b67012edc4e165d2a26ef0cba515fc9e9ecede359adedf15dd8c'
+sha256sums=('c6c33e6dce92e729635b244f0e63a24a004e7339f4ae885db2bd937d022ef93a'
+            'SKIP'
+            'SKIP'
+            'SKIP'
             'SKIP')
 
+prepare() {
+  cd $pkgname
+  git submodule init
+  git config submodule."deps/zig-pixman".url "${srcdir}/zig-pixman"
+  git config submodule."deps/zig-wayland".url "${srcdir}/zig-wayland"
+  git config submodule."deps/zig-wlroots".url "${srcdir}/zig-wlroots"
+  git config submodule."deps/zig-xkbcommon".url "${srcdir}/zig-xkbcommon"
+  git -c protocol.file.allow=always submodule update
+}
+
 build() {
-  cd "$pkgname-$pkgver"
+  cd $pkgname
 
   export PKG_CONFIG_PATH='/usr/lib/wlroots0.16/pkgconfig'
   DESTDIR="build" zig build \
@@ -39,7 +59,7 @@ build() {
 }
 
 check() {
-  cd "$pkgname-$pkgver"
+  cd $pkgname
 
   zig build test \
     --prefix /usr \
@@ -52,12 +72,11 @@ check() {
 }
 
 package() {
-  depends+=(libwlroots.so=11)
-  cd "$pkgname-$pkgver"
+  depends+=(libwlroots.so=12)
+  cd $pkgname
 
   cp -a build/* "$pkgdir"
 
-  install -Dm644 LICENSE -t "$pkgdir/usr/share/licenses/$pkgname"
   install -Dm644 README.md -t "$pkgdir/usr/share/doc/$pkgname"
   install -Dm644 contrib/river.desktop -t "$pkgdir/usr/share/wayland-sessions"
 

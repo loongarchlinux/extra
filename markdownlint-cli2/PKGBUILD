@@ -2,16 +2,17 @@
 # Contributor: Brody <archfan at brodix dot de>
 
 pkgname=markdownlint-cli2
-pkgver=0.12.1
+pkgver=0.13.0
 pkgrel=1
 pkgdesc='Fast, flexible, configuration-based command-line interface for linting Markdown/CommonMark files with the markdownlint library'
 arch=('any')
 url=https://github.com/DavidAnson/markdownlint-cli2
 license=('MIT')
 depends=('nodejs')
-makedepends=('git' 'npm')
+makedepends=('git' 'jq' 'npm')
+options=('!emptydirs')
 source=("git+$url.git#tag=v$pkgver")
-b2sums=('SKIP')
+b2sums=('afe8157dbec5eb3d1eb31dc12b11f1a8027a373676c30fc27a0973264e914fafd6ff4ae752cde03a19ff21e1206e77d0822b93824abb4e9ed27377fadd7446b4')
 
 prepare() {
   cd $pkgname
@@ -25,14 +26,14 @@ check() {
 
 package() {
   local mod_dir=/usr/lib/node_modules/$pkgname
-  install -d "$pkgdir"/{usr/bin,$mod_dir}
+  install -d "$pkgdir"/{usr/{bin,share/{doc,licenses}/$pkgname},$mod_dir}
   ln -s $mod_dir/$pkgname.js "$pkgdir"/usr/bin/$pkgname
+  ln -s $mod_dir/{CHANGELOG,README}.md "$pkgdir"/usr/share/doc/$pkgname
+  ln -s $mod_dir/LICENSE "$pkgdir"/usr/share/licenses/$pkgname
 
   cd $pkgname
   npm prune --production
 
-  cp -r {$pkgname,append-to-array,merge-options,resolve-and-require}.js \
-    node_modules package.json "$pkgdir"/$mod_dir
-  install -Dm644 -t "$pkgdir"/usr/share/doc/$pkgname README.md
-  install -Dm644 -t "$pkgdir"/usr/share/licenses/$pkgname LICENSE
+  readarray -t mod_files < <(jq -r '.files[]' package.json)
+  cp --parents -r "${mod_files[@]}" node_modules package.json "$pkgdir"/$mod_dir
 }

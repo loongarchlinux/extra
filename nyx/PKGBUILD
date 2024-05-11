@@ -3,7 +3,7 @@
 
 pkgname=nyx
 pkgver=2.1.0
-pkgrel=7
+pkgrel=8
 pkgdesc='Command-line status monitor for tor'
 url='https://nyx.torproject.org/'
 arch=('any')
@@ -22,6 +22,10 @@ prepare() {
   rm -r test/{panel,{popups,subwindow,installation}.py}
   # make test exit on error
   sed -E 's|(test_runner.run\(tests\))|__import__("sys").exit(0 if \1.wasSuccessful() else 1)|' -i run_tests.py
+
+  # fix tests with python 3.12
+  find -type f -exec sed -e 's|assertRaisesRegexp|assertRaisesRegex|' -i {} \;
+
 
   patch -Np1 < ../python3.11.patch
 }

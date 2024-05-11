@@ -3,7 +3,7 @@
 _hkgname=mysql-simple
 pkgname=haskell-mysql-simple
 pkgver=0.4.9
-pkgrel=33
+pkgrel=39
 pkgdesc="A mid-level MySQL client library"
 url="https://github.com/paul-rouse/mysql-simple"
 license=("BSD")
@@ -12,15 +12,22 @@ depends=('ghc-libs' 'haskell-attoparsec' 'haskell-base16-bytestring' 'haskell-bl
          'haskell-blaze-textual' 'haskell-mysql' 'haskell-old-locale' 'haskell-pcre-light')
 makedepends=('ghc' 'haskell-hspec')
 checkdepends=('mariadb')
-source=("https://hackage.haskell.org/packages/archive/$_hkgname/$pkgver/$_hkgname-$pkgver.tar.gz")
-sha512sums=('ccec9fbd2599b549a12237c46c6f992004853cffa21519dd7f7c6febdc83d7b7d6bf0edeb49c69691f2777b3e8bb855ac98c1c0ac299b27bab85124d8b83d189')
+source=("https://hackage.haskell.org/packages/archive/$_hkgname/$pkgver/$_hkgname-$pkgver.tar.gz"
+        mysql-simple-ghc9.2.patch::https://patch-diff.githubusercontent.com/raw/paul-rouse/mysql-simple/pull/61.patch)
+sha512sums=('ccec9fbd2599b549a12237c46c6f992004853cffa21519dd7f7c6febdc83d7b7d6bf0edeb49c69691f2777b3e8bb855ac98c1c0ac299b27bab85124d8b83d189'
+            'a9a82b3f8297635c3f6e25ffd01fd77ef8b23fbaf31e66768f662aedf617e7b313dadb4f991fe2ba17cdecee5d746ff41d7394e193cdfaea0147d9d80f8d522c')
+
+prepare() {
+  cd $_hkgname-$pkgver
+  patch -p1 < ../mysql-simple-ghc9.2.patch
+}
 
 build() {
   cd $_hkgname-$pkgver
 
   runhaskell Setup configure -O --enable-shared --enable-executable-dynamic --disable-library-vanilla \
     --prefix=/usr --docdir=/usr/share/doc/$pkgname --datasubdir=$pkgname --enable-tests \
-    --dynlibdir=/usr/lib --libsubdir=\$compiler/site-local/\$pkgid --ghc-option=-fllvm \
+    --dynlibdir=/usr/lib --libsubdir=\$compiler/site-local/\$pkgid \
     --ghc-option=-optl-Wl\,-z\,relro\,-z\,now \
     --ghc-option='-pie'
 

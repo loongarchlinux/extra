@@ -2,26 +2,27 @@
 # Maintainer: Robin Candau <antiz@archlinux.org>
 
 pkgname=grafana-zabbix
-pkgver=4.4.5
+pkgver=4.4.9
 pkgrel=1
 pkgdesc="Zabbix plugin for Grafana dashboard"
 arch=('any')
 url="https://github.com/alexanderzobnin/grafana-zabbix"
-license=('APACHE')
+license=('Apache-2.0')
 depends=('grafana')
-makedepends=(yarn libfaketime go git nodejs-lts-iron mage)
-source=("$pkgname-$pkgver-retagged-1.tar.gz::https://github.com/alexanderzobnin/grafana-zabbix/archive/v$pkgver.tar.gz")
-sha256sums=('7b93f15767c0142ba04d36924e02b597d006d77c2a239d9d5fb644dd752836de')
+makedepends=('yarn' 'libfaketime' 'go' 'git' 'nodejs-lts-iron' 'mage')
+source=("${pkgname}-${pkgver}.tar.gz::${url}/archive/v${pkgver}.tar.gz")
+sha256sums=('c6ada4fca3d6e562d0e933f030a4ce5edcb53711723e6eef34b84f333e2fa392')
 
 prepare() {
-	cd "$pkgname-$pkgver"
-
+	cd "${pkgname}-${pkgver}"
 	# Fix tests not working without git clone
 	sed -i 's#jest --watch --onlyChanged#jest#' package.json
+	# Remove lint related dependency (we don't care about linting tests at our level)
+	sed -i '/GO111MODULE=off go get -u golang.org\/x\/lint\/golint/d' Makefile
 }
 
 build() {
-	cd "$pkgname-$pkgver"
+	cd "${pkgname}-${pkgver}"
 	make install
 	make build
 	make dist-frontend
@@ -29,14 +30,14 @@ build() {
 }
 
 check() {
-	cd "$pkgname-$pkgver"
+	cd "${pkgname}-${pkgver}"
 	# Force UTC timezone so that tests pass, even after a DST change
-	PATH="$PATH:/build/go/bin" TZ=UTC make test lint
+	PATH="${PATH}:/build/go/bin" TZ=UTC make test
 }
 
 package() {
-	cd "$pkgname-$pkgver"
-	install -dm755 "$pkgdir/var/lib/grafana/plugins/alexanderzobnin-zabbix-app"
-	cp -r dist/* "$pkgdir/var/lib/grafana/plugins/alexanderzobnin-zabbix-app"
-	rm -rf "$pkgdir/var/lib/grafana/plugins/alexanderzobnin-zabbix-app/node_modules"
+	cd "${pkgname}-${pkgver}"
+	install -dm 755 "${pkgdir}/var/lib/grafana/plugins/alexanderzobnin-zabbix-app"
+	cp -rv dist/* "${pkgdir}/var/lib/grafana/plugins/alexanderzobnin-zabbix-app"
+	rm -rf "${pkgdir}/var/lib/grafana/plugins/alexanderzobnin-zabbix-app/node_modules"
 }

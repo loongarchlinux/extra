@@ -1,27 +1,28 @@
-# Maintainer: Gaetan Bisson <bisson@archlinux.org>
 # Maintainer: Jaroslav Lichtblau <svetlemodry@archlinux.org>
+# Contributor: Gaetan Bisson <bisson@archlinux.org>
 # Contributor: Daenyth <Daenyth+Arch [at] gmail [dot] com>
 # Contributor: Jeff Mickey <jeff@archlinux.org>
 # Contributor: sh__
 
 pkgname=libtorrent
 pkgver=0.13.8
-pkgrel=3
+pkgrel=4
 pkgdesc='BitTorrent library with a focus on high performance and good code'
 url='https://rakshasa.github.io/rtorrent/'
 arch=('loong64' 'x86_64')
 license=('GPL')
+makedepends=('git')
 depends=('openssl')
-source=("https://github.com/rakshasa/rtorrent/releases/download/v0.9.${pkgver##*.}/${pkgname}-${pkgver}.tar.gz")
-sha256sums=('ed115a28f4ae8cfcd33b94a597c076ca74fd549867a26e4fac9505c27288e983')
+source=("git+https://github.com/rakshasa/libtorrent.git#tag=v${pkgver}")
+sha256sums=('71e09b1b878ba463b3698968afd94412623b793b95a6c06967b405c1b7f584f3')
 
 prepare() {
-	cd "${srcdir}/${pkgname}-${pkgver}"
+	cd ${pkgname}
 	./autogen.sh
 }
 
 build() {
-	cd "${srcdir}/${pkgname}-${pkgver}"
+	cd ${pkgname}
 	export CXXFLAGS+=' -fno-strict-aliasing'
 	./configure \
 		--prefix=/usr \
@@ -31,6 +32,6 @@ build() {
 }
 
 package() {
-	cd "${srcdir}/${pkgname}-${pkgver}"
+	cd ${pkgname}
 	make DESTDIR="${pkgdir}" install
 }

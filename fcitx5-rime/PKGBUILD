@@ -2,27 +2,25 @@
 # Contributor: csslayer <wengxt AT gmail com>
 
 pkgname=fcitx5-rime
-pkgver=5.1.4
+pkgver=5.1.6
 pkgrel=1
 pkgdesc="RIME support for Fcitx5"
 arch=('loong64' 'x86_64')
 url="https://github.com/fcitx/fcitx5-rime"
 license=('GPL')
 depends=('fcitx5' 'librime')
-makedepends=('extra-cmake-modules' 'ninja')
-source=("https://download.fcitx-im.org/fcitx5/$pkgname/$pkgname-$pkgver.tar.xz"{,.sig})
-sha512sums=('1dc20c801e1ce4fa5e63f06554340af4616b044964d4235995e51dc6074223e30e66da74f354b2b05f77d2e0041af1e720bf2f2b214492ae4516d30761b2e092'
-            'SKIP')
+makedepends=('git' 'extra-cmake-modules' 'ninja')
+source=("git+https://github.com/fcitx/fcitx5-rime.git#tag=$pkgver?signed")
+sha512sums=('cf66e1baeee35dc07ad1553dc0361e56c3c27ca65e6f7a61cb76c0a67d17bbaf65464bd1e3a76de9fe11c8c800e82df24d440763fa06677769eb4191ec17b24c')
 validpgpkeys=('2CC8A0609AD2A479C65B6D5C8E8B898CBF2412F9') # Weng Xuetian <wengxt@gmail.com>
 
-build(){
-  cd $pkgname-$pkgver
-
+build() {
+  cd $pkgname
   cmake -GNinja -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_INSTALL_LIBDIR=/usr/lib .
   ninja
 }
 
 package() {
-  cd $pkgname-$pkgver
+  cd $pkgname
   DESTDIR="$pkgdir" ninja install
 }

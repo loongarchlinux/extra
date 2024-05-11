@@ -1,0 +1,37 @@
+# Maintainer: Fabian Bornschein <fabiscafe@archlinux.org>
+
+pkgname=libgedit-gfls
+pkgver=0.1.0
+pkgrel=1
+pkgdesc='A module dedicated to file loading and saving.'
+arch=('loong64' 'x86_64')
+url='https://github.com/gedit-technology/libgedit-gfls'
+license=('LGPL-3.0-or-later')
+depends=(
+  glib2
+  glibc
+)
+makedepends=(
+  git
+  gobject-introspection
+  gtk3
+  gtk-doc
+  meson
+)
+checkdepends=(xorg-server-xvfb)
+provides=(libgedit-gfls-1.so)
+source=("git+https://github.com/gedit-technology/libgedit-gfls#tag=${pkgver}")
+b2sums=('9a4675ab7b8e2323358bcc3942975ca3a61b2444d29fa102893c7514bf67529e7474825ffd4c4db9ef346e4e40c9fede400ab353f8088021795e46bbb5f11e7d')
+
+build() {
+  arch-meson $pkgname build
+  meson compile -C build
+}
+
+check() {
+  meson test -C build --print-errorlogs
+}
+
+package() {
+  meson install -C build --destdir "$pkgdir"
+}

@@ -1,10 +1,10 @@
 # Maintainer: David Runge <dvzrv@archlinux.org>
+# Maintainer: Caleb Maclennan <caleb@alerque.com>
 
 _name=pynitrokey
 pkgname=python-pynitrokey
-_commit=2fe68f7c2a2e1cebd23f168d2748e16a640e6142  # v0.4.45
-pkgver=0.4.45
-pkgrel=1
+pkgver=0.4.47
+pkgrel=3
 pkgdesc="A command line interface for the Nitrokey FIDO2 and Nitrokey Start"
 arch=(any)
 url="https://github.com/Nitrokey/pynitrokey"
@@ -32,7 +32,7 @@ depends=(
   python-spsdk
   python-tlv8
   python-tqdm
-  python-typing-extensions
+  python-typing_extensions
 )
 makedepends=(
   git
@@ -46,29 +46,25 @@ optdepends=(
   'python-libusb1: for pro and storage subcommands'
   'python-pyscard: for pcsclite integration'
 )
-source=("git+$url#tag=$_commit?signed")
-sha512sums=('SKIP')
-b2sums=('SKIP')
+source=("git+$url.git?signed#tag=v$pkgver")
+sha512sums=('573b61d5b9fa7a398f3318c6203536fc7c6a12707b8541affdb7f782ce9b6838662d32584f229b2300d830626b96700a1e1fbac68076da76c3bdaabef58c4be6')
+b2sums=('7ee09317dae350267c37a868be3aa616976a2b33e656680d4eb363e25d209c4788557c31f31e9aa8c7bba7908af580f88dabefabcaa234ceb3822329ffca94e4')
 validpgpkeys=(
-  868184069239FF65DE0BCD7DD9BAE35991DE5B22  # Szczepan Zalega (Nitrokey) <szczepan@nitrokey.com>
-  719EA31C3F1814DA787C8FD434F47D2F044B8F17  # Robin Krahl <robin@nitrokey.com>
+  868184069239FF65DE0BCD7DD9BAE35991DE5B22  # Szczepan Zalega <szczepan@nitrokey.com> (@szszszsz)
+  CC74B7120BFAA36FF42868724C1449F1C9804176  # Markus Meissner <meissner@nitrokey.com> (@daringer)
+  719EA31C3F1814DA787C8FD434F47D2F044B8F17  # Robin Krahl <robin@nitrokey.com> (@robin-nitrokey)
+  93CCB0DB717DAE30622F671436DA48A4C827B354  # Sosthène Guédon <sosthene@nitrokey.com> (@sosthene-nitrokey)
 )
-
-pkgver() {
-  cd $_name
-  git describe --tags | sed 's/\([^-]*-g\)/r\1/;s/-/./g;s/v//g'
-}
 
 build() {
   cd $_name
   python -m build --wheel --skip-dependency-check --no-isolation
 }
 
-# tests seem all to be integration tests currently: https://github.com/Nitrokey/pynitrokey/issues/294
-# check() {
-#   cd $_name
-#   pytest -vv
-# }
+check() {
+  cd $_name
+  pytest -vv
+}
 
 package() {
   cd $_name

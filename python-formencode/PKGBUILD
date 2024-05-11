@@ -3,18 +3,18 @@
 pkgname=python-formencode
 _pkgname=formencode
 _pypi=FormEncode
-pkgver=2.0.1
-pkgrel=4
+pkgver=2.1.0
+pkgrel=3
 pkgdesc="A validation library for Python."
 arch=("any")
 url="http://www.formencode.org/en/latest/"
 license=("MIT")
-depends=("python" "python-six")
+depends=("python")
 checkdepends=("python-pytest" "python-dnspython" "python-pycountry")
 makedepends=('python-build' 'python-installer' 'python-wheel' 'python-setuptools' 'python-setuptools-scm')
 source=("$pkgname-$pkgver.tar.gz::https://github.com/formencode/formencode/archive/$pkgver.tar.gz")
 source=("https://files.pythonhosted.org/packages/source/${_pkgname::1}/${_pkgname}/${_pypi}-${pkgver}.tar.gz")
-sha256sums=('8f2974112c2557839d5bae8b76490104c03830785d923abbdef148bf3f710035')
+sha256sums=('eb74d223078a28cf015fa88966c6e34f2d18d75127318d65c144bed9afc4263f')
 
 prepare() {
   cd "${_pypi}-${pkgver}"
@@ -23,12 +23,16 @@ prepare() {
 
 build() {
   cd "${_pypi}-${pkgver}"
+  export SETUPTOOLS_SCM_PRETEND_VERSION=$pkgver
   python -m build --wheel --no-isolation
 }
 
 check(){
   cd "${_pypi}-${pkgver}"
-  python -m unittest
+  python -m installer --destdir="$PWD/tmp_install" dist/*.whl
+  local site_packages=$(python -c "import site; print(site.getsitepackages()[0])")
+  export PYTHONPATH="$PWD/tmp_install/$site_packages" 
+  PYTHONDONTWRITEBYTECODE=1 python -m unittest
 }
 
 package() {

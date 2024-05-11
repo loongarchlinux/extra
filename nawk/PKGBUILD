@@ -1,10 +1,18 @@
 # Maintainer: Caleb Maclennan <caleb@alerque.com>
-# Maintainer: T.J. Townsend <blakkheim@archlinux.org>
 # Contributor: Dave Reisner <dreisner@archlinux.org>
 
+# Upstream has a history of forgetting to tag releases even when they bump the
+# version and comment that it is a release. See e.g.:
+# https://github.com/onetrueawk/awk/issues/141
+# https://github.com/onetrueawk/awk/issues/222
+#
+# If this happens again, releases can be bumped from commits that appear in the
+# master branch at points where internal version number is updated. Uncomment
+# this for it to take effect:
+# _commit=4d46214525a3b75879ad56fb0105ee01afa7c9dd
+
 pkgname=nawk
-pkgver=20231228
-_commit=908be9c222c0b7da4bcc3b8724ebb11996993a69 # master
+pkgver=20240422
 pkgrel=1
 pkgdesc='The one, true implementation of AWK'
 url="https://github.com/onetrueawk/awk"
@@ -13,13 +21,17 @@ arch=(loong64 x86_64)
 options=(!makeflags)
 depends=(glibc)
 makedepends=(git)
-source=("git+https://github.com/onetrueawk/awk.git#commit=${_commit}"
+source=("git+$url.git#commit=${_commit:-$pkgver}"
         'manpage-naming.patch')
-sha256sums=('SKIP'
+sha256sums=('784e2860d16c96366a26b4288fc11b0e9983f75910aa1ee6260566334ea690f0'
             'fa1bade363896033a50fbdadc8fa2f490f85a044d11afcd537f317067c70d3b5')
 
+# This pkgver function is not necessary for tagged releases but if _commit is
+# used to package something that did not get tagged this helps make sure the
+# package version matches the internal version string.
 pkgver() {
-  grep "version " awk/main.c | sed -e 's/[^"]*"\([^"]*\)".*/\1/' -e 's/^\w*\ *//'
+  grep "version " awk/main.c |
+    sed -e 's/[^"]*"\([^"]*\)".*/\1/' -e 's/^\w*\ *//'
 }
 
 prepare() {

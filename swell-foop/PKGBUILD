@@ -1,24 +1,41 @@
 # Maintainer: Jan Alexander Steffens (heftig) <heftig@archlinux.org>
+# Maintainer: Fabian Bornschein <fabiscafe@archlinux.org>
 # Contributor: Jan de Groot <jgc@archlinux.org>
 
 pkgname=swell-foop
-pkgver=41.1
+pkgver=46.0
 pkgrel=1
 pkgdesc="Clear the screen by removing groups of colored and shaped tiles"
 url="https://wiki.gnome.org/Apps/Swell%20Foop"
 arch=(loong64 x86_64)
-license=(GPL)
-depends=(clutter-gtk librsvg libgnome-games-support libgee)
-makedepends=(yelp-tools appstream-glib vala git meson)
+license=(GPL-2.0-or-later)
+depends=(
+  cairo
+  dconf
+  glib2
+  glibc
+  gtk4
+  hicolor-icon-theme
+  libgee
+  libgnome-games-support-2
+  librsvg
+  pango
+)
+makedepends=(
+  appstream-glib
+  git
+  meson
+  vala
+  yelp-tools
+)
 groups=(gnome-extra)
-options=(debug)
-_commit=f89d9cfe7c4b73ae37cf5ed0a6bdc9060365e55d  # tags/41.1^0
+_commit=d173f2c751acdf572a2cc90ef55cdd624f9305d5  # tags/46.0^0
 source=("git+https://gitlab.gnome.org/GNOME/swell-foop.git#commit=$_commit")
-sha256sums=('SKIP')
+b2sums=('SKIP')
 
 pkgver() {
   cd $pkgname
-  git describe --tags | sed 's/[^-]*-g/r&/;s/-/+/g'
+  git describe --tags | sed -r 's/\.([a-z])/\1/;s/([a-z])\./\1/;s/[^-]*-g/r&/;s/-/+/g'
 }
 
 prepare() {
@@ -37,3 +54,5 @@ check() {
 package() {
   meson install -C build --destdir "$pkgdir"
 }
+
+# vim:set sw=2 sts=-1 et:

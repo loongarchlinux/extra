@@ -1,15 +1,19 @@
-#/bin/bash
+#!/bin/bash
 
 # arg 1:  the new package version
 post_install() {
-  echo '==> Use 'znc --makeconf' as user znc to generate your first config'
+  echo "==> Use 'znc --makeconf' as user znc to generate your first config"
 }
 
 # arg 1:  the new package version
 # arg 2:  the old package version
 post_upgrade() {
-  if (( "$(vercmp $2 1.0-4)" < 0 )); then
+  if (( "$(vercmp "$2" 1.0-4)" < 0 )); then
     usermod -d /var/lib/znc znc 2>/dev/null && echo '==> znc home directory has moved to /var/lib/znc'
+  fi
+
+  if (( "$(vercmp "$2" "1.9")" < 0 )); then
+    echo '==> the znc data directory has moved to /var/lib/znc, please see the znc wiki article for migration instructions'
   fi
   :
 }

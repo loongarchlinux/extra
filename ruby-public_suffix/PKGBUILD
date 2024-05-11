@@ -5,8 +5,8 @@
 
 _gemname='public_suffix'
 pkgname="ruby-${_gemname}"
-pkgver=5.0.3
-pkgrel=1
+pkgver=5.0.5
+pkgrel=2
 pkgdesc='Domain name parser based on the Public Suffix List'
 arch=('any')
 url='https://simonecarletti.com/code/publicsuffix-ruby'
@@ -16,13 +16,13 @@ checkdepends=('ruby-minitest' 'ruby-mocha')
 depends=('ruby')
 source=("${pkgname}-${pkgver}.tar.gz::https://github.com/weppos/publicsuffix-ruby/archive/v${pkgver}/${pkgname}-v${pkgver}.tar.gz")
 options=("!emptydirs")
-sha512sums=('ae6b1db7166366d96411902e5b1fae44538085849ec61221f763c487b8069823032cf3d57930d5d56ba75d114df0a66b981663add9e9d45b43508d2a42996d75')
+sha512sums=('4b785474b7fb726dbfe66b6c1c801eb9a75d5e555c69e678cf8253112facd9dc98fd76c07f43ff74eb310beaf7e063344e8a6484dfe4b8cfea2557510f22ae9f')
 
 prepare() {
   cd "${srcdir}/publicsuffix-ruby-${pkgver}"
 
-  sed --in-place 's|git ls-files|find|' "${_gemname}.gemspec"
-  sed --in-place '/test_files/d' "${_gemname}.gemspec"
+  sed --in-place "s,git ls-files -z,find . | sed -e 's|^./||'," "${_gemname}.gemspec"
+  sed --in-place 's/x0/n/' "${_gemname}.gemspec"
   sed --in-place '/rubocop/Id' Rakefile
   sed --in-place '/reporters/Id' test/test_helper.rb
 }

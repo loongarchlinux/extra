@@ -2,28 +2,24 @@
 
 _hkgname=resolv
 pkgname=haskell-resolv
-pkgver=0.1.2.0
-pkgrel=196
+pkgver=0.2.0.2
+pkgrel=201
 pkgdesc="Domain Name Service (DNS) lookup via the libresolv standard library routines"
 url="https://github.com/hvr/resolv"
 license=('GPL')
 arch=('loong64' 'x86_64')
 depends=('ghc-libs' 'haskell-base16-bytestring')
-makedepends=('ghc' 'uusi' 'haskell-tasty' 'haskell-tasty-hunit')
+makedepends=('ghc' 'haskell-tasty' 'haskell-tasty-hunit')
 source=(https://hackage.haskell.org/packages/archive/${_hkgname}/${pkgver}/${_hkgname}-${pkgver}.tar.gz)
-sha512sums=('fae2d0717a109b0d6cc19c51c773bc68c64c0048b9d930528cf5622ee270ebaddec180c1d444542e8eb036262611f5b88deadeea223fb2ef2b15b41369a2376e')
-
-prepare() {
-    cd $_hkgname-$pkgver
-    uusi -u base -u base16-bytestring -u tasty $_hkgname.cabal
-}
+sha512sums=('df61ab0e3d1c2faa525271416fca3976378ac6fcbaf9f729c7ed3f07454625a03f6aafcd2fd56f2001bc61d365ccb2b4c4f2bd693696576450df20a20e7102df')
 
 build() {
     cd $_hkgname-$pkgver
     
+    LDFLAGS="${LDFLAGS/-Wl,-z,pack-relative-relocs/}" \
     runhaskell Setup configure -O --enable-shared --enable-executable-dynamic --disable-library-vanilla \
         --prefix=/usr --docdir=/usr/share/doc/$pkgname --datasubdir=$pkgname --enable-tests \
-        --dynlibdir=/usr/lib --libsubdir=\$compiler/site-local/\$pkgid --ghc-option=-fllvm
+        --dynlibdir=/usr/lib --libsubdir=\$compiler/site-local/\$pkgid
     runhaskell Setup build $MAKEFLAGS
     runhaskell Setup register --gen-script
     runhaskell Setup unregister --gen-script

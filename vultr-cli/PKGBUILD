@@ -1,25 +1,38 @@
 # Maintainer: kpcyrd <kpcyrd[at]archlinux[dot]org>
 
 pkgname=vultr-cli
-pkgver=2.21.0
-pkgrel=1
+pkgver=3.0.3
+pkgrel=2
 pkgdesc='Official command line tool for Vultr services'
 url='https://github.com/vultr/vultr-cli'
 arch=('loong64' 'x86_64')
-license=('Apache')
+license=('Apache-2.0')
+depends=('glibc')
 makedepends=('go')
+# we can not use LTO as otherwise we get no reproducible package with full RELRO
+options=(!lto)
 source=(https://github.com/vultr/${pkgname}/archive/v${pkgver}/${pkgname}-${pkgver}.tar.gz)
-sha256sums=('c9f94405d089bdf01a7c489b9cc7e51604e08fc7d15ff4b5553ae40015000ec6')
-b2sums=('e16a0097d933df5151687c7371afcacec7fcf703c8f243a14cf166ecb1327b4b3fa6c36b624f870be3723ccfa419af0cb6eb335bed8e82ff924f7bc56484e59b')
+sha256sums=('f0aa3f641c8be1278824c1d1a44670cb18ea236d91776a60d27bafb25372137e')
+b2sums=('b17f4edf677972dbfe885faba8e348135692e72d32565acd6174f255ea304cc9f6e269d4f098e0bcc6607b4c80de4ce0769e86e9851f1cd4b2d23b90d80e6450')
+
+prepare() {
+  cd ${pkgname}-${pkgver}
+  go mod download
+}
 
 build() {
   cd ${pkgname}-${pkgver}
+  export CGO_CPPFLAGS="${CPPFLAGS}"
+  export CGO_CFLAGS="${CFLAGS}"
+  export CGO_CXXFLAGS="${CXXFLAGS}"
+  export CGO_LDFLAGS="${LDFLAGS}"
+  export CGO_REQUIRED="1"
+
   go build \
-    -trimpath \
     -buildmode=pie \
     -mod=readonly \
     -modcacherw \
-    -ldflags "-linkmode external -extldflags \"${LDFLAGS}\"" \
+    -ldflags '-compressdwarf=false -linkmode=external' \
     .
 }
 
@@ -36,8 +49,6 @@ package() {
              "${pkgdir}/usr/share/zsh/site-functions" \
              "${pkgdir}/usr/share/fish/vendor_completions.d"
 
-  # workaround, see https://github.com/vultr/vultr-cli/issues/92#issuecomment-877722219
-  export VULTR_API_KEY=x
   ./vultr-cli completion bash > "${pkgdir}/usr/share/bash-completion/completions/vultr-cli"
   ./vultr-cli completion zsh > "${pkgdir}/usr/share/zsh/site-functions/_vultr-cli"
   ./vultr-cli completion fish > "${pkgdir}/usr/share/fish/vendor_completions.d/vultr-cli.fish"

@@ -2,7 +2,7 @@
 
 pkgname=python-matrix-common
 pkgver=1.3.0
-pkgrel=4
+pkgrel=5
 pkgdesc="Common code for Synapse, Sydent and Sygnal"
 arch=(any)
 url="https://github.com/matrix-org/matrix-python-common"

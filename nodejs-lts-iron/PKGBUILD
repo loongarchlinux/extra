@@ -2,8 +2,8 @@
 # Contributor: Felix Yan <felixonmars@archlinux.org>
 
 pkgname=nodejs-lts-iron
-pkgver=20.10.0
-pkgrel=2
+pkgver=20.13.0
+pkgrel=1
 pkgdesc="Evented I/O for V8 javascript (LTS release: Iron)"
 arch=(loong64 x86_64)
 url="https://nodejs.org/"
@@ -16,12 +16,16 @@ optdepends=('npm: nodejs package manager')
 options=(!lto)
 provides=("nodejs=$pkgver")
 conflicts=(nodejs)
-source=(${url}/dist/v${pkgver}/node-v${pkgver}.tar.xz)
+source=(https://nodejs.org/dist/v${pkgver}/node-v${pkgver}.tar.xz)
 # https://nodejs.org/download/release/latest-iron/SHASUMS256.txt.asc
-sha256sums=('32eb256eebd8cacd5574e6631e54b42be7ec8ebe25ad47a8ca685403bad15535')
+sha256sums=('11d229fcad7e6e10f450301223c602043f021cda51259ffafc7e55e484b37dc7')
 
 build() {
   cd node-v${pkgver}
+
+  # this uses malloc_usable_size, which is incompatible with fortification level 3
+  export CFLAGS="${CFLAGS/_FORTIFY_SOURCE=3/_FORTIFY_SOURCE=2}"
+  export CXXFLAGS="${CXXFLAGS/_FORTIFY_SOURCE=3/_FORTIFY_SOURCE=2}"
 
   ./configure \
     --prefix=/usr \
@@ -47,6 +51,11 @@ check() {
 
 package() {
   cd node-v${pkgver}
+
+  # this uses malloc_usable_size, which is incompatible with fortification level 3
+  export CFLAGS="${CFLAGS/_FORTIFY_SOURCE=3/_FORTIFY_SOURCE=2}"
+  export CXXFLAGS="${CXXFLAGS/_FORTIFY_SOURCE=3/_FORTIFY_SOURCE=2}"
+
   make DESTDIR="${pkgdir}" install
   install -Dm644 LICENSE -t "${pkgdir}"/usr/share/licenses/${pkgname}/
 }

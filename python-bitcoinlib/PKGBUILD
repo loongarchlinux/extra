@@ -3,32 +3,33 @@
 pkgname=python-bitcoinlib
 pkgver=0.12.2
 _tag=$pkgname-v$pkgver
-pkgrel=1
+pkgrel=2
 pkgdesc='Python3 library providing an easy interface to the Bitcoin data structures and protocol'
 arch=('any')
 url='https://github.com/petertodd/python-bitcoinlib'
-license=('GPL3')
-makedepends=('python-setuptools')
-checkdepends=('python-pytest-runner')
+license=('LGPL-3.0-or-later')
+depends=('python')
+makedepends=('python-build' 'python-installer' 'python-wheel' 'python-setuptools')
+checkdepends=('python-pytest')
 source=("$pkgname-$pkgver.tar.gz::$url/archive/$_tag.tar.gz")
 sha512sums=('18b6ab7ac1ac7a6ab0f31a32ca407c6a3a9b552225db817c68741e2282ef9f156e9dd9392b29018b820d4909121d4024c9f93dce0dbdbe5b5669d03f579a6190')
 
 build() {
   cd $pkgname-$_tag
 
-  python setup.py build
+  python -m build --wheel --no-isolation
 }
 
 check() {
   cd $pkgname-$_tag
 
-  python setup.py pytest
+  PYTHONPATH="$PWD/bitcoin" pytest
 }
 
 package() {
   cd $pkgname-$_tag
 
-  python setup.py install --root="$pkgdir" --optimize=1 --skip-build
+  python -m installer --destdir="$pkgdir" dist/*.whl
 
   install -Dm 644 LICENSE "$pkgdir"/usr/share/licenses/$pkgname/LICENSE
 }

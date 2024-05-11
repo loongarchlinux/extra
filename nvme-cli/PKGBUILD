@@ -5,7 +5,7 @@
 # Contributor: Martin Schrodt <martin@schrodt.org>
 
 pkgname=nvme-cli
-pkgver=2.7.1
+pkgver=2.9.1
 pkgrel=1
 pkgdesc="NVM-Express user space tooling for Linux"
 arch=('loong64' 'x86_64')
@@ -17,10 +17,15 @@ options=(strip)
 install=nvme-cli.install
 # checkdepends=('python2-nose' 'python-nose')
 source=("$pkgname-$pkgver.tar.gz::https://github.com/linux-nvme/${pkgname}/archive/v${pkgver}.tar.gz")
-sha256sums=('4c69d0f3c8b553110d0f63f5876d56627abd2d9f5d3904e2480cedd03cb15654')
+sha256sums=('4b61684a1d23de1d9d0abd3f273799c60256c0e2a2e68a790d7945183fe33874')
 
 build() {
 	cd "${pkgname}-${pkgver}"
+
+	# this uses malloc_usable_size, which is incompatible with fortification level 3
+	export CFLAGS="${CFLAGS/_FORTIFY_SOURCE=3/_FORTIFY_SOURCE=2}"
+	export CXXFLAGS="${CXXFLAGS/_FORTIFY_SOURCE=3/_FORTIFY_SOURCE=2}"
+
 	meson setup \
 	--prefix /usr \
 	--sysconfdir /etc \
@@ -43,5 +48,10 @@ build() {
 
 package() {
 	cd "${pkgname}-${pkgver}"
+
+	# this uses malloc_usable_size, which is incompatible with fortification level 3
+	export CFLAGS="${CFLAGS/_FORTIFY_SOURCE=3/_FORTIFY_SOURCE=2}"
+	export CXXFLAGS="${CXXFLAGS/_FORTIFY_SOURCE=3/_FORTIFY_SOURCE=2}"
+
 	DESTDIR="$pkgdir" meson install -C .build
 }

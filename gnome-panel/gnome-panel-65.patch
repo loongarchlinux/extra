@@ -1,0 +1,54 @@
+From 3f96b4d72aa1e670f68fa4653a8c36d4b6b9db0f Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Ball=C3=B3=20Gy=C3=B6rgy?= <ballogyor@gmail.com>
+Date: Thu, 1 Feb 2024 11:24:44 +0100
+Subject: [PATCH] clock: Ensure that calendar popup is always on screen
+
+This fixes the problem that the calendar popup is rendered partially off sceen on the right when the user expands the locations or adds a location with long name that extends the calendar popup.
+---
+ modules/clock/clock-applet.c | 16 ++++++++++++++++
+ 1 file changed, 16 insertions(+)
+
+diff --git a/modules/clock/clock-applet.c b/modules/clock/clock-applet.c
+index 76f26b044..7754515e7 100644
+--- a/modules/clock/clock-applet.c
++++ b/modules/clock/clock-applet.c
+@@ -844,6 +844,16 @@ static const GActionEntry clock_menu_actions [] = {
+         { NULL }
+ };
+ 
++static void
++expand_locations_changed (GSettings   *settings,
++                          const gchar *key,
++                          ClockApplet *clock)
++{
++	if (clock->calendar_popup != NULL) {
++                position_calendar_popup (clock);
++	}
++}
++
+ static void
+ format_changed (GSettings   *settings,
+                 const gchar *key,
+@@ -1087,6 +1097,8 @@ fill_clock_applet (ClockApplet *cd)
+                           G_CALLBACK (format_changed), cd);
+         g_signal_connect (cd->clock_settings, "changed::clock-show-weeks",
+                           G_CALLBACK (show_week_changed), cd);
++        g_signal_connect (cd->applet_settings, "changed::expand-locations",
++                          G_CALLBACK (expand_locations_changed), cd);
+         g_signal_connect (cd->applet_settings, "changed::locations",
+                           G_CALLBACK (locations_changed), cd);
+ 
+@@ -1301,6 +1313,10 @@ run_prefs_edit_save (GtkButton   *button,
+ 	 * account the new location (via the gconf notification) */
+         save_cities_store (cd);
+ 
++        if (cd->calendar_popup != NULL) {
++                position_calendar_popup (cd);
++        }
++
+         edit_hide (edit_window, cd);
+ }
+ 
+-- 
+GitLab
+

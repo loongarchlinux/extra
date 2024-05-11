@@ -4,25 +4,24 @@
 
 _pkgname=coveragepy
 pkgname=python-coverage
-pkgver=6.5.0
-pkgrel=5
+pkgver=7.4.4
+pkgrel=1
 pkgdesc="A tool for measuring code coverage of Python programs"
 arch=('loong64' 'x86_64')
-url="https://nedbatchelder.com/code/coverage/"
-license=('Apache')
-depends=('python')
-optdepends=('python-tomli: for pyproject.toml support')
-makedepends=('python-setuptools')
+url="https://coverage.readthedocs.io/en/latest/"
+license=('Apache-2.0')
+depends=('glibc' 'python')
+makedepends=('python-build' 'python-installer' 'python-setuptools' 'python-wheel')
 checkdepends=('python-flaky' 'python-hypothesis'
-              'python-pytest' 'python-pytest-xdist' 'python-tomli'
+              'python-pytest' 'python-pytest-xdist'
               'python-unittest-mixins' 'python-virtualenv')
 source=("$pkgname-$pkgver.tar.gz::https://github.com/nedbat/coveragepy/archive/$pkgver.tar.gz")
-sha512sums=('40d8c1a6b796925e7c1082fe27398f160725be7f7b73afef6328080930b6b635bfae863ed303b262d530ccd46cc8c4ab823acc1998cdd21b686b9f81b01a16ff')
-b2sums=('09d3efc0673485190c920c03f2fc1d2dac14c0759953df2d4f3e7043f63ea7b6c26ddcf715b6456671f3391bacefb34ed68228970faaf352ef6fd8ecb83413a7')
+sha512sums=('5edbad9906acabb56bafbd8cfb4179b75465da1b45ad19918e3fd82e1856c3024e6e73b8297df560fad0c51e0edff5f8466d6d112ebbc855e0fb1aea77422fea')
+b2sums=('f230cd3429c5f3b27b381dbb7bec76dfe0444bb961a3120a12af51a18f5ce5c3b10ff975e6a8bf0b9c3cc9eb30637a2100f30039b0d9de0de26ee06a5cc75bb6')
 
 build() {
   cd $_pkgname-$pkgver
-  python setup.py build
+  python -m build --wheel --no-isolation
 }
 
 check() {
@@ -45,8 +44,5 @@ check() {
 package() {
   cd $_pkgname-$pkgver
 
-  python setup.py install --skip-build \
-    --optimize=1 \
-    --prefix=/usr \
-    --root="$pkgdir"
+  python -m installer --destdir="$pkgdir" dist/*.whl
 }

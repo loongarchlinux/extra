@@ -1,12 +1,12 @@
 # Maintainer: David Runge <dvzrv@archlinux.org>
 
 pkgname=repod
-pkgver=0.3.0
-pkgrel=1
+pkgver=0.3.1
+pkgrel=2
 pkgdesc="Tooling to maintain binary package repositories"
 arch=(any)
 url="https://repod.archlinux.page/"
-license=(GPL3)
+license=(GPL-3.0-or-later)
 depends=(
   pyalpm
   python
@@ -20,7 +20,7 @@ depends=(
   python-pyxdg
   python-pyzstd
   python-subprocess-tee
-  python-tomli
+  python-typing_extensions
 )
 makedepends=(
   python-build
@@ -31,23 +31,40 @@ makedepends=(
   python-sphinx_rtd_theme
   python-sphinxcontrib-programoutput
 )
-checkdepends=(python-pytest python-pytest-asyncio python-pytest-lazy-fixture)
+checkdepends=(
+  python-pytest
+  python-pytest-asyncio
+  python-pytest-lazy-fixtures
+)
 source=(
   https://gitlab.archlinux.org/archlinux/$pkgname/-/archive/$pkgver/$pkgname-$pkgver.tar.gz
 )
-sha256sums=('1d7763d0234aeb64ba21772b9de33e4b05b575ff916c0bcf7055109f06168468')
-b2sums=('ba17d42856ba032d564fe8bdc5083f6524bc2b2d47bb353c68fd10f36a5a55795eba479f10853937772f470abe44dd9c582b49c3d905feea349c363e9249baa0')
+sha512sums=('fa7fea864686855e410da764c7303a1876fc86a9b59479855ae63d9e582ad52faea4bc33bf9fad170199de555298c57fb1ca5c089231fb0b423cfd06680c5956')
+b2sums=('257287997bf1477ad92c856b3fc97e76cfb2f7996714618ff8a7f6e5e3afbc21190c672e3dc29458046924bf76c79d335079892ae80ca6e0230dc7cb94e62076')
 
 build() {
-  export PDM_BUILD_SCM_VERSION=$pkgver
   cd $pkgname-$pkgver
-  make build
+  PDM_BUILD_SCM_VERSION=$pkgver make build
   make system-docs
 }
 
 check() {
+  local pytest_options=(
+    -vv
+    -k 'not (integration or regex)'
+    # fail with Python 3.12 (unittest.mock.Mock.has_calls silently removed)
+    --deselect tests/config/test_settings.py::test_usertomlconfig[True-False]
+    --deselect tests/config/test_settings.py::test_usertomlconfig[False-False]
+    --deselect tests/config/test_settings.py::test_usertomlconfig[True-True]
+    --deselect tests/config/test_settings.py::test_usertomlconfig[False-True]
+    --deselect tests/config/test_settings.py::test_systemtomlconfig[True-False]
+    --deselect tests/config/test_settings.py::test_systemtomlconfig[False-False]
+    --deselect tests/config/test_settings.py::test_systemtomlconfig[True-True]
+    --deselect tests/config/test_settings.py::test_systemtomlconfig[False-True]
+  )
+
   cd $pkgname-$pkgver
-  make test
+  pytest "${pytest_options[@]}"
 }
 
 package() {

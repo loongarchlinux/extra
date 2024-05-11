@@ -3,7 +3,7 @@
 pkgname=python-clevercsv
 pkgver=0.8.0
 _commit=25d696a0adb94e875bad7887ad34ac4be4bd6d3f
-pkgrel=2
+pkgrel=3
 pkgdesc="A Python package for handling messy CSV files"
 url="https://github.com/alan-turing-institute/CleverCSV"
 license=('MIT')

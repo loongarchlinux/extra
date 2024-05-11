@@ -1,0 +1,28 @@
+# Maintainer: Antonio Rojas <arojas@archlinux.org>
+
+_pyname=matroid-database
+pkgname=python-$_pyname
+pkgver=0.3
+pkgrel=2
+pkgdesc='Python interface to matroid database'
+arch=(any)
+url='https://github.com/gmou3/matroid-database'
+license=(GPL-3.0-or-later)
+depends=(python)
+makedepends=(python-build
+             python-installer
+             python-setuptools
+             python-wheel)
+source=(https://pypi.org/packages/source/${_pyname:0:1}/$_pyname/$_pyname-$pkgver.tar.gz)
+sha256sums=('446057ae38700432efc3a2fca2b9ee21f6a3987f4c3589804cae39000c051b66')
+
+build() {
+  cd $_pyname-$pkgver
+  python -m build --wheel --no-isolation
+}
+
+package() {
+  cd $_pyname-$pkgver
+  python -m installer --destdir="$pkgdir" dist/*.whl
+  install -Dm644 LICENSE -t "$pkgdir"/usr/share/licenses/$pkgname
+}

@@ -3,7 +3,7 @@
 
 pkgname=cargo-clone
 pkgver=1.2.1
-pkgrel=3
+pkgrel=4
 pkgdesc="A cargo subcommand to fetch the source code of a Rust crate"
 arch=('loong64' 'x86_64')
 url="https://github.com/JanLikar/cargo-clone"
@@ -16,12 +16,13 @@ sha256sums=('c82a54b7651419664e92c106e3eeacff5080cca10faed6bef5931129a7bde182')
 
 prepare() {
   cd "$pkgname-$pkgver"
-  cargo fetch --locked --target "$CARCH-unknown-linux-gnu"
+  cargo fetch --locked --target "$(rustc -vV | sed -n 's/host: //p')"
 }
 
 build() {
   cd "$pkgname-$pkgver"
   export LIBSSH2_SYS_USE_PKG_CONFIG=1
+  CFLAGS+=' -ffat-lto-objects'
   cargo build --release --frozen
 }
 

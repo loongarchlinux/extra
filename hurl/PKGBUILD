@@ -1,0 +1,65 @@
+# Maintainer: kpcyrd <kpcyrd[at]archlinux[dot]org>
+
+pkgname=hurl
+pkgver=4.3.0
+pkgrel=1
+pkgdesc="Run and test HTTP requests with plain text"
+url='https://github.com/Orange-OpenSource/hurl'
+arch=('loong64' 'x86_64')
+license=('Apache-2.0')
+depends=(
+  'curl' 'libcurl.so'
+  'gcc-libs'
+  'glibc'
+  'libxml2' 'libxml2.so'
+)
+makedepends=(
+  'cargo'
+)
+options=(!lto)
+source=(https://github.com/Orange-OpenSource/${pkgname}/archive/${pkgver}/${pkgname}-${pkgver}.tar.gz)
+sha256sums=('499f2430ee6b73b0414ab8aa3c9298be8276e7b404b13c76e4c02a86eb1db9cd')
+b2sums=('7d5edc1709e36193a535593bbf058669b7f61f0637e117050cb85e0cb386aefed26c18a1c5f7f5964ca2649abb684e593acf15adcb1da74e39ca73f066eef610')
+
+prepare() {
+  cd "${pkgname}-${pkgver}"
+  cargo fetch --locked --target "$(rustc -vV | sed -n 's/host: //p')"
+}
+
+build() {
+  cd ${pkgname}-${pkgver}
+  cargo build --frozen --release
+}
+
+check() {
+  cd ${pkgname}-${pkgver}
+  cargo test --frozen -- --skip simple_sample --skip runner::hurl_file::run
+  target/release/hurl --help
+}
+
+package() {
+  cd ${pkgname}-${pkgver}
+  install -Dm 755 -t "${pkgdir}/usr/bin" \
+    target/release/hurl
+
+  install -Dm 644 -t "${pkgdir}/usr/share/man/man1" \
+    docs/manual/hurl.1 \
+    docs/manual/hurlfmt.1
+
+  # install completions (available in next release)
+  if [ -d completions ]; then
+    echo "TODO: add completions"
+  fi
+#  install -Dm 644 completions/hurl.bash "${pkgdir}/usr/share/bash-completion/completions/hurl"
+#  install -Dm 644 completions/hurlfmt.bash "${pkgdir}/usr/share/bash-completion/completions/hurlfmt"
+#
+#  install -Dm 644 -t "${pkgdir}/usr/share/zsh/site-functions" \
+#    _hurl \
+#    _hurlfmt
+#
+#  install -Dm 644 -t "${pkgdir}/usr/share/fish/vendor_completions.d" \
+#    hurl.fish \
+#    hurlfmt.fish
+}
+
+# vim: ts=2 sw=2 et:

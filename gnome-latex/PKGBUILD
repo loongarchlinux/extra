@@ -5,26 +5,23 @@
 
 pkgname=gnome-latex
 pkgver=3.46.0
-pkgrel=2
+pkgrel=3
 pkgdesc='LaTeX editor for the GNOME desktop'
 arch=('loong64' 'x86_64')
 url='https://wiki.gnome.org/Apps/GNOME-LaTeX'
-license=('GPL3')
-depends=('gsettings-desktop-schemas' 'gspell' 'libgee' 'tepl')
+license=('GPL-3.0-or-later')
+depends=('gsettings-desktop-schemas' 'gspell' 'libgee' 'libgedit-tepl')
 makedepends=('appstream-glib' 'autoconf-archive' 'git' 'gtk-doc' 'gobject-introspection' 'intltool'
              'vala' 'yelp-tools')
 optdepends=('texlive-latex: build LaTeX documents')
-_commit=1a94329dd4c162452f64a96a19fc6bb30bfb006f  # tags/3.46.0^0
-source=("git+https://gitlab.gnome.org/swilmet/gnome-latex.git#commit=$_commit")
-sha256sums=('SKIP')
-
-pkgver() {
-  cd $pkgname
-  git describe --tags | sed 's/[^-]*-g/r&/;s/-/+/g'
-}
+source=("git+https://gitlab.gnome.org/swilmet/gnome-latex.git#tag=$pkgver")
+b2sums=('8f74661c98e3f5aba54d1abee3869832380da3c91abf477efc462e45dd0e23f040cee1c0a2c0864934f900c3c69e3021aea7cad6d9d37e8229fc0192749e04ee')
 
 prepare() {
   cd $pkgname
+
+  ## Adapt for Tepl -> libgedit-tepl rename
+  git cherry-pick -n 41e532c427f43a5eed9081766963d6e29a9975a1
   NOCONFIGURE=1 ./autogen.sh
 }
 

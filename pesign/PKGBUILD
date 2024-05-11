@@ -4,11 +4,14 @@
 
 pkgname=pesign
 pkgver=116
-pkgrel=1
+pkgrel=2
 pkgdesc="Linux tools for signed PE-COFF binaries"
 arch=(loong64 x86_64)
 url="https://github.com/rhboot/pesign"
-license=(GPL3)
+license=(
+  GPL-2.0-only
+  GPL-3.0-only
+)
 depends=(
   bash
   gcc-libs
@@ -24,6 +27,7 @@ options=(debug)
 source=(
   $pkgname-$pkgver.tar.gz::https://github.com/rhboot/$pkgname/archive/$pkgver.tar.gz
   $pkgname-116-remove_root_check.patch
+  $pkgname-116-fix_efikeygen_segfault.patch
   $pkgname.sysusers
   $pkgname.tmpfiles
   $pkgname.service
@@ -31,12 +35,14 @@ source=(
 )
 sha512sums=('c76a67e6ce59911ccde371080b38c08d17f5e418bf415ee112cc433f1b27ccf56c5f5580c21b17354f5d3017c2e6f13af31958179a6ad80e5e908535d215227c'
             'c79365268a56111af98b5ed20518df9ab955531d4a3978de83b2491ae9b96643cc7bfb6f24ca493885275429a4ecb79e6edb8135206ea65c4147d63727aa8f3a'
+            '08b1a7ad920591581f77d7c5f58a3a238b4a4eb27ea09c2bd7d24f665b461138bf27544c6434b1ab77a2d54aefa6fae77043128721d9ac94e3c0aebcf028158d'
             '46c9958170924632fdf8fdf7b07eac5b35fc2a9292c84e346d9fc69cbedbfb762fc911c5c5dbf6e8391fa38a4f747b891dd295f14b47f594814572a07fcbc44c'
             '2dca9a1aba9485afe6f07b7a3d9ee1dd0cd7640264f7584e739cab126b501ac1962a3b37509744a2b77abc613c75222801daf2e4fd97dd5211d19fbb7bd9ec33'
             '5e4eb101b01fd688ca915051e25978e6b7a27ad2588c6b04ed52c179a00c04c1298080f9c2c0ae982cd0d861c649e5e6c244e54cb4962ca39c1d2264d1ec12df'
             '14a161ec3a883d5c17581a6743a9b5e67e1617228966c4972933a055618f157aafefe8b0f648cb07251f0076384dd19be605acc6b1d31e7dec67749a682f505c')
 b2sums=('41c6cba82d34b13406167ea171d1630b158246259c242bd0f339da45d86a66789940f9d5361199efbf52f181bbc1653b7e1807039bcb829b26d73c7f92bfc1b5'
         '77edd4517c46c71d63c8003045ae16b9a252bf9e0e070066142f397b21d2a3634d4c4e72d1eab0a32aed441d860db7c7b9546d6b018200a6d85f9b32bf577ec2'
+        '02e6a11208d33d593e3cef01cad6291b6bbe31f9a51bdf8c48af44447f5ce5509b9f0c1f2203074b0d82ff3ce089728daf4749842fdbc934e3974679201dfd7b'
         'c4a1934f747207ffc6414db831ef138318a062e3b7186891e5294b7fb87b843204070573c762aa8da519f9c076601d8d343fcd2c336c9f7f78ee32781e930def'
         'ea7e579848648df60da248f657402cdbe3b0b866e6dcf7c062a39914e297f1dde91ec8a7d7dcfa3081c4309604c464a9e3f1263795cc3001fdbaef711028d3e5'
         '8daa7a7b5042a1d19ef53092b4c200d5ce12736d72dd561fac1adf6262db18dfc54eeaad7cf28365e06dc8322ba435674d608fdeb165c86c9f148852c2e48cea'
@@ -47,6 +53,9 @@ prepare() {
   sed -e 's/\-Werror//g' -i $pkgname-$pkgver/Make.defaults
   # remove root check so that we may run as unprivileged user: https://github.com/rhboot/pesign/issues/57
   patch -Np1 -d $pkgname-$pkgver -i ../$pkgname-116-remove_root_check.patch
+
+  # fix segfault in efikeygen: https://gitlab.archlinux.org/archlinux/packaging/packages/pesign/-/issues/1
+  patch -Np1 -d $pkgname-$pkgver -i ../$pkgname-116-fix_efikeygen_segfault.patch
 }
 
 build() {

@@ -6,11 +6,11 @@
 
 pkgname=gtkd
 pkgver=3.10.0
-pkgrel=11
+pkgrel=12
 pkgdesc='D bindings for GTK+ and related libraries.'
 arch=('loong64' 'x86_64')
 url='https://gtkd.org'
-license=('LGPL')
+license=('LGPL-3.0-or-later')
 depends=('liblphobos' 'gtk3')
 makedepends=('ldc')
 optdepends=('pango' 'atk' 'gdk-pixbuf2' 'gtksourceview3' 'gstreamer' 'vte3' 'libpeas')
@@ -19,11 +19,11 @@ sha512sums=('1e75d6cbd278a065ce26b33320fe06cc7a30af8bd884c3c87abe799afaf9da8339d
 
 build() {
     cd GtkD-$pkgver
-		export _ldFlags="$(echo -ne $LDFLAGS | sed -e 's/ /,/g')"
+    export _ldFlags="$(echo -ne $LDFLAGS | sed -e 's/-Wl,/-L=/g' -e 's/=auto/=full')"
 
     make \
         DC='ldc' \
-        LDFLAGS="-L=\"$_ldFlags\"" \
+        LDFLAGS="$_ldFlags" \
         libdir='lib/' \
         shared-{gtkd,gtkdgl,sv,gstreamer,vte,peas}
 }

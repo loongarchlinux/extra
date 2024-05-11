@@ -1,0 +1,89 @@
+# Maintainer: David Runge <dvzrv@archlinux.org>
+
+pkgbase=stalwart-mail-server
+_name=${pkgbase#stalwart-}
+pkgname=(stalwart-cli stalwart-mail)
+pkgver=0.7.3
+pkgrel=1
+pkgdesc="Secure & Modern All-in-One Mail Server (IMAP, JMAP, SMTP)"
+arch=(loong64 x86_64)
+url="https://stalw.art/"
+_url="https://github.com/stalwartlabs/mail-server"
+license=(AGPL-3.0-or-later)
+depends=(
+  gcc-libs
+  glibc
+)
+makedepends=(
+  cargo
+  clang
+)
+options=(!lto)
+source=(
+  $pkgname-$pkgver.tar.gz::$_url/archive/refs/tags/v$pkgver.tar.gz
+  config.toml
+  stalwart-mail.service
+  stalwart-mail.sysusers
+  stalwart-mail.tmpfiles
+)
+sha512sums=('72283f85039bb8ece15fbff285cddf5cc18573c6342d7d5d319a6647f54cd33d8c7d98f5b12d5edd0e967ca2c117e112be06078cc52d17bffc7549d68999fc26'
+            '1d53157ff6c369136576ca580a5948b0bd3d7ff03bbc1390f53697ceb3b55bdbf8f46fe3940a3523df4493cc8450c1495b09c08c562353e6d0c01f57de36710e'
+            'e13f1e64d780464bf728b703a61d16935d09e6ca2a053bb9cfe513f8f67282eb39a01c190ace51f5434459343a5d55a4cad0b7c8b0b6730c0500677c2811b6aa'
+            '49a52e18e529997b2fb03aae7bbf64b6493ceda0d53c3a59a1b95b4dceab2ec700e3e358015404be74ac13e354b57d17358b22f31ee9866e60a79b6922808268'
+            '5a2bbf84cb7cd10dcead3b2de7580cb31bcaf5ffa7364913a93676b64be0815112b7094478d111db86e13f4ef4eaaba8cf644dab5406940722b3116deff4a251')
+b2sums=('e3a276ff9b1153bdc8a3dcf8c2a0157527224695a2961063f0c0a371ce28a6934e1ca7183e61cbfd6e332fb57040a95cf58f5cff8a118715a864275f70115c9c'
+        'ed9dbf6965b34d357e67d37f86016caa1abc1a7bb622123c51ed2b0737125ad74aff11877f32aeedb0a0f618aeffefa30c8885c2404a77d0ac1298e3e83534d8'
+        '6ef9795916f3133616ab1d08bdc673c7bba22c2dbc25629b74274c8aed80261cdfbd0e1a50df102d857faa0d073775635e56290c5d0592fbcd59eb95759686ed'
+        '034f1896519a8d2be2ccf5a9861ac7d5f051b3336e24d01134465c1d49aff30ab662bf9d698b3c726df41e3399f87d20f45b7cfc7db98916e3a443a0a87730ce'
+        '9bfda27a714f9ccf939f01d34892cd2a92097fbffd8d670b545c3d0df9d3c3ae1704bceb76afe714e76aab9dfc7811c6c542a4cb15c58896c4da0cadcb3e13f8')
+
+prepare() {
+  cd $_name-$pkgver
+  export RUSTUP_TOOLCHAIN=stable
+  cargo fetch --locked --target "$(rustc -vV | sed -n 's/host: //p')"
+}
+
+build() {
+  cd $_name-$pkgver
+  export RUSTUP_TOOLCHAIN=stable
+  export CARGO_TARGET_DIR=target
+  cargo build --frozen --release -p mail-server -p stalwart-cli
+}
+
+check() {
+  cd $_name-$pkgver
+  export RUSTUP_TOOLCHAIN=stable
+  cargo test --frozen -p mail-server -p stalwart-cli
+}
+
+package_stalwart-cli() {
+  pkgdesc="Stalwart Mail Server CLI"
+
+  cd $_name-$pkgver
+  install -vDm 755 target/release/stalwart-cli -t "$pkgdir/usr/bin/"
+  install -vDm 644 {CHANGELOG,README,UPGRADING}.md -t "$pkgdir/usr/share/doc/$pkgname/"
+}
+
+package_stalwart-mail() {
+  pkgdesc="Stalwart Mail Server"
+  optdepends=(
+    'mariadb: for using MariaDB as storage backend on the same host'
+    'postgresql: for using PostgreSQL as storage backend on the same host'
+    'redis: for using Redis as lookup storage backend on the same host'
+    'sqlite: for using SQLite as storage backend on the same host'
+    'stalwart-cli: for using the CLI to the mail server on the same host'
+  )
+  backup=(etc/$pkgname/config.toml)
+  install=$pkgname.install
+
+  cd $_name-$pkgver
+  install -vDm 755 target/release/stalwart-mail -t "$pkgdir/usr/bin/"
+  install -vDm 640 ../config.toml -t "$pkgdir/etc/$pkgname/"
+  install -vDm 644 ../stalwart-mail.service -t "$pkgdir/usr/lib/systemd/system/"
+  install -vDm 644 ../stalwart-mail.sysusers "$pkgdir/usr/lib/sysusers.d/$pkgname.conf"
+  install -vDm 644 ../stalwart-mail.tmpfiles "$pkgdir/usr/lib/tmpfiles.d/$pkgname.conf"
+  install -vDm 644 resources/config/{build.py,spamfilter.toml} -t "$pkgdir/usr/share/$pkgname/"
+  install -vDm 644 resources/config/spamfilter/maps/* -t "$pkgdir/usr/share/$pkgname/spamfilter/maps/"
+  install -vDm 644 resources/config/spamfilter/scripts/* -t "$pkgdir/usr/share/$pkgname/spamfilter/scripts/"
+  install -vDm 644 {CHANGELOG,README,UPGRADING}.md -t "$pkgdir/usr/share/doc/$pkgname/"
+}

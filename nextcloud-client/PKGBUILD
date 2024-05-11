@@ -11,22 +11,19 @@
 # integrity checks will work:
 #
 #     makepkg -o --nodeps --skippgpcheck
-#
-# Also note that $_tag must be the SHA of the tag, not the tagged commit.
-# The _pkgver function should help get that right.
 
 pkgname=nextcloud-client
 pkgdesc='Nextcloud desktop client'
 epoch=2
-pkgver=3.11.0
-_tag=32fd0f49baafc21eee3dfc6b36cfdf623b244727
-pkgrel=3
+pkgver=3.13.0
+pkgrel=2
 arch=(loong64 x86_64)
 url='https://nextcloud.com/'
 _url=https://github.com/nextcloud/desktop
 license=(GPL-2.0-or-later)
 depends=(hicolor-icon-theme
          karchive5
+         kguiaddons5
          libcloudproviders
          openssl
          qt5-graphicaleffects
@@ -41,7 +38,7 @@ depends=(hicolor-icon-theme
 replaces=(nextcloud-client-cloudproviders)
 conflicts=(nextcloud-client-cloudproviders)
 provides=(nextcloud-client-cloudproviders)
-optdepends=('kio5: integration with Dolphin'
+optdepends=('kio: integration with Dolphin'
             'nemo-python: integration with Nemo'
             'python-nautilus: integration with Nautilus'
             'python-caja: integration with Caja'
@@ -51,32 +48,18 @@ makedepends=(cmocka
              doxygen
              extra-cmake-modules
              git
-             kio5
+             kio
              librsvg
              python-sphinx
              qt5-tools)
-source=("$pkgname::git+$_url.git?signed#tag=$_tag"
-        "0001-Avoid_duplicate_declarations_with_latest_libcloudproviders.patch::https://patch-diff.githubusercontent.com/raw/nextcloud/desktop/pull/6275.patch")
-validpgpkeys=(
-  A26B951528EA1BA1678C7AE5D406C75CEE1A36D6 # https://github.com/camilasan
-  42E775EAA3E47F9E0D5CDB0E00819E3BF4177B28 # https://github.com/misch7
-  17166A5275C5FA6F1A48FD78074BBBCB8DECC9E2 # https://github.com/er-vin
-  0739B11EDA696A3616666F6AE04221E85C5BB816 # https://github.com/allexzander
-  267BF70F7905C2723B0243267D0F74F05C22F553 # https://github.com/mgallien
-  3A877D9A896A057948059DEDAD2C27357B2CB11D # https://github.com/FlexW
-)
-sha256sums=('SKIP'
-            '681d70c75a01498f6c1c21c6b0d29e1a92515fd6570a47e775590285e9e0a03a')
-
-pkgver() {
-  cd $pkgname
-  git describe --tags | sed 's/^v//;s/-/+/g'
-}
-
-_pkgver() {
-  curl -fs https://api.github.com/repos/nextcloud/desktop/git/ref/tags/v$pkgver |
-    jq -r .object.sha
-}
+source=("$pkgname::git+$_url.git?signed#tag=v$pkgver")
+validpgpkeys=(A26B951528EA1BA1678C7AE5D406C75CEE1A36D6  # https://github.com/camilasan
+              42E775EAA3E47F9E0D5CDB0E00819E3BF4177B28  # https://github.com/misch7
+              17166A5275C5FA6F1A48FD78074BBBCB8DECC9E2  # https://github.com/er-vin
+              0739B11EDA696A3616666F6AE04221E85C5BB816  # https://github.com/allexzander
+              267BF70F7905C2723B0243267D0F74F05C22F553  # https://github.com/mgallien
+              3A877D9A896A057948059DEDAD2C27357B2CB11D) # https://github.com/FlexW
+sha256sums=('e37a43bcebbdd85370d6273465a61774648bce9d208e2a0cec8f5fad99f3aeb2')
 
 prepare() {
   # tmpdir for check()
@@ -90,13 +73,10 @@ prepare() {
   sed -i -e '/bulkupload/s/return _.*;$/return false;/' src/libsync/capabilities.cpp
   # Disable tests that touch on disabled feature
   sed -i -e '/SyncEngine/s/^/#/' -e '/Capabilities/s/^/#/' -e '/SecureFileDrop/s/^/#/' test/CMakeLists.txt
-  # Avoid duplicate declarations with latest libcloudproviders
-  git apply -3 ../0001-Avoid_duplicate_declarations_with_latest_libcloudproviders.patch
 }
 
 build() {
   cd $pkgname
-
   # bundled breakpad in libcrashreporter-qt submodule is too old and does not build with glibc >= 2.26
   # Upstream fix: https://github.com/google/breakpad/commit/bddcc58860f522a0d4cbaa7e9d04058caee0db9d
   cmake -B build -S . \
@@ -106,7 +86,6 @@ build() {
     -DBUILD_UPDATER=OFF \
     -DUNIT_TESTING=ON \
     -DPLUGINDIR=lib/qt/plugins # Fix vfs plugin install dir https://github.com/nextcloud/desktop/issues/3781#issuecomment-918918320
-
   # TODO: fix installation of PDF and HTML documents
   # WIP at https://github.com/yan12125/desktop/tree/doc-install-path
   make -C build all doc-man
@@ -114,7 +93,6 @@ build() {
 
 check() {
   cd $pkgname/build
-
   # Tests fail if $TMPDIR is too small; specify an alternative for machines
   # with a small /tmp partition.
   # Use UTC as TestCookies is sensitive to the timezone
@@ -124,7 +102,6 @@ check() {
 
 package() {
   cd $pkgname/build
-
   make DESTDIR="$pkgdir" install
 }
 

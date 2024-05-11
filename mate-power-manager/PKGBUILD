@@ -3,7 +3,7 @@
 # Contributor: Martin Wimpress <code@flexion.org>
 
 pkgname=mate-power-manager
-pkgver=1.26.1
+pkgver=1.28.1
 pkgrel=1
 pkgdesc="Power management tool for the MATE desktop"
 url="https://mate-desktop.org"
@@ -14,7 +14,7 @@ makedepends=('itstool' 'mate-panel' 'python')
 optdepends=('mate-panel: Set brightness and inhibit power management from the panel')
 source=("https://pub.mate-desktop.org/releases/${pkgver%.*}/${pkgname}-${pkgver}.tar.xz")
 groups=('mate-extra')
-sha256sums=('20cd9d22ed04babf98bb50e71a0ec5d78a8a476287723278f87da76cabfb1042')
+sha256sums=('8ebdcb74b607e868336ba9a8146cdef8f97bce535c2b0cb3bf650c58f71eee21')
 
 build() {
     	cd "${pkgname}-${pkgver}"

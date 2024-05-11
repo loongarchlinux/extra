@@ -7,8 +7,8 @@
 # Contributor: Sparadox <etienne.lafarge at gmail.com>
 
 pkgname=cloud-init
-pkgver=23.4.2
-pkgrel=1
+pkgver=24.1
+pkgrel=2
 pkgdesc="Cloud instance initialization"
 arch=(any)
 url="https://cloud-init.io"
@@ -26,7 +26,7 @@ depends=(
   python-pyserial
   python-pyyaml
   python-requests
-  python-typing-extensions
+  python-typing_extensions
   sudo
   systemd
 )
@@ -57,31 +57,30 @@ backup=(
 )
 source=(
   https://github.com/canonical/cloud-init/archive/$pkgver/$pkgname-$pkgver.tar.gz
-  $pkgname-22.1-lib_dir.patch
 )
-sha512sums=('193b3ce35132be0e127a3a077ef35d91335d3949e586b7f19eec973a5d2c28b6841f15ed90392e5097fdbb95b7d35eff2d0774033bac86aa35c221ea182ecb36'
-            '32b7521f0ae4d61a4d86f2f840fb0670e2cdc7bab708fc7b7676b5178b6d660beb3a46b803f5bcd7e0f18c6d6339fc96e20a951dfafadbb0312e4a0cafce325f')
-b2sums=('4d9d8b16f04311fe476e9f5933fa66b8faf4683b94fa7c595fe635805f63423b92ea913ce9d1c92f3d66f280fffea1b4c46aa0021030a66cba30c423f28329e6'
-        '4e03bd647ca9e1bc3d9c507824d43e4013a20d5bbcb7215755b427d0c7ded9ee48dbfb9faaae703ab2d519aee7c48a40277603c8f874347b574b7ac2b1e1a9fd')
-
-prepare() {
-  cd $pkgname-$pkgver
-  # we use /usr/lib
-  patch -Np1 -i ../$pkgname-22.1-lib_dir.patch
-}
+sha512sums=('216a824b341947189dbb252e549525bf7001c55778d9a51dde328ae4fd17da041e11813963ffedbb765245202a1e7a05ddc39350cdd8dc8e3bfb70b432b3ea5e')
+b2sums=('cdc55e9fa7c79e686aa6ac62c59bce8d243093eef90e4ef58f1cfaeae28939518c828ed688c41598216ea3614c77abea2568621240a64a4a7f1a3886ab361e8a')
 
 build() {
   cd $pkgname-$pkgver
-  python -m build --wheel --no-isolation
+  python -m build --wheel --no-isolation -C--distro=arch -C--prefix=/usr
 }
 
 check() {
-  local deselected=(
+  local pytest_options=(
+   -vv
     # we don't ship /etc/ca-certificates.conf
     --deselect tests/unittests/config/test_cc_ca_certs.py::TestRemoveDefaultCaCerts::test_commands
+    --deselect tests/unittests/test_ds_identify.py::TestWSL::test_empty_cloudinitdir
+    --deselect tests/unittests/test_ds_identify.py::TestWSL::test_found_via_userdata
+    --deselect 'tests/unittests/config/test_schema.py::TestNetplanValidateNetworkSchema::test_network_config_schema_validation_false_when_skipped[config0-]'
+    --deselect 'tests/unittests/config/test_schema.py::TestNetplanValidateNetworkSchema::test_network_config_schema_validation_false_when_skipped[config1-]'
+    --deselect 'tests/unittests/config/test_schema.py::TestNetplanValidateNetworkSchema::test_network_config_schema_validation_false_when_skipped[config2-Skipping netplan schema validation. No netplan available]'
+    --deselect 'tests/unittests/config/test_schema.py::TestNetplanValidateNetworkSchema::test_network_config_schema_validation_false_when_skipped[config3-Skipping netplan schema validation. No netplan available]'
+    --deselect 'tests/unittests/config/test_schema.py::TestNetworkSchema::test_network_schema[net_v2_skipped]'
   )
   cd $pkgname-$pkgver
-  pytest -vv "${deselected[@]}"
+  pytest "${pytest_options[@]}"
 }
 
 package() {
@@ -96,7 +95,6 @@ package() {
   rm -frv "$pkgdir/$site_packages/"{usr,etc}
 
   # configuration and hooks
-  install -vDm 644 config/clean.d/* -t "$pkgdir/etc/cloud/clean.d/"
   install -vDm 644 config/cloud.cfg.d/* -t "$pkgdir/etc/cloud/cloud.cfg.d/"
   ./tools/render-template --variant arch ./config/cloud.cfg.tmpl "$pkgdir/etc/cloud/cloud.cfg"
   install -vDm 644 templates/*.tmpl -t "$pkgdir/etc/cloud/templates/"

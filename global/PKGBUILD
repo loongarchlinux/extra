@@ -6,31 +6,31 @@
 # Contributor: Matthias Meulien <orontee@gmail.com>
 
 pkgname=global
-pkgver=6.6.11
+pkgver=6.6.12
 pkgrel=1
 pkgdesc='Source code tagging system'
 arch=(loong64 x86_64)
 url='https://www.gnu.org/software/global/'
-license=(GPL)
+license=('BSD-3-Clause', 'GPL-2.0-only', 'GPL-3.0-or-later', 'LGPL-2.0-or-later', 'LicenseRef-CALDERA', 'LicenseRef-PD', 'MIT')
 depends=(libltdl perl python sqlite)
 optdepends=(ctags emacs idutils python-pygments vim)
 options=(!emptydirs !libtool)
 validpgpkeys=("26F631B43D624A927E6F1C33969C3BE389DDA6EB")
 source=("https://ftp.gnu.org/pub/gnu/$pkgname/$pkgname-$pkgver.tar.gz"{,.sig})
-b2sums=('6e78534eed182b7106fea1df4eea3f12a01e0ea22d5030ad43954ac2e05205ed5e64138af30fe5e969c3ef35c55fc0647a89629cc11d7e7692be3ec92b53205c'
+b2sums=('985b84c35d9c526f26bd3cfbed41914d9c581f80b55979a19e1fb87db7fdb90834a0cc055775542eafd971ee10f43d74793e24e9e6265993e3dd344937ac7bab'
         'SKIP')
 
 prepare() {
   cd $pkgname-$pkgver
 
   sed -i 's/\.la/.so/g' gtags.conf.in
-  # Rename lid to lid-idutils to avoid a name collision with idutils from AUR
+
+  # Rename lid to lid-idutils to avoid a name collision with idutils
   sed -i 's/usable("lid")/usable("lid-idutils")/g' "$pkgname/$pkgname.c"
 }
 
 build() {
   cd $pkgname-$pkgver
-
   autoreconf -fi
   ./configure \
     --prefix=/usr \
@@ -47,15 +47,13 @@ check() {
 package() {
   make -C $pkgname-$pkgver DESTDIR="$pkgdir" install
 
-  # Package the emacs script
-  install -d "$pkgdir/usr/share/emacs/site-lisp"
-  mv "$pkgdir/usr/share/gtags/gtags.el" \
-    "$pkgdir/usr/share/emacs/site-lisp/gtags.el"
-
-  # Package the vim scripts
   install -d "$pkgdir/usr/share/vim/vimfiles/plugin"
   mv "$pkgdir/usr/share/gtags/gtags.vim" \
     "$pkgdir/usr/share/vim/vimfiles/plugin/gtags.vim"
   mv "$pkgdir/usr/share/gtags/gtags-cscope.vim" \
     "$pkgdir/usr/share/vim/vimfiles/plugin/gtags-cscope.vim"
+
+  install -d "$pkgdir/usr/share/emacs/site-lisp"
+  mv "$pkgdir/usr/share/gtags/gtags.el" \
+    "$pkgdir/usr/share/emacs/site-lisp/gtags.el"
 }

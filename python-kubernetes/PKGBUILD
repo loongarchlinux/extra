@@ -4,7 +4,7 @@
 pkgname=python-kubernetes
 _pkgbase="${pkgname#python-}"
 pkgver=28.1.0
-pkgrel=1
+pkgrel=3
 license=('Apache')
 pkgdesc='Python client for the kubernetes API'
 arch=('any')
@@ -14,14 +14,19 @@ depends=('python' 'python-certifi' 'python-six' 'python-dateutil'
          'python-websocket-client' 'python-requests' 'python-requests-oauthlib'
          'python-adal')
 makedepends=('python-setuptools')
-checkdepends=('python-pytest' 'python-pluggy' 'python-py' 'python-isort' 'python-nose')
-source=("${_pkgbase}-${pkgver}.tar.gz::${url}/archive/v${pkgver}.tar.gz")
-sha256sums=('eb03b3b3c586f90323a9aa8ec04bf6691b57abc56af7156030b7bf612c80af17')
+checkdepends=('python-pytest' 'python-pluggy' 'python-py' 'python-isort')
+source=("${_pkgbase}-${pkgver}.tar.gz::${url}/archive/v${pkgver}.tar.gz"
+	"removed-unittest-alias.patch")
+sha256sums=('eb03b3b3c586f90323a9aa8ec04bf6691b57abc56af7156030b7bf612c80af17'
+            '8fac6ead5125dd8c6644d5bc1696c9581b1a5aeb467254487acf9b8e1146ecd6')
 
 prepare() {
   cd "${srcdir}"
 
   mv -v "python-${pkgver}" "${_pkgbase}-${pkgver}"
+
+  cd "${srcdir}/${_pkgbase}-${pkgver}"
+  patch -Np1 -i $srcdir/removed-unittest-alias.patch
 }
 
 build() {

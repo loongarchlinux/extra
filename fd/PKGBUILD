@@ -1,28 +1,33 @@
 # Maintainer: Sven-Hendrik Haase <svenstaro@archlinux.org>
-# Maintainer: Maxim Baz <$pkgname at maximbaz dot com>
-# Contributor: Daniel M. Capella <polyzen@archlinux.info>
+# Maintainer: Daniel M. Capella <polyzen@archlinux.org>
+# Contributor: Maxim Baz <archlinux at maximbaz dot com>
 
 pkgname=fd
-pkgver=9.0.0
+pkgver=10.1.0
 pkgrel=1
 pkgdesc='Simple, fast and user-friendly alternative to find'
 arch=('loong64' 'x86_64')
 url=https://github.com/sharkdp/fd
-license=('MIT' 'APACHE')
+license=('MIT' 'Apache-2.0')
 depends=('gcc-libs')
 makedepends=('rust')
 source=("fd-$pkgver.tar.gz::$url/archive/v$pkgver.tar.gz")
-sha512sums=('e992db9170884c5c426d51ba06a0684b000c65df3fae392fe9ffb3555b94f1d0cfde9b5ae01da37508a1b11bc75b023534db380c992cb4ccf17084d27ec87c84')
+sha512sums=('6ab75965cb1852dd677ffb07d51db852c993b59551ab2e3a87bf81560a41c5fff35e63e9e09aa495c6c42cd9d038bf8ad85c491095435c9881101cf6284385df')
+
+prepare() {
+  cd fd-$pkgver
+  cargo fetch --locked --target "$(rustc -vV | sed -n 's/host: //p')"
+}
 
 build() {
   cd fd-$pkgver
   export CFLAGS+=" -ffat-lto-objects"
-  cargo build --release --locked
+  cargo build --release --locked --offline
 }
 
 check() {
   cd fd-$pkgver
-  cargo test --release --locked
+  cargo test --locked --offline
 }
 
 package() {
@@ -35,7 +40,6 @@ package() {
   install -Dm644 autocomplete/_fd "$pkgdir"/usr/share/zsh/site-functions/_fd
 
   install -Dm644 doc/fd.1 "$pkgdir"/usr/share/man/man1/fd.1
-  install -Dm644 LICENSE-APACHE "$pkgdir"/usr/share/licenses/fd/LICENSE-APACHE
   install -Dm644 LICENSE-MIT "$pkgdir"/usr/share/licenses/fd/LICENSE-MIT
 }
 

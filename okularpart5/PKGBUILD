@@ -1,0 +1,69 @@
+# Maintainer: Antonio Rojas <arojas@archlinux.org>
+
+pkgname=okularpart5
+pkgver=23.08.5
+pkgrel=1
+pkgdesc='Qt5 Okular KPart'
+arch=(loong64 x86_64)
+url='https://apps.kde.org/okular/'
+license=(GPL LGPL FDL)
+depends=(discount
+         djvulibre
+         freetype2
+         gcc-libs
+         glibc
+         karchive5
+         kbookmarks5
+         kcodecs5
+         kcompletion5
+         kconfig5
+         kconfigwidgets5
+         kcoreaddons5
+         ki18n5
+         kio5
+         kitemviews5
+         kjobwidgets5
+         kparts5
+         kpty5
+         ktextwidgets5
+         kwallet5
+         kwidgetsaddons5
+         kxmlgui5
+         libjpeg-turbo
+         libkexiv2-qt5
+         libspectre
+         libtiff
+         phonon-qt5
+         poppler-qt5
+         purpose5
+         qt5-base
+         qt5-declarative
+         qt5-speech
+         qt5-svg
+         threadweaver5
+         zlib)
+makedepends=(ebook-tools
+             extra-cmake-modules
+             kactivities5)
+optdepends=('ebook-tools: mobi and epub support'
+            'unarchiver: Comic Book Archive support (alternative)'
+            'unrar: Comic Book Archive support')
+conflicts=('okular<24')
+source=(https://download.kde.org/stable/release-service/$pkgver/src/okular-$pkgver.tar.xz{,.sig})
+sha256sums=('d5d51f69b176a250907ee70e8f97143fc9d705cee3ef7ff448626c8a529ce364'
+            'SKIP')
+validpgpkeys=(CA262C6C83DE4D2FB28A332A3A6A4DB839EAA6D7  # Albert Astals Cid <aacid@kde.org>
+              F23275E4BF10AFC1DF6914A6DBD2CE893E2D1C87  # Christoph Feck <cfeck@kde.org>
+              D81C0CB38EB725EF6691C385BB463350D6EF31EF) # Heiko Becker <heiko.becker@kde.org>
+
+build() {
+  cmake -B build -S okular-$pkgver \
+    -DBUILD_TESTING=OFF \
+    -DFORCE_NOT_REQUIRED_DEPENDENCIES="KF5DocTools;CHM;KF5KHtml;QMobipocket"
+  cmake --build build
+}
+
+package() {
+  DESTDIR="$pkgdir" cmake --install build
+  rm -r "$pkgdir"/usr/{bin,include,share}
+}

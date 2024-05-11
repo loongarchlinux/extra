@@ -2,8 +2,8 @@
 # Contributor: Arch Haskell Team <arch-haskell@haskell.org>
 
 pkgname=hoogle
-pkgver=5.0.18.3
-pkgrel=231
+pkgver=5.0.18.4
+pkgrel=16
 pkgdesc="Haskell API Search"
 url="https://www.haskell.org/hoogle/"
 license=("BSD")
@@ -11,32 +11,32 @@ arch=('loong64' 'x86_64')
 depends=('ghc-libs' 'haskell-quickcheck' 'haskell-aeson' 'haskell-blaze-html'
          'haskell-blaze-markup' 'haskell-cmdargs' 'haskell-conduit' 'haskell-conduit-extra'
          'haskell-crypton-connection' 'haskell-extra' 'haskell-foundation' 'haskell-hashable'
-         'haskell-http-conduit' 'haskell-http-types' 'haskell-js-flot' 'haskell-js-jquery'
-         'haskell-mmap' 'haskell-network' 'haskell-old-locale' 'haskell-process-extras'
-         'haskell-resourcet' 'haskell-src-exts' 'haskell-storable-tuple' 'haskell-tar'
-         'haskell-uniplate' 'haskell-utf8-string' 'haskell-vector' 'haskell-wai'
+         'haskell-src-exts' 'haskell-http-conduit' 'haskell-http-types' 'haskell-js-flot'
+         'haskell-js-jquery' 'haskell-mmap' 'haskell-network' 'haskell-old-locale'
+         'haskell-process-extras' 'haskell-resourcet' 'haskell-safe' 'haskell-storable-tuple'
+         'haskell-tar' 'haskell-uniplate' 'haskell-utf8-string' 'haskell-vector' 'haskell-wai'
          'haskell-wai-logger' 'haskell-warp' 'haskell-warp-tls' 'haskell-zlib')
-makedepends=('ghc' 'uusi')
+makedepends=('ghc')
 source=("https://hackage.haskell.org/packages/archive/${pkgname}/${pkgver}/${pkgname}-${pkgver}.tar.gz")
-sha512sums=('9e1f736411390c2807b46a555962b6346e8ce3b7cb2bb61ef38142992b02f2fcf636e4bc796d7bb582834810191a2f296b094cfc9630ab3ab170949c5aab1d23')
-
-prepare() {
-    cd $pkgname-$pkgver
-    uusi -r connection:crypton-connection $pkgname.cabal
-}
+sha512sums=('3237d8b2ed9f7b1c44ccbd2e09d3aa54e7c805043d172f053f076a53e642fdfbfae60e8cf90a9c5fe06e27a8004bc05657b4d110d6c342cfd4b2a68c94350db7')
 
 build() {
     cd $pkgname-$pkgver
 
     runhaskell Setup configure -O --enable-shared --enable-executable-dynamic --disable-library-vanilla \
-        --prefix=/usr --docdir=/usr/share/doc/$pkgname --datasubdir=$pkgname \
-        --dynlibdir=/usr/lib --libsubdir=\$compiler/site-local/\$pkgid --ghc-option=-fllvm \
+        --prefix=/usr --docdir=/usr/share/doc/$pkgname --datasubdir=$pkgname --enable-tests \
+        --dynlibdir=/usr/lib --libsubdir=\$compiler/site-local/\$pkgid \
         --ghc-option='-pie'
     runhaskell Setup build $MAKEFLAGS
     runhaskell Setup register --gen-script
     runhaskell Setup unregister --gen-script
     sed -i -r -e "s|ghc-pkg.*update[^ ]* |&'--force' |" register.sh
     sed -i -r -e "s|ghc-pkg.*unregister[^ ]* |&'--force' |" unregister.sh
+}
+
+check() {
+    cd $pkgname-$pkgver
+    runhaskell Setup test --show-details=direct
 }
 
 package() {

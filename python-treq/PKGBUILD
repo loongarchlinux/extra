@@ -4,7 +4,7 @@
 pkgname=python-treq
 # https://github.com/twisted/treq/blob/trunk/CHANGELOG.rst
 pkgver=23.11.0
-pkgrel=1
+pkgrel=2
 pkgdesc="A requests-like API built on top of twisted.web's Agent"
 arch=('any')
 license=('MIT')

@@ -1,8 +1,8 @@
 # Maintainer: Antonio Rojas <arojas@archlinux.org>
 
 pkgname=opentimelineio
-pkgver=0.15
-pkgrel=4
+pkgver=0.16.0
+pkgrel=2
 pkgdesc='Open Source API and interchange format for editorial timeline information'
 url='http://opentimeline.io/'
 license=(Apache)
@@ -20,21 +20,16 @@ makedepends=(cmake
              python-setuptools
              python-wheel)
 source=(git+https://github.com/PixarAnimationStudios/OpenTimelineIO#tag=v$pkgver
-        opentimelineio-rapidjson::git+https://github.com/Tencent/rapidjson
-        unbundle.patch)
-sha256sums=('SKIP'
-            'SKIP'
-            '1239ca9258b9c828bff3024564d67968e6e2986ecb0d3b4d900320405cc0d197')
+        opentimelineio-rapidjson::git+https://github.com/Tencent/rapidjson)
+sha256sums=('e9545959bdc9e9addb6a98fa4ef61c7d9fa3d4075115b098fcd5bcba179ae012'
+            'SKIP')
 
 prepare() {
   cd OpenTimelineIO
-
   git submodule init src/deps/rapidjson
   git submodule set-url src/deps/rapidjson "$srcdir"/opentimelineio-rapidjson
   git -c protocol.file.allow=always submodule update src/deps/rapidjson
 
-  git cherry-pick -n d1e78073d4fc321b667ceffc2d95251015af5fea # Fix build with GCC 13
-  patch -p1 -i ../unbundle.patch # Use C++17 any and optional
   sed -e '/cmake/d' -i pyproject.toml
 }
 

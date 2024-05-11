@@ -8,16 +8,17 @@ pkgname=(
   libxkbcommon-x11
   libxkbcommon-doc
 )
-pkgver=1.6.0
-pkgrel=1
+pkgver=1.7.0
+pkgrel=2
 pkgdesc='Keymap handling library for toolkits and window systems'
 url='https://xkbcommon.org/'
 arch=(loong64 x86_64)
-license=(custom)
+license=(MIT)
 makedepends=(
   bash-completion
   doxygen
   git
+  glibc
   libxcb
   libxml2
   meson
@@ -30,24 +31,19 @@ checkdepends=(
   libgl
   xorg-server-xvfb
 )
-options=(
-  debug
-)
-_commit=d2a08f761c796733e42fac4099f5c38d443e88e1  # tags/xkbcommon-1.6.0^0
-source=("git+https://github.com/xkbcommon/libxkbcommon#commit=$_commit")
-sha256sums=('SKIP')
-
-pkgver() {
-  cd libxkbcommon
-  git describe --tags | sed 's/^xkbcommon-//;s/[^-]*-g/r&/;s/-/+/g'
-}
+source=("git+https://github.com/xkbcommon/libxkbcommon#tag=xkbcommon-$pkgver")
+b2sums=('70da3ad61589c68a06c6456034f17afad3962045552641ab9e099cee821eb935d84b11de9ac52af8f79111ef222466f39cfc9a6f5ae9cac610c474a9305cd50a')
 
 prepare() {
   cd libxkbcommon
 }
 
 build() {
-  arch-meson libxkbcommon build
+  local meson_options=(
+    -D enable-docs=true
+  )
+
+  arch-meson libxkbcommon build "${meson_options[@]}"
   meson compile -C build
 }
 
@@ -67,6 +63,7 @@ _pick() {
 
 package_libxkbcommon() {
   depends=(
+    glibc
     libxml2
     xkeyboard-config
   )
@@ -95,6 +92,7 @@ package_libxkbcommon() {
 package_libxkbcommon-x11() {
   pkgdesc='Keyboard handling library using XKB data for X11 XCB clients'
   depends=(
+    glibc
     libxcb
     libxkbcommon
     libxkbcommon.so

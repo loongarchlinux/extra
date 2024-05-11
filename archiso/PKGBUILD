@@ -3,8 +3,7 @@
 # Contributor: Gerardo Exequiel Pozzi <djgera@archlinux.org>
 
 pkgname=archiso
-pkgver=75
-_commit=e72637798c2d6ce69d9444c568e230d44eacf6f5  # refs/tags/v75
+pkgver=77
 pkgrel=1
 pkgdesc="Tools for creating Arch Linux live and install iso images"
 arch=(any)
@@ -22,7 +21,10 @@ depends=(
   mtools
   squashfs-tools
 )
-makedepends=(git)
+makedepends=(
+  git
+  python-docutils
+)
 checkdepends=(shellcheck)
 optdepends=(
   'edk2-ovmf: for emulating UEFI with run_archiso'
@@ -30,17 +32,13 @@ optdepends=(
   'openssl: for CMS signature verification of PXE artifacts and rootfs over PXE'
   'qemu-desktop: for run_archiso'
 )
-source=(git+https://gitlab.archlinux.org/archlinux/archiso.git#tag=$_commit?signed)
-sha256sums=('SKIP')
+source=(git+https://gitlab.archlinux.org/archlinux/archiso.git#tag=v$pkgver?signed)
+sha512sums=('15a974cf48c0ed05f8788307cdd39b7aa29734c0de2886cfd74ec267a41612b7a9c8751d73b7afa36e3446a71e11b129cbb5d4a59540798464f7c6543d177e1f')
+b2sums=('f552bf00756012af1e2e21246d5d97f42f02595895c995c83bb1c556d51d126f4a86d67d49f872a62be87d2ff0a60907e9ff4a91dd5f1f8d489b7b1a9a503617')
 validpgpkeys=(
   '991F6E3F0765CF6295888586139B09DA5BF0D338' # David Runge <dvzrv@archlinux.org>
   'BB8E6F1B81CF0BB301D74D1CBF425A01E68B38EF' # nl6720 <nl6720@archlinux.org>
 )
-
-pkgver() {
-  cd $pkgname
-  git describe --tags | sed 's/\([^-]*-g\)/r\1/;s/-/./g;s/v//g'
-}
 
 check() {
   make -k check -C $pkgbase

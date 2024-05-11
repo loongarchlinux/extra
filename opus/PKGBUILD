@@ -8,30 +8,31 @@ pkgname=(
   opus
   opus-docs
 )
-pkgver=1.4
+pkgver=1.5.2
 pkgrel=1
 pkgdesc="Totally open, royalty-free, highly versatile audio codec"
 url="https://www.opus-codec.org/"
 arch=(loong64 x86_64)
-license=(BSD)
+license=(BSD-3-Clause)
 depends=(
   glibc
 )
 makedepends=(
   doxygen
-  git
   meson
 )
-_commit=82ac57d9f1aaf575800cf17373348e45b7ce6c0d  # tags/v1.4^0
-source=("git+https://github.com/xiph/opus#commit=$_commit")
-b2sums=('SKIP')
+source=("https://downloads.xiph.org/releases/opus/opus-$pkgver.tar.gz")
+b2sums=('1c54de8171df1da69b64a2eca4ce97a0280cfceafb387f40ef1186add366030a397fabc19b18cf1e50d6dbaccb027697d1e2b3da4fa6ab73d70c2b4e723e87f7')
 
-pkgver() {
-  cd opus
-  git describe --tags | sed 's/^v//;s/[^-]*-g/r&/;s/-/+/g'
-}
+# https://downloads.xiph.org/releases/opus/SHA256SUMS.txt
+sha256sums=('65c1d2f78b9f2fb20082c38cbe47c951ad5839345876e46941612ee87f9a7ce1')
+
+# Git doesn't contain model data
+#source=("git+https://gitlab.xiph.org/xiph/opus.git?signed#tag=v$pkgver")
+#validpgpkeys=(43E96DE704A2D88B339759C35E5DD9A36F9189C8) # Jean-Marc Valin <jmvalin@jmvalin.ca>
 
 prepare() {
+  ln -s opus-$pkgver opus
   cd opus
 }
 
@@ -39,6 +40,9 @@ build() {
   local meson_options=(
     -D asm=disabled
     -D custom-modes=true
+    -D deep-plc=enabled
+    -D dred=enabled
+    -D osce=enabled
   )
 
   arch-meson opus build "${meson_options[@]}"
@@ -66,6 +70,8 @@ package_opus-docs() {
   depends=()
 
   mv doc/* "$pkgdir"
+
+  install -Dt "$pkgdir/usr/share/licenses/$pkgname" -m644 opus/COPYING
 }
 
 # vim:set sw=2 sts=-1 et:

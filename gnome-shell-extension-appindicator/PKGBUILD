@@ -1,31 +1,28 @@
 # Maintainer: kpcyrd <kpcyrd[at]archlinux[dot]org>
 
 pkgname=gnome-shell-extension-appindicator
-pkgver=57
+pkgver=58
 pkgrel=1
 epoch=1
 pkgdesc='AppIndicator/KStatusNotifierItem support for GNOME Shell'
 url='https://github.com/ubuntu/gnome-shell-extension-appindicator'
 arch=('any')
 license=('GPL-2.0-or-later')
-depends=('gnome-shell>=3.34')
-makedepends=('meson' 'jq')
-optdepends=(
-  'libappindicator-gtk2: support GTK+2 applications'
-  'libappindicator-gtk3: support GTK+3 applications'
+depends=('gnome-shell')
+makedepends=(
+  'jq'
+  'meson'
 )
 source=("${pkgname}-${pkgver}.tar.gz::https://github.com/ubuntu/${pkgname}/archive/v${pkgver}.tar.gz")
-sha256sums=('788fa3ff2f8525efbd794bffd0fcec3d77c9c1cbfcff0fadeb93b4925751ca41')
+sha256sums=('7a6fda28ddd214fbb832486b85c73447ff0c5fc7a36c6d1510c4ff6801cff9d8')
 
 build() {
-  cd "${pkgname}-${pkgver}"
-  meson --prefix=/usr build/
-  ninja -C build/
+  arch-meson "${pkgname}-${pkgver}" build -Dlocal_install=disabled
+  meson compile -C build
 }
 
 package() {
-  cd "${pkgname}-${pkgver}"
-  DESTDIR="${pkgdir}" ninja -C build/ install
+  meson install -C build --destdir="${pkgdir}"
   # this file is generated at pkg install time
   rm "${pkgdir}/usr/share/glib-2.0/schemas/gschemas.compiled"
 }

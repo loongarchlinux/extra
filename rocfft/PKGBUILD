@@ -2,17 +2,17 @@
 # Contributor: Jakub Okoński <jakub@okonski.org>
 # Contributor: Markus Näther <naetherm@cs.uni-freiburg.de>
 pkgname=rocfft
-pkgver=5.7.1
+pkgver=6.0.2
 pkgrel=1
 pkgdesc='Next generation FFT implementation for ROCm'
 arch=('loong64' 'x86_64')
-url='https://rocfft.readthedocs.io/en/latest/library.html'
+url='https://rocm.docs.amd.com/projects/rocFFT/en/latest/index.html'
 license=('MIT')
-depends=('hip' 'python')
-makedepends=('rocm-cmake')
+depends=('rocm-core' 'hip' 'glibc' 'gcc-libs')
+makedepends=('cmake' 'rocm-cmake')
 _git='https://github.com/ROCmSoftwarePlatform/rocFFT'
 source=("$pkgname-$pkgver.tar.gz::$_git/archive/rocm-$pkgver.tar.gz")
-sha256sums=('202f11f60dc8738e29bbd1b397d419e032794f8bffb7f48f2b31f09cc5f08bc2')
+sha256sums=('d3e1f7a4dc661f1e5ffce02e2e01ae6c3c339bac8e93deaf175e4c03ddfea459')
 options=(!lto)
 _dirname="$(basename "$_git")-$(basename "${source[0]}" ".tar.gz")"
 
@@ -21,23 +21,22 @@ build() {
   export HIPCC_COMPILE_FLAGS_APPEND="-parallel-jobs=$(nproc)"
   export HIPCC_LINK_FLAGS_APPEND="-parallel-jobs=$(nproc)"
   # -fcf-protection is not supported by HIP, see
-  # https://docs.amd.com/bundle/ROCm-Compiler-Reference-Guide-v5.5/page/Compiler_Options_and_Features.html#d2e2018
-  CXXFLAGS="${CXXFLAGS} -fcf-protection=none" \
-  cmake \
-    -Wno-dev \
-    -B build \
-    -S "$_dirname" \
-    -DCMAKE_BUILD_TYPE=None \
-    -DCMAKE_CXX_COMPILER=/opt/rocm/bin/hipcc \
-    -DCMAKE_INSTALL_PREFIX=/opt/rocm
+  # https://rocm.docs.amd.com/en/latest/reference/rocmcc.html#support-status-of-other-clang-options
+  local cmake_args=(
+    -Wno-dev
+    -S "$_dirname"
+    -B build
+    -D CMAKE_BUILD_TYPE=None
+    -D CMAKE_CXX_COMPILER=/opt/rocm/bin/hipcc
+    -D CMAKE_CXX_FLAGS="${CXXFLAGS} -fcf-protection=none"
+    -D CMAKE_INSTALL_PREFIX=/opt/rocm
+  )
+  cmake "${cmake_args[@]}"
   cmake --build build
 }
 
 package() {
   DESTDIR="$pkgdir" cmake --install build
-
-  echo "/opt/rocm/$pkgname/lib" > "$pkgname.conf"
-  install -Dm644 "$pkgname.conf" "$pkgdir/etc/ld.so.conf.d/rocfft.conf"
 
   install -Dm644 "$srcdir/$_dirname/LICENSE.md" "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
 }

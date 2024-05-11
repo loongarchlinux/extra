@@ -4,7 +4,7 @@
 _hkgname=network
 pkgname=haskell-network
 pkgver=3.1.4.0
-pkgrel=15
+pkgrel=20
 pkgdesc="Low-level networking interface"
 url="https://hackage.haskell.org/package/${_hkgname}"
 license=('BSD')
@@ -17,10 +17,11 @@ sha512sums=('18a0e0e336691c639bf69b5af74adef57302250a0a2e3a4a15c6cad6743785b7abe
 
 build() {
     cd $_hkgname-$pkgver
-    
+
+    LDFLAGS="${LDFLAGS/-Wl,-z,pack-relative-relocs/}" \
     runhaskell Setup configure -O --enable-shared --enable-executable-dynamic --disable-library-vanilla \
         --prefix=/usr --docdir=/usr/share/doc/$pkgname --datasubdir=$pkgname --enable-tests \
-        --dynlibdir=/usr/lib --libsubdir=\$compiler/site-local/\$pkgid --ghc-option=-fllvm
+        --dynlibdir=/usr/lib --libsubdir=\$compiler/site-local/\$pkgid
     runhaskell Setup build $MAKEFLAGS
     runhaskell Setup register --gen-script
     runhaskell Setup unregister --gen-script

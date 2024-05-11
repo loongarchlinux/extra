@@ -3,7 +3,7 @@
 
 pkgname=todoman
 pkgver=4.4.0
-pkgrel=2
+pkgrel=3
 pkgdesc="A simple, standards-based, cli todo (aka: task) manager"
 arch=(any)
 url="https://github.com/pimutils/todoman"
@@ -43,11 +43,6 @@ source=($pkgname-$pkgver.tar.gz::$url/archive/refs/tags/v$pkgver.tar.gz)
 sha512sums=('45e5272fe1a001894c7d86b2cea1ba3a3b41df7b9966952d622ba97e0474a3d490788953cf05fccce2f83ae5f5c8ecce9ecfc0f880dd23deb5f0ffe618c436e6')
 b2sums=('f90208ad61d5aa1a9d546b998e4c640a8e5904587e8d1baf74189171521edb8ea19c5d15803edc72650b589076f89d6b5ed8779a0234bc46597ed9d023d0489e')
 
-prepare() {
-  # we don't care about test coverage
-  sed '/addopts/d' -i $pkgname-$pkgver/pyproject.toml
-}
-
 build() {
   export SETUPTOOLS_SCM_PRETEND_VERSION="$pkgver"
 
@@ -59,6 +54,7 @@ build() {
 check() {
   local pytest_options=(
     -vv
+    -o addopts=''
     --deselect tests/test_ui.py::test_ctrl_c_clears
   )
 

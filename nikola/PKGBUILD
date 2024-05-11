@@ -1,9 +1,8 @@
 # Maintainer: David Runge <dvzrv@archlinux.org>
 
-_name=Nikola
 pkgname=nikola
-pkgver=8.3.0
-pkgrel=2
+pkgver=8.3.1
+pkgrel=1
 pkgdesc="A static site and blog generator"
 arch=(any)
 url="https://getnikola.com/"
@@ -30,6 +29,7 @@ depends=(
   python-unidecode
 )
 makedepends=(
+  git
   jupyter-notebook
   python-aiohttp
   python-build
@@ -75,19 +75,21 @@ optdepends=(
   'python-typogrify: for typographical enhancements'
   'python-watchdog: for nikola auto'
 )
-source=($_url/releases/download/v$pkgver/$pkgname-$pkgver.tar.gz{,.asc})
-sha512sums=('9b25eb90fa560b45e8cd0b03f24523859548353f2a4d2ac91b23b05bfb614d20456bb71f1aaa5702b6d6ab7980696aeb2f5ccc3c00ebc648cfcad49619481247'
-            'SKIP')
-b2sums=('67ab76c670fd00d992e6359bcaa11c59dfc904c78c935d1739e6ed7118e38c8f1c4590782a75e85c722f4fcb2c23efc032cb5d58d0c1587069b80920f3bd20fa'
-        'SKIP')
+source=(
+  git+$_url.git?signed#tag=v$pkgver
+)
+sha512sums=('e41b3d26e2c431b9ed9fa40d6e71f9bd40eb6f8c5c5312133d0f835ddcdac96b0ab3d5b8c3d6dab56bde35717f684b80cdcced7e64c66829de1fe4acf8724eb8')
+b2sums=('a0a6f70e0903442a7611553ba410fadc8724158653f023b1da75aa46c7dadbbd4a5fe19337e33d1b20debbbac57c3391f55d0c8355729895a762c5bebf770029')
 validpgpkeys=('DF32C99CFF84282CF9D4CF7171023DBD5EAAEA16') # Chris Warrick <kwpolska@gmail.com>
 
 prepare() {
-  sed -e '/addopts/d' -i $_name-$pkgver/setup.cfg
+  cd $pkgname
+  # fix issue with pytest 8: https://github.com/getnikola/nikola/issues/3753
+  git cherry-pick -n 5f1003f91cd59f62622d379efe9be5fb19a1ed3e
 }
 
 build() {
-  cd $_name-$pkgver
+  cd $pkgname
   python -m build --wheel --no-isolation
 
   # shell completions
@@ -100,13 +102,14 @@ build() {
 check() {
   local pytest_options=(
     -vv
+    -o addopts=''
   )
-  cd $_name-$pkgver
+  cd $pkgname
   pytest "${pytest_options[@]}"
 }
 
 package() {
-  cd $_name-$pkgver
+  cd $pkgname
   python -m installer --destdir="$pkgdir" dist/*.whl
   install -vDm 644 LICENSE.txt -t "$pkgdir/usr/share/licenses/$pkgname/"
   install -vDm 644 {AUTHORS,CHANGES}.txt {CONTRIBUTING,README}.rst -t "$pkgdir/usr/share/doc/$pkgname/"

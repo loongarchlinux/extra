@@ -3,7 +3,7 @@
 
 pkgname=python-blessed
 pkgver=1.20.0
-pkgrel=4
+pkgrel=5
 pkgdesc='A thin, practical wrapper around terminal styling, screen positioning, and keyboard input'
 arch=(any)
 url=https://github.com/jquast/blessed

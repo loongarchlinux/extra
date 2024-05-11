@@ -6,14 +6,15 @@
 
 pkgname=(libvirt libvirt-storage-gluster libvirt-storage-iscsi-direct)
 epoch=1
-pkgver=10.0.0
-pkgrel=2
+pkgver=10.3.0
+pkgrel=1
 pkgdesc="API for controlling virtualization engines (openvz,kvm,qemu,virtualbox,xen,etc)"
 arch=('loong64' 'x86_64')
 url="https://libvirt.org/"
-license=('LGPL' 'GPL3') #libvirt_parthelper links to libparted which is GPL3 only
+license=('LGPL-2.1-or-later'
+         'GPL-3.0-or-later') # libvirt_parthelper links to libparted
 depends=('libpciaccess' 'yajl' 'fuse3' 'gnutls' 'parted' 'libssh' 'libxml2'
-'numactl' 'polkit' 'libnbd')
+'numactl' 'polkit' 'libnbd' 'libnl')
 makedepends=('meson' 'libxslt' 'python-docutils' 'lvm2' 'open-iscsi' 'libiscsi' 'glusterfs'
              'bash-completion' 'dnsmasq' 'iproute2' 'qemu-base')
 optdepends=('libvirt-storage-gluster: Gluster storage backend'
@@ -84,7 +85,7 @@ backup=(
 source=(
   "https://libvirt.org/sources/$pkgname-$pkgver.tar.xz"{,.asc}
 )
-sha256sums=('8ba2e72ec8bdd2418554a1474c42c35704c30174b7611eaf9a16544b71bcf00a'
+sha256sums=('2af5a50b6b1027822b6344e35080fa78cc8266f821a3ae6f8f372f18dd049018'
             'SKIP')
 validpgpkeys=('453B65310595562855471199CA68BE8010084C9C') # Jiří Denemark <jdenemar@redhat.com>
 
@@ -143,8 +144,8 @@ package_libvirt() {
   cd "$pkgname-$pkgver"
   meson install -C build --destdir "$pkgdir"
 
-  mkdir "$pkgdir"/usr/lib/{sysusers,tmpfiles}.d
-  echo 'g libvirt - -' > "$pkgdir/usr/lib/sysusers.d/libvirt.conf"
+  mkdir -p "$pkgdir"/usr/lib/{sysusers,tmpfiles}.d
+  echo 'g libvirt - -' > "$pkgdir/usr/lib/sysusers.d/libvirt-qemu.conf"
   echo 'u libvirt-qemu /var/lib/libvirt "Libvirt QEMU user"' >> "$pkgdir/usr/lib/sysusers.d/libvirt.conf"
   echo 'm libvirt-qemu kvm' >> "$pkgdir/usr/lib/sysusers.d/libvirt.conf"
   echo 'z /var/lib/libvirt/qemu 0751' > "$pkgdir/usr/lib/tmpfiles.d/libvirt.conf"
@@ -152,6 +153,7 @@ package_libvirt() {
   chmod 600 "$pkgdir"/etc/libvirt/nwfilter/*.xml \
     "$pkgdir/etc/libvirt/qemu/networks/default.xml"
   chmod 700 "$pkgdir"/etc/libvirt/secrets
+  chmod 711 "$pkgdir"/var/lib/libvirt/swtpm
 
   rm -rf \
     "$pkgdir/run" \

@@ -1,0 +1,24 @@
+diff --color -aur ddclient.old/ddclient.in ddclient.new/ddclient.in
+--- ddclient.old/ddclient.in	2024-02-21 00:36:27.549089907 +0200
++++ ddclient.new/ddclient.in	2024-02-21 01:49:30.982544914 +0200
+@@ -1575,12 +1575,17 @@
+     # If file is owned by our effective uid, ensure that it has no access for group or others.
+     # Otherwise, require that it isn't writable when not owned by us. For example allow it to
+     # be owned by root:ddclient with mode 640. Always ensure that it is not accessible to others.
+-    my ($dev, $ino, $mode, @statrest) = stat(FD);
++    my ($dev, $ino, $mode, $nlink, $uid, $gid, @statrest) = stat(FD);
++    my $group_name = 'ddclient';
++    my $group_gid = getgrnam($group_name);
+     if ($mode & 077 && -o FD) {
+-        if (-f FD && (chmod 0600, $file)) {
++        if ((!defined $group_gid || $gid != $group_gid) && -f FD && (chmod 0600, $file)) {
+             warning("file $file must be accessible only by its owner (fixed).");
++        } elsif ($gid == $group_gid) {
++            info("file $file is accessible to ddclient group.")
++        } else {
++            warning("file $file must be accessible only by its owner.");
+         }
+-        warning("file $file must be accessible only by its owner.");
+     } elsif (! -o FD && -w FD) {
+         warning("file $file should be owned only by ddclient or not be writable.");
+     }

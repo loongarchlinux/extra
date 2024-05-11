@@ -4,7 +4,7 @@
 
 pkgname=python-factory-boy
 pkgver=3.3.0
-pkgrel=1
+pkgrel=2
 pkgdesc="A versatile test fixtures replacement based on thoughtbot's factory_bot for Ruby"
 url="https://github.com/FactoryBoy/factory_boy"
 license=('MIT')
@@ -35,7 +35,8 @@ build() {
 check() {
   cd factory_boy-$pkgver
   python -m installer -d tmp_install dist/*.whl
-  PYTHONPATH=tmp_install/usr/lib/python3.11/site-packages pytest
+  local site_packages=$(python -c "import site; print(site.getsitepackages()[0])")
+  PYTHONPATH=tmp_install/"${site_packages}" pytest
 }
 
 package() {

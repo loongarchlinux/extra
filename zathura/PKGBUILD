@@ -5,14 +5,12 @@
 # Contributor: ML <neldoreth>
 
 pkgname=zathura
-pkgver=0.5.4
+pkgver=0.5.6
 pkgrel=2
-
 pkgdesc="Minimalistic document viewer"
 url="https://pwmt.org/projects/zathura/"
 arch=('loong64' 'x86_64')
-license=('custom')
-
+license=('Zlib')
 makedepends=('python-sphinx' 'texlive-bin' 'meson' 'ninja' 'appstream-glib' 'check')
 checkdepends=('xorg-server-xvfb')
 depends=('girara' 'sqlite' 'desktop-file-utils' 'file' 'libsynctex' 'file' 'libseccomp')
@@ -21,40 +19,22 @@ optdepends=('zathura-djvu: DjVu support'
             'zathura-pdf-mupdf: PDF support using MuPDF'
             'zathura-ps: PostScript support'
             'zathura-cb: Comic book support')
-
-source=(zathura-$pkgver.tar.gz::https://pwmt.org/projects/zathura/download/zathura-$pkgver.tar.xz
-        fix-xvfb-run-tests.patch)
-
-sha256sums=('a3037f7aa94d4096bfd97069f62ffcdca9f06431e8663548c1cd6b945c556f32'
-            '15bf4be1a6c1dc539e2f034fa30d509d19b016ec130aaa4cbe506bf61bc343fe')
-
-prepare() {
-  # Arch's using the Fedora `xvfb` fork that deprecated the `-a` option in favor of the `-d` one.
-  # This patch makes the switch in upstream sources to prevent xvfb-run tests to fail when trying to kill the process during check().
-  # Upstream is implementing an auto-detect feature for that in the next release, so the right option will be used automatically.
-  # This patch can thus be dropped at next release.
-  # See https://git.pwmt.org/pwmt/zathura/-/issues/390#note_2321 & https://git.pwmt.org/pwmt/zathura/-/issues/390#note_2323
-  cd zathura-$pkgver
-  patch -Np1 <${srcdir}/fix-xvfb-run-tests.patch
-}
+source=("${pkgname}-${pkgver}.tar.gz::https://github.com/pwmt/${pkgname}/archive/refs/tags/${pkgver}.tar.gz")
+sha512sums=('df518865bc559b97d7abebde2dae17cbd7bde6b9f8219338bd3a455a5d71b42f62299591b9c12c75a9a6f007b1179cb163722eaaf43ee86e6a6d9e2e25f63465')
 
 build() {
-  cd zathura-$pkgver
-  arch-meson build
-
-  cd build
-  ninja
+        cd "${pkgname}-${pkgver}"
+        arch-meson build
+        ninja -C build
 }
 
 check() {
-  cd zathura-$pkgver/build
-
-  ninja test
+        cd "${pkgname}-${pkgver}"
+        ninja -C build test
 }
 
 package() {
-  cd zathura-$pkgver/build
-  DESTDIR="$pkgdir" ninja install
-
-  install -D -m664 ../LICENSE "$pkgdir"/usr/share/licenses/$pkgname/LICENSE
+        cd "${pkgname}-${pkgver}"
+        DESTDIR="${pkgdir}" ninja -C build install
+        install -Dm 664 LICENSE "${pkgdir}/usr/share/licenses/${pkgname}/LICENSE"
 }

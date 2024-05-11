@@ -5,10 +5,11 @@ pkgbase=lua-bit32
 _project=lua-compat-5.3
 _rockname=${pkgbase#lua-}
 pkgname=("$pkgbase" "lua51-$_rockname" "lua52-$_rockname" "lua53-$_rockname")
-_compatrel=0.10
-pkgver=5.3.5.1_$_compatrel
+pkgver=0.13
+epoch=1
+pkgrel=1
+_pseudover=5.3.5.1
 _rockrel=1
-pkgrel=5
 pkgdesc='Lua 5.2 bit manipulation library'
 arch=(loong64 x86_64)
 url="https://github.com/keplerproject/$_project"
@@ -18,20 +19,17 @@ makedepends=(lua
              lua52
              lua53
              luarocks)
-options=(debug)
-_archive="$_project-$_compatrel"
-_rockspec="$_rockname-${pkgver%_*}-$_rockrel.rockspec"
-_rock="$_rockname-${pkgver%_*}-$_rockrel.linux-$CARCH.rock"
-source=("$url/archive/v$_compatrel/$_archive.tar.gz"
-        "${url/github/raw.githubusercontent}/1e31f3ddc517b4e521c73f7d6eaecd5e1787daa6/rockspecs/$_rockspec")
-sha256sums=('d1ed32f091856f6fffab06232da79c48b437afd4cd89e5c1fc85d7905b011430'
-            'a1c88310b5d5776c9f4c1ff4a934be497b03237c21d5aaf88422d1582b04af86')
+_archive="$_project-$pkgver"
+_rockspec="$_rockname-$_pseudover-$_rockrel.rockspec"
+_rock="$_rockname-$_pseudover-$_rockrel.linux-$CARCH.rock"
+source=("$url/archive/v$pkgver/$_archive.tar.gz")
+sha256sums=('f5dc30e7b1fda856ee4d392be457642c1f0c259264a9b9bfbcb680302ce88fc2')
 
 build() {
 	cd "$_archive"
 	for LUAVER in 5.{1,2,3,4}; do
 		luarocks --lua-version "$LUAVER" \
-			make --pack-binary-rock --deps-mode none -- "../$_rockspec"
+			make --pack-binary-rock --deps-mode none -- "rockspecs/$_rockspec"
 		install -Dm0644 -t "lua-$LUAVER/" "$_rock"
 	done
 }

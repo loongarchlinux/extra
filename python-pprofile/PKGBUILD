@@ -1,30 +1,40 @@
 # Maintainer: David Runge <dvzrv@archlinux.org>
 
-_name=pprofile
 pkgname=python-pprofile
+_name="${pkgname#python-}"
 pkgver=2.1.0
-pkgrel=3
+pkgrel=4
 pkgdesc="Line-granularity, thread-aware deterministic and statistic pure-python profiler"
-arch=('any')
+arch=(any)
 url="https://github.com/vpelletier/pprofile"
-license=('GPL2')
-depends=('python')
-makedepends=('python-setuptools')
-source=("https://files.pythonhosted.org/packages/source/${_name::1}/${_name}/${_name}-${pkgver}.tar.gz")
-sha512sums=('1cfea7bc89258f8a94c4c08cdbe84089e7417c17fe662014df33e315c86432830a100c367076ddb00b153e6a7b0d7394670190538fcbe85077c16bfe3dbb8545')
-b2sums=('c5d94585f8a56e199cfe6ac73ad0528ca6de6bc252996989f07d29d9fea6bfeda4809f8806c00a710396b0a27518a0a02908e887b473e306612754dcb0ae8ccf')
+license=(GPL-2.0-or-later)
+depends=(python)
+makedepends=(
+  python-build
+  python-installer
+  python-setuptools
+  python-wheel
+)
+source=(
+  $pkgname-$pkgver.tar.gz::$url/archive/refs/tags/$pkgver.tar.gz
+  $pkgname-2.1.0-versioneer_python3.12.patch
+)
+sha512sums=('0c19b8b1f127b51c75c81382fb33f5f76092fafae4c2839fae2d43e5591c842b04a174112ba0c6df5a4428de240f61cd73d779b0e48ddda983ae22997091a71d'
+            '8cfce1de563f058ac40f5e1e1031af4167993c3f0b9d1671c86b4c8a9f660c87e5931d8416ccc21a4c9aa9aaa15b27ac98327d2b82595914e1415e849c4bc508')
+b2sums=('e14e4b6626d88185a3c0ff3b441d61e166a39a3f6e6df115e8228159058cedd7e5f4dd19775c20937e8831adc583d800545b55d9a72810b9421059937402aedd'
+        'f33792864d2675950700b70f8d72e3043e9355bb4e8993c10ee6b9973589ba18fd999817fb54f09ee96ff07b7b8b00c4cd89eaaa75563621e8e0e2322bfef02b')
 
 prepare() {
-  mv -v "${_name}-$pkgver" "$pkgname-$pkgver"
+  patch -Np1 -d $_name-$pkgver -i ../$pkgname-2.1.0-versioneer_python3.12.patch
 }
 
 build() {
-  cd "$pkgname-$pkgver"
-  python setup.py build
+  cd $_name-$pkgver
+  python -m build --wheel --no-isolation
 }
 
 package() {
-  cd "$pkgname-$pkgver"
-  python setup.py install --optimize=1 --root="${pkgdir}"
-  install -vDm 644 README.rst -t "${pkgdir}/usr/share/doc/${pkgname}"
+  cd $_name-$pkgver
+  python -m installer --destdir="$pkgdir" dist/*.whl
+  install -vDm 644 README.rst -t "$pkgdir/usr/share/doc/$pkgname/"
 }

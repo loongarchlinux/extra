@@ -6,25 +6,26 @@
 
 pkgname=cowsay
 pkgver=3.04
-pkgrel=4
+pkgrel=5
 pkgdesc='Configurable talking cow (and a few other creatures)'
 arch=('any')
 url='https://web.archive.org/web/20120225123719/http://www.nog.net/~tony/warez/cowsay.shtml'
 license=('PerlArtistic' 'GPL')
+makedepends=('git')
 depends=('perl')
-source=(https://github.com/tnalpgge/rank-amateur-cowsay/archive/cowsay-$pkgver.tar.gz
+source=("git+https://github.com/tnalpgge/rank-amateur-cowsay.git#tag=${pkgname}-${pkgver}"
         cowsay.patch)
-sha512sums=('99d21ef9a7c7c76056cb7acb2c771fbdabfedde4f6edb5d3035337c59f9e88944690d1b43282c32827ad79339199716366c8be73b0dea09063ec2d52220c1b51'
+sha512sums=('79164fea738463b696f8ef8496be73a7d915abac0126b84b5fecd1cd8f61283854c0755ce203486a6e982e6188b257cc621aa1310eba7c656aa191826d96243d'
             '2317b46eaacb8516626248828cc4fa0a4a61293f384bdd083e5ee57e87a1307ed79ed86c3e8c19d9b0f5053f6cf871d185b4695ca2fbba6360d9e405750c6f70')
 
 prepare() {
-	cd rank-amateur-cowsay-${pkgname}-${pkgver}
+	cd rank-amateur-cowsay
 	patch -p1 -i "$srcdir"/cowsay.patch
 	sed -i 's|/man/|/share/man/|' install.sh
 }
 
 package() {
-	cd rank-amateur-cowsay-${pkgname}-${pkgver}
+	cd rank-amateur-cowsay
 	echo "${pkgdir}/usr" | ./install.sh
 	# This one is not a valid '.cow' file
 	rm "${pkgdir}"/usr/share/cows/mech-and-cow

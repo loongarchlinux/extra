@@ -3,7 +3,7 @@
 
 pkgname=python-pytools
 pkgver=2023.1.1
-pkgrel=1
+pkgrel=2
 pkgdesc="A collection of tools for Python"
 arch=('any')
 url="https://mathema.tician.de/software/pytools"

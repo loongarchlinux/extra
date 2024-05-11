@@ -1,0 +1,39 @@
+From 48b61f6953ea8cb90098e506f6113ab43ac12b96 Mon Sep 17 00:00:00 2001
+From: Ben Beasley <code@musicinmybrain.net>
+Date: Thu, 28 Mar 2024 11:08:00 -0400
+Subject: [PATCH] Support pytest_bdd 7.1.2 and later (#1878)
+
+* Support pytest_bdd 7.1.2 and later
+
+Fix #1875.
+
+* Prevent use of pytest 8.1 for now due to unrelated error
+
+* poetry lock --no-update
+
+---------
+
+Co-authored-by: Micah Jerome Ellison <micah.jerome.ellison@gmail.com>
+---
+ tests/lib/when_steps.py |  8 +++++++-
+ 3 files changed, 17 insertions(+), 24 deletions(-)
+
+diff --git a/tests/lib/when_steps.py b/tests/lib/when_steps.py
+index 71252f866..4cd7d559f 100644
+--- a/tests/lib/when_steps.py
++++ b/tests/lib/when_steps.py
+@@ -7,7 +7,13 @@
+ from pytest_bdd import when
+ from pytest_bdd.parsers import parse
+ from pytest_bdd.parsers import re
+-from pytest_bdd.steps import inject_fixture
++
++# This is an undocumented and unsupported function:
++# https://github.com/pytest-dev/pytest-bdd/issues/684
++try:
++    from pytest_bdd.compat import inject_fixture  # pytest_bdd 7.1.2 and later
++except ImportError:
++    from pytest_bdd.steps import inject_fixture  # pytest_bdd 7.1.1 and earlier
+ 
+ from jrnl.main import run
+ 

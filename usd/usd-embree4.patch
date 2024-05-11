@@ -1,217 +1,471 @@
-From 4b6c23d459c602fdac5e0ebc9b7722cbd5475e86 Mon Sep 17 00:00:00 2001
-From: "Benjamin A. Beasley" <code@musicinmybrain.net>
-Date: Sat, 11 Feb 2023 13:58:42 -0500
-Subject: [PATCH] Port to Embree 4.x
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Matt Johnson <matt.johnson@epicgames.com>
+Date: Thu, 23 Feb 2023 13:46:05 -0700
+Subject: [PATCH 1/5] build_usd.py: add a line item for Embree to the build
+ summary
 
+(cherry picked from commit c42863b9401b72926744f387d954ad665fe69b26)
 ---
- cmake/modules/FindEmbree.cmake                   | 16 ++++++++--------
- pxr/imaging/plugin/hdEmbree/context.h            |  2 +-
- pxr/imaging/plugin/hdEmbree/mesh.cpp             |  2 +-
- pxr/imaging/plugin/hdEmbree/mesh.h               |  4 ++--
- pxr/imaging/plugin/hdEmbree/meshSamplers.h       |  4 ++--
- pxr/imaging/plugin/hdEmbree/pch.h                |  6 +++---
- pxr/imaging/plugin/hdEmbree/renderDelegate.h     |  2 +-
- pxr/imaging/plugin/hdEmbree/renderParam.h        |  2 +-
- pxr/imaging/plugin/hdEmbree/renderer.cpp         |  8 ++------
- pxr/imaging/plugin/hdEmbree/renderer.h           |  4 ++--
- .../plugin/hdEmbree/testenv/testHdEmbree.cpp     |  2 +-
- 11 files changed, 24 insertions(+), 28 deletions(-)
+ build_scripts/build_usd.py | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/build_scripts/build_usd.py b/build_scripts/build_usd.py
+index 8a2698570..a28bd7613 100644
+--- a/build_scripts/build_usd.py
++++ b/build_scripts/build_usd.py
+@@ -2500,6 +2500,7 @@ summaryMsg += """\
+       OpenVDB support:          {enableOpenVDB}
+       OpenImageIO support:      {buildOIIO} 
+       OpenColorIO support:      {buildOCIO} 
++      Embree support:           {buildEmbree}
+       PRMan support:            {buildPrman}
+     UsdImaging                  {buildUsdImaging}
+       usdview:                  {buildUsdview}
+@@ -2564,6 +2565,7 @@ summaryMsg = summaryMsg.format(
+     enableOpenVDB=("On" if context.enableOpenVDB else "Off"),
+     buildOIIO=("On" if context.buildOIIO else "Off"),
+     buildOCIO=("On" if context.buildOCIO else "Off"),
++    buildEmbree=("On" if context.buildEmbree else "Off"),
+     buildPrman=("On" if context.buildPrman else "Off"),
+     buildUsdImaging=("On" if context.buildUsdImaging else "Off"),
+     buildUsdview=("On" if context.buildUsdview else "Off"),
+-- 
+2.43.2
+
+
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Matt Johnson <matt.johnson@epicgames.com>
+Date: Thu, 23 Feb 2023 14:17:02 -0700
+Subject: [PATCH 2/5] build_usd.py: wrap the TBB_ROOT parameter value in double
+ quotes when building Embree
+
+This ensures that slash characters are properly escaped on Windows.
+
+(cherry picked from commit 2e3104c85ed2bf4622fd0497f401a0478a8ab1cf)
+---
+ build_scripts/build_usd.py | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/build_scripts/build_usd.py b/build_scripts/build_usd.py
+index a28bd7613..8bc358840 100644
+--- a/build_scripts/build_usd.py
++++ b/build_scripts/build_usd.py
+@@ -1523,7 +1523,7 @@ else:
+ def InstallEmbree(context, force, buildArgs):
+     with CurrentWorkingDirectory(DownloadURL(EMBREE_URL, context, force)):
+         extraArgs = [
+-            '-DTBB_ROOT={instDir}'.format(instDir=context.instDir),
++            '-DTBB_ROOT="{instDir}"'.format(instDir=context.instDir),
+             '-DEMBREE_TUTORIALS=OFF',
+             '-DEMBREE_ISPC_SUPPORT=OFF'
+         ]
+-- 
+2.43.2
+
+
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Matt Johnson <matt.johnson@epicgames.com>
+Date: Thu, 23 Feb 2023 12:20:39 -0700
+Subject: [PATCH 3/5] FindEmbree.cmake: add support for finding Embree versions
+ 3 or 4
+
+(cherry picked from commit 91e2bf94c7778168c8ecd05b74b9d3a03efa2397)
+---
+ cmake/modules/FindEmbree.cmake | 41 +++++++++++++++++++++-------------
+ 1 file changed, 26 insertions(+), 15 deletions(-)
 
 diff --git a/cmake/modules/FindEmbree.cmake b/cmake/modules/FindEmbree.cmake
-index e12639d6d9..ec13d0f5c4 100644
+index e12639d6d..3f38e089a 100644
 --- a/cmake/modules/FindEmbree.cmake
 +++ b/cmake/modules/FindEmbree.cmake
-@@ -37,11 +37,11 @@
+@@ -36,12 +36,30 @@
+ #
  #=============================================================================
  
++find_path(EMBREE_INCLUDE_DIR
++    embree4/rtcore.h
++    embree3/rtcore.h
++HINTS
++    "${EMBREE_LOCATION}/include"
++    "$ENV{EMBREE_LOCATION}/include"
++DOC
++    "Embree headers path"
++)
++
++if (EMBREE_INCLUDE_DIR AND EXISTS "${EMBREE_INCLUDE_DIR}/embree4/rtcore.h")
++    set(EMBREE_VERSIONED_LIBRARY_NAME "embree4")
++    set(EMBREE_VERSION_HEADER_FILE_NAME "rtcore_config.h")
++else()
++    set(EMBREE_VERSIONED_LIBRARY_NAME "embree3")
++    set(EMBREE_VERSION_HEADER_FILE_NAME "rtcore_version.h")
++endif()
++
  if (APPLE)
 -    set (EMBREE_LIB_NAME libembree3.dylib)
-+    set (EMBREE_LIB_NAME libembree4.dylib)
++    set (EMBREE_LIB_NAME "lib${EMBREE_VERSIONED_LIBRARY_NAME}.dylib")
  elseif (UNIX)
 -    set (EMBREE_LIB_NAME libembree3.so)
-+    set (EMBREE_LIB_NAME libembree4.so)
++    set (EMBREE_LIB_NAME "lib${EMBREE_VERSIONED_LIBRARY_NAME}.so")
  elseif (WIN32)
 -    set (EMBREE_LIB_NAME embree3.lib)
-+    set (EMBREE_LIB_NAME embree4.lib)
++    set (EMBREE_LIB_NAME "${EMBREE_VERSIONED_LIBRARY_NAME}.lib")
  endif()
  
  find_library(EMBREE_LIBRARY
-@@ -56,7 +56,7 @@ find_library(EMBREE_LIBRARY
+@@ -55,21 +73,14 @@ find_library(EMBREE_LIBRARY
+         "Embree library path"
  )
  
- find_path(EMBREE_INCLUDE_DIR
+-find_path(EMBREE_INCLUDE_DIR
 -    embree3/rtcore.h
-+    embree4/rtcore.h
- HINTS
-     "${EMBREE_LOCATION}/include"
-     "$ENV{EMBREE_LOCATION}/include"
-@@ -64,12 +64,12 @@ DOC
-     "Embree headers path"
- )
+-HINTS
+-    "${EMBREE_LOCATION}/include"
+-    "$ENV{EMBREE_LOCATION}/include"
+-DOC
+-    "Embree headers path"
+-)
++set(EMBREE_VERSION_HEADER_FILE_PATH "${EMBREE_INCLUDE_DIR}/${EMBREE_VERSIONED_LIBRARY_NAME}/${EMBREE_VERSION_HEADER_FILE_NAME}")
  
 -if (EMBREE_INCLUDE_DIR AND EXISTS "${EMBREE_INCLUDE_DIR}/embree3/rtcore_version.h" )
 -    file(STRINGS "${EMBREE_INCLUDE_DIR}/embree3/rtcore_version.h" TMP REGEX "^#define RTC_VERSION_MAJOR.*$")
-+if (EMBREE_INCLUDE_DIR AND EXISTS "${EMBREE_INCLUDE_DIR}/embree4/rtcore_version.h" )
-+    file(STRINGS "${EMBREE_INCLUDE_DIR}/embree4/rtcore_version.h" TMP REGEX "^#define RTC_VERSION_MAJOR.*$")
++if (EMBREE_INCLUDE_DIR AND EXISTS "${EMBREE_VERSION_HEADER_FILE_PATH}")
++    file(STRINGS "${EMBREE_VERSION_HEADER_FILE_PATH}" TMP REGEX "^#define RTC_VERSION_MAJOR.*$")
      string(REGEX MATCHALL "[0-9]+" MAJOR ${TMP})
 -    file(STRINGS "${EMBREE_INCLUDE_DIR}/embree3/rtcore_version.h" TMP REGEX "^#define RTC_VERSION_MINOR.*$")
-+    file(STRINGS "${EMBREE_INCLUDE_DIR}/embree4/rtcore_version.h" TMP REGEX "^#define RTC_VERSION_MINOR.*$")
++    file(STRINGS "${EMBREE_VERSION_HEADER_FILE_PATH}" TMP REGEX "^#define RTC_VERSION_MINOR.*$")
      string(REGEX MATCHALL "[0-9]+" MINOR ${TMP})
 -    file(STRINGS "${EMBREE_INCLUDE_DIR}/embree3/rtcore_version.h" TMP REGEX "^#define RTC_VERSION_PATCH.*$")
-+    file(STRINGS "${EMBREE_INCLUDE_DIR}/embree4/rtcore_version.h" TMP REGEX "^#define RTC_VERSION_PATCH.*$")
++    file(STRINGS "${EMBREE_VERSION_HEADER_FILE_PATH}" TMP REGEX "^#define RTC_VERSION_PATCH.*$")
      string(REGEX MATCHALL "[0-9]+" PATCH ${TMP})
  
      set (EMBREE_VERSION ${MAJOR}.${MINOR}.${PATCH})
+-- 
+2.43.2
+
+
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Matt Johnson <matt.johnson@epicgames.com>
+Date: Thu, 16 Feb 2023 16:37:11 -0700
+Subject: [PATCH 4/5] hdEmbree: add support for building against Embree
+ versions 3 or 4
+
+This supports upgrading Embree to a major version 4 release, so it includes
+handling for the change in file paths between "embree3" and "embree4" and also
+accounts for a small change in API in version 4 where RTCIntersectContext was
+removed.
+
+(cherry picked from commit 683fc0b7f64df1423cb622d354e175baf913f813)
+---
+ pxr/imaging/plugin/hdEmbree/CMakeLists.txt           | 6 ++++++
+ pxr/imaging/plugin/hdEmbree/context.h                | 6 +++++-
+ pxr/imaging/plugin/hdEmbree/mesh.h                   | 9 +++++++--
+ pxr/imaging/plugin/hdEmbree/meshSamplers.h           | 9 +++++++--
+ pxr/imaging/plugin/hdEmbree/pch.h                    | 6 ++++++
+ pxr/imaging/plugin/hdEmbree/renderDelegate.h         | 7 ++++++-
+ pxr/imaging/plugin/hdEmbree/renderParam.h            | 6 +++++-
+ pxr/imaging/plugin/hdEmbree/renderer.cpp             | 8 ++++++++
+ pxr/imaging/plugin/hdEmbree/renderer.h               | 9 +++++++--
+ pxr/imaging/plugin/hdEmbree/testenv/testHdEmbree.cpp | 7 ++++++-
+ 10 files changed, 63 insertions(+), 10 deletions(-)
+
+diff --git a/pxr/imaging/plugin/hdEmbree/CMakeLists.txt b/pxr/imaging/plugin/hdEmbree/CMakeLists.txt
+index 43aa0826e..f19fc904f 100644
+--- a/pxr/imaging/plugin/hdEmbree/CMakeLists.txt
++++ b/pxr/imaging/plugin/hdEmbree/CMakeLists.txt
+@@ -11,6 +11,12 @@ if (NOT ${PXR_BUILD_GPU_SUPPORT})
+     return()
+ endif()
+ 
++if (EMBREE_VERSION VERSION_GREATER_EQUAL 4.0.0)
++    add_definitions(-DEMBREE_MAJOR_VERSION=4)
++else()
++    add_definitions(-DEMBREE_MAJOR_VERSION=3)
++endif()
++
+ pxr_plugin(hdEmbree
+    LIBRARIES
+         plug
 diff --git a/pxr/imaging/plugin/hdEmbree/context.h b/pxr/imaging/plugin/hdEmbree/context.h
-index 7af4ab0d27..fb10e8ceff 100644
+index 7af4ab0d2..133f6170a 100644
 --- a/pxr/imaging/plugin/hdEmbree/context.h
 +++ b/pxr/imaging/plugin/hdEmbree/context.h
-@@ -31,7 +31,7 @@
+@@ -31,7 +31,11 @@
  #include "pxr/base/gf/matrix4f.h"
  #include "pxr/base/vt/array.h"
  
 -#include <embree3/rtcore.h>
-+#include <embree4/rtcore.h>
++#if defined(EMBREE_MAJOR_VERSION) && EMBREE_MAJOR_VERSION >= 4
++    #include <embree4/rtcore.h>
++#else
++    #include <embree3/rtcore.h>
++#endif // defined(EMBREE_MAJOR_VERSION) && EMBREE_MAJOR_VERSION >= 4
  
  PXR_NAMESPACE_OPEN_SCOPE
  
-diff --git a/pxr/imaging/plugin/hdEmbree/mesh.cpp b/pxr/imaging/plugin/hdEmbree/mesh.cpp
-index e8e001e1cc..fe0f25b7b8 100644
---- a/pxr/imaging/plugin/hdEmbree/mesh.cpp
-+++ b/pxr/imaging/plugin/hdEmbree/mesh.cpp
-@@ -220,7 +220,7 @@ void HdEmbreeMesh::_EmbreeCullFaces(const RTCFilterFunctionNArguments* args)
-             default: break;
-         }
-         if (cull) {
--            // This is how you reject a hit in embree3 instead of setting
-+            // This is how you reject a hit in embree3/4 instead of setting
-             // geomId to invalid on the ray
-             args->valid[i] = 0;
-         }
 diff --git a/pxr/imaging/plugin/hdEmbree/mesh.h b/pxr/imaging/plugin/hdEmbree/mesh.h
-index 4574454368..f83bf5d998 100644
+index 457445436..a5f5868b4 100644
 --- a/pxr/imaging/plugin/hdEmbree/mesh.h
 +++ b/pxr/imaging/plugin/hdEmbree/mesh.h
-@@ -32,8 +32,8 @@
+@@ -32,8 +32,13 @@
  
  #include "pxr/imaging/plugin/hdEmbree/meshSamplers.h"
  
 -#include <embree3/rtcore.h>
 -#include <embree3/rtcore_ray.h>
-+#include <embree4/rtcore.h>
-+#include <embree4/rtcore_ray.h>
++#if defined(EMBREE_MAJOR_VERSION) && EMBREE_MAJOR_VERSION >= 4
++    #include <embree4/rtcore.h>
++    #include <embree4/rtcore_ray.h>
++#else
++    #include <embree3/rtcore.h>
++    #include <embree3/rtcore_ray.h>
++#endif // defined(EMBREE_MAJOR_VERSION) && EMBREE_MAJOR_VERSION >= 4
  
  PXR_NAMESPACE_OPEN_SCOPE
  
 diff --git a/pxr/imaging/plugin/hdEmbree/meshSamplers.h b/pxr/imaging/plugin/hdEmbree/meshSamplers.h
-index bef6f65959..2b481e5694 100644
+index bef6f6595..699297030 100644
 --- a/pxr/imaging/plugin/hdEmbree/meshSamplers.h
 +++ b/pxr/imaging/plugin/hdEmbree/meshSamplers.h
-@@ -29,8 +29,8 @@
+@@ -29,8 +29,13 @@
  #include "pxr/imaging/hd/meshUtil.h"
  #include "pxr/base/vt/types.h"
  
 -#include <embree3/rtcore.h>
 -#include <embree3/rtcore_geometry.h>
-+#include <embree4/rtcore.h>
-+#include <embree4/rtcore_geometry.h>
++#if defined(EMBREE_MAJOR_VERSION) && EMBREE_MAJOR_VERSION >= 4
++    #include <embree4/rtcore.h>
++    #include <embree4/rtcore_geometry.h>
++#else
++    #include <embree3/rtcore.h>
++    #include <embree3/rtcore_geometry.h>
++#endif // defined(EMBREE_MAJOR_VERSION) && EMBREE_MAJOR_VERSION >= 4
  
  #include <bitset>
  
 diff --git a/pxr/imaging/plugin/hdEmbree/pch.h b/pxr/imaging/plugin/hdEmbree/pch.h
-index 7710229804..e8e733bfc4 100644
+index 733d83b21..5f7eb03b0 100644
 --- a/pxr/imaging/plugin/hdEmbree/pch.h
 +++ b/pxr/imaging/plugin/hdEmbree/pch.h
-@@ -151,9 +151,9 @@
+@@ -151,9 +151,15 @@
  #include <boost/unordered_map.hpp>
  #include <boost/utility/enable_if.hpp>
  #include <boost/weak_ptr.hpp>
--#include <embree3/rtcore.h>
--#include <embree3/rtcore_geometry.h>
--#include <embree3/rtcore_ray.h>
++#if defined(EMBREE_MAJOR_VERSION) && EMBREE_MAJOR_VERSION >= 4
 +#include <embree4/rtcore.h>
 +#include <embree4/rtcore_geometry.h>
 +#include <embree4/rtcore_ray.h>
++#else
+ #include <embree3/rtcore.h>
+ #include <embree3/rtcore_geometry.h>
+ #include <embree3/rtcore_ray.h>
++#endif // defined(EMBREE_MAJOR_VERSION) && EMBREE_MAJOR_VERSION >= 4
  #include <tbb/blocked_range.h>
  #include <tbb/cache_aligned_allocator.h>
  #include <tbb/concurrent_queue.h>
 diff --git a/pxr/imaging/plugin/hdEmbree/renderDelegate.h b/pxr/imaging/plugin/hdEmbree/renderDelegate.h
-index 20a80487a9..6a6bc9dbf1 100644
+index 20a80487a..046db66f7 100644
 --- a/pxr/imaging/plugin/hdEmbree/renderDelegate.h
 +++ b/pxr/imaging/plugin/hdEmbree/renderDelegate.h
-@@ -31,7 +31,7 @@
+@@ -30,8 +30,13 @@
+ #include "pxr/imaging/plugin/hdEmbree/renderer.h"
  #include "pxr/base/tf/staticTokens.h"
  
++#if defined(EMBREE_MAJOR_VERSION) && EMBREE_MAJOR_VERSION >= 4
++    #include <embree4/rtcore.h>
++#else
++    #include <embree3/rtcore.h>
++#endif // defined(EMBREE_MAJOR_VERSION) && EMBREE_MAJOR_VERSION >= 4
++
  #include <mutex>
 -#include <embree3/rtcore.h>
-+#include <embree4/rtcore.h>
  
  PXR_NAMESPACE_OPEN_SCOPE
  
 diff --git a/pxr/imaging/plugin/hdEmbree/renderParam.h b/pxr/imaging/plugin/hdEmbree/renderParam.h
-index ff61000ab5..d3f903e0f3 100644
+index ff61000ab..7767c5f61 100644
 --- a/pxr/imaging/plugin/hdEmbree/renderParam.h
 +++ b/pxr/imaging/plugin/hdEmbree/renderParam.h
-@@ -28,7 +28,7 @@
+@@ -28,7 +28,11 @@
  #include "pxr/imaging/hd/renderDelegate.h"
  #include "pxr/imaging/hd/renderThread.h"
  
 -#include <embree3/rtcore.h>
-+#include <embree4/rtcore.h>
++#if defined(EMBREE_MAJOR_VERSION) && EMBREE_MAJOR_VERSION >= 4
++    #include <embree4/rtcore.h>
++#else
++    #include <embree3/rtcore.h>
++#endif // defined(EMBREE_MAJOR_VERSION) && EMBREE_MAJOR_VERSION >= 4
  
  PXR_NAMESPACE_OPEN_SCOPE
  
 diff --git a/pxr/imaging/plugin/hdEmbree/renderer.cpp b/pxr/imaging/plugin/hdEmbree/renderer.cpp
-index 20ec78c6aa..72a897120d 100644
+index a0e233bd3..5ecedd242 100644
 --- a/pxr/imaging/plugin/hdEmbree/renderer.cpp
 +++ b/pxr/imaging/plugin/hdEmbree/renderer.cpp
-@@ -650,9 +650,7 @@ HdEmbreeRenderer::_TraceRay(unsigned int x, unsigned int y,
+@@ -653,9 +653,13 @@ HdEmbreeRenderer::_TraceRay(unsigned int x, unsigned int y,
      rayHit.ray.flags = 0;
      _PopulateRayHit(&rayHit, origin, dir, 0.0f);
      {
--      RTCIntersectContext context;
--      rtcInitIntersectContext(&context);
--      rtcIntersect1(_scene, &context, &rayHit);
++#if defined(EMBREE_MAJOR_VERSION) && EMBREE_MAJOR_VERSION >= 4
 +      rtcIntersect1(_scene, &rayHit);
++#else
+       RTCIntersectContext context;
+       rtcInitIntersectContext(&context);
+       rtcIntersect1(_scene, &context, &rayHit);
++#endif // defined(EMBREE_MAJOR_VERSION) && EMBREE_MAJOR_VERSION >= 4
        //
        // there is something odd about how this is used in Embree. Is it reversed
        // here and then when it it used in
-@@ -992,9 +990,7 @@ HdEmbreeRenderer::_ComputeAmbientOcclusion(GfVec3f const& position,
+@@ -995,9 +999,13 @@ HdEmbreeRenderer::_ComputeAmbientOcclusion(GfVec3f const& position,
          shadow.flags = 0;
          _PopulateRay(&shadow, position, shadowDir, 0.001f);
          {
--          RTCIntersectContext context;
--          rtcInitIntersectContext(&context);
--          rtcOccluded1(_scene,&context,&shadow);
-+          rtcOccluded1(_scene,&shadow);
++#if defined(EMBREE_MAJOR_VERSION) && EMBREE_MAJOR_VERSION >= 4
++          rtcOccluded1(_scene, &shadow);
++#else
+           RTCIntersectContext context;
+           rtcInitIntersectContext(&context);
+           rtcOccluded1(_scene,&context,&shadow);
++#endif // defined(EMBREE_MAJOR_VERSION) && EMBREE_MAJOR_VERSION >= 4
          }
  
          // Record this AO ray's contribution to the occlusion factor: a
 diff --git a/pxr/imaging/plugin/hdEmbree/renderer.h b/pxr/imaging/plugin/hdEmbree/renderer.h
-index 6af8081678..740812fb03 100644
+index 6af808167..e72ea1e0c 100644
 --- a/pxr/imaging/plugin/hdEmbree/renderer.h
 +++ b/pxr/imaging/plugin/hdEmbree/renderer.h
-@@ -32,8 +32,8 @@
+@@ -32,8 +32,13 @@
  #include "pxr/base/gf/matrix4d.h"
  #include "pxr/base/gf/rect2i.h"
  
 -#include <embree3/rtcore.h>
 -#include <embree3/rtcore_ray.h>
-+#include <embree4/rtcore.h>
-+#include <embree4/rtcore_ray.h>
++#if defined(EMBREE_MAJOR_VERSION) && EMBREE_MAJOR_VERSION >= 4
++    #include <embree4/rtcore.h>
++    #include <embree4/rtcore_ray.h>
++#else
++    #include <embree3/rtcore.h>
++    #include <embree3/rtcore_ray.h>
++#endif // defined(EMBREE_MAJOR_VERSION) && EMBREE_MAJOR_VERSION >= 4
  
  #include <random>
  #include <atomic>
 diff --git a/pxr/imaging/plugin/hdEmbree/testenv/testHdEmbree.cpp b/pxr/imaging/plugin/hdEmbree/testenv/testHdEmbree.cpp
-index c361c678bc..8380aebe72 100644
+index c361c678b..2cd2394fc 100644
 --- a/pxr/imaging/plugin/hdEmbree/testenv/testHdEmbree.cpp
 +++ b/pxr/imaging/plugin/hdEmbree/testenv/testHdEmbree.cpp
-@@ -40,7 +40,7 @@
+@@ -40,7 +40,12 @@
  
  #include "pxr/base/tf/errorMark.h"
  
 -#include <embree3/rtcore.h>
-+#include <embree4/rtcore.h>
++#if defined(EMBREE_MAJOR_VERSION) && EMBREE_MAJOR_VERSION >= 4
++    #include <embree4/rtcore.h>
++#else
++    #include <embree3/rtcore.h>
++#endif // defined(EMBREE_MAJOR_VERSION) && EMBREE_MAJOR_VERSION >= 4
++
  #include <iostream>
  
  PXR_NAMESPACE_USING_DIRECTIVE
+-- 
+2.43.2
+
+
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Matt Johnson <matt.johnson@epicgames.com>
+Date: Thu, 23 Feb 2023 12:25:24 -0700
+Subject: [PATCH 5/5] build_usd.py: add an option to choose Embree 3 or Embree
+ 4
+
+The new --embree-major-version option can be given to build_usd.py to select
+between Embree 3 or Embree 4. By default, Embree 3 is still used, preserving
+the existing behavior.
+
+(cherry picked from commit 9050557a6a1765db9b17e8131f97391e0c605ad9)
+---
+ build_scripts/build_usd.py | 31 ++++++++++++++++++++++++-------
+ 1 file changed, 24 insertions(+), 7 deletions(-)
+
+diff --git a/build_scripts/build_usd.py b/build_scripts/build_usd.py
+index 8bc358840..d3f72c380 100644
+--- a/build_scripts/build_usd.py
++++ b/build_scripts/build_usd.py
+@@ -1513,14 +1513,19 @@ MATERIALX = Dependency("MaterialX", InstallMaterialX, "include/MaterialXCore/Lib
+ 
+ ############################################################
+ # Embree
+-# For MacOS we use version 3.13.3 to include a fix from Intel
+-# to build on Apple Silicon.
+-if MacOS():
+-    EMBREE_URL = "https://github.com/embree/embree/archive/v3.13.3.zip"
+-else:
+-    EMBREE_URL = "https://github.com/embree/embree/archive/v3.2.2.zip"
++
++EMBREE_DEFAULT_MAJOR_VERSION = 3
+ 
+ def InstallEmbree(context, force, buildArgs):
++    if context.embreeMajorVersion >= 4:
++        EMBREE_URL = "https://github.com/embree/embree/archive/refs/tags/v4.3.1.zip"
++    elif MacOS():
++        # For MacOS we use version 3.13.3 to include a fix from Intel
++        # to build on Apple Silicon.
++        EMBREE_URL = "https://github.com/embree/embree/archive/refs/tags/v3.13.3.zip"
++    else:
++        EMBREE_URL = "https://github.com/embree/embree/archive/refs/tags/v3.2.2.zip"
++
+     with CurrentWorkingDirectory(DownloadURL(EMBREE_URL, context, force)):
+         extraArgs = [
+             '-DTBB_ROOT="{instDir}"'.format(instDir=context.instDir),
+@@ -1537,7 +1542,9 @@ def InstallEmbree(context, force, buildArgs):
+ 
+         RunCMake(context, force, extraArgs)
+ 
+-EMBREE = Dependency("Embree", InstallEmbree, "include/embree3/rtcore.h")
++EMBREE = Dependency("Embree", InstallEmbree,
++                    "include/embree3/rtcore.h",
++                    "include/embree4/rtcore.h")
+ 
+ ############################################################
+ # AnimX
+@@ -2026,6 +2033,12 @@ subgroup.add_argument("--embree", dest="build_embree", action="store_true",
+                       help="Build Embree sample imaging plugin")
+ subgroup.add_argument("--no-embree", dest="build_embree", action="store_false",
+                       help="Do not build Embree sample imaging plugin (default)")
++group.add_argument("--embree-major-version",
++                   default=EMBREE_DEFAULT_MAJOR_VERSION, type=int,
++                   choices=[3, 4],
++                   help=(
++                       "The major version of Embree to build "
++                       "(default: {})").format(EMBREE_DEFAULT_MAJOR_VERSION))
+ subgroup = group.add_mutually_exclusive_group()
+ subgroup.add_argument("--prman", dest="build_prman", action="store_true",
+                       default=False,
+@@ -2231,6 +2244,7 @@ class InstallContext:
+ 
+         # - Imaging plugins
+         self.buildEmbree = self.buildImaging and args.build_embree
++        self.embreeMajorVersion = args.embree_major_version
+         self.buildPrman = self.buildImaging and args.build_prman
+         self.prmanLocation = (os.path.abspath(args.prman_location)
+                                if args.prman_location else None)                               
+@@ -2501,6 +2515,7 @@ summaryMsg += """\
+       OpenImageIO support:      {buildOIIO} 
+       OpenColorIO support:      {buildOCIO} 
+       Embree support:           {buildEmbree}
++        Embree major version:   {embreeMajorVersion}
+       PRMan support:            {buildPrman}
+     UsdImaging                  {buildUsdImaging}
+       usdview:                  {buildUsdview}
+@@ -2566,6 +2581,8 @@ summaryMsg = summaryMsg.format(
+     buildOIIO=("On" if context.buildOIIO else "Off"),
+     buildOCIO=("On" if context.buildOCIO else "Off"),
+     buildEmbree=("On" if context.buildEmbree else "Off"),
++    embreeMajorVersion=(context.embreeMajorVersion if context.buildEmbree
++                        else "N/A"),
+     buildPrman=("On" if context.buildPrman else "Off"),
+     buildUsdImaging=("On" if context.buildUsdImaging else "Off"),
+     buildUsdview=("On" if context.buildUsdview else "Off"),
+-- 
+2.43.2
+

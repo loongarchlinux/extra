@@ -3,27 +3,39 @@
 
 pkgname=givaro
 pkgver=4.2.0
-pkgrel=1
+pkgrel=2
 pkgdesc='C++ library for arithmetic and algebraic computations'
 arch=(loong64 x86_64)
 url='http://givaro.forge.imag.fr/'
-license=(GPL)
-depends=(gmp)
-source=(https://github.com/linbox-team/givaro/releases/download/v$pkgver/$pkgname-$pkgver.tar.gz)
-sha256sums=('865e228812feca971dfb6e776a7bc7ac959cf63ebd52b4f05492730a46e1f189')
+license=(CECILL-B)
+depends=(gcc-libs
+         glibc
+         gmp
+         sh)
+makedepends=(git)
+source=(git+https://github.com/linbox-team/givaro#tag=v$pkgver)
+sha256sums=('bb3da8e6b00e4a906ef452e70920cdd045c06b022d48fa977c2f431677bbad8a')
+
+prepare() {
+  cd $pkgname
+  git cherry-pick -n c7744bb133496cd7ac04688f345646d505e1bf52 # Fix build with GCC 13
+  git cherry-pick -n b0cf33e1d4437530c7e4b3db90b6c80057a7f2f3 # Fix build with GCC 14
+  ./autogen.sh
+}
 
 build() {
-  cd $pkgname-$pkgver
+  cd $pkgname
   ./configure --prefix=/usr --enable-shared
   make
 }
 
 check() {
-  cd $pkgname-$pkgver
+  cd $pkgname
   make check
 }
 
 package() {
-  cd $pkgname-$pkgver
+  cd $pkgname
   make DESTDIR="$pkgdir" install
+  install -Dm644 Licence_CeCILL-B_V1-en.txt -t "$pkgdir"/usr/share/licenses/$pkgname
 }

@@ -7,28 +7,28 @@
 
 pkgname=python-parsedatetime
 pkgver=2.6
-pkgrel=6
+pkgrel=8
 pkgdesc="Parse human-readable date/time strings."
 arch=('any')
-license=('Apache')
+license=('Apache-2.0')
 url='https://github.com/bear/parsedatetime'
 depends=('python-future')
-makedepends=('python-setuptools')
-checkdepends=('python-pytest-runner')
+makedepends=('python-setuptools' 'python-build' 'python-installer' 'python-wheel')
+checkdepends=('python-pytest')
 source=("$pkgname-$pkgver.tar.gz::https://github.com/bear/parsedatetime/archive/v$pkgver.tar.gz")
 sha512sums=('ed7649feb8773fdb33d609ef0abe4d20f555744bd70e9766aba6b9a79d8415c7e2efea1d7ef5c6b5906f3bc90bff124ef92992ce17d83fe70575da2db918e543')
 
 build() {
   cd parsedatetime-$pkgver
-  python setup.py build
+  python -m build --wheel --no-isolation
 }
 
 check() {
   cd parsedatetime-$pkgver
-  python setup.py pytest
+  pytest
 }
 
 package() {
   cd parsedatetime-$pkgver
-  python setup.py install --root="$pkgdir" --optimize=1
+  python -m installer --destdir="$pkgdir" dist/*.whl
 }

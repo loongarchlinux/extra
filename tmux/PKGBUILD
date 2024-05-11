@@ -2,42 +2,41 @@
 # Maintainer: T.J. Townsend <blakkheim@archlinux.org>
 
 pkgname=tmux
-pkgver=3.3_a
+pkgver=3.4
 pkgrel=7
 pkgdesc='Terminal multiplexer'
 url='https://github.com/tmux/tmux/wiki'
 arch=('loong64' 'x86_64')
 license=('BSD')
-depends=('ncurses' 'libevent' 'libutempter' 'systemd-libs')
-makedepends=('systemd')
-source=("https://github.com/tmux/tmux/releases/download/${pkgver/_/}/tmux-${pkgver/_/}.tar.gz"
-        '0001-CVE-2022-47016.patch'
-        '0002-ncurses.patch')
-sha256sums=('e4fd347843bd0772c4f48d6dde625b0b109b7a380ff15db21e97c11a4dcdf93f'
-            '58fb690833e086b71b52555aa8eced695ace0a0bc51b8bccfda441e35a47ca93'
-            '70e8cc2a95dd4a19ff54bcf0abaeff6464ebecbaace5ed0aec06ca93a84d415a')
+depends=('libevent' 'libevent_core-2.1.so'
+         'libutempter'
+         'ncurses' 'libncursesw.so'
+         'systemd-libs' 'libsystemd.so')
+makedepends=('git' 'systemd')
+source=("git+https://github.com/tmux/tmux.git#tag=${pkgver}")
+sha256sums=('71387cf05585836da88d9b481f98e89be5bc8f09a203600187b22aa0e00c52b0')
 
 prepare() {
-	cd "$pkgname-${pkgver/_/}"
+	cd "$pkgname"
 
-	patch -Np1 -i ../0001-CVE-2022-47016.patch
-	patch -Np1 -i ../0002-ncurses.patch
-
-	autoreconf -fi
+	# https://github.com/tmux/tmux/issues/3864
+	git revert -n 43e5e80343185e69a1b864fc48095ede0b898180
+	sh autogen.sh
 }
 
 build() {
-	cd "$pkgname-${pkgver/_/}"
+	cd "$pkgname"
 
 	./configure \
 		--prefix=/usr \
-		--enable-utempter \
-		--enable-systemd
+		--enable-sixel \
+		--enable-systemd \
+		--enable-utempter
 	make
 }
 
 package() {
-	cd "$pkgname-${pkgver/_/}"
+	cd "$pkgname"
 
 	make install DESTDIR="$pkgdir"
 	install -D -m0644 COPYING "$pkgdir/usr/share/licenses/tmux/LICENSE"

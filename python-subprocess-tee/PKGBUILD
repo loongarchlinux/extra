@@ -3,28 +3,45 @@
 _name=subprocess-tee
 pkgname=python-subprocess-tee
 pkgver=0.4.1
-pkgrel=3
+pkgrel=4
 pkgdesc="A subprocess.run that works like tee"
 arch=(any)
 url="https://github.com/pycontribs/subprocess-tee"
 license=(MIT)
 depends=(python)
-makedepends=(git python-build python-installer python-setuptools python-setuptools-scm python-wheel)
-checkdepends=(ansible-core molecule python-enrich python-pytest python-pytest-xdist)
+makedepends=(
+  git
+  python-build
+  python-installer
+  python-setuptools
+  python-setuptools-scm
+  python-wheel
+)
+checkdepends=(
+  ansible-core
+  python-enrich
+  python-pytest
+  python-pytest-xdist
+)
 optdepends=('python-enrich: for rich text rendering')
-source=(https://files.pythonhosted.org/packages/source/${_name::1}/$_name/$_name-$pkgver.tar.gz)
-sha512sums=('683813096c4bb78a4263075ba8590a926134ec92db5e2e72ed98ab1db9e231768adc15bb4273ba138f9a1b2a14ae4050d0b6acc76d483d0f3530f376ce8d9eee')
-b2sums=('779a8b5381155e8d524b6715ab9cc37f8e55565dd378a2d256648d56f018dc71860b0db2a50572a5e03fab7d2de5cd691be53c49c1aa79e756b4eb8a8d5878a5')
+source=($pkgname-$pkgver.tar.gz::$url/archive/refs/tags/v$pkgver.tar.gz)
+sha512sums=('e8ae073d9f9e0198e55bbdd4cc12babfc7cc2bb13f13bbd07a107452efdf78cbf1a544739381d4e98e55d6a4d1e4de3405b6258fcaa4fcfb871485085a2e8a5b')
+b2sums=('06278caf928da5ddc90803cfe5bcffb3e9d1e3c93653de34c2ceca523d9d1e04e33ad53cf2c173e0120d134308b56c52d957ee6611a7808b1aa3e46acefee6a1')
 
 build() {
   cd $_name-$pkgver
-  python -m build --wheel --no-isolation
+  SETUPTOOLS_SCM_PRETEND_VERSION=$pkgver python -m build --wheel --no-isolation
 }
 
 check() {
+  local pytest_options=(
+    -vv
+    --ignore test/test_func.py
+  )
+
   cd $_name-$pkgver
-  export PYTHONPATH="build:$PYTHONPATH"
-  pytest -vv -c /dev/null
+  export PYTHONPATH="src:$PYTHONPATH"
+  pytest "${pytest_options[@]}"
 }
 
 package() {

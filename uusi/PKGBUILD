@@ -2,7 +2,7 @@
 
 pkgname=uusi
 pkgver=0.4.3.0
-pkgrel=25
+pkgrel=34
 pkgdesc="Tweak .cabal files"
 url="https://github.com/berberman/uusi"
 license=("MIT")
@@ -10,8 +10,15 @@ arch=('loong64' 'x86_64')
 depends=('ghc-libs')
 makedepends=('ghc')
 checkdepends=('haskell-hunit')
-source=("https://hackage.haskell.org/packages/archive/$pkgname/$pkgver/$pkgname-$pkgver.tar.gz")
-sha512sums=('a7a7c7b352aba0edb33aa2c7663bfdc179ba5338281b72373670e57a1ed4c26ce1a6ae8c7f72e9841837bb43007b40715d70ee3408e4049fd47167b8151aeceb')
+source=("https://hackage.haskell.org/packages/archive/$pkgname/$pkgver/$pkgname-$pkgver.tar.gz"
+        "uusi-Cabal-3.6.patch")
+sha512sums=('a7a7c7b352aba0edb33aa2c7663bfdc179ba5338281b72373670e57a1ed4c26ce1a6ae8c7f72e9841837bb43007b40715d70ee3408e4049fd47167b8151aeceb'
+            '0ac55ca660f4b13790bd9b91e7f0501bc0c81b9a9a90e9c57edf013a287bcd6cbfdfd19375f51d41b85053d788f1c6d36f79d349c1b5865ac3fad44c916be045')
+
+prepare() {
+  cd $pkgname-$pkgver
+  patch -p1 -i ../uusi-Cabal-3.6.patch
+}
 
 build() {
   cd $pkgname-$pkgver
@@ -24,7 +31,7 @@ build() {
 
   runhaskell Setup configure -O --enable-shared --enable-executable-dynamic --disable-library-vanilla \
     --prefix=/usr --docdir=/usr/share/doc/$pkgname --datasubdir=$pkgname "${_opts[@]}" \
-    --dynlibdir=/usr/lib --libsubdir=\$compiler/site-local/\$pkgid --ghc-option=-fllvm \
+    --dynlibdir=/usr/lib --libsubdir=\$compiler/site-local/\$pkgid \
     --ghc-option=-optl-Wl\,-z\,relro\,-z\,now \
     --ghc-option='-pie'
 

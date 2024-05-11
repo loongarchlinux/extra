@@ -1,23 +1,39 @@
 # Maintainer: kpcyrd <kpcyrd[at]archlinux[dot]org>
 
 pkgname=sh4d0wup
-pkgver=0.9.1
+pkgver=0.9.3
 pkgrel=1
 pkgdesc="Signing-key abuse and update exploitation framework"
 url='https://github.com/kpcyrd/sh4d0wup'
 arch=('loong64' 'x86_64')
 license=('GPL-3.0-or-later')
-depends=('gcc' 'pcsclite' 'podman' 'openssl' 'shared-mime-info' 'xz' 'libzstd.so')
+depends=(
+  'gcc'
+  'gcc-libs'
+  'glibc'
+  'gmp'
+  'libbz2.so'
+  'liblzma.so'
+  'libnettle.so'
+  'libpcsclite.so'
+  'libssl.so'
+  'libzstd.so'
+  'podman'
+  'shared-mime-info'
+)
 checkdepends=('sequoia-sq')
-makedepends=('cargo' 'clang')
+makedepends=(
+  'cargo'
+  'clang'
+)
 options=(!lto)
 source=(https://github.com/kpcyrd/${pkgname}/archive/v${pkgver}/${pkgname}-${pkgver}.tar.gz)
-sha256sums=('5f74ad2cfc4babf0a718003e9940892250715f413efa321e0c53aedaed568f65')
-b2sums=('91a783a3aaf026f53e8f430c8999c3d8fa78b478441eb5fe32aa0574899ba245bafa134f2059bbd6bec510df0f367e332af49f4140a6f8e954d49ed3a98d2b3a')
+sha256sums=('7a1258a5dfc48c54cea1092adddb6bcfb1fcf19c7272c0a6a9e1d2d7daee6e12')
+b2sums=('cd594be73fcf632544195d09518901b1055ae86dcf463a5d446a83beba66073c70a9dfb75efd9d826c2ecf7215ab6cd76128a20104d5ef4ea57470061d2e29bf')
 
 prepare() {
   cd "${pkgname}-${pkgver}"
-  cargo fetch --locked --target "$CARCH-unknown-linux-gnu"
+  cargo fetch --locked --target "$(rustc -vV | sed -n 's/host: //p')"
 }
 
 build() {

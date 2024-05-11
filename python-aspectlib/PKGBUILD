@@ -2,13 +2,13 @@
 
 pkgname=python-aspectlib
 pkgver=1.5.2
-pkgrel=7
+pkgrel=8
 pkgdesc="Development library for quickly writing configurable applications and daemons"
 arch=('any')
-license=('BSD')
+license=('BSD-2-Clause')
 url="https://github.com/ionelmc/python-aspectlib"
-depends=('python-fields')
-makedepends=('python-setuptools')
+depends=('python' 'python-fields')
+makedepends=('python-build' 'python-installer' 'python-setuptools' 'python-wheel')
 checkdepends=('python-tornado' 'python-process-tests'
               'python-profilestats' 'python-pytest') # 'mysql-python')
 source=("$pkgname-$pkgver.tar.gz::https://github.com/ionelmc/python-aspectlib/archive/v$pkgver.tar.gz"
@@ -24,7 +24,7 @@ prepare() {
 
 build() {
   cd python-aspectlib-$pkgver
-  python setup.py build
+  python -m build --wheel --no-isolation
 }
 
 check() {
@@ -35,6 +35,6 @@ check() {
 
 package() {
   cd python-aspectlib-$pkgver
-  python setup.py install --root="$pkgdir" --optimize=1
+  python -m installer --destdir="$pkgdir" dist/*.whl
   install -D -m644 LICENSE "$pkgdir"/usr/share/licenses/$pkgname/LICENSE
 }

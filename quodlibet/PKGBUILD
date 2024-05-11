@@ -4,7 +4,7 @@
 
 pkgname=quodlibet
 pkgver=4.6.0
-pkgrel=1
+pkgrel=2
 pkgdesc="Music player and music library manager"
 arch=(any)
 url="https://quodlibet.readthedocs.io/"
@@ -42,6 +42,8 @@ checkdepends=(
   # python-polib  # TODO: package python-polib
   python-pytest
   python-pyvirtualdisplay
+  python-senf
+  xine-lib
   xorg-server-xvfb
 )
 optdepends=(
@@ -61,17 +63,26 @@ optdepends=(
   'webkit2gtk: Web Lyrics plugin'
   'xine-lib: Alternative audio backend'
 )
-source=(https://github.com/$pkgname/$pkgname/releases/download/release-$pkgver/$pkgname-$pkgver.tar.gz{,.sig})
+source=(https://github.com/$pkgname/$pkgname/releases/download/release-$pkgver/$pkgname-$pkgver.tar.gz{,.sig}
+        https://github.com/quodlibet/quodlibet/commit/a8b6f6bb.patch
+        https://github.com/quodlibet/quodlibet/commit/9b6693e1.patch)
 sha512sums=('d17ed0ba14aa86eaf103fdc5feaeda74575e4bd9d9e55dae07679afb50e279c82b66b7429b0435c36663a9865141c168d3ff56a25c64f9694818f722362db7e9'
-            'SKIP')
+            'SKIP'
+            '4bb30f57d8b3938ffecf2011e7d43ccc9fe6a9281c28406dadc5d12f4256c69458bb0f801e47c7c5d8310d7032e13ae071e49d3e9afe3e94e6d6b5700b203b90'
+            'dd02450d7060c7e96937bca068099156cd8de1ffe56866587330e9d3d391e6286f3b63ee04114e21622392c81ee97ef97ad258a6d55ff9caba4c85ce92bf8c3c')
 b2sums=('aab5a6a651081caf4a2e6935ccaab505ee1102e6433b28bcb704de2ef9d17190db30314f7efba07b3d3a15919eb8171bc81de68d60de8166efeddaaa7813d00c'
-        'SKIP')
+        'SKIP'
+        '5daca38f03fad56b8911413fa6ecab1da3c982a053e138e80f3395ac2658b9fa6887064af635b7059167d65ffd7f64a78a6285febcef21fd57680e4760a90022'
+        'b1bae5b594088ac4a9d82942670541734ba9eac9f7bcf54baea28e262583778672afe03ec588892ff5173bd745a02595db540129989fbd3c5570bf6436fdb067')
 validpgpkeys=(0EBF782C5D53F7E5FB02A66746BD761F7A49B0EC) # Christoph Reiter <reiter.christoph@gmail.com>
 
 prepare() {
   cd $pkgname-$pkgver
   # Fix zsh completions dir
   sed -e 's|vendor-completions|site-functions|' -i gdist/zsh_completions.py
+  # Support python 3.12
+  patch -p1 -i ../a8b6f6bb.patch
+  patch -p1 -i ../9b6693e1.patch
 }
 
 build() {

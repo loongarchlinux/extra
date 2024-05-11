@@ -2,29 +2,34 @@
 # Contributor: Arch Haskell Team <arch-haskell@haskell.org>
 
 pkgname=hlint
-pkgver=3.3.6
-pkgrel=141
+pkgver=3.4.1
+pkgrel=10
 pkgdesc="Source code suggestions"
 url="http://community.haskell.org/~ndm/hlint/"
 license=("BSD")
 arch=('loong64' 'x86_64')
 depends=('ghc-libs' 'haskell-aeson' 'haskell-ansi-terminal' 'haskell-cmdargs' 'haskell-cpphs'
-         'haskell-data-default' 'haskell-extra' 'haskell-file-embed' 'haskell-filepattern'
-         'haskell-ghc' 'haskell-ghc-lib-parser-ex' 'haskell-hscolour' 'haskell-refact'
-         'haskell-syb' 'haskell-uniplate' 'haskell-unordered-containers' 'haskell-utf8-string'
-         'haskell-vector' 'haskell-yaml')
+         'haskell-data-default' 'haskell-deriving-aeson' 'haskell-extra' 'haskell-file-embed'
+         'haskell-filepattern' 'haskell-ghc' 'haskell-ghc-lib-parser-ex' 'haskell-hscolour'
+         'haskell-refact' 'haskell-syb' 'haskell-uniplate' 'haskell-unordered-containers'
+         'haskell-utf8-string' 'haskell-vector' 'haskell-yaml')
 conflicts=('haskell-hlint')
 replaces=('haskell-hlint')
-makedepends=('ghc')
+makedepends=('ghc' 'uusi')
 source=("https://hackage.haskell.org/packages/archive/${pkgname}/${pkgver}/${pkgname}-${pkgver}.tar.gz")
-sha512sums=('efc42480ca1382741f65b8f1d84b5c7fe1bd0d94e39163c0e7488862300d19f45d4e55fb501b94a45b089508f44bf196beb3437ae9eee8fc765c588c8eff7916')
+sha512sums=('6c41235c9c36588d2760af84a251b078ebc31762e8ad91c817a500c787866d34a0eae92298ebad7ed57ac9df678018c52cce990e767ea64ffebc3a6ff68b51d1')
+
+prepare() {
+    cd "${srcdir}/${pkgname}-${pkgver}"
+    uusi -u ghc-lib-parser-ex
+}
 
 build() {
     cd "${srcdir}/${pkgname}-${pkgver}"
     runhaskell Setup configure -O --enable-shared --enable-executable-dynamic --disable-library-vanilla \
         --prefix=/usr --docdir=/usr/share/doc/$pkgname --datasubdir=$pkgname \
-        --dynlibdir=/usr/lib --libsubdir=\$compiler/site-local/\$pkgid --ghc-option=-fllvm \
-            -fgpl -fthreaded
+        --dynlibdir=/usr/lib --libsubdir=\$compiler/site-local/\$pkgid \
+            -fgpl -fthreaded -f-ghc-lib
     runhaskell Setup build $MAKEFLAGS
     runhaskell Setup register --gen-script
     runhaskell Setup unregister --gen-script

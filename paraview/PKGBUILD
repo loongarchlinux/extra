@@ -7,8 +7,8 @@ _pkg=paraview
 _mpi=openmpi
 pkgname=${_pkg}
 #-${_mpi}
-pkgver=5.11.2
-pkgrel=6
+pkgver=5.12.0
+pkgrel=8
 pkgdesc="Parallel Visualization application using VTK (${_mpi} version)"
 arch=(loong64 x86_64)
 url="https://www.paraview.org"
@@ -19,7 +19,7 @@ depends=(qt5-tools qt5-svg intel-tbb openmpi ffmpeg
          jsoncpp libjsoncpp.so libharu libxml2 lz4 xz python-mpi4py netcdf
          libogg libpng pugixml libtheora libtiff zlib verdict)
 optdepends=(python-matplotlib python-pandas)
-makedepends=(cmake boost mesa gcc-fortran ninja qt5-xmlpatterns cli11 eigen utf8cpp)
+makedepends=(cmake boost mesa gcc-fortran ninja qt5-xmlpatterns cli11 eigen utf8cpp fast_float)
 # pegtl: https://gitlab.kitware.com/vtk/vtk/-/issues/18151
 # rapidjson: https://gitlab.kitware.com/vtk/vtk/-/issues/18366
 # fmt: https://gitlab.kitware.com/paraview/paraview/-/issues/21315
@@ -29,17 +29,15 @@ replaces=(paraview-opt)
 source=(${url}/files/v${pkgver%.*}/ParaView-v${pkgver/R/-R}.tar.xz
         paraview-wrapper.sh
         template.sh
-        47ceab32.patch
-        fdb93d3e9.patch
         trunc-5055371e.patch
-        ospray-3.patch)
-sha256sums=('5c5d2f922f30d91feefc43b4a729015dbb1459f54c938896c123d2ac289c7a1e'
+        ospray-3.patch
+        $pkgname-fix-pvx-option.patch::https://gitlab.kitware.com/lahwaacz/paraview/-/commit/7f9f90bcb2512df950a7bfa380e16c7bd21cd25c.patch)
+sha256sums=('d289afe7b48533e2ca4a39a3b48d3874bfe67cf7f37fdd2131271c57e64de20d'
             'd1cdb4a81db280d6b21bee3d9e5f8fc3a87f00a909d33850a1964c72091ec138'
             '844d44a14817c656ba8d6998298785125a98f03f7b5ece58d966c226db1e0d83'
-            'd9e9eb9ebadd3ca066729732165f4420b0df10759defc17458a1b0b71255b36e'
-            '79eae9ff919a36f79ba91916fdc8b2c7312713ad13a6972a6d38220f229b1887'
             'fda145052b10f197cccbc2d02a3bba24b1aa7b512b72f4713f7d9cb0230bf8c9'
-            'faf3fd2eea2f73a07f5dcbd67920161a07ae554e008ad1e4099153fec2882278')
+            'faf3fd2eea2f73a07f5dcbd67920161a07ae554e008ad1e4099153fec2882278'
+            '71b3e049f4086ad570c0ffe3d9625ce63ee8abbf42017837495145e43d6aceab')
 
 prepare() {
   # Specify python version in wrapper
@@ -49,11 +47,14 @@ prepare() {
   cd ParaView-v${pkgver/R/-R}
   # We have a patched libharu
   sed -i "s|2.4.0|2.3.0|" VTK/ThirdParty/libharu/CMakeLists.txt
-  # Fix build with adios2 2.9
-  patch -d VTK/ThirdParty/fides/vtkfides -p1 < ../47ceab32.patch
-  patch -d VTK -p1 < ../fdb93d3e9.patch
   patch -d VTK -p1 -i "$srcdir"/trunc-5055371e.patch # Fix link to PDAL 2.6
   patch -d VTK -p1 -i "$srcdir"/ospray-3.patch # Fix build with ospray 3.0
+  _fast_float_version=$(pacman -Q fast_float | sed -e 's/.* //; s/-.*//g')
+  sed -i "s|3.9.0|${_fast_float_version}|" VTK/ThirdParty/fast_float/CMakeLists.txt
+
+  # Fix compatibility with CLI11 2.4.0 and newer
+  # https://gitlab.kitware.com/paraview/paraview/-/merge_requests/6777
+  patch -Np1 -i "$srcdir"/$pkgname-fix-pvx-option.patch
 }
 
 build() {
@@ -89,6 +90,7 @@ build() {
     -DVTK_MODULE_USE_EXTERNAL_VTK_fmt=OFF \
     -DVTK_MODULE_USE_EXTERNAL_VTK_ioss=OFF \
     -DVTK_MODULE_USE_EXTERNAL_VTK_pegtl=OFF \
+    -DVTK_MODULE_USE_EXTERNAL_VTK_token=OFF \
     -Wno-dev
   ninja -C build ${MAKEFLAGS}
 }

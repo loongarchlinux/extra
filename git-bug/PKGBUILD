@@ -1,27 +1,21 @@
 # Maintainer: George Rawlinson <grawlinson@archlinux.org>
+# Maintainer: Caleb Maclennan <caleb@alerque.com>
 
 pkgname=git-bug
 pkgver=0.8.0
-pkgrel=1
+pkgrel=2
 pkgdesc='Distributed, offline-first bug tracker embedded in git, with bridges '
 arch=('loong64' 'x86_64')
 url='https://github.com/MichaelMure/git-bug'
-license=('GPL3')
+license=('GPL-3.0-only')
 depends=('gcc-libs' 'git')
 makedepends=('go')
 options=('!lto')
-_commit='a3fa445a9c76631c4cd16f93e1c1c68a954adef7'
-source=("$pkgname::git+$url#commit=$_commit")
-b2sums=('SKIP')
+source=("git+$url#tag=v$pkgver")
+sha256sums=('f7e6dc8727a4637ff966c53047ae31e9327dfdfc5a87f988aba7f9ca62f2f30b')
 
 # NOTE: webui assets seem to be pregenerated & committed into the repo
 # so there is very little point in regenerating them
-
-pkgver() {
-  cd "$pkgname"
-
-  git describe --tags | sed 's/^v//'
-}
 
 prepare() {
   cd "$pkgname"
@@ -53,10 +47,10 @@ build() {
     -buildmode=pie \
     -mod=readonly \
     -modcacherw \
-    -ldflags "-linkmode external -extldflags ${LDFLAGS} \
-    -X ${COMMANDS_PATH}.GitCommit=${GIT_COMMIT} \
-	  -X ${COMMANDS_PATH}.GitLastTag=${GIT_LAST_TAG} \
-	  -X ${COMMANDS_PATH}.GitExactTag=${GIT_EXACT_TAG}" \
+    -ldflags "-linkmode external -extldflags \"${LDFLAGS}\" \
+        -X ${COMMANDS_PATH}.GitCommit=${GIT_COMMIT} \
+        -X ${COMMANDS_PATH}.GitLastTag=${GIT_LAST_TAG} \
+        -X ${COMMANDS_PATH}.GitExactTag=${GIT_EXACT_TAG}" \
     -o build \
     .
 }

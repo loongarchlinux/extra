@@ -1,7 +1,7 @@
 # Maintainer: Felix Yan <felixonmars@archlinux.org>
 
 pkgname=dtk6gui
-pkgver=6.0.4
+pkgver=6.0.11
 pkgrel=1
 epoch=1
 pkgdesc='Deepin Toolkit, gui module for DDE look and feel'
@@ -10,12 +10,12 @@ url="https://github.com/linuxdeepin/dtk6gui"
 license=('LGPL3')
 # 'libqtxdg' disabled until it supports Qt6
 depends=('glibc' 'dtk6core' 'freeimage' 'libraw' 'librsvg' 'qt6-base' 'glib2' 'libx11' 'gcc-libs')
-makedepends=('cmake' 'ninja' 'qt6-tools' 'gtest' 'doxygen')
-source=("https://github.com/linuxdeepin/dtk6gui/archive/$pkgver/$pkgname-$pkgver.tar.gz")
-sha512sums=('ecee00733eab24856af1e7cac335043dd7bcde1ce276fe5ce413ab259067deccd98451c634e4ed3db006ce3a1a7afe12daa451e7b5be77117bf3dcf6c47da096')
+makedepends=('git' 'cmake' 'ninja' 'qt6-tools' 'gtest' 'doxygen')
+source=("git+https://github.com/linuxdeepin/dtk6gui.git#tag=$pkgver")
+sha512sums=('5f6332728cf35379921baa7f0a7849e69a34b9433ed6b808c7d1815dba92093495b0d9530e3a27bc32b4808969f7f5d34b2fea31e528485fe88b4772d1028502')
 
 build() {
-  cd dtk6gui-$pkgver
+  cd dtk6gui
   cmake . -GNinja \
     -DBUILD_DOCS=ON \
     -DBUILD_TESTING=ON \
@@ -27,12 +27,12 @@ build() {
 }
 
 check() {
-  cd dtk6gui-$pkgver
+  cd dtk6gui
   # TODO
   ninja test || echo "Tests failed"
 }
 
 package() {
-  cd dtk6gui-$pkgver
+  cd dtk6gui
   DESTDIR="$pkgdir" ninja install
 }

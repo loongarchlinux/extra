@@ -1,0 +1,42 @@
+# Maintainer: Sven-Hendrik Haase <svenstaro@archlinux.org>
+# Contributor: pallxk <aur@pallxk.com>
+# https://docs.microsoft.com/en-us/cli/azure/install-azure-cli-linux
+pkgname=azure-cli
+pkgver=2.60.0
+pkgrel=3
+pkgdesc="Command-line tools for Microsoft Azure"
+arch=('any')
+url="https://github.com/Azure/azure-cli"
+license=('MIT')
+depends=("python")
+makedepends=("git")
+options=("!debug")
+source=("git+https://github.com/Azure/azure-cli.git#tag=azure-cli-${pkgver}"
+        "$pkgname-28796.patch::https://patch-diff.githubusercontent.com/raw/Azure/azure-cli/pull/28796.patch"
+        "az")
+sha256sums=('232c3b08a8396ac137b39fce4ca2c905947e4d0f2f52b19bbf435acf00dbd5e8'
+            '324f621539d56195d2725451bc2edae3e2c01c173b7722f8e162af8b98aeefc0'
+            '990f70efec828c1e1f3f57748fc6e40f9705f2223dc96683e8e29d118daac116')
+options=('!strip')
+
+prepare() {
+  cd azure-cli
+  patch -Np1 -i "$srcdir"/$pkgname-28796.patch
+}
+
+package() {
+  cd azure-cli
+
+  mkdir "$pkgdir/opt"
+
+  # We're going to just slap all of this junk into /opt because it needs so much stuff
+  # with very specific versions that it's just not worth the hassle to try to fight it.
+  # Sometimes you just have to be like water, my friend.
+  python -m venv "$pkgdir/opt/azure-cli"
+  source "$pkgdir/opt/azure-cli/bin/activate"
+
+  scripts/install_full.sh
+
+  install -Dm755 "$srcdir/az" "$pkgdir/usr/bin/az"
+  install -Dm644 az.completion "$pkgdir/usr/share/bash-completion/completions/az"
+}

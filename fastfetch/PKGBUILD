@@ -2,13 +2,13 @@
 # Contributor: Mark Wagie <mark dot wagie at proton dot me>
 
 pkgname=fastfetch
-pkgver=2.7.1
+pkgver=2.11.5
 pkgrel=1
 pkgdesc="Like Neofetch, but much faster because written in C"
 arch=('loong64' 'x86_64')
 url="https://github.com/fastfetch-cli/fastfetch"
 license=('MIT')
-depends=('glibc')
+depends=('glibc' 'yyjson')
 makedepends=(
   'chafa'
   'cmake'
@@ -24,7 +24,6 @@ makedepends=(
   'mesa'
   'ocl-icd'
   'opencl-headers'
-  'pciutils'
   'vulkan-headers'
   'vulkan-icd-loader'
   'wayland'
@@ -44,25 +43,24 @@ optdepends=(
   'mesa: Needed by the OpenGL module for gl context creation.'
   'libxrandr: Multi monitor support'
   'ocl-icd: OpenCL module'
-  'pciutils: GPU output'
+  'hwdata: GPU output'
   'vulkan-icd-loader: Vulkan module & fallback for GPU output'
   'xfconf: Needed for XFWM theme and XFCE Terminal font'
   'zlib: Faster image output when using kitty graphics protocol'
   'libdrm: Displays detection'
 )
 source=("${pkgname}-${pkgver}.tar.gz::${url}/archive/refs/tags/${pkgver}.tar.gz")
-sha256sums=('64778068628426a1d4394f756cec70a62dd9f7fabc267dd7bdcbfc6302f6476e')
+sha256sums=('83b7699d0aee3aa1683721fe4b82d667c88e97e257d48e9efe586b0e830f8a64')
 
 build() {
 	cmake -B build -S "${pkgname}-${pkgver}" \
 		-DCMAKE_BUILD_TYPE='None' \
 		-DCMAKE_INSTALL_PREFIX='/usr' \
-		-DCMAKE_BUILD_TYPE='RelWithDebInfo' \
 		-DBUILD_TESTS='ON' \
 		-DENABLE_SQLITE3='OFF' \
 		-DENABLE_RPM='OFF' \
 		-DENABLE_IMAGEMAGICK6='OFF' \
-		-DENABLE_DDCUTIL='ON' \
+		-DENABLE_SYSTEM_YYJSON='ON' \
 		-Wno-dev
 	cmake --build build
 }

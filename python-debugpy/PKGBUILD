@@ -3,34 +3,47 @@
 
 _pipname=debugpy
 pkgname=python-$_pipname
-pkgver=1.8.0
-pkgrel=1
+pkgver=1.8.1
+pkgrel=3
 pkgdesc='An implementation of the Debug Adapter Protocol for Python'
 arch=(loong64 x86_64)
 url='https://aka.ms/debugpy'
-license=(EPL MIT)
-depends=(python)
-makedepends=(python-setuptools)
-source=(https://github.com/microsoft/debugpy/archive/v$pkgver/$pkgname-$pkgver.tar.gz)
-sha256sums=('0adfbfd9a7df6b21f2ef084c070c99cfd6e0bc8aeee72976ddcbcbfbac1674bb')
+license=(MIT)
+depends=(gcc-libs
+         glibc
+         python)
+makedepends=(cython
+             git
+             python-build
+             python-installer
+             python-setuptools
+             python-wheel)
+source=(git+https://github.com/microsoft/debugpy#tag=v$pkgver)
+sha256sums=('41cd4bf27887e8bd431555c9107f55f61fd359cb794a0867b615cb1cc284dd0d')
 
 prepare() {
-  cd $_pipname-$pkgver
+  cd $_pipname
 # remove precompiled libs
   rm src/debugpy/_vendored/pydevd/pydevd_attach_to_process/*.{so,dll,dylib,exe,pdb}
 }
 
 build() {
-  cd $_pipname-$pkgver
-  python setup.py build
+  cd $_pipname
+# Recythonize sources
+  pushd src/debugpy/_vendored/pydevd/_pydevd_bundle
+    cythonize pydevd_cython.pyx
+  popd
+
+  python -m build --wheel --no-isolation
 # Compile attach libraries
   cd build/lib*/debugpy/_vendored/pydevd/pydevd_attach_to_process
   g++ ${CXXFLAGS} -m64 -shared -o attach_linux_amd64.so -fPIC -nostartfiles linux_and_mac/attach.cpp ${LDFLAGS}
 }
 
 package() {
-  cd $_pipname-$pkgver
-  python setup.py install --skip-build --root="$pkgdir" --optimize=1
-
+  cd $_pipname
+  python -m installer --destdir="$pkgdir" dist/*.whl
+  install -Dm755 build/lib*/debugpy/_vendored/pydevd/pydevd_attach_to_process/attach_linux_amd64.so \
+    -t "$pkgdir"`python -c "import site; print(site.getsitepackages()[0])"`/debugpy/_vendored/pydevd/pydevd_attach_to_process
   install -Dm644 LICENSE "$pkgdir"/usr/share/licenses/$pkgname/LICENSE
 }

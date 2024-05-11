@@ -1,7 +1,7 @@
 # Maintainer: Sven-Hendrik Haase <svenstaro@archlinux.org>
 pkgname=vncdotool
 pkgver=1.2.0
-pkgrel=1
+pkgrel=2
 pkgdesc='A command line VNC client'
 arch=('any')
 url='https://github.com/sibson/vncdotool'

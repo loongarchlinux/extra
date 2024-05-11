@@ -2,7 +2,7 @@
 # Contributor: Morteza NourelahiAlamdari <m@0t1.me>
 
 pkgname=sqlfluff
-pkgver=2.3.2
+pkgver=3.0.4
 pkgrel=1
 pkgdesc='A dialect-flexible and configurable SQL linter'
 arch=('any')
@@ -11,15 +11,14 @@ license=('MIT')
 depends=(
   'python'
   'python-appdirs'
-  'python-cached-property'
   'python-chardet'
   'python-click'
   'python-colorama'
   'python-diff-cover'
   'python-jinja'
-  'python-oyaml'
   'python-pathspec'
   'python-pytest'
+  'python-pyyaml'
   'python-regex'
   'python-tblib'
   'python-toml'
@@ -34,18 +33,11 @@ makedepends=(
   'python-setuptools'
 )
 checkdepends=('python-hypothesis')
-_commit='5dbc0aa71ac5eeaa70e4f7e9159a17dd8eaa81b4'
-source=("$pkgname::git+https://github.com/sqlfluff/sqlfluff.git#commit=$_commit")
-b2sums=('SKIP')
-
-pkgver() {
-  cd "$pkgname"
-
-  git describe --tags | sed 's/^v//'
-}
+source=("$pkgname-$pkgver.tar.gz::https://github.com/sqlfluff/sqlfluff/archive/refs/tags/$pkgver.tar.gz")
+b2sums=('38763f5cf11cf3373cc78e92cfb5161f4f26776b96ee06b699633b0c732a8e37c88e0c0143029671d32801bd12bd31368dbf34072d824fa173f476cd5e1395c2')
 
 build() {
-  cd "$pkgname"
+  cd "$pkgname-$pkgver"
 
   python \
     -m build \
@@ -54,7 +46,7 @@ build() {
 }
 
 check() {
-  cd "$pkgname"
+  cd "$pkgname-$pkgver"
 
   # install to temporary directory for access to sqlfluff executable
   python \
@@ -71,7 +63,7 @@ check() {
 }
 
 package() {
-  cd "$pkgname"
+  cd "$pkgname-$pkgver"
 
   python \
     -m installer \

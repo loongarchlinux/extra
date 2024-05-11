@@ -5,22 +5,27 @@
 _hkgname=regex-compat
 pkgname=haskell-regex-compat
 pkgver=0.95.2.1
-pkgrel=6
+pkgrel=7
 pkgdesc='Replaces and enhances Text.Regex'
 url="https://hackage.haskell.org/package/${_hkgname}"
 license=('BSD')
 arch=('loong64' 'x86_64')
 depends=('ghc-libs' 'haskell-regex-base' 'haskell-regex-posix')
-makedepends=('ghc')
+makedepends=('ghc' 'uusi')
 source=("https://hackage.haskell.org/packages/archive/$_hkgname/$pkgver/$_hkgname-$pkgver.tar.gz")
 sha512sums=('87a671729dcdb2c89ce079fbb124cd2f16407f2dca0ed5d0d898a9cf06f893b82c184566efe80d966afbc7dde2cab1693b81516adc4832a9c65283a65fecd919')
+
+prepare() {
+    cd $_hkgname-$pkgver
+    uusi -u base $_hkgname.cabal
+}
 
 build() {
     cd $_hkgname-$pkgver
     
     runhaskell Setup configure -O --enable-shared --enable-executable-dynamic --disable-library-vanilla \
-        --prefix=/usr --docdir=/usr/share/doc/$pkgname \
-        --dynlibdir=/usr/lib --libsubdir=\$compiler/site-local/\$pkgid --ghc-option=-fllvm
+        --prefix=/usr --docdir=/usr/share/doc/$pkgname --datasubdir=$pkgname \
+        --dynlibdir=/usr/lib --libsubdir=\$compiler/site-local/\$pkgid
     runhaskell Setup build $MAKEFLAGS
     runhaskell Setup register --gen-script
     runhaskell Setup unregister --gen-script

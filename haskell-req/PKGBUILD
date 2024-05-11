@@ -2,8 +2,8 @@
 
 _hkgname=req
 pkgname=haskell-req
-pkgver=3.13.0
-pkgrel=103
+pkgver=3.13.1
+pkgrel=2
 pkgdesc="HTTP client library"
 url="https://github.com/mrkkrp/req"
 license=('BSD')
@@ -12,23 +12,25 @@ depends=('ghc-libs' 'haskell-aeson' 'haskell-authenticate-oauth' 'haskell-blaze-
          'haskell-case-insensitive' 'haskell-crypton-connection' 'haskell-http-api-data'
          'haskell-http-client' 'haskell-http-client-tls' 'haskell-http-types' 'haskell-modern-uri'
          'haskell-monad-control' 'haskell-retry' 'haskell-transformers-base' 'haskell-unliftio-core')
-makedepends=('ghc' 'uusi' 'haskell-quickcheck' 'haskell-hspec' 'haskell-hspec-core')
-source=("https://hackage.haskell.org/packages/archive/$_hkgname/$pkgver/$_hkgname-$pkgver.tar.gz")
-sha512sums=('01600cee2ffb2db91a46ede812b29a94e2671dc92765b40ffcd5caa53dbaf27d97abd6f6ca18a0cd9cec0be41ea65daccecbd03e96e2a4c08dde8ee96b12adae')
+makedepends=('git' 'ghc' 'haskell-quickcheck' 'haskell-hspec' 'haskell-hspec-core')
+source=("git+https://github.com/mrkkrp/req#tag=$pkgver")
+sha512sums=('f08c2026afde72503e1e0de090e1e8c9cab940f12036cc8599b17dae0be72862c99aa0da38607378d4de3a144d02537b62c6e5aa835609f8a0f41a01cbbf5c3e')
 
 prepare() {
-  cd $_hkgname-$pkgver
-  uusi -r connection:crypton-connection $_hkgname.cabal
-  # httpbin.org is very unstable
-  sed -i 's|httpbin.org|httpbin.verygoodsecurity.io|' httpbin-tests/Network/HTTP/ReqSpec.hs
+  cd $_hkgname
+  # Fix tests
+  git cherry-pick -n f7c3b88e1989df250b62bb1a8595c422043bea45
+  git cherry-pick -n 0f7692ad76a795ffa7920482bec1a90de97a1891
+  # httpbin.org is very unstable, httpbun.org seems to be a typo
+  # sed -i 's|httpbun.org|httpbin.jsteelkw.dev|' httpbun-tests/Network/HTTP/ReqSpec.hs
 }
 
 build() {
-  cd $_hkgname-$pkgver    
+  cd $_hkgname
     
   runhaskell Setup configure -O --enable-shared --enable-executable-dynamic --disable-library-vanilla \
     --prefix=/usr --docdir=/usr/share/doc/$pkgname --datasubdir=$pkgname --enable-tests \
-    --dynlibdir=/usr/lib --libsubdir=\$compiler/site-local/\$pkgid --ghc-option=-fllvm \
+    --dynlibdir=/usr/lib --libsubdir=\$compiler/site-local/\$pkgid \
     --ghc-option=-optl-Wl\,-z\,relro\,-z\,now \
     --ghc-option='-pie'
 
@@ -40,12 +42,12 @@ build() {
 }
 
 check() {
-  cd $_hkgname-$pkgver
+  cd $_hkgname
   runhaskell Setup test --show-details=direct
 }
 
 package() {
-  cd $_hkgname-$pkgver
+  cd $_hkgname
 
   install -D -m744 register.sh "$pkgdir"/usr/share/haskell/register/$pkgname.sh
   install -D -m744 unregister.sh "$pkgdir"/usr/share/haskell/unregister/$pkgname.sh

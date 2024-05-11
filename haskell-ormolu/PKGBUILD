@@ -2,22 +2,23 @@
 
 _hkgname=ormolu
 pkgname=haskell-ormolu
-pkgver=0.3.0.0
-pkgrel=102
+pkgver=0.5.0.1
+pkgrel=8
 pkgdesc="A formatter for Haskell source code"
 url="https://github.com/tweag/ormolu"
 license=("BSD")
 arch=('loong64' 'x86_64')
-depends=('ghc-libs' 'haskell-ansi-terminal' 'haskell-diff' 'haskell-dlist'
-         'haskell-gitrev' 'haskell-optparse-applicative' 'haskell-syb')
-makedepends=('ghc' 'uusi' 'haskell-hspec' 'haskell-path' 'haskell-path-io')
+depends=('ghc-libs' 'haskell-aeson' 'haskell-ansi-terminal' 'haskell-diff' 'haskell-dlist'
+         'haskell-ghc-lib-parser' 'haskell-gitrev' 'haskell-megaparsec' 'haskell-memotrie'
+         'haskell-optparse-applicative' 'haskell-syb' 'haskell-th-lift-instances')
+makedepends=('ghc' 'uusi' 'haskell-quickcheck' 'haskell-hspec' 'haskell-hspec-megaparsec'
+             'haskell-path' 'haskell-path-io' 'haskell-temporary')
 source=("https://hackage.haskell.org/packages/archive/$_hkgname/$pkgver/$_hkgname-$pkgver.tar.gz")
-sha512sums=('627939eeacf0b87a8eef8b7f1f96385e15ee97a1f8592561bb2ff0f84229ffb6f09ec78e0ebd561c4afd892a2e7067c8e867c98f216e310400edf0856809aa3b')
+sha512sums=('155d7f8fcab72b72e6710437dfc6d7b63c6f2b7b9bc8667b0ac8d0a9382ee693ae9feb8cb3404e763eb2378ce322c57eca606349f7b7f0769e0fd6a1c74e1b7a')
 
 prepare() {
   cd $_hkgname-$pkgver
-  uusi -rghc-lib-parser:ghc,ghc-boot,ghc-boot-th -u optparse-applicative $_hkgname.cabal
-  sed -i 's/using ghc-lib-parser/using ghc/;s/VERSION_ghc_lib_parser/VERSION_ghc/' app/Main.hs
+  uusi -u optparse-applicative $_hkgname.cabal
 }
 
 build() {
@@ -25,7 +26,7 @@ build() {
 
   runhaskell Setup configure -O --enable-shared --enable-executable-dynamic --disable-library-vanilla \
     --prefix=/usr --docdir=/usr/share/doc/$pkgname --datasubdir=$pkgname --enable-tests \
-    --dynlibdir=/usr/lib --libsubdir=\$compiler/site-local/\$pkgid --ghc-option=-fllvm \
+    --dynlibdir=/usr/lib --libsubdir=\$compiler/site-local/\$pkgid \
     --ghc-option=-optl-Wl\,-z\,relro\,-z\,now \
     --ghc-option='-pie'
 

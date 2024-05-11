@@ -1,0 +1,27 @@
+diff -ruN a/pysmt/smtlib/parser/__init__.py b/pysmt/smtlib/parser/__init__.py
+--- a/pysmt/smtlib/parser/__init__.py	2022-05-28 14:12:12.000000000 +0200
++++ b/pysmt/smtlib/parser/__init__.py	2024-03-01 15:24:10.084613742 +0100
+@@ -80,7 +80,8 @@
+     # no ambiguity when importing the parser: the only way to load the
+     # cython version is by the so_path that targets .pyxbld .
+     #
+-    import imp
++    import importlib
++    import sys
+     
+     pyx = pyximport.install()
+     pyximport.uninstall(*pyx)
+@@ -90,7 +91,12 @@
+ 
+     so_path = pyximport.build_module(name, path,
+                                      pyxbuild_dir=build_dir)
+-    mod = imp.load_dynamic(name, so_path)
++    spec = importlib.util.spec_from_file_location(name, so_path)
++    module = importlib.util.module_from_spec(spec)
++    sys.modules[name] = module
++    spec.loader.exec_module(module)
++    mod = sys.modules[name]
++
+     assert mod.__file__ == so_path, (mod.__file__, so_path)
+     # print(so_path)
+     from pysmt.smtlib.parser.parser import *

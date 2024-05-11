@@ -3,18 +3,18 @@
 # Contributor: Ellie Huxtable <e@elm.sh>
 
 pkgname=atuin
-pkgver=17.2.1
-pkgrel=1
+pkgver=18.2.0
+pkgrel=2
 pkgdesc="Magical shell history"
 arch=('loong64' 'x86_64')
 url="https://github.com/atuinsh/atuin"
 license=('MIT')
-depends=('gcc-libs')
+depends=('gcc-libs' 'glibc')
 makedepends=('cargo')
 optdepends=('bash-preexec: bash integration')
-source=("$url/archive/v$pkgver/$pkgname-$pkgver.tar.gz")
-sha256sums=('5bad59af24317adfa1d56fce39e231c85836fb91ac3d468830f9bb0884b320ca')
 options=('!lto')
+source=("$url/archive/v$pkgver/$pkgname-$pkgver.tar.gz")
+sha256sums=('7fb87902ce09af2d29459e9158bc83c18519690d555259709cab40d9ee75b024')
 
 prepare() {
   cd "$pkgname-$pkgver"
@@ -24,6 +24,10 @@ prepare() {
 
 build() {
   cd "$pkgname-$pkgver"
+  env \
+      CARGO_PROFILE_RELEASE_LTO=true \
+      CARGO_PROFILE_RELEASE_CODEGEN_UNITS=1 \
+      CARGO_PROFILE_RELEASE_DEBUG=2 \
   cargo build --release --frozen --all-features
   for sh in 'bash' 'fish' 'zsh'; do
     "target/release/$pkgname" gen-completions -s "$sh" -o completions/

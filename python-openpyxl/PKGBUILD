@@ -6,7 +6,7 @@
 pkgname=python-openpyxl
 # https://openpyxl.readthedocs.io/en/stable/changes.html
 pkgver=3.1.2
-pkgrel=3
+pkgrel=4
 pkgdesc="A Python library to read/write Excel 2010 xlsx/xlsm files"
 arch=('any')
 url="https://openpyxl.readthedocs.org/"
@@ -18,8 +18,17 @@ optdepends=('python-pillow: needed to include images'
             'python-lxml: alternative XML backend'
             'python-defusedxml: guard against various XML vulnerabilities'
             'python-pandas: for iteration over Pandas DataFrames')
-source=("https://foss.heptapod.net/openpyxl/openpyxl/-/archive/${pkgver}/openpyxl-${pkgver}.tar.bz2")
-sha256sums=('421e13e7004f6fee7cf84c1b9fa738615bf409ff2b57e2227be75452f7608c12')
+source=("https://foss.heptapod.net/openpyxl/openpyxl/-/archive/${pkgver}/openpyxl-${pkgver}.tar.bz2"
+        "pytest8.patch")
+sha256sums=('421e13e7004f6fee7cf84c1b9fa738615bf409ff2b57e2227be75452f7608c12'
+            '28014dede088afb80047458c88d0e121aae93b20cf8789ad45b47fd4c8884b2d')
+
+prepare() {
+  cd "$srcdir"/openpyxl-${pkgver}
+  # Backport a fix for compatibility with the latest pytest
+  # See: https://foss.heptapod.net/openpyxl/openpyxl/-/commit/517ce7d21194da275f8083fa2fd7de6977dc7e95
+  patch -Np1 -i ../pytest8.patch
+}
 
 build() {
   cd "$srcdir"/openpyxl-${pkgver}

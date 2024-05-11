@@ -1,0 +1,39 @@
+# Maintainer: Daniel M. Capella <polyzen@archlinux.org>
+# Contributor: ObserverOfTime <chronobserver@disroot.org>
+
+pkgname=tree-sitter-vimdoc
+pkgver=2.5.1
+pkgrel=2
+pkgdesc='Vim help file grammar for tree-sitter'
+arch=('loong64' 'x86_64')
+url=https://github.com/neovim/tree-sitter-vimdoc
+license=('Apache-2.0')
+groups=('tree-sitter-grammars')
+makedepends=('git' 'tree-sitter-cli')
+optdepends=('tree-sitter: core library')
+provides=("lib$pkgname.so")
+source=("git+$url.git#tag=v$pkgver")
+b2sums=('76266ce810287de60bf09688825a2ccd94de980cdafc924436e723c0577e5b78085dcd01d1edd9127363a41dc37a742bc9752dbfa8d4a57c60caf2285d871166')
+
+prepare() {
+  cd $pkgname
+  tree-sitter generate --no-bindings src/grammar.json
+  # TODO: remove when the version is fixed
+  sed -i Makefile -e "s/VERSION := .*/VERSION := ${pkgver}/"
+}
+
+build() {
+  cd $pkgname
+  make PREFIX=/usr PARSER_URL="$url"
+}
+
+package() {
+  install -d "$pkgdir"/usr/lib/tree_sitter
+  ln -s /usr/lib/lib$pkgname.so \
+    "$pkgdir"/usr/lib/tree_sitter/${pkgname#tree-sitter-}.so
+
+  cd $pkgname
+  make DESTDIR="$pkgdir" PREFIX=/usr install
+  install -Dm644 -t "$pkgdir"/usr/share/doc/$pkgname README.md
+  install -Dm644 -t "$pkgdir"/usr/share/licenses/$pkgname LICENSE
+}

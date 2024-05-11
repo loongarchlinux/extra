@@ -3,7 +3,7 @@
 # Contributor: Martin Wimpress <code@flexion.org>
 
 pkgname=mate-desktop
-pkgver=1.26.2
+pkgver=1.28.2
 pkgrel=1
 pkgdesc="Library with common API for various MATE modules"
 url="http://mate-desktop.org"
@@ -15,7 +15,7 @@ groups=('mate')
 conflicts=('mate-desktop-gtk3' 'mate-desktop-schemas')
 replaces=('mate-desktop-gtk3' 'mate-desktop-schemas')
 source=("https://pub.mate-desktop.org/releases/${pkgver%.*}/${pkgname}-${pkgver}.tar.xz")
-sha256sums=('5ed03f7c52d7b7ece49ca1e736aa766aefeb5c639eab3e68c7090c530d02376a')
+sha256sums=('32bb4b792014b391c1e1b8ae9c18a82b4d447650984b4cba7d28e95564964aa2')
 
 build() {
 	cd "$pkgname-$pkgver"

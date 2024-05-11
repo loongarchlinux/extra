@@ -1,22 +1,25 @@
-# Maintainer: Sergej Pupykin <pupykin.s+arch@gmail.com>
-# Maintainer: Lukas Fleischer <lfleischer@archlinux.org>
+# Maintainer: Christian Hesse <mail@eworm.de>
+# Contributor: Sergej Pupykin <pupykin.s+arch@gmail.com>
+# Contributor: Lukas Fleischer <archlinux at cryptocrack dot de>
 # Contributor: Patrick Palka <patrick@parcs.ath.cx>
 # Contributor: Loui Chang <louipc.ist at gmail com>
 # Contributor: Andreas Baumann <abaumann at yahoo dot com>
 
 pkgname=cgit
-pkgver=1.2.3
-pkgrel=3
-pkgdesc="A web interface for git written in plain C"
+_commit='00ecfaadea2c40cc62b7a43e246384329e6ddb98'
+pkgver=1.2.3.r54.g00ecfaa
+pkgrel=11
+pkgdesc='A web interface for git written in plain C'
 arch=('loong64' 'x86_64')
-url="https://git.zx2c4.com/cgit/"
-license=('GPL2')
+url='https://git.zx2c4.com/cgit/'
+license=('GPL-2.0-only')
 depends=('openssl' 'luajit')
-makedepends=('zlib' 'curl' 'asciidoc')
+makedepends=('git' 'zlib' 'curl' 'asciidoc')
 optdepends=('groff: about page using man page syntax'
             'python-pygments: syntax highlighting support'
             'python-docutils: about page formatted with reStructuredText'
             'python-markdown: about page formatted with markdown'
+            'lua51-luaossl: for lua filters'
             'gzip: gzip compressed snapshots'
             'bzip2: bzip2 compressed snapshots'
             'lzip: lzip compressed snapshots'
@@ -25,33 +28,60 @@ optdepends=('groff: about page using man page syntax'
             'mime-types: serve file with correct content-type header')
 install=cgit.install
 validpgpkeys=('AB9942E6D4A4CFC3412620A749FC7012A5DE03AE')
-source=("https://git.zx2c4.com/cgit/snapshot/cgit-$pkgver.tar."{xz,asc}
+source=("git+https://git.zx2c4.com/cgit.git#commit=${_commit}"
+        'git+https://github.com/git/git.git'
+        '0001-for-jason.patch'
         'tmpfiles.conf'
         'apache.example.conf')
-sha256sums=('5a5f12d2f66bd3629c8bc103ec8ec2301b292e97155d30a9a61884ea414a6da4'
+sha256sums=('96263de9f828eddf0ae29ab7e1b399c3228ec3244e5153d9cda8ec2c223ff5fd'
             'SKIP'
+            'f1d43fa3c4c213d4828db9cbd86a1eb5c2bfbe56c0da084fae1df6bd8b706282'
             '4004b72d433e5810b046fc6019171a11a0dae3e9c6b29a44f16ed41705c46c3d'
             '89927d462c0504863c163eb8a210e5d65db30ee6e4300ff6a2f92460e4f20a62')
 
+pkgver() {
+  cd cgit/
+
+  GITTAG="$(git describe --abbrev=0 --tags 2>/dev/null)"
+  printf '%s.r%s.g%s' \
+    "$(sed -e "s/^${pkgname%%-git}//" -e 's/^[-_/a-zA-Z]\+//' -e 's/[-_+]/./g' <<< ${GITTAG})" \
+    "$(git rev-list --count ${GITTAG}..)" \
+    "$(git rev-parse --short HEAD)"
+}
+
 prepare() {
-  cd "$pkgname-$pkgver"
-  make get-git
+  cd cgit/
+
+  # branch 'for-jason' for recent git...
+  # Please do *NOT* merge/cherry-pick, as commit hashes may change before landing in master!
+  git apply --index < ../0001-for-jason.patch
+
+  git config --file=.gitmodules submodule.git.url ../git/
+  git submodule init
+  git -c protocol.file.allow=always submodule update
 }
 
 build() {
-  cd "$pkgname-$pkgver"
+  cd cgit/
+
   make
   make doc-man
 }
 
+check() {
+  cd cgit/
+
+  make test
+}
+
 package() {
-  cd "$pkgname-$pkgver"
+  cd cgit/
 
-  make CGIT_SCRIPT_PATH=/usr/share/webapps/cgit DESTDIR="$pkgdir" prefix=/usr install install-man
+  make CGIT_SCRIPT_PATH=/usr/share/webapps/cgit DESTDIR="${pkgdir}" prefix=/usr install install-man
 
-  install -vDm0644 "$srcdir/tmpfiles.conf" "$pkgdir/usr/lib/tmpfiles.d/cgit.conf"
-  install -vDm0644 "$srcdir/apache.example.conf" "$pkgdir/etc/webapps/cgit/apache.example.conf"
-  mkdir -p "$pkgdir/usr/lib/cgit"
-  mv "$pkgdir/usr/share/webapps/cgit/cgit.cgi" "$pkgdir/usr/lib/cgit"
-  ln -sf ../../../lib/cgit/cgit.cgi "$pkgdir/usr/share/webapps/cgit/cgit.cgi"
+  install -vDm0644 "${srcdir}/tmpfiles.conf" "${pkgdir}/usr/lib/tmpfiles.d/cgit.conf"
+  install -vDm0644 "${srcdir}/apache.example.conf" "${pkgdir}/etc/webapps/cgit/apache.example.conf"
+  install -d "${pkgdir}/usr/lib/cgit"
+  mv "${pkgdir}/usr/share/webapps/cgit/cgit.cgi" "${pkgdir}/usr/lib/cgit"
+  ln -sf ../../../lib/cgit/cgit.cgi "${pkgdir}/usr/share/webapps/cgit/cgit.cgi"
 }

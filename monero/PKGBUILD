@@ -1,14 +1,15 @@
 # Maintainer: kpcyrd <kpcyrd[at]archlinux[dot]org>
 
 pkgname=monero
-pkgver=0.18.3.1
-_commit=2656cdf5056c07684741c4425a051760b97025b0
-pkgrel=4
+pkgver=0.18.3.3
+pkgrel=1
 pkgdesc="Monero: the secure, private, untraceable peer-to-peer currency"
-license=('BSD')
+license=('BSD-3-Clause')
 arch=('loong64' 'x86_64')
 url="https://getmonero.org/"
 depends=(
+  'gcc-libs'
+  'glibc'
   'libboost_program_options.so'
   'libhidapi-libusb.so'
   'libreadline.so'
@@ -28,21 +29,23 @@ makedepends=(
   'python'
 )
 source=(
-  "${pkgname}"::"git+https://github.com/monero-project/monero?signed#commit=${_commit}"
+  "${pkgname}::git+https://github.com/monero-project/monero?signed#tag=v${pkgver}"
   "git+https://github.com/miniupnp/miniupnp.git"
   "git+https://github.com/Tencent/rapidjson.git"
   "git+https://github.com/trezor/trezor-common.git"
   "git+https://github.com/tevador/RandomX.git"
   "git+https://github.com/monero-project/supercop.git"
+  "fortify-source.patch"
   "monero.sysusers"
   "monero.tmpfiles"
 )
-sha512sums=('SKIP'
+sha512sums=('4708c835831bdd4b3ce22178bb9561de0dfee221bb254a4c2ff039f94c1c24344bb17f025ba794046adb791486d590117f7e0a9a6a411b75838578e9c14f2b6c'
             'SKIP'
             'SKIP'
             'SKIP'
             'SKIP'
             'SKIP'
+            'cbb67fee67d053bbc929ad0eeaad6421fae43acf5f1ae4df346333362da7f50adc985a63c27bc4ac2a7c1f226d27162a6cad9908b53866180153a5422038e3db'
             '2e4ecf3f305dab46e166f50c0451dd969927b485df544aebcf8115a65444573e6d57a8ac6bea64ce5ab4b5cce2c70f913d9ac3bce561c59acf89851edc76a22c'
             'ae3c300548e6ba5fdf6a203146e5dcaf1955c3e19820c0bb3a73bb70ec5629a3af00d43dac95b6f3832ded5c480e872d829981a63206016d4a64f3940b713357')
 validpgpkeys=(
@@ -65,6 +68,8 @@ prepare() {
   git cherry-pick -n c32befe4f8385f5f893c0db611060bc7c7b425f3
 # Fix build with protobuf 23
   sed -e 's|CMAKE_CXX_STANDARD 14|CMAKE_CXX_STANDARD 17|' -i CMakeLists.txt
+
+  patch -Np1 -i ../fortify-source.patch
 }
 
 build() {

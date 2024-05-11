@@ -3,16 +3,15 @@
 # Contributor: damir <damir@archlinux.org>
 
 pkgname=libcdio-paranoia
-pkgver=10.2+2.0.1
-pkgrel=3
+pkgver=10.2+2.0.2
+pkgrel=1
 pkgdesc='Compact Disc Digital Audio (CDDA) extraction tool using libcdio for CDROM access'
 arch=('loong64' 'x86_64')
 url='https://www.gnu.org/software/libcdio/'
-license=('GPL3')
+license=('GPL-3.0-or-later')
 depends=('glibc' 'libcdio')
-source=("https://ftp.gnu.org/gnu/libcdio/$pkgname-$pkgver.tar.gz"{,.sig})
-sha256sums=('28d7d00e4a83d0221acda0fd2eb3e3240bf094db4c00a85998922201939fa952'
-            'SKIP')
+source=("https://github.com/rocky/$pkgname/releases/download/release-$pkgver/$pkgname-$pkgver.tar.gz")
+sha256sums=('b875d45c3f788fce82a5091c7e87869dd4298cd945e7fb873b61b3e613a32e43')
 validpgpkeys=('DAA63BC2582034A02B923D521A8DE5008275EC21') # R. Bernstein <rocky@panix.com>
 
 build() {
@@ -20,6 +19,11 @@ build() {
   ./configure --prefix=/usr
   sed -i -e 's/ -shared / -Wl,-O1,--as-needed\0/g' libtool
   make
+}
+
+check() {
+  cd $pkgname-$pkgver
+  make check
 }
 
 package() {

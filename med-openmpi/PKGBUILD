@@ -3,26 +3,32 @@
 # Contributor: Michel Zou
 # Contributor: Oliver Goethel
 # Contributor: Gustavo Alvarez <sl1pkn07@gmail.com>
+#
+# Upstream disappeared:
+#     https://www.salome-platform.org/downloads
+#     https://files.salome-platform.org/Salome/other/med-4.1.1.tar.gz
+#
+# Using a fork on GitHub by one of the FreeCAD developers instead.
 
 pkgname=med-openmpi
 pkgver=4.1.1
-pkgrel=4
-pkgdesc='Generic pre- and post-processing platform for numerical simulation'
-url="https://www.salome-platform.org/downloads"
+pkgrel=9
+pkgdesc='Library for reading and writing MED files'
+url='https://github.com/chennes/med'
 license=(LGPL)
 arch=(loong64 x86_64)
 provides=(med)
 conflicts=(med)
 replaces=(med)
 depends=(hdf5-openmpi python tk)
-makedepends=(cmake gcc-fortran ninja openmpi swig)
-source=("https://files.salome-platform.org/Salome/other/med-$pkgver.tar.gz"
+makedepends=(cmake gcc-fortran git ninja openmpi swig)
+source=("git+$url#commit=621956ec1a18d66346b40e91679021e4595ffa1b"
         hdf5-1.12.patch)
-b2sums=('fb9bc3239c18c53fa42c5dd1101559746e8d38db2a3cb5fb47d1bf0cb578facc4ab95409af8524f5c20251848842cc1a331f6a816ce0754e9a6c95f507174ed1'
+b2sums=('SKIP'
         '9fb63135d64d7a905cfad012a5d5fc2ecc8605ea0e30adeeb21d29d5e36ecedbe91f7b6254a53ae11d74336633c352b7021bdebda8d772640b5fafb70ad6796f')
 
 prepare() {
-  cd med-${pkgver}_SRC
+  cd med
   patch -p1 -i ../hdf5-1.12.patch # Fix build with hdf5 1.12 (Fedora)
   sed -i 's/if H5_VERS_MINOR > 10/if 0/g' src/ci/MEDfileCompatibility.c
   # install cmake files to /usr/lib${LIB_SUFFIX}/cmake
@@ -41,7 +47,7 @@ build() {
     -D MEDFILE_INSTALL_DOC=OFF \
     -D MEDFILE_USE_MPI=ON \
     -G Ninja \
-    -S med-${pkgver}_SRC
+    -S med
   ninja -C build
 }
 

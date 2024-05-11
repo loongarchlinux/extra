@@ -1,0 +1,51 @@
+# Maintainer: Brett Cornwall <ainola@archlinux.org>
+
+pkgname=sway-contrib
+# Upstream versions with <current_sway_version>-contrib.<version>. Since that
+# is illegal in PKGBUILD-land, let's just remove the "-contrib" portion
+# entirely.
+pkgver=1.9.0
+_upstream_pkgver="1.9-contrib.0"
+pkgrel=1
+pkgdesc="A collection of user-contributed scripts for sway"
+arch=('any')
+url="https://github.com/OctopusET/sway-contrib"
+license=('MIT')
+depends=(
+    "jq"
+    "libnotify"
+    "python"
+    "python-i3ipc"
+    "slurp"
+    "sway"
+    "wl-clipboard"
+)
+source=("$pkgname-$pkgver::https://github.com/OctopusET/$pkgname/archive/refs/tags/$_upstream_pkgver.tar.gz")
+sha256sums=('3233a4a1671973c950802b4efb0912d08c6e08c78c0998daffff2844683f3457')
+
+package() {
+    cd "$pkgname-$_upstream_pkgver"
+
+    install -dm755 "$pkgdir/usr/share/$pkgname"
+    for util in autoname-workspaces.py \
+                firefox-focus-monitor.py \
+                grimshot \
+                inactive-windows-transparency.py \
+                layout-per-window.py \
+                switch-top-level.py; do
+        install -Dm755 "$util" -t \
+                       "$pkgdir/usr/share/$pkgname/"
+    done
+
+    install -dm755 "$pkgdir/usr/lib/systemd/user/"
+    install sway-session.target -t "$pkgdir/usr/lib/systemd/user/"
+
+    install -dm755 "$pkgdir/usr/share/doc/$pkgname"
+    install -Dm644 README.md -t "$pkgdir/usr/share/doc/$pkgname"
+
+    install -dm755 "$pkgdir/usr/share/man/man1"
+    install -Dm644 grimshot.1 -t "$pkgdir/usr/share/man/man1"
+
+    install -dm755 "$pkgdir/usr/share/licenses/$pkgname"
+    install -Dm644 LICENSE -t "$pkgdir/usr/share/licenses/$pkgname"
+}

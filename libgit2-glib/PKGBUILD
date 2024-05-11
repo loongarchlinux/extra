@@ -7,12 +7,11 @@ pkgname=(
   libgit2-glib
   libgit2-glib-docs
 )
-_commit=f9843757630160f1222ef084a47931c7d0b90fe3  # tags/v1.2.0^0
 pkgver=1.2.0
-pkgrel=1
+pkgrel=3
 pkgdesc="GLib wrapper for libgit2"
 url="https://gitlab.gnome.org/GNOME/libgit2-glib"
-license=(LGPL2.1)
+license=(LGPL-2.1-or-later)
 arch=(loong64 x86_64)
 makedepends=(
   gi-docgen
@@ -24,8 +23,12 @@ makedepends=(
   python-gobject
   vala
 )
-source=("git+$url.git#commit=$_commit")
-b2sums=('SKIP')
+source=(
+  "git+$url.git#tag=v$pkgver"
+  $pkgname-1.2.0-libgit2_1.8.patch
+)
+b2sums=('d31e3edff3b663b0ba754868b719afd231067dd55aef05d4deec995dfab7eb7ba45c16ef2094dfa0f0c605731732b78e78bfa283a70fb18ab7d24a6f12fb00a8'
+        '412dc5ae24a29789d1f8433c2dd3a1eaebb2087311be2019a2170c32d913ee9310e62e292fdd51d1a9eb5c4f9b1dc19deefb4734ca40940523e17cb76eecb834')
 
 _pick() {
   local p="$1" f d; shift
@@ -40,6 +43,11 @@ _pick() {
 pkgver() {
   cd $pkgname
   git describe --tags | sed 's/^v//g;s/\([^-]*-g\)/r\1/;s/-/./g'
+}
+
+prepare() {
+  # add compatibility for libgit2 1.8: https://gitlab.gnome.org/GNOME/libgit2-glib/-/merge_requests/40
+  patch -Np1 -d $pkgname -i ../$pkgname-1.2.0-libgit2_1.8.patch
 }
 
 build() {

@@ -1,20 +1,53 @@
 # Maintainer: Alexander F. Rødseth <xyproto@archlinux.org>
 # Contributor: Grey Christoforo
 
+_name=pivy
 pkgname=python-pivy
-pkgver=0.6.8
-pkgrel=2
+pkgver=0.6.9.a0
+pkgrel=4
 pkgdesc='Bindings to Coin3D'
 arch=(loong64 x86_64)
-license=(BSD)
+license=(ISC)
 url='https://github.com/coin3d/pivy'
-depends=(python soqt)
-makedepends=(cmake git glu python-setuptools swig)
-source=("git+$url#commit=83e99c18545bb66145716123151f6635c367533b") # tag: 0.6.8
-b2sums=('SKIP')
+depends=(
+  coin
+  gcc-libs
+  glibc
+  pyside6
+  python
+  python-numpy
+  qt6-base
+  soqt
+)
+makedepends=(
+  cmake
+  glu
+  swig
+)
+source=($pkgname-$pkgver.tar.gz::$url/archive/refs/tags/$pkgver.tar.gz)
+b2sums=('1e72ff67bfb28a4a193e08a073705d6c82d65297090ca90734b6f7b8c31b79102ca0aecc5e6a192f9db45859afbec151318b34188fa7e92214fc3cb6db0faf05')
+
+build() {
+  local cmake_options=(
+    -B build
+    -D CMAKE_BUILD_TYPE=None
+    -D CMAKE_INSTALL_PREFIX=/usr
+    -D PIVY_USE_QT6=ON
+    -W no-dev
+  )
+
+  # NOTE: out-of-tree build broken: https://github.com/coin3d/pivy/issues/72
+  cd $_name-$pkgver
+  cmake "${cmake_options[@]}"
+  cmake --build build --verbose
+}
 
 package() {
-  cd pivy
-  python setup.py install --prefix=/usr --root="$pkgdir" --optimize=1
-  install -Dm644 LICENSE "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
+  cd $_name-$pkgver
+  DESTDIR="$pkgdir" cmake --install build
+  install -vDm 644 LICENSE -t "$pkgdir/usr/share/licenses/$pkgname/"
+
+  # compile Python bytecode as cmake does not do that for us
+  python -m compileall -d /usr/lib "$pkgdir/usr/lib"
+  python -O -m compileall -d /usr/lib "$pkgdir/usr/lib"
 }

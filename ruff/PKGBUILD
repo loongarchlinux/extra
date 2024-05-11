@@ -1,9 +1,11 @@
 # Maintainer: David Runge <dvzrv@archlinux.org>
 # Maintainer: Caleb Maclennan <caleb@alerque.com>
+# Maintainer: Leonidas Spyropoulos <artafinde@archlinux.org>
+# Maintainer: Daniel M. Capella <polyzen@archlinux.org>
 
 pkgbase=ruff
 pkgname=($pkgbase python-$pkgbase)
-pkgver=0.1.15
+pkgver=0.4.4
 pkgrel=1
 pkgdesc='An extremely fast Python linter, written in Rust'
 arch=(loong64 x86_64)
@@ -21,8 +23,8 @@ makedepends=(
 options=(!lto)
 _archive="$pkgbase-$pkgver"
 source=($url/archive/refs/tags/v$pkgver/$_archive.tar.gz)
-sha512sums=('2ad630c15d9c22485ab81424d76f1a4a213635f05d0786b3d695a8307e54d67c755ce9ec6a95c5cf489208f753751f94403892f7ed4e26a2e8690dadba03959b')
-b2sums=('f5fce986c26e9e8398565bc464f2bb93b93a3ea285b4a6206cda5d4c6ac816a2bd5e4a0fd8d3accfa9041d53a7279728cc4d1eb15f6178c49af7ee6243783f0e')
+sha512sums=('d5b14266d30920e4772cc690e263478abfdfd08865ca7cae64b9184566e172fc5c70d3f9463967cc431bb12bff9c97333835d3773fa70462953aa9fafd47aa0d')
+b2sums=('41fe1a7814bed12260d2eab3ae39f8039a2dde7210715905d41500c235b6def9c6cf4c4feab0bd09964a729f830cdc30dc377e980243791fe388e3faa464e5a9')
 
 prepare() {
   cd "$_archive"
@@ -47,11 +49,12 @@ _package_common() {
 package_ruff() {
   cd "$_archive"
   _package_common
-  local _target="target/$CARCH-unknown-linux-gnu/release/ruff"
+  local _target="target/$(rustc -vV | sed -n 's/host: //p')/release/ruff"
   install -Dm0755 -t "$pkgdir/usr/bin/" "$_target"
-  $_target --generate-shell-completion bash | install -Dm0644 /dev/stdin "$pkgdir/usr/share/bash-completion/completions/$pkgbase.bash"
-  $_target --generate-shell-completion fish | install -Dm0644 /dev/stdin "$pkgdir/usr/share/fish/vendor_completions.d/$pkgbase.fish"
-  $_target --generate-shell-completion zsh  | install -Dm0644 /dev/stdin "$pkgdir/usr/share/zsh/site-functions/_$pkgbase"
+  $_target generate-shell-completion bash   | install -Dm0644 /dev/stdin "$pkgdir/usr/share/bash-completion/completions/$pkgbase.bash"
+  $_target generate-shell-completion elvish | install -Dm0644 /dev/stdin "$pkgdir/usr/share/elvish/lib/$pkgbase.elv"
+  $_target generate-shell-completion fish   | install -Dm0644 /dev/stdin "$pkgdir/usr/share/fish/vendor_completions.d/$pkgbase.fish"
+  $_target generate-shell-completion zsh    | install -Dm0644 /dev/stdin "$pkgdir/usr/share/zsh/site-functions/_$pkgbase"
 }
 
 package_python-ruff() {

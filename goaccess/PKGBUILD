@@ -3,25 +3,31 @@
 # Contributor: Nicolas Storme <nicolas@atelier-web.com>
 
 pkgname=goaccess
-pkgver=1.8.1
+pkgver=1.9.2
 pkgrel=1
 pkgdesc="An open source real-time web log analyzer and interactive viewer"
 arch=('loong64' 'x86_64')
 url='https://goaccess.io'
 license=('GPL')
 depends=('ncurses' 'libmaxminddb' 'openssl')
+makedepends=('git')
 optdepends=('geoip2-database: for geoip support')
 backup=('etc/goaccess/goaccess.conf')
-source=("https://tar.goaccess.io/$pkgname-$pkgver.tar.gz")
-sha512sums=('96f0b73f13cfb77ad57748bce7d8791f8486bfd5ce47420d1c0016826a4deb9ab2d2742f4afd5d8b0eed003f9b596aae51f232fa71bf47f823b6ff8119f91354')
+source=("git+https://github.com/allinurl/goaccess.git#tag=v$pkgver")
+sha512sums=('9e0454f7d8d7a4a68ee8f0534c976e1b182eb6b28cc458c6dd36b6f75757a597c7030c180eec73447303caa7c3f3dfd82d4adc2576cfb68b496392cc6901e74f')
+
+prepare() {
+  cd $pkgname
+  autoreconf -fiv
+}
 
 build() {
-  cd $pkgname-$pkgver
+  cd $pkgname
   ./configure --enable-geoip=mmdb --enable-utf8 --with-openssl
   make prefix=/usr sysconfdir=/etc
 }
 
 package() {
-  cd $pkgname-$pkgver
+  cd $pkgname
   make prefix="$pkgdir/usr" sysconfdir="$pkgdir/etc" install
 }

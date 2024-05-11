@@ -4,22 +4,38 @@
 
 pkgname=rhythmbox
 pkgver=3.4.7
-pkgrel=1
+pkgrel=2
 pkgdesc="Music playback and management application"
 url="https://wiki.gnome.org/Apps/Rhythmbox"
 arch=(loong64 x86_64)
-license=(GPL)
+license=(GPL-2.0-or-later)
 depends=(
+  at-spi2-core
+  cairo
   dconf
+  gcc-libs
+  gdk-pixbuf2
+  glib2
+  glibc
   grilo
   gst-plugins-base
+  gst-plugins-base-libs
   gst-plugins-good
+  gstreamer
+  gtk3
+  hicolor-icon-theme
   json-glib
+  libgirepository
   libgudev
   libnotify
   libpeas
+  libsecret
   libsoup3
+  libx11
+  libxml2
   media-player-info
+  pango
+  python
   python-gobject
   tdb
   totem-plparser
@@ -55,17 +71,14 @@ optdepends=(
   'lirc: LIRC plugin'
   'zeitgeist: Zeitgeist logging plugin'
 )
-_commit=1b4df30fcd66d2e9ff5a934f1ca3bfcbf3402847  # tags/v3.4.7^0
-source=("git+https://gitlab.gnome.org/GNOME/rhythmbox.git#commit=$_commit")
-b2sums=('SKIP')
-
-pkgver() {
-  cd $pkgname
-  git describe --tags | sed 's/^v//;s/[^-]*-g/r&/;s/-/+/g'
-}
+source=("git+https://gitlab.gnome.org/GNOME/rhythmbox.git#tag=v$pkgver")
+b2sums=('4c4d2bf06fbfe642ebc81829c1fc7bc4a4d61ee4687acfa253c758fc7ddd061eccf2aa8ce257a6e61a4a35194c40aea85f4f9113c65b2e9ac1484ed683029794')
 
 prepare() {
   cd $pkgname
+
+  # Python 3.12
+  git cherry-pick -n ceeed5736c3e25d33fec5a100afde20ef485e07e
 }
 
 build() {
@@ -85,9 +98,6 @@ check() {
 
 package() {
   meson install -C build --destdir "$pkgdir"
-
-  python -m compileall -d /usr/lib "$pkgdir/usr/lib"
-  python -O -m compileall -d /usr/lib "$pkgdir/usr/lib"
 }
 
 # vim:set sw=2 sts=-1 et:

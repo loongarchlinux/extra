@@ -2,20 +2,21 @@
 
 pkgname=python-copr
 pkgver=1.127
-pkgrel=1
+pkgrel=3
 pkgdesc="Python interface for Copr"
 url="https://github.com/fedora-copr/copr"
-license=('GPL')
+license=('GPL-2.0-or-later')
 arch=('any')
 depends=('python-filelock' 'python-requests' 'python-requests-toolbelt' 'python-setuptools'
          'python-six' 'python-munch' 'python-future')
+makedepends=('python-build' 'python-installer' 'python-wheel')
 checkdepends=('python-pytest' 'python-requests-gssapi')
 source=("https://github.com/fedora-copr/copr/archive/python-copr-$pkgver-1.tar.gz")
 sha512sums=('96ce147a90f0ead84d251b22636b82029c617800481ad8a52e7048e375600cd35f03261e52a2f5aad384e125749846674eb08b04dbe40e8556b595a67f35cc12')
 
 build() {
   cd copr-python-copr-$pkgver-1/python
-  python setup.py build
+  python -m build --wheel --no-isolation
 }
 
 check() {
@@ -25,5 +26,5 @@ check() {
 
 package() {
   cd copr-python-copr-$pkgver-1/python
-  python setup.py install --root="$pkgdir" --optimize=1
+  python -m installer --destdir="$pkgdir" dist/*.whl
 }

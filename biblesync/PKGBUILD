@@ -4,19 +4,19 @@
 
 pkgname=biblesync
 pkgver=2.1.0
-pkgrel=3
+pkgrel=5
 pkgdesc='multicast shared co-navigation library for Bible programs'
 arch=('loong64' 'x86_64')
 url="https://github.com/karlkleinpaste/biblesync"
 license=('custom')
-makedepends=('cmake')
+makedepends=('cmake' 'git')
 depends=('gcc-libs' 'util-linux-libs')
 provides=('libbiblesync.so')
-source=("$url/releases/download/$pkgver/$pkgname-$pkgver.tar.gz")
-sha256sums=('9083fcacc4d85f2b8c3a3254112129c02d940d20db8c0c5bcb6239b115e8d0e8')
+source=("git+https://github.com/karlkleinpaste/biblesync.git#tag=${pkgver}")
+sha256sums=('867f86996a63e2bac48507b1ca3e8f4498d64691f67f14e3c3610d497e5bfb4a')
 
 build() {
-  cmake -B build -S "$pkgname-$pkgver" \
+  cmake -B build -S "$pkgname" \
     -DBUILD_SHARED_LIBS=TRUE \
     -DLIBDIR=/usr/lib \
     -DCMAKE_INSTALL_PREFIX=/usr \
@@ -27,5 +27,5 @@ build() {
 
 package() {
   DESTDIR="$pkgdir" cmake --install build
-  install -Dm644 "$pkgname-$pkgver"/COPYING -t "$pkgdir/usr/share/licenses/$pkgname/"
+  install -Dm644 "$pkgname"/COPYING -t "$pkgdir/usr/share/licenses/$pkgname/"
 }

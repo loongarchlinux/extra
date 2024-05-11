@@ -3,12 +3,13 @@
 
 pkgname=iotop
 pkgver=0.6
-pkgrel=10
+pkgrel=11
 pkgdesc='View I/O usage of processes'
 arch=('any')
 url='http://guichaz.free.fr/iotop/'
 license=('GPL')
 depends=('python')
+makedepends=('python-setuptools')
 changelog=$pkgname.changelog
 source=(http://guichaz.free.fr/$pkgname/files/$pkgname-$pkgver.tar.bz2{,.asc})
 sha256sums=('3adea2a24eda49bbbaeb4e6ed2042355b441dbd7161e883067a02bfc8dcef75b'

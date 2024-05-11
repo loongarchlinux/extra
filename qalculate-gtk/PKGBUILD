@@ -2,12 +2,12 @@
 # Contributor: Eric Bélanger <eric@archlinux.org>
 
 pkgname=qalculate-gtk
-pkgver=4.9.0
+pkgver=5.1.0
 pkgrel=1
 pkgdesc='GTK frontend for libqalculate'
 arch=(loong64 x86_64)
 url='https://qalculate.github.io/'
-license=(GPL)
+license=(GPL-2.0-only)
 depends=(cairo
          gcc-libs
          gdk-pixbuf2
@@ -17,12 +17,18 @@ depends=(cairo
          libqalculate
          pango)
 makedepends=(intltool
-             python)
-source=(https://github.com/Qalculate/qalculate-gtk/releases/download/v$pkgver/$pkgname-$pkgver.tar.gz)
-sha256sums=('d6f8bae81585088dcf8eb60ea41614c5a11e9096f1f1aec186e94839b030d480')
+             git
+             python-packaging)
+source=(git+https://github.com/Qalculate/qalculate-gtk#tag=v$pkgver)
+sha256sums=('809cb654079240fa6a0596175bdd13d3bc1aacd8eb55f4a047123c170d97f464')
+
+prepare() {
+  cd $pkgname
+  ./autogen.sh
+}
 
 build() {
-  cd $pkgname-$pkgver
+  cd $pkgname
   ./configure \
     --prefix=/usr \
     --libexecdir=/usr/lib
@@ -30,6 +36,6 @@ build() {
 }
 
 package() {
-  cd $pkgname-$pkgver
+  cd $pkgname
   make DESTDIR="$pkgdir" install
 }

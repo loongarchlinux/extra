@@ -1,25 +1,35 @@
 # Maintainer: Antonio Rojas <arojas@archlinux.org>
 
-pkgname=python-ipycanvas
-_pyname=${pkgname#python-}
-pkgver=0.13.1
+_pyname=ipycanvas
+pkgname=python-$_pyname
+pkgver=0.13.2
 pkgrel=2
 pkgdesc="Interactive widgets library exposing the browser's Canvas API"
-url='https://github.com/martinRenou/ipycanvas'
+url='https://ipycanvas.readthedocs.io/en/latest/'
 arch=(any)
-license=(BSD)
-source=(https://files.pythonhosted.org/packages/source/${_pyname::1}/$_pyname/$_pyname-$pkgver.tar.gz)
-depends=(python-ipywidgets python-pillow python-numpy python-setuptools)
-makedepends=(python-build python-installer python-jupyter_packaging jupyterlab)
-sha256sums=('f9c3940681bc38383390f8c46ea5d8445d6e11c6da6484c37d89df5ae1dac131')
+license=(BSD-3-Clause)
+source=(git+https://github.com/jupyter-widgets-contrib/ipycanvas#tag=$pkgver)
+depends=(python
+         python-ipywidgets
+         python-numpy
+         python-pillow
+         python-traitlets)
+makedepends=(git
+             jupyterlab
+             python-build
+             python-hatch-jupyter-builder
+             python-hatchling
+             python-installer
+             yarn)
+sha256sums=('4bef2708b92261b7b00b914b5fc21b7f2c029eb6e1e13f40de83db66422daf1f')
 
 build() {
-  cd $_pyname-$pkgver
+  cd $_pyname
   python -m build --wheel --no-isolation --skip-dependency-check
 }
 
 package() {
-  cd $_pyname-$pkgver
+  cd $_pyname
   python -m installer --destdir="$pkgdir" dist/*.whl
   install -Dm644 LICENSE.txt "$pkgdir"/usr/share/licenses/$pkgname/LICENSE
   mv "$pkgdir"/{usr/,}etc

@@ -2,8 +2,8 @@
 
 _hkgname=isomorphism-class
 pkgname=haskell-isomorphism-class
-pkgver=0.1.0.9
-pkgrel=48
+pkgver=0.1.0.11
+pkgrel=2
 pkgdesc="Isomorphism typeclass solving the conversion problem"
 url="https://github.com/nikita-volkov/isomorphism-class"
 license=("MIT")
@@ -13,7 +13,7 @@ depends=('ghc-libs' 'haskell-hashable' 'haskell-primitive' 'haskell-unordered-co
 makedepends=('ghc' 'uusi' 'haskell-quickcheck' 'haskell-quickcheck-instances' 'haskell-rebase'
              'haskell-tasty' 'haskell-tasty-quickcheck')
 source=("https://hackage.haskell.org/packages/archive/$_hkgname/$pkgver/$_hkgname-$pkgver.tar.gz")
-sha256sums=('2fbaa8cf141489a2107e294e50628dc7797b8e3218069bdfbc387ab9547d1bb4')
+sha256sums=('e317c46a01bf4f274a745b5583028a48485aeb80b06f3b6b9394e186df4d37fd')
 
 prepare() {
   cd $_hkgname-$pkgver
@@ -23,10 +23,9 @@ prepare() {
 build() {
   cd $_hkgname-$pkgver
 
-  # Tests are disabled because they require bytestring 0.11 which is available in GHC 9.2
   runhaskell Setup configure -O --enable-shared --enable-executable-dynamic --disable-library-vanilla \
-    --prefix=/usr --docdir=/usr/share/doc/$pkgname --datasubdir=$pkgname --disable-tests \
-    --dynlibdir=/usr/lib --libsubdir=\$compiler/site-local/\$pkgid --ghc-option=-fllvm \
+    --prefix=/usr --docdir=/usr/share/doc/$pkgname --datasubdir=$pkgname --enable-tests \
+    --dynlibdir=/usr/lib --libsubdir=\$compiler/site-local/\$pkgid \
     --ghc-option=-optl-Wl\,-z\,relro\,-z\,now \
     --ghc-option='-pie' 
 
@@ -39,7 +38,7 @@ build() {
 
 check() {
   cd $_hkgname-$pkgver
-  # runhaskell Setup test --show-details=direct
+  runhaskell Setup test --show-details=direct
 }
 
 package() {

@@ -4,20 +4,23 @@
 pkgname=signon-plugin-oauth2
 _pkgname=signon-oauth2
 pkgver=0.25
-pkgrel=1
+pkgrel=3
 pkgdesc='OAuth 2 plugin for signon'
 arch=(loong64 x86_64)
-url="https://gitlab.com/accounts-sso/signon-plugin-oauth2"
+url='https://gitlab.com/accounts-sso/signon-plugin-oauth2'
 license=(LGPL)
-depends=(signond)
-makedepends=(qt5-xmlpatterns)
-source=("$pkgname-$pkgver.tar.gz::https://gitlab.com/accounts-sso/signon-plugin-oauth2/repository/archive.tar.gz?ref=VERSION_$pkgver")
-sha256sums=('f750a1e767c1977d73895b7aa7d5dca5494e4cbc53cf57c7e6c311933701ae52')
+depends=(gcc-libs
+         glibc
+         qt6-base
+         signond)
+makedepends=(git)
+# source=(https://gitlab.com/accounts-sso/signon-plugin-oauth2/-/archive/VERSION_$pkgver/signon-plugin-oauth2-VERSION_$pkgver.tar.bz2)
+_commit=fab698862466994a8fdc9aa335c87b4f05430ce6
+source=(git+https://gitlab.com/nicolasfella/signon-plugin-oauth2#commit=$_commit)
+sha256sums=('SKIP')
 
 prepare() {
-  cd signon-plugin-oauth2-VERSION_$pkgver-*
-
-  sed -i '/-Werror/d' common-project-config.pri
+  cd $pkgname
 
   # Do not install tests and example
   echo 'INSTALLS =' >>tests/tests.pro
@@ -25,14 +28,16 @@ prepare() {
 }
 
 build() {
-  cd signon-plugin-oauth2-VERSION_$pkgver-*
+  cd $pkgname
 
-  qmake-qt5 PREFIX=/usr LIBDIR=/usr/lib
+  qmake6 \
+    PREFIX=/usr \
+    LIBDIR=/usr/lib
   make
 }
 
 package() {
-  cd signon-plugin-oauth2-VERSION_$pkgver-*
+  cd $pkgname
 
   make INSTALL_ROOT="$pkgdir" install
 }

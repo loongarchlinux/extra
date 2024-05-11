@@ -3,29 +3,30 @@
 # Contributor: Thomas S Hatch <thatch45@gmail.com>
 
 pkgname=python-mockito
-pkgver=1.4.0
-pkgrel=2
+pkgver=1.5.0
+pkgrel=1
 pkgdesc='Spying framework'
 arch=('any')
 url='https://github.com/kaste/mockito-python'
 license=('MIT')
 depends=('python')
-makedepends=('python-pytest' 'python-setuptools')
-checkdepends=('python-numpy')
-source=("$pkgname-$pkgver.tar.gz::https://github.com/kaste/mockito-python/archive/$pkgver.tar.gz")
-sha512sums=('053feb0353d987622d7ccbeceb47da208080ef68c77ba3885560c06abb859307bc065bffb00280f70d4941b364db39f9a1e9c389b4206c09f1aae85ebef3c940')
+makedepends=('git' 'python-build' 'python-installer' 'python-hatchling')
+checkdepends=('python-pytest' 'python-numpy')
+source=("git+https://github.com/kaste/mockito-python.git#tag=$pkgver")
+sha512sums=('596ffeae502ad4fb3709103c9d3cde9ce72674f2ae6d04c4f13781eaf1a9ae2a1262c1770b611aefebc41d739b341454a61a35130a8dbd8e6fe79bb39c3a4de8')
 
 build() {
-  cd mockito-python-$pkgver
-  python setup.py build
+  cd mockito-python
+  python -m build -nw
 }
 
 check() {
-  cd mockito-python-$pkgver
-  pytest --ignore=build
+  cd mockito-python
+  pytest
 }
 
 package() {
-  cd mockito-python-$pkgver
-  python setup.py install --root="$pkgdir" -O1
+  cd mockito-python
+  python -m installer -d "$pkgdir" dist/*.whl
+  install -Dm644 LICENSE -t "$pkgdir"/usr/share/licenses/$pkgname/
 }

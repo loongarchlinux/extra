@@ -1,18 +1,31 @@
 # Maintainer: kpcyrd <kpcyrd[at]archlinux[dot]org>
 
 pkgname=espup
-pkgver=0.10.0
-pkgrel=1
+pkgver=0.11.0
+pkgrel=2
 pkgdesc="Tool for installing and maintaining ESP Rust ecosystem"
 url='https://github.com/esp-rs/espup'
 arch=('loong64' 'x86_64')
 license=('MIT' 'Apache-2.0')
-depends=('curl' 'git' 'ldproxy' 'libbz2.so' 'liblzma.so' 'pkg-config' 'python' 'python-pip' 'udev')
+depends=(
+  'curl'
+  'gcc-libs'
+  'git'
+  'glibc'
+  'ldproxy'
+  'libbz2.so'
+  'liblzma.so'
+  'libssl.so'
+  'pkg-config'
+  'python'
+  'python-pip'
+  'udev'
+)
 makedepends=('cargo')
 options=(!lto)
 source=(https://github.com/esp-rs/${pkgname}/archive/v${pkgver}/${pkgname}-${pkgver}.tar.gz)
-sha256sums=('c01e31563a14b01736e475abd8834d6e9cef9d4683545d6d4b1580ec9572d0ca')
-b2sums=('ecf2b10a72f664db49e584901ccacbff78e00a7b33a9ab9ae146d09ebb754d9dcd5e5ad79eae3d6348d1229f4ba09314195ed1c167d959d2d08a1baa89a275ce')
+sha256sums=('54103c3e2f9f202ae65b3b5edad5919eb546dbaa927fc1ada7dcea5d4090bc85')
+b2sums=('a19829f996967bbd5df29c2dba3e57373a1bd3f957bca3e0d1cb2bd4adf89c06c4b214c46505b4cf43cf81501825bc68bf1841e6a3f401ca4b8c806541a133ab')
 
 prepare() {
   cd "${pkgname}-${pkgver}"
@@ -21,12 +34,12 @@ prepare() {
 
 build() {
   cd ${pkgname}-${pkgver}
-  cargo build --frozen --release
+  OPENSSL_NO_VENDOR=1 cargo build --frozen --release
 }
 
 check() {
   cd ${pkgname}-${pkgver}
-  cargo test --frozen
+  OPENSSL_NO_VENDOR=1 cargo test --frozen
   target/release/${pkgname} --help
 }
 
@@ -34,6 +47,7 @@ package() {
   cd ${pkgname}-${pkgver}
   install -Dm 755 -t "${pkgdir}/usr/bin" \
     target/release/${pkgname}
+  install -Dm 644 -t "${pkgdir}/usr/share/licenses/${pkgname}" LICENSE-*
 }
 
 # vim: ts=2 sw=2 et:

@@ -1,20 +1,31 @@
 # Maintainer: Antonio Rojas <arojas@archlinux.org>
 
-_pipname=pplpy
+_pyname=pplpy
 pkgname=python-pplpy
-pkgver=0.8.9
-pkgrel=1
+pkgver=0.8.10
+pkgrel=2
 pkgdesc='Python wrapper to the C++ Parma Polyhedra Library (PPL)'
 arch=(loong64 x86_64)
 url='https://gitlab.com/videlec/pplpy/'
-license=(LGPL2.1)
-depends=(python-cysignals python-gmpy2 ppl)
-makedepends=(cython python-build python-installer python-setuptools python-wheel python-sphinx)
-source=(https://pypi.io/packages/source/${_pipname:0:1}/$_pipname/$_pipname-$pkgver.tar.gz)
-sha256sums=('db7a3b571d6ef053f75137975e947c3a1c1e45a30bab90eaf215b4e5cc15797e')
+license=(GPL-3.0-or-later)
+depends=(gcc-libs
+         glibc
+         gmp
+         ppl
+         python
+         python-cysignals
+         python-gmpy2)
+makedepends=(cython
+             python-build
+             python-installer
+             python-setuptools
+             python-sphinx
+             python-wheel)
+source=(https://github.com/sagemath/pplpy/archive/$pkgver/$_pyname-$pkgver.tar.gz)
+sha256sums=('9f01ddd28e0b7de9ca9599d03d00d261e395a161a592aca4ef8fb79a487505e6')
 
 build() {
-  cd $_pipname-$pkgver
+  cd $_pyname-$pkgver
   python -m build --wheel --no-isolation
 
   _pythonver=`python -c "from sysconfig import get_python_version; print(get_python_version())"`
@@ -22,7 +33,7 @@ build() {
 }
 
 package() {
-  cd $_pipname-$pkgver 
+  cd $_pyname-$pkgver 
   python -m installer --destdir="$pkgdir" dist/*.whl
 
   mkdir -p "$pkgdir"/usr/share/doc/pplpy

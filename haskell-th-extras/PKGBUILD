@@ -2,23 +2,23 @@
 
 _hkgname=th-extras
 pkgname=haskell-th-extras
-pkgver=0.0.0.7
-pkgrel=4
+pkgver=0.0.0.8
+pkgrel=2
 pkgdesc="A grab bag of functions for use with Template Haskell"
-url="https://github.com/mokus0/th-extras"
+url="https://github.com/erikd/th-extras"
 license=("custom:PublicDomain")
 arch=('loong64' 'x86_64')
 depends=('ghc-libs' 'haskell-syb' 'haskell-th-abstraction')
 makedepends=('ghc')
 source=("https://hackage.haskell.org/packages/archive/$_hkgname/$pkgver/$_hkgname-$pkgver.tar.gz")
-sha256sums=('86d0061673dd35cdf64e2865f13c1fca34291f04d10bd88a6452d2fc5bc5ab7f')
+sha256sums=('3a57b6af13fada13a3be36d3762d3a6af3a3091ffae3762b79fe0b29c0da77c3')
 
 build() {
   cd $_hkgname-$pkgver
 
   runhaskell Setup configure -O --enable-shared --enable-executable-dynamic --disable-library-vanilla \
     --prefix=/usr --docdir=/usr/share/doc/$pkgname --datasubdir=$pkgname --enable-tests \
-    --dynlibdir=/usr/lib --libsubdir=\$compiler/site-local/\$pkgid --ghc-option=-fllvm \
+    --dynlibdir=/usr/lib --libsubdir=\$compiler/site-local/\$pkgid \
     --ghc-option=-optl-Wl\,-z\,relro\,-z\,now \
     --ghc-option='-pie'
 
@@ -27,6 +27,11 @@ build() {
   runhaskell Setup unregister --gen-script
   sed -i -r -e "s|ghc-pkg.*update[^ ]* |&'--force' |" register.sh
   sed -i -r -e "s|ghc-pkg.*unregister[^ ]* |&'--force' |" unregister.sh
+}
+
+check() {
+  cd $_hkgname-$pkgver
+  runhaskell Setup test --show-details=direct
 }
 
 package() {

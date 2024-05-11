@@ -6,21 +6,21 @@
 # Contributor: Jens Maucher <defcon@archlinux.us>
 
 pkgname=python-rope
-pkgver=1.11.0
-pkgrel=1
+pkgver=1.12.0
+pkgrel=2
 pkgdesc='Refactoring library'
 arch=('any')
 url='https://github.com/python-rope/rope'
-license=('GPL')
+license=('LGPL-3.0-or-later')
 depends=('python-pytoolconfig')
-makedepends=('python' 'python-setuptools')
+makedepends=('python-setuptools' 'python-build' 'python-installer' 'python-wheel')
 checkdepends=('python-pytest')
 source=("https://pypi.io/packages/source/r/rope/rope-$pkgver.tar.gz")
-sha256sums=('ac0cbdcda5a546e1e56c54976df07ea2cb04c806f65459bc213536c5d1bc073e')
+sha256sums=('93a1bb991fbf0426e8d415102d1c092ccc42e826ce9a42c4d61ce53d7786d9d9')
 
 build(){
   cd "rope-$pkgver"
-  python setup.py build
+  python -m build --wheel --no-isolation
 }
 
 check(){
@@ -30,7 +30,7 @@ check(){
 
 package() {
   cd "rope-$pkgver"
-  python setup.py install --root="$pkgdir" --optimize=1 --skip-build
+  python -m installer --destdir="$pkgdir" dist/*.whl
 }
 
 # vim:set ts=2 sw=2 et:

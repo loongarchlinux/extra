@@ -8,125 +8,192 @@
 # fine with them.
 
 pkgname=blender
-pkgver=4.0.2
-pkgrel=9
+pkgver=4.1.1
+pkgrel=4
 epoch=17
 pkgdesc="A fully integrated 3D graphics creation suite"
 arch=('loong64' 'x86_64')
-license=('GPL')
+license=(
+  Apache-2.0
+  BSD-2-Clause
+  BSD-3-Clause
+  GPL-2.0-or-later
+  GPL-3.0-or-later
+  LGPL-2.1-or-later
+  MIT
+  MPL-2.0
+  Zlib
+)
 url="https://www.blender.org"
-depends=('libpng' 'libtiff' 'openexr' 'python' 'desktop-file-utils' 'python-requests' 'potrace'
-         'shared-mime-info' 'hicolor-icon-theme' 'xdg-utils' 'glew' 'openjpeg2' 'python-numpy'
-         'freetype2' 'openal' 'ffmpeg' 'fftw' 'boost-libs' 'opencollada' 'alembic' 'openxr'
-         'openimageio' 'libsndfile' 'jack' 'opencolorio' 'openimagedenoise' 'materialx'
-         'jemalloc' 'libspnav' 'ptex' 'opensubdiv' 'openvdb' 'sdl2' 'embree' 'libharu'
-         'draco' 'openpgl' 'level-zero-loader' 'libxkbcommon' 'libepoxy' 'usd' 'openshadinglanguage'
-         'intel-oneapi-compiler-shared-runtime-libs' 'intel-oneapi-compiler-dpcpp-cpp-runtime-libs')
-makedepends=('cmake' 'boost' 'mesa' 'git' 'subversion' 'llvm' 'cuda' 'ninja' 'wayland-protocols' 'libxkbcommon'
-             'libdecor' 'hip-runtime-amd' 'level-zero-headers' 'intel-oneapi-dpcpp-cpp'
-             'intel-oneapi-compiler-shared-runtime' 'intel-compute-runtime')
+depends=(
+  'alembic'
+  'bash'
+  'boost-libs'
+  'draco'  # seems to use static lib and should probably only be makedepends
+  'embree'
+  'expat'
+  'ffmpeg'
+  'fftw'
+  'freetype2'
+  'gcc-libs'
+  'glew'
+  'glibc'
+  'gmp'
+  'hicolor-icon-theme'
+  'imath'
+  'intel-oneapi-compiler-dpcpp-cpp-runtime-libs'
+  'intel-oneapi-compiler-shared-runtime-libs'
+  'jack'  # dlopen'ed
+  'jemalloc'
+  'level-zero-loader'  # dlopen'ed
+  'libepoxy'
+  'libharu'
+  'libjpeg-turbo'
+  'libpng'
+  'libsndfile'
+  'libspnav'
+  'libtiff'
+  'libwebp'
+  'libx11'
+  'libxfixes'
+  'libxi'
+  'libxkbcommon'
+  'libxml2'
+  'libxrender'
+  'libxxf86vm'
+  'llvm-libs'
+  'materialx'
+  'onetbb'
+  'openal'
+  'opencollada'
+  'opencolorio'
+  'openexr'
+  'openimagedenoise'
+  'openimageio'
+  'openjpeg2'
+  'openpgl'
+  'openshadinglanguage'
+  'opensubdiv'
+  'openvdb'
+  'openxr'
+  'potrace'
+  'pugixml'
+  'pystring'
+  'python'
+  'python-numpy'
+  'python-requests'
+  'sdl2'  # dlopen'ed
+  'shared-mime-info'
+  'usd'
+  'xdg-utils'
+  'yaml-cpp'
+  'zlib'
+  'zstd'
+)
+makedepends=(
+  'boost'
+  'cmake'
+  'cuda'
+  'git'
+  'git-lfs'
+  'hip-runtime-amd'
+  'intel-oneapi-compiler-shared-runtime'
+  'intel-oneapi-dpcpp-cpp'
+  'intel-compute-runtime'
+  'level-zero-headers'
+  'libdecor'
+  'mold'
+  'llvm'
+  'mesa'
+  'ninja'
+  'subversion'
+  'wayland-protocols'
+)
 optdepends=('cuda: Cycles renderer CUDA support'
             'intel-compute-runtime: Cycles renderer Intel OneAPI support'
             'libdecor: wayland support')
-# We're using !buildflags here as otherwise we get stuff such as FS#77557
-# It'd be better to figure out exactly which of the flags is the culprit which I attempted but without any success.
-options=('!buildflags')
+# We're using !lto here as otherwise we get stuff such as FS#77557
+options=('!lto')
 source=("git+https://projects.blender.org/blender/blender.git#tag=v$pkgver"
         "git+https://projects.blender.org/blender/blender-addons.git#tag=v$pkgver"
         "git+https://projects.blender.org/blender/blender-addons-contrib#tag=v$pkgver"
-        "svn+https://svn.blender.org/svnroot/bf-blender/tags/blender-${pkgver%%.[^.]}-release/lib/assets"
-        https://developer.download.nvidia.com/redist/optix/v7.7/OptiX-7.7-Include.zip
-        https://projects.blender.org/blender/blender/commit/5486c70aae94196d715c07364292fc108ebf59a8.patch
+        "git+https://projects.blender.org/blender/blender-assets#tag=v$pkgver"
+        https://developer.download.nvidia.com/redist/optix/v8.0/OptiX-8.0-Include.zip
         force-draco1.patch
-        force-draco2.patch
-        blender-rocm-6.patch)
-sha512sums=('SKIP'
-            'SKIP'
-            'SKIP'
-            'SKIP'
-            '55caea5beccdc0adebdba8a825f3cfee083015311de5602cfcf215139ccbf9fed62f10ee1dcdf7e31a3557aabbc1fa872eeed67bc46f59fb4e5abd18331c0aca'
-            '375508d1d010b4b043b293cb0c192cb2096aef7ddb0dd1be4a738b20aa720523494cf3054161f1ad116fddc6a9ce03159d6da0a3b3fdb1b57002a477c7c5920a'
+        force-draco2.patch)
+sha512sums=('194274ee62c2a3b96e81af92520d424fb7bda24902cffcf2cd9a2e343c0627fe74cdd08d52709c8f181df72f7e36fc64f6144412c459f5a5a0b4497babd2fe07'
+            '4476c93942e5efc5a8ee7c4ef1caea2e77dc6e40eb825e35c0120f7e9f714ff8bdb873bb83d47ac27f8616eedac8e52f15804ed603c093044490f89e626baa80'
+            '877ed9ced417c5879b0bc6a7d3d87aa68a3e4015df9c08945c468dfab59a513bdd03523b7593e556fc9d0e22dbad25d980238e25583ea34a77ffcae3693cd0e7'
+            '2eaa05da22d4a304d1db310bd8c04358e70fdd927cbaadd574e179a86bf288c7b4fa1188d15f1928788ce9c5d2b15b512d47743a230e703f44c07cb7bbc39c5b'
+            '5502d9df847de12badc702c0444bd4f1f7620460b2235026df2c3133da1e04c148af0f1fc7f345e9a0c009c32f905f66c8d427743445e8864d3a797cdce6a483'
             'e239da4f3906f1b54265435181cf770bae3d269c8d915df9a73861e6ee71ec70bf2339426e7c81a91e5a567273b3b3742d7a99feefd3398d821b26e1ff3a56d0'
-            'c162646eba42ea7112cfb615466c2cbaddac8d254d4a9e91cf887c5bffef1325a983701163223a1fdee091310ac5574a400347aab7f52321825b5fa3d5a9036f'
-            'dc694c655690913701dba92281724671c14f7305cc8f4de6071056f4608837532194178fdddcbcf500d330a0b804d26cd9599b88ff71f9c799664e941809813a')
+            'c162646eba42ea7112cfb615466c2cbaddac8d254d4a9e91cf887c5bffef1325a983701163223a1fdee091310ac5574a400347aab7f52321825b5fa3d5a9036f')
 
 prepare() {
   cd "$pkgname"
 
-  # Create expected path for assets
-  mkdir -p "$srcdir"/lib
-  # Copy assets to expected location
-  cp -r "$srcdir"/assets "$srcdir"/lib/assets
-  # Remove this directory to prevent it being packaged
-  rm -r "$srcdir"/lib/assets/.makepkg/
+  git submodule init
+  git config submodule.release/datafiles/assets.url "$srcdir/blender-assets"
+  git -c protocol.file.allow=always submodule update
+
+  # Fetch assets from git-lfs
+  git -C release/datafiles/assets lfs install --local
+  git -C release/datafiles/assets remote add network-origin https://projects.blender.org/blender/blender-assets
+  git -C release/datafiles/assets lfs fetch network-origin
+  git -C release/datafiles/assets lfs checkout
 
   # Copy addons to expected location
   cp -r "$srcdir"/blender-addons scripts/addons
   cp -r "$srcdir"/blender-addons-contrib scripts/addons_contrib
 
-  # Disable openexr core
-  # https://projects.blender.org/blender/blender/issues/117145
-  git cherry-pick -n eb99895c972b6c713294f68a34798aa51d36034a
-
   # fix draco
   patch -p1 -i "$srcdir"/force-draco1.patch
   patch -p1 -d scripts/addons -i "$srcdir"/force-draco2.patch
-
-  # To fix manpage installation
-  # https://devtalk.blender.org/t/regression-cmake-install-error-for-man-page/32129
-  # https://projects.blender.org/blender/blender/pulls/115127
-  patch -Np1 -i "$srcdir"/5486c70aae94196d715c07364292fc108ebf59a8.patch || true
-  # We don't care about the first failed hunk.
-
-  # Revert https://projects.blender.org/blender/blender/commit/4b891b4af which causes all
-  # CMake custom commands to be run in serial instead of in parallel.
-  sed -i "s/USES_TERMINAL//g" intern/cycles/kernel/CMakeLists.txt
-
-  patch -Np1 -i "$srcdir/blender-rocm-6.patch"
 }
 
-get_pyver() {
+_get_pyver() {
   python -c 'import sys; print(str(sys.version_info[0]) + "." + str(sys.version_info[1]))'
 }
 
 build() {
-  cd "$pkgname"
+  # This should fix #13.
+  export CXXFLAGS=${CXXFLAGS/-Wp,-D_GLIBCXX_ASSERTIONS/}
 
-  local PYTHON_VER="$(get_pyver)"
+  local cmake_options=(
+    -B build
+    -C "$pkgname/build_files/cmake/config/blender_release.cmake"
+    -C "$srcdir/precache"
+    -D CMAKE_BUILD_TYPE=Release
+    -D CMAKE_INSTALL_PREFIX=/usr
+    -D WITH_LINKER_MOLD=ON
+    -D CUDA_HOST_COMPILER=/usr/bin/gcc
+    -D HIP_ROOT_DIR=/opt/rocm
+    -D OCLOC_INSTALL_DIR=/usr
+    -D OPTIX_ROOT_DIR="$srcdir"
+    -D PYTHON_VERSION="$(_get_pyver)"
+    # -D SYCL_CPP_FLAGS=--verbose  # for debugging
+    -D SYCL_OFFLINE_COMPILER_PARALLEL_JOBS=8
+    -D USD_ROOT_DIR=/usr
+    -D WITH_CYCLES_OSL=ON
+    -D WITH_INSTALL_PORTABLE=OFF
+    -D WITH_PYTHON_INSTALL=OFF
+    -G Ninja
+    -S "$pkgname"
+    -W no-dev
+  )
 
   # CUDA arch 90 is unsupported
   echo 'set(CYCLES_CUDA_BINARIES_ARCH sm_52 sm_53 sm_60 sm_61 sm_62 sm_70 sm_72 sm_75 sm_80 sm_86 sm_87 sm_89 compute_89 CACHE STRING "CUDA architectures to build binaries for" FORCE)' > precache
   echo 'mark_as_advanced(CYCLES_CUDA_BINARIES_ARCH)' >> precache
 
-  # Disable OSL until it's built with LLVM 16 otherwise we get stuff like
-  # https://gitlab.archlinux.org/archlinux/packaging/packages/blender/-/issues/2
-  cmake \
-    -Bbuild \
-    -GNinja \
-    -Cbuild_files/cmake/config/blender_release.cmake \
-    -C precache \
-    -DCUDA_HOST_COMPILER=/usr/bin/gcc-12 \
-    -DLLVM_VERSION=16 \
-    -DPYTHON_VERSION=$PYTHON_VER \
-    -DHIP_ROOT_DIR=/opt/rocm \
-    -DOPTIX_ROOT_DIR="$srcdir" \
-    -DCMAKE_INSTALL_PREFIX=/usr \
-    -DWITH_CYCLES_OSL=OFF \
-    -DCMAKE_BUILD_TYPE=Release \
-    -DWITH_INSTALL_PORTABLE=OFF \
-    -DWITH_PYTHON_INSTALL=OFF \
-    -DOCLOC_INSTALL_DIR=/usr \
-    -DUSD_ROOT_DIR=/usr \
-    -DSYCL_OFFLINE_COMPILER_PARALLEL_JOBS=8
+  cmake "${cmake_options[@]}"
   cmake --build build
-    # For debug:
-    # -DSYCL_CPP_FLAGS=--verbose
 }
 
 package() {
+  DESTDIR="${pkgdir}" cmake --install build
   cd "$pkgname"
 
-  DESTDIR="${pkgdir}" cmake --install build
   install -Dm755 release/bin/blender-softwaregl "${pkgdir}/usr/bin/blender-softwaregl"
   python -m compileall "${pkgdir}/usr/share/blender"
   python -O -m compileall "${pkgdir}/usr/share/blender"
@@ -137,10 +204,12 @@ package() {
   cp -r scripts/addons_contrib/* "${pkgdir}"/usr/share/blender/4*/scripts/addons_contrib/
 
   # Manually install draco bindings (See FS#73415)
-  mkdir -p "${pkgdir}/usr/lib/python$(get_pyver)"/
+  mkdir -p "${pkgdir}/usr/lib/python$(_get_pyver)"/
   mv "${pkgdir}"/usr/share/blender/4*/python/lib/* "${pkgdir}"/usr/lib/
   rm -r "${pkgdir}"/usr/share/blender/4*/python
 
   # Move OneAPI AOT lib to proper place
   mv "${pkgdir}"/usr/share/blender/lib/libcycles_kernel_oneapi_aot.so "${pkgdir}"/usr/lib/
+
+  install -vDm 644 doc/license/{BSD-{2,3}-Clause,MIT,Zlib}-license.txt -t "$pkgdir/usr/share/licenses/$pkgname/"
 }

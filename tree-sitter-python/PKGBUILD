@@ -1,0 +1,37 @@
+# Maintainer: Daniel M. Capella <polyzen@archlinux.org>
+# Contributor: ObserverOfTime <chronobserver@disroot.org>
+
+pkgname=tree-sitter-python
+pkgver=0.21.0
+pkgrel=2
+pkgdesc='Python grammar for tree-sitter'
+arch=('loong64' 'x86_64')
+url=https://github.com/tree-sitter/tree-sitter-python
+license=('MIT')
+groups=('tree-sitter-grammars')
+makedepends=('git' 'tree-sitter-cli')
+optdepends=('tree-sitter: core library')
+provides=("lib$pkgname.so")
+source=("git+$url.git#tag=v$pkgver")
+b2sums=('c23d8f5b72a88ad49238217717fa69489f79b3bcd35472f953ebf8271d54710dcd0c0dcc3e601a4fca583a49dc7c054483c7f3aec879b4f24013866215341bd4')
+
+prepare() {
+  cd $pkgname
+  tree-sitter generate --no-bindings src/grammar.json
+}
+
+build() {
+  cd $pkgname
+  make PREFIX=/usr PARSER_URL="$url"
+}
+
+package() {
+  install -d "$pkgdir"/usr/lib/tree_sitter
+  ln -s /usr/lib/lib$pkgname.so \
+    "$pkgdir"/usr/lib/tree_sitter/${pkgname#tree-sitter-}.so
+
+  cd $pkgname
+  make DESTDIR="$pkgdir" PREFIX=/usr install
+  install -Dm644 -t "$pkgdir"/usr/share/doc/$pkgname README.md
+  install -Dm644 -t "$pkgdir"/usr/share/licenses/$pkgname LICENSE
+}

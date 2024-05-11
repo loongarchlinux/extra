@@ -2,17 +2,17 @@
 # Contributor: Massimiliano Torromeo <massimiliano.torromeo@gmail.com>
 
 pkgname=libuv
-pkgver=1.47.0
-pkgrel=1
+pkgver=1.48.0
+pkgrel=2
 pkgdesc="Multi-platform support library with a focus on asynchronous I/O"
 arch=('loong64' 'x86_64')
 url="https://github.com/libuv/libuv"
 license=('custom')
 depends=('glibc' 'libnsl')
-makedepends=('python-sphinx')
-source=(https://dist.libuv.org/dist/v$pkgver/libuv-v$pkgver.tar.gz{,.sign})
-sha512sums=('3fb6db0109dfa49db0e6028f6667ab5245b9707df337134ce6e1e9c9f82d4d686356cad30221094f79e87441e300f3c036a3cf04838d6eb23d4f27b1aaf4da13'
-            'SKIP')
+makedepends=('git' 'python-sphinx')
+#source=(https://dist.libuv.org/dist/v$pkgver/libuv-v$pkgver.tar.gz{,.sign})
+source=("git+https://github.com/libuv/libuv.git?signed#tag=v${pkgver}")
+sha512sums=('016401251c3490678593e92977005f6f4da16935f84fae0ed535d06fb19893b90ee59b57136d94f7c5893feed21c03000a5269218b209186f3a87cf8c34c5b9c')
 # PGP key IDs are available from https://github.com/libuv/libuv/blob/v1.x/MAINTAINERS.md
 validpgpkeys=('57353E0DBDAAA7E839B66A1AFF47D5E4AD8B4FDC'  # Colin Ihrig (@cjihrig)
               '612F0EAD9401622379DF4402F28C3C8DA33C03BE'  # Santiago Gimeno
@@ -20,7 +20,7 @@ validpgpkeys=('57353E0DBDAAA7E839B66A1AFF47D5E4AD8B4FDC'  # Colin Ihrig (@cjihri
               'CFBB9CA9A5BEAFD70E2B3C5A79A67C55A3679C8B') # Jameson Nash (@vtjnash)
 
 prepare() {
-    cd $pkgname-v$pkgver
+    cd $pkgname
     # Disable tests that fail on build.a.o (but pass locally)
     sed -e '/udp_multicast_join/d' \
         -e '/tcp_connect6_link_local/d' \
@@ -28,7 +28,7 @@ prepare() {
 }
 
 build() {
-    cd $pkgname-v$pkgver
+    cd $pkgname
     ./autogen.sh
     ./configure --prefix=/usr
     make
@@ -36,12 +36,12 @@ build() {
 }
 
 check() {
-    cd $pkgname-v$pkgver
+    cd $pkgname
     make check
 }
 
 package() {
-    cd $pkgname-v$pkgver
+    cd $pkgname
 
     make DESTDIR="$pkgdir" install
 

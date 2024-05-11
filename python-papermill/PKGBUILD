@@ -3,45 +3,69 @@
 
 _pkgname=papermill
 pkgname="python-${_pkgname}"
-pkgver=2.4.0
+pkgver=2.5.0
 pkgrel=3
 pkgdesc="Parametrize and run Jupyter and nteract Notebooks"
 arch=('any')
-url="https://pypi.org/project/${_pkgname}"
-license=('BSD')
-makedepends=(python-build python-installer python-wheel python-setuptools-scm)
-checkdepends=(python-pytest python-boto3 python-moto)
+url="https://github.com/nteract/papermill"
+license=('BSD-3-Clause')
+makedepends=(
+  python-build
+  python-installer
+  python-setuptools-scm
+  python-wheel
+)
+checkdepends=(
+  # python-azure  # TODO: package
+  python-boto3
+  python-moto
+  python-pytest
+)
 depends=(
-    python
-    python-ansiwrap
-    python-click
-    python-pyyaml
-    jupyter-nbformat
-    jupyter-nbclient
-    python-tqdm
-    python-requests
-    python-entrypoints
-    python-tenacity
+  python
+  python-click
+  python-pyyaml
+  jupyter-nbformat
+  jupyter-nbclient
+  python-tqdm
+  python-requests
+  python-entrypoints
+  python-tenacity
 )
 optdepends=('python-boto3: AWS functionality')
-source=("${_pkgname}-${pkgver}.tar.gz::https://github.com/nteract/${_pkgname}/archive/refs/tags/${pkgver}.tar.gz")
-b2sums=('ffbc08bcc75ad01721b503e7eb9033ee4131852c3813f3a1e40db60eab9ca210322ed05e6d9d0ef7f023bffce8278f181a542cee6f4fb711a10d6534c061be12')
+source=("${_pkgname}-${pkgver}.tar.gz::$url/archive/refs/tags/${pkgver}.tar.gz"
+         https://github.com/nteract/papermill/commit/6e8cc427.patch)
+b2sums=('d0f67d1a701bd41c6a22a7f5c98bb270041b9eb0ceddb68e95705eadb64a69e972903b49ac2b4a5f1759f018694ca57a0187d24e6728b0cf00fd9b91173652bb'
+        '6d87f73a878c519e3534a4071dc0dd6d5ccf8f0a3b6e80059cd3b4298b14bc340c8d955b5386ce08c413f07b570b921e6a7e068737ad3e488a02ee5e3c55173f')
+
+prepare() {
+  cd $_pkgname-$pkgver
+  patch -p1 -i ../6e8cc427.patch # Fix tests with pytest 8
+}
 
 build() {
-  cd "${srcdir}/${_pkgname}-${pkgver}"
+  cd "${_pkgname}-${pkgver}"
   python -m build --wheel --no-isolation
 }
 
 check() {
-  cd "${srcdir}/${_pkgname}-${pkgver}"
-  # drop test files we cannot load
-  PYTHONPATH="${PWD}/build/lib:${PWD}/src" pytest --continue-on-collection-errors \
-    --ignore-glob='papermill/tests/test_abs.py' --ignore-glob='papermill/tests/test_adl.py' \
-    -k 'not gcs_fallback_retry and not gcs_handle_exception and not gcs_retry and not hdfs_listdir'
+  local pytest_options=(
+    --ignore papermill/tests/test_abs.py  # requires python-azure
+    --ignore papermill/tests/test_adl.py  # requires python-azure
+    # probably failing because of network access?
+    --deselect papermill/tests/test_gcs.py::GCSTest::test_gcs_fallback_retry_unknown_failure_code
+    --deselect papermill/tests/test_gcs.py::GCSTest::test_gcs_handle_exception
+    --deselect papermill/tests/test_gcs.py::GCSTest::test_gcs_retry
+    --deselect papermill/tests/test_gcs.py::GCSTest::test_gcs_retry_older_exception
+    -vv
+  )
+
+  cd "${_pkgname}-${pkgver}"
+  pytest "${pytest_options[@]}"
 }
 
 package() {
-  cd "${srcdir}/${_pkgname}-${pkgver}"
+  cd "${_pkgname}-${pkgver}"
   python -m installer --destdir="$pkgdir" dist/*.whl
   install -D LICENSE -t "${pkgdir}/usr/share/licenses/${pkgname}/"
 }

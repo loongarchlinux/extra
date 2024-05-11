@@ -2,7 +2,7 @@
 # Maintainer: Christian Heusel <gromit@archlinux.org>
 
 pkgname=gum
-pkgver=0.13.0
+pkgver=0.14.0
 pkgrel=1
 pkgdesc='A tool for glamorous shell scripts'
 arch=('loong64' 'x86_64')
@@ -11,15 +11,8 @@ license=('MIT')
 depends=('glibc')
 makedepends=('git' 'go')
 options=('!lto')
-_commit='b0e5f32d3fe192d9605f173da9c2047f79ceea2d'
-source=("$pkgname::git+$url#commit=$_commit")
-b2sums=('SKIP')
-
-pkgver() {
-  cd "$pkgname"
-
-  git describe --tags | sed 's/^v//'
-}
+source=("$pkgname::git+$url#tag=v$pkgver")
+b2sums=('a8b08ab91a52340aca9d8f905873b7a94b02f68cfeaf551ea573a1bdbb6157c54a26ad7db4da49026de9d9ae1029d2ba8c43701e0795f7a4741056b25e8a52f6')
 
 prepare() {
   cd "$pkgname"
@@ -50,9 +43,9 @@ build() {
     -modcacherw \
     -ldflags "-compressdwarf=false \
     -linkmode external \
-    -extldflags ${LDFLAGS} \
+    -extldflags \"${LDFLAGS}\" \
     -X main.Version=$pkgver \
-    -X main.CommitSHA=$_commit \
+    -X main.CommitSHA=$(git rev-parse HEAD) \
     -X main.CommitDate=$_commit_date" \
     -o build \
     .

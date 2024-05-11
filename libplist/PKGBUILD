@@ -4,21 +4,22 @@
 # Contributor: Gabriel Martinez < reitaka at gmail dot com >
 
 pkgname=libplist
-pkgver=2.3.0
-pkgrel=2
+pkgver=2.5.0
+pkgrel=1
 pkgdesc='Library to handle Apple Property List files'
 arch=('loong64' 'x86_64')
 url='https://libimobiledevice.org/'
-license=('LGPL2.1')
+license=('LGPL-2.1-or-later')
 depends=('gcc-libs' 'glibc')
+makedepends=('cython' 'python' 'python-setuptools')
 optdepends=('python: Python bindings')
-makedepends=('cython' 'python')
 source=("https://github.com/libimobiledevice/$pkgname/releases/download/$pkgver/$pkgname-$pkgver.tar.bz2")
-sha256sums=('4e8580d3f39d3dfa13cefab1a13f39ea85c4b0202e9305c5c8f63818182cac61')
+sha256sums=('72742f20a73e0a6367fbcadaf48cf903bfa45a3642a11f2224ed850d1f1e5683')
 
 build() {
   cd $pkgname-$pkgver
   ./configure --prefix=/usr
+  sed -i -e 's/ -shared / -Wl,-O1,--as-needed\0/g' libtool
   make
 }
 

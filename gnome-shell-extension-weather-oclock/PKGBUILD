@@ -1,0 +1,28 @@
+# Maintainer: Balló György <ballogyor+arch at gmail dot com>
+
+pkgname=gnome-shell-extension-weather-oclock
+_pkgname=weather-oclock
+_uuid=weatheroclock@CleoMenezesJr.github.io
+pkgver=46.2
+pkgrel=1
+pkgdesc='GNOME Shell extension that displays the current weather inside the pill next to the clock'
+arch=('any')
+url='https://github.com/CleoMenezesJr/weather-oclock'
+license=('GPL-3.0-or-later')
+depends=('gnome-shell')
+optdepends=('gnome-weather: configure location')
+source=("https://github.com/CleoMenezesJr/$_pkgname/archive/$pkgver/$_pkgname-$pkgver.tar.gz"
+        'gnome-shell-extension-weather-oclock-icon-size.patch')
+sha256sums=('7542b9888aafa81ebb942b0962ee2690f007eae82e86aee02fd8675b08e23bd9'
+            '1b7c39af7ad851f42430951e3fc896dc5aec3048f1f4bf45544c6b0cdbfd82a4')
+
+prepare() {
+  cd $_pkgname-$pkgver
+  
+  # https://github.com/CleoMenezesJr/weather-oclock/commit/64a3f9911a0e87ff5c2ef16a79b30820a40d0654
+  patch -Np1 -i ../gnome-shell-extension-weather-oclock-icon-size.patch
+}
+
+package() {
+  install -Dm644 -t "$pkgdir/usr/share/gnome-shell/extensions/$_uuid" $_pkgname-$pkgver/$_uuid/*
+}

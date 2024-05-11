@@ -5,20 +5,19 @@
 
 _name=urwid
 pkgname=python-urwid
-pkgver=2.4.1
-_commit=fd6e4462c21824641c7598b042820f1a98aae459
-pkgrel=1
+pkgver=2.6.10
+pkgrel=3
 pkgdesc='Curses-based user interface library'
 url='https://urwid.org/'
 arch=('loong64' 'x86_64')
-license=('LGPL')
+license=('LGPL-2.1-only')
 depends=(
   'glibc'
   'python'
-  'python-typing-extensions'
+  'python-typing_extensions'
+  'python-wcwidth'
 )
 makedepends=(
-  'git'
   'python-build'
   'python-installer'
   'python-setuptools'
@@ -34,29 +33,32 @@ checkdepends=(
   'python-pyzmq'
   'python-gobject'
 )
-source=(
-  git+https://github.com/$_name/$_name.git#commit=$_commit
+optdepends=(
+  'python-gobject: for gobject integration'
+  'python-pyserial: for LCD and serial integration'
+  'python-pyzmq: for zmq integration'
+  'python-tornado: for tornado integration'
+  'python-trio: for trio integration'
+  'python-twisted: for twisted integration'
 )
-sha256sums=('SKIP')
-sha512sums=('SKIP')
-
-pkgver() {
-  cd $_name
-  git describe --tags | sed 's/^release-//;s/\([^-]*-g\)/r\1/;s/-/./g'
-}
+source=(
+  $_name-$pkgver.tar.gz::https://github.com/urwid/urwid/archive/refs/tags/$pkgver.tar.gz
+)
+sha256sums=('995234babe454f4a4656764d41a3c863ad106167a444d9719cca51af1abfce3b')
+sha512sums=('add8088b07bbbb0e7284bb93558028b764e4784b1593408745ad7ff5ff176f537ecc6845cbafbb11af08ff44115149cc8adf8b5714984b9017ff7b54e7a80bc8')
 
 build() {
-  cd $_name
-  python -m build --wheel --no-isolation
+  cd $_name-$pkgver
+  SETUPTOOLS_SCM_PRETEND_VERSION=$pkgver python -m build --wheel --no-isolation
 }
 
 check() {
-  cd $_name/tests
-  pytest -v
+  cd $_name-$pkgver
+  pytest -vv tests
 }
 
 package() {
-  cd $_name
+  cd $_name-$pkgver
   python -m installer --destdir="$pkgdir" dist/*.whl
 }
 

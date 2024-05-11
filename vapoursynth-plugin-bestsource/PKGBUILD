@@ -1,0 +1,57 @@
+# Maintainer: Maxime Gauduin <alucryd@archlinux.org>
+# Contributor: witchymary
+
+pkgname=vapoursynth-plugin-bestsource
+pkgver=R1
+pkgrel=2
+epoch=1
+pkgdesc='BestSource plugin for VapourSynth'
+arch=(loong64 x86_64)
+url=https://github.com/vapoursynth/bestsource
+license=(MIT)
+depends=(
+  gcc-libs
+  glibc
+  jansson
+  libavcodec.so
+  libavformat.so
+  vapoursynth
+)
+makedepends=(
+  git
+  meson
+)
+_tag=a4f0d2f53b9a67927e1cf55fb9f7662f314689e7
+source=(
+  git+https://github.com/vapoursynth/bestsource.git#tag=${_tag}
+  git+https://github.com/sekrit-twc/libp2p.git
+)
+b2sums=(
+  SKIP
+  SKIP
+)
+
+prepare() {
+  cd bestsource
+  git submodule init libp2p
+  git config submodule.libp2p.url ../libp2p
+  git -c protocol.file.allow=always submodule update libp2p
+}
+
+pkgver() {
+  cd bestsource
+  git describe --tags
+}
+
+build() {
+  arch-meson bestsource build \
+    --libdir /usr/lib/vapoursynth
+  ninja -C build
+}
+
+package(){
+  DESTDIR="${pkgdir}" ninja -C build install
+  install -Dm 644 bestsource/LICENSE -t "${pkgdir}"/usr/share/licenses/vapoursynth-plugin-bestsource/
+}
+
+# vim: ts=2 sw=2 et:

@@ -2,31 +2,35 @@
 
 pkgname=dateutils
 pkgver=0.4.11
-pkgrel=1
+pkgrel=3
 pkgdesc='nifty command line date and time utilities; fast date calculations and conversion in the shell'
 url='https://www.fresse.org/dateutils/'
 arch=('loong64' 'x86_64')
 license=('BSD')
+makedepends=('git' 'gperf')
 depends=('glibc')
-source=("$pkgname-$pkgver.tar.xz::https://github.com/hroptatyr/$pkgname/releases/download/v$pkgver/$pkgname-$pkgver.tar.xz"
-        "$pkgname-$pkgver.tar.asc::https://github.com/hroptatyr/$pkgname/releases/download/v$pkgver/$pkgname-$pkgver.tar.asc")
+source=("git+https://github.com/hroptatyr/dateutils.git?signed#tag=v${pkgver}")
+sha512sums=('4fdf3ed23928145086f78077db3ec16364bdf1d7aba73bd360057a3026c0f3b5e968496c3a177c8f5cbe2483892c5a28f1459bdbecf4805d4b4b6979a911ec44')
 validpgpkeys=('6CB0D61E23A4275CC2CFA16194C9A1AC82C9390E')
-sha512sums=('601fa8197acdb68fe0688aed3fa2ba2fcf66b9a8ad23a0c7cb816a2cba9c645854ec8715a2127e02294cc068f63b09d0596eee60e151a8ad0edff22f54ec9d7a'
-            'SKIP')
+
+prepare() {
+    cd $pkgname
+    autoreconf -fiv
+}
 
 build() {
-    cd $pkgname-$pkgver
+    cd $pkgname
     ./configure --prefix=/usr --with-old-links=no
     make
 }
 
 check() {
-    cd $pkgname-$pkgver
+    cd $pkgname
     make check
 }
 
 package() {
-    cd $pkgname-$pkgver
+    cd $pkgname
     make DESTDIR="$pkgdir" install
     install -Dm0644 LICENSE "$pkgdir"/usr/share/licenses/"$pkgname"/LICENSE
 }

@@ -3,8 +3,8 @@
 
 _pkg=Type-Tiny
 pkgname=perl-${_pkg,,}
-pkgver=1.016010
-pkgrel=2
+pkgver=2.004000
+pkgrel=1
 pkgdesc="Tiny, yet Moo(se)-compatible type constraint"
 arch=(any)
 url="https://metacpan.org/release/${_pkg}"
@@ -13,7 +13,7 @@ options=(!emptydirs)
 depends=(perl perl-exporter-tiny)
 checkdepends=(perl-test-simple)
 source=(https://cpan.metacpan.org/authors/id/T/TO/TOBYINK/${_pkg}-${pkgver}.tar.gz)
-sha512sums=('49134351dfaa18b69a6bb8fa375fe35fbbaff12b2ac4f6c80fa93fbedbce9e15930a598dde4a27b7eb23d7681d27ebb2487fa7e771bc86a22ad7d90e8b23e686')
+sha512sums=('a28a0fdfe48c8ce7f7313bfa6645094337dfb12d76401d9947a649763379a912f480ff418f0023d1e0c5851ffa347823669192a9eb8081341db7525d84c82220')
 
 build() {
     cd ${_pkg}-${pkgver}

@@ -1,0 +1,30 @@
+# Maintainer: Robin Candau <antiz@archlinux.org>
+# Contributor: Aaron Fischer <mail@aaron-fischer.net>
+# Contributor: danyf90 <daniele.formichelli@gmail.com>
+# Contributor: Hyperair <hyperair@gmail.com>
+
+pkgname=wakeonlan
+pkgver=0.42
+pkgrel=2
+pkgdesc="Perl script for waking up computers via Wake-On-LAN magic packets"
+arch=('any')
+url="https://github.com/jpoliv/wakeonlan/"
+license=('Artistic-2.0')
+depends=('perl')
+source=("${pkgname}-${pkgver}.tar.gz::${url}/archive/v${pkgver}.tar.gz")
+sha256sums=('4f533f109f7f4294f6452b73227e2ce4d2aa81091cf6ae1f4fa2f87bad04a031')
+
+build() {
+	cd "${pkgname}-${pkgver}"
+	perl Makefile.PL
+	make
+}
+
+package() {
+	cd "${pkgname}-${pkgver}"
+	install -Dm 755 "${pkgname}" "${pkgdir}/usr/bin/${pkgname}"
+	install -Dm 644 "blib/man1/${pkgname}.1p" "${pkgdir}/usr/share/man/man1/${pkgname}.1"
+	install -Dm 644 README.md "${pkgdir}/usr/share/doc/${pkgname}/README.md"
+	install -Dm 644 Changes "${pkgdir}/usr/share/doc/${pkgname}/Changes"
+	find examples/ -type f -exec install -Dm 644 -t "${pkgdir}/usr/share/doc/${pkgname}/" {} +
+}

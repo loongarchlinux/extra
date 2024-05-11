@@ -3,7 +3,7 @@
 _name=django-classy-tags
 pkgname=python-django-classy-tags
 pkgver=4.1.0
-pkgrel=1
+pkgrel=2
 pkgdesc="Class based template tags for django"
 arch=(any)
 url="https://github.com/django-cms/django-classy-tags"

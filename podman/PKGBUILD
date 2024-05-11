@@ -4,8 +4,7 @@
 
 pkgbase=podman
 pkgname=(podman podman-docker)
-pkgver=4.9.0
-_commit=f7c7b0a7e437b6d4849a9fb48e0e779c3100e337  #refs/tags/v4.9.0^{}
+pkgver=5.0.2
 pkgrel=1
 pkgdesc='Tool and library for running OCI-based containers in pods'
 arch=(loong64 x86_64)
@@ -26,7 +25,7 @@ makedepends=(
 # https://github.com/containers/podman/issues/13297
 options=(!lto)
 source=(
-  git+$url#commit=$_commit?signed
+  "git+$url#tag=v$pkgver?signed"
   $pkgname-4.6.0-defaultinitpath.patch
 )
 # See the release-keys repository
@@ -36,13 +35,8 @@ validpgpkeys=(
   7CE1E6F8C90CB53E7E4D8F2D502E08DB0BBF8EEE  # Ashley Cui <acui@redhat.com>
   9E33DD8704CC03E2DEB84D9A1C1EDD7CC7C3A0DD  # Lokesh Mandvekar <lsm5@redhat.com>
 )
-sha256sums=('SKIP'
+sha256sums=('75034e1437e6fcf5710864a02982b5273e4b3f8e2f8e76e610135aad79d6e362'
             'eeacf654707b9b8d6a6c08453b5625d9cf31010d666f82f4851aa34433b97700')
-
-pkgver() {
-  cd $pkgname
-  git describe --tags | sed 's/^v//;s/-/+/g'
-}
 
 prepare() {
   # set default init_path to /usr/lib/podman/catatonit
@@ -77,14 +71,14 @@ package_podman() {
     device-mapper libdevmapper.so
     gpgme libgpgme.so
     libseccomp libseccomp.so
-    slirp4netns
+    passt
   )
   optdepends=(
     'apparmor: for AppArmor support'
     'btrfs-progs: support btrfs backend devices'
     'cni-plugins: for an alternative container-network-stack implementation'
     'fuse-overlayfs: for storage driver in rootless environment'
-    'passt: for alternative rootless network support'
+    'slirp4netns: for alternative rootless network support'
     'podman-compose: for docker-compose compatibility'
     'podman-docker: for Docker-compatible CLI'
   )

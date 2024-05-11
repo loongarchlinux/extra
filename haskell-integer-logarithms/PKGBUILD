@@ -3,7 +3,7 @@
 _hkgname=integer-logarithms
 pkgname=haskell-integer-logarithms 
 pkgver=1.0.3.1
-pkgrel=6
+pkgrel=7
 pkgdesc="Integer logarithms"
 url="https://github.com/Bodigrim/integer-logarithms"
 license=('MIT')
@@ -15,15 +15,15 @@ sha512sums=('670aff419de8d6afd1b7e1a40b68290bcf7aefad788c3b08aebfa5ca3e709f5d225
 
 prepare() {
     cd $_hkgname-$pkgver
-    uusi -u ghc-bignum $_hkgname.cabal
+    uusi -u base -u ghc-bignum -u ghc-prim $_hkgname.cabal
 }
 
 build() {
     cd $_hkgname-$pkgver
     
     runhaskell Setup configure -O --enable-shared --enable-executable-dynamic --disable-library-vanilla \
-        --prefix=/usr --docdir=/usr/share/doc/$pkgname \
-        --dynlibdir=/usr/lib --libsubdir=\$compiler/site-local/\$pkgid --ghc-option=-fllvm \
+        --prefix=/usr --docdir=/usr/share/doc/$pkgname --datasubdir=$pkgname \
+        --dynlibdir=/usr/lib --libsubdir=\$compiler/site-local/\$pkgid \
             -finteger-gmp -f-check-bounds
     runhaskell Setup build $MAKEFLAGS
     runhaskell Setup register --gen-script

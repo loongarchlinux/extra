@@ -1,32 +1,42 @@
-# Maintainer: Jan Alexander Steffens (heftig) <jan.steffens@gmail.com>
+# Maintainer: Jan Alexander Steffens (heftig) <heftig@archlinux.org>
 # Contributor: Felix Yan <felixonmars@archlinux.org>
 # Contributor: Alessandro Pezzoni <donbex at nerdshack dot com>
 
 pkgbase=pycdio
 pkgname=(python-pycdio)
 pkgver=2.1.1
-pkgrel=4
+pkgrel=5
 pkgdesc="Python OO interface to libcdio (CD Input and Control library)"
-url="https://pypi.python.org/pypi/pycdio"
+url="https://github.com/rocky/pycdio"
 arch=(loong64 x86_64)
-license=(GPL)
-depends=(python libcdio)
-makedepends=(python-setuptools swig)
-source=("https://pypi.io/packages/source/p/$pkgbase/$pkgbase-$pkgver.tar.gz")
-sha512sums=('4c756b1c2f39332add86e01af129ccb608178306be42c9719c163b6bad0ba4de3916ac477c6866450890e094b14a2689a24e7d19bcf13846330555c2bb1feaa7')
+license=(GPL-3.0-or-later)
+depends=(
+  libcdio
+  python
+)
+makedepends=(
+  git
+  python-build
+  python-installer
+  python-setuptools
+  python-wheel
+  swig
+)
+source=("git+$url#tag=$pkgver")
+b2sums=('a2c6490ea13e4d790ce9e61005eddce74d58719b544afe44d0f6aaea81ba22d82aadf9cfe69b65bf67e5b91d6ec87601055f53444df65d924e534091e36b6b3b')
 
 prepare() {
-  cd $pkgbase-$pkgver
+  cd pycdio
 }
 
 build() {
-  cd $pkgbase-$pkgver
-  python setup.py build
+  cd pycdio
+  python -m build --wheel --no-isolation
 }
 
 package_python-pycdio() {
-  cd $pkgbase-$pkgver
-  python setup.py install --root="$pkgdir" --optimize=1 --skip-build
+  cd pycdio
+  python -m installer --destdir="$pkgdir" dist/*.whl
 }
 
-# vim:set sw=2 et:
+# vim:set sw=2 sts=-1 et:

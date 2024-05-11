@@ -1,7 +1,7 @@
 # Maintainer: Daurnimator <daurnimator@archlinux.org>
 
-pkgname=('grafana-agent' 'grafana-agentctl' 'grafana-agent-crow')
-pkgver=0.39.2
+pkgname=('grafana-agent' 'grafana-agentctl')
+pkgver=0.40.2
 pkgrel=1
 pkgdesc='Grafana Agent is a telemetry collector for sending metrics, logs, and trace data to the opinionated Grafana observability stack'
 url='https://github.com/grafana/agent'
@@ -12,7 +12,7 @@ makedepends=('go' 'systemd' 'yarn')
 options=('!lto')
 source=($pkgname-$pkgver.tar.gz::https://github.com/grafana/agent/archive/v$pkgver.tar.gz
         grafana-agent.sysusers grafana-agent.service grafana-agent.tmpfiles)
-sha512sums=('ab61cea54df72a9e3f4901a8babbe61b28e990eb5a77488e4d5e40fdb1b5e410fdab045484d9843ed9ccd4212de8969d5aed39d3314270fcb1b39b8d18b00e11'
+sha512sums=('e4b10d06c639b1e86314fd8a6792619d6a446e4d0af3fece06b10d85d1d2a74e590b050b4f5d1e93d99fc0c8a3dc2b1d8f8bf52399538967062d150e0b8b28f1'
             '1e58f6273562fd6ddeae41bb6d223230ed301199af6bd2f85fa3d2c1e6352952c600cd4488ad769069519c42b6863be84aaa2c93c88f696e5a0bedbb93758d0e'
             '1fb0bdcbf1bf7b11e83111a998f05d7fff0dda936054d17d061da97078be1ddfc4b90f0ea0578932049fc3eb4ccd7f61492e2395d1b1fcbc4ad908bb26c5623c'
             '3a4c4896b2454272b5a2d53ba5aa7009fa5b42a573fef521afb5d9712e53119539c4195d2b149d04d086c5fa197ccf7dc9bbdc407efb55514e3c92b994121fa8')
@@ -43,7 +43,7 @@ build() {
   export CGO_CXXFLAGS="${CXXFLAGS}"
   export GOPATH="${srcdir}"
   export GOPROXY=off
-  for path in cmd/grafana-agent cmd/grafana-agentctl tools/crow; do
+  for path in cmd/grafana-agent cmd/grafana-agentctl; do
     echo "Building $path"
     go build \
       -trimpath \
@@ -68,7 +68,7 @@ check() {
   ./grafana-agentctl --version
 
   # Skip `Test_tlsListener` due to https://github.com/grafana/agent/issues/4919
-  go test -v ./pkg/{agentctl,config,crow,flow,logs,metrics,runner,server,traces}/ \
+  go test -v ./pkg/{agentctl,config,flow,logs,metrics,runner,server,traces}/ \
     -skip Test_tlsListener
 }
 
@@ -91,12 +91,4 @@ package_grafana-agentctl() {
   cd "agent-$pkgver"
 
   install -Dm755 -t "$pkgdir"/usr/bin grafana-agentctl
-}
-
-package_grafana-agent-crow() {
-  pkgdesc="A correctness checker tool that validates that scraped metrics are delivered to a remote_write endpoint."
-
-  cd "agent-$pkgver"
-
-  install -Dm755 crow "$pkgdir"/usr/bin/grafana-agent-crow
 }

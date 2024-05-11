@@ -1,31 +1,36 @@
-# Maintainer: Gaetan Bisson <bisson@archlinux.org>
+# Maintainer: Caleb Maclennan <caleb@alerque.com>
+# Contributor: Gaetan Bisson <bisson@archlinux.org>
 # Contributor: dorphell <dorphell@archlinux.org>
 
 pkgname=rcs
 pkgver=5.10.1
-pkgrel=1
+pkgrel=2
 pkgdesc='Revision Control System: manages multiple revisions of files'
-url='https://www.gnu.org/software/rcs/'
-license=('GPL3')
-arch=('loong64' 'x86_64')
-depends=('ed')
-validpgpkeys=('748EA0E81CB8A7489BFA6CE4670322244C807502')
-source=("https://ftp.gnu.org/gnu/${pkgname}/${pkgname}-${pkgver}.tar.lz"{,.sig})
+url="https://www.gnu.org/software/$pkgname/"
+license=(GPL-3.0-only)
+arch=(loong64 x86_64)
+depends=(bash
+         diffutils
+         glibc)
+makedepends=(ed)
+_archive="$pkgname-$pkgver"
+source=("https://ftp.gnu.org/gnu/$pkgname/$_archive.tar.lz"{,.sig})
 sha256sums=('43ddfe10724a8b85e2468f6403b6000737186f01e60e0bd62fde69d842234cc5'
             'SKIP')
+validpgpkeys=('748EA0E81CB8A7489BFA6CE4670322244C807502')
 
 build() {
-  cd ${pkgname}-${pkgver}
-  ./configure --prefix=/usr
-  make
+	cd "$_archive"
+	./configure --prefix /usr
+	make
 }
 
 check() {
-  cd ${pkgname}-${pkgver}
-  make check
+	cd "$_archive"
+	make check
 }
 
 package() {
-  cd ${pkgname}-${pkgver}
-  make prefix="${pkgdir}/usr" install
+	cd "$_archive"
+	make DESTDIR="$pkgdir" install
 }

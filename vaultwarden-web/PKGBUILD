@@ -3,28 +3,27 @@
 # Contributor: Markus Richter <mqus at disroot dot org>
 
 pkgname=vaultwarden-web
-_pkgver=2024.1.2
-pkgver=2024.1.2
+_pkgver=2024.3.1
+pkgver=2024.3.1
 _upstreamver=${_pkgver%[[:lower:]]}
-#_patchver=$_upstreamver
-_patchver=2024.1.2 # almost always out of sync now
-pkgrel=3
+_patchver=$_upstreamver
+pkgrel=1
 pkgdesc='Bitwarden web vault with the patches to make it work with Vaultwarden'
 arch=('any')
 url='https://github.com/dani-garcia/bw_web_builds'
 license=('GPL3')
 depends=('vaultwarden')
 makedepends=('git' 'nodejs' 'npm')
-provides=('bitwarden_rs-vault' 'bitwarden_rs-web')
-replaces=('bitwarden_rs-vault' 'bitwarden_rs-web')
 install=$pkgname.install
 source=(
   "bitwarden-clients::git+https://github.com/bitwarden/clients.git#tag=web-v$_upstreamver"
-  "bw_web_builds::git+https://github.com/dani-garcia/bw_web_builds#tag=v$_pkgver"
+  "git+https://github.com/dani-garcia/bw_web_builds#tag=v$_pkgver"
 )
-b2sums=('SKIP'
-        'SKIP')
+b2sums=('279659ba15498d013027b5cdd1682cd284b2a8b9a6e565e5b92a6eaeca6ea4397a3b870e2ee0951f3cc3a6e16402bee6e249f5f3760a15c8f1b1800104dfc2ca'
+        '17a1aa44b3dac20ceb2aded072319baa456bfd9a79942128690394c1b4de583c0d9e039d2d7cd273e47294c16c0fde7cbc8238c0974ea0667c3424509239b701')
 
+# Appease vercmp by prepending trailing letter with a period
+# shellcheck disable=SC2001
 pkgver() {
   echo $_pkgver | sed 's/[[:lower:]]$/.&/'
 }
@@ -32,10 +31,10 @@ pkgver() {
 prepare() {
   cd bitwarden-clients
 
-  # copy vaultwarden images
+  # copy Vaultwarden images
   cp -vr "$srcdir/bw_web_builds/resources/src/images/"{logo-{dark,white}@2x,icon-white}.png apps/web/src/images
 
-  # apply vaultwarden patch
+  # apply Vaultwarden patch
   patch --forward --strip=1 --input="$srcdir/bw_web_builds/patches/v$_patchver.patch"
 
   npm ci
@@ -44,6 +43,11 @@ prepare() {
 build() {
   cd bitwarden-clients/apps/web
 
+  # https://nodejs.org/api/cli.html#--max-old-space-sizesize-in-megabytes
+  # Workaround for "JavaScript heap out of memory" on 32-bit systems
+  if [[ $(getconf LONG_BIT) -eq 32 ]]; then
+    export NODE_OPTIONS="--max-old-space-size=1536"
+  fi
   npm run dist:oss:selfhost
 }
 

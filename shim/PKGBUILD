@@ -1,56 +1,44 @@
 # Maintainer: David Runge <dvzrv@archlinux.org>
-# Maintainer: Jonas Witschel <diabonas@archlinux.org>
+# Contributor: Jonas Witschel <diabonas@archlinux.org>
 
 pkgname=shim
-pkgver=15.7
-_commit=46f7220ff61dc5dea95273ccb595de31b2b3bf9e  # refs/tags/15.7
+pkgver=15.8
 pkgrel=1
 pkgdesc="EFI preloader (unsigned EFI binaries)"
 arch=(any)
 url="https://github.com/rhboot/shim"
-license=(BSD)
-makedepends=(git)
+license=(BSD-3-Clause)
 checkdepends=(efivar xxd)
 source=(
-  git+https://github.com/rhboot/shim.git#tag=$_commit?signed
-  rhboot-gnu-efi::git+https://github.com/rhboot/gnu-efi.git
+  $url/releases/download/$pkgver/$pkgname-$pkgver.tar.bz2{,.asc}
 )
-md5sums=('SKIP'
-         'SKIP')
+sha512sums=('30b3390ae935121ea6fe728d8f59d37ded7b918ad81bea06e213464298b4bdabbca881b30817965bd397facc596db1ad0b8462a84c87896ce6c1204b19371cd1'
+            'SKIP')
+b2sums=('24da29cf45a08bceffc15682fcdd16e34e42d3b33f2a0b2e528193d8e3455a034b6242c13cebf43db481f73a83329effd9812f0d1e04861ecf7329e54f9059b9'
+        'SKIP')
 validpgpkeys=(
   B00B48BC731AA8840FED9FB0EED266B70F4FEF10  # Peter Jones <pjones@redhat.com>
   039A9CEA19DE9508C36875AA2532F9176A95A442  # Robbie Harwood (work) <rharwood@fedoraproject.org>
 )
 
-pkgver() {
-  cd $pkgname
-  git describe | sed 's/\([^-]*-\)g/r\1/;s/-/./g'
-}
-
 prepare() {
-  cd $pkgname
-  git submodule init
-  git config submodule.gnu-efi.url "$srcdir/rhboot-gnu-efi"
-  git -c protocol.file.allow=always submodule update
-
+  cd $pkgname-$pkgver
   # -Werror, not even once
   sed -e 's/-Werror\b//g' -i Makefile Make.defaults
 }
 
 build() {
-  cd $pkgname
   # TODO: evaluate setting DEFAULT_LOADER to e.g. loader.efi:
   # this would require changing grub's default, but would allow us to unify
-  make EFIDIR=ARCH
+  make EFIDIR=ARCH -C $pkgname-$pkgver
 }
 
 check() {
-  cd $pkgname
-  make test
+  make test -C $pkgname-$pkgver
 }
 
 package() {
-  cd $pkgname
+  cd $pkgname-$pkgver
   make DATATARGETDIR="/usr/share/$pkgname" DESTDIR="$pkgdir/" install-as-data
   install -vDm 644 COPYRIGHT -t "$pkgdir/usr/share/licenses/$pkgname/"
   install -vDm 644 {BUILDING,README.{md,fallback,tpm},TODO} -t "$pkgdir/usr/share/doc/$pkgname/"

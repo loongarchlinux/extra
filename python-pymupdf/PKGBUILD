@@ -1,8 +1,9 @@
 # Maintainer: David Runge <dvzrv@archlinux.org>
+# Maintainer: Robin Candau <antiz@archlinux.org>
 
 _name=PyMuPDF
 pkgname=python-pymupdf
-pkgver=1.23.19
+pkgver=1.24.3
 pkgrel=1
 pkgdesc="Python bindings for MuPDF's rendering library"
 arch=(loong64 x86_64)
@@ -38,15 +39,19 @@ optdepends=(
 )
 source=(
   $_name-$pkgver.tar.gz::$url/archive/refs/tags/$pkgver.tar.gz
+  remove-clang-and-swig-dependencies.patch
 )
-sha512sums=('1656f0d7206bc10fe68954d7541cbcb025c3d2e98ffd67156b4b73093e8b3a8c9b0b434499d55e14130690b06bfe805e121a167a4c8cc6c7af7695c0c986628b')
-b2sums=('0f6c2707f2ef342af4b13e83d4698ceb8a261a35939f17459dcf53d1d2fd16aa809e3ed7212d186ef973ac93b1c2f791a94df0143e6c043892b5305da7350398')
+sha512sums=('a35fdffeaa108c6bd0df30e407eade2699f55865d81e001f88824806b685cce45da5dfa0706d95de9ec44c3b26f99696aacca33e5fda4078180e1df97275936a'
+            '3ad7fcc092288fd973a6fdaff5702919473607bcc6007d1a8e464d613a11a550bb5a06f0ebab8b171e1188be702abbecc999a0ad0d2fca121516b69f7d36bae5')
+b2sums=('e3d4b79555f22e4adab2d6f18dd9795912da85bf9c9896348c0e112dbacbe3d638a41c3e09260b7abf2dba4b75d00cd934acba2eb9d53e1787ae0c21e60334eb'
+        'a0307f03e70f18547e095d5f9e80776e7e7ef38da170fa331a77a4465488f619228cd2367976f3be5fced6a77fe5e639c1d321c636b8a8825aa6310787aa1d39')
 
 prepare() {
   # remove bundled mupdf sources
   rm -frv $pkgname/*.tgz
   # we package clang and swig and don't need python-clang or python-swig
-  sed -e 's/"libclang", "swig", //' -i $_name-$pkgver/pyproject.toml
+  cd $_name-$pkgver
+  patch -Np1 < $srcdir/remove-clang-and-swig-dependencies.patch
 }
 
 build() {
@@ -92,12 +97,19 @@ check() {
     --deselect tests/test_general.py::test_subset_fonts
     # we do not care about flake8
     --deselect tests/test_flake8.py::test_flake8
+    # no point testing code quality on our side
+    --deselect tests/test_pylint.py::test_pylint
+    # some textbox stuff again: https://github.com/pymupdf/PyMuPDF/issues/3398
+    --deselect tests/test_textbox.py::test_textbox3
+    # broken test as of v1.24.3: https://github.com/pymupdf/PyMuPDF/issues/3460
+    --deselect tests/test_balance_count.py::test_q_count
   )
   local _site_packages=$(python -c "import site; print(site.getsitepackages()[0])")
 
   cd $_name-$pkgver
   python -m installer --destdir=test_dir dist/*.whl
   export PYTHONPATH="$PWD/test_dir/$_site_packages:$PYTHONPATH"
+  export PATH="$PWD/test_dir/usr/bin:$PATH"
   pytest "${pytest_options[@]}" tests/
 }
 

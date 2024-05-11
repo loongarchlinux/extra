@@ -2,18 +2,20 @@
 # Maintainer: Jan Alexander Steffens (heftig) <heftig@archlinux.org>
 
 pkgname=gnome-remote-desktop
-pkgver=45.1
+pkgver=46.1
 pkgrel=1
 pkgdesc="GNOME Remote Desktop server"
 url="https://wiki.gnome.org/Projects/Mutter/RemoteDesktop"
 arch=(loong64 x86_64)
-license=(GPL2)
+license=(GPL-2.0-or-later)
 depends=(
   cairo
   dconf
   freerdp
   fuse3
+  gcc-libs
   glib2
+  glibc
   libdrm
   libei
   libepoxy
@@ -23,8 +25,11 @@ depends=(
   libsecret
   libvncserver
   libxkbcommon
+  opus
   pipewire
+  polkit
   systemd
+  systemd-libs
   tpm2-tss
 )
 makedepends=(
@@ -32,6 +37,7 @@ makedepends=(
   ffnvcodec-headers
   git
   meson
+  python-packaging
 )
 checkdepends=(
   dbus-broker
@@ -42,14 +48,11 @@ checkdepends=(
   wireplumber
 )
 groups=(gnome)
-_commit=df66c0e99a749058e0ee7dcee36bd97e018a3bb8  # tags/45.1^0
-source=("git+https://gitlab.gnome.org/GNOME/gnome-remote-desktop.git#commit=$_commit")
-b2sums=('SKIP')
-
-pkgver() {
-  cd $pkgname
-  git describe --tags | sed 's/[^-]*-g/r&/;s/-/+/g'
-}
+source=("git+https://gitlab.gnome.org/GNOME/gnome-remote-desktop.git?signed#tag=${pkgver/[a-z]/.&}")
+b2sums=('7204bc6b9c04308f406284345b734bddbd0a170cbe3ed16fc9034b4aa76750ae63f2b853a8b7e92f37c77309a551c1f416122aa184584b4d46b7bc222804326c')
+validpgpkeys=(
+  8307C0A224BABDA1BABD0EB9A6EEEC9E0136164A # Jonas Ådahl <jadahl@gmail.com>
+)
 
 prepare() {
   cd $pkgname

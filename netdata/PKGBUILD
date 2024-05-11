@@ -2,8 +2,8 @@
 # Contributor: SanskritFritz (gmail)
 
 pkgname=netdata
-pkgver=1.44.1
-pkgrel=4
+pkgver=1.44.3
+pkgrel=2
 _go_ver="0.57.2"
 pkgdesc="Real-time performance monitoring, in the greatest possible detail, over the web"
 url="https://github.com/netdata/netdata"
@@ -28,17 +28,14 @@ optdepends=('nodejs: for monitoring named and SNMP devices'
 source=("$pkgname-$pkgver.tar.gz::https://github.com/netdata/netdata/releases/download/v$pkgver/netdata-v$pkgver.tar.gz"
         "go.d.plugin-${_go_ver}.tar.gz::https://github.com/netdata/go.d.plugin/archive/refs/tags/v${_go_ver}.tar.gz"
         "https://github.com/netdata/go.d.plugin/releases/download/v${_go_ver}/go.d.plugin-config-v${_go_ver}.tar.gz"
-        "$pkgname.sysusers"
-         protobuf-23.patch)
-sha512sums=('2c3f4ff03704eb19a203a2ee7494c6f16e2b1a45ec3464ca3685dc6baa4b82e5d216c6076610a07a610db7e0eae93b3be52eb69382fc07fcde83fdc4727c8ba2'
+        "netdata.sysusers")
+sha512sums=('cbc0698b33d27d78b13fe0a915288a22fc4bb3246c37cf48037650ef9465553a6a92f1702ca273c05cdd9385eecc0713f230939a8341dfe174403d8623388922'
             'b8bc855d18245bfa69407a1449be4179375ecd6b6d9014f8726b0ac0c9b52a7ff193e50df82cf09c7a598f96a4edc8f9178b4f77c78af07a1e15e49a2d06b9e8'
             'a64683be6d3327ce9500606b22d8d908cf36206934b5437d1c91d893c72cd8e44057f895c7e3986aa22335884903f2835d4b64196a65060d4dee41a6bca321b1'
-            'a910809a823ba58ca7bdaa72e8d68427b48f452c1fbb2343fa182ecb0a091a7640e73af24b8ba2fdd90e00aed8ef53b7fccd25cb8f04ca9b9fa6c8e52223ca66'
-            '5a759d6fe29f6ded679ebe61189a81639adf4397219cb0f1128a1490702ca4b1e250a70ed3bb548ca37c53992659f9c910e1ddc8b167bc6cf1f518630b960e05')
+            'a910809a823ba58ca7bdaa72e8d68427b48f452c1fbb2343fa182ecb0a091a7640e73af24b8ba2fdd90e00aed8ef53b7fccd25cb8f04ca9b9fa6c8e52223ca66')
 
 prepare() {
   cd $pkgname-v$pkgver
-  patch -p1 -i ../protobuf-23.patch # Fix build with protobuf 23
   # protobuf 23 requires c++17
   sed -e 's|\# AX_CXX_COMPILE_STDCXX(17, noext, optional)|AX_CXX_COMPILE_STDCXX(17, noext, optional)|' -i configure.ac
 }
@@ -74,6 +71,8 @@ package() {
   cd "$pkgname-v$pkgver"
 
   make DESTDIR="$pkgdir" install
+
+  # go.d.plugin
   install -Dm755 ${srcdir}/go.d.plugin-${_go_ver}/go.d.plugin "${pkgdir}/usr/lib/netdata/plugins.d/go.d.plugin"
   cp -r "${srcdir}/go.d.conf" "${srcdir}/go.d" "${pkgdir}/usr/lib/${pkgname}/conf.d"
 

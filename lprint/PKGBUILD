@@ -2,29 +2,30 @@
 # Contributor: WorMzy Tykashi <wormzy.tykashi@gmail.com>
 
 pkgname=lprint
-pkgver=1.2.0
+pkgver=1.3.1
 pkgrel=1
 pkgdesc="Label Printer Application"
 arch=('loong64' 'x86_64')
 url="https://www.msweet.org/lprint/"
-license=('Apache' 'custom')
-depends=('pappl' 'libcups' 'libpng' 'libusb' 'pam')
-options=('debug')
+license=('Apache-2.0')
+depends=('pappl' 'libcups' 'glibc') #'libpng' 'libusb' 'pam' 
 source=("https://github.com/michaelrsweet/lprint/releases/download/v${pkgver}/${pkgname}-${pkgver}.tar.gz"{,.sig})
-validpgpkeys=('845464660B686AAB36540B6F999559A027815955')  # "Michael R Sweet <michael.r.sweet@gmail.com>"
-#validpgpkeys=('9086C3CDC66C3F563CF8F405BE67C75EC81F3244') # "Michael R Sweet <msweet@msweet.org>"
-sha256sums=('96a2f7efbbd318cc7189c4b1d59894caee02503a881a82d7a212d2a94636f95c'
+#validpgpkeys=('845464660B686AAB36540B6F999559A027815955')  # "Michael R Sweet <michael.r.sweet@gmail.com>"
+validpgpkeys=('9086C3CDC66C3F563CF8F405BE67C75EC81F3244') # "Michael R Sweet <msweet@msweet.org>"
+sha256sums=('bebdf14615f292972c9c939a003f2ad79eef32ddf9ff8d67f611a5da5a2a4598'
             'SKIP')
 
 build() {
   cd ${pkgname}-${pkgver}
-  ./configure --prefix=/usr --with-systemd
+  ./configure --prefix=/usr \
+    --with-systemd \
+    --with-ldflags=" -Wl,-z,now"
   make
 }
 
 check() {
    cd "$pkgname-$pkgver"
-#   make -k check
+   make test
 }
 
 package() {

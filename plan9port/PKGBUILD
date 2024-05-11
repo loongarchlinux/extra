@@ -4,12 +4,11 @@
 # Contributor: Chris Brannon <cmbrannon79@gmail.com>
 
 pkgname=plan9port
-_commit=984c2824e3569479bace65bdaf9e78a2eb36dd58 # master
-pkgver=20230913
-pkgrel=1
+_commit=ace7bcb75bf2f4e27abbd413b45d04ab4314fbb1 # master
+pkgver=20240406
+pkgrel=2
 pkgdesc='Ports of applications from Plan 9'
 arch=(loong64 x86_64)
-url='https://swtch.com/plan9port/'
 url='https://9fans.github.io/plan9port/'
 license=(custom)
 depends=(fontconfig fuse2 libxt xorg-server)
@@ -19,10 +18,10 @@ install=plan9.install
 options=(staticlibs !zipman)
 source=("git+https://github.com/9fans/plan9port#commit=$_commit"
         acme.png acme.sh plan9.sh)
-b2sums=('SKIP'
+b2sums=('4b1c73b3f9c671edcdd3b46a222ac7554cb5dcf26983ced37babe370cf5bc237f310daca7b52d065892bef89a9e09f200f7ad14041ce159b2f0cd23429d3aa78'
         '983106b7a91afadae0f3aff5ff69338aa80d7eb6f9b65a95a31c963f162f6fb2dea748e5da698e0bd14d4343fe17281f55b9a1966fcba1c497fbd4bd855caf6c'
         '6bd5abac872d578523fee4d7287aa9df7faecccefab92377a871596f1526f3a26d3e89098aef3bb3e3773b2de6f5f63be6cb13134b1cbc66be9763403c344598'
-        '3de66befb0a864a5e1e01f5700bb14bc927bec4738e394e0b73b09f7322bb738d51c611376b3360883e20b605df15bff6fb0fd7850545e35d5b92ec3990469d6')
+        '743d3b663f8cad370fe4e6f0fe24efd444172327b9e0bd2ac5fd3c4f9595edd4e513c6ba978719a163e0507121cab622de8453289bde19b37365a2a78df4ccf9')
 
 pkgver() {
  cd $pkgname
@@ -71,8 +70,7 @@ package() {
   rm -rf .hg/
   rm -f .hgignore .hgtags
   find . -name '.cvsignore' -delete
-  rm -f config install.log install.sum install.txt configure Makefile INSTALL \
-    LICENSE
+  rm -f INSTALL LICENSE Makefile config configure install.log install.sum install.txt
 
   # Package text files
   for i in CHANGES CONTRIBUTING.md CONTRIBUTORS README.md; do
@@ -98,6 +96,6 @@ package() {
   install -Dm755 acme.sh "$pkgdir/usr/bin/acme"
   install -Dm644 acme.png "$pkgdir/usr/share/pixmaps/acme.png"
 
-  # Remove git repository
-  rm -rf "$pkgdir/usr/lib/plan9/.git"
+  # Remove git repository and CI workflow configuration
+  rm -rf "$pkgdir/usr/lib/plan9/.git"{,hub}
 }

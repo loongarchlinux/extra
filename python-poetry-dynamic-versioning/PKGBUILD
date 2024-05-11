@@ -2,7 +2,7 @@
 
 pkgname=python-poetry-dynamic-versioning
 pkgver=1.2.0
-pkgrel=1
+pkgrel=2
 pkgdesc='Plugin for Poetry to enable dynamic versioning based on VCS tags'
 arch=('any')
 url='https://github.com/mtkennerly/poetry-dynamic-versioning'

@@ -2,26 +2,31 @@
 # Contributor: Kevin Sopp
 
 pkgname=zutty
-pkgver=0.14
+pkgver=0.15
 pkgrel=2
 pkgdesc='Terminal emulator'
 arch=(loong64 x86_64)
 url='https://tomscii.sig7.se/zutty'
 license=(GPL3)
 depends=(freetype2 libglvnd libxmu xorg-fonts-misc)
-makedepends=(git python)
-source=('git+https://github.com/tomszilagyi/zutty#commit=bc6e0893e91bc0ffd08cb7d15727973de450c3d6') # tag: 0.14
-b2sums=('SKIP')
+makedepends=(git python waf)
+source=('git+https://git.hq.sig7.se/zutty.git#commit=7e481c04507e9b5cacfe67fe2b96bdb449b08726') # tag: 0.15
+b2sums=('a298699acf09ad599f0a7c921b546f398416698d9d92765667fa3b280c00e3fa745300d45dfaab0bc2aa468837cfc0a22da4c4bdc5188542c2daebdab73de8bb')
+
+prepare() {
+  cd $pkgname
+  rm -rv waf
+}
 
 build() {
   cd $pkgname
-  python waf configure --prefix=/usr
-  python waf -v build
+  waf configure --prefix=/usr
+  waf -v build
 }
 
 package() {
   cd $pkgname
-  python waf --destdir="$pkgdir" install
+  waf --destdir="$pkgdir" install
   install -d "$pkgdir/usr/share/doc/$pkgname"
   cp -v doc/* "$pkgdir/usr/share/doc/$pkgname"
   cd icons

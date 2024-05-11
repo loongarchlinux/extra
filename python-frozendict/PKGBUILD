@@ -3,23 +3,23 @@
 # Contributor: Ivan Shapovalov <intelfx@intelfx.name>
 
 pkgname=python-frozendict
-pkgver=2.3.8
-pkgrel=1
+pkgver=2.4.0
+pkgrel=2
 epoch=1
 pkgdesc='An immutable dictionary'
 url='https://pypi.python.org/pypi/frozendict/'
 arch=('any')
 license=('LGPL3')
 depends=('python')
-makedepends=('python-setuptools')
+makedepends=('python-setuptools' 'python-build' 'python-installer' 'python-wheel')
 checkdepends=('python-pytest')
 source=("https://pypi.org/packages/source/f/frozendict/frozendict-$pkgver.tar.gz")
-sha512sums=('e0607e695bd7b70b32bdd939b394e6efad604948d1c0b14d3d5ae074c3d9e7a602f32c71c2ce66fb27a99bdd7fb3bf14998df9bea8a42ee7c11192cfe81380f3')
-b2sums=('7b23b8663c04a9a5a6ef5586be5930e4daad99fa203805d4a5099c56d5eff3268f03b20113ec7a4585cfa8a5bee618253888d7e2f6e41baa0f3a1063b7ba5c2c')
+sha512sums=('56d190f3ae19e4d89c51c02fdc58bd29b61f73e7ecec97c6018117d966a40b84513a13e7d86c62c8a6c7fe8daed75b287881c315ef23120e17bfda21cfecc1f1')
+b2sums=('595be3e7947d67ccc6952d91aee486849f653e041c41495dcc910f78cd4f043cf310fe2d3cc2e8d3dc0a3c354c9f137da96770ef18b64e65f0f72af2c54cbfcd')
 
 build() {
 	cd frozendict-$pkgver
-	python setup.py py build
+	python -m build --wheel --no-isolation
 }
 
 check(){
@@ -29,7 +29,7 @@ check(){
 
 package() {
 	cd frozendict-$pkgver
-	python setup.py py install --root="$pkgdir" --optimize=1 --skip-build
+	python -m installer --destdir="$pkgdir" dist/*.whl
 }
 
 # vim: set ts=4 sw=4 tw=0 ft=PKGBUILD :

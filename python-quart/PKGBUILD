@@ -1,7 +1,7 @@
 # Maintainer: Maxime Gauduin <alucryd@archlinux.org>
 
 pkgname=python-quart
-pkgver=0.19.4
+pkgver=0.19.5
 pkgrel=1
 pkgdesc='A Python ASGI web microframework with the same API as Flask'
 url=https://github.com/pallets/quart
@@ -9,6 +9,7 @@ arch=(any)
 license=(MIT)
 depends=(
   hypercorn
+  python
   python-aiofiles
   python-blinker
   python-click
@@ -25,7 +26,7 @@ makedepends=(
   python-poetry-core
   python-wheel
 )
-_tag=7ee33a4d10d94a7199a1945f3d71c80a0b23617d
+_tag=d5b5a99d7e1cfb123ae582a3cd8c59f782e08cd4
 source=(git+https://github.com/pallets/quart.git#tag=${_tag})
 sha256sums=(SKIP)
 

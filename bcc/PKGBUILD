@@ -4,36 +4,52 @@
 
 pkgbase=bcc
 pkgname=('bcc' 'bcc-tools' 'python-bcc')
-pkgver=0.28.0
+pkgver=0.30.0
 pkgrel=2
 pkgdesc='BPF Compiler Collection'
 arch=('loong64' 'x86_64')
 url='https://github.com/iovisor/bcc'
-license=('Apache')
-makedepends=('cmake' 'clang' 'llvm' 'flex' 'bison' 'python' 'python-setuptools')
+license=('Apache-2.0')
+makedepends=('cmake' 'clang' 'llvm' 'flex' 'bison' 'libbpf' 'python' 'python-setuptools')
 checkdepends=('netperf' 'iperf')
 source=("bcc-$pkgver.tar.gz"::"https://github.com/iovisor/bcc/releases/download/v$pkgver/bcc-src-with-submodule.tar.gz")
-sha512sums=('581e9b5d9c83efd376d74a311208a57d30f8d927a3f6c0da7f811c5cc8e35b7e5bb43d8aa2c56d392d7162786abf3330f7a5c239fbec0b967b43c7869e96aaa1')
+sha512sums=('6ab30533675b96f21b48d503b6d7a15ccbdf54dfc823ce26b56c2a24dd3e670824542e1bc8766fda4a5bff879146dcdabf87da3511205ee99ef9b5b17f0fab38')
+
+_pick() {
+  local p="$1" f d; shift
+  for f; do
+    d="$srcdir/$p/${f#$pkgdir/}"
+    mkdir -p "$(dirname "$d")"
+    mv "$f" "$d"
+    rmdir -p --ignore-fail-on-non-empty "$(dirname "$f")"
+  done
+}
 
 build() {
-  mkdir -p bcc/build
-  cd bcc/build
+  local cmake_options=(
+    -B build
+    -D CMAKE_BUILD_TYPE=None
+    -D CMAKE_INSTALL_PREFIX=/usr
+    -D CMAKE_INSTALL_LIBDIR=/usr/lib
+    -D CMAKE_USE_LIBBPF_PACKAGE=ON
+    -D ENABLE_LLVM_SHARED=1  # https://bugs.archlinux.org/task/71163
+    -D ENABLE_TESTS=OFF
+    -D REVISION=$pkgver
+    -D RUN_LUA_TESTS=OFF
+    -S $pkgbase
+    -W no-dev
+  )
+
   export CFLAGS+=" -ffat-lto-objects"
   export CXXFLAGS+=" -ffat-lto-objects"
 
-  # The python version is irrelevant at this stage
-  cmake -DREVISION=$pkgver \
-    -DCMAKE_INSTALL_PREFIX=/usr \
-    -DCMAKE_INSTALL_LIBDIR=/usr/lib .. \
-    -DENABLE_TESTS=OFF -DRUN_LUA_TESTS=OFF \
-    -DENABLE_LLVM_SHARED=1   # FS#71163
-
-  make
+  cmake "${cmake_options[@]}"
+  cmake --build build --verbose
 }
 
 package_bcc() {
   pkgdesc='BPF Compiler Collection - C library and examples'
-  depends=('clang' 'libelf')
+  depends=('clang' 'gcc-libs' 'glibc' 'libbpf' 'libbpf.so' 'libelf' 'llvm-libs' 'python' 'xz' 'zlib')
   optdepends=('linux-headers: build modules against the Arch kernel'
     'linux-lts-headers: build modules against the LTS kernel'
     'linux-zen-headers: build modules against the ZEN kernel'
@@ -43,26 +59,18 @@ package_bcc() {
     'luajit: Lua bindings for BCC')
   provides=('bcc' 'libbcc')
 
-  cd bcc/build
+  DESTDIR="$pkgdir" cmake --install build
 
-  # Install the kitchen sink
-  make DESTDIR="$pkgdir" install
-
-  # These go in a split package python*-bcc
-  rm -rf "$pkgdir"/usr/lib/python*
-
-  # These go in a split package bcc-tools
-  rm -rf "$pkgdir"/usr/share/bcc/{tools,man}
+  cd "$pkgdir"
+  _pick bcc-tools usr/share/bcc/{tools,man}
+  _pick python-bcc usr/lib/python*
 }
 
 package_bcc-tools() {
   pkgdesc='BPF Compiler Collection - Tools'
-  depends=('bcc' 'libedit' 'ethtool' 'python-bcc')
+  depends=('bash' 'bcc' 'libedit' 'ethtool' 'python' 'python-bcc' 'python-dnslib')
 
-  cd bcc/build
-
-  make -C tools DESTDIR="$pkgdir" install
-  make -C man DESTDIR="$pkgdir" install
+  mv -v $pkgname/* "$pkgdir/"
 }
 
 package_python-bcc() {
@@ -73,15 +81,9 @@ package_python-bcc() {
     'python-pyroute2: Netlink and Linux network configuration'
   )
 
-  cd bcc/build
+  mv -v $pkgname/* "$pkgdir/"
 
-  # Force a quick python3 binding build (C library is already built)
-  cmake -DREVISION=$pkgver \
-    -DPYTHON_CMD="python" \
-    -DCMAKE_INSTALL_PREFIX=/usr \
-    -DCMAKE_INSTALL_LIBDIR=/usr/lib ..
-  make -C "src/python"
-
-  # Install just those bindings
-  make -C "src/python" DESTDIR="$pkgdir" install
+  # compile Python bytecode as cmake does not do that (properly) for us
+  python -m compileall -d /usr/lib "$pkgdir/usr/lib"
+  python -O -m compileall -d /usr/lib "$pkgdir/usr/lib"
 }

@@ -2,7 +2,7 @@
 # Contributor: Butui Hu <hot123tea123@gmail.com>
 
 pkgname=python-onnx
-pkgver=1.15.0
+pkgver=1.16.0
 pkgrel=3
 epoch=1
 pkgdesc='Open standard for machine learning interoperability'
@@ -25,12 +25,14 @@ makedepends=(
   python-wheel
 )
 source=("${pkgname}::git+https://github.com/onnx/onnx.git#tag=v${pkgver}")
-sha512sums=('SKIP')
+sha512sums=('9d0d6ca4d0808e12ef1c10a38c2232ee6f0f4c996186c66d16819f72c379d0d708a3d29724b6d1c46bb38a9d1eec7ba05022cb85a2dc34f0f40d959fc6b6ea48')
+
 
 prepare() {
   cd "${pkgname}"
-  # bump CMAKE_CXX_STANDARD to 17, see also https://github.com/onnx/onnx/pull/5119
-  sed -i 's#CMAKE_CXX_STANDARD 14#CMAKE_CXX_STANDARD 17#' CMakeLists.txt
+  # Remove cmake and protobuf dependencies since we don't want to pull the
+  # corresponding packages from PyPI
+  sed -i 's/requires = .*/requires = ["setuptools"]/' pyproject.toml
 }
 
 build() {

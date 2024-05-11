@@ -4,7 +4,7 @@
 # Contributor: mezcal
 
 pkgname=rspamd
-pkgver=3.7.5
+pkgver=3.8.4
 pkgrel=3
 epoch=
 pkgdesc='Fast, free and open-source spam filtering system'
@@ -123,7 +123,8 @@ backup=(
   etc/rspamd/worker-proxy.inc
 )
 install=rspamd.install
-_tag=8c86c16763af854f19f2fb6eae289814feab8f28
+options=(!lto)
+_tag=93fa4f6dc67f67fa1b7ce14aeb8f0841b4b0369e
 source=(
   git+https://github.com/rspamd/rspamd.git#tag=${_tag}
   rspamd.tmpfiles
@@ -152,6 +153,7 @@ prepare() {
 }
 
 build() {
+  export LDFLAGS=${LDFLAGS/-Wl,-z,pack-relative-relocs/}
   cmake -S rspamd -B build -G Ninja \
     -DCMAKE_INSTALL_PREFIX=/usr \
     -DCONFDIR=/etc/rspamd \

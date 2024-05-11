@@ -3,25 +3,29 @@
 # Contributor: Stefano Facchini <stefano.facchini@gmail.com>
 
 pkgname=gnome-boxes
-pkgver=45.0
+pkgver=46.1
 pkgrel=1
 pkgdesc='Simple GNOME application to access virtual systems'
 arch=('loong64' 'x86_64')
-url='https://wiki.gnome.org/Apps/Boxes'
-license=('LGPL')
+url='https://apps.gnome.org/Boxes/'
+license=('LGPL-2.0-or-later')
 depends=(
   'cairo'
   'cdrtools'
   'dconf'
   'edk2-ovmf'
+  'gcc-libs'
   'gdk-pixbuf2'
   'glib2'
+  'glibc'
   'gtk3'
   'hicolor-icon-theme'
   'libarchive'
   'libgudev'
   'libhandy'
   'libosinfo'
+  'libportal'
+  'libportal-gtk3'
   'libsecret'
   'libsoup3'
   'libusb'
@@ -36,6 +40,7 @@ depends=(
 )
 makedepends=(
   'appstream-glib'
+  'git'
   'gobject-introspection'
   'meson'
   'spice-protocol'
@@ -43,11 +48,26 @@ makedepends=(
   'yelp-tools'
 )
 groups=('gnome-extra')
-source=("https://download.gnome.org/sources/$pkgname/${pkgver%%.*}/$pkgname-$pkgver.tar.xz")
-sha256sums=('cc63080eefa147a8472ab1a5ff087b97a27ab723a4ee005ed41e8c9dd7798e41')
+source=(
+  "git+https://gitlab.gnome.org/GNOME/gnome-boxes.git?signed#tag=${pkgver/[a-z]/.&}"
+  "git+https://gitlab.gnome.org/felipeborges/libovf-glib.git"
+)
+b2sums=('58cf53e4c297a5e3cf22a7428b78128973453c93c596819f969a2d0d4ee8eb3d396820c4c01c53b76e6ac23222632d545a332d241d3cb10e8ea3d426f387c9a2'
+        'SKIP')
+validpgpkeys=(
+  9B60FE7947F0A3C58136817F2C2A218742E016BE # Felipe Borges <felipeborges@gnome.org>
+)
+
+prepare() {
+  cd $pkgname
+
+  git submodule init
+  git submodule set-url subprojects/libovf-glib "$srcdir/libovf-glib"
+  git -c protocol.file.allow=always -c protocol.allow=never submodule update
+}
 
 build() {
-  arch-meson $pkgname-$pkgver build
+  arch-meson $pkgname build
   meson compile -C build
 }
 

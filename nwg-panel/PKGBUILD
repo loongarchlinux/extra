@@ -1,0 +1,36 @@
+# Maintainer: Robin Candau <antiz@archlinux.org>
+# Contributor: Piotr Miller <nwg.piotr@gmail.com>
+
+pkgname=nwg-panel
+pkgver=0.9.31
+pkgrel=1
+pkgdesc="GTK3-based panel for sway and Hyprland Wayland compositors"
+url="https://github.com/nwg-piotr/nwg-panel"
+arch=('any')
+license=('MIT')
+depends=('python' 'python-gobject' 'python-i3ipc' 'python-cairo' 'python-dasbus' 'python-netifaces' 'python-psutil' 'python-requests' 'bluez-utils' 'gtk3' 'libappindicator-gtk3' 'gtk-layer-shell' 'brightnessctl' 'playerctl' 'glib2')
+makedepends=('python-build' 'python-installer' 'python-wheel' 'python-setuptools')
+optdepends=('wlr-randr: for non-sway Wayland WMs support'
+            'swaync: for Sway Notification Center support'
+            'ddcutil: for external displays brightness control'
+            'upower: for multiple batteries support'
+	    'nwg-icon-picker: for a graphical icon chooser')
+source=("${pkgname}-${pkgver}.tar.gz::${url}/archive/v"$pkgver".tar.gz")
+sha256sums=('709a301cd38339ab453a157fc3a3b63132bb988f90670a59a30841da0c2aa69a')
+
+build() {
+        cd "${pkgname}-${pkgver}"
+        python -m build --wheel --no-isolation
+}
+
+package() {
+        cd "${pkgname}-${pkgver}"
+        python -m installer --destdir="${pkgdir}" dist/*.whl
+
+	install -Dm 644 "${pkgname}.svg" "${pkgdir}/usr/share/pixmaps/${pkgname}.svg"
+	install -Dm 644 nwg-shell.svg "${pkgdir}/usr/share/pixmaps/nwg-shell.svg"
+	install -Dm 644 nwg-processes.svg "${pkgdir}/usr/share/pixmaps/nwg-processes.svg"
+	install -Dm 644 "${pkgname}-config.desktop" "${pkgdir}/usr/share/applications/${pkgname}-config.desktop"
+	install -Dm 644 LICENSE "${pkgdir}/usr/share/licenses/${pkgname}/LICENSE"
+	install -Dm 644 README.md "${pkgdir}/usr/share/doc/${pkgname}/README.md"
+}

@@ -2,12 +2,12 @@
 # Contributor: Baptiste Jonglez <baptiste--aur at jonglez dot org>
 
 pkgname=jami-daemon
-pkgver=20231123
-pkgrel=1
+pkgver=20240322
+pkgrel=2
 pkgdesc="Free and universal communication platform which preserves the users’ privacy and freedoms (daemon component)"
 arch=(loong64 x86_64)
 url="https://jami.net"
-license=(GPL3)
+license=(GPL-3.0-or-later)
 groups=(jami)
 depends=(glibc opendht gnutls nettle libgit2 libsecp256k1 libsecp256k1.so ffmpeg speexdsp
          fmt yaml-cpp jsoncpp zlib alsa-lib libpulse jack libupnp libnatpmp
@@ -15,17 +15,19 @@ depends=(glibc opendht gnutls nettle libgit2 libsecp256k1 libsecp256k1.so ffmpeg
 # portaudio needs a not-yet-upstream patch https://git.jami.net/savoirfairelinux/jami-daemon/-/issues/650
 makedepends=(git cmake perl asio msgpack-c msgpack-cxx restinio systemd meson)
 checkdepends=(cppunit)
-_commit=8c1c74f0f3dff84361302d65e724c899eb708f91
-_pjprojectver=311bd018fc07aaf62d4c2d2494e08b5ee97e6846
-_dhtnetver=fe79669b400d5e6a521fd1408dae02e0d4e50a5b
+_commit=32f39e65483cb22729eb922d72434013b337f2c9
+_pjprojectver=e12ea3bfa81cc4f46031599f80707e81133f1353
+_dhtnetver=024c46fb1f14276d4adf15764ed97b733890826e
 source=(git+https://git.jami.net/savoirfairelinux/${pkgname}.git#commit=${_commit}
         https://github.com/savoirfairelinux/pjproject/archive/${_pjprojectver}/pjproject-${_pjprojectver}.tar.gz
-        dhtnet-$_dhtnetver.tar.gz::https://review.jami.net/plugins/gitiles/dhtnet/+archive/$_dhtnetver.tar.gz)
+        dhtnet-$_dhtnetver.tar.gz::https://review.jami.net/plugins/gitiles/dhtnet/+archive/$_dhtnetver.tar.gz
+        libgit2-1.8.patch)
 noextract=(pjproject-${_pjprojectver}.tar.gz
            dhtnet-${_dhtnetver}.tar.gz)
-sha512sums=('SKIP'
-            '272598c9a8fa1f1b7c7d68b5554759dcc2b7b6f578dba2348b836561d18da0bb3bd466e59f3911ae51e2b68423f3da6e43ab4bf35f836135188e67457d156fc1'
-            'SKIP')
+sha512sums=('fe6bb7d9b78d2da6ec5be971a5e0e663379f541adba5a9103bba2c7252b6f0b347983f3a0c29300acc9bf0758779a7c7f55ab6b67eb0b1620c46600bf0535068'
+            '7d481f4dcbe7232ff5a63cae46206943b64ac2d30f3b4598a9caf863322c1cfcd93c6c1232e2fa8f4e747f54f70b71a9b8f42f7e90d98fdd02124088afbdd37d'
+            'SKIP'
+            'eef5c72149baaf9765917046a6e0dd8daffa422b69d1df15037cb0a0a756f632ddfb5f0b2299116554615972787cee2b9e2cd171063324d5d9a60c2e54038006')
 
 pkgver() {
   cd ${pkgname}
@@ -37,6 +39,8 @@ prepare() {
   cp ../pjproject-${_pjprojectver}.tar.gz contrib/tarballs
   cp ../dhtnet-$_dhtnetver.tar.gz contrib/tarballs/
   mkdir contrib/native
+
+  patch -p1 -i ../libgit2-1.8.patch # Fix build with libgit2 1.8
 }
 
 build() {

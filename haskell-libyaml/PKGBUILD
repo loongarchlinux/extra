@@ -2,23 +2,22 @@
 
 _hkgname=libyaml
 pkgname=haskell-libyaml
-pkgver=0.1.2
-pkgrel=334
+pkgver=0.1.4
+pkgrel=1
 pkgdesc="Low-level, streaming YAML interface."
-url="https://github.com/snoyberg/libyaml"
+url="https://github.com/snoyberg/yaml"
 license=('BSD')
 arch=('loong64' 'x86_64')
 depends=('ghc-libs' 'libyaml' 'haskell-conduit' 'haskell-resourcet')
 makedepends=('ghc')
 source=(https://hackage.haskell.org/packages/archive/${_hkgname}/${pkgver}/${_hkgname}-${pkgver}.tar.gz)
-sha512sums=('0423fb36f1fdeeb89244a81930558ad272f8ffe8161ced3cc542e180937a1e5f264f188972786830b0bace6851adca796756abe100dffa8cb969eff4cb0e3121')
+sha512sums=('b62d7ac0c4d5cbbbd86f640866d55a68ccfdd347063706de14dac715a4de87faaf6a9617457380592e889a4fbff4429cf067948fe8b539ca73ee438cf064bd78')
 
 build() {
     cd $_hkgname-$pkgver
-    
     runhaskell Setup configure -O --enable-shared --enable-executable-dynamic --disable-library-vanilla \
-        --prefix=/usr --docdir=/usr/share/doc/$pkgname --datasubdir=$pkgname \
-        --dynlibdir=/usr/lib --libsubdir=\$compiler/site-local/\$pkgid --ghc-option=-fllvm \
+        --prefix=/usr --docdir=/usr/share/doc/$pkgname --datasubdir=$pkgname --enable-tests \
+        --dynlibdir=/usr/lib --libsubdir=\$compiler/site-local/\$pkgid \
             -fsystem-libyaml
     runhaskell Setup build $MAKEFLAGS
     runhaskell Setup register --gen-script
@@ -27,9 +26,13 @@ build() {
     sed -i -r -e "s|ghc-pkg.*unregister[^ ]* |&'--force' |" unregister.sh
 }
 
+check() {
+    cd $_hkgname-$pkgver
+    runhaskell Setup test --show-details=direct
+}
+
 package() {
     cd $_hkgname-$pkgver
-    
     install -D -m744 register.sh "$pkgdir"/usr/share/haskell/register/$pkgname.sh
     install -D -m744 unregister.sh "$pkgdir"/usr/share/haskell/unregister/$pkgname.sh
     runhaskell Setup copy --destdir="$pkgdir"

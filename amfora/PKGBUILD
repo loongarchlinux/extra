@@ -2,31 +2,32 @@
 # Contributor: Paul Boyd <boyd.paul2@gmail.com>
 
 pkgname=amfora
-pkgver=1.9.2
-pkgrel=4
+pkgver=1.10.0
+pkgrel=2
 pkgdesc='Terminal browser for the Gemini protocol'
 arch=(loong64 x86_64)
 url='https://github.com/makeworld-the-better-one/amfora'
 license=(GPL3)
-makedepends=(git go)
-source=('https://roboticoverlords.org/amfora.png'
-        "git+$url#commit=61d864540140f463a183e187e4211c258bd518bf") # tag: v1.9.2
-b2sums=('1f93ca564c2ef8ef9a94102ac50781b740266a2413cb92ac900240c9324d2dee27a19e4b0a95f45edf933e07ed133f696b4f969e3cfa7cb26a57bfdc63a287cb'
-        'SKIP')
-options=('!lto')
+makedepends=(git go imagemagick)
+source=("git+$url#commit=2534983d96c431430e9263c27ce5bfa36b66c3d5") # tag: v1.10.0
+b2sums=('7fc7424d5d436e7415dfa4825ff883dcbd0e6d695c822cd11e503dd0b39413ee70035cb300f0c180a8d5dfd5b8aca0bd05c57e743ecccddad7fcbb5e892bfa7b')
 
 prepare() {
-  echo Icon=amfora >> amfora/amfora.desktop
+  cd $pkgname
+  convert logo.png -colorspace sRGB \( +clone -crop 50%x100%+0+0 \) -delete 0 -fuzz 10% -transparent white \
+    -background none -resize 48x48 -gravity center -extent 48x48 -strip amfora.png
+  echo Icon=amfora >> amfora.desktop
 }
 
 build() {
-  cd amfora
+  cd $pkgname
   go build -buildmode=pie -mod=readonly -modcacherw -trimpath -ldflags \
-    "-s -w -linkmode=external -extldflags $LDFLAGS -X main.version=$pkgver -X main.builtBy=Arch_Linux -X main.commit=${source#*=}"
+    "-s -w -linkmode=external -extldflags \"$LDFLAGS\" -X main.version=$pkgver -X main.builtBy=Arch_Linux -X main.commit=${source#*=}"
 }
 
 package() {
+  cd $pkgname
+  install -Dm755 amfora "$pkgdir/usr/bin/amfora"
   install -Dm644 amfora.png "$pkgdir/usr/share/pixmaps/amfora.png"
-  install -Dm755 amfora/amfora "$pkgdir/usr/bin/amfora"
-  install -Dm644 amfora/amfora.desktop "$pkgdir/usr/share/applications/amfora.desktop"
+  install -Dm644 amfora.desktop "$pkgdir/usr/share/applications/amfora.desktop"
 }

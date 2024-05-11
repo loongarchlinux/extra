@@ -1,24 +1,18 @@
 # Maintainer: George Rawlinson <grawlinson@archlinux.org>
 
 pkgname=dagger
-pkgver=0.9.7
+pkgver=0.11.1
 pkgrel=1
 pkgdesc='A portable devkit for CI/CD pipelines'
 arch=('loong64' 'x86_64')
 url='https://dagger.io'
-license=('Apache')
+license=('Apache-2.0')
 depends=('glibc')
 makedepends=('git' 'go')
 options=('!lto')
-_commit='f838acf038b5ecbaf7f64c988ee3276c18dc7811'
-source=("$pkgname::git+https://github.com/dagger/dagger.git#commit=$_commit")
-b2sums=('SKIP')
-
-pkgver() {
-  cd "$pkgname"
-
-  git describe --tags | sed 's/^v//'
-}
+source=("$pkgname::git+https://github.com/dagger/dagger.git#tag=v$pkgver")
+sha512sums=('70c38e998612bffdf23e4772264da87f818ada9a930a8131ced56e5684c5de99462688aca3ba282287cf645fa00bb4398f0118dca69978b69664e9b975e31987')
+b2sums=('6feaf7e41746165cde1fd46ec5b5b266290421a55b1200e7d3a07180c6736df2ebb22bf816d06d743b57a47eb297e4b89bb976dc7d38b3933f99a25ea8bed2a7')
 
 prepare() {
   cd "$pkgname"
@@ -46,7 +40,7 @@ build() {
     -modcacherw \
     -ldflags "-compressdwarf=false \
     -linkmode external \
-    -extldflags ${LDFLAGS} \
+    -extldflags '${LDFLAGS}' \
     -X github.com/dagger/dagger/engine.Version=$pkgver" \
     -o build \
     ./cmd/...

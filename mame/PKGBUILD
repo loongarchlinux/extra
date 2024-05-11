@@ -6,7 +6,7 @@
 pkgbase=mame
 pkgname=(mame
          mame-tools)
-pkgver=0.262
+pkgver=0.265
 pkgrel=1
 pkgdesc='Port of the popular Multiple Arcade Machine Emulator using SDL with OpenGL support'
 url='https://mamedev.org/'
@@ -21,6 +21,7 @@ license=(BSD-2-Clause
 arch=(loong64 x86_64)
 makedepends=(asio
              flac
+             git
              glm
              libpulse
              libutf8proc
@@ -35,19 +36,20 @@ makedepends=(asio
              qt6-base
              rapidjson
              sdl2_ttf)
-source=(https://github.com/mamedev/mame/archive/mame${pkgver/./}.tar.gz
+source=(git+https://github.com/mamedev/mame#tag=mame${pkgver/./}?signed
         mame.desktop
         mame.sh
         mame.svg)
-sha256sums=('64e482f3dd13be4e91c5dfa076fb7a71f450f2879118c6ae452b0037b661aaae'
+sha256sums=('01044dbcb98eb734fec5cbaa4753797e61f374d78f1435405bae2c65ce1cfcc2'
             '0e5e93f84673c2d17a1bf7a6b256cfa54ef89a086a828df19bc054c12776d821'
             'ee1c59bafc5e5441e99fa4c58108a3e18048e60672f34de865c8a5a976094dba'
             '17c442c933d764175e4ce1de50a80c0c2ddd5d733caf09c3cd5e6ba697ac43f4')
 options=(!debug
          !lto) # debug build fails
+validpgpkeys=(D0362DB01844E0433ADBBFBAC174B1018C40710E) # Vas Crabb <vas@vastheman.com>
 
 prepare() {
-  cd mame-mame${pkgver/./}
+  cd mame
 
 # Use system libraries
   sed -e 's|\# USE_SYSTEM_LIB|USE_SYSTEM_LIB|g' -i makefile
@@ -58,7 +60,7 @@ prepare() {
 }
 
 build() {
-  cd mame-mame${pkgver/./}
+  cd mame
   export CXXFLAGS+="  -Wp,-U_GLIBCXX_ASSERTIONS" # FS#73202
   make \
     -j10 \
@@ -67,7 +69,8 @@ build() {
     OPTIMIZE=2 \
     TOOLS=1 \
     QT_HOME=/usr/lib/qt6 \
-    ARCHOPTS=-flifetime-dse=1
+    ARCHOPTS=-flifetime-dse=1 \
+    USE_WAYLAND=1
 }
 
 package_mame() {
@@ -86,15 +89,18 @@ package_mame() {
            portaudio
            portmidi
            pugixml
-           qt5-base
+           qt6-base
            sdl2
            sdl2_ttf
+           sh
            sqlite
-           zlib)
+           wayland
+           zlib
+           zstd)
   conflicts=(sdlmame)
   replaces=(sdlmame) 
 
-  cd mame-mame${pkgver/./}
+  cd mame
 
   # Install the mame script
   install -Dm755 "$srcdir"/$pkgname.sh "$pkgdir"/usr/bin/$pkgname
@@ -135,7 +141,7 @@ package_mame-tools() {
            sdl2
            zlib)
 
-  cd mame-mame${pkgver/./}
+  cd mame
   for _i in castool \
             chdman \
             floptool \

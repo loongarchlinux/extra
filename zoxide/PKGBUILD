@@ -1,33 +1,27 @@
 # Maintainer: George Rawlinson <grawlinson@archlinux.org>
+# Maintainer: Caleb Maclennan <caleb@alerque.com>
 # Contributor: desbma
 
 pkgname=zoxide
-pkgver=0.9.2
-pkgrel=1
+pkgver=0.9.4
+pkgrel=2
 pkgdesc='A smarter cd command for your terminal'
 arch=('loong64' 'x86_64')
 url='https://github.com/ajeetdsouza/zoxide'
 license=('MIT')
-depends=('gcc-libs')
-makedepends=('git' 'rust')
+depends=('gcc-libs' 'glibc')
+makedepends=('cargo' 'git')
 optdepends=(
   'fzf: for interactive selection'
 )
 options=('!lto')
-_commit='1bfcdfacf22fe22ff05ad2813aac7c0d14dfba36'
-source=("$pkgname::git+$url.git#commit=$_commit")
-b2sums=('SKIP')
-
-pkgver() {
-  cd "$pkgname"
-
-  git describe --tags | sed 's/^v//'
-}
+source=("$pkgname::git+$url.git#tag=v$pkgver")
+sha256sums=('56f1111d7b0a8e2b5b93da4fac530cf63b935882122fa64762cdf879eed568e2')
 
 prepare() {
   cd "$pkgname"
 
-  cargo fetch --locked --target "$CARCH-unknown-linux-gnu"
+  cargo fetch --locked --target "$(rustc -vV | sed -n 's/host: //p')"
 }
 
 build() {

@@ -3,25 +3,29 @@
 
 pkgname=python-keyutils
 pkgver=0.6
-pkgrel=9
+pkgrel=10
 pkgdesc="A set of python bindings for keyutils"
 arch=("loong64" "x86_64")
 url="https://github.com/sassoftware/python-keyutils"
-license=("Apache")
-# python-pytest-runner in makedepends due to be set in setup_requires (which is wrong upstream)
+license=("Apache-2.0")
 depends=("python" "keyutils")
-makedepends=("python" "python-setuptools" "python-pytest-runner" "cython")
+makedepends=("python" "python-setuptools" "python-build" "python-installer" "python-wheel" "cython")
 checkdepends=("python-pytest")
 source=("$pkgname-$pkgver.tar.gz::https://github.com/sassoftware/python-keyutils/archive/$pkgver.tar.gz")
 sha256sums=('f69e6cadc50525dcb117714e440ee6579b0e5b7f12910b2bb2e910b236a2b18b')
 
+prepare() {
+  # Remove dependency on pytest-runner
+  sed -i '/pytest-runner/d' "$pkgname-$pkgver"/setup.py
+}
+
 build(){
 	cd "$pkgname-$pkgver"
 	cython keyutils/_keyutils.pyx
-	python setup.py build
+	python -m build --wheel --no-isolation
 }
 
 package(){
 	cd "$pkgname-$pkgver"
-	python setup.py install --root="$pkgdir" --prefix=/usr --optimize=1 --skip-build
+	python -m installer --destdir="$pkgdir" dist/*.whl
 }

@@ -1,0 +1,43 @@
+# Maintainer: Antonio Rojas <arojas@archlinux.org>
+# Contributor: Sergey Khorev <sergey.khorev@gmail.com>
+
+pkgname=fricas
+pkgver=1.3.10
+pkgrel=2
+pkgdesc='An advanced computer algebra system'
+arch=(loong64 x86_64)
+url='https://fricas.github.io'
+license=(BSD-3-Clause)
+depends=(gawk
+         glibc
+         libx11
+         libxpm
+         sh
+         zstd)
+makedepends=(sbcl
+             texlive-basic)
+options=(!strip)
+source=(https://github.com/fricas/fricas/releases/download/$pkgver/fricas-$pkgver-full.tar.bz2)
+sha256sums=('fc2112ad45ba7b45ac423165f32bd5b244622107a1e4e1d56b9136f96746f2a0')
+
+prepare() {
+# Honor system build flags
+  sed -e "s|^CCF=.*|CCF=$CFLAGS|" -i $pkgname-$pkgver/configure -i $pkgname-$pkgver/config/var-def.mk
+  sed -e "s|^LDF=.*|LDF=$LDFLAGS|" -i $pkgname-$pkgver/configure -i $pkgname-$pkgver/config/var-def.mk
+  sed -e "s|^FRICAS_X11_LDFLAGS = |FRICAS_X11_LDFLAGS = $LDFLAGS |" -i $pkgname-$pkgver/config/var-def.mk
+  sed -e "s|\$(fricas_c_runtime_extra)| \$(fricas_c_runtime_extra) \$(LDF)|g" -i $pkgname-$pkgver/src/lib/Makefile.in
+}
+
+build() {
+  cd $pkgname-$pkgver
+  ./configure \
+    --prefix=/usr \
+    --with-lisp='sbcl --control-stack-size 512 --dynamic-space-size 6000'
+  make
+}
+
+package() {
+  cd $pkgname-$pkgver
+  make DESTDIR="$pkgdir" install
+  install -Dm644 LICENSE.txt -t "$pkgdir"/usr/share/licenses/$pkgname
+}

@@ -3,31 +3,25 @@
 
 pkgbase=kid3
 pkgname=('kid3-common' 'kid3-qt' 'kid3')
-pkgver=3.9.4
+pkgver=3.9.5
 pkgrel=3
 pkgdesc="An MP3, Ogg/Vorbis and FLAC tag editor"
 arch=('loong64' 'x86_64')
 url="https://kid3.kde.org/"
 license=('GPL')
-depends=('chromaprint' 'flac' 'id3lib' 'kxmlgui5' 'libmp4v2'
-         'qt5-declarative' 'qt5-multimedia' 'taglib' 'kio5')
-makedepends=('cmake' 'docbook-xsl' 'extra-cmake-modules' 'kdoctools5' 'python' 'qt5-tools')
+depends=('chromaprint' 'flac' 'id3lib' 'kxmlgui' 'libmp4v2'
+         'qt6-declarative' 'qt6-multimedia' 'taglib' 'kio')
+makedepends=('cmake' 'docbook-xsl' 'extra-cmake-modules' 'kdoctools' 'python' 'qt6-tools' 'clang')
 changelog=$pkgbase.changelog
 source=(https://prdownloads.sourceforge.net/$pkgbase/$pkgbase-$pkgver.tar.gz{,.sig}
-        https://invent.kde.org/multimedia/kid3/-/commit/3ed2e5f7.patch
-        https://invent.kde.org/multimedia/kid3/-/commit/98524900.patch
-        taglib-2.patch)
+        https://invent.kde.org/multimedia/kid3/-/commit/b3c65a8c.patch)
 validpgpkeys=('7D09794C2812F62194B081C14CAD34426E354DD2') # Urs Fleisch
-sha256sums=('6d67d941604c3d96e42b2bafbe7ec4a60004620b729ccbe2550af211eb59dd7b'
+sha256sums=('d68f6e1d7b794b991b57bf976edb8e22d3457911db654ad1fb9b124cc62057f9'
             'SKIP'
-            '7f59595a638056a780db5ce3b4266760e7f478e7b11c4c5b703772fddc8bdb5c'
-            '6edd2ab211d92c2e4ab6c5c757686bd730f2f54cb26b23e4c513d18cbc341900'
-            '11bd60246fe7c8066c5b33b3884b2008f19afbc8b7c0df3a5631e39258642e0c')
+            'd5502567094c6331b5192775e58920ce0d92235f9de3c72d3736af7abd082523')
 
 prepare() {
-  patch -d $pkgbase-$pkgver -p1 < 3ed2e5f7.patch
-  patch -d $pkgbase-$pkgver -p1 < 98524900.patch # Fix build with taglib 2
-  patch -d $pkgbase-$pkgver -p1 < taglib-2.patch
+  patch -d $pkgbase-$pkgver -p1 < b3c65a8c.patch # Fix rc install dir
 }
 
 build() {
@@ -44,9 +38,9 @@ build() {
 
 package_kid3-common() {
   pkgdesc="An MP3, Ogg/Vorbis and FLAC tag editor, CLI version and common files"
-  depends=('chromaprint' 'flac' 'id3lib' 'libmp4v2' 'libvorbis' 'qt5-base' 'taglib')
-  optdepends=('qt5-declarative: GUI support library'
-              'qt5-multimedia: GUI support library')
+  depends=('chromaprint' 'flac' 'id3lib' 'libmp4v2' 'libvorbis' 'qt6-base' 'taglib')
+  optdepends=('qt6-declarative: GUI support library'
+              'qt6-multimedia: GUI support library')
 
   make -C build DESTDIR="${pkgdir}" install
 
@@ -56,14 +50,14 @@ package_kid3-common() {
 
 package_kid3-qt() {
   pkgdesc="An MP3, Ogg/Vorbis and FLAC tag editor, Qt version"
-  depends=("kid3-common=$pkgver" 'qt5-declarative' 'qt5-multimedia')
+  depends=("kid3-common=$pkgver" 'qt6-declarative' 'qt6-multimedia')
 
   make -C build/src/app/qt DESTDIR="${pkgdir}" install
 }
 
 package_kid3() {
   pkgdesc="An MP3, Ogg/Vorbis and FLAC tag editor, KDE version"
-  depends=("kid3-common=$pkgver" 'kxmlgui5' 'qt5-declarative' 'qt5-multimedia' 'kio5')
+  depends=("kid3-common=$pkgver" 'kxmlgui' 'qt6-declarative' 'qt6-multimedia' 'kio')
 
   make -C build/src/app DESTDIR="${pkgdir}" install
 

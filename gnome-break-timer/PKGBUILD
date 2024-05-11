@@ -1,22 +1,16 @@
 # Maintainer: Balló György <ballogyor+arch at gmail dot com>
 
 pkgname=gnome-break-timer
-pkgver=2.1.0
+pkgver=3.1.0
 pkgrel=1
 pkgdesc="Keeps track of how much you are using the computer, and it reminds you to take regular breaks"
 arch=('loong64' 'x86_64')
 url="https://wiki.gnome.org/Apps/BreakTimer"
 license=('GPL3')
-depends=('gsound' 'gtk3' 'libnotify')
-makedepends=('meson' 'git' 'vala')
-_commit=8f938244d5f444bde2c47c510d9245f0e6d768cf
-source=("git+https://gitlab.gnome.org/GNOME/gnome-break-timer.git#commit=$_commit")
-sha256sums=('SKIP')
-
-pkgver() {
-  cd $pkgname
-  git describe --tags | sed 's/-/+/g'
-}
+depends=('gsound' 'gtk4' 'libnotify' 'libadwaita')
+makedepends=('meson' 'git' 'vala' 'blueprint-compiler')
+source=("git+https://gitlab.gnome.org/GNOME/gnome-break-timer.git#tag=$pkgver")
+sha256sums=('5a2e42d98407db3c8c4e2a6a1182cfb4e95a29e2d0af73b08af328d95e1456a0')
 
 build() {
   arch-meson $pkgname build
@@ -24,5 +18,5 @@ build() {
 }
 
 package() {
-  DESTDIR="$pkgdir" meson install -C build
+  meson install -C build --destdir "$pkgdir"
 }

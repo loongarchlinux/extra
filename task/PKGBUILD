@@ -7,27 +7,40 @@
 # Contributor: coolkehon <coolkehon@gmail.com>
 
 pkgname=task
-pkgver=2.6.2
-pkgrel=2
+pkgver=3.0.2
+pkgrel=1
 pkgdesc="Taskwarrior, a command-line todo list manager"
 arch=('loong64' 'x86_64')
 url="https://taskwarrior.org/"
 license=('MIT')
 depends=('util-linux' 'gnutls')
-makedepends=('cmake')
+makedepends=('cmake' 'git' 'cargo')
 optdepends=('bash-completion: for bash completion' 'python: for python export addon' 'ruby: for ruby export addon' 'perl: for perl export addon' 'perl-json: for perl export addon')
-source=("https://taskwarrior.org/download/$pkgname-$pkgver.tar.gz")
-sha256sums=('b1d3a7f000cd0fd60640670064e0e001613c9e1cb2242b9b3a9066c78862cfec')
+_commit=bc86a1e53f641e38d66df40c1a085830ea876d47
+source=(
+  "$pkgname::git+https://github.com/GothenburgBitFactory/taskwarrior.git#commit=$_commit"
+  "$pkgname-libshared::git+https://github.com/GothenburgBitFactory/libshared.git"
+)
+sha256sums=('da205e9ea68a198e78985b904cf26dc0140aa593fbed2b4fecf3dac1c2955e0f'
+            'SKIP')
+options=('!lto')
+
+prepare() {
+  cd "$srcdir/$pkgname"
+  git submodule init
+  git config submodule."src/libshared".url "${srcdir}/${pkgname}"-libshared
+  git -c protocol.file.allow=always submodule update --init --recursive
+}
 
 build() {
-  cd "$srcdir/$pkgname-$pkgver"
+  cd "$srcdir/$pkgname"
 
   cmake -DCMAKE_INSTALL_PREFIX=/usr .
   make
 }
 
 package() {
-  cd "$srcdir/$pkgname-$pkgver"
+  cd "$srcdir/$pkgname"
   make DESTDIR="$pkgdir" install
 
   # Note that we rename the bash completion script for bash-completion > 1.99, until upstream does so.
@@ -39,5 +52,5 @@ package() {
   install -Dm644 "$pkgdir/usr/share/doc/task/scripts/vim/syntax/taskedit.vim" "$pkgdir/usr/share/vim/vimfiles/syntax/taskedit.vim"
   install -Dm644 "$pkgdir/usr/share/doc/task/scripts/vim/syntax/taskrc.vim" "$pkgdir/usr/share/vim/vimfiles/syntax/taskrc.vim"
 
-  install -Dm644 "$srcdir/$pkgname-$pkgver/LICENSE" "$pkgdir/usr/share/licenses/task/LICENSE"
+  install -Dm644 "$srcdir/$pkgname/LICENSE" "$pkgdir/usr/share/licenses/task/LICENSE"
 }

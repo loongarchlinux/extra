@@ -1,0 +1,29 @@
+diff --git a/common/cuda_hip/base/device_matrix_data_kernels.hpp.inc b/common/cuda_hip/base/device_matrix_data_kernels.hpp.inc
+index faf0ad151..1a6057272 100644
+--- a/common/cuda_hip/base/device_matrix_data_kernels.hpp.inc
++++ b/common/cuda_hip/base/device_matrix_data_kernels.hpp.inc
+@@ -76,8 +76,9 @@ void sum_duplicates(std::shared_ptr<const DefaultExecutor> exec, size_type,
+                     array<IndexType>& col_idxs)
+ {
+     const auto size = values.get_num_elems();
+-    const auto rows = row_idxs.get_const_data();
+-    const auto cols = col_idxs.get_const_data();
++    // CUDA 12.4 has a bug that requires these pointers to be non-const
++    const auto rows = row_idxs.get_data();
++    const auto cols = col_idxs.get_data();
+     auto iota = thrust::make_counting_iterator(size_type{});
+     const auto new_size = static_cast<size_type>(thrust::count_if(
+         thrust_policy(exec), iota, iota + size,
+diff --git a/common/cuda_hip/multigrid/pgm_kernels.hpp.inc b/common/cuda_hip/multigrid/pgm_kernels.hpp.inc
+index b08e86efa..1144e587d 100644
+--- a/common/cuda_hip/multigrid/pgm_kernels.hpp.inc
++++ b/common/cuda_hip/multigrid/pgm_kernels.hpp.inc
+@@ -65,7 +65,7 @@ void compute_coarse_coo(std::shared_ptr<const DefaultExecutor> exec,
+ {
+     auto vals_it = as_device_type(vals);
+     auto key_it =
+-        thrust::make_zip_iterator(thrust::make_tuple(row_idxs, col_idxs));
++        thrust::make_zip_iterator(thrust::make_tuple(const_cast<IndexType*>(row_idxs), const_cast<IndexType*>(col_idxs)));
+
+     auto coarse_vals_it = as_device_type(coarse_coo->get_values());
+     auto coarse_key_it = thrust::make_zip_iterator(thrust::make_tuple(

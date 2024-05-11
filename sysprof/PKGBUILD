@@ -1,4 +1,4 @@
-# Maintainer: Fabian Bornschein <fabiscafe-at-mailbox-dot-org>
+# Maintainer: Fabian Bornschein <fabiscafe@archlinux.org>
 # Maintainer: Jan Alexander Steffens (heftig) <heftig@archlinux.org>
 # Contributor: Sergej Pupykin <pupykin.s+arch@gmail.com>
 # Contributor: Geoffroy Carrier <geoffroy.carrier@aur.archlinux.org>
@@ -11,15 +11,17 @@ pkgname=(
   sysprof
   libsysprof-capture
 )
-pkgver=45.1
-pkgrel=1
+pkgver=46.0
+pkgrel=3
 pkgdesc="Kernel based performance profiler"
 url="https://wiki.gnome.org/Apps/Sysprof"
-license=(GPL)
+license=(GPL-3.0-or-later)
 arch=(loong64 x86_64)
 depends=(
   cairo
+  gcc-libs
   glib2
+  glibc
   graphene
   gtk4
   hicolor-icon-theme
@@ -30,22 +32,18 @@ depends=(
   libunwind
   pango
   polkit
+  systemd-libs
 )
 makedepends=(
   git
   meson
+  python-packaging
   yelp-tools
 )
-_commit=d62c94d62a29be82c187e45e2e17181a4e0c4211  # tags/45.1^0
 source=(
-  "git+https://gitlab.gnome.org/GNOME/sysprof.git#commit=$_commit"
+  "git+https://gitlab.gnome.org/GNOME/sysprof.git#tag=${pkgver/[a-z]/.&}"
 )
-b2sums=('SKIP')
-
-pkgver() {
-  cd sysprof
-  git describe --tags | sed 's/[^-]*-g/r&/;s/-/+/g'
-}
+b2sums=('d32a2a9f129a121c814b46377b6d0fee306e3d0f87dac73e7fd4ce9de85888e5e980f309faa17ce366006f0a0390475dc83739b92d4e460c2da7293ab97dcd03')
 
 prepare() {
   cd sysprof
@@ -91,7 +89,7 @@ package_sysprof() {
 package_libsysprof-capture() {
   pkgdesc+=" - capture library"
   depends=()
-  license=(BSD)
+  license=(BSD-2-Clause-Patent)
 
   mv capture/* "$pkgdir"
 

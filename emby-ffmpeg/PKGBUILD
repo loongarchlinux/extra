@@ -1,0 +1,128 @@
+# Maintainer: Maxime Gauduin <alucryd@archlinux.org>
+
+pkgname=emby-ffmpeg
+pkgver=2023_06_25
+pkgrel=1
+pkgdesc='Emby fork of ffmpeg'
+arch=(loong64 x86_64)
+url=https://emby.media
+license=(custom)
+depends=(
+  aribb24
+  bzip2
+  expat
+  fontconfig
+  fribidi
+  glibc
+  lame
+  libass.so
+  libchromaprint.so
+  libdav1d.so
+  libdrm
+  libfreetype.so
+  libjpeg-turbo
+  libmfx
+  libpng
+  libtheora
+  libva-drm.so
+  libva.so
+  libvorbisenc.so
+  libvorbis.so
+  libvpx.so
+  libwebp
+  libx264.so
+  libx265.so
+  mbedtls
+  opus
+  tesseract
+  xz
+  zlib
+  zvbi
+)
+makedepends=(
+  clang
+  ffnvcodec-headers
+  nasm
+)
+source=(
+  https://mediabrowser.github.io/embytools/ffmpeg-${pkgver}-u1.tar.gz
+  https://mediabrowser.github.io/embytools/ffdetect-${pkgver}-x64.tar.xz
+  https://github.com/FFmpeg/FFmpeg/commit/effadce6c756247ea8bae32dc13bb3e6f464f0eb.patch
+  https://github.com/FFmpeg/FFmpeg/commit/03823ac0c6a38bd6ba972539e3203a592579792f.patch
+  https://github.com/FFmpeg/FFmpeg/commit/d2b46c1ef768bc31ba9180f6d469d5b8be677500.patch
+  https://github.com/FFmpeg/FFmpeg/commit/43b417d516b0fabbec1f02120d948f636b8a018e.patch
+  06c2a2c425f22e7dba5cad909737a631cc676e3f.patch
+  license.docx
+  Permission_to_distribute.mbox
+)
+noextract=(license.docx)
+b2sums=('5f3577002de8229d4456ac6731c4e3c02f9b235df15b4a62008abfd300afc6db5a59fc85e71cdc6059503ba6316901cff2c849fa694f0a422b6088fbf4dab267'
+        '40635a62a110af510b442d4dc617e2c16b10f9997c193a5f16c2b9f170928240ad2ccd431ffc814e0f7d4c304ae9389f20fae92c26d2928f7d257832b435c9af'
+        '0df36f9c15939b54600d4523d8679db3b0c1af4e8c77e4330754acf07c0071c574265a710e6c093c35b4787cd523604d26fc77cca0e376dbe0156db053313ce7'
+        '5af43f68140cb9bc45085081937dac4f7ad26702f2121be33d55f62555f1fd8c80bd398fe1fe2e157a6fe1025975d5df3b0695f779aee68769352fc8182341a9'
+        '48fd13487aff0ef32d5fbd2e90f90b244b6c2f0abe4cd5c919a6bca60186bc3fe2e7450d07afa89fbe8b1f509692a2cf987d3cbc27a23441e7d9bb9469fd79c5'
+        'c8dfbed01442b1173c94ee7f7c7bda59802e86359be7dfcf52e25a05f245deac1ed8f3ca8e43650bef033cbd44c3ac15d32c191d913227da497187fcbbefa954'
+        '43a1f6a7dd010d70c59250f047275c55413879b0a98671377edb920194361c4a4fca5d9021a16c80ced4a452f878a00fe7e71ee46f59066c2bfcd00bb009d49a'
+        'e490c2ec7aff3deb9874a80345273c2aa435624b914a13fe8cba8f07ee44938699a024d0c6784fe68820d3a848cccf5af3f7120c7906356ed17d306fc31b6490'
+        '61ca54af95278f498b21b424b4d4bae98660b4b7898bfd9752fe21da20d7c508502014bc1970a60920f3064ca20b31b46ba2a788b3b1371f75b5278add70ffc4')
+
+build() {
+  cd ffmpeg-${pkgver}_public
+  patch -Np1 -i ../effadce6c756247ea8bae32dc13bb3e6f464f0eb.patch
+  patch -Np1 -i ../03823ac0c6a38bd6ba972539e3203a592579792f.patch
+  patch -Np1 -i ../d2b46c1ef768bc31ba9180f6d469d5b8be677500.patch
+  patch -Np1 -i ../43b417d516b0fabbec1f02120d948f636b8a018e.patch
+  patch -Np1 -i ../06c2a2c425f22e7dba5cad909737a631cc676e3f.patch
+  ./configure \
+    --disable-alsa \
+    --disable-doc \
+    --disable-ffplay \
+    --disable-gnutls \
+    --disable-libpulse \
+    --disable-librtmp \
+    --disable-libxcb \
+    --disable-openssl \
+    --disable-shared \
+    --disable-vdpau \
+    --disable-vulkan \
+    --disable-xlib \
+    --enable-chromaprint \
+    --enable-cuda-llvm \
+    --enable-fontconfig \
+    --enable-gpl \
+    --enable-iconv \
+    --enable-libaribb24 \
+    --enable-libass \
+    --enable-libdav1d \
+    --enable-libdrm \
+    --enable-libfreetype \
+    --enable-libfribidi \
+    --enable-libmfx \
+    --enable-libmp3lame \
+    --enable-libopus \
+    --enable-libtesseract \
+    --enable-libtheora \
+    --enable-libvorbis \
+    --enable-libvpx \
+    --enable-libwebp \
+    --enable-libx264 \
+    --enable-libx265 \
+    --enable-libzvbi \
+    --enable-lto \
+    --enable-mbedtls \
+    --enable-nvdec \
+    --enable-nvenc \
+    --enable-static \
+    --enable-vaapi \
+    --enable-version3
+  make
+}
+
+package() {
+  install -Dm 755 bin/ffdetect "${pkgdir}"/usr/bin/ffdetect-emby
+  install -Dm 755 ffmpeg-${pkgver}_public/ffmpeg "${pkgdir}"/usr/bin/ffmpeg-emby
+  install -Dm 755 ffmpeg-${pkgver}_public/ffprobe "${pkgdir}"/usr/bin/ffprobe-emby
+  install -Dm 644 license.docx -t "${pkgdir}"/usr/share/licenses/emby-ffmpeg/
+}
+
+# vim: ts=2 sw=2 et:

@@ -6,27 +6,24 @@
 
 pkgname=zathura-pdf-poppler
 pkgver=0.3.2
-pkgrel=2
-
+pkgrel=5
 pkgdesc="Adds pdf support to zathura by using the poppler engine"
 url="https://pwmt.org/projects/zathura-pdf-poppler/"
 arch=('loong64' 'x86_64')
-license=('custom')
-
+license=('Zlib')
 depends=('poppler-glib' 'zathura' 'desktop-file-utils')
 makedepends=('meson' 'ninja')
-
-source=(zathura-pdf-poppler-$pkgver.tar.gz::https://github.com/pwmt/zathura-pdf-poppler/archive/$pkgver.tar.gz)
-
-sha256sums=('2e64e59ed46b0d93fbad70eca9a77cc720c5909c988b0b6637333504da52b23d')
+source=("${pkgname}-${pkgver}.tar.gz::https://github.com/pwmt/${pkgname}/archive/refs/tags/${pkgver}.tar.gz")
+sha512sums=('5e6d748f9dfcc9e318ee7947d3a4d9acbbb30d6b45810a7c2fd2d0572d98872f5d594add8683b6579791fb82846a3d7854e84239ac5167c0541e700518a31043')
 
 build() {
-  cd zathura-pdf-poppler-$pkgver
-  arch-meson build
-  ninja -C build
+        cd "${pkgname}-${pkgver}"
+        arch-meson build
+        ninja -C build
 }
 
-package(){
-  DESTDIR="$pkgdir" ninja -C zathura-pdf-poppler-$pkgver/build install
-  install -Dm0644 zathura-pdf-poppler-$pkgver/LICENSE "$pkgdir"/usr/share/licenses/$pkgname/LICENSE
+package() {
+        cd "${pkgname}-${pkgver}"
+        DESTDIR="${pkgdir}" ninja -C build install
+        install -Dm 664 LICENSE "${pkgdir}/usr/share/licenses/${pkgname}/LICENSE"
 }

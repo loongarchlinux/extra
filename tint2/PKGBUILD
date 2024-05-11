@@ -1,36 +1,41 @@
 # Maintainer: Alexander F. Rødseth <xyproto@archlinux.org>
+# Maintainer: Robin Candau <antiz@archlinux.org>
 # Contributor: Blue Peppers <bluepeppers@archlinux.us>
 # Contributor: Stefan Husmann <stefan-husmann@t-online.de>
 # Contributor: Yannick LM <LMyannicklm1337@gmail.com>
 
 pkgname=tint2
 pkgver=17.0.2
-pkgrel=3
+pkgrel=4
 pkgdesc='Basic, good-looking task manager for WMs'
 arch=(loong64 x86_64)
 url='https://gitlab.com/o9000/tint2'
-license=(GPL2)
+license=(GPL-2.0-only)
 depends=(gtk3 imlib2 startup-notification)
 makedepends=(cmake git ninja setconf)
-source=("git+$url#commit=f8f9c18cef88239688c62fdba70db9b082e1f0f4") # tag: v17.0.2
-b2sums=(SKIP)
+source=("git+${url}.git#tag=${pkgver}"
+        fix_segfault.patch)
+sha256sums=('60dcde15ac09508daffe59b9c35244fee771f66ee989193f37d81c823fc643da'
+            'b7cd2936bb807478bbb356b96879dedbbfc464ed2f930f426a0123e39884f78f')
 
 prepare() {
-  setconf $pkgname/get_version.sh VERSION="$pkgver"
+	setconf "${pkgname}/get_version.sh" VERSION="${pkgver}"
+	# Patch to fix segfault issue when opening some apps like conky, mpv or steam
+	# See https://gitlab.archlinux.org/archlinux/packaging/packages/tint2/-/issues/1
+	cd "${pkgname}"
+	patch -Np1 < "${srcdir}/fix_segfault.patch"
 }
 
 build() {
-  mkdir -p build
-  cd build
-  cmake ../$pkgname \
-    -D CMAKE_INSTALL_PREFIX=/usr \
-    -D ENABLE_TINT2CONF=1 \
-    -G Ninja
-  ninja
+	mkdir -p build
+	cd build
+	cmake ../"${pkgname}" \
+	  -D CMAKE_INSTALL_PREFIX=/usr \
+	  -D ENABLE_TINT2CONF=1 \
+	  -G Ninja
+	ninja
 }
 
 package() {
-  DESTDIR="$pkgdir" ninja -C build install
+	DESTDIR="${pkgdir}" ninja -C build install
 }
-
-# getver: gitlab.com/o9000/tint2/raw/master/README.md

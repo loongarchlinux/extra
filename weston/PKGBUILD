@@ -3,30 +3,34 @@
 
 pkgname=weston
 pkgver=13.0.0
-pkgrel=1
+pkgrel=2
 pkgdesc='Reference implementation of a Wayland compositor'
 arch=('loong64' 'x86_64')
 url='https://wayland.freedesktop.org/'
 license=('MIT')
-depends=('glibc' 'wayland' 'libxkbcommon' 'libinput' 'libunwind' 'pixman'
+depends=('fontconfig' 'glibc' 'wayland' 'libxkbcommon' 'libinput' 'libunwind' 'pixman'
          'libdrm' 'pam' 'systemd-libs' 'cairo' 'libpng' 'libjpeg-turbo' 'libwebp'
-         'mesa' 'libegl' 'libgles' 'glib2' 'pango' 'lcms2' 'mtdev' 'libx11'
+         'mesa' 'libegl' 'libevdev' 'libgles' 'glib2' 'pango' 'lcms2' 'mtdev' 'libx11'
          'libxcb' 'dbus' 'libva' 'libxcursor' 'colord' 'seatd'
          'gstreamer' 'gst-plugins-base-libs')
-makedepends=('wayland-protocols' 'meson' 'ninja' 'freerdp' 'neatvnc' 'libpipewire'
+makedepends=('wayland-protocols' 'meson' 'ninja' 'freerdp2' 'neatvnc' 'libpipewire'
              'xorg-xwayland' 'xcb-util-cursor')
 optdepends=('xorg-xwayland: support x11 backend'
             'libpipewire: support pipewire backend'
-            'freerdp: support rdp backend'
+            'freerdp2: support rdp backend'
             'neatvnc: support vnc backend')
 options=(!lto)
 validpgpkeys=('7032877A3EB1EAE3E4DC9DFBF63412E60947D6EF' # Marius Vlad <marius.vlad@collabora.com>
               '34FF9526CFEF0E97A340E2E40FDE7BE0E88F5E48' # emersion <contact@emersion.fr>
               'C7223EBE4EF66513B892598911A30156E0E67611' # Bryce Harrington
               'C0066D7DB8E9AC6844D728715E54498E697F11D7') # Derek Foreman
-source=("https://gitlab.freedesktop.org/wayland/weston/-/releases/$pkgver/downloads/weston-$pkgver.tar.xz"{,.sig})
+source=(
+  "https://gitlab.freedesktop.org/wayland/weston/-/releases/$pkgver/downloads/weston-$pkgver.tar.xz"{,.sig}
+  $pkgname-13.0.0-neatvnc0.8.patch  # https://gitlab.freedesktop.org/wayland/weston/-/issues/890
+)
 sha256sums=('52ff1d4aa2394a2e416c85a338b627ce97fa71d43eb762fd4aaf145d36fc795a'
-            'SKIP')
+            'SKIP'
+            'c33085a00bddd2be1227e5f7a8b7d90e67c9f0b9fab39819490255cbcbc534ae')
 
 prepare() {
   cd $pkgname-$pkgver

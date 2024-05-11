@@ -3,20 +3,20 @@
 
 pkgname=python-venusian
 pkgver=3.1.0
-pkgrel=2
+pkgrel=5
 pkgdesc="A library for deferring decorator actions"
 arch=('any')
-license=('custom:BSD')
+license=('BSD-3-Clause-Modification')
 url="https://pylonsproject.org"
 depends=('python')
-makedepends=('python-setuptools')
+makedepends=('python-setuptools' 'python-build' 'python-installer' 'python-wheel')
 checkdepends=('python-pytest' 'python-pytest-cov')
 source=("$pkgname-$pkgver.tar.gz::https://github.com/Pylons/venusian/archive/$pkgver.tar.gz")
 sha512sums=('cd59a0789c4e7c3851009ff9b71eb05fdd3b8f02027e920c1631f7a5453707dea4b9501645143219728666e4455ecedd0431de6c41dd8901e8f17dfe58ebb781')
 
 build() {
   cd venusian-$pkgver
-  python setup.py build
+  python -m build --wheel --no-isolation
 }
 
 check() {
@@ -26,6 +26,6 @@ check() {
 
 package() {
   cd venusian-$pkgver
-  python setup.py install --root="$pkgdir" --optimize=1
+  python -m installer --destdir="$pkgdir" dist/*.whl
   install -D -m644 LICENSE.txt "$pkgdir"/usr/share/licenses/$pkgname/LICENSE.txt
 }

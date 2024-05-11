@@ -1,11 +1,11 @@
-# Maintainer: Caleb Maclennana <caleb@alerque.com>
+# Maintainer: Caleb Maclennan <caleb@alerque.com>
 
 BUILDENV+=(!check)
 
 pkgname=python-pytest-param-files
 _pyname=${pkgname#python-}
 pkgver=0.6.0
-pkgrel=2
+pkgrel=3
 pkgdesc='Create pytest parametrize decorators from external files '
 arch=(any)
 url="https://github.com/chrisjsewell/$_pyname"

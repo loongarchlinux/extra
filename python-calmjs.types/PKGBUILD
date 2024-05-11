@@ -3,38 +3,37 @@
 _name=calmjs.types
 pkgname=python-calmjs.types
 pkgver=1.0.1
-pkgrel=6
+pkgrel=7
 pkgdesc="Base types for calmjs framework"
-arch=('any')
+arch=(any)
 url="https://github.com/calmjs/calmjs.types"
-license=('MIT')
-depends=('python')
-makedepends=('python-setuptools')
-checkdepends=('python-pytest')
-source=("https://files.pythonhosted.org/packages/source/${_name::1}/${_name}/${_name}-${pkgver}.zip")
-sha512sums=('e6c14975de2391d55042f36c76f3cafcc690417240014af537b3dcdfee77d320f6d33afcb29c103ad23124aa6117bbd19a89d6a1542c307b141b8aa7f325ae32')
-
-prepare() {
-  mv -v "${_name}-${pkgver}" "$pkgname-$pkgver"
-}
+license=(MIT)
+depends=(python)
+makedepends=(
+  python-build
+  python-installer
+  python-setuptools
+  python-wheel
+)
+checkdepends=(python-pytest)
+source=($pkgname-$pkgver.tar.gz::$url/archive/refs/tags/$pkgver.tar.gz)
+sha512sums=('a2445cd6b5b55405058d1e90d1b7353c30135deb5656a1325f84590adc7567ac9d71b96365ac3fa5f8c33e571992508a9664d340c01da85e03bef4b6a8b67485')
+b2sums=('1b9d7a6ccbef33f756d70d0ea77813172a647e94f7df57b4d9a422a6fac6811d2b477e9682a359b814f6cf57db72f81d12bd6cada6b1cb76d1472b42774bb768')
 
 build() {
-  cd "$pkgname-$pkgver"
-  python setup.py build
+  cd $_name-$pkgver
+  python -m build --wheel --no-isolation
 }
 
 check() {
-  cd "$pkgname-$pkgver"
-  export PYTHONPATH="build:${PYTHONPATH}"
+  cd $_name-$pkgver
+  export PYTHONPATH="build:$PYTHONPATH"
   pytest -v
 }
 
 package() {
-  cd "$pkgname-$pkgver"
-  python setup.py install --skip-build \
-    --optimize=1 \
-    --prefix=/usr \
-    --root="${pkgdir}"
-  install -vDm 644 {CHANGES,README}.rst -t "${pkgdir}/usr/share/doc/${pkgname}"
-  install -vDm 644 LICENSE -t "${pkgdir}/usr/share/licenses/${pkgname}"
+  cd $_name-$pkgver
+  python -m installer --destdir="$pkgdir" dist/*.whl
+  install -vDm 644 {CHANGES,README}.rst -t "$pkgdir/usr/share/doc/$pkgname/"
+  install -vDm 644 LICENSE -t "$pkgdir/usr/share/licenses/$pkgname/"
 }

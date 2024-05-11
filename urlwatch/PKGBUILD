@@ -1,4 +1,5 @@
 # Maintainer: Daniel M. Capella <polyzen@archlinux.org>
+# Maintainer: Robin Candau <antiz@archlinux.org>
 # Contributor: Balló György <ballogyor+arch at gmail dot com>
 # Contributor: Maxim Baz <$pkgname at maximbaz dot com>
 # Contributor: Skydrome <skydrome@i2pmail.org>
@@ -6,28 +7,56 @@
 
 pkgname=urlwatch
 pkgver=2.28
-pkgrel=1
+pkgrel=3
 pkgdesc='Tool for monitoring webpages for updates'
 arch=('any')
 url=https://thp.io/2008/urlwatch/
-license=('BSD')
-depends=('python-appdirs' 'python-cssselect' 'python-keyring' 'python-lxml'
-         'python-minidb' 'python-requests' 'python-yaml')
-makedepends=('python-build' 'python-installer' 'python-setuptools'
-             'python-wheel')
-checkdepends=('python-docutils' 'python-pycodestyle' 'python-pytesseract'
-              'python-pytest')
-optdepends=('lynx: for one of the html2text filter methods'
-            'python-beautifulsoup4: for the beautify filter and one of the html2text filter methods'
-            'python-cssbeautifier: for the beautify filter'
-            'python-html2text: for one of the html2text filter methods'
-            'python-jq: for the jq filter'
-            'python-jsbeautifier: for the beautify filter'
-            'python-pdftotext: for the pdf2text filter'
-            'python-pytesseract: for the ocr filter')
-source=("https://files.pythonhosted.org/packages/source/${pkgname::1}/$pkgname/$pkgname-$pkgver.tar.gz")
-sha256sums=('911df3abbd8923e46ec167a9657a812436caf93f7f9917cb7c95ebd73d28cce5')
-b2sums=('73fcff8c153db472c944d0c9406e0e98bf64299d5532486a08cb024339544f17d716a22d6f0807ba55c79af9dc7fef41fa8dc5a7fe79c831f3e9958e3ea8958e')
+license=('BSD-3-Clause')
+depends=(
+  'python-appdirs'
+  'python-cssselect'
+  'python-keyring'
+  'python-lxml'
+  'python-minidb'
+  'python-requests'
+  'python-yaml'
+)
+makedepends=(
+  'python-build'
+  'python-installer'
+  'python-setuptools'
+  'python-wheel'
+)
+checkdepends=(
+  'python-docutils'
+  'python-pytesseract'
+  'python-pytest'
+)
+optdepends=(
+  'lynx: for one of the html2text filter methods'
+  'python-beautifulsoup4: for the beautify filter and one of the html2text filter methods'
+  'python-cssbeautifier: for the beautify filter'
+  'python-html2text: for one of the html2text filter methods'
+  'python-jq: for the jq filter'
+  'python-jsbeautifier: for the beautify filter'
+  'python-pdftotext: for the pdf2text filter'
+  'python-pytesseract: for the ocr filter'
+)
+source=("https://files.pythonhosted.org/packages/source/${pkgname::1}/$pkgname/$pkgname-$pkgver.tar.gz"
+        fix_css_filter.patch)
+sha256sums=('911df3abbd8923e46ec167a9657a812436caf93f7f9917cb7c95ebd73d28cce5'
+            '3624310c7f576f7ca5935ac1088b57c3b7551d414cc147d3c850a819ac835b70')
+b2sums=('73fcff8c153db472c944d0c9406e0e98bf64299d5532486a08cb024339544f17d716a22d6f0807ba55c79af9dc7fef41fa8dc5a7fe79c831f3e9958e3ea8958e'
+        '7dd9137a882879cd0262e7a7b257d57094fe405977a4e4e90ad4050bc596c3d548780ad9c99a3cedd66430533a86470968eba25ca28702e12baba950df850008')
+
+prepare() {
+  cd $pkgname-$pkgver
+
+  # Temporary patch to fix the CSS selector filter with python-lxml>=5
+  # See https://gitlab.archlinux.org/archlinux/packaging/packages/urlwatch/-/issues/1
+  # Patch taken from upstream at https://github.com/thp/urlwatch/commit/123de66d019aef7fc18fab6d56cc2a54d81fea3f
+  patch -Np1 < $srcdir/fix_css_filter.patch
+}
 
 build() {
   cd $pkgname-$pkgver
@@ -36,7 +65,7 @@ build() {
 
 check() {
   cd $pkgname-$pkgver
-  pytest
+  pytest -k 'not test_pep8_conformance'
 }
 
 package() {

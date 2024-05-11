@@ -2,19 +2,19 @@
 # Contributor: Arch Haskell Team <arch-haskell@haskell.org>
 
 pkgname=stylish-haskell
-pkgver=0.13.0.0
-pkgrel=119
+pkgver=0.14.3.0
+pkgrel=8
 pkgdesc="Haskell code prettifier"
 url="https://github.com/haskell/stylish-haskell"
 license=("BSD")
 arch=('loong64' 'x86_64')
-depends=('ghc-libs' 'haskell-aeson' 'haskell-file-embed' 'haskell-ghc-lib-parser'
-         'haskell-optparse-applicative' 'haskell-strict' 'haskell-syb' 'haskell-hsyaml'
-         'haskell-hsyaml-aeson')
+depends=('ghc-libs' 'haskell-aeson' 'haskell-file-embed' 'haskell-ghc' 'haskell-ghc-lib-parser-ex'
+         'haskell-optparse-applicative' 'haskell-regex-tdfa' 'haskell-strict' 'haskell-syb'
+         'haskell-hsyaml' 'haskell-hsyaml-aeson')
 makedepends=('ghc' 'uusi' 'haskell-hunit' 'haskell-random' 'haskell-test-framework'
              'haskell-test-framework-hunit')
 source=("https://hackage.haskell.org/packages/archive/${pkgname}/${pkgver}/${pkgname}-${pkgver}.tar.gz")
-sha512sums=('6a575568f9e81bf840743282d65a48f9bfa6541f192aab7633c93f8a6805e95897c4137cb70aaf5fc341db850b435da0b9b60e60e505b3fa8f90c2ce5ed8d075')
+sha512sums=('88cf7f419889a459b1e7ffb7b4d5412ac349a56f91efdb9f08ef296421e4ee06f8cd2e6b51f11c4fcb759ee3ecc90546e409fef12d9a5ac5fc88a4c56b6507e5')
 
 prepare() {
     cd $pkgname-$pkgver
@@ -26,8 +26,8 @@ build() {
     
     runhaskell Setup configure -O --enable-shared --enable-executable-dynamic --disable-library-vanilla \
         --prefix=/usr --docdir=/usr/share/doc/$pkgname --datasubdir=$pkgname --enable-tests --datasubdir=$pkgname \
-        --dynlibdir=/usr/lib --libsubdir=\$compiler/site-local/\$pkgid --ghc-option=-fllvm \
-            -f-old_base --ghc-option='-pie'
+        --dynlibdir=/usr/lib --libsubdir=\$compiler/site-local/\$pkgid \
+            -f-ghc-lib --ghc-option='-pie'
     runhaskell Setup build $MAKEFLAGS
     runhaskell Setup register --gen-script
     runhaskell Setup unregister --gen-script

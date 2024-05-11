@@ -4,23 +4,24 @@
 # Contributor: MatejSpindler <spindler.matej@gmail.com>
 
 pkgname=esptool
-pkgver=4.6.2
-pkgrel=1
+pkgver=4.7.0
+pkgrel=3
 pkgdesc="A cute Python utility to communicate with the ROM bootloader in Espressif ESP8266"
 arch=('any')
 url="https://github.com/espressif/esptool"
-license=('GPL2')
-makedepends=('git' 'python-setuptools')
-depends=('python-pyserial' 'python-ecdsa' 'python-bitstring' 'python-reedsolo' 'python-cryptography' 'python-pyyaml')
+license=('GPL-2.0-only')
+makedepends=('git' 'python-build' 'python-installer' 'python-wheel')
+depends=('python' 'python-pyserial' 'python-ecdsa' 'python-bitstring' 'python-reedsolo' 'python-cryptography' 'python-pyyaml' 'python-intelhex')
+optdepends=('python-python-pkcs11: Support for HSM devices')
 source=($pkgname-$pkgver.tar.gz::https://github.com/espressif/esptool/archive/v${pkgver}.tar.gz)
-sha512sums=('97cc9f4d92b479351089fac59aed08f9519ff76d994ddae601da8e39b988f4bb90dc3885bf30b7998e2575a0365a5f0eef85f16a28b12eb944eec1e9f5265c6c')
+sha512sums=('dda2af5d9b2f8a4ec5706eaf58021e95094c152380c732074809c370a5d1bfaeb424cb27f69a3b980dec83ae9c4c9ee1eddfeb0a7990c3b1f1494160a2d369cc')
 
 build() {
   cd "${pkgname}-${pkgver}"
-  python3 setup.py build
+  python -m build --wheel --no-isolation
 }
 
 package() {
   cd "${pkgname}-${pkgver}"
-  python3 setup.py install --root="$pkgdir/" --optimize=1 --skip-build
+  python -m installer --destdir="$pkgdir" dist/*.whl
 }

@@ -2,8 +2,8 @@
 
 pkgname=awxkit
 _pkgname=awx
-_commit=f9c0b97c5335bbc94dd5a2903d40bec2969ac8c9
-pkgver=23.7.0
+_commit=918d5b3565e5997bdbd57117b92852ba13bb55d6
+pkgver=24.3.1
 pkgrel=1
 pkgdesc="The official command line interface for Ansible AWX"
 arch=('any')
@@ -15,22 +15,22 @@ depends=(
   'python-pyyaml'
   'python-requests'
   'python-setuptools'  # unreferenced, required in awxkit/cli/client.py
+  'python-websocket-client'
 )
 makedepends=('git' 'python-build' 'python-installer' 'python-setuptools' 'python-setuptools-scm' 'python-wheel')
 checkdepends=(
   'jq'
   'python-pytest'
   'python-cryptography'
-  # 'python-websocket-client'  # TODO: needs to be packaged
+  'python-websocket-client'
 )
 optdepends=(
   'jq: for formatting'
-  # 'python-websocket-client: for websockets support'  # TODO: needs to be packaged
   'python-cryptography: for cryptography support'
 )
 options=(!emptydirs)
 source=("${_pkgname}::git+https://github.com/ansible/${_pkgname}#tag=$_commit")
-sha512sums=('SKIP')
+sha512sums=('aa3dd6d787de43da29866636e82e6923722a94f4104521c820596e8899a8ed03a250c3e02e9706ee4b8140f50f24bd4eb87764685d56f140cc37557f79288a5b')
 
 build() {
     cd "${_pkgname}/${pkgname}"
@@ -39,14 +39,11 @@ build() {
 
 check() {
     local deselected=(
-      # NOTE: deselect tests that require python-websocket-client
-      --deselect test/test_ws.py::test_explicit_hostname
-      --deselect test/test_ws.py::test_urlparsing
       # Python 3.11 test failure https://github.com/ansible/awx/issues/13820
       --deselect test/cli/test_options.py::TestOptions::test_actions_with_primary_key
     )
     cd "${_pkgname}/${pkgname}"
-    pytest -vv "${deselected[@]}"
+    PYTHONPATH="$PYTHONPATH:." pytest -vv "${deselected[@]}"
 }
 
 package() {

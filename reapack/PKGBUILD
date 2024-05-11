@@ -1,12 +1,16 @@
 # Maintainer: George Rawlinson <grawlinson@archlinux.org>
 
 pkgname=reapack
-pkgver=1.2.4.3
+pkgver=1.2.4.5
+_commit='9282e03643afead4171e4cac70a51ba32fb7dece'  # refs/tags/v1.2.4.5^{}
 pkgrel=1
 pkgdesc='Package manager for the Reaper DAW'
 arch=('loong64' 'x86_64')
 url='https://reapack.com'
-license=('GPL3' 'LGPL3')
+license=(
+  'GPL-3.0-or-later'
+  'LGPL-3.0-or-later'
+)
 depends=(
   'glibc'
   'gcc-libs'
@@ -25,18 +29,16 @@ makedepends=(
   'php'
   'catch2'
 )
-install='reapack.install'
-_commit='7ece4e058436959d977ab387aa86bf73ac5b2278'
 source=(
   "$pkgname::git+https://github.com/cfillion/reapack#commit=$_commit"
   'github.com-justinfrankel-wdl::git+https://github.com/justinfrankel/WDL'
   'github.com-justinfrankel-reaper-sdk::git+https://github.com/justinfrankel/reaper-sdk'
-  'ftbfs-gcc13.patch'
+  $pkgname-1.2.4.5-system_wide.patch
 )
 b2sums=('SKIP'
         'SKIP'
         'SKIP'
-        'f31e2c4cbb7d32092e165687f0acb95591ea1f199234394a3e6d5890bc34fde8b157014c815989f5a0456b8813c2a4a9efa2dfc111a5cee003470c0cf32f3cfe')
+        '0f24c87d822322db6807a262fdb808b72937838fcb998b8d69cd938a9b33a22dfcdd95cf620ef862134f30e87681c40d99323a7762c92aef4e29f83f665e036d')
 
 pkgver() {
   cd "$pkgname"
@@ -53,25 +55,22 @@ prepare() {
   git config submodule.vendor/reaper-sdk.url "$srcdir/github.com-justinfrankel-reaper-sdk"
   git -c protocol.file.allow=always submodule update
 
-  # FTBFS due to catch2 v3 not being in the repos yet
-  # so we have to use an older version
-  git revert --no-commit d551e255fe79ea1e463fe757554a55bf5adf5058
-
-  # FTBFS: FS#77178
-  git cherry-pick --no-commit f2806c95ba16549e969581429d1fc51616c68796
-
-  # FTBFS: GCC13
-  # https://gcc.gnu.org/gcc-13/porting_to.html
-  patch -p1 -i "$srcdir/ftbfs-gcc13.patch"
+  # allow installing the plugin to reaper's system-wide plugin path: https://github.com/cfillion/reapack/issues/80
+  patch -Np1 -i ../$pkgname-1.2.4.5-system_wide.patch
 }
 
 build() {
+  local cmake_options=(
+    -B build
+    -D CMAKE_BUILD_TYPE=None
+    -D CMAKE_INSTALL_PREFIX=/usr
+    # out-of-tree build is broken: https://github.com/cfillion/reapack/issues/79
+    -S .
+    -W no-dev
+  )
+
   cd "$pkgname"
-
-  cmake \
-    -B build \
-    -DCMAKE_BUILD_TYPE=Release
-
+  cmake "${cmake_options[@]}"
   cmake --build build
 }
 
@@ -82,8 +81,9 @@ check() {
 package() {
   cd "$pkgname"
 
+  # NOTE: install target is not configurable: https://github.com/cfillion/reapack/issues/81
   # plugin
-  install -vDm755 -t "$pkgdir/usr/lib/$pkgname" "build/reaper_reapack-$CARCH.so"
+  install -vDm755 -t "$pkgdir/usr/lib/REAPER/Plugins/" "build/reaper_reapack-$CARCH.so"
 
   # documentation
   install -vDm644 -t "$pkgdir/usr/share/doc/$pkgname" README.md

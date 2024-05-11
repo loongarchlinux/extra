@@ -3,22 +3,16 @@
 # Contributor: Joakim Saario <saario.joakim@gmail.com>
 
 pkgname=docker-buildx
-pkgver=0.12.1
+pkgver=0.14.0
 pkgrel=1
 pkgdesc="Docker CLI plugin for extended build capabilities with BuildKit"
 arch=('loong64' 'x86_64')
 url="https://github.com/docker/buildx"
-license=("Apache")
+license=("Apache-2.0")
 makedepends=('go' 'git')
 options=(!lto)
-_commit=30feaa1a915b869ebc2eea6328624b49facd4bfb # refs/tags/v0.12.1
-source=("git+https://github.com/docker/buildx.git#commit=${_commit}")
-sha512sums=('SKIP')
-
-pkgver() {
-  cd "buildx"
-  git describe --tags | sed 's/^v//;s/-/+/g'
-}
+source=("git+https://github.com/docker/buildx.git#tag=v${pkgver}")
+sha512sums=('115b59ce9f73bbd5eda10344cc26be66e5cceb808abe9c4921a6e5e86d4339706f7d374b8239738784873cb2e401ce31fe8f7eff9daa9501475f20f959164e2c')
 
 build() {
   cd "buildx"
@@ -30,6 +24,7 @@ build() {
   export GO111MODULE=on
   _buildx_r=github.com/docker/buildx
   go build -mod=vendor -o docker-buildx -ldflags "-linkmode=external \
+    -compressdwarf=false \
     -X $_buildx_r/version.Version=${pkgver} \
     -X $_buildx_r/version.Revision=$(git rev-parse HEAD) \
     -X $_buildx_r/version.Package=$_buildx_r" \

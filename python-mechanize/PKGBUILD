@@ -8,37 +8,43 @@
 _pkgname=mechanize
 pkgname=python-mechanize
 pkgver=0.4.8
-pkgrel=2
+pkgrel=3
 epoch=1
 pkgdesc='Stateful programmatic web browsing in Python'
 arch=('any')
 url="https://github.com/python-mechanize/mechanize"
 license=('BSD')
 depends=('python-html5lib')
-makedepends=('python-setuptools')
+makedepends=('python-setuptools' 'git')
 checkdepends=('python-zope-interface' 'python-twisted')
 optdepends=('python-html5-parser: faster parsing of HTML')
-source=("https://files.pythonhosted.org/packages/source/${_pkgname:0:1}/${_pkgname}/${_pkgname}-${pkgver}.tar.gz"{,.asc})
-sha256sums=('5e86ac0777357e006eb04cd28f7ed9f811d48dffa603d3891ac6d2b92280dc91'
-            'SKIP')
-b2sums=('bd91738092ac473ee6e65ee5f175479515f735a0433b112241f17061adf7e60ef6fa410fa549f088390b6ef6c8b2ff95e00335a626322ad170c88923c96e8e44'
-        'SKIP')
+source=("git+$url#tag=v$pkgver?signed")
+sha256sums=('SKIP')
+b2sums=('SKIP')
 validpgpkeys=('3CE1780F78DD88DF45194FD706BC317B515ACE7C') # Kovid Goyal (New longer key) <kovid@kovidgoyal.net>
 
+prepare() {
+  cd $_pkgname
+  #  Fix check failure with python 3.11
+  git cherry-pick -n 529d2c4cb8f31284f8026642968ba3adb9de1171 # Use asserts for failing test so we get better feedback on the failure
+  git cherry-pick -n 7ba3d586368c03577c061c35bc27664a907f5435 # DRYer
+  git cherry-pick -n 560839d51e54943890c2d37c0d0854792479cb80 # Change test to not rely on order of cookie iteration
+}
+
 build() {
-  cd "mechanize-$pkgver"
+  cd $_pkgname
 
   python setup.py build
 }
 
 check() {
-  cd "mechanize-$pkgver"
+  cd $_pkgname
 
   python run_tests.py
 }
 
 package() {
-  cd "mechanize-$pkgver"
+  cd $_pkgname
 
   python setup.py install --root="$pkgdir" --optimize=1 --skip-build
   install -Dm644 LICENSE "$pkgdir/usr/share/licenses/$pkgname/LICENSE"

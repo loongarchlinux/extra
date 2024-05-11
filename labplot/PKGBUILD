@@ -2,11 +2,11 @@
 
 pkgname=labplot
 pkgver=2.10.1
-pkgrel=5
+pkgrel=8
 arch=(loong64 x86_64)
 pkgdesc='KDE Application for interactive graphing and analysis of scientific data'
 url='https://labplot.kde.org/'
-license=(GPL2)
+license=(GPL-2.0-or-later)
 depends=(cantor
          cblas
          cfitsio
@@ -27,7 +27,7 @@ depends=(cantor
          kio5
          kparts5
          ktextwidgets5
-         kuserfeedback5
+#        kuserfeedback5
          kwidgetsaddons5
          kxmlgui5
          libcerf
@@ -48,8 +48,17 @@ depends=(cantor
 makedepends=(dbc-parser-cpp
              extra-cmake-modules
              kdoctools5)
-source=(https://download.kde.org/stable/$pkgname/$pkgname-$pkgver.tar.xz)
-sha256sums=('2b6e181517cfb6e0dfff7b895f3eb20c7ce359e6732d38545e0757c9aea2daef')
+source=(https://download.kde.org/stable/$pkgname/$pkgname-$pkgver.tar.xz
+        dbc-parser-cpp-0.4.patch
+        libmatio-1.5.27.patch)
+sha256sums=('2b6e181517cfb6e0dfff7b895f3eb20c7ce359e6732d38545e0757c9aea2daef'
+            '8b554771c51e99c37b138b2d45fecadba53e1c1c87b0ed8e5ffb547008d1445b'
+            '9204f8a174a01e61328d3946b8ea4549a3a42c019202cb53916617f9f5926b26')
+
+prepare() {
+  patch -d $pkgname-$pkgver -p1 < dbc-parser-cpp-0.4.patch # support dbc-parser-cpp 0.4
+  patch -d $pkgname-$pkgver -p1 < libmatio-1.5.27.patch # fix build with libmatio 1.5.27
+}
 
 build() {
   cmake -B build -S $pkgname-$pkgver \

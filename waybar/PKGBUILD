@@ -1,77 +1,99 @@
 # Maintainer: Brett Cornwall <ainola@archlinux.org>
-# Maintainer: Maxim Baz <archlinux at maximbaz dot com>
+# Maintainer: Robin Candau <antiz@archlinux.org>
+# Contributor: Maxim Baz <archlinux at maximbaz dot com>
+# Contributor: Parmjot Singh <parmjotsinghrobot at gmail dot com>
 
 pkgname=waybar
-pkgver=0.9.24
-pkgrel=3
+pkgver=0.10.3
+pkgrel=1
 pkgdesc='Highly customizable Wayland bar for Sway and Wlroots based compositors'
 arch=('loong64' 'x86_64')
 url="https://github.com/Alexays/Waybar/"
 license=('MIT')
 depends=(
-    'gtkmm3'
-    'libjsoncpp.so'
-    'libsigc++'
+    'atkmm'
+    'cairomm'
     'fmt'
-    'jack' 'libjack.so'
-    'wayland'
-    'libdate-tz.so'
-    'libspdlog.so'
+    'gcc-libs'
+    'glib2'
+    'glibc'
+    'glibmm'
     'gtk-layer-shell'
-    'libupower-glib.so'
-    'upower'
+    'gtk3'
+    'gtkmm3'
+    'jack'
+    'jsoncpp'
+    'libdbusmenu-gtk3'
     'libevdev'
     'libinput'
-    'libpulse'
-    'libnl'
-    'libappindicator-gtk3'
-    'libdbusmenu-gtk3'
     'libmpdclient'
-    'libsndio.so'
-    'libxkbcommon'
+    'libnl'
+    'libpipewire'
+    'libpulse'
+    'libsigc++'
     'libwireplumber'
+    'libxkbcommon'
     'playerctl'
+    'sndio'
+    'spdlog'
+    'systemd-libs'
+    'upower'
+    'wayland'
 )
 makedepends=(
-    'cmake'
     'catch2'
+    'cmake'
     'meson'
+    'python-packaging' # gdbus-codegen
     'scdoc' # For generating manpages
     'wayland-protocols'
 )
 backup=(
-    etc/xdg/waybar/config
+    etc/xdg/waybar/config.jsonc
     etc/xdg/waybar/style.css
 )
 optdepends=(
     'otf-font-awesome: Icons in the default configuration'
 )
-source=("$pkgname-$pkgver.tar.gz::https://github.com/Alexays/Waybar/archive/$pkgver.tar.gz")
-b2sums=('15774a78f2f7bb85d497e7f80a968b775bb42d285d0950e8e384962c6b947ea895eea2b30c0aba7ca671595ce59acd65e66cf8b67f2478ecad7564de50e4bfe6')
+source=(
+    "$pkgname-$pkgver.tar.gz::https://github.com/Alexays/Waybar/archive/$pkgver.tar.gz"
+)
+b2sums=('0ef1cf82cc9f374c756724c389a045d2d9e26a5403eeb527ab0885d89d6030bea74aa5c299f8f865c244524c485a90ad3fee071968d21ff728c1f46f75f637b4')
 
 build() {
     cd "Waybar-$pkgver"
-    # TODO tests depend on catch2 v3
-    CXXFLAGS+=" -std=c++20" \
     meson --prefix=/usr \
           --buildtype=plain \
           --auto-features=enabled \
           --wrap-mode=nodownload \
+          -Dcpp_std=c++20 \
           -Dexperimental=true \
           -Dcava=disabled \
           -Dtests=enabled \
           build
-    ninja -C build
+    meson compile -C build
 }
 
 check() {
     cd "Waybar-$pkgver"
-    meson test -C build --no-rebuild --suite waybar
-
+    meson test -C build --print-errorlogs --no-rebuild --suite waybar
 }
 
 package() {
+    depends+=(
+      'libatkmm-1.6.so'
+      'libcairomm-1.0.so'
+      'libgtk-3.so'
+      'libjack.so'
+      'libjsoncpp.so'
+      'libpipewire-0.3.so'
+      'libsndio.so'
+      'libspdlog.so'
+      'libudev.so'
+      'libupower-glib.so'
+    )
+
     cd "Waybar-$pkgver"
-    DESTDIR="$pkgdir" ninja -C build install
+    meson install -C build --destdir "$pkgdir"
     install -Dm644 LICENSE -t "$pkgdir/usr/share/licenses/$pkgname/"
 }

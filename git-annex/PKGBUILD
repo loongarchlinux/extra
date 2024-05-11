@@ -3,11 +3,11 @@
 # Contributor: Arch Haskell Team <arch-haskell@haskell.org>
 
 pkgname=git-annex
-pkgver=10.20231129
-pkgrel=11
+pkgver=10.20240430
+pkgrel=1
 pkgdesc="Manage files with git, without checking their contents into git"
 url="https://git-annex.branchable.com/"
-license=("AGPL3")
+license=("AGPL-3.0-only")
 arch=('loong64' 'x86_64')
 depends=('git' 'lsof' 'rsync' 'ghc-libs' 'haskell-aeson' 'haskell-ansi-terminal' 'haskell-async'
          'haskell-aws' 'haskell-blaze-builder' 'haskell-bloomfilter' 'haskell-byteable'
@@ -25,26 +25,28 @@ depends=('git' 'lsof' 'rsync' 'ghc-libs' 'haskell-aeson' 'haskell-ansi-terminal'
          'haskell-regex-tdfa' 'haskell-resourcet' 'haskell-safesemaphore' 'haskell-sandi'
          'haskell-securemem' 'haskell-shakespeare' 'haskell-socks' 'haskell-split'
          'haskell-stm-chans' 'haskell-tagsoup' 'haskell-tasty' 'haskell-tasty-hunit'
-         'haskell-tasty-quickcheck' 'haskell-tasty-rerun' 'haskell-torrent' 'haskell-unix-compat'
-         'haskell-unliftio-core' 'haskell-unordered-containers' 'haskell-utf8-string' 'haskell-uuid'
-         'haskell-vector' 'haskell-wai' 'haskell-wai-extra' 'haskell-warp' 'haskell-warp-tls'
-         'haskell-yesod' 'haskell-yesod-core' 'haskell-yesod-form' 'haskell-yesod-static')
+         'haskell-tasty-quickcheck' 'haskell-tasty-rerun' 'haskell-torrent'
+         'haskell-unbounded-delays' 'haskell-unix-compat' 'haskell-unliftio-core'
+         'haskell-unordered-containers' 'haskell-utf8-string' 'haskell-uuid' 'haskell-vector'
+         'haskell-wai' 'haskell-wai-extra' 'haskell-warp' 'haskell-warp-tls' 'haskell-yesod'
+         'haskell-yesod-core' 'haskell-yesod-form' 'haskell-yesod-static')
 makedepends=('chrpath' 'ghc' 'uusi')
 source=("git+https://git.joeyh.name/git/git-annex.git#tag=$pkgver")
-sha512sums=('SKIP')
+sha256sums=('28b3eb40854cc55261f8be950129dc966654671fd31fa23cf60c728d79b67c49')
 
 prepare() {
   cd git-annex
 
   # persistent-template was merged into persistent
-  uusi -d persistent-template git-annex.cabal
+  uusi -d persistent-template
   sed -i 's/MIN_VERSION_persistent_template/MIN_VERSION_persistent/' Database/ImportFeed.hs Database/ContentIdentifier.hs Database/Export.hs Database/Fsck.hs Database/Keys/SQL.hs
+  sed -e 's|--ghc-options|-O --prefix=/usr --enable-executable-dynamic --disable-library-vanilla --docdir=/usr/share/doc/'$pkgname' --ghc-options|' \
+      -i Makefile
 }
 
 build() {
   cd git-annex
-  sed -e 's|--ghc-options|-O --prefix=/usr --enable-executable-dynamic --disable-library-vanilla --docdir=/usr/share/doc/'$pkgname' --ghc-options|' \
-      -i Makefile
+  LDFLAGS="${LDFLAGS/-Wl,-z,pack-relative-relocs/}" \
   make GHC="ghc -dynamic" BUILDER=./Setup BUILDEROPTIONS=$MAKEFLAGS
 }
 

@@ -3,29 +3,30 @@
 
 pkgname=python-pyicu
 pkgver=2.12
-pkgrel=1
+pkgrel=4
 pkgdesc="Python binding for ICU"
 arch=('loong64' 'x86_64')
 license=('MIT')
 url="http://pyicu.osafoundation.org/"
 depends=('python' 'icu')
-makedepends=('python-setuptools')
+makedepends=('python-setuptools' 'python-build' 'python-installer' 'python-wheel')
 checkdepends=('python-fonttools' 'python-pytest' 'python-six')
 source=("https://pypi.io/packages/source/P/PyICU/PyICU-$pkgver.tar.gz")
 sha512sums=('75b799df40c43e0f607e3d90b07e0277dd2f37541b671bd24fdc81044facd2ad89ede991becc256d0761a7627afa3a70dd9e9681cef9eaa8e660f021450eb522')
 
 build() {
   cd PyICU-$pkgver
-  python setup.py build
+  python -m build --wheel --no-isolation
 }
 
 check() {
   cd PyICU-$pkgver
-  python setup.py test
+  local python_version=$(python -c 'import sys; print("".join(map(str, sys.version_info[:2])))')
+  PYTHONPATH="$PWD/build/lib.linux-$CARCH-cpython-$python_version" pytest
 }
 
 package() {
   cd PyICU-$pkgver
-  python setup.py install --root="$pkgdir" --optimize=1
+  python -m installer --destdir="$pkgdir" dist/*.whl
   install -D -m644 LICENSE "$pkgdir"/usr/share/licenses/$pkgname/LICENSE
 }

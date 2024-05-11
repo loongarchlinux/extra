@@ -2,23 +2,28 @@
 
 _hkgname=hspec-megaparsec
 pkgname=haskell-hspec-megaparsec
-pkgver=2.2.0
-pkgrel=170
+pkgver=2.2.1
+pkgrel=2
 pkgdesc="Utility functions for testing Megaparsec parsers with Hspec"
 url="https://github.com/goldfirere/hspec-megaparsec"
 license=('BSD')
 arch=('loong64' 'x86_64')
 depends=('ghc-libs' 'haskell-hspec-expectations' 'haskell-megaparsec')
-makedepends=('ghc' 'haskell-hspec')
+makedepends=('ghc' 'uusi' 'haskell-hspec')
 source=(https://hackage.haskell.org/packages/archive/${_hkgname}/${pkgver}/${_hkgname}-${pkgver}.tar.gz)
-sha512sums=('347e1d5275fbd52bc0a51a1106aab8de123034ec34d5f0a113af76136009bc16d2c570aa747e903e050899cf3d53a091e765af5aa67dd7eb3ee7aef6e62054a4')
+sha512sums=('1ce121896327566a481021721d3ec9b03ffe0090e3b017f891a9e923f6c8e010a74d6d6ac4495d54cfc4b2200c65fc5e4741424e50947246a20a178df7c2cc0a')
+
+prepare() {
+    cd $_hkgname-$pkgver
+    gen-setup
+}
 
 build() {
     cd $_hkgname-$pkgver
     
     runhaskell Setup configure -O --enable-shared --enable-executable-dynamic --disable-library-vanilla \
         --prefix=/usr --docdir=/usr/share/doc/$pkgname --datasubdir=$pkgname --enable-tests \
-        --dynlibdir=/usr/lib --libsubdir=\$compiler/site-local/\$pkgid --ghc-option=-fllvm
+        --dynlibdir=/usr/lib --libsubdir=\$compiler/site-local/\$pkgid
     runhaskell Setup build $MAKEFLAGS
     runhaskell Setup register --gen-script
     runhaskell Setup unregister --gen-script

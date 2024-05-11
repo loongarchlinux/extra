@@ -3,8 +3,8 @@
 
 _hkgname=unix-time
 pkgname=haskell-unix-time
-pkgver=0.4.11
-pkgrel=15
+pkgver=0.4.12
+pkgrel=5
 pkgdesc="Unix time parser/formatter and utilities"
 url="https://hackage.haskell.org/package/${_hkgname}"
 license=("BSD")
@@ -13,14 +13,15 @@ depends=('ghc-libs' 'haskell-old-time')
 makedepends=('ghc' 'haskell-cabal-doctest' 'haskell-doctest' 'haskell-hspec' 'haskell-old-locale'
              'haskell-quickcheck')
 source=("https://hackage.haskell.org/packages/archive/${_hkgname}/${pkgver}/${_hkgname}-${pkgver}.tar.gz")
-sha512sums=('1709df7edd1ab3c2152afdbc2e77b65c433329958d3066ea0868a9280321e0e6a10c8151fdf2586d1b210600566fe8a304589d5b04e18a349f4e1c5346715172')
+sha512sums=('b6ac7b5376a97d59a62053c054e95fba7c089e0ef22f2bd03065d3785abd4eaa7fe195bbc197e329585782a8987fcbcf1bbfa7c64d3a765429d00018a0f9bc46')
 
 build() {
     cd $_hkgname-$pkgver
     
+    LDFLAGS="${LDFLAGS/-Wl,-z,pack-relative-relocs/}" \
     runhaskell Setup configure -O --enable-shared --enable-executable-dynamic --disable-library-vanilla \
         --prefix=/usr --docdir=/usr/share/doc/$pkgname --datasubdir=$pkgname --enable-tests \
-        --dynlibdir=/usr/lib --libsubdir=\$compiler/site-local/\$pkgid --ghc-option=-fllvm
+        --dynlibdir=/usr/lib --libsubdir=\$compiler/site-local/\$pkgid
     runhaskell Setup build $MAKEFLAGS
     runhaskell Setup register --gen-script
     runhaskell Setup unregister --gen-script

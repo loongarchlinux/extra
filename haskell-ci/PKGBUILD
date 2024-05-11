@@ -3,8 +3,8 @@
 
 _hkgname=haskell-ci
 pkgname=haskell-ci
-pkgver=0.12.1
-pkgrel=474
+pkgver=0.14.3
+pkgrel=12
 pkgdesc="Cabal package script generator for Travis-CI"
 url="https://haskell-ci.rtfd.org/"
 license=("GPL")
@@ -16,15 +16,12 @@ depends=('ghc-libs' 'haskell-aeson' 'haskell-attoparsec' 'haskell-base-compat'
          'haskell-network-uri' 'haskell-optparse-applicative' 'shellcheck' 'haskell-temporary'
          'haskell-unordered-containers' 'haskell-zinza')
 makedepends=('ghc' 'uusi' 'haskell-diff' 'haskell-ansi-terminal' 'haskell-tasty' 'haskell-tasty-golden')
-source=("https://hackage.haskell.org/packages/archive/$_hkgname/$pkgver/$_hkgname-$pkgver.tar.gz"
-        haskell-ci-aeson-2.patch)
-sha512sums=('d93a6b8e880255469b34b568320659802252379f0c5486ed315b366fd07dae935a480047468912bc5a397b9e55b00ea964451790f963d05b8df1d426d871da1c'
-            '6f96010eec7add9740b5c760c76a9dad01e391ebd503c52c93b0126fee7d48e29e3ffd30c387908b0341ebaf20b34caafbd2d291b2f5e0a22b086f0402784497')
+source=("https://hackage.haskell.org/packages/archive/$_hkgname/$pkgver/$_hkgname-$pkgver.tar.gz")
+sha512sums=('16a75acb1c3979c4a22cb2631b89bd2035b2d6917c59a87c1e08fe1ade960f6531e2ff7574048a584c49a55d9441d0b13e3e47c2e758b6e454721015c5e44f51')
 
 prepare(){
   cd $_hkgname-$pkgver
-  patch -p1 -i ../haskell-ci-aeson-2.patch
-  uusi -u aeson -u attoparsec -u base-compat -u lattices -u optparse-applicative -u ShellCheck $_hkgname.cabal
+  uusi -u aeson -u lattices -u optparse-applicative -u ShellCheck $_hkgname.cabal
 }
 
 build() {
@@ -32,7 +29,7 @@ build() {
 
   runhaskell Setup configure -O --enable-shared --enable-executable-dynamic --disable-library-vanilla \
     --prefix=/usr --docdir=/usr/share/doc/$pkgname --datasubdir=$pkgname --enable-tests \
-    --dynlibdir=/usr/lib --libsubdir=\$compiler/site-local/\$pkgid --ghc-option=-fllvm \
+    --dynlibdir=/usr/lib --libsubdir=\$compiler/site-local/\$pkgid \
     --ghc-option=-optl-Wl\,-z\,relro\,-z\,now \
     --ghc-option='-pie'
 

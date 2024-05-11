@@ -1,0 +1,58 @@
+diff -aur j2cli-0.3.12b.old/j2cli/cli.py j2cli-0.3.12b/j2cli/cli.py
+--- j2cli-0.3.12b.old/j2cli/cli.py	2024-04-15 14:26:46.007188732 +0200
++++ j2cli-0.3.12b/j2cli/cli.py	2024-04-15 14:40:30.666236205 +0200
+@@ -5,7 +5,9 @@
+ import jinja2.loaders
+ from . import __version__
+ 
+-import imp, inspect
++import importlib.util
++import importlib.machinery
++import inspect
+ 
+ from .context import read_context_data, FORMATS
+ from .extras import filters
+@@ -70,8 +72,13 @@
+         self.register_tests(self._import_functions(filename))
+ 
+     def _import_functions(self, filename):
+-        m = imp.load_source('imported-funcs', filename)
+-        return dict((name, func) for name, func in inspect.getmembers(m) if inspect.isfunction(func))
++        loader = importlib.machinery.SourceFileLoader('imported-funcs', filename)
++        spec = importlib.util.spec_from_file_location('imported-funcs', filename, loader=loader)
++        module = importlib.util.module_from_spec(spec)
++        sys.modules['imported-funcs'] = module
++        loader.exec_module(module)
++
++        return dict((name, func) for name, func in inspect.getmembers(module) if inspect.isfunction(func))
+ 
+     def render(self, template_path, context):
+         """ Render a template
+@@ -166,9 +173,12 @@
+ 
+     # Customization
+     if args.customize is not None:
+-        customize = CustomizationModule(
+-            imp.load_source('customize-module', args.customize)
+-        )
++        loader = importlib.machinery.SourceFileLoader('customize-module', args.customize)
++        spec = importlib.util.spec_from_file_location('customize-module', args.customize, loader=loader)
++        module = importlib.util.module_from_spec(spec)
++        sys.modules['customize-module'] = module
++        loader.exec_module(module)
++        customize = CustomizationModule(module)
+     else:
+         customize = CustomizationModule(None)
+ 
+diff -aur j2cli-0.3.12b.old/j2cli/context.py j2cli-0.3.12b/j2cli/context.py
+--- j2cli-0.3.12b.old/j2cli/context.py	2024-04-15 14:26:46.007188732 +0200
++++ j2cli-0.3.12b/j2cli/context.py	2024-04-15 14:36:32.274737441 +0200
+@@ -41,7 +41,7 @@
+ 
+     # Parse
+     ini = MyConfigParser()
+-    ini.readfp(ini_file_io(data_string))
++    ini.read_file(ini_file_io(data_string))
+ 
+     # Export
+     return ini.as_dict()

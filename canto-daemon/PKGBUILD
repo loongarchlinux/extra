@@ -1,32 +1,34 @@
 # Maintainer: David Runge <dvzrv@archlinux.org>
 
-_name=Canto
+_name=canto-next
 pkgname=canto-daemon
 pkgver=0.9.8
-pkgrel=4
+pkgrel=5
 pkgdesc="Next-gen console RSS/Atom reader"
-arch=('any')
+arch=(any)
 url="https://github.com/themoken/canto-next"
-license=('GPL2')
-depends=('python-feedparser')
-makedepends=('python-setuptools')
+license=(GPL-2.0-only)
+depends=(
+  python
+  python-feedparser
+)
+makedepends=(
+  python-build
+  python-installer
+  python-setuptools
+  python-wheel
+)
 optdepends=('python-requests: for inoreader plugin')
-source=("https://files.pythonhosted.org/packages/source/${_name::1}/${_name}/${_name}-${pkgver}.tar.gz")
-sha512sums=('cc052a4774d9cb65d78cf845d581e491ef4e035dc5b267b3843edb3b400c04297d418a00e8685fcd6faed4b8d3ca5dfc844717134045f643bf149d93d22a1374')
-b2sums=('79f8a2d1ad4f9095c753660c2ef03db798f088a2eeb5b1cc105b82ed684afee7f2bb72bc010587031d633f6b6c9d4f5f6e49368f0e1e536e3edef44d761d7602')
-
-prepare() {
-  mv -v "${_name}-$pkgver" "$pkgname-$pkgver"
-}
+source=($_name-$pkgver.tar.gz::$url/archive/refs/tags/v$pkgver.tar.gz)
+sha512sums=('5394a0fea38ecbe28c02bd6f68e1e10e0523cf087bb0f79f17e53bdf8e9df16213beaa1c0a5f5873b3126022faf8d0fd999dbd01aa727c35b3c1a823501787da')
+b2sums=('55b5e9be9980df471e5488b7583be3b06f8f7048ecb3a89a64ecc9aafa806b201272bd16944a25e7a412da914cc83b76d1f19c0813366209c33195442a84586e')
 
 build() {
-  cd "$pkgname-$pkgver"
-  python setup.py build
+  cd $_name-$pkgver
+  python -m build --wheel --no-isolation
 }
 
 package() {
-  cd "$pkgname-$pkgver"
-  python setup.py install --skip-build \
-                          --optimize=1 \
-                          --root="${pkgdir}"
+  cd $_name-$pkgver
+  python -m installer --destdir="$pkgdir" dist/*.whl
 }

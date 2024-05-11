@@ -4,42 +4,43 @@
 # Contributor: Sven Pfleiderer <pfleidi@roothausen.de>
 
 pkgname=newsboat
-pkgver=2.34
-pkgrel=1
+pkgver=2.35
+pkgrel=4
 pkgdesc="RSS/Atom feed reader for text terminals"
 arch=('loong64' 'x86_64')
 url="https://newsboat.org/"
 license=('MIT')
 depends=('curl' 'hicolor-icon-theme' 'json-c' 'libxml2' 'sqlite' 'stfl')
-makedepends=('asciidoctor' 'rust' 'swig')
-optdepends=('buku: for bookmark-buku.sh'
-            'kitty: for kitty-img-pager.sh'
-            'perl: for pinboard.pl'
-            'python: for exportOPMLWithTags.py'
-            'ruby: for feedgrabber.rb, heise.rb, and slashdot.rb')
+makedepends=('asciidoctor' 'git' 'rust' 'swig')
+optdepends=(
+  'buku: for bookmark-buku.sh'
+  'kitty: for kitty-img-pager.sh'
+  'perl: for pinboard.pl'
+  'python: for exportOPMLWithTags.py'
+  'ruby: for feedgrabber.rb, heise.rb, and slashdot.rb'
+)
 replaces=('newsbeuter')
 options=('!makeflags' '!lto')
-changelog=$pkgname.changelog
-source=("https://newsboat.org/releases/$pkgver/$pkgname-$pkgver.tar.xz"{,.asc})
-sha256sums=('73d7b539b0c906f6843a1542e1904a02ae430e79d6be4d6f9e2e2034eac2434e'
-            'SKIP')
-validpgpkeys=('B8B1756A0DDBF0760CE67CCF4ED6CD61932B9EBE') # Newsboat project <newsboat@googlegroups.com>
+#source=("https://newsboat.org/releases/$pkgver/$pkgname-$pkgver.tar.xz"{,.asc})
+source=("git+https://github.com/newsboat/newsboat.git#tag=r${pkgver}")
+sha256sums=('329d0fe161f90f9ce049d8b2878b0ba65405b08c279f72021de74a63558be6e8')
+#validpgpkeys=('B8B1756A0DDBF0760CE67CCF4ED6CD61932B9EBE') # Newsboat project <newsboat@googlegroups.com>
 
 prepare() {
-  cd $pkgname-$pkgver
+  cd $pkgname
 
-  cargo fetch --locked --target "$CARCH-unknown-linux-gnu"
+  cargo fetch --locked --target "$(rustc -vV | sed -n 's/host: //p')"
 }
 
 build() {
-  cd $pkgname-$pkgver
+  cd $pkgname
 
   make prefix=/usr
   make doc
 }
 
 package() {
-  cd $pkgname-$pkgver
+  cd $pkgname
 
   make prefix=/usr DESTDIR="$pkgdir" install
   install -Dm644 -t "$pkgdir"/usr/share/licenses/$pkgname LICENSE

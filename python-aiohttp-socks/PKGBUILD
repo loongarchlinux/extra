@@ -4,7 +4,7 @@
 pkgname=python-aiohttp-socks
 pkgver=0.8.4
 _tag=2521e1b078e97f02d06b01aa8950bc6b23f24746 # git rev-parse "v$pkgver"
-pkgrel=1
+pkgrel=2
 pkgdesc="SOCKS proxy connector for aiohttp. SOCKS4(a) and SOCKS5 are supported."
 arch=('any')
 url="https://github.com/romis2012/aiohttp-socks/"

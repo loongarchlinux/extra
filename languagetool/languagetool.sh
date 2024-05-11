@@ -10,7 +10,7 @@ declare -a argv=("$@")
 
 i=0
 for arg in "$@"; do
-  if [[ $arg != -* ]]; then
+  if [[ $arg != -* || $arg == - ]]; then
     file_present=true
   fi
   if [[ $arg == --config* ]]; then

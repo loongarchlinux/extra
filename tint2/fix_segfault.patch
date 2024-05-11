@@ -1,0 +1,36 @@
+diff --git a/src/main.c b/src/main.c
+index 7b2c610..186f840 100644
+--- a/src/main.c
++++ b/src/main.c
+@@ -419,6 +419,10 @@ void handle_x_event(XEvent *e)
+         return;
+ 
+     Panel *panel = get_panel(e->xany.window);
++    if(e->type>=KeyPress && e->type<=LeaveNotify && panel == NULL) {
++        return;
++    }
++
+     switch (e->type) {
+     case ButtonPress: {
+         tooltip_hide(0);
+@@ -443,7 +447,7 @@ void handle_x_event(XEvent *e)
+             handle_mouse_move_event(e);
+ 
+         Area *area = find_area_under_mouse(panel, e->xmotion.x, e->xmotion.y);
+-        if (area->_get_tooltip_text)
++        if (area && area->_get_tooltip_text)
+             tooltip_trigger_show(area, panel, e);
+         else
+             tooltip_trigger_hide();
+diff --git a/src/util/area.c b/src/util/area.c
+index c1cc949..c893023 100644
+--- a/src/util/area.c
++++ b/src/util/area.c
+@@ -773,6 +773,7 @@ gboolean full_width_area_is_under_mouse(void *obj, int x, int y)
+ 
+ Area *find_area_under_mouse(void *root, int x, int y)
+ {
++    if (root == NULL) return NULL;
+     Area *result = root;
+     Area *new_result = result;
+     do {

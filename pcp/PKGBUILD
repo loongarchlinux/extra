@@ -5,13 +5,13 @@ pkgbase=pcp
 pkgname=(pcp pcp-gui pcp-pmda-activemq pcp-pmda-bcc pcp-pmda-bind2 pcp-pmda-bpftrace pcp-pmda-libvirt
          pcp-pmda-mysql pcp-pmda-nginx pcp-pmda-nutcracker pcp-pmda-openmetrics
          pcp-pmda-podman pcp-pmda-postgresql pcp-pmda-snmp)
-pkgver=6.1.1
+pkgver=6.2.1
 pkgrel=1
 arch=('loong64' 'x86_64')
 url="https://pcp.io"
-license=('LGPL')
+license=(GPL-2.0-or-later LGPL-2.1-or-later CC-BY-3.0)
 makedepends=('avahi' 'procps-ng' 'which' 'libuv'
-             'rsync' 'llvm' 'debugedit'
+             'rsync' 'llvm' 'debugedit' 'python-setuptools'
              'qt5-svg' # gui
              'python-openpyxl' # pcp2xlsx
              'python-jsonpointer' 'python-six' # json
@@ -32,15 +32,18 @@ makedepends=('avahi' 'procps-ng' 'which' 'libuv'
 source=("https://github.com/performancecopilot/pcp/archive/$pkgver/$pkgname-$pkgver.tar.gz"
         "sysuser.conf"
         "tmpfile.conf"
-        "check-lto.patch")
-sha256sums=('a79ec79e15a71ddcc98aae873c89ee24f3d5bfaa31cfb7712a3c02a1d04c228c'
+        "check-lto.patch"
+        "setuptools.patch")
+sha256sums=('189d6cb56e6b8e2eae5fab93c11d1a58cdc3ec8c8860b52aa8819c79a7fedc9e'
             '3e21ef7925296f73c91fe85c8dba341ce00366163845dd8993e2813b0ad5e4a4'
             '0166ffea180527de5a48a8e8f145cc80860b93e8f44bc5f96836c3d1cb4b01a2'
-            '228bb9c24ad8001b1806526d3cb65758dd184af7735038a93ab4465909d9fda9')
+            '228bb9c24ad8001b1806526d3cb65758dd184af7735038a93ab4465909d9fda9'
+            'b76db42b08c1cc5e2a61cc0b3371aee2508667ac544eeba40dfcc2b895f9587d')
 
 prepare() {
   cd "$pkgbase-$pkgver"
   patch -p1 -i "$srcdir/check-lto.patch"
+  patch -p1 -i "$srcdir/setuptools.patch"
 }
 
 build() {
@@ -90,6 +93,336 @@ package_pcp() {
               'perl-date-parse: sar2pcp'
               'python-openpyxl: pcp2xlsx')
   install=pcp.install
+  backup=(
+    etc/pcp.conf
+    etc/pcp.env
+    etc/pcp/bpf/bpf.conf
+    etc/pcp/derived/cpu-util.conf
+    etc/pcp/derived/denki.conf
+    etc/pcp/derived/iostat.conf
+    etc/pcp/derived/mssql.conf
+    etc/pcp/derived/proc.conf
+    etc/pcp/discover/pcp-kube-pods.conf
+    etc/pcp/dstat/aio
+    etc/pcp/dstat/battery
+    etc/pcp/dstat/cpu
+    etc/pcp/dstat/disk
+    etc/pcp/dstat/dm
+    etc/pcp/dstat/entropy
+    etc/pcp/dstat/freespace
+    etc/pcp/dstat/fs
+    etc/pcp/dstat/gpfs
+    etc/pcp/dstat/int
+    etc/pcp/dstat/io
+    etc/pcp/dstat/ipc
+    etc/pcp/dstat/load
+    etc/pcp/dstat/locks
+    etc/pcp/dstat/md
+    etc/pcp/dstat/mem
+    etc/pcp/dstat/memcache
+    etc/pcp/dstat/mongodb
+    etc/pcp/dstat/mysql
+    etc/pcp/dstat/net
+    etc/pcp/dstat/nfs
+    etc/pcp/dstat/page
+    etc/pcp/dstat/part
+    etc/pcp/dstat/postfix
+    etc/pcp/dstat/proc
+    etc/pcp/dstat/redis
+    etc/pcp/dstat/rpc
+    etc/pcp/dstat/sockets
+    etc/pcp/dstat/swap
+    etc/pcp/dstat/sys
+    etc/pcp/dstat/tcp
+    etc/pcp/dstat/topbio
+    etc/pcp/dstat/topchildwait
+    etc/pcp/dstat/topcpu
+    etc/pcp/dstat/topio
+    etc/pcp/dstat/topmem
+    etc/pcp/dstat/utmp
+    etc/pcp/dstat/vm
+    etc/pcp/dstat/zfs
+    etc/pcp/elasticsearch/elasticsearch.conf
+    etc/pcp/haproxy/haproxy.conf
+    etc/pcp/indom.conf
+    etc/pcp/kvm/kvm.conf
+    etc/pcp/labels.conf
+    etc/pcp/linux/interfaces.conf
+    etc/pcp/linux/samplebandwidth.conf
+    etc/pcp/lustre/lustre.conf
+    etc/pcp/mounts/mounts.conf
+    etc/pcp/netcheck/netcheck.conf
+    etc/pcp/overhead/conf.d/default.conf
+    etc/pcp/pmafm/pcp
+    etc/pcp/pmafm/pcp-gui
+    etc/pcp/pmcd/pmcd.conf
+    etc/pcp/pmcd/pmcd.options
+    etc/pcp/pmcd/rc.local
+    etc/pcp/pmie/class.d/pmfind
+    etc/pcp/pmie/control
+    etc/pcp/pmie/control.d/local
+    etc/pcp/pmie/rc
+    etc/pcp/pmieconf/cisco/in_util
+    etc/pcp/pmieconf/cisco/out_util
+    etc/pcp/pmieconf/cpu/context_switch
+    etc/pcp/pmieconf/cpu/load_average
+    etc/pcp/pmieconf/cpu/low_util
+    etc/pcp/pmieconf/cpu/system
+    etc/pcp/pmieconf/cpu/util
+    etc/pcp/pmieconf/dm/data_high_util
+    etc/pcp/pmieconf/dm/metadata_high_util
+    etc/pcp/pmieconf/entropy/available
+    etc/pcp/pmieconf/filesys/filling
+    etc/pcp/pmieconf/filesys/vfs_files
+    etc/pcp/pmieconf/global/parameters
+    etc/pcp/pmieconf/global/pcp_actions
+    etc/pcp/pmieconf/memory/exhausted
+    etc/pcp/pmieconf/memory/oom_kill
+    etc/pcp/pmieconf/memory/swap_low
+    etc/pcp/pmieconf/network/tcplistenoverflows
+    etc/pcp/pmieconf/network/tcpqfulldocookies
+    etc/pcp/pmieconf/network/tcpqfulldrops
+    etc/pcp/pmieconf/openvswitch/errors
+    etc/pcp/pmieconf/openvswitch/mtu_exceeded_drops
+    etc/pcp/pmieconf/openvswitch/rx_drops
+    etc/pcp/pmieconf/openvswitch/rx_qos_drops
+    etc/pcp/pmieconf/openvswitch/tx_drops
+    etc/pcp/pmieconf/openvswitch/tx_failure_drops
+    etc/pcp/pmieconf/openvswitch/tx_qos_drops
+    etc/pcp/pmieconf/openvswitch/tx_retries
+    etc/pcp/pmieconf/openvswitch/vhost_notification
+    etc/pcp/pmieconf/openvswitch/vhost_tx_contention
+    etc/pcp/pmieconf/percpu/many_util
+    etc/pcp/pmieconf/percpu/some_util
+    etc/pcp/pmieconf/percpu/system
+    etc/pcp/pmieconf/perdisk/average_queue_length
+    etc/pcp/pmieconf/perdisk/average_wait_time
+    etc/pcp/pmieconf/perdisk/bandwidth
+    etc/pcp/pmieconf/perdisk/iops
+    etc/pcp/pmieconf/pernetif/collisions
+    etc/pcp/pmieconf/pernetif/errors
+    etc/pcp/pmieconf/pernetif/packets
+    etc/pcp/pmieconf/pernetif/util
+    etc/pcp/pmieconf/power/thermal_throttle
+    etc/pcp/pmieconf/primary/pmda_status
+    etc/pcp/pmieconf/shping/response
+    etc/pcp/pmieconf/shping/status
+    etc/pcp/pmieconf/testing/test_actions
+    etc/pcp/pmieconf/zeroconf/all_threads
+    etc/pcp/pmlogconf/apache/processes
+    etc/pcp/pmlogconf/apache/summary
+    etc/pcp/pmlogconf/apache/uptime
+    etc/pcp/pmlogconf/cpu/percpu
+    etc/pcp/pmlogconf/cpu/summary
+    etc/pcp/pmlogconf/disk/percontroller
+    etc/pcp/pmlogconf/disk/perdisk
+    etc/pcp/pmlogconf/disk/perpartition
+    etc/pcp/pmlogconf/disk/summary
+    etc/pcp/pmlogconf/elasticsearch/summary
+    etc/pcp/pmlogconf/filesystem/all
+    etc/pcp/pmlogconf/filesystem/rpc-server
+    etc/pcp/pmlogconf/filesystem/summary
+    etc/pcp/pmlogconf/filesystem/xfs-all
+    etc/pcp/pmlogconf/filesystem/xfs-io-linux
+    etc/pcp/pmlogconf/gfs2/gfs2-all
+    etc/pcp/pmlogconf/gfs2/gfs2-base
+    etc/pcp/pmlogconf/kernel/bufcache-activity
+    etc/pcp/pmlogconf/kernel/bufcache-all
+    etc/pcp/pmlogconf/kernel/inode-cache
+    etc/pcp/pmlogconf/kernel/load
+    etc/pcp/pmlogconf/kernel/memory-linux
+    etc/pcp/pmlogconf/kernel/read-write-data
+    etc/pcp/pmlogconf/kernel/summary-linux
+    etc/pcp/pmlogconf/kernel/summary-windows
+    etc/pcp/pmlogconf/kernel/syscalls-linux
+    etc/pcp/pmlogconf/kernel/vnodes
+    etc/pcp/pmlogconf/kvm/kvm
+    etc/pcp/pmlogconf/libvirt/libvirt
+    etc/pcp/pmlogconf/mailq/summary
+    etc/pcp/pmlogconf/memcache/summary
+    etc/pcp/pmlogconf/memory/buddyinfo
+    etc/pcp/pmlogconf/memory/ksminfo
+    etc/pcp/pmlogconf/memory/meminfo
+    etc/pcp/pmlogconf/memory/proc-linux
+    etc/pcp/pmlogconf/memory/slabinfo
+    etc/pcp/pmlogconf/memory/swap-activity
+    etc/pcp/pmlogconf/memory/swap-all
+    etc/pcp/pmlogconf/memory/swap-config
+    etc/pcp/pmlogconf/memory/vmstat
+    etc/pcp/pmlogconf/memory/zoneinfo
+    etc/pcp/pmlogconf/mmv/summary
+    etc/pcp/pmlogconf/mysql/summary
+    etc/pcp/pmlogconf/netcheck/summary
+    etc/pcp/pmlogconf/netfilter/config
+    etc/pcp/pmlogconf/netfilter/summary
+    etc/pcp/pmlogconf/networking/icmp6
+    etc/pcp/pmlogconf/networking/interface-all
+    etc/pcp/pmlogconf/networking/interface-summary
+    etc/pcp/pmlogconf/networking/ip6
+    etc/pcp/pmlogconf/networking/mbufs
+    etc/pcp/pmlogconf/networking/multicast
+    etc/pcp/pmlogconf/networking/nfs2-client
+    etc/pcp/pmlogconf/networking/nfs2-server
+    etc/pcp/pmlogconf/networking/nfs3-client
+    etc/pcp/pmlogconf/networking/nfs3-server
+    etc/pcp/pmlogconf/networking/nfs4-client
+    etc/pcp/pmlogconf/networking/nfs4-server
+    etc/pcp/pmlogconf/networking/other-protocols
+    etc/pcp/pmlogconf/networking/perprocess-linux
+    etc/pcp/pmlogconf/networking/persocket-linux
+    etc/pcp/pmlogconf/networking/rpc
+    etc/pcp/pmlogconf/networking/socket-linux
+    etc/pcp/pmlogconf/networking/softnet
+    etc/pcp/pmlogconf/networking/streams
+    etc/pcp/pmlogconf/networking/tcp-activity-linux
+    etc/pcp/pmlogconf/networking/tcp-all
+    etc/pcp/pmlogconf/networking/udp-all
+    etc/pcp/pmlogconf/networking/udp-packets-linux
+    etc/pcp/pmlogconf/networking/udp6
+    etc/pcp/pmlogconf/nginx/summary
+    etc/pcp/pmlogconf/openmetrics/kepler
+    etc/pcp/pmlogconf/openmetrics/summary
+    etc/pcp/pmlogconf/openvswitch/summary
+    etc/pcp/pmlogconf/oracle/summary
+    etc/pcp/pmlogconf/platform/hinv
+    etc/pcp/pmlogconf/platform/linux
+    etc/pcp/pmlogconf/postgresql/summary
+    etc/pcp/pmlogconf/rabbitmq/summary
+    etc/pcp/pmlogconf/rsyslog/summary
+    etc/pcp/pmlogconf/services/pmproxy
+    etc/pcp/pmlogconf/services/redis
+    etc/pcp/pmlogconf/shping/summary
+    etc/pcp/pmlogconf/sqlserver/summary
+    etc/pcp/pmlogconf/statsd/statsd
+    etc/pcp/pmlogconf/storage/vdo
+    etc/pcp/pmlogconf/storage/vdo-summary
+    etc/pcp/pmlogconf/tools/atop
+    etc/pcp/pmlogconf/tools/atop-gpustats
+    etc/pcp/pmlogconf/tools/atop-hotproc
+    etc/pcp/pmlogconf/tools/atop-httpstats
+    etc/pcp/pmlogconf/tools/atop-infiniband
+    etc/pcp/pmlogconf/tools/atop-nfsclient
+    etc/pcp/pmlogconf/tools/atop-perfevent
+    etc/pcp/pmlogconf/tools/atop-proc
+    etc/pcp/pmlogconf/tools/atop-summary
+    etc/pcp/pmlogconf/tools/atop-zfs
+    etc/pcp/pmlogconf/tools/atop-zswap
+    etc/pcp/pmlogconf/tools/collectl
+    etc/pcp/pmlogconf/tools/collectl-interrupts
+    etc/pcp/pmlogconf/tools/collectl-summary
+    etc/pcp/pmlogconf/tools/dmcache
+    etc/pcp/pmlogconf/tools/dstat
+    etc/pcp/pmlogconf/tools/dstat-summary
+    etc/pcp/pmlogconf/tools/free
+    etc/pcp/pmlogconf/tools/free-summary
+    etc/pcp/pmlogconf/tools/hotproc
+    etc/pcp/pmlogconf/tools/htop
+    etc/pcp/pmlogconf/tools/htop-proc
+    etc/pcp/pmlogconf/tools/htop-summary
+    etc/pcp/pmlogconf/tools/htop-zfs
+    etc/pcp/pmlogconf/tools/iostat
+    etc/pcp/pmlogconf/tools/ip
+    etc/pcp/pmlogconf/tools/ipcs
+    etc/pcp/pmlogconf/tools/mpstat
+    etc/pcp/pmlogconf/tools/mpstat-interrupts
+    etc/pcp/pmlogconf/tools/mpstat-summary
+    etc/pcp/pmlogconf/tools/numastat
+    etc/pcp/pmlogconf/tools/pcp-summary
+    etc/pcp/pmlogconf/tools/pidstat
+    etc/pcp/pmlogconf/tools/pidstat-summary
+    etc/pcp/pmlogconf/tools/pmclient
+    etc/pcp/pmlogconf/tools/pmclient-summary
+    etc/pcp/pmlogconf/tools/pmieconf
+    etc/pcp/pmlogconf/tools/pmstat
+    etc/pcp/pmlogconf/tools/sar
+    etc/pcp/pmlogconf/tools/sar-summary
+    etc/pcp/pmlogconf/tools/tapestat
+    etc/pcp/pmlogconf/tools/uptime
+    etc/pcp/pmlogconf/tools/vector
+    etc/pcp/pmlogconf/tools/vector-summary
+    etc/pcp/pmlogconf/tools/vmstat
+    etc/pcp/pmlogconf/tools/vmstat-summary
+    etc/pcp/pmlogconf/zeroconf/atop-proc
+    etc/pcp/pmlogconf/zeroconf/disk
+    etc/pcp/pmlogconf/zeroconf/filesystem
+    etc/pcp/pmlogconf/zeroconf/interrupts
+    etc/pcp/pmlogconf/zeroconf/nfsclient
+    etc/pcp/pmlogconf/zeroconf/numa
+    etc/pcp/pmlogconf/zeroconf/numastat
+    etc/pcp/pmlogconf/zeroconf/pidstat
+    etc/pcp/pmlogconf/zeroconf/pidstat-summary
+    etc/pcp/pmlogconf/zeroconf/rpc
+    etc/pcp/pmlogconf/zeroconf/tapestat
+    etc/pcp/pmlogconf/zeroconf/tty
+    etc/pcp/pmlogconf/zeroconf/xfs-perdev
+    etc/pcp/pmlogconf/zimbra/all
+    etc/pcp/pmlogger/class.d/pmfind
+    etc/pcp/pmlogger/config.pmstat
+    etc/pcp/pmlogger/control
+    etc/pcp/pmlogger/control.d/local
+    etc/pcp/pmlogger/options.pmstat
+    etc/pcp/pmlogger/rc
+    etc/pcp/pmlogredact/network
+    etc/pcp/pmlogredact/usernames
+    etc/pcp/pmlogrewrite/bcc_migrate.conf
+    etc/pcp/pmlogrewrite/cgroup_units.conf
+    etc/pcp/pmlogrewrite/jbd2_kernel_ulong.conf
+    etc/pcp/pmlogrewrite/kvm_fixups.conf
+    etc/pcp/pmlogrewrite/linux_disk_all_fixups.conf
+    etc/pcp/pmlogrewrite/linux_kernel_fixups.conf
+    etc/pcp/pmlogrewrite/linux_kernel_ulong.conf
+    etc/pcp/pmlogrewrite/linux_mem_fixups.conf
+    etc/pcp/pmlogrewrite/linux_proc_fs_nfsd_fixups.conf
+    etc/pcp/pmlogrewrite/linux_proc_migrate.conf
+    etc/pcp/pmlogrewrite/linux_proc_net_snmp_migrate.conf
+    etc/pcp/pmlogrewrite/linux_proc_net_tcp_migrate.conf
+    etc/pcp/pmlogrewrite/linux_xfs_migrate.conf
+    etc/pcp/pmlogrewrite/linux_xfs_perdev_buffer.conf
+    etc/pcp/pmlogrewrite/mysql_migrate.conf
+    etc/pcp/pmlogrewrite/nfsclient_migrate.conf
+    etc/pcp/pmlogrewrite/pmcd_migrate.conf
+    etc/pcp/pmlogrewrite/pmproxy_fixups.conf
+    etc/pcp/pmlogrewrite/proc_discrete_strings.conf
+    etc/pcp/pmlogrewrite/proc_jiffies.conf
+    etc/pcp/pmlogrewrite/proc_kernel_ulong.conf
+    etc/pcp/pmlogrewrite/proc_kernel_ulong_migrate.conf
+    etc/pcp/pmlogrewrite/proc_scheduler.conf
+    etc/pcp/pmproxy/pmproxy.conf
+    etc/pcp/pmproxy/pmproxy.options
+    etc/pcp/pmproxy/rc
+    etc/pcp/pmrep/00-defaults.conf
+    etc/pcp/pmrep/collectl.conf
+    etc/pcp/pmrep/iostat.conf
+    etc/pcp/pmrep/iostat_v10.conf
+    etc/pcp/pmrep/iostat_v11.conf
+    etc/pcp/pmrep/iostat_v12_5.conf
+    etc/pcp/pmrep/mpstat.conf
+    etc/pcp/pmrep/numa.conf
+    etc/pcp/pmrep/pidstat.conf
+    etc/pcp/pmrep/pmproxy.conf
+    etc/pcp/pmrep/proc.conf
+    etc/pcp/pmrep/sar.conf
+    etc/pcp/pmrep/sar_v11.conf
+    etc/pcp/pmrep/vmstat.conf
+    etc/pcp/pmsearch/pmsearch.conf
+    etc/pcp/pmseries/pmseries.conf
+    etc/pcp/proc/samplehotproc.conf
+    etc/pcp/rabbitmq/rabbitmq.conf
+    etc/pcp/redis/redis.conf
+    etc/pcp/simple/simple.conf
+    etc/pcp/sockets/filter.conf
+    etc/pcp/summary/expr.pmie
+    etc/pcp/tls.conf
+    etc/sasl2/pmcd.conf
+    etc/sysconfig/pmcd
+    etc/sysconfig/pmfind
+    etc/sysconfig/pmie_timers
+    etc/sysconfig/pmlogger
+    etc/sysconfig/pmlogger_farm
+    etc/sysconfig/pmlogger_timers
+    etc/sysconfig/pmproxy
+    etc/zabbix/zabbix_agentd.d/zbxpcp.conf
+  )
 
   cd "$pkgbase-$pkgver"
   rsync -vaHAX --exclude-from=../gui.list --exclude-from=<(echo /{etc/pcp,var/lib/pcp/config/pmlogconf,{usr,var}/lib/pcp/pmdas}/{activemq,bcc,bind2,bpftrace,libvirt,json,mysql,nginx,nutcracker,openmetrics,podman,postgresql,snmp} /usr/share/man/man1/pmda{activemq,bcc,bind2,bpftrace,libvirt,json,mysql,nginx,nutcracker,openmetrics,podman,postgresql,snmp}.1.gz | sed -r 's/ +/\n/g') "$srcdir"/installskel/ "$pkgdir"/
@@ -101,6 +434,49 @@ package_pcp() {
 package_pcp-gui() {
   pkgdesc='Visualization tools for the Performance Co-Pilot toolkit'
   depends=('pcp' 'qt5-svg')
+  backup=(
+    etc/pcp/pmchart/Apache
+    etc/pcp/pmchart/ApacheServer
+    etc/pcp/pmchart/BusyCPU
+    etc/pcp/pmchart/CPU
+    etc/pcp/pmchart/Cisco
+    etc/pcp/pmchart/Disk
+    etc/pcp/pmchart/Diskbytes
+    etc/pcp/pmchart/ElasticsearchServer
+    etc/pcp/pmchart/Filesystem
+    etc/pcp/pmchart/Iostat
+    etc/pcp/pmchart/Iostat.DM
+    etc/pcp/pmchart/Iostat.MD
+    etc/pcp/pmchart/Loadavg
+    etc/pcp/pmchart/MemAvailable
+    etc/pcp/pmchart/Memory
+    etc/pcp/pmchart/NFS2
+    etc/pcp/pmchart/NFS3
+    etc/pcp/pmchart/Netbytes
+    etc/pcp/pmchart/Netpackets
+    etc/pcp/pmchart/Overview
+    etc/pcp/pmchart/PMCD
+    etc/pcp/pmchart/Paging
+    etc/pcp/pmchart/Sample
+    etc/pcp/pmchart/Schemes
+    etc/pcp/pmchart/Sendmail
+    etc/pcp/pmchart/Sockets
+    etc/pcp/pmchart/Swap
+    etc/pcp/pmchart/Syscalls
+    etc/pcp/pmchart/Web.Alarms
+    etc/pcp/pmchart/Web.Allservers
+    etc/pcp/pmchart/Web.Perserver.Bytes
+    etc/pcp/pmchart/Web.Perserver.Requests
+    etc/pcp/pmchart/Web.Requests
+    etc/pcp/pmchart/Web.Volume
+    etc/pcp/pmchart/shping.CPUTime
+    etc/pcp/pmchart/shping.RealTime
+    etc/pcp/pmchart/vCPU
+    etc/pcp/pmsnap/Snap
+    etc/pcp/pmsnap/control
+    etc/pcp/pmsnap/crontab
+    etc/pcp/pmsnap/summary.html
+  )
 
   while read f; do
     [[ "$f" = "" ]] && continue
@@ -119,6 +495,12 @@ package_pcp-pmda-activemq() {
 package_pcp-pmda-bcc() {
   pkgdesc='PCP Performance Metrics Domain Agent (PMDA) for collecting metrics from eBPF/BCC modules'
   depends=('pcp' 'python-bcc')
+  backup=(
+    etc/pcp/bcc/bcc-tracepoint.conf
+    etc/pcp/bcc/bcc-uprobe.conf
+    etc/pcp/bcc/bcc-usdt.conf
+    etc/pcp/bcc/bcc.conf
+  )
 
   _package_module bcc
 }
@@ -126,6 +508,9 @@ package_pcp-pmda-bcc() {
 package_pcp-pmda-bind2() {
   pkgdesc='PCP Performance Metrics Domain Agent (PMDA) for collecting metrics from BIND via its REST interface'
   depends=('pcp' 'perl-libwww' 'perl-xml-libxml' 'perl-file-slurp')
+  backup=(
+    etc/pcp/bind2/bind2.conf
+  )
 
   _package_module bind2
 }
@@ -133,6 +518,9 @@ package_pcp-pmda-bind2() {
 package_pcp-pmda-bpftrace() {
   pkgdesc='PCP Performance Metrics Domain Agent (PMDA) for collecting metrics from bpftrace scripts'
   depends=('pcp' 'bpftrace')
+  backup=(
+    etc/pcp/bpftrace/bpftrace.conf
+  )
 
   _package_module bpftrace
 }
@@ -140,6 +528,9 @@ package_pcp-pmda-bpftrace() {
 package_pcp-pmda-libvirt() {
   pkgdesc='PCP Performance Metrics Domain Agent (PMDA) for collecting metrics from libvirt virtual machines'
   depends=('pcp' 'libvirt-python' 'python-lxml')
+  backup=(
+    etc/pcp/libvirt/libvirt.conf
+  )
 
   _package_module libvirt
 }
@@ -154,6 +545,9 @@ package_pcp-pmda-json() {
 package_pcp-pmda-nginx() {
   pkgdesc='PCP Performance Metrics Domain Agent (PMDA) for collecting metrics from Nginx'
   depends=('pcp' 'perl-libwww')
+  backup=(
+    etc/pcp/nginx/nginx.conf
+  )
 
   _package_module nginx
 }
@@ -168,6 +562,9 @@ package_pcp-pmda-mysql() {
 package_pcp-pmda-nutcracker() {
   pkgdesc='PCP Performance Metrics Domain Agent (PMDA) for collecting metrics from NutCracker (TwemCache)'
   depends=('pcp' 'perl-yaml-libyaml' 'perl-json')
+  backup=(
+    etc/pcp/nutcracker/nutcracker.conf
+  )
 
   _package_module nutcracker
 }
@@ -175,6 +572,14 @@ package_pcp-pmda-nutcracker() {
 package_pcp-pmda-openmetrics() {
   pkgdesc='PCP Performance Metrics Domain Agent (PMDA) for collecting metrics from OpenMetrics endpoints'
   depends=('pcp' 'python-requests')
+  backup=(
+    etc/pcp/openmetrics/collectd.url
+    etc/pcp/openmetrics/etcd.url
+    etc/pcp/openmetrics/grafana.url
+    etc/pcp/openmetrics/kepler.url
+    etc/pcp/openmetrics/spark.url
+    etc/pcp/openmetrics/vmware.url
+  )
 
   _package_module openmetrics
 }
@@ -189,6 +594,9 @@ package_pcp-pmda-podman() {
 package_pcp-pmda-postgresql() {
   pkgdesc='PCP Performance Metrics Domain Agent (PMDA) for collecting metrics from PostgreSQL'
   depends=('pcp' 'python-psycopg2')
+  backup=(
+    etc/pcp/postgresql/pmdapostgresql.conf
+  )
 
   _package_module postgresql
 }
@@ -196,6 +604,9 @@ package_pcp-pmda-postgresql() {
 package_pcp-pmda-snmp() {
   pkgdesc='PCP Performance Metrics Domain Agent (PMDA) for collecting metrics from SNMP'
   depends=('pcp' 'perl-net-snmp')
+  backup=(
+    etc/pcp/snmp/snmp.conf
+  )
 
   _package_module snmp
 }

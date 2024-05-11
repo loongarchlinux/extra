@@ -2,21 +2,30 @@
 
 pkgname=python-systemd
 pkgver=235
-pkgrel=2
+pkgrel=3
 pkgdesc="Python bindings for systemd"
 url="https://github.com/systemd/python-systemd"
 arch=(loong64 x86_64)
-license=(LGPL)
-depends=(python systemd)
-makedepends=(python-setuptools git)
-_commit=dc1dae2eaa00e2369c366f80f9bcd3f729b7abca  # tags/v235^0
-source=("git+$url#commit=$_commit")
-sha256sums=('SKIP')
-
-pkgver() {
-  cd $pkgname
-  git describe --tags | sed 's/^v//;s/[^-]*-g/r&/;s/-/+/g'
-}
+license=(LGPL-2.1-or-later)
+depends=(
+  gcc-libs
+  glibc
+  python
+  systemd
+  systemd-libs
+)
+makedepends=(
+  git
+  python-build
+  python-installer
+  python-setuptools
+  python-wheel
+)
+source=("git+$url?signed#tag=v$pkgver")
+b2sums=('bf5eb823d107abcb5e22d0d0cec3b63960833687da6d49cf96b780ff4975e07d05375e933ee0ad30dc0675c3c2baf8755f9847add21274f02bba0cd2f494ce00')
+validpgpkeys=(
+  5C251B5FC54EB2F80F407AAAC54CA336CFEB557E # Zbigniew Jędrzejewski-Szmek <zbyszek@in.waw.pl>
+)
 
 prepare() {
   cd $pkgname
@@ -24,10 +33,12 @@ prepare() {
 
 build() {
   cd $pkgname
-  make
+  python -m build --wheel --no-isolation
 }
 
 package() {
   cd $pkgname
-  python setup.py install --root="$pkgdir" --optimize=1 --skip-build
+  python -m installer --destdir="$pkgdir" dist/*.whl
 }
+
+# vim:set sw=2 sts=-1 et:

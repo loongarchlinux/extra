@@ -1,23 +1,38 @@
 # Maintainer: Robin Broda <coderobe @ archlinux.org>
 # Contributor: Lars Hagström <lars@foldspace.nu>
 pkgname=s-tui
-pkgver=1.1.4
-pkgrel=6
+pkgver=1.1.6
+pkgrel=2
 pkgdesc="Terminal UI stress test and monitoring tool "
-arch=('any')
+arch=(any)
 url="https://github.com/amanusk/s-tui"
-license=('GPL2')
-depends=('stress' 'python' 'python-urwid' 'python-psutil')
-makedepends=('python-setuptools')
-source=("${pkgname}-${pkgver}.tar.gz::${url}/archive/v${pkgver}.tar.gz")
-sha512sums=('20adfb27bae6467650a901211f4b58d0351d756a5b9465922953feb3711969c6d647782f99479475499b4658ef65da6283ad4e55ce72839d36c08f8a7f244322')
+license=(GPL-2.0-only)
+depends=(
+  python
+  python-psutil
+  python-urwid
+  stress
+)
+makedepends=(
+  python-build
+  python-installer
+  python-setuptools
+  python-wheel
+)
+source=($pkgname-$pkgver.tar.gz::$url/archive/v$pkgver.tar.gz)
+sha512sums=('73412b55175ca2a5e98e410a3c9b5ce9aa1cffc13eb9af26e834d0ea784c06f6a9f81bb1be028b8cf94046ff0a8b20fff5b1191c949d49a72cecf3abd6a1fc38')
 
 build() {
-  cd "${pkgname}-${pkgver}"
-  python setup.py build
+  cd $pkgname-$pkgver
+  python -m build --wheel --no-isolation
+}
+
+check() {
+  cd $pkgname-$pkgver
+  python -m unittest discover -v
 }
 
 package() {
-  cd "${pkgname}-${pkgver}"
-  python setup.py install --root="$pkgdir/" --optimize=1 --skip-build
+  cd $pkgname-$pkgver
+  python -m installer --destdir="$pkgdir" dist/*.whl
 }

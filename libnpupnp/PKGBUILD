@@ -1,0 +1,31 @@
+# Maintainer: Alexander Epaneshnikov <alex19ep@archlinux.org>
+# Contributor: Fabio 'Lolix' Loli <fabio.loli@disroot.org> -> https://github.com/FabioLolix
+
+pkgname=libnpupnp
+pkgver=6.1.0
+pkgrel=1
+pkgdesc="C++ base UPnP library, derived from Portable UPnP, a.k.a libupnp"
+url="https://www.lesbonscomptes.com//upmpdcli/libupnpp-refdoc/libupnpp-ctl.html"
+arch=(loong64 x86_64)
+license=(BSD-3-Clause)
+depends=(glibc gcc-libs curl expat libmicrohttpd)
+provides=(libnpupnp.so)
+source=("https://www.lesbonscomptes.com/upmpdcli/downloads/libnpupnp-${pkgver}.tar.gz")
+sha256sums=('1e305abf63ac945d9cb4576689670c009a914dc9d05b4c1ed605391e7f6b9719')
+
+prepare() {
+  cd "${pkgname}-${pkgver}"
+  ./autogen.sh
+}
+
+build(){
+  cd "${pkgname}-${pkgver}"
+  ./configure --prefix=/usr
+  make
+}
+
+package(){
+  cd "${pkgname}-${pkgver}"
+  make DESTDIR="$pkgdir" install
+  install -Dm644 COPYING "${pkgdir}/usr/share/licenses/${pkgname}/COPYING"
+}

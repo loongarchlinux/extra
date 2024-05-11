@@ -4,7 +4,7 @@
 # Contributor: damir <damir@archlinux.org>
 
 pkgname=libchewing
-pkgver=0.6.0
+pkgver=0.7.0
 pkgrel=1
 pkgdesc='Intelligent Chinese phonetic input method'
 url='https://chewing.im/'
@@ -16,23 +16,25 @@ makedepends=('cmake' 'minisign')
 optdepends=(
   'chewing-editor: view and modify libchewing user phrases database'
 )
-source=("https://github.com/chewing/${pkgname}/releases/download/v${pkgver}/${pkgname}-${pkgver}.tar.xz"{,.minisig})
-sha256sums=('c2913bed55b7fdb25942b6a5832c254bc9bcb9c365d3cafa0a569b4b7cbd8f00'
-            '4f2c8cada59331add1366bd19842a60f996b02741f9c5dc19818c119886b5421')
+source=("https://github.com/chewing/${pkgname}/releases/download/v${pkgver}/${pkgname}-${pkgver}.tar.zst"{,.minisig})
+sha256sums=('87289bc759d04bfebad92d395d4f63e54f584f3e805731588edaa0c9a8bb6cce'
+            '16ed098e7a63da7631d27d2df3a72e095bed057aebe5a98335c766b5bf7b82db')
 # The key is mentioned on https://github.com/chewing/libchewing
 _validminisignkey='RWRzJFnXiLZleAyCIv1talBjyRewelcy9gzYQq9pd3SKSFBPoy57sf5s'
 
 # XXX: move to verify() when pacman 7.0 is out
 # https://gitlab.archlinux.org/pacman/pacman/-/merge_requests/37
 prepare() {
-  minisign -Vm $pkgname-$pkgver.tar.xz -P $_validminisignkey
+  minisign -Vm $pkgname-$pkgver.tar.zst -P $_validminisignkey
 }
 
 build() {
+  # Specify the existence of ncurses.h manually as FindCurses.cmake cannot identify it
   cmake -B build -S $pkgname-$pkgver \
     -DCMAKE_BUILD_TYPE=None \
     -DCMAKE_INSTALL_PREFIX=/usr \
-    -DBUILD_INFO=ON
+    -DBUILD_INFO=ON \
+    -DCURSES_HAVE_NCURSES_H=ON
   make -C build
 }
 

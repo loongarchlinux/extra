@@ -1,9 +1,9 @@
 # Maintainer: Orhun Parmaksız <orhun@archlinux.org>
-# Maintainer: Maxim Baz <archlinux at maximbaz dot com>
+# Contributor: Maxim Baz <archlinux at maximbaz dot com>
 # Contributor: Wojciech Kępka (wojciech@wkepka.dev)
 
 pkgname=helix
-pkgver=23.10
+pkgver=24.03
 pkgrel=1
 pkgdesc="A post-modern modal text editor"
 arch=('loong64' 'x86_64')
@@ -34,7 +34,7 @@ optdepends=(
 )
 install="$pkgname.install"
 source=("$pkgname-$pkgver.tar.gz::https://github.com/helix-editor/helix/archive/$pkgver.tar.gz")
-b2sums=('167099ec0d6a2a90ecf9469e1c8764d16bebe9173796feb844f9d0794d21f26975b77812345697c9b2b4e491db12269c5b8987b01da66def06c9afa779f3fde3')
+b2sums=('b83937e81f1d53e6fe3a1432b5524e1ba321d398c06de8a3aed313928144dce72e3b745c63e3d50a361cd0518bc68d9b500bbb07e271d39b05028499b5f3a71e')
 options=('!lto')
 
 prepare() {
@@ -42,7 +42,7 @@ prepare() {
   # NOTE: we are renaming hx to helix so there is no conflict with hex (providing hx)
   sed -i "s|hx|helix|g" contrib/completion/hx.*
   sed -i 's|hx|helix|g' contrib/Helix.desktop
-  cargo fetch --locked --target "$CARCH-unknown-linux-gnu"
+  cargo fetch --locked --target "$(rustc -vV | sed -n 's/host: //p')"
 }
 
 build() {
@@ -52,7 +52,7 @@ build() {
 
 check() {
   cd "$pkgname-$pkgver"
-  cargo test --frozen --all-features
+  cargo test --frozen
 }
 
 package() {

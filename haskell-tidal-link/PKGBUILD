@@ -2,16 +2,31 @@
 
 _hkgname=tidal-link
 pkgname=haskell-tidal-link
-pkgver=1.0.1
+pkgver=1.0.3
 pkgrel=1
 pkgdesc="Ableton Link integration for Tidal"
 url="http://tidalcycles.org/"
-license=("GPL3")
-arch=('loong64' 'x86_64')
-depends=('ghc-libs' 'gcc-libs')
-makedepends=('ghc' 'uusi')
-source=("https://hackage.haskell.org/packages/archive/$_hkgname/$pkgver/$_hkgname-$pkgver.tar.gz")
-sha256sums=('612d2670302d401250fab9b5be96ba4416905bfa841ce11857b267d2ff387d68')
+license=(GPL-3.0-only)
+arch=(loong64 x86_64)
+depends=(
+  gcc-libs
+  ghc-libs
+  glibc
+  gmp
+)
+makedepends=(
+  ghc
+  libffi
+  numactl
+  uusi
+)
+optdepends=(
+  'libffi: for linktest'
+  'numactl: for linktest'
+)
+source=(https://hackage.haskell.org/packages/archive/$_hkgname/$pkgver/$_hkgname-$pkgver.tar.gz)
+sha512sums=('7c8319f9767899e87b90e58ec3da5cc8ce4e1f38135c32f825b27a6d01851a67715cb314d2945cc1326bfa938eb32384be77e5d71f7d0ec2661ce607e59e337d')
+b2sums=('5ab7a2019fb6d1d588abbb39bf99c38a4d5b4d81bd7b0f8a8470521877a6973f3ab46bf6dbfd4230ec274063ba0fa0aac5233b1ac72ac044ac644736f54c2ebd')
 
 prepare() {
   cd $_hkgname-$pkgver
@@ -19,14 +34,24 @@ prepare() {
 }
 
 build() {
+  local configure_options=(
+    -O
+    --datasubdir=$pkgname
+    --disable-library-vanilla
+    --docdir=/usr/share/doc/$pkgname
+    --dynlibdir=/usr/lib
+    --enable-executable-dynamic
+    --enable-shared
+    --enable-tests
+    --ghc-option=-optl-Wl\,-z\,relro\,-z\,now
+    --ghc-option=-pie
+    --libsubdir=\$compiler/site-local/\$pkgid
+    --prefix=/usr
+  )
+
   cd $_hkgname-$pkgver
 
-  runhaskell Setup configure -O --enable-shared --enable-executable-dynamic --disable-library-vanilla \
-    --prefix=/usr --docdir=/usr/share/doc/$pkgname --datasubdir=$pkgname --enable-tests \
-    --dynlibdir=/usr/lib --libsubdir=\$compiler/site-local/\$pkgid --ghc-option=-fllvm \
-    --ghc-option=-optl-Wl\,-z\,relro\,-z\,now \
-    --ghc-option='-pie' 
-
+  runhaskell Setup configure "${configure_options[@]}"
   runhaskell Setup build $MAKEFLAGS
   runhaskell Setup register --gen-script
   runhaskell Setup unregister --gen-script

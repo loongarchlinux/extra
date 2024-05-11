@@ -4,52 +4,36 @@
 pkgbase=sfizz
 pkgname=(
   sfizz
-  sfizz-{lib,lv2,standalone,vst3}
-  pd-sfizz
+  sfizz-{lib,standalone}
 )
-pkgver=1.2.1
+pkgver=1.2.3
 pkgrel=2
-pkgdesc="SFZ library and LV2 plugin"
+pkgdesc="SFZ parser and synth"
 arch=(loong64 x86_64)
 url="https://github.com/sfztools/sfizz"
-license=(BSD)
+license=(BSD-2-Clause)
 makedepends=(
   abseil-cpp
-  cairo
   cmake
   cxxopts
   gcc-libs
   ghc-filesystem
   glibc
   jack
-  freetype2
-  libx11
-  libxkbcommon
-  libxkbcommon-x11
-  lv2
-  pango
   pugixml
   simde
-  vst3sdk
-  xcb-util
-  xcb-util-cursor
-  xcb-util-keysyms
 )
 checkdepends=(
-  catch2
-  lv2lint
+  catch2-v2
 )
 source=(
   $url/releases/download/$pkgver/$pkgname-$pkgver.tar.gz
-  https://github.com/sfztools/sfizz-ui/commit/a197e3a7.patch
-  53d796ff.patch
+  sfizz-1_2_3-absl_20240116_1-fix-build.patch
 )
-sha512sums=('933f43a397f717490f9067009a5c6d43391d697d7788f07a68fbd03dd4702fb17a2ebc69fa21775c6ba927bfbed1bf1de2ff49b5816dead1a47fa90eb4372b96'
-            '77853e0c0c3ea6e40ebbbefd62c85365a55f8188359b81f39c5c10b7ba9904b32f2915de771e25aa1fe821757027df957ea6ebf4ff4409c6c4807a9699bcec4b'
-            '1f04ae5df7cf739801a5c796e57ca5eb0d632a61aac56f0aae0f16304a3e776b69d4926e299bbcb1f58e2f5c30602d6485a23aae41935cf7507af2d77c01fd10')
-b2sums=('a8a6b512a9b001e9d9c4f39fb3576c09aaadb9132cd6852368ed137a06c95a0f3a935ef9731b291c7f0d4175311a9c10aedbe991c53d335d5b23161901d8aa51'
-        'b0218d7f60275de638b268e8e8684d8bc8b9fbf360a384892319bec65fc5bb0a4ae8dd41a97dfb8a8a4efd8f127f7927e3bc0564210e2a2a3f9b5f8b129644a2'
-        '8393697e7de9fd59104ec9db73214f8046aa3a3ae4f24beee9284ce19ca7c4a2cb795eccd62ecc3c07c9f671822bead4e67501db38e649c56cbeb173c66b34dd')
+sha512sums=('753df985b0863baf3335cc386075a1f8053800a521725ad57102394883274aa617f1a554da8471444789c985891c604946f2e0627e3a5e2349586532ea0af3cc'
+            '9dbc285d1d54410ca058eec5257eb1b68fe5b0e4e22c3994483d76b9d664ba66efb8feaf21f36e15834a18e62f0d5d4025f65d1e7a4396046925a794416e8707')
+b2sums=('bd41e583ecb0d77831ea20213692c428d958207914252bf8b9cca2d384d12eb80662803c91575e27c543098950df009b01869db65b02b9dd95c20011eb5d0793'
+        '8a149bf204c12aec74d71e40aa804076a864436be2f10a0350d0b47f572c096562c0656987012256642c324aa253c1ceeca38e87b4416e6c766a8987b4658ca1')
 
 _pick() {
   local p="$1" f d; shift
@@ -64,10 +48,7 @@ _pick() {
 prepare() {
   # symlink tests data to top-level location so that tests can get to them (we build out of tree)
   ln -sv $pkgbase-$pkgver/tests .
-
-  # fix build with newer vst3
-  patch -d $pkgbase-$pkgver -p1 < a197e3a7.patch
-  patch -d $pkgbase-$pkgver -p1 < 53d796ff.patch
+  patch --directory="$pkgbase-$pkgver" --forward --strip=1 --input="${srcdir}/sfizz-1_2_3-absl_20240116_1-fix-build.patch"
 }
 
 build() {
@@ -76,16 +57,14 @@ build() {
     -D CMAKE_INSTALL_PREFIX=/usr
     -D CMAKE_BUILD_TYPE=None
     -D CMAKE_CXX_STANDARD=17
-    -D SFIZZ_PUREDATA=ON
+    -D ENABLE_LTO=ON
     -D SFIZZ_TESTS=ON
     -D SFIZZ_USE_SYSTEM_ABSEIL=ON
     -D SFIZZ_USE_SYSTEM_CATCH=ON
     -D SFIZZ_USE_SYSTEM_CXXOPTS=ON
     -D SFIZZ_USE_SYSTEM_GHC_FS=ON
-    -D SFIZZ_USE_SYSTEM_LV2=ON
     -D SFIZZ_USE_SYSTEM_PUGIXML=ON
     -D SFIZZ_USE_SYSTEM_SIMDE=ON
-    -D SFIZZ_USE_SYSTEM_VST3SDK=ON
     -S $pkgbase-$pkgver
     -W no-dev
   )
@@ -96,13 +75,11 @@ build() {
 
 check() {
   ctest --test-dir build --output-on-failure
-  lv2lint -Mpack -I build/$pkgbase.lv2 "http://sfztools.github.io/sfizz"
 }
 
 package_sfizz() {
   depends=(
-    sfizz-{lib,lv2,standalone,vst3}
-    pd-sfizz
+    sfizz-{lib,standalone,ui}
   )
 
   DESTDIR="$pkgdir" cmake --install build
@@ -114,39 +91,15 @@ package_sfizz() {
     _pick $pkgbase-lib usr/lib/lib$pkgbase.so*
     _pick $pkgbase-lib usr/lib/pkgconfig/$pkgbase.pc
 
-    _pick $pkgbase-lv2 usr/lib/lv2
-
     _pick $pkgbase-standalone usr/bin
     _pick $pkgbase-standalone usr/share/man/man1
-
-    _pick $pkgbase-vst3 usr/lib/vst3
-
-    _pick pd-$pkgbase usr/lib/pd
   )
 
-}
-
-package_pd-sfizz() {
-  pkgdesc+=" - pd external"
-  groups=(
-    pd-externals
-    pro-audio
-  )
-  depends=(
-    abseil-cpp
-    gcc-libs
-    glibc
-    pd
-    pugixml
-  )
-
-  mv -v $pkgname/* "$pkgdir"
   install -vDm 644 $pkgbase-$pkgver/LICENSE -t "$pkgdir/usr/share/licenses/$pkgname/"
-  install -vDm 644 $pkgbase-$pkgver/{AUTHORS,CONTRIBUTING,GOVERNANCE,README}.md -t "$pkgdir/usr/share/doc/$pkgname/"
 }
 
 package_sfizz-lib() {
-  pkgdesc+=" - library"
+  pkgdesc+=" - C++ library"
   depends=(
     abseil-cpp
     gcc-libs
@@ -160,40 +113,8 @@ package_sfizz-lib() {
   install -vDm 644 $pkgbase-$pkgver/{AUTHORS,CONTRIBUTING,GOVERNANCE,README}.md -t "$pkgdir/usr/share/doc/$pkgname/"
 }
 
-package_sfizz-lv2() {
-  pkgdesc+=" - LV2 plugin"
-  groups=(
-    lv2-plugins
-    pro-audio
-  )
-  depends=(
-    abseil-cpp
-    cairo
-    fontconfig
-    gcc-libs
-    glib2
-    glibc
-    libxcb
-    libxkbcommon
-    libxkbcommon-x11
-    lv2-host
-    pango
-    pugixml
-    ttf-roboto
-    xcb-util
-    xcb-util-cursor
-    zenity
-  )
-
-  mv -v $pkgname/* "$pkgdir"
-  # devendor ttf-roboto
-  ln -svf /usr/share/fonts/TTF/Roboto-Regular.ttf "$pkgdir/usr/lib/lv2/$pkgbase.lv2/Contents/Resources/Fonts/"
-  install -vDm 644 $pkgbase-$pkgver/LICENSE -t "$pkgdir/usr/share/licenses/$pkgname/"
-  install -vDm 644 $pkgbase-$pkgver/{AUTHORS,CONTRIBUTING,GOVERNANCE,README}.md -t "$pkgdir/usr/share/doc/$pkgname/"
-}
-
 package_sfizz-standalone() {
-  pkgdesc+=" - standalone"
+  pkgdesc+=" - JACK standalone client"
   groups=(
     pro-audio
   )
@@ -201,45 +122,11 @@ package_sfizz-standalone() {
     abseil-cpp
     gcc-libs
     glibc
+    jack libjack.so
     pugixml
-  )
-  optdepends=(
-    'jack: for sfizz_jack'
   )
 
   mv -v $pkgname/* "$pkgdir"
-  install -vDm 644 $pkgbase-$pkgver/LICENSE -t "$pkgdir/usr/share/licenses/$pkgname/"
-  install -vDm 644 $pkgbase-$pkgver/{AUTHORS,CONTRIBUTING,GOVERNANCE,README}.md -t "$pkgdir/usr/share/doc/$pkgname/"
-}
-
-package_sfizz-vst3() {
-  pkgdesc+=" - VST3 plugin"
-  groups=(
-    pro-audio
-    vst3-plugins
-  )
-  depends=(
-    abseil-cpp
-    cairo
-    fontconfig
-    gcc-libs
-    glib2
-    glibc
-    libxcb
-    libxkbcommon
-    libxkbcommon-x11
-    pango
-    pugixml
-    ttf-roboto
-    vst3-host
-    xcb-util
-    xcb-util-cursor
-    zenity
-  )
-
-  mv -v $pkgname/* "$pkgdir"
-  # devendor ttf-roboto
-  ln -svf /usr/share/fonts/TTF/Roboto-Regular.ttf "$pkgdir/usr/lib/vst3/$pkgbase.vst3/Contents/Resources/Fonts/"
   install -vDm 644 $pkgbase-$pkgver/LICENSE -t "$pkgdir/usr/share/licenses/$pkgname/"
   install -vDm 644 $pkgbase-$pkgver/{AUTHORS,CONTRIBUTING,GOVERNANCE,README}.md -t "$pkgdir/usr/share/doc/$pkgname/"
 }

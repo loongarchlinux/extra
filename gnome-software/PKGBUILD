@@ -1,24 +1,32 @@
-# Maintainer: Fabian Bornschein <fabiscafe-at-mailbox-dot-org>
 # Maintainer: Jan Alexander Steffens (heftig) <heftig@archlinux.org>
-# Contributor: Fabian Bornschein <fabiscafe-cat-mailbox-dog-org>
+# Maintainer: Fabian Bornschein <fabiscafe@archlinux.org>
 # Contributor: Jan de Groot <jgc@archlinux.org>
 # Contributor: Yosef Or Boczko <yoseforb@gnome.org>
 
 pkgname=gnome-software
-pkgver=45.3
+pkgver=46.1
 pkgrel=1
 pkgdesc="GNOME Software Tools"
 url="https://wiki.gnome.org/Apps/Software/"
 arch=(loong64 x86_64)
-license=(GPL)
+license=(GPL-2.0-or-later)
 depends=(
   appstream
+  dconf
+  gcc-libs
+  gdk-pixbuf2
+  glib2
+  glibc
   gsettings-desktop-schemas
   gtk4
+  hicolor-icon-theme
+  json-glib
   libadwaita
+  libgudev
   libsoup3
   libsysprof-capture
   libxmlb
+  pango
   polkit
 )
 makedepends=(
@@ -31,6 +39,7 @@ makedepends=(
   libglib-testing
   malcontent
   meson
+  python-packaging
 )
 optdepends=(
   'flatpak: Flatpak support plugin'
@@ -38,29 +47,22 @@ optdepends=(
   'malcontent: Parental control plugin'
 )
 groups=(gnome)
-_commit=f027ac3fc839c0c0fe68006cea1acc757461c128  # tags/45.3^0
 source=(
-  "git+https://gitlab.gnome.org/GNOME/gnome-software.git#commit=$_commit"
+  "git+https://gitlab.gnome.org/GNOME/gnome-software.git?signed#tag=${pkgver/[a-z]/.&}"
   "git+https://gitlab.gnome.org/mwleeds/gnome-pwa-list.git"
 )
-b2sums=('SKIP'
+b2sums=('0f7b401da058f279a7b004c5bcb76d3f3118b2f50629a46f008dc7193436645cf9045d91d58aa147e59d4f7ce164f18cfed53cb91b2efb0a8245c735805d9c32'
         'SKIP')
-
-pkgver() {
-  cd $pkgname
-  git describe --tags | sed 's/[^-]*-g/r&/;s/-/+/g'
-}
+validpgpkeys=(
+  2AA441054BD2F1715EC11610FB183E7EF3C36A0D # Milan Crha <mcrha@redhat.com>
+)
 
 prepare() {
   cd $pkgname
 
-  # support appstream 1.0
-  git cherry-pick -n 0655f358ed0e8455e12d9634f60bc4dbaee434e3 \
-                     e431ab003f3fabf616b6eb7dc93f8967bc9473e5
-
   git submodule init
   git submodule set-url subprojects/gnome-pwa-list "$srcdir/gnome-pwa-list"
-  git -c protocol.file.allow=always submodule update
+  git -c protocol.file.allow=always -c protocol.allow=never submodule update
 }
 
 build() {

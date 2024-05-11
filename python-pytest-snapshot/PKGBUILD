@@ -3,7 +3,7 @@
 pkgname=python-pytest-snapshot
 _name=${pkgname#python-}
 pkgver=0.9.0
-pkgrel=1
+pkgrel=2
 pkgdesc="A plugin for snapshot testing with pytest."
 arch=('any')
 url="https://github.com/joseph-roitman/pytest-snapshot"
@@ -24,7 +24,7 @@ prepare() {
 
 check() {
     cd $_name-$pkgver
-    PYTHONPATH=. pytest -k 'not test_sth' tests
+    PYTHONPATH=. pytest -k 'not test_sth and not test_assert_match_failure_bytes' tests
 }
 
 build() {

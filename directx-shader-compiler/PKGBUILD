@@ -3,37 +3,56 @@
 pkgname=directx-shader-compiler
 pkgdesc="A compiler for HLSL to DXIL (DirectX Intermediate Language)."
 pkgver=1.7.2308
-pkgrel=1
+pkgrel=2
 arch=('loong64' 'x86_64')
-url="https://github.com/microsoft/${_pkgname}"
+url="https://github.com/microsoft/DirectXShaderCompiler"
 license=('custom')
 depends=('ncurses')
 makedepends=('git' 'cmake' 'ninja' 'python')
 options=(!lto)
-source=("directx-shader-compiler-${pkgver}::git+https://github.com/microsoft/DirectXShaderCompiler.git#tag=v${pkgver}")
-sha256sums=('SKIP')
+source=("${pkgname}::git+https://github.com/microsoft/DirectXShaderCompiler.git#tag=v${pkgver}"
+        "${pkgname}-DirectX-Headers::git+https://github.com/microsoft/DirectX-Headers.git"
+        "${pkgname}-SPIRV-Headers::git+https://github.com/KhronosGroup/SPIRV-Headers"
+        "${pkgname}-SPIRV-Tools::git+https://github.com/KhronosGroup/SPIRV-Tools"
+        "${pkgname}-effcee::git+https://github.com/google/effcee"
+        "${pkgname}-googletest::git+https://github.com/google/googletest"
+        "${pkgname}-re2::git+https://github.com/google/re2")
+sha256sums=('3540da8f542da705a245629944896acb2a9ea768a3559cb39fb01dbd026f7427'
+            'SKIP'
+            'SKIP'
+            'SKIP'
+            'SKIP'
+            'SKIP'
+            'SKIP')
 
 prepare() {
-  cd "${pkgname}-${pkgver}"
+  cd "${pkgname}"
 
-  git submodule update --init
+  git submodule init
 
-  rm -rf build && mkdir build
+  git config submodule."external/DirectX-Headers".url "${srcdir}/${pkgname}"-DirectX-Headers
+  git config submodule."external/SPIRV-Headers".url "${srcdir}/${pkgname}"-SPIRV-Headers
+  git config submodule."external/SPIRV-Tools".url "${srcdir}/${pkgname}"-SPIRV-Tools
+  git config submodule."external/effcee".url "${srcdir}/${pkgname}"-effcee
+  git config submodule."external/googletest".url "${srcdir}/${pkgname}"-googletest
+  git config submodule."external/re2".url "${srcdir}/${pkgname}"-re2
+
+  git -c protocol.file.allow=always submodule update
 }
 
 build() {
-  cd "${pkgname}-${pkgver}"/build
+  cd "${pkgname}"
 
-  cmake .. -G Ninja \
-    -C ../cmake/caches/PredefinedParams.cmake \
+  cmake -B build -S . -G Ninja \
+    -C cmake/caches/PredefinedParams.cmake \
     -DCMAKE_BUILD_TYPE=Debug \
     -DLLVM_ENABLE_LTO=False
 
-  ninja
+  cmake --build build
 }
 
 package() {
-  cd "${pkgname}-${pkgver}"
+  cd "${pkgname}"
 
   install -m755 -d "${pkgdir}"/usr/bin
   install -m755 -d "${pkgdir}"/usr/lib

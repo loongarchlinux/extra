@@ -1,38 +1,41 @@
 # Maintainer: Bruno Pagani <archange@archlinux.org>
-# Maintainer: Caleb Maclennan <alerque.com>
+# Maintainer: Caleb Maclennan <caleb@alerque.com>
 # Contributor: William Gathoye <william + aur at gathoye dot be>
 # Contributor: Massimiliano Torromeo <massimiliano dot torromeo at gmail dot com>
 
 pkgbase=mattermost
 pkgname=($pkgbase mmctl)
-pkgver=9.4.2
-pkgrel=2
+pkgver=9.8.0
+pkgrel=1
 pkgdesc="Open source Slack-alternative in Golang and React"
 arch=(loong64 x86_64)
 url="https://mattermost.com"
 license=(AGPL-3.0-only Apache-2.0)
 depends=(glibc)
 makedepends=(git
-             go
+             'go<2:1.22' 'go>=2:1.21' # https://github.com/mattermost/mattermost/issues/26425
              jq
              libpng
-             nodejs-lts-iron # upstream specs 18 (hydrogene) but Arch’s is trying to get rid of it
+             nodejs-lts-iron
              moreutils
              npm
              python)
-_archive=$pkgname-$pkgver
+_archive="$pkgname-$pkgver"
 source=(https://github.com/$pkgname/$pkgname-server/archive/v$pkgver/$_archive.tar.gz
         $pkgname.service
         $pkgname.sysusers
         $pkgname.tmpfiles)
-sha256sums=('84e0fdf3100bfa044e3bbf79ff7c8204ceceb236e9e477e33ae2f5b105065854'
+sha256sums=('a84921350c8c3fb1c58b53ff33dd6fe8ce014b78b92d641b6987f7ce4d21acf5'
             '9e73dc5e9ab9a95049352bd504fb4e0d6becbd5c715026d8c1df4f515d258b68'
             'f7bd36f6d7874f1345d205c6dcb79af1804362fc977a658db88951a172d1dfa0'
             '8dfeee28655b91dc75aca2317846284013ac3d5a837d360eba9641e9fbcf3aa2')
 
 prepare() {
     cd $_archive/server
-    go mod vendor
+
+    # This will fail to download some private dependencies for enterprise-version-only features
+    go mod vendor -e
+    go mod tidy -e
 
     # The configuration isn’t available at this time yet, modify the default.
     sed -r -i build/release.mk \
@@ -47,13 +50,13 @@ prepare() {
 
     cd ../webapp
 
-    # Arch's NPM is too new to pass build time checks
+    # Arch's NPM is too new to pass build time checks.
+    # (Upstream isn't even adhering to this in their own CI.)
     jq 'del(.engines)' package.json | sponge package.json
 
-    # Modify npm commands to always use srcdir cache + temporary workaround for OpenSSL3 support
+    # Modify npm commands to always use srcdir cache
     sed -r -i Makefile \
-        -e "/^\tnpm /s!npm!npm --cache '$srcdir/npm-cache' --no-audit --no-fund!" \
-        -e "s|--max-old-space-size=4096|--openssl-legacy-provider|"
+        -e "/^\tnpm /s!npm!npm --cache '$srcdir/npm-cache' --no-audit --no-fund!"
     make node_modules -W package.json
 }
 
@@ -156,4 +159,7 @@ package_mmctl() {
     cd $_archive
     install -Dm0755 -t "$pkgdir/usr/bin/" "server/bin/$pkgname"
     install -Dm0644 -t "$pkgdir/usr/share/licenses/$pkgname/" LICENSE.txt
+    alias _compgen="$pkgdir/usr/bin/mmctl completion"
+    _compgen bash | install -Dm0644 /dev/stdin "$pkgdir/usr/share/bash-completion/completions/$pkgname"
+    _compgen zsh  | install -Dm0644 /dev/stdin "$pkgdir/usr/share/zsh/site-functions/_$pkgname"
 }

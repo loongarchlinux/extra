@@ -1,16 +1,17 @@
 # Maintainer: Daniel M. Capella <polyzen@archlinux.org>
 
 pkgname=rink
-pkgver=0.7.0
+pkgver=0.8.0
 pkgrel=1
 pkgdesc='Unit conversion tool and library written in rust'
 arch=('loong64' 'x86_64')
 url=https://rinkcalc.app
-license=('GPL3' 'MPL2')
-depends=('gcc-libs' 'openssl')
-makedepends=('git' 'rust')
-source=("git+https://github.com/tiffany352/$pkgname-rs.git#tag=v$pkgver")
-b2sums=('SKIP')
+license=('GPL-3.0-or-later' 'MPL-2.0')
+depends=('curl' 'gcc-libs' 'openssl')
+makedepends=('asciidoctor' 'git' 'make' 'rust')
+source=("git+https://github.com/tiffany352/$pkgname-rs.git#tag=v$pkgver?signed")
+b2sums=('41064be6ebd800f1d9a6603716ea64192550cddac622c30f89c06b4991c7c80b06d038d4d1bba75ae97c794a95a88586349e0f9910c06ab004d47cef52d1a78c')
+validpgpkeys=('BC69595DA4AC1B321854939833F53ED0A9B562C1') # tiffany <tiffany@stormbit.net>
 
 prepare() {
   cd $pkgname-rs
@@ -19,7 +20,7 @@ prepare() {
 
 build() {
   cd $pkgname-rs
-  cargo build --release --locked --offline
+  make prefix=/usr
 }
 
 check() {
@@ -29,5 +30,5 @@ check() {
 
 package() {
   cd $pkgname-rs
-  install -Dt "$pkgdir"/usr/bin target/release/$pkgname
+  make install prefix=/usr DESTDIR="$pkgdir"/usr
 }

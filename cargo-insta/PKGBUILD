@@ -1,36 +1,32 @@
 # Maintainer: Jelle van der Waa <jelle@archlinux.org>
+# Maintainer: Orhun Parmaksız <orhun@archlinux.org>
 # Contributor: CosmicHorror <CosmicHorrorDev@pm.me>
 # Contributor: Vlad Frolov <frolvlad@gmail.com>
 
 pkgname=cargo-insta
-pkgver=1.33.0
-pkgrel=1
+pkgver=1.38.0
+pkgrel=2
 pkgdesc="Cargo plugin for snapshot testing in Rust"
 url="https://github.com/mitsuhiko/insta"
-depends=('gcc-libs')
-makedepends=('cargo')
+depends=('gcc-libs' 'cargo')
 arch=('loong64' 'x86_64')
-license=('APACHE')
+license=('Apache-2.0')
 source=("$pkgname-$pkgver.tar.gz::https://static.crates.io/crates/$pkgname/$pkgname-$pkgver.crate")
-sha512sums=('0ee791792e5324f8e53efb645ae862965b973498059cd32e66f379a971d5ffadac2190dbf87c81d91d81c3076591dd72425907c29d5da1558e474115da9b6284')
+sha512sums=('8d4b57c01ca9ec3721835869fccb56672f47192278cd76e377118be4a069235316df6226bd0a77a2417b746586abd9861592096097157e9cdf7cd8ddf69a5cbc')
 
 prepare() {
-    cd "$pkgname-$pkgver"
-    export RUSTUP_TOOLCHAIN=stable
-    cargo fetch --locked --target "$CARCH-unknown-linux-gnu"
+  cd "$pkgname-$pkgver"
+  cargo fetch --locked --target "$(rustc -vV | sed -n 's/host: //p')"
 }
 
 build() {
-    cd "$pkgname-$pkgver"
-    export RUSTUP_TOOLCHAIN=stable
-    export CARGO_TARGET_DIR=target
-    cargo build --frozen --release --all-features
+  cd "$pkgname-$pkgver"
+  cargo build --frozen --release --all-features
 }
 
 check() {
-    cd "$pkgname-$pkgver"
-    export RUSTUP_TOOLCHAIN=stable
-    cargo test --frozen --all-features
+  cd "$pkgname-$pkgver"
+  cargo test --frozen --all-features
 }
 
 package() {

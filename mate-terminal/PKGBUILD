@@ -3,7 +3,7 @@
 # Contributor: Martin Wimpress <code@flexion.org>
 
 pkgname=mate-terminal
-pkgver=1.27.1
+pkgver=1.28.1
 pkgrel=1
 pkgdesc="The MATE Terminal Emulator"
 url="https://mate-desktop.org"
@@ -15,7 +15,7 @@ groups=('mate-extra')
 conflicts=('mate-terminal-gtk3')
 replaces=('mate-terminal-gtk3')
 source=("https://pub.mate-desktop.org/releases/${pkgver%.*}/${pkgname}-${pkgver}.tar.xz")
-sha256sums=('8d6b16ff2cac930afce4625b1b8f30c055e314e5b3dae806ac5b80c809f08dbe')
+sha256sums=('f135eb1a9e2ae22798ecb2dc1914fdb4cfd774e6bb65c0152be37cc6c9469e92')
 
 build() {
 	cd "${pkgname}-${pkgver}"

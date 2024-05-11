@@ -3,9 +3,9 @@
 pkgname=python-py-partiql-parser
 _pkgname=py-partiql-parser
 # https://github.com/getmoto/py-partiql-parser/blob/main/CHANGELOG.md
-# UPDATE_BLOCKED: moto pins a specific version https://github.com/getmoto/moto/blob/master/setup.cfg
+# UPDATE_BLOCKED: blocked along with python-moto
 pkgver=0.5.0
-pkgrel=1
+pkgrel=2
 pkgdesc='Python Parser for PartiQL'
 arch=(any)
 url='https://github.com/getmoto/py-partiql-parser'

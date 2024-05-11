@@ -2,7 +2,7 @@
 # Maintainer: Caleb Maclennan <caleb@alerque.com>
 
 pkgname=editorconfig-checker
-pkgver=2.8.0
+pkgver=3.0.1
 pkgrel=1
 pkgdesc='A tool to verify that your files are in harmony with your .editorconfig'
 arch=('loong64' 'x86_64')
@@ -11,11 +11,12 @@ license=(MIT)
 depends=(glibc)
 makedepends=(go)
 provides=(ec)
-source=("$pkgname-$pkgver.tar.gz::$url/archive/refs/tags/$pkgver.tar.gz")
-sha256sums=('639ed029204ba548854ff64f432f01f732fccb161a29c7477b70911576840ac4')
+_archive="$pkgname-$pkgver"
+source=("$url/archive/refs/tags/v$pkgver/$_archive.tar.gz")
+sha256sums=('57bc2cd8b357aa3b3d8138c357ec34dd98b881fc01f8b067465757cd45ffdf0e')
 
 build() {
-	cd "$pkgname-$pkgver"
+	cd "$_archive"
 	export CGO_CPPFLAGS="$CPPFLAGS"
 	export CGO_CFLAGS="$CFLAGS"
 	export CGO_CXXFLAGS="$CXXFLAGS"
@@ -25,12 +26,12 @@ build() {
 }
 
 check() {
-	cd "$pkgname-$pkgver"
+	cd "$_archive"
 	go test ./...
 }
 
 package() {
-	cd "$pkgname-$pkgver"
+	cd "$_archive"
 	install -Dm755 -t "$pkgdir/usr/bin/" "$pkgname"
 	ln -sf "$pkgname" "$pkgdir/usr/bin/ec"
 	install -Dm644 -t  "$pkgdir/usr/share/licenses/$pkgname" LICENSE

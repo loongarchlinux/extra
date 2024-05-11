@@ -4,29 +4,40 @@
 # Contributor: Giulio Bai <giulio@hewle.com>
 
 pkgname=accerciser
-pkgver=3.42.0
-pkgrel=1
+pkgver=3.42.0+r100+g6e6256e
+pkgrel=2
 pkgdesc="Interactive Python accessibility explorer for the GNOME desktop"
 url="https://wiki.gnome.org/Apps/Accerciser"
 arch=(any)
-license=(BSD)
+license=(BSD-3-Clause)
 depends=(
+  at-spi2-core
+  dconf
+  gdk-pixbuf2
+  gobject-introspection-runtime
   gtk3
+  hicolor-icon-theme
   ipython
+  librsvg
   libwnck3
+  pango
   python
   python-atspi
   python-cairo
+  python-gobject
+  python-setuptools
+  python-traitlets
 )
 makedepends=(
-  appstream-glib
+  appstream
   git
+  meson
   yelp-tools
 )
 groups=(gnome-extra)
-_commit=e36f30841dd85faff6ff5156f6c15fecbbf020ca  # tags/3.42.0^0
+_commit=6e6256ede8886a56789f315290a1a0d1c9f62b78  # master
 source=("git+https://gitlab.gnome.org/GNOME/accerciser.git#commit=$_commit")
-b2sums=('SKIP')
+b2sums=('9358444abd0fed8a382cc7d8b297a102fcd80c12f984231f89f06b4a6c6a5007bd4b058470e5e843da3cf8f5bc061ce897841eeaa8d1513148da594d0b6839be')
 
 pkgver() {
   cd $pkgname
@@ -35,26 +46,20 @@ pkgver() {
 
 prepare() {
   cd $pkgname
-  NOCONFIGURE=1 ./autogen.sh
 }
 
 build() {
-  local configure_options=(
-    --prefix=/usr
-    --sysconfdir=/etc
-    --localstatedir=/var
-    --disable-schemas-compile
-  )
+  arch-meson $pkgname build
+  meson compile -C build
+}
 
-  cd $pkgname
-  ./configure "${configure_options[@]}"
-  make
+check() {
+  meson test -C build --print-errorlogs
 }
 
 package() {
-  cd $pkgname
-  make DESTDIR="$pkgdir" install
-  install -Dt "$pkgdir/usr/share/licenses/$pkgname" -m644 COPYING
+  meson install -C build --destdir "$pkgdir"
+  install -Dt "$pkgdir/usr/share/licenses/$pkgname" -m644 $pkgname/COPYING
 }
 
 # vim:set sw=2 sts=-1 et:

@@ -1,27 +1,30 @@
-# Maintainer: Gaetan Bisson <bisson@archlinux.org>
 # Maintainer: Jaroslav Lichtblau <svetlemodry@archlinux.org>
+# Contributor: Gaetan Bisson <bisson@archlinux.org>
 # Contributor: Daenyth <Daenyth [at] gmail [dot] com>
 # Contributor: Jeff Mickey <jeff@archlinux.org>
 # Contributor: sh__
 
 pkgname=rtorrent
 pkgver=0.9.8
-pkgrel=4
+pkgrel=6
 pkgdesc='Ncurses BitTorrent client based on libTorrent'
 url='https://rakshasa.github.io/rtorrent/'
 license=('GPL')
 arch=('loong64' 'x86_64')
+makedepends=('git')
 depends=("libtorrent=0.13.${pkgver##*.}" 'curl' 'xmlrpc-c')
-source=("https://github.com/rakshasa/rtorrent/releases/download/v${pkgver}/${pkgname}-${pkgver}.tar.gz")
-sha256sums=('9edf0304bf142215d3bc85a0771446b6a72d0ad8218efbe184b41e4c9c7542af')
+source=("git+https://github.com/rakshasa/rtorrent.git#tag=v${pkgver}")
+sha256sums=('36c91dce07420840d429a649596776cc6fa669c476e2dee732c7c59736293027')
 
 prepare() {
-	cd "${srcdir}/${pkgname}-${pkgver}"
+	cd ${pkgname}
+	# https://gitlab.archlinux.org/archlinux/packaging/packages/rtorrent/-/issues/1
+	git cherry-pick -n 92bec88d0904bfb31c808085c2fd0f22d0ec8db7
 	./autogen.sh
 }
 
 build() {
-	cd "${srcdir}/${pkgname}-${pkgver}"
+	cd ${pkgname}
 	export CXXFLAGS+=' -fno-strict-aliasing'
 	./configure \
 		--prefix=/usr \
@@ -32,7 +35,7 @@ build() {
 }
 
 package() {
-	cd "${srcdir}/${pkgname}-${pkgver}"
+	cd ${pkgname}
 	make DESTDIR="${pkgdir}" install
 	install -D doc/rtorrent.rc "${pkgdir}"/usr/share/doc/rtorrent/rtorrent.rc
 }

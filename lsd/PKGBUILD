@@ -3,12 +3,12 @@
 # Contributor: Julien Nicoulaud <julien dot nicoulaud at gmail dot com>
 
 pkgname=lsd
-pkgver=1.0.0
+pkgver=1.1.2
 pkgrel=1
 pkgdesc='Modern ls with a lot of pretty colors and awesome icons'
-url='https://github.com/Peltoche/lsd'
+url='https://github.com/lsd-rs/lsd'
 arch=('loong64' 'x86_64')
-license=('Apache')
+license=('Apache-2.0')
 depends=('gcc-libs' 'zlib')
 makedepends=('cargo' 'pandoc')
 checkdepends=('git')
@@ -16,14 +16,14 @@ optdepends=(
   'nerd-fonts'
   'awesome-terminal-fonts'
 )
-source=(https://github.com/Peltoche/lsd/archive/v${pkgver}/${pkgname}-${pkgver}.tar.gz)
-sha256sums=('ab34e9c85bc77cfa42b43bfb54414200433a37419f3b1947d0e8cfbb4b7a6325')
-sha512sums=('c16fbbaa23bcc24050180d415f992459b423473eeb7771b1b8cd59aab5db97bf8d0cd01e3db507031f9588291bb8c90e02397b9a146973a054d338b60da10220')
+source=(https://github.com/lsd-rs/lsd/archive/v${pkgver}/${pkgname}-${pkgver}.tar.gz)
+sha256sums=('cd80dae9a8f6c4c2061f79084468ea6e04c372e932e3712a165119417960e14e')
+sha512sums=('2d0370c5fb463a4f5e1f2b0366e4fa4baab08eb307b8410d430361777d061a18b9bb9f75a7d19afbb12449c62a59d986cdb170937b7814f49cfbeb85612e8d54')
 options=('!lto')
 
 prepare() {
   cd ${pkgname}-${pkgver}
-  cargo fetch --locked --target "$CARCH-unknown-linux-gnu"
+  cargo fetch --target "$(rustc -vV | sed -n 's/host: //p')" # --locked
 }
 
 build() {
@@ -40,7 +40,7 @@ check() {
 package() {
   cd ${pkgname}-${pkgver}
   install -Dm 755 target/release/${pkgname} -t "${pkgdir}/usr/bin"
-  install -Dm 644 README.md CHANGELOG.md -t "${pkgdir}/usr/share/doc/${pkgname}"
+  install -Dm 644 README.md -t "${pkgdir}/usr/share/doc/${pkgname}"
   install -Dm 644 "completions/${pkgname}.bash" "${pkgdir}/usr/share/bash-completion/completions/${pkgname}"
   install -Dm 644 "completions/${pkgname}.fish" "${pkgdir}/usr/share/fish/vendor_completions.d/${pkgname}.fish"
   install -Dm 644 "completions/_${pkgname}" "${pkgdir}/usr/share/zsh/site-functions/_${pkgname}"

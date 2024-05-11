@@ -2,20 +2,19 @@
 
 pkgname=python-pyzstd
 _pyname=${pkgname#python-}
-pkgver=0.15.9
-pkgrel=1
+pkgver=0.15.10
+pkgrel=3
 pkgdesc='Python bindings to Zstandard (zstd) compression library'
 arch=(loong64 x86_64)
-url="https://github.com/animalize/$_pyname"
-license=(LGPL)
+url="https://pypi.org/project/$_pyname"
+license=(BSD-3-Clause)
 depends=(python
          zstd)
 makedepends=(python-{build,installer,wheel}
-             python-setuptools-scm)
-checkdepends=(python-tests)
+             python-setuptools)
 _archive="$_pyname-$pkgver"
 source=("https://files.pythonhosted.org/packages/source/${_pyname::1}/$_pyname/$_archive.tar.gz")
-sha256sums=('cbfdde6c5768ffa5d2f14127bbc1d7c3c2d03c0ceaeb0736946197e06275ccc7')
+sha256sums=('83603a97fdbcf2139f475c940789f09e32703f931f29f4a8ddf3551e6700108b')
 
 build() {
 	cd "$_archive"
@@ -23,10 +22,10 @@ build() {
 }
 
 check() {
-	cd "$_archive/build"
+	cd "$_archive"
 	local _pyver=$(python -c 'import sys; print("".join(map(str, sys.version_info[:2])))')
-	export PYTHONPATH="$PWD/lib.linux-$CARCH-cpython-$_pyver"
-	python -m unittest discover
+	export PYTHONPATH="$PWD/build/lib.linux-$CARCH-cpython-$_pyver"
+	python -m unittest discover tests
 }
 
 package() {

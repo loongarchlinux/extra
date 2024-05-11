@@ -1,25 +1,22 @@
 # Maintainer: George Rawlinson <grawlinson@archlinux.org>
+# Maintainer: Orhun Parmaksız <orhun@archlinux.org>
 # Contributor: Gobidev <adrian[dot]groh[at]t-online[dot]de>
 # Contributor: Hao Long <aur@esd.cc>
 
 pkgname=rustscan
-pkgver=2.1.1
+pkgver=2.2.3
 pkgrel=1
 pkgdesc='A modern port scanner'
 arch=('loong64' 'x86_64')
 url='https://github.com/rustscan/RustScan'
 license=('GPL3')
 depends=('gcc-libs' 'nmap')
-makedepends=('git' 'rust')
+makedepends=('git' 'cargo')
 checkdepends=('python')
 options=('!lto')
-_commit='bd32f4ead4edd662633c1dd1f569132352ed9f04'
-source=(
-  "$pkgname::git+$url#commit=$_commit"
-  'update-lockfile.patch'
-)
-b2sums=('SKIP'
-        '2e9ee58867414ffc5148e4c4213a4cf1641961a9f540e201cc6311011b19fd32559e9af668aae514b13b53f024bd51764bb0853501dd7919f305aa71a17066f0')
+_commit=5328bfc8b00c99163edf770e859960280d55360b
+source=("$pkgname::git+$url#commit=$_commit")
+b2sums=('960a175f59406d502d3b30dd2b9d13f5e152bdac1cd6e230e06c5b2291ffb254553e7c4163fcc40d9f3a65067823e041f7c95782e2f2299b50c401221a1738c5')
 
 pkgver() {
   cd "$pkgname"
@@ -30,12 +27,8 @@ pkgver() {
 prepare() {
   cd "$pkgname"
 
-  # update out-of-sync lockfile
-  # https://github.com/RustScan/RustScan/issues/460
-  patch -p1 -i ../update-lockfile.patch
-
   # download dependencies
-  cargo fetch --locked --target "$CARCH-unknown-linux-gnu"
+  cargo fetch --locked --target "$(rustc -vV | sed -n 's/host: //p')"
 }
 
 build() {

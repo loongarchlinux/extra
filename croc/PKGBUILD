@@ -1,37 +1,38 @@
-# Maintainer: Maxim Baz <$pkgname at maximbaz dot com>
 # Maintainer: Caleb Maclennan <caleb@alerque.com>
+# Contributor: Maxim Baz <archlinux at maximbaz dot com>
 # Contributor: Mikuro Kagamine <mikurok@forgecrushing.com>
 
 pkgname=croc
-pkgver=9.6.6
+pkgver=9.6.15
 pkgrel=1
 pkgdesc='Easily and securely send things from one computer to another.'
-arch=('loong64' 'x86_64')
-url="https://github.com/schollz/${pkgname}"
-license=('MIT')
-depends=('glibc')
-makedepends=('go')
-source=("${url}/releases/download/v${pkgver}/${pkgname}_${pkgver}_src.tar.gz")
-sha256sums=('5f2f11a6e4781c57b2606a443160abe89a2850d09f0ee6ca906d2552a519ef20')
+arch=(loong64 x86_64)
+url="https://github.com/schollz/$pkgname"
+license=(MIT)
+depends=(glibc)
+makedepends=(go)
+_archive="$pkgname-v$pkgver"
+source=("$_archive.tar.gz::$url/releases/download/v$pkgver/${pkgname}_v${pkgver}_src.tar.gz")
+sha256sums=('6b4261e33a214aa2cc2f77f4c2007dc6e5db6eab3991dcdee43ae577132a59cc')
 
 build() {
-    cd "${pkgname}-${pkgver}"
-    export CGO_CPPFLAGS="${CPPFLAGS}"
-    export CGO_CFLAGS="${CFLAGS}"
-    export CGO_CXXFLAGS="${CXXFLAGS}"
-    export CGO_LDFLAGS="${LDFLAGS}"
-    export GOFLAGS="-buildmode=pie -trimpath -ldflags=-linkmode=external -mod=vendor -modcacherw -buildvcs=false"
+    cd "$_archive"
+    export CGO_CPPFLAGS="$CPPFLAGS"
+    export CGO_CFLAGS="$CFLAGS"
+    export CGO_CXXFLAGS="$CXXFLAGS"
+    export CGO_LDFLAGS="$LDFLAGS"
+    export GOFLAGS='-buildmode=pie -trimpath -ldflags=-linkmode=external -mod=vendor -modcacherw -buildvcs=false'
     go build
 }
 
 check() {
-    cd "${pkgname}-${pkgver}"
+    cd "$_archive"
     go test ./...
 }
 
 package() {
-    cd "${pkgname}-${pkgver}"
-    install -Dm755 -t "${pkgdir}/usr/bin/" "${pkgname}"
-    install -Dm644 -t "${pkgdir}/usr/lib/systemd/system/" "${pkgname}.service"
-    install -Dm644 -t "${pkgdir}/usr/share/licenses/${pkgname}/" LICENSE
+    cd "$_archive"
+    install -Dm0755 -t "$pkgdir/usr/bin/" "$pkgname"
+    install -Dm0644 -t "$pkgdir/usr/lib/systemd/system/" "$pkgname.service"
+    install -Dm0644 -t "$pkgdir/usr/share/licenses/$pkgname/" LICENSE
 }

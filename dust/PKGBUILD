@@ -3,33 +3,21 @@
 # Contributor: Knut Ahlers <knut at ahlers dot me>
 
 pkgname=dust
-pkgver=0.9.0
-_commit='fead40b6283255173345e3742c22e74f3dd30673'
-pkgrel=1
+pkgver=1.0.0
+pkgrel=3
 pkgdesc='A more intuitive version of du in rust'
 arch=('loong64' 'x86_64')
 url='https://github.com/bootandy/dust'
-license=('Apache')
-depends=('gcc-libs')
-makedepends=('git' 'rust')
-source=("$pkgname::git+$url#commit=$_commit")
-b2sums=('SKIP')
+license=('Apache-2.0')
+depends=('gcc-libs' 'glibc')
+makedepends=('cargo' 'git')
+source=("$pkgname::git+$url#tag=v$pkgver")
+sha256sums=('9a4a338116d7c0078524ecc490a02ec28b6c77bb9081b7518fb76c7494a5957f')
 
 prepare() {
   cd "$pkgname"
 
   cargo fetch --locked --target "$(rustc -vV | sed -n 's/host: //p')"
-}
-
-_pkgver() {
-  curl -fs https://api.github.com/repos/bootandy/$pkgname/git/ref/tags/v$pkgver |
-    jq -r .object.sha
-}
-
-pkgver() {
-  cd "$pkgname"
-
-  git describe --tags | sed 's/^v//'
 }
 
 build() {
@@ -55,6 +43,15 @@ package() {
 
   # documentation
   install -vDm644 -t "$pkgdir/usr/share/doc/$pkgname" README.md
+
+  # shell completions
+  install -vDm644 "completions/$pkgname.bash" "$pkgdir/usr/share/bash-completion/completions/$pkgname"
+  install -vDm644 -t "$pkgdir/usr/share/elvish/lib/" "completions/$pkgname.elv"
+  install -vDm644 -t "$pkgdir/usr/share/fish/vendor_completions.d/" "completions/$pkgname.fish"
+  install -vDm644 -t "$pkgdir/usr/share/zsh/site-functions/" "completions/_$pkgname"
+
+  # manpage
+  install -vDm644 -t "$pkgdir/usr/share/man/man1/" man-page/$pkgname.1
 }
 
 # vim:set ts=2 sw=2 et:

@@ -1,0 +1,23 @@
+#!/bin/bash
+
+set -eu
+
+cdi_file=/etc/cdi/nvidia.yaml
+
+# determine the old nvidia-utils version used in the CDI file
+if [[ -f "$cdi_file" ]]; then
+    old_version=$(sed -ne 's|.*hostPath: /usr/lib/libcuda.so.\([0-9.]\+\)|\1|p' "$cdi_file")
+fi
+
+# determine the new nvidia-utils version as installed in the system
+new_version=$(realpath /usr/lib/libcuda.so)
+new_version=${new_version#/usr/lib/libcuda.so.}
+
+if ! [[ -f "$cdi_file" ]] || [[ "$old_version" == "$new_version" ]]; then
+    nvidia-ctk --quiet cdi generate --output="$cdi_file"
+else
+    printf "WARNING: updating nvidia-utils version (%s -> %s) in %s using plain string substitution.\n" "$old_version" "$new_version" "$cdi_file"
+    printf " -> If you meet problems, run the following command to regenerate the CDI file:\n"
+    printf "    nvidia-ctk cdi generate --output=\"%s\"\n" "$cdi_file"
+    sed -i "s|$old_version|$new_version|g" "$cdi_file"
+fi

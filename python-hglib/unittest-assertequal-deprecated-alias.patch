@@ -1,0 +1,862 @@
+diff -aur python-hglib-2.6.2.old/tests/test-annotate.py python-hglib-2.6.2/tests/test-annotate.py
+--- python-hglib-2.6.2.old/tests/test-annotate.py	2024-04-10 11:39:03.263003961 +0200
++++ python-hglib-2.6.2/tests/test-annotate.py	2024-04-10 11:43:35.999240985 +0200
+@@ -8,9 +8,9 @@
+         self.append('a', 'a\n')
+         rev, node1 = self.client.commit(b('second'))
+ 
+-        self.assertEquals(list(self.client.annotate(b('a'))),
++        self.assertEqual(list(self.client.annotate(b('a'))),
+                           [(b('0'), b('a')), (b('1'), b('a'))])
+-        self.assertEquals(list(
++        self.assertEqual(list(
+             self.client.annotate(
+                 b('a'), user=True, file=True,
+                 number=True, changeset=True, line=True, verbose=True)),
+@@ -22,11 +22,11 @@
+         rev, node0 = self.client.commit(b('first'), addremove=True)
+         self.append('b', 'b\n')
+         rev, node1 = self.client.commit(b('second'), addremove=True)
+-        self.assertEquals(list(self.client.annotate([b('a'), b('b')])),
++        self.assertEqual(list(self.client.annotate([b('a'), b('b')])),
+                           [(b('0'), b('a')), (b('1'), b('b'))])
+ 
+     def test_two_colons(self):
+         self.append('a', 'a: b\n')
+         self.client.commit(b('first'), addremove=True)
+-        self.assertEquals(list(self.client.annotate(b('a'))),
++        self.assertEqual(list(self.client.annotate(b('a'))),
+                           [(b('0'), b('a: b'))])
+diff -aur python-hglib-2.6.2.old/tests/test-bookmarks.py python-hglib-2.6.2/tests/test-bookmarks.py
+--- python-hglib-2.6.2.old/tests/test-bookmarks.py	2024-04-10 11:39:03.263003961 +0200
++++ python-hglib-2.6.2/tests/test-bookmarks.py	2024-04-10 11:43:35.999240985 +0200
+@@ -3,7 +3,7 @@
+ 
+ class test_bookmarks(common.basetest):
+     def test_empty(self):
+-        self.assertEquals(self.client.bookmarks(), ([], -1))
++        self.assertEqual(self.client.bookmarks(), ([], -1))
+ 
+     def test_basic(self):
+         self.append('a', 'a')
+@@ -12,15 +12,15 @@
+         rev1, node1 = self.client.commit(b('second'))
+ 
+         self.client.bookmark(b('zero'), rev0)
+-        self.assertEquals(self.client.bookmarks(),
++        self.assertEqual(self.client.bookmarks(),
+                           ([(b('zero'), rev0, node0[:12])], -1))
+ 
+         self.client.bookmark(b('one'), rev1)
+-        self.assertEquals(self.client.bookmarks()[0],
++        self.assertEqual(self.client.bookmarks()[0],
+                           [(b('one'), rev1, node1[:12]),
+                            (b('zero'), rev0, node0[:12])])
+ 
+     #def test_spaces(self):
+     #    self.client.bookmark('s pace', self.rev0)
+-    #    self.assertEquals(self.client.bookmarks(),
++    #    self.assertEqual(self.client.bookmarks(),
+     #                      ([('s pace', 0, self.rev0.node[:12])], -1))
+diff -aur python-hglib-2.6.2.old/tests/test-branches.py python-hglib-2.6.2/tests/test-branches.py
+--- python-hglib-2.6.2.old/tests/test-branches.py	2024-04-10 11:39:03.263003961 +0200
++++ python-hglib-2.6.2/tests/test-branches.py	2024-04-10 11:43:35.999240985 +0200
+@@ -4,7 +4,7 @@
+ 
+ class test_branches(common.basetest):
+     def test_empty(self):
+-        self.assertEquals(self.client.branches(), [])
++        self.assertEqual(self.client.branches(), [])
+ 
+     def test_basic(self):
+         self.append('a', 'a')
+@@ -19,7 +19,7 @@
+             r = self.client.log(r)[0]
+             expected.append((r.branch, int(r.rev), r.node[:12]))
+ 
+-        self.assertEquals(branches, expected)
++        self.assertEqual(branches, expected)
+ 
+     def test_active_closed(self):
+         pass
+diff -aur python-hglib-2.6.2.old/tests/test-branch.py python-hglib-2.6.2/tests/test-branch.py
+--- python-hglib-2.6.2.old/tests/test-branch.py	2024-04-10 11:39:03.263003961 +0200
++++ python-hglib-2.6.2/tests/test-branch.py	2024-04-10 11:43:35.999240985 +0200
+@@ -4,17 +4,17 @@
+ 
+ class test_branch(common.basetest):
+     def test_empty(self):
+-        self.assertEquals(self.client.branch(), b('default'))
++        self.assertEqual(self.client.branch(), b('default'))
+ 
+     def test_basic(self):
+-        self.assertEquals(self.client.branch(b('foo')), b('foo'))
++        self.assertEqual(self.client.branch(b('foo')), b('foo'))
+         self.append('a', 'a')
+         rev, node = self.client.commit(b('first'), addremove=True)
+ 
+         rev = self.client.log(node)[0]
+ 
+-        self.assertEquals(rev.branch, b('foo'))
+-        self.assertEquals(self.client.branches(),
++        self.assertEqual(rev.branch, b('foo'))
++        self.assertEqual(self.client.branches(),
+                           [(rev.branch, int(rev.rev), rev.node[:12])])
+ 
+     def test_reset_with_name(self):
+@@ -22,7 +22,7 @@
+ 
+     def test_reset(self):
+         self.client.branch(b('foo'))
+-        self.assertEquals(self.client.branch(clean=True), b('default'))
++        self.assertEqual(self.client.branch(clean=True), b('default'))
+ 
+     def test_exists(self):
+         self.append('a', 'a')
+@@ -42,5 +42,5 @@
+ 
+         self.assertRaises(hglib.error.CommandError,
+                           self.client.branch, b('default'))
+-        self.assertEquals(self.client.branch(b('default'), force=True),
++        self.assertEqual(self.client.branch(b('default'), force=True),
+                           b('default'))
+diff -aur python-hglib-2.6.2.old/tests/test-clone.py python-hglib-2.6.2/tests/test-clone.py
+--- python-hglib-2.6.2.old/tests/test-clone.py	2024-04-10 11:39:03.263003961 +0200
++++ python-hglib-2.6.2/tests/test-clone.py	2024-04-10 11:43:35.999240985 +0200
+@@ -10,7 +10,7 @@
+         cloned = hglib.clone(b('.'), b('cloned'))
+         self.assertRaises(ValueError, cloned.log)
+         cloned.open()
+-        self.assertEquals(self.client.log(), cloned.log())
++        self.assertEqual(self.client.log(), cloned.log())
+ 
+     def test_clone_uncompressed(self):
+         hglib.clone(b('.'), b('cloned'), uncompressed=True)
+diff -aur python-hglib-2.6.2.old/tests/test-commit.py python-hglib-2.6.2/tests/test-commit.py
+--- python-hglib-2.6.2.old/tests/test-commit.py	2024-04-10 11:39:03.263003961 +0200
++++ python-hglib-2.6.2/tests/test-commit.py	2024-04-10 11:43:35.999240985 +0200
+@@ -8,7 +8,7 @@
+         rev, node = self.client.commit(b('first'), addremove=True,
+                                        user=b('foo'))
+         rev = self.client.log(node)[0]
+-        self.assertEquals(rev.author, b('foo'))
++        self.assertEqual(rev.author, b('foo'))
+ 
+     def test_no_user(self):
+         self.append('a', 'a')
+@@ -24,10 +24,10 @@
+         revclose = self.client.commit(b('closing foo'), closebranch=True)
+         rev0, rev1, revclose = self.client.log([node0, node1, revclose[1]])
+ 
+-        self.assertEquals(self.client.branches(),
++        self.assertEqual(self.client.branches(),
+                           [(rev0.branch, int(rev0.rev), rev0.node[:12])])
+ 
+-        self.assertEquals(self.client.branches(closed=True),
++        self.assertEqual(self.client.branches(closed=True),
+                           [(revclose.branch, int(revclose.rev),
+                             revclose.node[:12]),
+                            (rev0.branch, int(rev0.rev), rev0.node[:12])])
+@@ -44,7 +44,7 @@
+             b('first'), addremove=True,
+             date=now.isoformat(' ').encode('latin-1'))
+ 
+-        self.assertEquals(now, self.client.tip().date)
++        self.assertEqual(now, self.client.tip().date)
+ 
+     def test_amend(self):
+         self.append('a', 'a')
+@@ -53,12 +53,12 @@
+             b('first'), addremove=True,
+             date=now.isoformat(' ').encode('latin-1'))
+ 
+-        self.assertEquals(now, self.client.tip().date)
++        self.assertEqual(now, self.client.tip().date)
+ 
+         self.append('a', 'a')
+         rev1, node1 = self.client.commit(amend=True)
+-        self.assertEquals(now, self.client.tip().date)
+-        self.assertNotEquals(node0, node1)
++        self.assertEqual(now, self.client.tip().date)
++        self.assertNotEqual(node0, node1)
+         self.assertEqual(1, len(self.client.log()))
+ 
+     def test_nul_injection(self):
+diff -aur python-hglib-2.6.2.old/tests/test-context.py python-hglib-2.6.2/tests/test-context.py
+--- python-hglib-2.6.2.old/tests/test-context.py	2024-04-10 11:39:03.263003961 +0200
++++ python-hglib-2.6.2/tests/test-context.py	2024-04-10 11:43:35.999240985 +0200
+@@ -21,44 +21,44 @@
+ 
+         ctx = self.client[node0]
+ 
+-        self.assertEquals(ctx.description(), b('first'))
+-        self.assertEquals(str(ctx), node0[:12].decode('latin-1'))
+-        self.assertEquals(ctx.node(), node0)
+-        self.assertEquals(int(ctx), rev0)
+-        self.assertEquals(ctx.rev(), rev0)
+-        self.assertEquals(ctx.branch(), b('default'))
++        self.assertEqual(ctx.description(), b('first'))
++        self.assertEqual(str(ctx), node0[:12].decode('latin-1'))
++        self.assertEqual(ctx.node(), node0)
++        self.assertEqual(int(ctx), rev0)
++        self.assertEqual(ctx.rev(), rev0)
++        self.assertEqual(ctx.branch(), b('default'))
+ 
+         self.assertTrue(ctx)
+ 
+         self.assertTrue(b('a') in ctx and b('b') in ctx)
+         self.assertFalse(b('c') in ctx)
+-        self.assertEquals(list(ctx), [b('a'), b('b')])
+-        self.assertEquals(ctx.files(), [b('a'), b('b')])
++        self.assertEqual(list(ctx), [b('a'), b('b')])
++        self.assertEqual(ctx.files(), [b('a'), b('b')])
+ 
+-        self.assertEquals(ctx.modified(), [])
+-        self.assertEquals(ctx.added(), [b('a'), b('b')])
+-        self.assertEquals(ctx.removed(), [])
+-        self.assertEquals(ctx.ignored(), [])
+-        self.assertEquals(ctx.clean(), [])
++        self.assertEqual(ctx.modified(), [])
++        self.assertEqual(ctx.added(), [b('a'), b('b')])
++        self.assertEqual(ctx.removed(), [])
++        self.assertEqual(ctx.ignored(), [])
++        self.assertEqual(ctx.clean(), [])
+ 
+         man = {b('a') : b('047b75c6d7a3ef6a2243bd0e99f94f6ea6683597'),
+                b('b') : b('62452855512f5b81522aa3895892760bb8da9f3f')}
+-        self.assertEquals(ctx.manifest(), man)
++        self.assertEqual(ctx.manifest(), man)
+ 
+-        self.assertEquals([int(c) for c in ctx.parents()], [-1])
+-        self.assertEquals(int(ctx.p1()), -1)
+-        self.assertEquals(int(ctx.p2()), -1)
+-
+-        self.assertEquals([int(c) for c in ctx.children()], [1])
+-        self.assertEquals([int(c) for c in ctx.descendants()], [0, 1])
+-        self.assertEquals([int(c) for c in ctx.ancestors()], [0])
++        self.assertEqual([int(c) for c in ctx.parents()], [-1])
++        self.assertEqual(int(ctx.p1()), -1)
++        self.assertEqual(int(ctx.p2()), -1)
++
++        self.assertEqual([int(c) for c in ctx.children()], [1])
++        self.assertEqual([int(c) for c in ctx.descendants()], [0, 1])
++        self.assertEqual([int(c) for c in ctx.ancestors()], [0])
+ 
+         self.client.bookmark(b('bookmark'), inactive=True, rev=node0)
+-        self.assertEquals(ctx.bookmarks(), [b('bookmark')])
++        self.assertEqual(ctx.bookmarks(), [b('bookmark')])
+ 
+         self.client.tag(b('tag'), rev=node0)
+         # tags are read on construction
+-        self.assertEquals(self.client[node0].tags(), [b('tag')])
++        self.assertEqual(self.client[node0].tags(), [b('tag')])
+ 
+     def test_construction(self):
+         self.append('a', 'a')
+@@ -67,11 +67,11 @@
+ 
+         # from client.revision
+         ctx = context.changectx(self.client, tip)
+-        self.assertEquals(ctx.node(), tip.node)
++        self.assertEqual(ctx.node(), tip.node)
+ 
+         # from revset
+         ctx = context.changectx(self.client, b('all()'))
+-        self.assertEquals(ctx.node(), tip.node)
++        self.assertEqual(ctx.node(), tip.node)
+ 
+     def test_in_keyword(self):
+         """
+diff -aur python-hglib-2.6.2.old/tests/test-copy.py python-hglib-2.6.2/tests/test-copy.py
+--- python-hglib-2.6.2.old/tests/test-copy.py	2024-04-10 11:39:03.263003961 +0200
++++ python-hglib-2.6.2/tests/test-copy.py	2024-04-10 11:43:35.999240985 +0200
+@@ -8,10 +8,10 @@
+         self.client.commit(b('first'), addremove=True)
+ 
+         self.assertTrue(self.client.copy(b('a'), b('b')))
+-        self.assertEquals(self.client.status(), [(b('A'), b('b'))])
++        self.assertEqual(self.client.status(), [(b('A'), b('b'))])
+         self.append('c', 'a')
+         self.assertTrue(self.client.copy(b('a'), b('c'), after=True))
+-        self.assertEquals(self.client.status(),
++        self.assertEqual(self.client.status(),
+                           [(b('A'), b('b')), (b('A'), b('c'))])
+ 
+     # hg returns 0 even if there were warnings
+diff -aur python-hglib-2.6.2.old/tests/test-diff.py python-hglib-2.6.2/tests/test-diff.py
+--- python-hglib-2.6.2.old/tests/test-diff.py	2024-04-10 11:39:03.263003961 +0200
++++ python-hglib-2.6.2/tests/test-diff.py	2024-04-10 11:43:35.999240985 +0200
+@@ -11,8 +11,8 @@
+ @@ -0,0 +1,1 @@
+ +a
+ """)
+-        self.assertEquals(diff1, self.client.diff(nodates=True))
+-        self.assertEquals(diff1, self.client.diff([b('a')], nodates=True))
++        self.assertEqual(diff1, self.client.diff(nodates=True))
++        self.assertEqual(diff1, self.client.diff([b('a')], nodates=True))
+         rev0, node0 = self.client.commit(b('first'))
+         diff2 = b("""diff -r 000000000000 -r """) + node0[:12] + b(""" a
+ --- /dev/null
+@@ -20,7 +20,7 @@
+ @@ -0,0 +1,1 @@
+ +a
+ """)
+-        self.assertEquals(diff2, self.client.diff(change=rev0, nodates=True))
++        self.assertEqual(diff2, self.client.diff(change=rev0, nodates=True))
+         self.append('a', 'a\n')
+         rev1, node1 = self.client.commit(b('second'))
+         diff3 = b("""diff -r """) + node0[:12] + b(""" a
+@@ -30,7 +30,7 @@
+  a
+ +a
+ """)
+-        self.assertEquals(diff3, self.client.diff(revs=[rev0], nodates=True))
++        self.assertEqual(diff3, self.client.diff(revs=[rev0], nodates=True))
+         diff4 = b("""diff -r """) + node0[:12] + b(" -r ") + node1[:12] + b(
+             """ a
+ --- a/a
+@@ -39,7 +39,7 @@
+  a
+ +a
+ """)
+-        self.assertEquals(diff4, self.client.diff(revs=[rev0, rev1],
++        self.assertEqual(diff4, self.client.diff(revs=[rev0, rev1],
+                                                   nodates=True))
+ 
+     def test_basic_plain(self):
+diff -aur python-hglib-2.6.2.old/tests/test-encoding.py python-hglib-2.6.2/tests/test-encoding.py
+--- python-hglib-2.6.2.old/tests/test-encoding.py	2024-04-10 11:39:03.263003961 +0200
++++ python-hglib-2.6.2/tests/test-encoding.py	2024-04-10 11:43:35.999240985 +0200
+@@ -5,4 +5,4 @@
+ class test_encoding(common.basetest):
+     def test_basic(self):
+         self.client = hglib.open(encoding='utf-8')
+-        self.assertEquals(self.client.encoding, b('utf-8'))
++        self.assertEqual(self.client.encoding, b('utf-8'))
+diff -aur python-hglib-2.6.2.old/tests/test-grep.py python-hglib-2.6.2/tests/test-grep.py
+--- python-hglib-2.6.2.old/tests/test-grep.py	2024-04-10 11:39:03.263003961 +0200
++++ python-hglib-2.6.2/tests/test-grep.py	2024-04-10 11:43:35.999240985 +0200
+@@ -8,22 +8,22 @@
+         self.client.commit(b('first'), addremove=True)
+ 
+         # no match
+-        self.assertEquals(list(self.client.grep(b('c'))), [])
++        self.assertEqual(list(self.client.grep(b('c'))), [])
+ 
+         if self.client.version >= (5, 2):
+-            self.assertEquals(list(self.client.grep(b('x'))),
++            self.assertEqual(list(self.client.grep(b('x'))),
+                               [(b('a'), b('x')), (b('b'), b('xy'))])
+-            self.assertEquals(list(self.client.grep(b('x'), b('a'))),
++            self.assertEqual(list(self.client.grep(b('x'), b('a'))),
+                               [(b('a'), b('x'))])
+ 
+-            self.assertEquals(list(self.client.grep(b('y'))),
++            self.assertEqual(list(self.client.grep(b('y'))),
+                               [(b('b'), b('xy'))])
+         else:
+-            self.assertEquals(list(self.client.grep(b('x'))),
++            self.assertEqual(list(self.client.grep(b('x'))),
+                               [(b('a'), b('0'), b('x')), (b('b'), b('0'), b('xy'))])
+-            self.assertEquals(list(self.client.grep(b('x'), b('a'))),
++            self.assertEqual(list(self.client.grep(b('x'), b('a'))),
+                               [(b('a'), b('0'), b('x'))])
+-            self.assertEquals(list(self.client.grep(b('y'))),
++            self.assertEqual(list(self.client.grep(b('y'))),
+                               [(b('b'), b('0'), b('xy'))])
+ 
+     def test_options(self):
+@@ -31,33 +31,33 @@
+         self.append('b', 'xy\n')
+         rev, node = self.client.commit(b('first'), addremove=True)
+ 
+-        self.assertEquals([(b('a'), b('0'), b('+'), b('x')),
++        self.assertEqual([(b('a'), b('0'), b('+'), b('x')),
+                            (b('b'), b('0'), b('+'), b('xy'))],
+                           list(self.client.grep(b('x'), all=True)))
+ 
+         if self.client.version >= (5, 2):
+-            self.assertEquals([(b('a'),), (b('b'),)],
++            self.assertEqual([(b('a'),), (b('b'),)],
+                               list(self.client.grep(b('x'), fileswithmatches=True)))
+ 
+-            self.assertEquals([(b('a'), b('1'), b('x')), (b('b'), b('1'), b('xy'))],
++            self.assertEqual([(b('a'), b('1'), b('x')), (b('b'), b('1'), b('xy'))],
+                               list(self.client.grep(b('x'), line=True)))
+ 
+-            self.assertEquals([(b('a'), b('test'), b('x')),
++            self.assertEqual([(b('a'), b('test'), b('x')),
+                                (b('b'), b('test'), b('xy'))],
+                               list(self.client.grep(b('x'), user=True)))
+         else:
+-            self.assertEquals([(b('a'), b('0')), (b('b'), b('0'))],
++            self.assertEqual([(b('a'), b('0')), (b('b'), b('0'))],
+                               list(self.client.grep(b('x'), fileswithmatches=True)))
+ 
+-            self.assertEquals([(b('a'), b('0'), b('1'), b('x')),
++            self.assertEqual([(b('a'), b('0'), b('1'), b('x')),
+                                (b('b'), b('0'), b('1'), b('xy'))],
+                               list(self.client.grep(b('x'), line=True)))
+ 
+-            self.assertEquals([(b('a'), b('0'), b('test'), b('x')),
++            self.assertEqual([(b('a'), b('0'), b('test'), b('x')),
+                                (b('b'), b('0'), b('test'), b('xy'))],
+                               list(self.client.grep(b('x'), user=True)))
+ 
+-        self.assertEquals([(b('a'), b('0'), b('1'), b('+'), b('test')),
++        self.assertEqual([(b('a'), b('0'), b('1'), b('+'), b('test')),
+                            (b('b'), b('0'), b('1'), b('+'), b('test'))],
+                           list(self.client.grep(b('x'), all=True, user=True,
+                                                 line=True,
+diff -aur python-hglib-2.6.2.old/tests/test-heads.py python-hglib-2.6.2/tests/test-heads.py
+--- python-hglib-2.6.2.old/tests/test-heads.py	2024-04-10 11:39:03.263003961 +0200
++++ python-hglib-2.6.2/tests/test-heads.py	2024-04-10 11:43:35.999240985 +0200
+@@ -3,15 +3,15 @@
+ 
+ class test_heads(common.basetest):
+     def test_empty(self):
+-        self.assertEquals(self.client.heads(), [])
++        self.assertEqual(self.client.heads(), [])
+ 
+     def test_basic(self):
+         self.append('a', 'a')
+         rev, node0 = self.client.commit(b('first'), addremove=True)
+-        self.assertEquals(self.client.heads(), [self.client.tip()])
++        self.assertEqual(self.client.heads(), [self.client.tip()])
+ 
+         self.client.branch(b('foo'))
+         self.append('a', 'a')
+         rev, node1 = self.client.commit(b('second'))
+ 
+-        self.assertEquals(self.client.heads(node0, topological=True), [])
++        self.assertEqual(self.client.heads(node0, topological=True), [])
+diff -aur python-hglib-2.6.2.old/tests/test-import.py python-hglib-2.6.2/tests/test-import.py
+--- python-hglib-2.6.2.old/tests/test-import.py	2024-04-10 11:39:03.263003961 +0200
++++ python-hglib-2.6.2/tests/test-import.py	2024-04-10 11:43:35.999240985 +0200
+@@ -20,7 +20,7 @@
+ class test_import(common.basetest):
+     def test_basic_cstringio(self):
+         self.client.import_(BytesIO(patch))
+-        self.assertEquals(self.client.cat([b('a')]), b('1\n'))
++        self.assertEqual(self.client.cat([b('a')]), b('1\n'))
+ 
+     def test_basic_file(self):
+         f = open('patch', 'wb')
+@@ -29,10 +29,10 @@
+ 
+         # --no-commit
+         self.client.import_([b('patch')], nocommit=True)
+-        self.assertEquals(open('a').read(), '1\n')
++        self.assertEqual(open('a').read(), '1\n')
+ 
+         self.client.update(clean=True)
+         os.remove('a')
+ 
+         self.client.import_([b('patch')])
+-        self.assertEquals(self.client.cat([b('a')]), b('1\n'))
++        self.assertEqual(self.client.cat([b('a')]), b('1\n'))
+diff -aur python-hglib-2.6.2.old/tests/test-log.py python-hglib-2.6.2/tests/test-log.py
+--- python-hglib-2.6.2.old/tests/test-log.py	2024-04-10 11:39:03.263003961 +0200
++++ python-hglib-2.6.2/tests/test-log.py	2024-04-10 11:43:35.999240985 +0200
+@@ -13,26 +13,26 @@
+         revs.reverse()
+ 
+         self.assertTrue(len(revs) == 2)
+-        self.assertEquals(revs[1].node, node1)
++        self.assertEqual(revs[1].node, node1)
+ 
+-        self.assertEquals(revs[0], self.client.log(b('0'))[0])
+-        self.assertEquals(self.client.log(), self.client.log(files=[b('a')]))
++        self.assertEqual(revs[0], self.client.log(b('0'))[0])
++        self.assertEqual(self.client.log(), self.client.log(files=[b('a')]))
+ 
+-        self.assertEquals(self.client.log(), self.client.log(hidden=True))
++        self.assertEqual(self.client.log(), self.client.log(hidden=True))
+ 
+     def test_dash_in_filename(self):
+         self.append('-a', '-a')
+         self.client.commit(b('first'), addremove=True)
+         revs = self.client.log(files=[b('-a')])
+         self.assertTrue(len(revs) == 1)
+-        self.assertEquals(revs[0].rev, b('0'))
++        self.assertEqual(revs[0].rev, b('0'))
+ 
+     def test_empty_short_option(self):
+         self.append('foobar', 'foobar')
+         self.client.commit(b('first'), addremove=True)
+         revs = self.client.log(keyword=b(''), files=[b('foobar')])
+         self.assertTrue(len(revs) == 1)
+-        self.assertEquals(revs[0].rev, b('0'))
++        self.assertEqual(revs[0].rev, b('0'))
+ 
+     # def test_errors(self):
+     #     self.assertRaisesRegexp(CommandError, 'abort: unknown revision',
+diff -aur python-hglib-2.6.2.old/tests/test-manifest.py python-hglib-2.6.2/tests/test-manifest.py
+--- python-hglib-2.6.2.old/tests/test-manifest.py	2024-04-10 11:39:03.263003961 +0200
++++ python-hglib-2.6.2/tests/test-manifest.py	2024-04-10 11:43:36.002574354 +0200
+@@ -22,6 +22,6 @@
+ 
+         self.client.commit(b('first'), addremove=True)
+ 
+-        self.assertEquals(list(self.client.manifest(all=True)), files)
++        self.assertEqual(list(self.client.manifest(all=True)), files)
+ 
+-        self.assertEquals(list(self.client.manifest()), manifest)
++        self.assertEqual(list(self.client.manifest()), manifest)
+diff -aur python-hglib-2.6.2.old/tests/test-merge.py python-hglib-2.6.2/tests/test-merge.py
+--- python-hglib-2.6.2.old/tests/test-merge.py	2024-04-10 11:39:03.263003961 +0200
++++ python-hglib-2.6.2/tests/test-merge.py	2024-04-10 11:43:36.002574354 +0200
+@@ -28,7 +28,7 @@
+ \ No newline at end of file
+ """)
+ 
+-        self.assertEquals(diff, self.client.diff(change=node, nodates=True))
++        self.assertEqual(diff, self.client.diff(change=node, nodates=True))
+ 
+     def test_merge_prompt_abort(self):
+         self.client.update(self.node0)
+@@ -56,7 +56,7 @@
+ +aa
+ \ No newline at end of file
+ """)
+-        self.assertEquals(diff, self.client.diff(nodates=True))
++        self.assertEqual(diff, self.client.diff(nodates=True))
+ 
+     def test_merge_prompt_cb(self):
+         self.client.update(self.node0)
+@@ -75,4 +75,4 @@
+ +aa
+ \ No newline at end of file
+ """)
+-        self.assertEquals(diff, self.client.diff(nodates=True))
++        self.assertEqual(diff, self.client.diff(nodates=True))
+diff -aur python-hglib-2.6.2.old/tests/test-outgoing-incoming.py python-hglib-2.6.2/tests/test-outgoing-incoming.py
+--- python-hglib-2.6.2.old/tests/test-outgoing-incoming.py	2024-04-10 11:39:03.263003961 +0200
++++ python-hglib-2.6.2/tests/test-outgoing-incoming.py	2024-04-10 11:43:36.002574354 +0200
+@@ -10,8 +10,8 @@
+         self.client.clone(dest=b('other'))
+         self.other = hglib.open(b('other'))
+ 
+-        self.assertEquals(self.other.incoming(), [])
+-        self.assertEquals(self.other.outgoing(), [])
++        self.assertEqual(self.other.incoming(), [])
++        self.assertEqual(self.other.outgoing(), [])
+ 
+     def test_basic(self):
+         self.append('a', 'a')
+@@ -22,18 +22,18 @@
+         self.client.clone(dest=b('other'))
+         other = hglib.open(b('other'))
+ 
+-        self.assertEquals(self.client.log(), other.log())
+-        self.assertEquals(self.client.outgoing(path=b('other')),
++        self.assertEqual(self.client.log(), other.log())
++        self.assertEqual(self.client.outgoing(path=b('other')),
+                           other.incoming())
+ 
+         self.append('a', 'a')
+         rev, node = self.client.commit(b('third'))
+         out = self.client.outgoing(path=b('other'))
+ 
+-        self.assertEquals(len(out), 1)
+-        self.assertEquals(out[0].node, node)
++        self.assertEqual(len(out), 1)
++        self.assertEqual(out[0].node, node)
+ 
+-        self.assertEquals(out, other.incoming())
++        self.assertEqual(out, other.incoming())
+ 
+     def test_bookmarks(self):
+         self.append('a', 'a')
+@@ -46,8 +46,8 @@
+ 
+         self.client.bookmark(b('bm1'), 1)
+ 
+-        self.assertEquals(other.incoming(bookmarks=True),
++        self.assertEqual(other.incoming(bookmarks=True),
+                           [(b('bm1'), self.client.tip().node[:12])])
+ 
+-        self.assertEquals(self.client.outgoing(path=b('other'), bookmarks=True),
++        self.assertEqual(self.client.outgoing(path=b('other'), bookmarks=True),
+                           [(b('bm1'), self.client.tip().node[:12])])
+diff -aur python-hglib-2.6.2.old/tests/test-parents.py python-hglib-2.6.2/tests/test-parents.py
+--- python-hglib-2.6.2.old/tests/test-parents.py	2024-04-10 11:39:03.263003961 +0200
++++ python-hglib-2.6.2/tests/test-parents.py	2024-04-10 11:43:36.002574354 +0200
+@@ -3,13 +3,13 @@
+ 
+ class test_parents(common.basetest):
+     def test_noparents(self):
+-        self.assertEquals(self.client.parents(), None)
++        self.assertEqual(self.client.parents(), None)
+ 
+     def test_basic(self):
+         self.append('a', 'a')
+         rev, node = self.client.commit(b('first'), addremove=True)
+-        self.assertEquals(node, self.client.parents()[0].node)
+-        self.assertEquals(node, self.client.parents(file=b('a'))[0].node)
++        self.assertEqual(node, self.client.parents()[0].node)
++        self.assertEqual(node, self.client.parents(file=b('a'))[0].node)
+ 
+     def test_two_parents(self):
+         pass
+diff -aur python-hglib-2.6.2.old/tests/test-paths.py python-hglib-2.6.2/tests/test-paths.py
+--- python-hglib-2.6.2.old/tests/test-paths.py	2024-04-10 11:39:03.263003961 +0200
++++ python-hglib-2.6.2/tests/test-paths.py	2024-04-10 11:43:36.002574354 +0200
+@@ -12,8 +12,8 @@
+         # hgrc isn't watched for changes yet, have to reopen
+         self.client = hglib.open()
+         paths = self.client.paths()
+-        self.assertEquals(len(paths), 1)
+-        self.assertEquals(paths[b('foo')],
++        self.assertEqual(len(paths), 1)
++        self.assertEqual(paths[b('foo')],
+                           os.path.abspath('bar').encode('latin-1'))
+-        self.assertEquals(self.client.paths(b('foo')),
++        self.assertEqual(self.client.paths(b('foo')),
+                           os.path.abspath('bar').encode('latin-1'))
+diff -aur python-hglib-2.6.2.old/tests/test-pull.py python-hglib-2.6.2/tests/test-pull.py
+--- python-hglib-2.6.2.old/tests/test-pull.py	2024-04-10 11:39:03.263003961 +0200
++++ python-hglib-2.6.2/tests/test-pull.py	2024-04-10 11:43:36.002574354 +0200
+@@ -14,7 +14,7 @@
+         self.client.commit(b('second'))
+ 
+         self.assertTrue(other.pull())
+-        self.assertEquals(self.client.log(), other.log())
++        self.assertEqual(self.client.log(), other.log())
+ 
+     def test_unresolved(self):
+         self.append('a', 'a')
+diff -aur python-hglib-2.6.2.old/tests/test-push.py python-hglib-2.6.2/tests/test-push.py
+--- python-hglib-2.6.2.old/tests/test-push.py	2024-04-10 11:39:03.263003961 +0200
++++ python-hglib-2.6.2/tests/test-push.py	2024-04-10 11:43:36.002574354 +0200
+@@ -17,4 +17,4 @@
+         self.client.commit(b('second'))
+ 
+         self.assertTrue(self.client.push(b('other')))
+-        self.assertEquals(self.client.log(), other.log())
++        self.assertEqual(self.client.log(), other.log())
+diff -aur python-hglib-2.6.2.old/tests/test-resolve.py python-hglib-2.6.2/tests/test-resolve.py
+--- python-hglib-2.6.2.old/tests/test-resolve.py	2024-04-10 11:39:03.263003961 +0200
++++ python-hglib-2.6.2/tests/test-resolve.py	2024-04-10 11:43:36.002574354 +0200
+@@ -25,9 +25,9 @@
+         self.assertRaises(hglib.error.CommandError,
+                           self.client.resolve, all=True)
+ 
+-        self.assertEquals([(b('U'), b('a')), (b('U'), b('b'))],
++        self.assertEqual([(b('U'), b('a')), (b('U'), b('b'))],
+                           self.client.resolve(listfiles=True))
+ 
+         self.client.resolve(b('a'), mark=True)
+-        self.assertEquals([(b('R'), b('a')), (b('U'), b('b'))],
++        self.assertEqual([(b('R'), b('a')), (b('U'), b('b'))],
+                           self.client.resolve(listfiles=True))
+diff -aur python-hglib-2.6.2.old/tests/test-status.py python-hglib-2.6.2/tests/test-status.py
+--- python-hglib-2.6.2.old/tests/test-status.py	2024-04-10 11:39:03.263003961 +0200
++++ python-hglib-2.6.2/tests/test-status.py	2024-04-10 11:43:36.002574354 +0200
+@@ -4,7 +4,7 @@
+ 
+ class test_status(common.basetest):
+     def test_empty(self):
+-        self.assertEquals(self.client.status(), [])
++        self.assertEqual(self.client.status(), [])
+ 
+     def test_one_of_each(self):
+         self.append('.hgignore', 'ignored')
+@@ -40,11 +40,11 @@
+         self.client.commit(b('first'), addremove=True)
+         self.client.copy(b('source'), b('dest'))
+         l = [(b('A'), b('dest')), (b(' '), b('source'))]
+-        self.assertEquals(self.client.status(copies=True), l)
++        self.assertEqual(self.client.status(copies=True), l)
+ 
+     def test_copy_origin_space(self):
+         self.append('s ource', 'a')
+         self.client.commit(b('first'), addremove=True)
+         self.client.copy(b('s ource'), b('dest'))
+         l = [(b('A'), b('dest')), (b(' '), b('s ource'))]
+-        self.assertEquals(self.client.status(copies=True), l)
++        self.assertEqual(self.client.status(copies=True), l)
+diff -aur python-hglib-2.6.2.old/tests/test-summary.py python-hglib-2.6.2/tests/test-summary.py
+--- python-hglib-2.6.2.old/tests/test-summary.py	2024-04-10 11:39:03.263003961 +0200
++++ python-hglib-2.6.2/tests/test-summary.py	2024-04-10 11:43:36.002574354 +0200
+@@ -10,7 +10,7 @@
+              b('commit') : True,
+              b('update') : 0}
+ 
+-        self.assertEquals(self.client.summary(), d)
++        self.assertEqual(self.client.summary(), d)
+ 
+     def test_basic(self):
+         self.append('a', 'a')
+@@ -23,7 +23,7 @@
+         if self.client.version >= (3, 5):
+             d[b('phases')] = b('1 draft')
+ 
+-        self.assertEquals(self.client.summary(), d)
++        self.assertEqual(self.client.summary(), d)
+ 
+     def test_commit_dirty(self):
+         self.append('a', 'a')
+@@ -37,7 +37,7 @@
+         if self.client.version >= (3, 5):
+             d[b('phases')] = b('1 draft')
+ 
+-        self.assertEquals(self.client.summary(), d)
++        self.assertEqual(self.client.summary(), d)
+ 
+     def test_secret_commit_clean(self):
+         if self.client.version < (2, 1):
+@@ -62,7 +62,7 @@
+         if self.client.version >= (3, 5):
+             d[b('phases')] = b('2 draft')
+ 
+-        self.assertEquals(self.client.summary(), d)
++        self.assertEqual(self.client.summary(), d)
+ 
+     def test_remote(self):
+         self.append('a', 'a')
+@@ -77,17 +77,17 @@
+              b('update') : 0,
+              b('remote') : (0, 0, 0, 0)}
+ 
+-        self.assertEquals(other.summary(remote=True), d)
++        self.assertEqual(other.summary(remote=True), d)
+ 
+         self.append('a', 'a')
+         self.client.commit(b('second'))
+ 
+         d[b('remote')] = (1, 0, 0, 0)
+-        self.assertEquals(other.summary(remote=True), d)
++        self.assertEqual(other.summary(remote=True), d)
+ 
+         self.client.bookmark(b('bm'))
+         d[b('remote')] = (1, 1, 0, 0)
+-        self.assertEquals(other.summary(remote=True), d)
++        self.assertEqual(other.summary(remote=True), d)
+ 
+         other.bookmark(b('bmother'))
+         d[b('remote')] = (1, 1, 0, 1)
+@@ -95,7 +95,7 @@
+             d[b('parent')] = [(0, node[:12], b('tip bmother'), b('first'))]
+         else:
+             d[b('bookmarks')] = b('*bmother')
+-        self.assertEquals(other.summary(remote=True), d)
++        self.assertEqual(other.summary(remote=True), d)
+ 
+         self.append('other/a', 'a')
+         rev, node = other.commit(b('second in other'))
+@@ -109,7 +109,7 @@
+         if self.client.version >= (3, 5):
+             d[b('phases')] = b('1 draft')
+ 
+-        self.assertEquals(other.summary(remote=True), d)
++        self.assertEqual(other.summary(remote=True), d)
+ 
+     def test_two_parents(self):
+         self.append('a', 'a')
+@@ -132,4 +132,4 @@
+         if self.client.version >= (3, 5):
+             d[b('phases')] = b('3 draft')
+ 
+-        self.assertEquals(self.client.summary(), d)
++        self.assertEqual(self.client.summary(), d)
+diff -aur python-hglib-2.6.2.old/tests/test-tags.py python-hglib-2.6.2/tests/test-tags.py
+--- python-hglib-2.6.2.old/tests/test-tags.py	2024-04-10 11:39:03.263003961 +0200
++++ python-hglib-2.6.2/tests/test-tags.py	2024-04-10 11:43:36.002574354 +0200
+@@ -15,7 +15,7 @@
+             self.client = hglib.open()
+ 
+         tags = self.client.tags()
+-        self.assertEquals(tags,
++        self.assertEqual(tags,
+                           [(b('tip'), 1, self.client.tip().node[:12], False),
+                            (b('my tag'), 0, node[:12], False),
+                            (b('local tag'), 0, node[:12], True)])
+diff -aur python-hglib-2.6.2.old/tests/test-update.py python-hglib-2.6.2/tests/test-update.py
+--- python-hglib-2.6.2.old/tests/test-update.py	2024-04-10 11:39:03.263003961 +0200
++++ python-hglib-2.6.2/tests/test-update.py	2024-04-10 11:43:36.002574354 +0200
+@@ -12,19 +12,19 @@
+ 
+     def test_basic(self):
+         u, m, r, ur = self.client.update(self.rev0)
+-        self.assertEquals(u, 1)
+-        self.assertEquals(m, 0)
+-        self.assertEquals(r, 0)
+-        self.assertEquals(ur, 0)
++        self.assertEqual(u, 1)
++        self.assertEqual(m, 0)
++        self.assertEqual(r, 0)
++        self.assertEqual(ur, 0)
+ 
+     def test_unresolved(self):
+         self.client.update(self.rev0)
+         self.append('a', 'b')
+         u, m, r, ur = self.client.update()
+-        self.assertEquals(u, 0)
+-        self.assertEquals(m, 0)
+-        self.assertEquals(r, 0)
+-        self.assertEquals(ur, 1)
++        self.assertEqual(u, 0)
++        self.assertEqual(m, 0)
++        self.assertEqual(r, 0)
++        self.assertEqual(ur, 1)
+         self.assertTrue((b('M'), b('a')) in self.client.status())
+ 
+     def test_merge(self):
+@@ -38,17 +38,17 @@
+         f.write(b('a') + old.encode('latin-1'))
+         f.close()
+         u, m, r, ur = self.client.update()
+-        self.assertEquals(u, 0)
+-        self.assertEquals(m, 1)
+-        self.assertEquals(r, 0)
+-        self.assertEquals(ur, 0)
+-        self.assertEquals(self.client.status(), [(b('M'), b('a'))])
++        self.assertEqual(u, 0)
++        self.assertEqual(m, 1)
++        self.assertEqual(r, 0)
++        self.assertEqual(ur, 0)
++        self.assertEqual(self.client.status(), [(b('M'), b('a'))])
+ 
+     def test_tip(self):
+         self.client.update(self.rev0)
+         u, m, r, ur = self.client.update()
+-        self.assertEquals(u, 1)
+-        self.assertEquals(self.client.parents()[0].node, self.node1)
++        self.assertEqual(u, 1)
++        self.assertEqual(self.client.parents()[0].node, self.node1)
+ 
+         self.client.update(self.rev0)
+         self.append('a', 'b')
+@@ -56,7 +56,7 @@
+         self.client.update(self.rev0)
+ 
+         self.client.update()
+-        self.assertEquals(self.client.parents()[0].node, node2)
++        self.assertEqual(self.client.parents()[0].node, node2)
+ 
+     def test_check_clean(self):
+         self.assertRaises(ValueError, self.client.update, clean=True,
+@@ -68,8 +68,8 @@
+         self.assertRaises(error.CommandError, self.client.update, check=True)
+ 
+         u, m, r, ur = self.client.update(clean=True)
+-        self.assertEquals(u, 1)
+-        self.assertEquals(old, open('a').read())
++        self.assertEqual(u, 1)
++        self.assertEqual(old, open('a').read())
+ 
+     def test_basic_plain(self):
+         f = open('.hg/hgrc', 'a')
+@@ -96,7 +96,7 @@
+                                 # Keep the 'changed' version
+                                prompt=lambda s, d: 'c\n')
+         u, m, r, ur = self.client.update(rev2, clean=True)
+-        self.assertEquals(u, 2)
+-        self.assertEquals(m, 0)
+-        self.assertEquals(r, 0)
+-        self.assertEquals(ur, 0)
++        self.assertEqual(u, 2)
++        self.assertEqual(m, 0)
++        self.assertEqual(r, 0)
++        self.assertEqual(ur, 0)

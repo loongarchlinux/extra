@@ -1,35 +1,37 @@
 # Maintainer: Jelle van der Waa <jelle@archlinux.org>
 
 pkgname=keycloak-metrics-spi
-pkgver=4.0.0
+pkgver=5.0.0
 pkgrel=1
 pkgdesc='A Service Provider that adds a Prometheus metrics endpoint to Keycloak'
 url="https://github.com/aerogear/keycloak-metrics-spi"
 arch=('any')
 license=('Apache')
+# Match JDK from keycloak
 _jrever=17
 _jdkver=17
 depends=("java-runtime>=${_jrever}")
-makedepends=("jdk${_jdkver}-openjdk" 'gradle' 'keycloak')
+makedepends=("java-environment=${_jdkver}" 'gradle' 'keycloak')
 source=($pkgname-$pkgver.tar.gz::https://github.com/aerogear/keycloak-metrics-spi/archive/${pkgver}.tar.gz
-        $pkgname-fix-gradle-build.patch::https://github.com/aerogear/keycloak-metrics-spi/commit/7678d8e13b9a.patch
         move-version-to-properties.patch
         reproducible-build.patch
-        remove-manifest-variable-fields.patch)
-sha512sums=('f506e34078039ce4a86ddbc7b0cc94cc31b1f060cdd782c996a831b1dc26dcda1124dd8e14291b751de736e47ed1a26cfae65b8632060058dd072e4e4f1085c5'
-            '0bbd5b08516ac5eb8986a761534079eb2382d1d3aeb7999d360eb0e23f6021505438c34132f62599d7857ad875c8593f369fbe56027713c09c856aecdeda84a8'
-            '92f5d9c3d24219cd800aafcba42115500c143d3da3748894a5cb5cb6779fc38d483fa170f5a59f82d5cc264638636f54b7a7dcd971626bbf82b5aa7feb38484c'
+        remove-manifest-variable-fields.patch
+        add-quarkus-resteasy-reactive-in-gradle-deps.patch)
+sha512sums=('50b04fe1987721cfda778a11d598cffdc2730599e4e47bb71aecc30a50d2935bef6aa5b6f57f62e8e56eda83c091ade92e1606bb8e2691ce125ca4f401977b75'
+            '1f3a66c4c969039363b8f7c444658f7ea62ef5cba35e96952d49cccf4204a01f5e68096f4df135ddc509b54999c9ec80e21b234252480bc14e1cd099278d1ef0'
             '238cd8e201d2831686890eacc4c0188e2f56c93212d66a367a37921408ad768a463aa088472140bc5701f70e0d32c637c75cc18a1bb4b3d2d9d14654888a70f7'
-            '356507ba6f056ea33522d7e3e297fd17df84eb8243d9802a8b902dd59808ea1237f2d138487d5061a68d849e289daf5c4e7738ee6facb28987a6df20def83fce')
+            '356507ba6f056ea33522d7e3e297fd17df84eb8243d9802a8b902dd59808ea1237f2d138487d5061a68d849e289daf5c4e7738ee6facb28987a6df20def83fce'
+            '85b054c26dda43b609069a447031d0a18dc1adc623ff12e37727a3c639ab61372efcb470e3398b1bd7d7d2bd15d9d69a472e8c8c0625fdad0af48fcc8b82ce87')
 
 prepare() {
   cd ${pkgname}-${pkgver}
-  # https://github.com/aerogear/keycloak-metrics-spi/commit/7678d8e13b9a
-  patch -Np1 < "${srcdir}/${pkgname}-fix-gradle-build.patch"
   # https://github.com/aerogear/keycloak-metrics-spi/pull/164
   patch -Np1 < "${srcdir}/move-version-to-properties.patch"
   # https://github.com/aerogear/keycloak-metrics-spi/pull/165
   patch -Np1 < "${srcdir}/reproducible-build.patch"
+  # https://github.com/aerogear/keycloak-metrics-spi/pull/202
+  patch -Np1 < "${srcdir}/add-quarkus-resteasy-reactive-in-gradle-deps.patch"
+  # Reproducible support
   patch -Np1 < "${srcdir}/remove-manifest-variable-fields.patch"
 }
 

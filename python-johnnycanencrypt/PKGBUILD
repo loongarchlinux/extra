@@ -1,9 +1,9 @@
 # Maintainer: David Runge <dvzrv@archlinux.org>
 
-_name=johnnycanencrypt
 pkgname=python-johnnycanencrypt
+_name="${pkgname#python-}"
 pkgver=0.14.1
-pkgrel=1
+pkgrel=2
 pkgdesc="Python module for OpenPGP written in Rust"
 arch=(loong64 x86_64)
 url="https://github.com/kushaldas/johnnycanencrypt"
@@ -20,6 +20,7 @@ depends=(
 )
 makedepends=(
   clang
+  git
   python-build
   python-installer
   python-setuptools
@@ -31,15 +32,13 @@ checkdepends=(
   python-pytest
   python-vcrpy
 )
-source=($url/releases/download/v$pkgver/$_name-$pkgver.tar.gz{,.asc})
-sha512sums=('c10eaaecce8f4e2f34e2b6c0223dfbcd6c93be18a5c68fb18908ab51d9ce6fd2aaaf67fb213837bbe02eed7a9c1ec46b3593777ce4ac436bd5dae553377dce33'
-            'SKIP')
-b2sums=('e670955748aef70fca6c89467ac0b38117d930a74c25307300c9da747f3140515e9e19b726f479b1a7aa4a03a80fda9c26106f4f7be9351383e4c68bbe6f2770'
-        'SKIP')
+source=(git+$url.git?signed#tag=v$pkgver)
+sha512sums=('635a3dc07f7cf7acea0ccda7a2e3a586adf8b5f0f66997892b6fb1ad0411700f045d5c374de0034c2d6fe31f1b9b06c4db49a6ea38ba98cb8f7a78cd7a016a61')
+b2sums=('fce4a07964d961ca74c0bef5e93019c3631f6355f78ec24a84ca5a195194f4a5d225d2c351c52758b53ba0870122bb9bb8d1fd68fcffcdd81dbba1d56ed92488')
 validpgpkeys=(A85FF376759C994A8A1168D8D8219C8C43F6C5E1)  # Kushal Das <kushal@freedom.press>
 
 build() {
-  cd $_name-$pkgver
+  cd $_name
   python -m build --wheel --no-isolation
 }
 
@@ -49,7 +48,7 @@ check() {
   )
   local site_packages=$(python -c "import site; print(site.getsitepackages()[0])")
 
-  cd $_name-$pkgver
+  cd $_name
   # install to temporary location and copy tests in place because test imports are relative :(
   python -m installer --destdir=test_dir dist/*.whl
   cp -av -- tests "test_dir/$site_packages/"
@@ -58,6 +57,6 @@ check() {
 }
 
 package() {
-  cd $_name-$pkgver
+  cd $_name
   python -m installer --destdir="$pkgdir" dist/*.whl
 }

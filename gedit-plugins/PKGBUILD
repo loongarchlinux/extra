@@ -7,16 +7,26 @@
 # Contributor: zhuqin <zhuqin83@gmail.com>
 
 pkgname=gedit-plugins
-pkgver=46.0
+pkgver=47.1
 pkgrel=1
 pkgdesc="Collection of plugins for the gedit Text Editor"
-url="https://wiki.gnome.org/Apps/Gedit/ShippedPlugins"
+url="https://gitlab.gnome.org/GNOME/gedit-plugins"
 arch=(loong64 x86_64)
-license=(GPL)
+license=(GPL-2.0-or-later)
 depends=(
+  dconf
   gedit
+  glib2
+  glibc
+  gtk3
+  libgedit-gtksourceview
+  libgedit-tepl
+  libpeas
+  pango
+  python
   python-cairo
   python-dbus
+  python-gobject
 )
 makedepends=(
   appstream-glib
@@ -33,14 +43,9 @@ optdepends=(
   'libgit2-glib: for git plugin'
   'vte3: for embedded terminal'
 )
-_commit=e4f3ca3eaac33f802db23c3ad4227481fdd18015  # tags/46.0^0
-source=("git+https://gitlab.gnome.org/GNOME/gedit-plugins.git#commit=$_commit")
-b2sums=('SKIP')
+source=("git+https://gitlab.gnome.org/GNOME/gedit-plugins.git#tag=${pkgver/[a-z]/.&}")
+b2sums=('31282ba70549c0cc1d5530e761b05e2d95ea87caadcd206018925b643a203d39dffa86648bf0e75b32df0a85c28f9094c77dd008fd0b615025eb0cd528c084a1')
 
-pkgver() {
-  cd $pkgname
-  git describe --tags | sed 's/[^-]*-g/r&/;s/-/+/g'
-}
 
 prepare() {
   cd $pkgname
@@ -58,8 +63,9 @@ check() {
 package() {
   meson install -C build --destdir "$pkgdir"
 
-  python -m compileall -d /usr "$pkgdir/usr"
-  python -O -m compileall -d /usr "$pkgdir/usr"
+  # Plugins not handled by meson's python.bytecompile
+  python -m compileall -d "/usr/lib/gedit" "$pkgdir/usr/lib/gedit"
+  python -O -m compileall -d "/usr/lib/gedit" "$pkgdir/usr/lib/gedit"
 }
 
 # vim:set sw=2 sts=-1 et:

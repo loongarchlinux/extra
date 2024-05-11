@@ -2,17 +2,18 @@
 
 pkgname=hypercorn
 pkgver=0.16.0
-pkgrel=1
+pkgrel=2
 pkgdesc='An ASGI Server based on Hyper libraries and inspired by Gunicorn'
 url=https://github.com/pgjones/hypercorn
 arch=(any)
 license=(MIT)
 depends=(
+  python
+  python-exceptiongroup
   python-h11
   python-h2
   python-priority
-  python-toml
-  python-typing_extensions
+  python-tomli
   python-wsproto
 )
 makedepends=(
@@ -26,9 +27,9 @@ checkdepends=(
   python-hypothesis
   python-pytest
   python-pytest-asyncio
+  python-pytest-cov
   python-pytest-sugar
   python-pytest-trio
-  python-tox
   python-trio
 )
 optdepends=('python-trio: trio support')
@@ -48,7 +49,8 @@ build() {
 
 check() {
   cd hypercorn
-  tox -e py311
+  PYTHONPATH="src:$PYTHONPATH" python -m pytest \
+    --ignore=tests/trio/test_lifespan.py
 }
 
 package() {

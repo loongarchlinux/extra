@@ -1,0 +1,55 @@
+# Maintainer: David Runge <dvzrv@archlinux.org>
+
+pkgname=rsop
+pkgver=0.3.1
+pkgrel=1
+pkgdesc="Stateless OpenPGP (SOP) based on rpgp"
+arch=(loong64 x86_64)
+url="https://codeberg.org/heiko/rsop"
+license=(
+  'Apache-2.0 OR MIT'
+  CC0-1.0
+)
+groups=(stateless-openpgp)
+depends=(
+  gcc-libs
+  glibc
+)
+makedepends=(
+  pcsclite
+  rust
+)
+source=(
+  $pkgname-$pkgver.tar.gz::$url/archive/$pkgname/v$pkgver.tar.gz
+)
+sha512sums=('fd29dc779af65877bbcc96f59b6d0540736e56e77db55d5b872b196b4d69023e8df8a31efb2f9f8a9f72decb36bc50de530f0e4cb61d88018ba3c97bf510e8fb')
+b2sums=('65a46a89377cb9577618da5a2fb0afcd2bd2a07d3ca06ccb0a770b902ae921c136f36b03a2bc46789f46573833e766e5953508cfcd21a8d30db05e2015992832')
+
+prepare() {
+  cd $pkgname
+  export RUSTUP_TOOLCHAIN=stable
+  cargo fetch --locked --target "$(rustc -vV | sed -n 's/host: //p')"
+}
+
+build() {
+  cd $pkgname
+  export RUSTUP_TOOLCHAIN=stable
+  export CARGO_TARGET_DIR=target
+  cargo build --frozen --release --all-features
+}
+
+check() {
+  cd $pkgname
+  export RUSTUP_TOOLCHAIN=stable
+  cargo test --frozen --all-features
+}
+
+package() {
+  depends+=(
+    pcsclite libpcsclite.so
+  )
+
+  cd $pkgname
+  install -vDm 0755 "target/release/$pkgname" -t "$pkgdir/usr/bin/"
+  install -vDm 0644 LICENSES/MIT.txt -t "$pkgdir/usr/share/licenses/$pkgname/"
+}

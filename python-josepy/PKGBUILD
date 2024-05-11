@@ -3,7 +3,7 @@
 
 pkgname=python-josepy
 pkgver=1.14.0
-pkgrel=1
+pkgrel=2
 pkgdesc='JOSE protocol implementation in Python'
 arch=('any')
 url='https://github.com/certbot/josepy'

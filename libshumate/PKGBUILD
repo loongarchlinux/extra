@@ -1,39 +1,48 @@
 # Maintainer: Jan Alexander Steffens (heftig) <heftig@archlinux.org>
+# Maintainer: Fabian Bornschein <fabiscafe@archlinux.org>
 
 pkgbase=libshumate
 pkgname=(
   libshumate
   libshumate-docs
 )
-pkgver=1.1.2
+pkgver=1.2.1
 pkgrel=1
 pkgdesc="Map widget for GTK 4"
 url="https://wiki.gnome.org/Projects/libshumate"
-license=(LGPL)
+license=(LGPL-2.1-or-later)
 arch=(loong64 x86_64)
 depends=(
   cairo
+  gcc-libs
+  gdk-pixbuf2
   glib2
+  glibc
+  graphene
   gtk4
+  json-glib
   libsoup3
+  libsysprof-capture
+  pango
+  protobuf-c
   sqlite
 )
 makedepends=(
   gi-docgen
   git
   gobject-introspection
+  gperf
   meson
   vala
 )
 checkdepends=(xorg-server-xvfb)
-_commit=eeb257ab8cfca9133ec2e7da739d3ce815be7067  # tags/1.1.2^0
-source=("git+https://gitlab.gnome.org/GNOME/libshumate.git#commit=$_commit")
-b2sums=('SKIP')
-
-pkgver() {
-  cd $pkgname
-  git describe --tags | sed 's/[^-]*-g/r&/;s/-/+/g'
-}
+source=(
+  "git+https://gitlab.gnome.org/GNOME/libshumate.git?signed#tag=${pkgver/[a-z]/.&}"
+)
+b2sums=('684c159eeedda0e0a935f56848cb8096611e89e48cd51e11f7811962322d9469e62afdf97a6d2a6ca2d8f9847ebef302d51e59542544aabe96bd384eb3529853')
+validpgpkeys=(
+  7448F128A4B18AB2EF87F092FA6624580A420D5D # Marcus Lundblad <ml@update.uu.se>
+)
 
 prepare() {
   cd $pkgname
@@ -41,6 +50,7 @@ prepare() {
 
 build() {
   local meson_options=(
+    --buildtype debugoptimized  # Required for tests
     -D demos=true
   )
 

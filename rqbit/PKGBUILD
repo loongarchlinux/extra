@@ -1,0 +1,96 @@
+# Maintainer: kpcyrd <kpcyrd[at]archlinux[dot]org>
+
+pkgbase=rqbit
+pkgname=(
+  rqbit
+  rqbit-desktop
+)
+pkgver=5.6.4
+pkgrel=1
+pkgdesc="A bittorrent client in Rust"
+url='https://github.com/ikatson/rqbit'
+arch=('loong64' 'x86_64')
+license=('Apache-2.0')
+makedepends=(
+  'cairo'       'libcairo.so'
+  'cargo'
+  'cargo-tauri'
+  'gdk-pixbuf2' 'libgdk_pixbuf-2.0.so'
+  'glib2'       'libglib-2.0.so'
+  'gtk3'        'libgtk-3.so'
+  'libsoup'     'libsoup-2.4.so'
+  'npm'
+  'openssl'     'libssl.so'
+  'pango'       'libpango-1.0.so'
+  'typescript'
+  'webkit2gtk'  'libwebkit2gtk-4.0.so'
+)
+source=(https://github.com/ikatson/${pkgbase}/archive/v${pkgver}/${pkgbase}-${pkgver}.tar.gz)
+sha256sums=('d4cda6fba73b3961d17517921f22f5afc2763f32a85d2a61141ff8d012a5d623')
+b2sums=('498463a24608942d8673a69df9be2a7260b059ef5e982019978233c84d09b7603d87107a675edec2136a33933bbff2b1b3dade6de53dfe3b1bd99f0e79449038')
+
+prepare() {
+  cd "${pkgbase}-${pkgver}"
+  cargo fetch --locked --target "$(rustc -vV | sed -n 's/host: //p')"
+
+  pushd desktop
+  npm install
+  popd
+
+  pushd crates/librqbit/webui
+  npm install
+}
+
+build() {
+  cd ${pkgbase}-${pkgver}
+  cargo build -p rqbit --frozen --release
+  cd desktop
+  cargo tauri build -b deb --ci
+}
+
+check() {
+  cd ${pkgbase}-${pkgver}
+  cargo test --frozen -- --skip tests::e2e
+}
+
+package_rqbit() {
+  depends=(
+    'gcc-libs'
+    'glibc'
+    'libssl.so'
+  )
+
+  cd ${pkgbase}-${pkgver}
+  install -Dm 755 -t "${pkgdir}/usr/bin" \
+    target/release/rqbit
+
+  # install completions
+  install -d "${pkgdir}/usr/share/bash-completion/completions" \
+             "${pkgdir}/usr/share/zsh/site-functions" \
+             "${pkgdir}/usr/share/fish/vendor_completions.d"
+  RUST_LOG=off "${pkgdir}/usr/bin/${pkgname}" completions bash > "${pkgdir}/usr/share/bash-completion/completions/${pkgname}"
+  RUST_LOG=off "${pkgdir}/usr/bin/${pkgname}" completions zsh > "${pkgdir}/usr/share/zsh/site-functions/_${pkgname}"
+  RUST_LOG=off "${pkgdir}/usr/bin/${pkgname}" completions fish > "${pkgdir}/usr/share/fish/vendor_completions.d/${pkgname}.fish"
+}
+
+package_rqbit-desktop() {
+  pkgdesc="A bittorrent client in Rust (desktop app)"
+  depends=(
+    'gcc-libs'
+    'glibc'
+    'hicolor-icon-theme'
+    'libcairo.so'
+    'libgdk_pixbuf-2.0.so'
+    'libglib-2.0.so'
+    'libgtk-3.so'
+    'libpango-1.0.so'
+    'libsoup-2.4.so'
+    'libssl.so'
+    'libwebkit2gtk-4.0.so'
+    'rqbit'
+  )
+
+  mv "${pkgbase}-${pkgver}"/desktop/src-tauri/target/release/bundle/deb/rqbit-desktop_*/data/usr "${pkgdir}"
+}
+
+# vim: ts=2 sw=2 et:

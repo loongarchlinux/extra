@@ -4,42 +4,48 @@
 # PKGBUILD base; Simper < simonpersson1 AT gmail DOT com >
 
 pkgname=kup
-pkgver=0.9.1
-pkgrel=9
+pkgver=0.9.1.20240317
+pkgrel=2
+_commit=f705664ce437ca2a40b4a91dadc4c3fe1e700dfd
 pkgdesc='A backup software for helping people to keep up-to-date backups'
 arch=(loong64 x86_64)
 url='https://apps.kde.org/kup/'
-license=(GPL2)
+license=(GPL-2.0-only GPL-2.0-or-later GPL-3.0-only)
 depends=(gcc-libs
          glibc
-         kcompletion5
-         kconfig5
-         kconfigwidgets5
-         kcoreaddons5
-         kdbusaddons5
-         ki18n5
-         kidletime5
-         kinit
-         kio5
-         kjobwidgets5
-         knotifications5
-         kwidgetsaddons5
-         kxmlgui5
+         kcmutils
+         kcompletion
+         kconfig
+         kconfigwidgets
+         kcoreaddons
+         kdbusaddons
+         ki18n
+         kidletime
+         kio
+         kirigami
+         kjobwidgets
+         knotifications
+         kwidgetsaddons
+         kxmlgui
          libgit2
-         qt5-base
-         solid5)
+         libplasma
+         plasma5support
+         qt6-base
+         qt6-declarative
+         solid)
 makedepends=(extra-cmake-modules
-             plasma-framework)
+             git)
 optdepends=('bup: bup backend'
             'rsync: support for synced backups')
-source=(https://download.kde.org/stable/kup/kup-$pkgver.tar.xz{,.sig})
-sha256sums=('5597d215b025bfc76aa290efbe187fb6f92313fbdc40628b851180c535610976'
-            'SKIP')
+# source=(https://download.kde.org/stable/kup/kup-$pkgver.tar.xz{,.sig})
+source=(git+https://invent.kde.org/system/kup#commit=$_commit)
+sha256sums=('SKIP')
 validpgpkeys=(CBA1DCD0B06A2B2E9B133E5C5C7D83CE9812E291)
 
 build() {
-  cmake -B build -S $pkgname-$pkgver \
-    -DBUILD_TESTING=OFF
+  cmake -B build -S $pkgname \
+    -DBUILD_TESTING=OFF \
+    -DQT_MAJOR_VERSION=6
   cmake --build build
 }
 

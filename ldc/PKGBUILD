@@ -4,17 +4,17 @@
 
 pkgname=('ldc' 'liblphobos')
 groups=('dlang' 'dlang-ldc')
-pkgver=1.36.0
-_pkgcommit=530d41be11e92901f797ebbbc1dc695df4af06e9
-_dversion=2.106.1
-_clangversion=16 # related to where ldc2 looks for compiler-rt sanitizers
+pkgver=1.37.0
+_pkgcommit=3eb31901b3d253b3f23b8599111d930994696ef7
+_dversion=2.107.1
+_clangversion=17 # related to where ldc2 looks for compiler-rt sanitizers
 epoch=3
 pkgrel=1
 pkgdesc="A D Compiler based on the LLVM Compiler Infrastructure including D runtime and libphobos2"
 arch=('loong64' 'x86_64')
 url="https://github.com/ldc-developers/ldc"
 license=('BSD')
-makedepends=('git' 'cmake' 'llvm' 'ldc' 'ninja')
+makedepends=('git' 'cmake' 'llvm' 'lld' 'ldc' 'ninja')
 # Disable lto as linking the ldc2 binary fails
 options=(!lto)
 
@@ -33,7 +33,7 @@ prepare() {
     git config submodule.phobos.url "$srcdir/ldc-phobos"
     git -c protocol.file.allow=always submodule update
 
-    # Set version used for path construction in getFullClangCompilerRTLibPath()
+    # Set version used for path construction in getRelativeClangCompilerRTLibPath()
     sed -i "s/ldc::llvm_version_base/\"$_clangversion\"/" driver/linker-gcc.cpp
 }
 
@@ -50,7 +50,7 @@ build() {
     -DBUILD_SHARED_LIBS=BOTH \
     -DBUILD_LTO_LIBS=ON \
     -DLDC_WITH_LLD=OFF \
-    -DD_COMPILER_FLAGS="-link-defaultlib-shared=false -linker=gold --flto=thin" \
+    -DD_COMPILER_FLAGS="-link-defaultlib-shared=false -linker=lld --flto=thin" \
     -DADDITIONAL_DEFAULT_LDC_SWITCHES="\"-link-defaultlib-shared\"," \
     ..
     ninja

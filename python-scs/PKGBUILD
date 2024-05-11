@@ -3,7 +3,7 @@
 _pyname=scs
 pkgname=python-$_pyname
 pkgver=3.2.4.post1
-pkgrel=1
+pkgrel=2
 pkgdesc='Splitting Conic Solver'
 url='https://github.com/cvxgrp/scs/'
 license=(MIT)

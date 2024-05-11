@@ -8,16 +8,33 @@
 
 pkgname=hydra
 pkgver=9.5
-pkgrel=1
+pkgrel=2
 pkgdesc='Very fast network logon cracker which support many different services'
 url='https://github.com/vanhauser-thc/thc-hydra'
 arch=('loong64' 'x86_64')
-license=('GPL3')
-depends=('postgresql-libs' 'subversion' 'libssh' 'mariadb-libs' 'libidn'
-         'libfbclient' 'afpfs-ng' 'zlib' 'openssl' 'ncurses' 'pcre2'
-         'freerdp' 'libmemcached' 'mongo-c-driver'
-         libncursesw.so libmariadb.so libpq.so libssh.so libfreerdp2.so
-         libwinpr2.so)
+license=('AGPL-3.0-or-later')
+depends=(
+  afpfs-ng
+  apr
+  bash
+  glibc
+  libfbclient
+  libgcrypt
+  libidn
+  libmemcached
+  mongo-c-driver
+  openssl
+  pcre2
+  subversion
+  zlib
+)
+makedepends=(
+  freerdp2
+  libssh
+  mariadb-libs
+  ncurses
+  postgresql-libs
+)
 source=(https://github.com/vanhauser-thc/thc-hydra/archive/v${pkgver}/thc-hydra-v${pkgver}.tar.gz)
 sha512sums=('a8fe42d175d184cdb82072f3a963b956d767fa908aaf1cbbc0746b6a67cfd37f8b5e3ecf9be82085a7f6c1ef57e91a8bf05bfeb41e96708899b6c8d7f05eee06')
 b2sums=('848c5b34719c2db98b3a3bee1c47e0b2ebeea668f5c387f015c7079f800cf0607a8cb5accba25ef2e253deb44422d51cf6e012c313496942a47468e0503000e8')
@@ -29,6 +46,14 @@ build() {
 }
 
 package() {
+  depends+=(
+    freerdp2 libfreerdp2.so libwinpr2.so
+    libssh libssh.so
+    mariadb-libs libmariadb.so
+    ncurses libncursesw.so
+    postgresql-libs libpq.so
+  )
+
   cd thc-hydra-${pkgver}
   make DESTDIR="${pkgdir}" MANDIR=/share/man/man1 DATADIR=/share/hydra install
   install -Dm 644 README -t "${pkgdir}/usr/share/doc/${pkgname}"

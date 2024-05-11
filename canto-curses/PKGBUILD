@@ -1,32 +1,40 @@
 # Maintainer: David Runge <dvzrv@archlinux.org>
 
-_name=Canto-curses
 pkgname=canto-curses
 pkgver=0.9.9
-pkgrel=5
+pkgrel=6
 pkgdesc="Next-gen console RSS/Atom reader"
-arch=('loong64' 'x86_64')
+arch=(loong64 x86_64)
 url="https://github.com/themoken/canto-curses"
-license=('GPL2')
-depends=('canto-daemon' 'glibc' 'libncursesw.so' 'libreadline.so' 'python')
-makedepends=('python-setuptools')
-source=("https://files.pythonhosted.org/packages/source/${_name::1}/${_name}/${_name}-${pkgver}.tar.gz")
-sha512sums=('cf476f67d6b7de9dcaf742dc983310a1ecfb324d7b104748a6fd9406821a02e36270c175b85e9bcb5c03b7ca0df25d49d306882500b0a8699b2bd0367756be9b')
-
-prepare() {
-  mv -v "${_name}-$pkgver" "$pkgname-$pkgver"
-  cd "$pkgname-$pkgver"
-}
+license=(GPL-2.0-only)
+depends=(
+  canto-daemon
+  glibc
+  python
+)
+makedepends=(
+  ncurses
+  python-setuptools
+  python-build
+  python-installer
+  python-wheel
+  readline
+)
+source=($pkgname-$pkgver.tar.gz::$url/archive/refs/tags/v$pkgver.tar.gz)
+sha512sums=('2a88631506c1fda7278bb3ac376c2b67b4f2e5e1f443e49fe3035f542b66ac4b232fa66e7ae1b40e86b0a5cde3c38d11a0953754e5c5c7ed572a0da74656d798')
+b2sums=('c6154dfa71ec88b405fb89feec66a6bb922dfb93523c865c33fe0664ed7ea796d795027ff65a355fd3767342ffd5fa8cb01f48475c262ded4413924df6339509')
 
 build() {
-  cd "$pkgname-$pkgver"
-  python setup.py build
+  cd $pkgname-$pkgver
+  python -m build --wheel --no-isolation
 }
 
 package() {
-  cd "$pkgname-$pkgver"
-  python setup.py install --skip-build \
-                          --optimize=1 \
-                          --prefix=/usr \
-                          --root="${pkgdir}"
+  depends+=(
+    ncurses libncursesw.so
+    readline libreadline.so
+  )
+
+  cd $pkgname-$pkgver
+  python -m installer --destdir="$pkgdir" dist/*.whl
 }

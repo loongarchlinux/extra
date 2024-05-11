@@ -2,17 +2,17 @@
 
 _pkgname=sphinx-autobuild
 pkgname=python-$_pkgname
-pkgver=2021.03.14
-pkgrel=3
+pkgver=2024.04.13
+pkgrel=2
 pkgdesc='Rebuild Sphinx documentation on changes, with live-reload in the browser'
 arch=('any')
 url='https://github.com/executablebooks/sphinx-autobuild'
 license=('BSD')
-depends=('python' 'python-sphinx' 'python-livereload')
+depends=('python' 'python-sphinx' 'python-colorama' 'python-watchfiles' 'uvicorn' 'python-starlette')
 makedepends=('python-build' 'python-installer' 'python-flit-core')
 checkdepends=('python-pytest')
 source=("$pkgname-$pkgver.tar.gz::$url/archive/$pkgver.tar.gz")
-sha512sums=('6be06e129119f2ab9d6443fc04bd1f6005c154fd53f231124babe6fd5f6371e0c9d8b42b119ab3cf53926d17970894b6ee883c464384abaa98a152f61020ed90')
+sha512sums=('3d444e7e90cd5dfba7fbc252793627c7fef16281888363fb0b881ebdfdb1e0e6fcd6e326d4a396851725180c82e5d9ffb83ab592d21243bb2fd0fdd2015e8e33')
 
 build() {
   cd $_pkgname-$pkgver
@@ -23,7 +23,7 @@ build() {
 check() {
   cd $_pkgname-$pkgver
 
-  PYTHONPATH=src pytest
+  PYTHONPATH="$PWD" pytest
 }
 
 package() {
@@ -31,7 +31,7 @@ package() {
 
   python -m installer --destdir="$pkgdir" dist/*.whl
 
-  install -Dm 644 LICENSE "$pkgdir"/usr/share/licenses/$pkgname/LICENSE
+  install -Dm 644 LICENSE.rst -t "$pkgdir"/usr/share/licenses/$pkgname
 }
 
 # vim:set ts=2 sw=2 et:

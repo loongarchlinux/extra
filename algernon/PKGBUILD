@@ -1,21 +1,23 @@
 # Maintainer: Alexander F. Rødseth <xyproto@archlinux.org>
 
 pkgname=algernon
-pkgver=1.15.5
+pkgver=1.16.0
 pkgrel=1
 pkgdesc='Web server with Lua, Markdown, QUIC, Redis and PostgreSQL support'
 arch=(loong64 x86_64)
 url='https://algernon.roboticoverlords.org/'
-license=(BSD)
+license=(BSD-3-Clause)
 makedepends=(git go)
 optdepends=('mariadb: For using the MariaDB/MySQL database backend'
+            'ollama: For using Ollama from Lua or .prompt files'
             'postgresql: For using the PostgreSQL database backend'
             'redis: For using the Redis database backend')
-source=("git+https://github.com/xyproto/algernon#commit=bb6ed669e1330bc6ca9271c5a1129b9a1c052366") # tag: v1.15.5
+source=("git+https://github.com/xyproto/algernon#commit=41cc40983b7fd3ee1a54c09e16f4b7ab8144c32f") # tag: v1.16.0
 b2sums=('SKIP')
 
 prepare() {
   cd $pkgname
+  export LDFLAGS='-Wl,-O2,--as-needed,-z,relro,-z,now'
   go build -v -mod=vendor -trimpath -buildmode=pie -ldflags "-s -w -linkmode=external -extldflags=$LDFLAGS"
 }
 

@@ -1,0 +1,35 @@
+# Maintainer:
+
+_pyname=astropy-iers-data
+pkgname=python-$_pyname
+pkgver=0.2024.03.18.00.29.47
+pkgrel=3
+pkgdesc="IERS Earth Rotation and Leap Second tables for the astropy core package"
+arch=(any)
+url="https://github.com/astropy/astropy-iers-data"
+license=(BSD-3-Clause)
+depends=(python)
+makedepends=(python-build python-installer python-wheel python-setuptools-scm)
+source=(https://github.com/astropy/$_pyname/archive/v$pkgver/$_pyname-$pkgver.tar.gz
+    "python-astropy_0_2024_03_18_00_29_47-issue-1.patch::https://github.com/astropy/astropy-iers-data/pull/24.patch"
+)
+sha256sums=('348dad7dc09012e5abb490706c176ba3e4e384e68dbc505f5b7a79ca1a912940'
+            '79ecf580efcf66bf16816ff47c0b044946c20aae04356677acf7fc3e96b98d82')
+
+prepare() {
+  cd $_pyname-$pkgver
+  # https://gitlab.archlinux.org/archlinux/packaging/packages/python-astropy-iers-data/-/issues/1
+  patch -Np1 < "${srcdir}"/python-astropy_0_2024_03_18_00_29_47-issue-1.patch
+}
+
+build() {
+  cd $_pyname-$pkgver
+  SETUPTOOLS_SCM_PRETEND_VERSION=${pkgver} \
+  python -m build --wheel --no-isolation --skip-dependency-check
+}
+
+package() {
+  cd $_pyname-$pkgver
+  python -m installer --destdir="$pkgdir" dist/*.whl
+  install -Dm644 LICENSE.rst -t "$pkgdir"/usr/share/licenses/$pkgname
+}

@@ -4,24 +4,29 @@
 _hkgname=binary-tagged
 pkgname=haskell-binary-tagged
 pkgver=0.3.1
-pkgrel=172
+pkgrel=181
 pkgdesc="Tagged binary serialisation."
 url="https://github.com/phadej/binary-tagged#readme"
 license=("BSD")
 arch=('loong64' 'x86_64')
 depends=('ghc-libs' 'haskell-base16-bytestring' 'haskell-structured' 'haskell-tagged')
-makedepends=('ghc' 'haskell-binary-instances' 'haskell-quickcheck' 'haskell-quickcheck-instances'
+makedepends=('ghc' 'uusi' 'haskell-binary-instances' 'haskell-quickcheck' 'haskell-quickcheck-instances'
              'haskell-singleton-bool' 'haskell-tasty' 'haskell-tasty-hunit'
              'haskell-tasty-quickcheck')
 source=("https://hackage.haskell.org/packages/archive/${_hkgname}/${pkgver}/${_hkgname}-${pkgver}.tar.gz")
 sha512sums=('b28372c7618088862cb7b5631378348b98c7a9dd1e41bffe3b72a52533468c6ae34b2937ab347dbb516b4ba72d0cdfb7f1450e916f696736daae9fc179741e75')
+
+prepare() {
+    cd $_hkgname-$pkgver
+    uusi -u base $_hkgname.cabal
+}
 
 build() {
     cd $_hkgname-$pkgver
 
     runhaskell Setup configure -O --enable-shared --enable-executable-dynamic --disable-library-vanilla \
         --prefix=/usr --docdir=/usr/share/doc/$pkgname --datasubdir=$pkgname --enable-tests \
-        --dynlibdir=/usr/lib --libsubdir=\$compiler/site-local/\$pkgid --ghc-option=-fllvm
+        --dynlibdir=/usr/lib --libsubdir=\$compiler/site-local/\$pkgid
     runhaskell Setup build $MAKEFLAGS
     runhaskell Setup register --gen-script
     runhaskell Setup unregister --gen-script

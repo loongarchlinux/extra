@@ -3,8 +3,8 @@
 # Contributor: Xu Fasheng <fasheng.xu[AT]gmail.com>
 
 pkgname=deepin-kwin
-pkgver=5.25.13
-pkgrel=1
+pkgver=5.25.18
+pkgrel=2
 pkgdesc='DDE window manager forked from KWin'
 arch=('loong64' 'x86_64')
 url="https://github.com/linuxdeepin/deepin-kwin"
@@ -12,23 +12,27 @@ license=('GPL3')
 depends=(qt5-declarative qt5-x11extras kconfig5 kconfigwidgets5 kcoreaddons5 kdbusaddons5 kdeclarative5
          kglobalaccel5 ki18n5 kidletime5 knotifications5 kcrash5 kpackage5 plasma-framework5 libepoxy
          kwidgetsaddons5 kwindowsystem5 kcompletion5 kcmutils5 knewstuff5 kservice5 ktextwidgets5 kxmlgui5
-         kdecoration kscreenlocker dwayland xcb-util-cursor xorg-xwayland libpipewire
-         breeze lcms2 libqaccessibilityclient qt5-quickcontrols python fontconfig freetype2 libcap
+         breeze dwayland xcb-util-cursor xorg-xwayland libpipewire libkscreen5 kdecoration5 kscreenlocker5 qt5-wayland
+         lcms2 libqaccessibilityclient-qt5 qt5-quickcontrols python fontconfig freetype2 libcap
          systemd-libs kauth5 bash kactivities5 libxkbcommon libxss libxi libinput xcb-util-wm wayland
          perl libxcb xcb-util-keysyms libx11 libxtst libdrm gcc-libs mesa qt5-base deepin-qt5platform-plugins)
 makedepends=(extra-cmake-modules kdoctools5 ninja qt5-tools wayland-protocols
              deepin-wayland-protocols)
 source=("https://github.com/linuxdeepin/deepin-kwin/archive/$pkgver/$pkgname-$pkgver.tar.gz")
-sha512sums=('c369604d51a6e6e195a82757815ef1cfbd35abefe89c637ec6e17579a53d65394a20840022d128e2e086507a092bd18c13c8343ba1fef19a7f9c2e32aeb181af')
+sha512sums=('ae1bdc1656b9f96a686af28b9d282678e6c39d54d01059783206e97d95971e100b0587ed7b86a9242bbe063919e42811df40e85bed6ff1fec0b8fd84cbc0ef1c')
 
 prepare() {
   cd deepin-kwin-$pkgver
   sed -i 's|/usr/share/backgrounds/default_background.jpg|/usr/share/backgrounds/deepin/desktop.jpg|' src/effects/multitaskview/multitaskview.cpp
+  sed -i 's|org.kde.screensaver.xml|org.kde.screensaver5.xml|' src/CMakeLists.txt
 }
 
 build() {
   cd deepin-kwin-$pkgver
-  cmake . -GNinja -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_INSTALL_LIBEXECDIR=lib
+  cmake . -GNinja -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_INSTALL_LIBEXECDIR=lib \
+    -DKScreenLocker_ROOT=/usr/lib/cmake/plasma5 \
+    -DKDecoration2_ROOT=/usr/lib/cmake/plasma5 \
+    -DKWIN_BUILD_RUNNERS=OFF
   ninja
 }
 

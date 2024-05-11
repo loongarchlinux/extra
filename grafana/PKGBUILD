@@ -3,8 +3,8 @@
 # Contributor: Gilles Hamel <hamelg at laposte dot net>
 
 pkgname=grafana
-pkgver=10.2.3
-pkgrel=2
+pkgver=10.4.2
+pkgrel=1
 pkgdesc='Gorgeous metric viz, dashboards & editors for Graphite, InfluxDB & OpenTSDB'
 url='https://grafana.com/'
 arch=('loong64' 'x86_64')
@@ -18,7 +18,7 @@ source=("git+https://github.com/grafana/grafana.git#tag=v$pkgver"
         'grafana.tmpfiles'
        )
 install=$pkgname.install
-sha512sums=('SKIP'
+sha512sums=('45db571c3c5ea92360a81403ef2669d4c7e702e65291afe35d14c4eb8a0ab5110297e8a384be489d7a28a6960d34efd3cee7cc48b9f238672b3811b6afe4018d'
             '02a597225ee6ba8da9491a94daa33fe681846e2140e02fbb461ff7d39acd4cf99694dc03fb5f2c5ecfd180b09c44a41fe639b121499b4222b67ada57dc60d850'
             '38b46d953837a7afa5a654dfeef163b210d56cad57d937018531d00cd63b5341d6f9cd777299bdc7a994d0cb7df09b8157aad0f166e76ad47564e1ad6d5441d4'
             'c1724bfc7cbd6a406f17acb661efca0f1e57e2c30cc1841f4cb7ccfc420adc40cc61cb1c023d00444827b2c40e9caa4c2fefbfd503419848c74a0b455b2375ab')
@@ -38,14 +38,6 @@ prepare() {
   sed -ri 's,^(\s*plugins\s*=).*,\1 /var/lib/grafana/plugins,' conf/defaults.ini
   sed -ri 's,^(\s*provisioning\s*=).*,\1 /var/lib/grafana/conf/provisioning,' conf/defaults.ini
   sed -ri 's,^(\s*logs\s*=).*,\1 /var/log/grafana,' conf/defaults.ini
-
-  # fix wrong gauge panel size
-  # https://github.com/grafana/grafana/issues/79827
-  git format-patch -1 --stdout 3e08abff3ba1 | patch -Rp1
-
-  # attempt to fix wrong bar gauge size
-  # https://github.com/grafana/grafana/issues/79797
-  git format-patch -1 --stdout 4b87f38f668d | patch -Rp1
 }
 
 build() {

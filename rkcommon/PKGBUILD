@@ -2,29 +2,30 @@
 # Maintainer: Bruno Pagani <archange@archlinux.org>
 
 pkgname=rkcommon
-pkgver=1.12.0
+pkgver=1.13.0
 pkgrel=1
 pkgdesc="Intel RenderKit common C++/CMake infrastructure"
 arch=(loong64 x86_64)
 url="https://github.com/ospray/rkcommon/"
-license=(Apache)
+license=(Apache-2.0)
 depends=(gcc-libs glibc onetbb)
 makedepends=(cmake)
 source=(${url}/archive/v${pkgver}/${pkgname}-${pkgver}.tar.gz)
-sha256sums=('6abb901073811cdbcbe336772e1fcb458d78cab5ad8d5d61de2b57ab83581e80')
+sha256sums=('8ae9f911420085ceeca36e1f16d1316a77befbf6bf6de2a186d65440ac66ff1f')
 
 build() {
   cmake -B build -S ${pkgname}-${pkgver} \
+    -G 'Unix Makefiles' \
     -DCMAKE_BUILD_TYPE=None \
     -DCMAKE_INSTALL_PREFIX=/usr \
     -Wno-dev
-  make -C build
+  cmake --build build
 }
 
 check() {
-  make -C build test
+  ctest --test-dir build --output-on-failure
 }
 
 package() {
-  make -C build DESTDIR="${pkgdir}" install
+  DESTDIR="${pkgdir}" cmake --install build
 }

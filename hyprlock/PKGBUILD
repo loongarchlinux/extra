@@ -1,0 +1,49 @@
+# Maintainer: Caleb Maclennan <caleb@alerque.com>
+
+pkgname=hyprlock
+pkgver=0.3.0
+pkgrel=1
+pkgdesc='hyprland’s GPU-accelerated screen locking utility'
+arch=(loong64 x86_64 aarch64)
+url="https://github.com/hyprwm/$pkgname"
+license=(BSD-3-Clause)
+depends=(cairo # libcairo.so
+         gcc-libs # libgcc_s.so libstdc++.so
+         glib2 libgobject-2.0.so libglib-2.0.so
+         glibc # libc.so libm.so
+         hyprlang libhyprlang.so
+         libdrm # libdrm.so
+         libglvnd libOpenGL.so libEGL.so
+         libxkbcommon libxkbcommon.so
+         mesa # libgbm.so
+         pam libpam.so
+         pango libpango-1.0.so libpangocairo-1.0.so
+         wayland libwayland-client.so libwayland-egl.so
+         wayland-protocols)
+makedepends=(cmake)
+backup=("etc/pam.d/$pkgname")
+_archive="$pkgname-$pkgver"
+source=("$url/archive/v$pkgver/$_archive.tar.gz"
+        "$url/commit/d9a62294.patch")
+sha256sums=('5e84ac3223ea340bb3d39c22db4edefbb8364da8c3b6b3d0da1dfa45d8cc945f'
+            'c50bfa1b1d69d95a6fe0ae9ab9c023ee220f8b9b535a54f1271782e33b198941')
+
+prepare() {
+	cd "$_archive"
+	# https://github.com/hyprwm/hyprlock/issues/220
+	patch -p1 -i ../d9a62294.patch
+}
+
+build() {
+	cd "$_archive"
+	cmake -B build \
+		-D CMAKE_INSTALL_PREFIX=/usr \
+		-D CMAKE_BUILD_TYPE=Release
+	cmake --build build
+}
+
+package() {
+	cd "$_archive"
+	DESTDIR="$pkgdir" cmake --install build
+	install -Dm0644 -t "$pkgdir/usr/share/licenses/$pkgname" LICENSE
+}

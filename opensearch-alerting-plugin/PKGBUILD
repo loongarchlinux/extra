@@ -1,20 +1,27 @@
 # Maintainer: Justin Kromlinger <hashworks@archlinux.org>
 
 pkgname=opensearch-alerting-plugin
-pkgver=2.11.1.0
+pkgver=2.13.0.0
 pkgrel=1
-_opensearchver=2.11.1
+_opensearchver=2.13.0
 _jdkver=11
 pkgdesc="OpenSearch Alerting Plugin"
 arch=('loong64' 'x86_64')
 url="https://docs-beta.opensearch.org/monitoring-plugins/alerting"
-license=('Apache')
+license=('Apache-2.0')
 depends=("opensearch=${_opensearchver}" "opensearch-notifications-plugin")
-makedepends=("java-environment=${_jdkver}" 'unzip')
+makedepends=("java-environment-openjdk=${_jdkver}" 'unzip')
 source=(
   "${pkgname}-${pkgver}.tar.gz::https://github.com/opensearch-project/alerting/archive/${pkgver}.tar.gz"
+  "skip-broken-test.patch"
 )
-sha256sums=('75b4755c6b0d835210d64c5344a89585f98f22d6065171666ecb8f25303b1286')
+sha256sums=('2c898134300e66900c072f9fd471c1a0ce870bde708a4c76f26e35437b2ce638'
+            '58c5dc220362afc59ad941827441e6fce63deba6967b2bd2bda88f7224753cea')
+
+prepare() {
+  cd "alerting-${pkgver}"
+  patch -Np1 < "$srcdir/skip-broken-test.patch"
+}
 
 build() {
   cd "alerting-${pkgver}"

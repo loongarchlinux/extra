@@ -3,7 +3,7 @@
 
 pkgname=beets
 pkgver=1.6.0
-pkgrel=6
+pkgrel=9
 pkgdesc='Flexible music library manager and tagger'
 arch=(any)
 url=https://beets.io/
@@ -22,8 +22,11 @@ depends=(
 )
 makedepends=(
   git
+  python-build
+  python-installer
   python-setuptools
   python-sphinx
+  python-wheel
 )
 checkdepends=(
   bash-completion
@@ -32,8 +35,7 @@ checkdepends=(
   python-discogs-client
   python-flask
   python-mpd2
-  python-nose
-  python-nose-exclude
+  python-pytest
   python-pylast
   python-requests-oauthlib
   python-responses
@@ -70,9 +72,19 @@ b2sums=('SKIP'
 
 prepare() {
   cd beets
+  # Adapt tests to latest Unidecode version
   git cherry-pick -n 5ae1e0f3c8d3a450cb39f7933aa49bb78c2bc0d9
+  # tests: fix assertions for empty MediaFile.images
   git cherry-pick -n d5f998b3120c8027986b55b9288b530fbf165fcc
+  # Add missing placeholders to extlinks captions
+  # Sphinx 6.0.0 changed extlinks to always require placeholders in link captions.
   git cherry-pick -n 2106f471affd1dab35b4b26187b9c74d034528c5
+  #  web: fix for breaking werkzeug change
+  git cherry-pick -n 4ae1e8278c31fce4538ae978ad1d46b7f980d3b1
+
+  # Define colorspaces for imagemagick comparison
+  # https://github.com/beetbox/beets/commit/a873a191b9d25236774cec82df2ceb6399ed4ce3
+  sed -i "s/'-metric'/'-define', 'phash:colorspaces=sRGB,HCLp', '-metric'/" beets/art.py
 }
 
 pkgver() {
@@ -82,19 +94,24 @@ pkgver() {
 
 build() {
   cd beets
-  python setup.py build sdist
+  # Do not use --wheel so man pages are included
+  python -m build --no-isolation
 }
 
 check() {
   cd beets
-  python -m nose \
-    --exclude-test=test.test_ui.CompletionTest \
-    --exclude-test=test.test_zero.ZeroPluginTest
+  rm test/test_player.py
+  python -m pytest \
+    --deselect test/test_plugins.py::ListenersTest::test_events_called \
+    --deselect test/test_thumbnails.py::ThumbnailsTest::test_invokations \
+    --deselect test/test_thumbnails.py::ThumbnailsTest::test_make_cover_thumbnail \
+    --deselect test/test_thumbnails.py::ThumbnailsTest::test_process_album \
+    --deselect test/test_ui.py::CompletionTest::test_completion
 }
 
 package() {
   cd beets
-  python setup.py install --root="${pkgdir}" --optimize=1
+  python -m installer --destdir="$pkgdir" dist/*.whl
   install -Dm 644 ../beet -t "${pkgdir}"/usr/share/bash-completion/completions/
   install -Dm 644 extra/_beet -t "${pkgdir}"/usr/share/zsh/site-functions/
   install -Dm 644 man/beet.1 -t "${pkgdir}"/usr/share/man/man1/

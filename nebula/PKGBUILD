@@ -1,45 +1,47 @@
 # Maintainer: Robin Broda <coderobe @ archlinux.org>
+# Maintainer: Robin Candau <antiz@archlinux.org>
+
 pkgname=nebula
-pkgver=1.7.2
+pkgver=1.9.0
 pkgrel=1
-pkgdesc='A scalable overlay networking tool with a focus on performance, simplicity and security'
-arch=(loong64 x86_64)
-url='https://github.com/slackhq/nebula'
-license=(MIT)
-depends=(glibc)
-makedepends=(go)
-options=(!lto)
-source=($pkgname-$pkgver.tar.gz::$url/archive/v$pkgver.tar.gz)
-sha512sums=('b9b871eabdf0ffb05cb350fd665e4cc7c39c9c519837eb4aa88aba4d8d43d62e098da6eb4d2e679100eaa1755f1bb0a3d416a2ea5271ad1e841be1d3434fb341')
-b2sums=('18f996e56aa4de44c8f45d5ad051a07f2927f8115c76ecce9be9dfe0a59f3b5175a93de8442f384162cf406298833d9a364f2ca5f9a51797961505368fe5d3d5')
+pkgdesc="A scalable overlay networking tool with a focus on performance, simplicity and security"
+arch=('loong64' 'x86_64')
+url="https://github.com/slackhq/nebula"
+license=('MIT')
+depends=('glibc')
+makedepends=('go')
+options=('!lto')
+source=("${pkgname}-${pkgver}.tar.gz::${url}/archive/v${pkgver}.tar.gz"
+        "${pkgname}.service")
+sha512sums=('913e27abd24fbe747a466ab48e8058f1140c9aee9d1f8911cd99b6f677ab5734d4c4115e57a86e868d12bc4f88d8a3814474c214ae2aa862632b3aae9ead217e'
+            '5237b50a98c9af95c97fed5d17cd313353b65e1ca981558e415fe95ce4296247fb3051bf6a59e2d2dd89aee3aef3bf3dbaa815becb5c2033523fbf163551b07f')
+b2sums=('d08ef9a57ae83ce2cb5e889542a0ab005156600fc5a8d85556d2ff6624ba6461836d13854530bf2af953fe04c0e1b6f53ebc96ae8f89072fd68c7a6c1db6cf91'
+        '3fb0d210bf96d843c044078d2b7fc3c68f26754aa7b7cdfccf721b62e227de8e6c2ec7c8dbe20b3133c882d01c58c7423f87aa2ef61e9a2d6bbe846779085314')
 
 prepare() {
-  mkdir -vp $pkgname-$pkgver/build
+	cd "${pkgname}-${pkgver}"
+	mkdir -p build
 }
 
 build() {
-  cd $pkgname-$pkgver
-
-  export CGO_CPPFLAGS="$CPPFLAGS"
-  export CGO_CFLAGS="$CFLAGS"
-  export CGO_CXXFLAGS="$CXXFLAGS"
-  export CGO_LDFLAGS="$LDFLAGS"
-  export GOPATH="$srcdir"
-  export GOFLAGS="-buildmode=pie -mod=readonly -modcacherw"
-
-  go build -ldflags "-X main.Build=$pkgver -compressdwarf=false -linkmode external" -o build ./cmd/...
+	cd "${pkgname}-${pkgver}"
+	export CGO_CPPFLAGS="${CPPFLAGS}"
+	export CGO_CFLAGS="${CFLAGS}"
+	export CGO_CXXFLAGS="${CXXFLAGS}"
+	export CGO_LDFLAGS="${LDFLAGS}"
+	export GOFLAGS="-buildmode=pie -trimpath -ldflags=-linkmode=external -mod=readonly -modcacherw"
+	go build -ldflags "-X main.Build=${pkgver}" -o build ./cmd/...
 }
 
 check() {
-  cd $pkgname-$pkgver
-
-  go test -v ./...
+	cd "${pkgname}-${pkgver}"
+	go test ./...
 }
 
 package() {
-  cd $pkgname-$pkgver
-
-  install -Dm644 LICENSE -t "$pkgdir/usr/share/licenses/$pkgname/"
-  install -Dm644 dist/arch/nebula.service -t "$pkgdir/usr/lib/systemd/system/"
-  install -vDm 755 build/* -t "$pkgdir/usr/bin/"
+	cd "${pkgname}-${pkgver}"
+	install -vDm 755 build/* -t "${pkgdir}/usr/bin/"
+	install -Dm 644 "${srcdir}/${pkgname}.service" "${pkgdir}/usr/lib/systemd/system/${pkgname}.service"
+	install -Dm 644 README.md "${pkgdir}/usr/share/doc/${pkgname}/README.md"
+	install -Dm 644 LICENSE "${pkgdir}/usr/share/licenses/${pkgname}/LICENSE"
 }

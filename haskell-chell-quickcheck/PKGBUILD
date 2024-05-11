@@ -2,28 +2,38 @@
 
 _hkgname=chell-quickcheck
 pkgname=haskell-chell-quickcheck
-pkgver=0.2.5.3
-pkgrel=74
+pkgver=0.2.5.4
+pkgrel=2
 pkgdesc="QuickCheck support for the Chell testing library"
 url="https://github.com/typeclasses/chell"
 license=('MIT')
 arch=('loong64' 'x86_64')
 depends=('ghc-libs' 'haskell-chell' 'haskell-quickcheck' 'haskell-random')
-makedepends=('ghc')
+makedepends=('ghc' 'uusi')
 source=(https://hackage.haskell.org/packages/archive/${_hkgname}/${pkgver}/${_hkgname}-${pkgver}.tar.gz)
-sha512sums=('d2f8eca8995c45aa3732303c7168f12d98b0b121ea5730dc481041a900b6c35b6ac965cc47eea6710f486c4ed850915daeacca1e8a8f844a242386c9dd854a96')
+sha512sums=('967f61e1e6d03c2c1d5195e6efdfcb33c6fcded0b3383ca2ac6cb4dedce163634d841b5eba77cebbe7f6952dfbb95bb72e08ec8d1ead64fdb4be7d8780f20c64')
+
+prepare() {
+    cd $_hkgname-$pkgver
+    gen-setup
+}
 
 build() {
     cd $_hkgname-$pkgver
     
     runhaskell Setup configure -O --enable-shared --enable-executable-dynamic --disable-library-vanilla \
-        --prefix=/usr --docdir=/usr/share/doc/$pkgname --datasubdir=$pkgname \
-        --dynlibdir=/usr/lib --libsubdir=\$compiler/site-local/\$pkgid --ghc-option=-fllvm
+        --prefix=/usr --docdir=/usr/share/doc/$pkgname --datasubdir=$pkgname --enable-tests \
+        --dynlibdir=/usr/lib --libsubdir=\$compiler/site-local/\$pkgid
     runhaskell Setup build $MAKEFLAGS
     runhaskell Setup register --gen-script
     runhaskell Setup unregister --gen-script
     sed -i -r -e "s|ghc-pkg.*update[^ ]* |&'--force' |" register.sh
     sed -i -r -e "s|ghc-pkg.*unregister[^ ]* |&'--force' |" unregister.sh
+}
+
+check() {
+    cd $_hkgname-$pkgver
+    runhaskell Setup test --show-details=direct
 }
 
 package() {

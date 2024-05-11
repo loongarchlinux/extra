@@ -3,7 +3,7 @@
 
 pkgname=certbot-dns-cloudflare
 pkgver=2.8.0
-pkgrel=1
+pkgrel=3
 pkgdesc='Cloudflare DNS Authenticator plugin for Certbot'
 arch=('any')
 license=('Apache')

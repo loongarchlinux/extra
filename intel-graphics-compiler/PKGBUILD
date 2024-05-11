@@ -3,20 +3,22 @@
 # Maintainer: Torsten Keßler <tpkessler@archlinux.org>
 
 pkgname=intel-graphics-compiler
-pkgver=1.0.15610.11
+pkgver=1.0.16510.2
 _llvmmaj=14
 _llvmver="${_llvmmaj}.0.5"
-_vciver=0.14.0
-_spirv_llvm_commit=493353d7fdc655f9f31abc874dd0adef7dd241c1
+_vciver=0.18.0
+_spirv_tools_tag=v2023.6.rc1
+_spirv_headers_commit=1c6bb2743599e6eb6f37b2969acc0aef812e32e3
+_spirv_llvm_commit=927efdc07bc18302559acdce1715c3f9507f3acf
 _opencl_clang_commit=cf95b338d14685e4f3402ab1828bef31d48f1fd6
 pkgrel=1
 epoch=1
 pkgdesc='Intel Graphics Compiler for OpenCL'
 arch=('loong64' 'x86_64')
 url='https://github.com/intel/intel-graphics-compiler/'
-license=('MIT' 'custom')
-depends=('gcc-libs' 'zlib' 'spirv-tools')
-makedepends=('git' 'cmake' 'python' 'python-mako' 'spirv-headers')
+license=('MIT' 'LicenseRef-Custom')
+depends=('gcc-libs' 'zlib')
+makedepends=('git' 'cmake' 'python' 'python-mako')
 provides=("intel-opencl-clang=${_llvmver}")
 conflicts=('intel-opencl-clang')
 replaces=('intel-opencl-clang')
@@ -24,13 +26,17 @@ options=('!emptydirs' '!lto')
 source=("${pkgname}-${pkgver}.tar.gz::https://github.com/intel/intel-graphics-compiler/archive/refs/tags/igc-${pkgver}.tar.gz"
         "git+https://github.com/intel/vc-intrinsics.git#tag=v${_vciver}"
         "git+https://github.com/KhronosGroup/SPIRV-LLVM-Translator.git#commit=${_spirv_llvm_commit}"
+        "git+https://github.com/KhronosGroup/SPIRV-Tools.git#tag=${_spirv_tools_tag}"
+        "git+https://github.com/KhronosGroup/SPIRV-Headers.git#commit=${_spirv_headers_commit}"
         "git+https://github.com/intel/opencl-clang.git#commit=${_opencl_clang_commit}"
         "git+https://github.com/llvm/llvm-project.git#tag=llvmorg-${_llvmver}")
-sha256sums=('54d86cf1f575d1efafc6e3ecac1303ee2395814d2f531b57e8904723711750f9'
-            'SKIP'
-            'SKIP'
-            'SKIP'
-            'SKIP')
+sha256sums=('b8edfbdccf0bf5d333e162df16805d878f08493b7b9288e889258420800ba332'
+            '82062143cf2d7538a04b9e53be6312be8e54da6bc0c65c7b1c4465d7aeb54f7f'
+            'd8008cd52eb86eca7427cca5fd01cd9f07dc794710e3413173e723a9385ce581'
+            'ad11e234110902f42c9e54d2f4bb014b64e280ac9428f4c03a04b8b4571112b8'
+            '86b7a82e8169097bb84741dff6003da85c841f9d3514034b213896c498ae294c'
+            '06648bff406785c2f9d28c4f38ace010ef699f30e8d70531137bff13adff7bd6'
+            'f04acc3523802bc24fef7753c8e4326502b8525cb516705f362972ef5698d6c3')
 
 prepare() {
     ln -s "${srcdir}/SPIRV-LLVM-Translator"  "${srcdir}/llvm-project/llvm/projects/llvm-spirv"
@@ -52,13 +58,14 @@ build() {
         -DCMAKE_INSTALL_PREFIX=/usr \
         -DCMAKE_INSTALL_LIBDIR=lib \
         -DIGC_OPTION__ARCHITECTURE_TARGET=Linux64 \
-        -DIGC_OPTION__SPIRV_TOOLS_MODE=Prebuilds \
-        -DIGC_OPTION__USE_PREINSTALLED_SPIRV_HEADERS=ON \
+        -DIGC_OPTION__SPIRV_TOOLS_MODE=Source \
+        -DIGC_OPTION__USE_PREINSTALLED_SPIRV_HEADERS=OFF \
         -DIGC_OPTION__CLANG_MODE=Source \
         -DIGC_OPTION__LLD_MODE=Source \
         -DIGC_OPTION__LLVM_PREFERRED_VERSION="${_llvmver}" \
         -DIGC_OPTION__LLVM_MODE=Source \
         -DIGC_OPTION__LINK_KHRONOS_SPIRV_TRANSLATOR=OFF \
+        -DIGC_OPTION__USE_KHRONOS_SPIRV_TRANSLATOR_IN_SC=OFF \
         -DIGC_OPTION__VC_INTRINSICS_MODE=Source \
         -DCCLANG_FROM_SYSTEM=OFF \
         -DINSTALL_GENX_IR=ON \

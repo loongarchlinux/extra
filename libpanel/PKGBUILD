@@ -1,4 +1,4 @@
-# Maintainer: Fabian Bornschein <fabiscafe-at-mailbox-dot-org>
+# Maintainer: Fabian Bornschein <fabiscafe@archlinux.org>
 # Maintainer: Jan Alexander Steffens (heftig) <heftig@archlinux.org>
 
 pkgbase=libpanel
@@ -6,7 +6,7 @@ pkgname=(
   libpanel
   libpanel-docs
 )
-pkgver=1.4.1
+pkgver=1.6.0
 pkgrel=1
 pkgdesc="Dock/panel library for GTK 4"
 url="https://gitlab.gnome.org/GNOME/libpanel"
@@ -27,7 +27,7 @@ makedepends=(
   meson
   vala
 )
-_commit=c16317c2af563d203c230b0168a54a59a751442b  # tags/1.4.1^0
+_commit=28a0203968d7e4a9258116a4342becfb2301c9da  # tags/1.6.0^0
 source=("git+https://gitlab.gnome.org/GNOME/libpanel.git#commit=$_commit")
 b2sums=('SKIP')
 

@@ -2,37 +2,39 @@
 
 pkgname=csound-plugins
 pkgver=1.0.2
-pkgrel=7
+pkgrel=10
 pkgdesc="Extra opcodes for Csound"
 arch=(loong64 x86_64)
 url="https://github.com/csound/plugins"
-license=('GPL')
+license=('LGPL-2.1-or-later')
 groups=('pro-audio')
 depends=(
 	'csound'
+	'gcc-libs'
+	'glibc'
 	'hdf5'
-	'lame'
-	'libfaust.so'
-	'libfltk.so'
-	'libfluidsynth.so'
-	'libjack.so'
-	'libwebsockets.so'
-	'libwiiuse.so'
+	'libx11'
 	'python'
 	'stk'
 )
 makedepends=(
 	'cmake'
 	'eigen'
+	'faust'
+	'fltk'
+	'fluidsynth'
 	'git'
 	'gmm'
+	'jack'
+	'lame'
 	'libpng'
+	'libwebsockets'
+	'wiiuse'
 )
 source=("$pkgname-$pkgver.tar.gz::https://github.com/csound/plugins/archive/refs/tags/$pkgver.tar.gz")
 sha256sums=('8c2f0625ad1d38400030f414b92d82cfdec5c04b7dc178852f3e1935abf75d30')
 
 build() {
-	mkdir build
 	cmake -B build -S "plugins-$pkgver" \
 		-DCMAKE_BUILD_TYPE='None' \
 		-DCMAKE_INSTALL_PREFIX='/usr' \
@@ -41,5 +43,16 @@ build() {
 }
 
 package() {
+	depends+=(
+		faust libfaust.so
+		fltk libfltk.so
+		fluidsynth libfluidsynth.so
+		jack libjack.so
+		lame libmp3lame.so
+		libpng libpng16.so
+		libwebsockets libwebsockets.so
+		wiiuse libwiiuse.so
+	)
+
 	make -C build DESTDIR="$pkgdir/" install
 }

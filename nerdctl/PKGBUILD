@@ -1,7 +1,8 @@
 # Maintainer: George Rawlinson <grawlinson@archlinux.org>
+# Maintainer: Caleb Maclennan <caleb@alerque.com>
 
 pkgname=nerdctl
-pkgver=1.7.2
+pkgver=1.7.6
 pkgrel=1
 pkgdesc='Docker-compatible CLI for containerd'
 arch=('loong64' 'x86_64')
@@ -16,20 +17,14 @@ optdepends=(
   'slirp4netns: for rootless mode'
 )
 options=('!lto')
-_commit='e32c4b023bf41e5c8325cfb893a53cefb5fc68ed'
 source=(
-  "$pkgname::git+$url.git#commit=$_commit"
+  "$pkgname::git+$url.git#tag=v$pkgver"
   'skip-failing-test.patch'
 )
-sha512sums=('SKIP'
+sha512sums=('63004e2c4aef298e6547f2ebdbbbdcd928e8bf5708a959fed141fdebd8970b7345bb43aac3bbb0c8869e9d1dfd8c08f781723ea2080fff5a1af571502b00e0b1'
             'c168de6147edcebf31df4b2e22dc830cad62b81780d10105aada8e17347523747d413c4398bec3840f079a37177b6f9c3ca87c8f0119f4f651f7e4c6462eb8b3')
-b2sums=('SKIP'
+b2sums=('4f1b7a56ef1197f2b09943cb77a2b6fa32f1386ebe1ce51f943b987758cce531d1468a61724ceed6c6c2608f9425ce1f7c9cf96e4baaab00276442153049e6fc'
         'c4dd2803d0fb6ef0067ee2ec3fb34f606618e157264e03f9b607629900b11a774f484c8cb320054f90911400bb436ca65f024bf5d63f39766e5b7f19fd8814e5')
-
-pkgver() {
-  cd "$pkgname"
-  git describe --tags | sed 's/^v//'
-}
 
 prepare() {
   cd "$pkgname"
@@ -54,13 +49,15 @@ build() {
   export CGO_CXXFLAGS="${CXXFLAGS}"
   export GOPATH="${srcdir}"
 
+  local _commit="$(git rev-list -1 HEAD)"
+
   go build -v \
     -buildmode=pie \
     -mod=readonly \
     -modcacherw \
     -ldflags "-compressdwarf=false \
     -linkmode external \
-    -extldflags ${LDFLAGS} \
+    -extldflags \"${LDFLAGS}\" \
     -X github.com/containerd/nerdctl/pkg/version.Version=$pkgver \
     -X github.com/containerd/nerdctl/pkg/version.Revision=$_commit" \
     -o build \

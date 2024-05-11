@@ -5,9 +5,9 @@ pkgbase=wireplumber
 pkgname=(
   wireplumber
   libwireplumber
+  wireplumber-docs
 )
-_commit=d3eb77b292655cef333a8f4cab4e861415bc37c2  # tags/0.4.17
-pkgver=0.4.17
+pkgver=0.5.2
 pkgrel=1
 pkgdesc="Session / policy manager implementation for PipeWire"
 url="https://pipewire.pages.freedesktop.org/wireplumber/"
@@ -15,32 +15,41 @@ arch=(loong64 x86_64)
 license=(MIT)
 makedepends=(
   doxygen
+  gcc-libs
   git
   glib2
+  glibc
   gobject-introspection
   graphviz
+  libpipewire
   lua
   meson
   pipewire
+  python-breathe
   python-lxml
+  python-sphinx
+  python-sphinx_rtd_theme
   systemd
+  systemd-libs
 )
 checkdepends=(pipewire-audio)
-source=("git+https://gitlab.freedesktop.org/pipewire/$pkgbase.git#commit=$_commit")
-b2sums=('SKIP')
-
-pkgver() {
-  cd $pkgbase
-  git describe --tags | sed 's/\([^-]*-g\)/r\1/;s/-/./g'
-}
+source=(
+  "git+https://gitlab.freedesktop.org/pipewire/$pkgbase.git#tag=$pkgver"
+  sphinx-no-parallel.patch
+)
+b2sums=('27cd96b6f8d7f3be588074db2e99e1ec253d5fe8f9098b7080699d9bef6beb258bd9a4b12a00ebe637078613c3363496d71f2ef344c91284b8ef5f71e4d24736'
+        '771ea16e3c5c5ebcce0b451a2e9aa5d4e4098191a6a23c42350116d37fc756631cff71a5d3fb1226ed944e9953736d8a220187627cfe36ec453315c20b1032c8')
 
 prepare() {
   cd $pkgbase
+
+  # Parallel Sphinx is unreproducible; should be fixed in Sphinx 7.3+:
+  # https://github.com/sphinx-doc/sphinx/commit/8e768e6c231c67caadecd5b43c20eb1f3a594079
+  git apply -3 ../sphinx-no-parallel.patch
 }
 
 build() {
   local meson_options=(
-    -D doc=disabled
     -D elogind=disabled
     -D system-lua=true
   )
@@ -68,9 +77,18 @@ _ver=${pkgver:0:3}
 package_wireplumber() {
   depends=(
     "libwireplumber=$pkgver-$pkgrel"
+    gcc-libs
+    glibc
+    libg{lib,object,io}-2.0.so
+    libpipewire
+    libpipewire-0.3.so
     libsystemd.so
     lua
     pipewire
+    systemd-libs
+  )
+  optdepends=(
+    'wireplumber-docs: Documentation'
   )
   provides=(pipewire-session-manager)
   conflicts=(pipewire-media-session)
@@ -86,6 +104,8 @@ package_wireplumber() {
     _pick libw usr/lib/pkgconfig
     _pick libw usr/include
     _pick libw usr/share/gir-1.0
+
+    _pick docs usr/share/doc
   )
 
   install -Dt "$pkgdir/usr/share/doc/$pkgname" -m644 $pkgbase/{NEWS,README}*
@@ -95,12 +115,22 @@ package_wireplumber() {
 package_libwireplumber() {
   pkgdesc+=" - client library"
   depends=(
+    gcc-libs
+    glibc
     libg{lib,module,object,io}-2.0.so
     libpipewire-0.3.so
   )
   provides=(libwireplumber-$_ver.so)
 
   mv libw/* "$pkgdir"
+
+  install -Dt "$pkgdir/usr/share/licenses/$pkgname" -m644 $pkgbase/LICENSE
+}
+
+package_wireplumber-docs() {
+  pkgdesc+=" - documentation"
+
+  mv docs/* "$pkgdir"
 
   install -Dt "$pkgdir/usr/share/licenses/$pkgname" -m644 $pkgbase/LICENSE
 }

@@ -4,30 +4,38 @@
 _pkgname=pybox2d
 pkgname=python-pybox2d
 pkgver=2.3.10
-pkgrel=2
+pkgrel=4
 epoch=1
 pkgdesc='Python wrapper for Box2D'
 arch=('loong64' 'x86_64')
 url='https://github.com/pybox2d/pybox2d'
 license=('custom')
 depends=('python')
-makedepends=('python-setuptools' 'swig')
-source=("$pkgname-$pkgver.tar.gz::https://github.com/pybox2d/$_pkgname/archive/$pkgver.tar.gz")
-sha256sums=('5471722f290b7285dcbdee9bef61d1cb424e5a610fa6e19e9ddeb854c7e3b937')
+makedepends=('python-setuptools' 'python-build' 'python-installer' 'python-wheel' 'swig')
+source=("$pkgname-$pkgver.tar.gz::https://github.com/pybox2d/$_pkgname/archive/$pkgver.tar.gz"
+	"unittest-deprecation.patch")
+sha256sums=('5471722f290b7285dcbdee9bef61d1cb424e5a610fa6e19e9ddeb854c7e3b937'
+            '3d8fa696272a0da2236c686192e4e35af64b96cf06c9d28a4c3d4ff6d7d123a5')
+
+prepare() {
+	cd $_pkgname-$pkgver
+	patch -Np1 -i ${srcdir}/unittest-deprecation.patch
+}
 
 build() {
 	cd $_pkgname-$pkgver
 	swig -python -c++ -IBox2D -small -O -includeall -ignoremissing -w201 -globals b2Globals -outdir library/Box2D -keyword -w511 -D_SWIG_KWARGS -o Box2D/Box2D_wrap.cpp Box2D/Box2D.i
-	python setup.py build
+	python -m build --wheel --no-isolation
 }
 
 check() {
 	cd $_pkgname-$pkgver
-	PYTHONPATH="$PWD"/library/Box2D python setup.py test
+	local python_version=$(python -c 'import sys; print("".join(map(str, sys.version_info[:2])))')
+	PYTHONPATH="$PWD/build/lib.linux-$CARCH-cpython-$python_version" python -m unittest discover -v library/Box2D/tests
 }
 
 package() {
 	cd $_pkgname-$pkgver
-	python setup.py install --root "$pkgdir" --optimize=1 --skip-build
+	python -m installer --destdir="$pkgdir" dist/*.whl
 	install -Dm644 LICENSE "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
 }

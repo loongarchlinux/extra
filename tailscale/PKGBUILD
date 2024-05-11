@@ -3,7 +3,7 @@
 # Contributor: David Anderson <dave@natulte.net>
 
 pkgname=tailscale
-pkgver=1.58.2
+pkgver=1.66.1
 pkgrel=1
 pkgdesc="A mesh VPN that makes it easy to connect your devices, wherever they are."
 arch=("loong64" "x86_64")
@@ -13,15 +13,11 @@ makedepends=("git" "go")
 depends=("glibc")
 backup=("etc/default/tailscaled")
 # Important: Check if the version has been published before updating
-# curl -s "https://pkgs.tailscale.com/stable/?mode=json"
-_commit=6a2a8457f0d62c775bfee3e350d2b34d85eda0f5
-source=("git+https://github.com/tailscale/tailscale.git#commit=${_commit}")
-sha256sums=('SKIP')
+# pkgctl version check
+source=("git+https://github.com/tailscale/tailscale.git#tag=v${pkgver}")
+sha256sums=('d65302233290c34af592b086a807b91ff8e59fd9f4ff6c6b9c4cc7cdbd9bb0db')
 
-pkgver() {
-  cd "${pkgname}"
-  git describe --tags | sed 's/^[vV]//;s/-/+/g'
-}
+options=(!lto)
 
 prepare() {
     cd "${pkgname}"
@@ -34,15 +30,13 @@ build() {
     export CGO_CFLAGS="${CFLAGS}"
     export CGO_CXXFLAGS="${CXXFLAGS}"
     export CGO_LDFLAGS="${LDFLAGS}"
-    # pacman bug
-    # export GOPATH="${srcdir}"
     export GOFLAGS="-buildmode=pie -mod=readonly -modcacherw"
     GO_LDFLAGS="\
         -compressdwarf=false \
         -linkmode=external \
         -X tailscale.com/version.longStamp=${pkgver} \
         -X tailscale.com/version.shortStamp=$(cut -d+ -f1 <<< "${pkgver}") \
-        -X tailscale.com/version.gitCommitStamp=${_commit}"
+        -X tailscale.com/version.gitCommitStamp=$(git rev-parse v"${pkgver}")"
     for cmd in ./cmd/tailscale ./cmd/tailscaled; do
         go build -v -tags xversion -ldflags "$GO_LDFLAGS" "$cmd"
     done

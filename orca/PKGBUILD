@@ -1,11 +1,11 @@
-# Maintainer: Fabian Bornschein <fabiscafe-at-mailbox-dot-org>
+# Maintainer: Fabian Bornschein <fabiscafe@archlinux.org>
 # Maintainer: Jan Alexander Steffens (heftig) <heftig@archlinux.org>
 # Contributor: Jan de Groot <jgc@archlinux.org>
 # Contributor: William Rea <sillywilly@gmail.com>
 
 pkgname=orca
-pkgver=45.2
-pkgrel=1
+pkgver=46.1
+pkgrel=2
 pkgdesc="Screen reader for individuals who are blind or visually impaired"
 url="https://wiki.gnome.org/Projects/Orca"
 arch=(any)
@@ -13,6 +13,7 @@ license=(LGPL-2.1-or-later)
 depends=(
   at-spi2-core
   brltty
+  glib2
   gobject-introspection-runtime
   gsettings-desktop-schemas
   gstreamer
@@ -24,9 +25,9 @@ depends=(
   libwnck3
   pango
   python
-  python-atspi
   python-cairo
   python-gobject
+  python-psutil
   python-setproctitle
   speech-dispatcher
   xorg-xkbcomp
@@ -35,38 +36,32 @@ depends=(
 makedepends=(
   git
   itstool
+  meson
   yelp-tools
 )
 groups=(gnome)
-_commit=cd1c1f25fbea6b6d815ce4403364e78e635919be  # tags/ORCA_45_2^0
-source=("git+https://gitlab.gnome.org/GNOME/orca.git#commit=$_commit")
-b2sums=('SKIP')
-
-pkgver() {
-  cd orca
-  git describe --tags | sed 's/ORCA_//;s/_/\./g;s/[^-]*-g/r&/;s/-/+/g'
-}
+source=("git+https://gitlab.gnome.org/GNOME/orca.git#tag=ORCA_${pkgver//./_}")
+b2sums=('210be323b41d5e643b08e3246afa9d7cd3d88156d27647fb587da90263af7da8dda41569c9a238f5294cf78f475c3778c9cbcf1a66aba45b578240680f656082')
 
 prepare() {
   cd orca
-  NOCONFIGURE=1 ./autogen.sh
 }
 
 build() {
-  local configure_options=(
-    --prefix=/usr
-    --sysconfdir=/etc
-    --localstatedir=/var
+  local meson_options=(
+    -D spiel=false
   )
 
-  cd orca
-  ./configure "${configure_options[@]}"
-  make
+  arch-meson orca build "${meson_options[@]}"
+  meson compile -C build
+}
+
+check() {
+  meson test -C build --print-errorlogs
 }
 
 package() {
-  cd orca
-  make DESTDIR="$pkgdir" install
+  meson install -C build --destdir "$pkgdir"
 }
 
 # vim:set sw=2 sts=-1 et:

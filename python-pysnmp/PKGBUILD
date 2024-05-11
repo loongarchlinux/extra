@@ -3,36 +3,37 @@
 
 pkgname=python-pysnmp
 _pyname=pysnmp
-pkgver=4.4.12
-pkgrel=7
+pkgver=6.1.2
+pkgrel=1
 pkgdesc='Open source and free implementation of v1/v2c/v3 SNMP engine'
-url='https://github.com/etingof/pysnmp'
+url='https://www.pysnmp.com/'
 arch=('any')
 license=('BSD')
 depends=('python' 'python-pysmi' 'python-pyasn1' 'python-pycryptodomex')
-makedepends=('python-setuptools' 'python-sphinx')
-options=('!makeflags')
-source=(https://github.com/etingof/pysnmp/archive/v${pkgver}/${_pyname}-v${pkgver}.tar.gz)
-sha256sums=('137d8fd93fffadd0c6d34c65e4dda373f41122a5f1c38537cc9ec4194dc99980')
-sha512sums=('48481e219098369b09cc2ffea6cd51974b64bed0131671cc7a2213ee5eb432c62e0ff5c3700b6be515bd3e90951927e41845c98ae7a339d551f0f4ec19c5e3b1')
+makedepends=('python-build' 'python-installer' 'python-wheel' 'python-poetry-core')
+checkdepends=('python-pytest' 'python-pytest-asyncio')
+source=(https://github.com/lextudio/pysnmp/archive/v${pkgver}/${_pyname}-v${pkgver}.tar.gz)
+sha256sums=('72a83040496dd58a4b3ec671a883648f27cfb53e5fafd4b124c6123282796c53')
+sha512sums=('894526c71fb417d7b8c6b3d45cc8595877d001a645c588b59df9f03448b6e20816f920ab3a9bbeee3a62b39789e0582cb8e0f5f08110f7d17c1a17be817f108f')
 
 build() {
   cd ${_pyname}-${pkgver}
-  export PYTHONPATH=.
-  python setup.py build
-  make -C docs text man
+  python -m build --wheel --no-isolation
+}
+
+check() {
+  cd ${_pyname}-${pkgver}
+  # TODO: get the tests running
+  #PYTHONPATH=. pytest -v .
 }
 
 package() {
   cd ${_pyname}-${pkgver}
-  python setup.py install --root="${pkgdir}" --optimize=1 --skip-build
+  python -m installer --destdir="$pkgdir" dist/*.whl
 
   install -Dm 644 README.md -t "${pkgdir}/usr/share/doc/${pkgname}"
-  cp -r docs/build/text "${pkgdir}/usr/share/doc/${pkgname}"
   cp -r examples -t "${pkgdir}/usr/share/doc/${pkgname}"
 
-  install -Dm 644 docs/build/man/${_pyname}.1 "${pkgdir}/usr/share/man/man1/${_pyname}.1"
-  install -Dm 644 docs/build/man/${_pyname}.1 "${pkgdir}/usr/share/man/man1/${pkgname}.1"
   install -Dm 644 LICENSE.rst -t "${pkgdir}/usr/share/licenses/${pkgname}"
 }
 

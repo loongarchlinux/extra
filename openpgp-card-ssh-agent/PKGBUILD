@@ -1,0 +1,52 @@
+# Maintainer: David Runge <dvzrv@archlinux.org>
+
+pkgname=openpgp-card-ssh-agent
+_name="${pkgname#openpgp-card-}"
+pkgver=0.3.2
+pkgrel=1
+pkgdesc="A simple ssh-agent backed by OpenPGP card authentication keys"
+arch=(loong64 x86_64)
+url="https://codeberg.org/openpgp-card/ssh-agent/"
+license=('Apache-2.0 OR MIT')
+depends=(
+  gcc-libs
+  glibc
+  org.freedesktop.secrets
+)
+makedepends=(
+  pcsclite
+  rust
+)
+source=($pkgname-$pkgver.tar.gz::$url/archive/v$pkgver.tar.gz)
+sha512sums=('b8e013cbb35870f5185718453e2ee97c858361b66b3321e15ee069a9ef131fd2f97abb181000057057b3a66c4cfe6d089df562c1c43a291344f5fd4d8b97a426')
+b2sums=('4c1d3d3ee04a367a36a82d7266463507324135f381e839f14929b828cbbd9c385d321359aa0c24c3dcc90a12adbbc2a76fa60f500c8d65518e6f61a496fd7cf3')
+
+prepare() {
+  cd $_name
+  export RUSTUP_TOOLCHAIN=stable
+  cargo fetch --locked --target "$(rustc -vV | sed -n 's/host: //p')"
+}
+
+build() {
+  cd $_name
+  export RUSTUP_TOOLCHAIN=stable
+  export CARGO_TARGET_DIR=target
+  cargo build --frozen --release --all-features
+}
+
+check() {
+  cd $_name
+  export RUSTUP_TOOLCHAIN=stable
+  cargo test --frozen --all-features
+}
+
+package() {
+  depends+=(
+    pcsclite libpcsclite.so
+  )
+
+  cd $_name
+  install -vDm 755 -t "$pkgdir/usr/bin/" "target/release/$pkgname"
+  install -vDm 644 contrib/*.{service,socket} -t "$pkgdir/usr/lib/systemd/user/"
+  install -vDm 644 LICENSES/*.txt -t "$pkgdir/usr/share/licenses/$pkgname/"
+}

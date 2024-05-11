@@ -1,7 +1,7 @@
 # Maintainer: Sven-Hendrik Haase <svenstaro@archlinux.org>
 pkgname=python-argparse-manpage
 pkgver=4.5
-pkgrel=1
+pkgrel=2
 pkgdesc='Automatically build man-pages for your Python project'
 url='https://github.com/praiskup/argparse-manpage'
 arch=('any')
@@ -18,7 +18,7 @@ build() {
 
 check() {
   cd "$srcdir/argparse-manpage-$pkgver"
-  python -m unittest discover -vs .
+  python -m unittest discover -vs tests
 }
 
 package() {

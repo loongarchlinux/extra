@@ -1,0 +1,54 @@
+# Maintainer: David Runge <dvzrv@archlinux.org>
+
+pkgname=openpgp-card-tool-git
+pkgver=0.1.0
+pkgrel=1
+pkgdesc="A simple tool for Git signing and verification with a focus on OpenPGP cards"
+arch=(loong64 x86_64)
+url="https://codeberg.org/openpgp-card/oct-git"
+_name="${url##*/}"
+license=('Apache-2.0 OR MIT')
+depends=(
+  gcc-libs
+  glibc
+  openssl
+  org.freedesktop.secrets
+  sqlite
+)
+makedepends=(
+  pcsclite
+  rust
+)
+source=($pkgname-$pkgver.tar.gz::$url/archive/v$pkgver.tar.gz)
+sha512sums=('d078f86a52262c97509a188cfe1263761aab72232b67d6befd63972cb12e6df101bcba998b8486aa203ebacd5da3fdea91231f5cb6ab5e53b6719b3b2b95d86f')
+b2sums=('5c79196e9f89269609bceac4464f6b4ce4ff5820091428aa3efc9976fb5677b1c6bc6647f6c8d8458059ec8e74b6fceb837e609c6a2efd56b5bdf0e6601bf3e8')
+
+prepare() {
+  cd $_name
+  export RUSTUP_TOOLCHAIN=stable
+  cargo fetch --locked --target "$(rustc -vV | sed -n 's/host: //p')"
+}
+
+build() {
+  cd $_name
+  export RUSTUP_TOOLCHAIN=stable
+  export CARGO_TARGET_DIR=target
+  cargo build --frozen --release --all-features
+}
+
+check() {
+  cd $_name
+  export RUSTUP_TOOLCHAIN=stable
+  cargo test --frozen --all-features
+}
+
+package() {
+  depends+=(
+    pcsclite libpcsclite.so
+  )
+
+  cd $_name
+  install -vDm 755 -t "$pkgdir/usr/bin/" target/release/oct-git
+  install -vDm 644 README.md -t "$pkgdir/usr/lib/systemd/user/"
+  install -vDm 644 LICENSES/*.txt -t "$pkgdir/usr/share/licenses/$pkgname/"
+}

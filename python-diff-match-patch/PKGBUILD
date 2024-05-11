@@ -3,21 +3,21 @@
 
 _pkg=diff-match-patch
 pkgname=python-${_pkg}
-pkgver=20200713
-pkgrel=6
+pkgver=20230430
+pkgrel=1
 pkgdesc="Robust algorithms to perform the operations required for synchronizing plain text"
 arch=('any')
 url="https://github.com/diff-match-patch-python/diff-match-patch"
 license=('Apache')
 depends=('python')
-makedepends=('python-setuptools')
+makedepends=('python-build' 'python-installer' 'python-wheel' 'python-flit-core')
 checkdepends=('python-pytest')
 source=(https://files.pythonhosted.org/packages/source/${_pkg::1}/${_pkg}/${_pkg}-${pkgver}.tar.gz)
-sha256sums=('da6f5a01aa586df23dfc89f3827e1cafbb5420be9d87769eeb079ddfd9477a18')
+sha256sums=('953019cdb9c9d2c9e47b5b12bcff3cf4746fc4598eb406076fa1fc27e6a1f15c')
 
 build() {
   cd ${_pkg}-${pkgver}
-  python setup.py build
+  python -m build --wheel --no-isolation
 }
 
 check() {
@@ -27,7 +27,6 @@ check() {
 
 package() {
   cd ${_pkg}-${pkgver}
-  python setup.py install --prefix=/usr --root="${pkgdir}" --skip-build --optimize=1
-  find "${pkgdir}" -name *_py2.* -delete
+  python -m installer --destdir="$pkgdir" dist/*.whl
   rm -r "${pkgdir}"$(python -c "import site; print(site.getsitepackages()[0])")/${_pkg//-/_}/tests
 }

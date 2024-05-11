@@ -1,54 +1,36 @@
 # Maintainer: Caleb Maclennan <caleb@alerque.com>
+# Contributor: xs5871 <xs5871@qn-4.net>
 # Contributor: Gaetan Bisson <bisson@archlinux.org>
 # Contributor: Tobias Powalowski <tpowa@archlinux.org>
 
 pkgname=unison
-pkgver=2.53.3
-pkgrel=4
+pkgver=2.53.5
+pkgrel=1
 pkgdesc='File-synchronization tool'
 url="https://github.com/bcpierce00/$pkgname/"
 arch=(loong64 x86_64)
-license=(GPL2)
+license=(GPL-3.0-only)
 optdepends=('gtk3: graphical interface')
-makedepends=(emacs
-             lablgtk3
+makedepends=(lablgtk3
              ocaml)
 _archive="$pkgname-$pkgver"
 source=("$url/archive/v$pkgver/$_archive.tar.gz"
-        "$pkgname-large.patch"
         "$pkgname.desktop")
-sha512sums=('f3fafd5e1a2950a00ed8bcc682036180ea40eff1ccfa1fc671cca49954890a535ee48faf1e8e62002563143e5479b9df1eca1db1caf03dffc50449fb467b8e2b'
-            'e2f7a5e6e832ee9c694f36e399178652456d2047b22cba86603982cd6f6caf54e520fc87a8bde1940b2da46102cf3aa89f3e062c965efc77cd840b47e01b4d2f'
-            '2043acd79dde45b9b724076e361f117a6b42ec0c0321a2d2836b55a7fe5b03c45d81200819f64bc3e7d446f979a5a4a66c3d8c3ac7bdf1fe469c480ae2ac9464')
+sha512sums=('eabeed7b428f1985610b47ce8bc7faac515fd24937727612aa45435da3e38d40b6cd6d227eb3b65dc370d46458cecfca9d0e9e1712b2b7fa41b76675f8115c4c'
+            '3e6e7b793deb60dab64c6e585e3b2ceee01ced0f8b73d1373ac1cd8aaaadb5c7415f2295b8a044a57fc15356dfe76bab002e1e633495e5f8e436871c83c48990')
 options=('!makeflags')
-
-prepare() {
-	cd "$_archive"
-	patch -p0 -i "../$pkgname-large.patch"
-}
 
 build() {
 	cd "$_archive"
-	for ui in gtk3 text; do
-		cp -a . build || true
-		pushd build
-		export CFLAGS=
-		make all UISTYLE=$ui DEBUGGING=false THREADS=true
-		mv src/unison src/unison-$ui
-		mv src/unison-* ..
-		mv man/unison.1 .. ||:
-		popd
-		rm -fr build
-	done
+	make all
 }
 
 package() {
 	cd "$_archive"
-	install -Dm0755 -t "$pkgdir/usr/bin/" unison-*
-	ln -s unison-text "$pkgdir/usr/bin/unison"
+	install -Dm0755 -t "$pkgdir/usr/bin/" "src/$pkgname"{,-fsmonitor,-gui}
 	install -Dm0644 -t "$pkgdir/usr/share/applications/" "../$pkgname.desktop"
+	install -Dm0644 -t "$pkgdir/usr/share/man/man1/" man/*.1
 	install -Dm0644 icons/U.svg "$pkgdir/usr/share/icons/hicolor/scalable/apps/$pkgname.svg"
-	install -Dm0644 -t "$pkgdir/usr/share/man/man1/" $pkgname.1
 	for i in 16 24 32 48 256; do
 		install -Dm0644 "icons/U.${i}x${i}x16m.png" "$pkgdir/usr/share/icons/hicolor/${i}x${i}/apps/$pkgname.png"
 	done

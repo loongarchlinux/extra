@@ -4,12 +4,12 @@
 pkgname=python-guzzle-sphinx-theme
 _pkgname=guzzle_sphinx_theme
 pkgver=0.7.11
-pkgrel=11
+pkgrel=12
 pkgdesc='Sphinx theme used by Guzzle'
 arch=('any')
 url="https://github.com/guzzle/${_pkgname}"
 license=('custom')
-makedepends=('python-distribute')
+makedepends=('python-setuptools')
 depends=('python' 'python-sphinx>=1.1.3')
 source=("${_pkgname}-${pkgver}.tar.gz::${url}/archive/${pkgver}.tar.gz")
 sha256sums=('f5f0e3d541c09ace912e0fa75dafd46f5a54314a929913c7de9709e677d5aa09')

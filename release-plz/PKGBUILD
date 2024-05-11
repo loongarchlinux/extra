@@ -1,22 +1,21 @@
 # Maintainer: Orhun Parmaksız <orhun@archlinux.org>
 
 pkgname=release-plz
-pkgver=0.3.42
+pkgver=0.3.66
 pkgrel=1
+_commit=e51258d18ccb2b6d3d9de63020124fabf263d496
 pkgdesc="Release Rust packages without using the command line"
 arch=('loong64' 'x86_64')
 url="https://github.com/MarcoIeni/release-plz"
 license=('MIT' 'Apache-2.0')
-depends=('gcc-libs' 'curl')
-checkdepends=('git')
-makedepends=('cargo')
+depends=('gcc-libs' 'curl' 'libgit2' 'openssl')
+makedepends=('cargo' 'git')
 optdepends=('cargo-semver-checks: check for API breaking changes')
-source=("$pkgname-$pkgver.tar.gz::$url/archive/$pkgname-v$pkgver.tar.gz")
-sha512sums=('faca69bf2e28746a405def0f7fbd9046aac61a391604bf2f6991482b2978b39a5a62a0efdcf14d5291e5f93e943ac27e98e914ed242c3a08ee5c6be577a84d22')
+source=("$pkgname-$pkgver::git+$url.git#commit=$_commit")
+sha512sums=('0cea74d4570b75688ad3190bc867cb1a65121fbe9117b2f9ed8e8cde4935959a52daaf0a07ec69f7deb655e09e9072cdcd94a825b174293ebdc446d90bc29922')
 options=('!lto')
 
 prepare() {
-	mv "$pkgname-$pkgname-v$pkgver" "$pkgname-$pkgver"
 	cd "$pkgname-$pkgver"
 	cargo fetch --locked --target "$(rustc -vV | sed -n 's/host: //p')"
 	mkdir completions
@@ -24,7 +23,7 @@ prepare() {
 
 build() {
 	cd "$pkgname-$pkgver"
-	cargo build --release --frozen
+	cargo build --release --frozen --no-default-features
 	local compgen="target/release/$pkgname generate-completions"
 	$compgen bash >"completions/$pkgname"
 	$compgen fish >"completions/$pkgname.fish"

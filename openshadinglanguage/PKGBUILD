@@ -1,17 +1,17 @@
 # Maintainer: Sven-Hendrik Haase <svenstaro@archlinux.org>
 pkgname=openshadinglanguage
-pkgver=1.12.14.0
-pkgrel=2
+pkgver=1.13.9.0
+pkgrel=1
 pkgdesc="Advanced shading language for production GI renderers"
 arch=('loong64' 'x86_64')
 url="https://github.com/imageworks/OpenShadingLanguage"
 license=('custom')
 depends=('boost-libs' 'openimageio' 'imath' 'freetype2' 'libpng'
-         'libtiff' 'zlib' 'ncurses' 'clang15')
-makedepends=('boost' 'cmake' 'python' 'llvm15' 'ninja')
+         'libtiff' 'zlib' 'ncurses' 'clang')
+makedepends=('boost' 'cmake' 'python' 'llvm' 'ninja')
 optdepends=('python: the Python module')
 source=($pkgname-$pkgver.tar.gz::https://github.com/AcademySoftwareFoundation/OpenShadingLanguage/archive/refs/tags/v${pkgver}.tar.gz)
-sha512sums=('51641e58fb0bba042853e3976c104decc788f1b1d3ec2e33a3f5504b11b05950dc38766ffb066b0f76edc4e0a8829d6b7dd408d9288b74d69380395b1d991bd5')
+sha512sums=('d10a5f820dc9cada93bb3834aefd9e968d6dc2e3b06bbe0c560d5381a257d24c95c9396e91caa4e5918db9ad9237b9fd755c1f1c798e50a5ab07f3e5103b465e')
 
 build() {
   cd OpenShadingLanguage-$pkgver
@@ -21,9 +21,7 @@ build() {
     -GNinja \
     -DCMAKE_INSTALL_PREFIX=/usr \
     -DCMAKE_INSTALL_LIBDIR=lib \
-    -DCMAKE_CXX_STANDARD=14 \
-    -DLLVM_DIRECTORY=/usr/lib/llvm15 \
-    -DLLVM_STATIC=0 \
+    -DCMAKE_CXX_STANDARD=17 \
     -DSTOP_ON_WARNING=OFF
   ninja -C build
 }
@@ -32,6 +30,9 @@ package() {
   cd OpenShadingLanguage-$pkgver
 
   DESTDIR="$pkgdir/" ninja -C build install
+
+  # Fixup an upstream fucky (See #1)
+  rm "$pkgdir"/usr/build-scripts/serialize-bc.py
 
   install -Dm644 LICENSE.md "$pkgdir"/usr/share/licenses/$pkgname/LICENSE.md
 }

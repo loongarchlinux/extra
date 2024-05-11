@@ -1,12 +1,12 @@
 # Maintainer: David Runge <dvzrv@archlinux.org>
 
 pkgname=sequoia-chameleon-gnupg
-pkgver=0.3.2
+pkgver=0.9.0
 pkgrel=1
 pkgdesc="A re-implementation and drop-in replacement of gpg and gpgv"
 arch=(loong64 x86_64)
 url="https://gitlab.com/sequoia-pgp/sequoia-chameleon-gnupg"
-license=(GPL3)
+license=(GPL-3.0-or-later)
 groups=(sequoia)
 depends=(
   gcc-libs
@@ -16,32 +16,41 @@ makedepends=(
   bzip2
   cargo
   clang
+  git
   openssl
   sqlite
 )
-checkdepends=(gnupg)
-source=($url/-/archive/v$pkgver/$pkgname-v$pkgver.tar.gz)
-sha512sums=('d69faae869eea58223e1d01cc582214182aa0bb45a848846be01c508b67354f750acbc8f661e5c2364a14a4718a48f558d9b3f1abdfc295a56dc9391d84fca88')
-b2sums=('2b703f891f90798c984c0ca5e0dccd476e0ea0d0561771a2fc6f3efa75ddf3ac98946c2c3523027c3162d7f37b5dca0ab88ba5ac73897481bf5b2856dd84d249')
+checkdepends=(
+  gnupg
+  sequoia-sq
+)
+source=(
+  git+$url?signed#tag=v$pkgver
+)
+sha512sums=('dd443ada9fd539f8e4e7e89059e38ca3244e832c8d8ce401c4b278b3505adeff2670f4bf7972f46710c0acc68496075ce2eff2978aadf0ebc2f634ec2dcc9c21')
+b2sums=('84c15659e38ed2d60082221d4eaeebca0c857c331ead974cdef48bd13ac4c4718361049f8f54e6adb9174c6f4923428d2079b8dbcc44038187eeefd3d9a22f43')
+validpgpkeys=(
+  CBCD8F030588653EEDD7E2659B7DD433F254904A  # Justus Winter <justus@sequoia-pgp.org>
+)
 
 prepare() {
-  cd $pkgname-v$pkgver
-  cargo fetch --locked --target "$CARCH-unknown-linux-gnu"
+  cd $pkgname
+  cargo fetch --locked --target "$(rustc -vV | sed -n 's/host: //p')"
 }
 
 build() {
-  cd $pkgname-v$pkgver
+  cd $pkgname
   export RUSTUP_TOOLCHAIN=stable
   export CARGO_TARGET_DIR=target
   cargo build --frozen --release --no-default-features --features=crypto-openssl
 }
 
 check() {
-  cd $pkgname-v$pkgver
+  cd $pkgname
   export RUSTUP_TOOLCHAIN=stable
   RUST_BACKTRACE=1
-
-  cargo test --frozen --no-default-features --features=crypto-openssl
+  # skip broken test: https://gitlab.com/sequoia-pgp/sequoia-chameleon-gnupg/-/issues/58
+  cargo test --frozen --no-default-features --features=crypto-openssl -- --skip password_store_git
 }
 
 package() {
@@ -51,7 +60,7 @@ package() {
     sqlite libsqlite3.so
   )
 
-  cd $pkgname-v$pkgver
+  cd $pkgname
   install -vDm 755 target/release/gpg{,v}-sq -t "$pkgdir/usr/bin/"
   install -vDm 644 gpg-sq-parcimonie.service -t "$pkgdir/usr/lib/systemd/user/"
   install -vDm 644 README.md -t "$pkgdir/usr/share/doc/$pkgname/"

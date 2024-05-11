@@ -2,7 +2,7 @@
 
 pkgname=python-aresponses
 pkgver=3.0.0
-pkgrel=1
+pkgrel=2
 pkgdesc="Asyncio http mocking. Similar to the responses library used for 'requests'"
 url="https://github.com/aresponses/aresponses"
 license=('MIT')

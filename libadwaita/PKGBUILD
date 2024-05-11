@@ -1,4 +1,5 @@
 # Maintainer: Jan Alexander Steffens (heftig) <heftig@archlinux.org>
+# Maintainer: Fabian Bornschein <fabiscafe@archlinux.org>
 
 pkgbase=libadwaita
 pkgname=(
@@ -6,16 +7,21 @@ pkgname=(
   libadwaita-demos
   libadwaita-docs
 )
-pkgver=1.4.2
+pkgver=1.5.0
 pkgrel=1
 epoch=1
 pkgdesc="Building blocks for modern adaptive GNOME applications"
 url="https://gnome.pages.gitlab.gnome.org/libadwaita/"
 arch=(loong64 x86_64)
-license=(LGPL)
+license=(LGPL-2.1-or-later)
 depends=(
   appstream
+  fribidi
+  glib2
+  glibc
+  graphene
   gtk4
+  pango
 )
 makedepends=(
   gi-docgen
@@ -26,13 +32,13 @@ makedepends=(
   vala
 )
 checkdepends=(weston)
-_commit=fd5892e94ddd9baf44dcfb2faaa97211a2532d6d  # tags/1.4.2^0
+_commit=6eed5e87efdcb6c599caaad64cbf1b68603ee6e7  # tags/1.5.0^0
 source=("git+https://gitlab.gnome.org/GNOME/libadwaita.git#commit=$_commit")
 b2sums=('SKIP')
 
 pkgver() {
   cd $pkgname
-  git describe --tags | sed -r 's/\.([a-z])/\1/;s/[^-]*-g/r&/;s/-/+/g'
+  git describe --tags | sed -r 's/\.([a-z])/\1/;s/([a-z])\./\1/;s/[^-]*-g/r&/;s/-/+/g'
 }
 
 prepare() {
@@ -88,7 +94,13 @@ package_libadwaita() {
 
 package_libadwaita-demos() {
   pkgdesc+=" (demo applications)"
-  depends=(libadwaita)
+  depends=(
+    glib2
+    glibc
+    gtk4
+    hicolor-icon-theme
+    libadwaita
+  )
   mv demo/* "$pkgdir"
 }
 

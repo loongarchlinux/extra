@@ -1,0 +1,50 @@
+# Maintainer: kpcyrd <kpcyrd[at]archlinux[dot]org>
+
+pkgname=turbo
+pkgver=1.13.3
+pkgrel=1
+pkgdesc="Incremental bundler and build system optimized for JavaScript and TypeScript"
+url='https://turbo.build/'
+arch=('loong64' 'x86_64')
+license=('MPL-2.0')
+depends=(
+  'glibc'
+  'gcc-libs'
+  'zlib' 'libz.so'
+)
+makedepends=(
+  'capnproto'
+  'cargo'
+  'protobuf'
+)
+options=(!lto)
+source=(https://github.com/vercel/${pkgname}/archive/v${pkgver}/${pkgname}-${pkgver}.tar.gz)
+sha256sums=('4891512c1baedb0bf439516952fc4d828c49ff302853ebe43dd919e15758e4c3')
+b2sums=('7fc9e0114fca3644000a8157a4435573281c6ad99628f27395f5327b409bfdbd834b718a4afd19a501ab49a613cc877bb7ad05570578f3ad5fcb71c0fbcc4a0f')
+
+prepare() {
+  cd "${pkgname}-${pkgver}"
+  RUSTC_BOOTSTRAP=1 cargo fetch --locked --target "$(rustc -vV | sed -n 's/host: //p')"
+}
+
+build() {
+  cd ${pkgname}-${pkgver}
+  RUSTC_BOOTSTRAP=1 cargo build -p turbo --frozen --release
+}
+
+package() {
+  cd ${pkgname}-${pkgver}
+  install -Dm 755 -t "${pkgdir}/usr/bin" \
+    target/release/turbo
+
+  # install completions
+  install -d "${pkgdir}/usr/share/bash-completion/completions" \
+             "${pkgdir}/usr/share/zsh/site-functions" \
+             "${pkgdir}/usr/share/fish/vendor_completions.d"
+  export TURBO_TELEMETRY_DISABLED=1
+  "${pkgdir}/usr/bin/${pkgname}" completion bash > "${pkgdir}/usr/share/bash-completion/completions/${pkgname}"
+  "${pkgdir}/usr/bin/${pkgname}" completion zsh > "${pkgdir}/usr/share/zsh/site-functions/_${pkgname}"
+  "${pkgdir}/usr/bin/${pkgname}" completion fish > "${pkgdir}/usr/share/fish/vendor_completions.d/${pkgname}.fish"
+}
+
+# vim: ts=2 sw=2 et:

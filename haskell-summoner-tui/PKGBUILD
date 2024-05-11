@@ -4,7 +4,7 @@
 _hkgname=summoner-tui
 pkgname=haskell-summoner-tui
 pkgver=2.0.1.1
-pkgrel=531
+pkgrel=547
 pkgdesc="Tool for scaffolding fully configured batteries-included production-level Haskell projects using TUI."
 url="https://github.com/kowainik/summoner"
 license=('MPL2')
@@ -12,11 +12,14 @@ arch=('loong64' 'x86_64')
 depends=('ghc-libs' 'haskell-brick0.71' 'haskell-colourista' 'haskell-microlens' 'haskell-microlens-th'
          'haskell-relude' 'haskell-summoner' 'haskell-validation-selective' 'haskell-vty')
 makedepends=('ghc' 'uusi')
-source=("https://hackage.haskell.org/packages/archive/$_hkgname/$pkgver/$_hkgname-$pkgver.tar.gz")
-sha256sums=('9f840f25d72c54b4b5ed0c5e6755e52ca71e9961759de6bd0046d567bd1f2c27')
+source=("https://hackage.haskell.org/packages/archive/$_hkgname/$pkgver/$_hkgname-$pkgver.tar.gz"
+        "summoner-tui-relude-1.x.patch")
+sha256sums=('9f840f25d72c54b4b5ed0c5e6755e52ca71e9961759de6bd0046d567bd1f2c27'
+            'aacf24c91b28580210d67f5b6df63f44bf84d5adee7172231809ebe0ade6cd98')
 
 prepare(){
   cd $_hkgname-$pkgver
+  patch -p2 -i ../summoner-tui-relude-1.x.patch
   uusi -u base -u brick -u vty -u validation-selective $_hkgname.cabal
   gen-setup
   sed -i 's|renderCheckbox :: Bool -> String|renderCheckbox :: (Ord n) => Bool -> String|' src/Summoner/Tui/Field.hs
@@ -27,7 +30,7 @@ build() {
     
   runhaskell Setup configure -O --enable-shared --enable-executable-dynamic --disable-library-vanilla \
     --prefix=/usr --docdir=/usr/share/doc/$pkgname --datasubdir=$pkgname --enable-tests \
-    --dynlibdir=/usr/lib --libsubdir=\$compiler/site-local/\$pkgid --ghc-option=-fllvm \
+    --dynlibdir=/usr/lib --libsubdir=\$compiler/site-local/\$pkgid \
     --ghc-option=-optl-Wl\,-z\,relro\,-z\,now \
     --ghc-option='-pie'
 

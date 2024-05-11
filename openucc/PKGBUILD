@@ -1,0 +1,78 @@
+# Maintainer: Jakub Klinkovský <lahwaacz at archlinux dot org>
+
+_name=ucc
+pkgname=openucc
+pkgver=1.3.0
+pkgrel=1
+pkgdesc="Unified Collective Communication Library"
+arch=(loong64 x86_64)
+url="https://github.com/openucx/ucc"
+license=(BSD-3-Clause)
+depends=(
+  glibc
+  openucx
+)
+makedepends=(
+  cuda
+  hip-runtime-amd
+  nccl
+  rccl
+  rdma-core
+)
+checkdepends=(
+  gtest
+)
+optdepends=(
+  'cuda: for CUDA execution engine and transport layer'
+  'hip-runtime-amd: for HIP execution engine'
+  'nccl: for NCCL transport layer'
+  'rccl: for RCCL transport layer'
+  'rdma-core: for InfiniBand transport layer'
+)
+provides=(
+  libucc.so
+)
+source=(
+  "$pkgname-$pkgver.tar.gz::$url/archive/refs/tags/v$pkgver.tar.gz"
+)
+sha256sums=('b56379abe5f1c125bfa83be305d78d81a64aa271b7b5fff0ac17b86725ff3acf')
+
+prepare() {
+  # workaround for https://github.com/openucx/ucc/issues/969
+  sed -i 's/--offload-arch=native//g' $_name-$pkgver/cuda_lt.sh
+}
+
+build() {
+  local configure_options=(
+    --prefix=/usr
+    --with-ucx=/usr
+    --with-cuda=/opt/cuda
+    --with-rocm=/opt/rocm
+    --enable-gtest
+    CFLAGS="$CFLAGS"
+    CXXFLAGS="$CXXFLAGS"
+    LDFLAGS="$LDFLAGS"
+    NVCC_CFLAGS="--threads 0"
+    HIPCC="/opt/rocm/lib/llvm/bin/amdclang"
+  )
+
+  cd $_name-$pkgver
+  ./autogen.sh
+  ./configure "${configure_options[@]}"
+  # prevent excessive overlinking due to libtool
+  sed -i -e 's/ -shared / -Wl,-O1,--as-needed\0/g' libtool
+  make V=1
+}
+
+check() {
+  # exclude test_mc_rocm.* - we cannot test ROCm without a GPU
+  # exclude test_*reduce*:test_bcast_*:test_barrier.*:test_team.*:test_mc.*:test_active_set_2.*:test_scatter*:test_*gather*:*test_alltoall* - UCC ERROR no components supported memory type host available
+  make gtest -C $_name-$pkgver GTEST_FILTER='-test_mc_rocm.*:test_*reduce*:test_bcast_*:test_barrier.*:test_team.*:test_mc.*:test_active_set_2.*:test_scatter*:test_*gather*:*test_alltoall*'
+}
+
+package() {
+  make DESTDIR="$pkgdir" install -C $_name-$pkgver
+
+  # install the license
+  install -vDm 644 $_name-$pkgver/LICENSE -t "$pkgdir/usr/share/licenses/$pkgname/"
+}

@@ -4,13 +4,13 @@
 _name=fuo-ytmusic
 pkgname=feeluown-ytmusic
 pkgver=0.3.4
-pkgrel=1
+pkgrel=2
 pkgdesc="YouTube Music for FeelUOwn music player"
 arch=('any')
 url="https://github.com/feeluown/feeluown-ytmusic"
 license=('GPL-3.0-or-later')
-depends=('feeluown' 'python-pydantic' 'python-cachetools' 'python-pytube' 'python-ytmusicapi')
-makedepends=('python-setuptools')
+depends=('feeluown' 'python' 'python-pydantic' 'python-cachetools' 'python-pyqt5' 'python-pytube' 'python-requests' 'python-ytmusicapi')
+makedepends=('python-build' 'python-installer' 'python-poetry-core' 'python-wheel')
 checkdepends=('python-pytest')
 optdepends=('feeluown-netease: Lyric source')
 source=("https://github.com/feeluown/feeluown-ytmusic/archive/v$pkgver/$pkgname-$pkgver.tar.gz"
@@ -25,15 +25,22 @@ prepare() {
 
 build() {
 	cd $pkgname-$pkgver
-	python setup.py build
+	python -m build --wheel --no-isolation
 }
 
 check() {
+	local pytest_options=(
+		-vv
+		# broken with pytest >= 8
+		--deselect tests/test_service.py::TestService::test_search_song
+		--deselect tests/test_service.py::TestService::test_search_album
+		--deselect tests/test_service.py::TestService::test_stream_url
+	)
 	cd $pkgname-$pkgver
-	pytest
+	pytest "${pytest_options[@]}"
 }
 
 package() {
 	cd $pkgname-$pkgver
-	python setup.py install --root="$pkgdir/" --optimize=1 --skip-build
+	python -m installer --destdir="$pkgdir" dist/*.whl
 }

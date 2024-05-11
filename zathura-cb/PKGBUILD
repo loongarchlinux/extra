@@ -4,31 +4,24 @@
 
 pkgname=zathura-cb
 pkgver=0.1.10
-pkgrel=4
-
+pkgrel=7
 pkgdesc="Adds comic book support to zathura"
 url="https://pwmt.org/projects/zathura-cb/"
 arch=('loong64' 'x86_64')
-license=('custom:zlib')
-
+license=('Zlib')
 depends=('zathura' 'libarchive' 'desktop-file-utils')
 makedepends=('meson' 'ninja')
-
-source=(zathura-cb-$pkgver.tar.gz::https://pwmt.org/projects/zathura-cb/download/zathura-cb-$pkgver.tar.xz)
-
-sha256sums=('89b0ca17a80cba1ea9fd1b3b72f3a7173f0aad3a06a8c364d865c4999c18bbc8')
+source=("${pkgname}-${pkgver}.tar.gz::https://github.com/pwmt/${pkgname}/archive/refs/tags/${pkgver}.tar.gz")
+sha512sums=('5f0de7b6991ca35996b9fc1d32527618b3d0df813d7803ceb7bfcd24762262ab780b01cc8f8aac5ffeb7ca42fac2ba65fd90f74000c9b1bc686d4c4af6ad2a69')
 
 build() {
-  cd zathura-cb-$pkgver
-  arch-meson build
-
-  cd build
-  ninja
+        cd "${pkgname}-${pkgver}"
+        arch-meson build
+        ninja -C build
 }
 
 package() {
-  cd zathura-cb-$pkgver/build
-
-  DESTDIR="$pkgdir" ninja install
-  install -Dm664 ../LICENSE "$pkgdir"/usr/share/licenses/$pkgname/LICENSE
+        cd "${pkgname}-${pkgver}"
+        DESTDIR="${pkgdir}" ninja -C build install
+        install -Dm 664 LICENSE "${pkgdir}/usr/share/licenses/${pkgname}/LICENSE"
 }

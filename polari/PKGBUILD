@@ -1,25 +1,32 @@
 # Maintainer: Jan Alexander Steffens (heftig) <heftig@archlinux.org>
 
 pkgname=polari
-pkgver=45.0
+pkgver=46.0
 pkgrel=1
 pkgdesc="An IRC Client for GNOME"
-url="https://wiki.gnome.org/Apps/Polari"
+url="https://apps.gnome.org/Polari/"
 arch=(loong64 x86_64)
-license=(GPL)
+license=(GPL-2.0-or-later)
 depends=(
+  dconf
+  gcc-libs
   gjs
+  glib2
+  glibc
   gnome-keyring
   gtk4
+  hicolor-icon-theme
   libadwaita
+  libgirepository
   libsoup3
   telepathy-glib
   telepathy-idle
   telepathy-logger
   telepathy-mission-control
+  tracker3
 )
 makedepends=(
-  appstream-glib
+  appstream
   git
   gobject-introspection
   meson
@@ -27,13 +34,11 @@ makedepends=(
 )
 groups=(gnome-extra)
 _commit=9ea71de3d20fdc96e76bb55362418b9118e7cf07  # tags/45.0^0
-source=("git+https://gitlab.gnome.org/GNOME/polari.git#commit=$_commit")
-b2sums=('SKIP')
-
-pkgver() {
-  cd polari
-  git describe --tags | sed 's/[^-]*-g/r&/;s/-/+/g'
-}
+source=(
+  # Polari tags use SSH signatures which makepkg doesn't understand
+  "git+https://gitlab.gnome.org/GNOME/polari.git#tag=${pkgver/[a-z]/.&}"
+)
+b2sums=('4e8ebd9ab847cd67b0427e69e41fa1a102f00799309767efdb3b1e109a2737155224bf1558808f610639200e817dd64cef6d657cfcefbca183c8e779d36dad16')
 
 prepare() {
   cd polari

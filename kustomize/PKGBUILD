@@ -2,19 +2,19 @@
 # Maintainer: Daurnimator <daurnimator@archlinux.org>
 
 pkgname=kustomize
-pkgver=5.3.0
+pkgver=5.4.1
 pkgrel=1
 pkgdesc="Template-free customization of Kubernetes YAML manifests"
 arch=('loong64' 'x86_64')
 url="https://github.com/kubernetes-sigs/kustomize"
-license=('Apache')
+license=('Apache-2.0')
 makedepends=('go')
 depends=('glibc')
 optdepends=('helm')
 options=('!lto')
 source=("https://github.com/kubernetes-sigs/kustomize/archive/kustomize/v${pkgver}/${pkgname}-${pkgver}.tar.gz")
-sha512sums=('d9c8545c9e2fa0b650e45a2a397c823e8157dc9361293dd0abd8a2f64dc10733dbcb030c7b781215997f741edd196b035616b943f4ad30158ba39b4587f1d9d4')
-b2sums=('01093b5425157f81bb0bf3d2efda3933627c521ce635137e26115d792f8a53121afc87472e7ae8e3f555c636e9486532bb3de6358b98c73a2a9a5f109aba7917')
+sha512sums=('60c890e789a9f8e37370b14d0d83b310c9b20e85cf4088399fdf8726bc80d210143a8a14109c629eccc2ada8da9620b74ea499c2feccb663d7845156994344d4')
+b2sums=('22cd3bb72b7d2d2994062acafd63deacaba86f29b28c1c01c0c2d39d532f6773b7f877e0df804bae9ac04e66d34bd2ae898f6fbd708a7abeaf2bf5408825c2b1')
 
 prepare() {
   cd "kustomize-kustomize-v${pkgver}/kustomize"
@@ -41,7 +41,8 @@ build(){
       -X sigs.k8s.io/kustomize/api/provenance.version=${pkgver} \
       -X sigs.k8s.io/kustomize/api/provenance.buildDate=$(date -u +'%Y-%m-%dT%H:%M:%SZ' --date=@${SOURCE_DATE_EPOCH}) \
       -compressdwarf=false \
-      -extldflags ${LDFLAGS}" \
+      -linkmode external \
+      -extldflags \"${LDFLAGS}\"" \
     .
 }
 

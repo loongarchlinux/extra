@@ -1,16 +1,16 @@
 # Maintainer: Torsten Keßler <tpkessler at archlinux dot org>
 
 pkgname=composable-kernel
-pkgver=5.7.1
+pkgver=6.0.2
 pkgrel=1
 pkgdesc="High Performance Composable Kernel for AMD GPUs"
 arch=('loong64' 'x86_64')
-url="https://github.com/ROCmSoftwarePlatform/composable_kernel"
+url="https://github.com/ROCm/composable_kernel"
 license=('MIT')
-depends=('hip')
-makedepends=('rocm-cmake' 'rocm-llvm' 'openmp')
+depends=('rocm-core' 'glibc' 'gcc-libs' 'hip')
+makedepends=('git' 'cmake' 'ninja' 'rocm-cmake' 'rocm-llvm' 'openmp')
 source=("$pkgname-$pkgver.tar.gz::$url/archive/rocm-$pkgver.tar.gz")
-sha256sums=('75f66e023c2e31948e91fa26366eaeac72d871fc2e5188361d4465179f13876e')
+sha256sums=('f648a99388045948b7d5fbf8eb8da6a1803c79008b54d406830b7f9119e1dcf6')
 # Build without default flags as they cause the final linking step to fail
 # https://github.com/ROCmSoftwarePlatform/composable_kernel/issues/736
 options=(!lto !buildflags)
@@ -22,15 +22,18 @@ prepare() {
 }
 
 build() {
-  cmake \
-    -Wno-dev \
-    -B build \
-    -S "$_dirname" \
-    -DCMAKE_CXX_COMPILER=/opt/rocm/bin/hipcc \
-    -DCMAKE_BUILD_TYPE=Release \
-    -DBUILD_DEV=OFF \
-    -DCMAKE_INSTALL_PREFIX=/opt/rocm \
-    -DGPU_TARGETS='gfx900;gfx906;gfx908;gfx90a;gfx1030;gfx1100;gfx1101;gfx1102'
+  local _cmake_args=(
+    -Wno-dev
+    -G Ninja
+    -B build
+    -S "$_dirname"
+    -D CMAKE_CXX_COMPILER=/opt/rocm/bin/hipcc
+    -D CMAKE_BUILD_TYPE=Release
+    -D CMAKE_INSTALL_PREFIX=/opt/rocm
+    -D BUILD_DEV=OFF
+    -D INSTANCES_ONLY=ON
+  )
+  cmake "${_cmake_args[@]}"
   cmake --build build
 }
 

@@ -4,7 +4,7 @@
 
 pkgname=python-signedjson
 pkgver=1.1.4
-pkgrel=2
+pkgrel=3
 
 pkgdesc='Sign JSON with Ed25519 signatures'
 url='https://pypi.python.org/pypi/signedjson/'

@@ -6,13 +6,14 @@
 
 pkgname=feedbackd
 pkgver=0.2.1
-pkgrel=1
+pkgrel=2
 pkgdesc='A daemon to provide haptic feedback on events'
 arch=(loong64 x86_64 aarch64)
 url='https://source.puri.sm/Librem5/feedbackd'
 license=(GPL3)
 depends=(dconf gsound json-glib libgudev gsettings-desktop-schemas)
-makedepends=(gobject-introspection meson vala git python-docutils)
+makedepends=(gobject-introspection meson vala git python-docutils
+             python-packaging)
 
 source=("git+${url}.git#tag=v${pkgver}")
 sha256sums=('SKIP')
@@ -40,4 +41,7 @@ check() {
 
 package() {
   DESTDIR="${pkgdir}" meson install -C build
+
+  install -Dm644 "$srcdir/$pkgname"/debian/feedbackd.udev \
+                 "$pkgdir"/usr/lib/udev/rules.d/90-feedbackd.rules
 }

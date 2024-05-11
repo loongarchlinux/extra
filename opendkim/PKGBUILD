@@ -3,8 +3,8 @@
 
 pkgname=opendkim
 pkgver=2.11.0beta
-pkgrel=5
-_commit=14d54524e0a97d3fe9b80441907d7e356c9ded04
+pkgrel=8
+_commit=551ab3820476234def82eb2223ca6c7b45b45076
 pkgdesc="Open source implementation of the DKIM sender authentication system. Based on a fork of dkim-milter."
 arch=(loong64 x86_64)
 url="http://www.opendkim.org/"
@@ -13,29 +13,30 @@ depends=("db" "openssl" "libbsd" "opendbx" "libldap")
 optdepends=("perl: for opendkim-genkey")
 makedepends=("libmilter" "git")
 options=(!emptydirs)
-backup=(etc/conf.d/opendkim)
 validpgpkeys=('5CDD574C22FF4D2480ACABDF5254B96BC608B511')
+# https://github.com/trusteddomainproject/OpenDKIM/commits/develop
 source=("git+https://github.com/trusteddomainproject/OpenDKIM.git#commit=${_commit}"
-        opendkim.conf
+        "https://github.com/trusteddomainproject/OpenDKIM/commit/7c70ee7c86da1cecc621182355cc950d3b193314.patch"
         opendkim.sysusers
         opendkim.tmpfiles
         opendkim.service
         openssl_1.1.0_compat.patch)
 sha256sums=('SKIP'
-            'a3b5ecf4f4fe4a79392a75f7c4b6cc93a51ef8503215bb0f64d795f8754d4b68'
+            'd677e975977a94c09aaf1c92a98797189d969cdce98ac3867d7a3737ad4eaab0'
             '525ac5df345e753461efa8f6528f5532a00ecf2562f985a3c6c7169235170499'
             'ab66c9fdcb8913f2a550289dd44d56d17b960cf5275839ffd03cba70a27ab6ed'
-            '3e1cb3a3ddb794253d5a1c59673c40687bbc2b1bf878e70ccd03356f6d1e6735'
+            'a9beeedc6fb543d92a9dd50c99c018dccdc2b7123675d37d7a4123a93d211487'
             '5095a7516493af08396060852851231c9b1cba5ee00493f810f0dfc9a69f8dfe')
 
 prepare() {
   cd "$srcdir/OpenDKIM"
+  patch -p1 -i "$srcdir"/7c70ee7c86da1cecc621182355cc950d3b193314.patch
   autoreconf -i
 }
 
 build() {
   cd "$srcdir/OpenDKIM"
-  ./configure --prefix=/usr --sbindir=/usr/bin --with-db \
+  ./configure --prefix=/usr --sbindir=/usr/bin --with-db --sysconfdir="/etc/$pkgname" \
     --with-odbx --with-sql-backend --with-openldap
   make
 }
@@ -51,9 +52,6 @@ package() {
   make DESTDIR="$pkgdir/" install
   install -Dm644 "$srcdir/opendkim.sysusers" "$pkgdir/usr/lib/sysusers.d/opendkim.conf"
   install -Dm644 "$srcdir/opendkim.tmpfiles" "$pkgdir/usr/lib/tmpfiles.d/opendkim.conf"
-
-  # configure default configuration
-  install -Dm644 "$srcdir/opendkim.conf" "$pkgdir/etc/conf.d/opendkim"
 
   # License
   mkdir -p "$pkgdir/usr/share/licenses/opendkim"

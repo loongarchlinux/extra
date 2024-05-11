@@ -2,37 +2,27 @@
 
 pkgname=palp
 epoch=1
-pkgver=2.20
-pkgrel=1
-pkgdesc="A Package for analyzing Lattice Polytopes"
+pkgver=2.21
+pkgrel=2
+pkgdesc='A Package for analyzing Lattice Polytopes'
 arch=(loong64 x86_64)
-url="http://hep.itp.tuwien.ac.at/~kreuzer/CY/CYpalp.html"
-license=(GPL3)
+url='http://hep.itp.tuwien.ac.at/~kreuzer/CY/CYpalp.html'
+license=(GPL-3.0-only)
 depends=(glibc)
-source=("http://hep.itp.tuwien.ac.at/~kreuzer/CY/$pkgname/$pkgname-$pkgver.tar.gz")
-sha256sums=('723e89e78b2d3d94a720dd770c11b932b3e6b56f8a49e0bf3621c776f7a02ce0')
+source=(https://gitlab.com/stringstuwien/PALP/-/archive/v$pkgver/PALP-v$pkgver.tar.gz)
+sha256sums=('8cb5cb9289b2ac88618c792f7720de1a3c08b4b43da7393553d6b68cc3548711')
 
 build() {
-  cd $pkgname-$pkgver
-  mkdir bin
-  mv Global.h Global.h-template
-  for dim in 4 5 6 11; do
-    sed "s/^#define[^a-zA-Z]*POLY_Dmax.*/#define POLY_Dmax $dim/" Global.h-template > Global.h
-    make
-    for file in poly class cws nef mori; do
-      mv ${file}.x bin/${file}-${dim}d.x
-    done
-  done
+  cd PALP-v$pkgver
+  make all-dims
 }
 
 package() {
-  cd $pkgname-$pkgver
-  pushd bin
-    for exe in *.x; do
-	install -Dm755 $exe -t "$pkgdir"/usr/bin
-    done
-  popd
-  for file in poly class cws nef mori; do
-    ln -sf ${file}-6d.x "$pkgdir"/usr/bin/${file}.x
+  cd PALP-v$pkgver
+  for _exe in *.x; do
+    install -Dm755 $_exe -t "$pkgdir"/usr/bin
+  done
+  for _file in poly class cws nef mori; do
+    ln -sf $_file-6d.x "$pkgdir"/usr/bin/$_file.x
   done
 }

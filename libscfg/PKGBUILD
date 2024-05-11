@@ -1,0 +1,32 @@
+# Maintainer: Brett Cornwall <ainola@archlinux.org>
+
+pkgname=libscfg
+pkgver=0.1.1
+pkgrel=2
+pkgdesc="A C library for scfg"
+arch=(loong64 x86_64)
+url="https://git.sr.ht/~emersion/libscfg"
+license=('MIT')
+makedepends=(meson)
+provides=(libscfg.so)
+source=("https://git.sr.ht/~emersion/libscfg/refs/download/v$pkgver/libscfg-$pkgver.tar.gz"
+        "https://git.sr.ht/~emersion/libscfg/refs/download/v$pkgver/libscfg-$pkgver.tar.gz.sig")
+sha256sums=('8276cbca1de5350f534325e38d08ca71bcbb8041a1fa5174521f4ea17eba1039'
+            'SKIP')
+validpgpkeys=('34FF9526CFEF0E97A340E2E40FDE7BE0E88F5E48')  # Simon Ser
+
+build() {
+    arch-meson "$pkgname-$pkgver" build
+    ninja -C build
+}
+
+check() {
+    ninja -C build test
+}
+
+package() {
+    DESTDIR="$pkgdir" ninja -C build install
+    cd "$pkgname-$pkgver"
+    install -Dm644 LICENSE -t "$pkgdir/usr/share/licenses/$pkgname"
+    install -Dm644 README.md -t "$pkgdir/usr/share/doc/$pkgname"
+}

@@ -3,8 +3,9 @@
 # Maintainer: Torsten Keßler <tpkessler@archlinux.org>
 
 pkgname=intel-compute-runtime
-pkgver=23.48.27912.11
+pkgver=24.13.29138.7
 pkgrel=1
+_cl_headers_ver=2023.12.14
 pkgdesc="Intel(R) Graphics Compute Runtime for oneAPI Level Zero and OpenCL(TM) Driver"
 arch=(loong64 x86_64)
 url="https://01.org/compute-runtime"
@@ -17,8 +18,10 @@ provides=(opencl-driver level-zero-driver)
 # https://github.com/intel/compute-runtime/issues/528
 options=(!lto)
 source=(https://github.com/intel/compute-runtime/archive/${pkgver}/${pkgname}-${pkgver}.tar.gz
+        https://github.com/KhronosGroup/OpenCL-Headers/archive/v${_cl_header_ver}/opencl-headers-${_cl_headers_ver}.tar.gz
         010-intel-compute-runtime-disable-werror.patch)
-sha256sums=('32d9f3b963a832f042a5019fd1f25c041a04badf971ea8f5b162d15155b8eefd'
+sha256sums=('96b2331ee98e800e6b6666f9ab0803a9d16430f8781f3cac1b3f2b81235dfd95'
+            '407d5e109a70ec1b6cd3380ce357c21e3d3651a91caae6d0d8e1719c69a1791d'
             '0a03571882300426c14fa03161ea3ca211831bc3c9676995ac74293fd953af16')
 
 prepare() {
@@ -36,12 +39,14 @@ build() {
     -DCMAKE_BUILD_TYPE=Release \
     -DCMAKE_INSTALL_PREFIX=/usr \
     -DCMAKE_INSTALL_LIBDIR=lib \
+    -DNEO_DISABLE_LD_GOLD:BOOL=ON \
     -DNEO_OCL_VERSION_MAJOR=${pkgver%%.*} \
     -DNEO_OCL_VERSION_MINOR=$(echo ${pkgver} | cut -d . -f2) \
     -DNEO_VERSION_BUILD=$(echo ${pkgver} | cut -d . -f3) \
     -DSUPPORT_DG1=ON \
-    -DKHRONOS_GL_HEADERS_DIR=/usr/include/GL \
-    -DKHRONOS_HEADERS_DIR=/usr/include/CL \
+    -DSUPPORT_DG2=ON \
+    -DKHRONOS_GL_HEADERS_DIR=/usr/include \
+    -DKHRONOS_HEADERS_DIR="${srcdir}/OpenCL-Headers-${_cl_headers_ver}" \
     -DSKIP_UNIT_TESTS=1 \
     -Wno-dev
   cmake --build build

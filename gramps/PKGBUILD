@@ -4,7 +4,7 @@
 # Contributor: Cory Farmer <rbgkofi@ameritech.net>
 
 pkgname=gramps
-pkgver=5.1.6
+pkgver=5.2.2
 pkgrel=1
 epoch=2
 pkgdesc="Genealogy program, which helps you track your family tree"
@@ -12,7 +12,7 @@ arch=('any')
 url="https://gramps-project.org/"
 license=('GPL')
 depends=('gtk3' 'python-bsddb' 'python-cairo' 'python-gobject' 'xdg-utils')
-makedepends=('intltool')
+makedepends=('intltool' 'python-setuptools')
 optdepends=('osm-gps-map: show maps in the geography view'
             'graphviz: enable creation of graphs (required for tree reports)'
             'python-pyicu: improves localised sorting'
@@ -22,7 +22,7 @@ optdepends=('osm-gps-map: show maps in the geography view'
             'libgexiv2: manage Exif metadata embedded in your media'
             'geocode-glib: associate a geographical position to a place name')
 source=("$pkgname-$pkgver.tar.gz::https://github.com/gramps-project/$pkgname/archive/v$pkgver.tar.gz")
-sha256sums=('bff0b5694e77e0f7075fb76481c4523d37646cc042c8dd9897ff2e0cd401fa3b')
+sha256sums=('340cfe136f428cd185d510ca8f932401633e0014eba0261159c4b21efe92a126')
 
 build() {
   cd $pkgname-$pkgver
@@ -32,5 +32,6 @@ build() {
 package() {
   cd $pkgname-$pkgver
   python3 setup.py install --no-compress-manpages --root="$pkgdir" --optimize=1
-  echo -n '/usr/share' >"$pkgdir"/usr/lib/python*/site-packages/gramps/gen/utils/resource-path
+  local site_packages=$(python -c "import site; print(site.getsitepackages()[0])")
+  echo -n '/usr/share' >"$pkgdir"${site_packages}/gramps/gen/utils/resource-path
 }

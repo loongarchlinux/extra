@@ -3,8 +3,8 @@
 # Contributor: Thomas S Hatch <thatch45@gmail.com>
 
 pkgname=python-pyftpdlib
-pkgver=1.5.7
-pkgrel=3
+pkgver=1.5.9
+pkgrel=2
 pkgdesc='Very fast asynchronous FTP server library'
 arch=('any')
 url='https://github.com/giampaolo/pyftpdlib/'
@@ -12,14 +12,22 @@ license=('MIT')
 depends=('python')
 optdepends=('python-pyopenssl: FTPS support'
             'python-psutil: to keep track of FTP server memory usage')
-makedepends=('python-setuptools' 'python-pysendfile')
+makedepends=('python-build' 'python-installer' 'python-setuptools'
+             'python-wheel')
 checkdepends=('python-pytest' 'python-pyopenssl' 'python-psutil')
-source=("https://pypi.io/packages/source/p/pyftpdlib/pyftpdlib-$pkgver.tar.gz")
-sha512sums=('66ad5a1ab8fde26233250351f553cdc411303616d717c416cdce059f93c64e6ef64c7707103644583249b6aba22a9841994b38e731edc7997e95e266dbdbdc22')
+source=("https://pypi.io/packages/source/p/pyftpdlib/pyftpdlib-$pkgver.tar.gz"
+        "regenerate-SSL-certificates-which-was-too-old-and-broke.patch")
+sha512sums=('3efa07f5522cee89d2bf60c93b1315dfb149da622f34e043aca0ac1c4336c0a0885d7238123068401afa6988da9cbde6adfac78f08918d3a14e84c17ebb8b32f'
+            '00687c9bf2ca1ad1efb0d4222b566510fb8c99241837f99ced5a5e6ee21891bf1a055bad3ff5fa4a291e4d1bb12f698aefa09a8aba4ed4b00aa427e072d804a8')
+
+prepare() {
+  cd pyftpdlib-$pkgver
+  patch -Np1 -i ${srcdir}/regenerate-SSL-certificates-which-was-too-old-and-broke.patch
+}
 
 build() {
   cd pyftpdlib-$pkgver
-  python setup.py build
+  python -m build --wheel --skip-dependency-check --no-isolation
 }
 
 check() {
@@ -29,6 +37,11 @@ check() {
 
 package() {
   cd pyftpdlib-$pkgver
-  python setup.py install --root="$pkgdir" -O1
-  install -Dm644 LICENSE -t "$pkgdir"/usr/share/licenses/$pkgname/
+  python -m installer --destdir="$pkgdir" dist/*.whl
+
+  # Symlink license file
+  local site_packages=$(python -c "import site; print(site.getsitepackages()[0])")
+  install -d "$pkgdir"/usr/share/licenses/$pkgname
+  ln -s "$site_packages"/pyftpdlib-$pkgver.dist-info/LICENSE \
+    "$pkgdir"/usr/share/licenses/$pkgname/LICENSE
 }

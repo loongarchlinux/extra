@@ -3,7 +3,7 @@
 
 pkgname=python-nbval
 pkgver=0.10.0
-pkgrel=5
+pkgrel=6
 pkgdesc="A py.test plugin to validate Jupyter notebooks"
 url="https://github.com/computationalmodelling/nbval"
 license=('BSD')
@@ -11,7 +11,7 @@ arch=('any')
 depends=('python-pytest' 'python-jupyter_client' 'jupyter-nbformat' 'python-ipykernel'
          'python-coverage')
 makedepends=('python-setuptools' 'python-nbdime')
-checkdepends=('python-doit' 'python-matplotlib' 'python-pytest-cov' 'python-pytest-mock' 'python-sympy')
+checkdepends=('python-matplotlib' 'python-pytest-cov' 'python-pytest-mock' 'python-sympy')
 optdepends=(
   'python-nbdime: for --nbdime option'
 )
@@ -27,7 +27,8 @@ check() {
   cd nbval-$pkgver
   python setup.py egg_info
 
-  PYTHONPATH="$PWD" doit test
+  # https://github.com/computationalmodelling/nbval/blob/0.10.0/dodo.py#L25
+  PYTHONPATH="$PWD" pytest -v tests/ --nbval --nbval-current-env --nbval-sanitize-with tests/sanitize_defaults.cfg --ignore tests/ipynb-test-samples
 }
 
 package() {

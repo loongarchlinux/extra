@@ -1,19 +1,19 @@
 # Maintainer: Balló György <ballogyor+arch at gmail dot com>
-# Contributor: Fabian Bornschein <fabiscafe-cat-mailbox-dog-org>
+# Maintainer: Fabian Bornschein <fabiscafe@archlinux.org>
 
 pkgname=gnome-tour
-pkgver=45.0
+pkgver=46.0
 pkgrel=1
 pkgdesc='Guided tour and greeter for GNOME'
 arch=('loong64' 'x86_64')
-url='https://gitlab.gnome.org/GNOME/gnome-tour'
-license=('GPL3')
-depends=('gcc-libs' 'glib2' 'glibc' 'gtk4' 'hicolor-icon-theme' 'libadwaita'
-         'pango')
-makedepends=('appstream-glib' 'meson' 'rust')
+url='https://apps.gnome.org/Tour/'
+license=('GPL-3.0-or-later')
+depends=('gcc-libs' 'glib2' 'glibc' 'gtk4' 'hicolor-icon-theme' 'libadwaita')
+makedepends=('appstream-glib' 'git' 'meson' 'rust')
 groups=('gnome')
-source=("https://download.gnome.org/sources/$pkgname/${pkgver%.*}/$pkgname-$pkgver.tar.xz")
-sha256sums=('5be4b8ef4b8f4d5ecaccc31048db6e085a8f7bffadaa0843b8e8a788ff1dadee')
+_commit=3c2afb0773356a4d59c2400cd7bed0a0ed39ff4a  # tags/46.0^0
+source=("git+https://gitlab.gnome.org/GNOME/gnome-tour.git#commit=$_commit")
+b2sums=('SKIP')
 
 # Use LTO
 export CARGO_PROFILE_RELEASE_LTO=true CARGO_PROFILE_RELEASE_CODEGEN_UNITS=1
@@ -21,8 +21,13 @@ export CARGO_PROFILE_RELEASE_LTO=true CARGO_PROFILE_RELEASE_CODEGEN_UNITS=1
 # Use debug
 export CARGO_PROFILE_RELEASE_DEBUG=2
 
+pkgver() {
+  cd $pkgname
+  git describe --tags | sed -r 's/\.([a-z])/\1/;s/([a-z])\./\1/;s/[^-]*-g/r&/;s/-/+/g'
+}
+
 build() {
-  arch-meson $pkgname-$pkgver build
+  arch-meson $pkgname build
   meson compile -C build
 }
 

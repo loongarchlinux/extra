@@ -1,0 +1,406 @@
+diff --git a/data/org.gnome.gnome-panel.gschema.xml b/data/org.gnome.gnome-panel.gschema.xml
+index 08c4bbfa3..b29128c04 100644
+--- a/data/org.gnome.gnome-panel.gschema.xml
++++ b/data/org.gnome.gnome-panel.gschema.xml
+@@ -11,6 +11,8 @@
+     <value nick='16px' value='16'/>
+     <value nick='22px' value='22'/>
+     <value nick='24px' value='24'/>
++    <value nick='32px' value='32'/>
++    <value nick='48px' value='48'/>
+   </enum>
+ 
+   <enum id='org.gnome.gnome-panel.panel-max-icon-size'>
+diff --git a/data/theme/common.css b/data/theme/common.css
+index 109678e52..cbcb991e2 100644
+--- a/data/theme/common.css
++++ b/data/theme/common.css
+@@ -58,19 +58,21 @@ panel-toplevel.vertical gp-menu-button .icon {
+ }
+ 
+ na-tray-applet {
+-  -NaTrayApplet-icon-padding: 2;
++  -NaApplet-icon-padding: 4;
+ }
+ 
+ gp-applet.separator > separator {
+   margin: 2px 4px;
+ }
+ 
+-.horizontal sn-item {
+-  padding: 0px 3px;
++.horizontal sn-item,
++.horizontal .system-indicators > menubar > menuitem {
++  padding: 0px 4px;
+ }
+ 
+-.vertical sn-item {
+-  padding: 3px 0px;
++.vertical sn-item,
++.vertical .system-indicators > menubar > menuitem {
++  padding: 4px 0px;
+ }
+ 
+ #tasklist-button,
+diff --git a/gnome-panel/gp-application.c b/gnome-panel/gp-application.c
+index 75d8a32fc..4ff5fc598 100644
+--- a/gnome-panel/gp-application.c
++++ b/gnome-panel/gp-application.c
+@@ -28,6 +28,7 @@
+ #include "panel-layout.h"
+ #include "panel-lockdown.h"
+ #include "panel-multiscreen.h"
++#include "panel-schemas.h"
+ #include "panel-toplevel.h"
+ #include "panel-widget.h"
+ 
+@@ -44,6 +45,7 @@ struct _GpApplication
+   GObject           parent;
+ 
+   GSettings        *general_settings;
++  GSettings        *interface_settings;
+ 
+   gulong            theme_name_id;
+   gulong            prefer_dark_id;
+@@ -189,13 +191,28 @@ theme_variant_changed_cb (GSettings     *settings,
+                           GpApplication *self)
+ {
+   PanelThemeVariant variant;
++  char *color_scheme;
+ 
+-  variant = g_settings_get_enum (settings, key);
++  variant = g_settings_get_enum (self->general_settings, PANEL_GENERAL_THEME_VARIANT_KEY);
+ 
+   if (variant == PANEL_THEME_VARIANT_SYSTEM)
+     {
+-      gtk_settings_reset_property (gtk_settings_get_default (),
+-                                   "gtk-application-prefer-dark-theme");
++      color_scheme = g_settings_get_string (self->interface_settings, "color-scheme");
++
++      if (g_strcmp0 (color_scheme, "prefer-dark") == 0)
++        {
++          g_object_set (gtk_settings_get_default (),
++                        "gtk-application-prefer-dark-theme",
++                        TRUE,
++                        NULL);
++        }
++      else
++        {
++          gtk_settings_reset_property (gtk_settings_get_default (),
++                                       "gtk-application-prefer-dark-theme");
++        }
++
++      g_free (color_scheme);
+     }
+   else
+     {
+@@ -344,6 +361,7 @@ gp_application_dispose (GObject *object)
+   g_clear_pointer (&self->toplevels, g_hash_table_destroy);
+ 
+   g_clear_object (&self->general_settings);
++  g_clear_object (&self->interface_settings);
+   g_clear_object (&self->provider);
+   g_clear_object (&self->module_manager);
+   g_clear_object (&self->applet_manager);
+@@ -368,6 +386,7 @@ static void
+ gp_application_init (GpApplication *self)
+ {
+   self->general_settings = g_settings_new ("org.gnome.gnome-panel.general");
++  self->interface_settings = g_settings_new ("org.gnome.desktop.interface");
+ 
+   g_signal_connect (self->general_settings,
+                     "changed::theme-variant",
+@@ -394,6 +413,11 @@ gp_application_init (GpApplication *self)
+                     G_CALLBACK (panel_max_icon_size_cb),
+                     self);
+ 
++  g_signal_connect (self->interface_settings,
++                    "changed::color-scheme",
++                    G_CALLBACK (theme_variant_changed_cb),
++                    self);
++
+   self->theme_name_id = g_signal_connect (gtk_settings_get_default (),
+                                           "notify::gtk-theme-name",
+                                           G_CALLBACK (gtk_theme_name_changed_cb),
+diff --git a/gnome-panel/gp-properties-dialog.c b/gnome-panel/gp-properties-dialog.c
+index de4668151..d6ed8961a 100644
+--- a/gnome-panel/gp-properties-dialog.c
++++ b/gnome-panel/gp-properties-dialog.c
+@@ -223,16 +223,16 @@ setup_toplevel_bindings (GpPropertiesDialog *dialog)
+ 
+   text = GTK_COMBO_BOX_TEXT (dialog->orientation);
+ 
+-  gtk_combo_box_text_append (text, "top", NC_("Orientation", "Top"));
+-  gtk_combo_box_text_append (text, "bottom", NC_("Orientation", "Bottom"));
+-  gtk_combo_box_text_append (text, "left", NC_("Orientation", "Left"));
+-  gtk_combo_box_text_append (text, "right", NC_("Orientation", "Right"));
++  gtk_combo_box_text_append (text, "top", C_("Orientation", "Top"));
++  gtk_combo_box_text_append (text, "bottom", C_("Orientation", "Bottom"));
++  gtk_combo_box_text_append (text, "left", C_("Orientation", "Left"));
++  gtk_combo_box_text_append (text, "right", C_("Orientation", "Right"));
+ 
+   text = GTK_COMBO_BOX_TEXT (dialog->alignment);
+ 
+-  gtk_combo_box_text_append (text, "start", NC_("Alignment", "Start"));
+-  gtk_combo_box_text_append (text, "center", NC_("Alignment", "Center"));
+-  gtk_combo_box_text_append (text, "end", NC_("Alignment", "End"));
++  gtk_combo_box_text_append (text, "start", C_("Alignment", "Start"));
++  gtk_combo_box_text_append (text, "center", C_("Alignment", "Center"));
++  gtk_combo_box_text_append (text, "end", C_("Alignment", "End"));
+ 
+   g_object_bind_property (dialog->expand,
+                           "active",
+diff --git a/libgnome-panel/gp-applet.c b/libgnome-panel/gp-applet.c
+index 1d191ba5d..d7cdf9443 100644
+--- a/libgnome-panel/gp-applet.c
++++ b/libgnome-panel/gp-applet.c
+@@ -562,7 +562,7 @@ install_properties (GObjectClass *object_class)
+    */
+   properties[PROP_MENU_ICON_SIZE] =
+     g_param_spec_uint ("menu-icon-size", "Menu Icon Size", "Menu Icon Size",
+-                       16, 24, 16,
++                       16, 48, 16,
+                        G_PARAM_READABLE | G_PARAM_EXPLICIT_NOTIFY |
+                        G_PARAM_STATIC_STRINGS);
+ 
+diff --git a/modules/clock/calendar-client.c b/modules/clock/calendar-client.c
+index faf561712..b3c08e6f5 100644
+--- a/modules/clock/calendar-client.c
++++ b/modules/clock/calendar-client.c
+@@ -316,9 +316,9 @@ calendar_client_init (CalendarClient *client)
+                                                     G_CALLBACK (calendar_client_timezone_changed_cb),
+                                                     client);
+ 
+-  client->priv->day = 0;
+-  client->priv->month = 0;
+-  client->priv->year = 0;
++  client->priv->day = G_MAXUINT;
++  client->priv->month = G_MAXUINT;
++  client->priv->year = G_MAXUINT;
+ }
+ 
+ static void
+@@ -1563,7 +1563,7 @@ calendar_client_update_appointments (CalendarClient *client)
+   char   *month_begin;
+   char   *month_end;
+ 
+-  if (client->priv->month == 0 || client->priv->year == 0)
++  if (client->priv->month == G_MAXUINT || client->priv->year == G_MAXUINT)
+     return;
+ 
+   month_begin = make_isodate_for_day_begin (1,
+@@ -1609,9 +1609,9 @@ calendar_client_update_tasks (CalendarClient *client)
+   char   *day_begin;
+   char   *day_end;
+ 
+-  if (client->priv->day == 0 ||
+-      client->priv->month == 0 ||
+-      client->priv->year == 0)
++  if (client->priv->day == G_MAXUINT ||
++      client->priv->month == G_MAXUINT ||
++      client->priv->year == G_MAXUINT)
+     return;
+ 
+   day_begin = make_isodate_for_day_begin (client->priv->day,
+@@ -1971,9 +1971,9 @@ calendar_client_get_events (CalendarClient    *client,
+   time_t  day_end;
+ 
+   g_return_val_if_fail (CALENDAR_IS_CLIENT (client), NULL);
+-  g_return_val_if_fail (client->priv->day != 0, NULL);
+-  g_return_val_if_fail (client->priv->month != 0, NULL);
+-  g_return_val_if_fail (client->priv->year != 0, NULL);
++  g_return_val_if_fail (client->priv->day != G_MAXUINT, NULL);
++  g_return_val_if_fail (client->priv->month != G_MAXUINT, NULL);
++  g_return_val_if_fail (client->priv->year != G_MAXUINT, NULL);
+ 
+   day_begin = make_time_for_day_begin (client->priv->day,
+ 				       client->priv->month,
+@@ -2028,8 +2028,8 @@ calendar_client_foreach_appointment_day (CalendarClient  *client,
+ 
+   g_return_if_fail (CALENDAR_IS_CLIENT (client));
+   g_return_if_fail (iter_func != NULL);
+-  g_return_if_fail (client->priv->month != 0);
+-  g_return_if_fail (client->priv->year != 0);
++  g_return_if_fail (client->priv->month != G_MAXUINT);
++  g_return_if_fail (client->priv->year != G_MAXUINT);
+ 
+   month_begin = make_time_for_day_begin (1,
+ 					 client->priv->month,
+diff --git a/modules/menu/gp-lock-logout.c b/modules/menu/gp-lock-logout.c
+index edfce1ca2..3837749b7 100644
+--- a/modules/menu/gp-lock-logout.c
++++ b/modules/menu/gp-lock-logout.c
+@@ -887,7 +887,7 @@ install_properties (GObjectClass *object_class)
+ 
+   lock_logout_properties[PROP_MENU_ICON_SIZE] =
+     g_param_spec_uint ("menu-icon-size", "Menu Icon Size", "Menu Icon Size",
+-                       16, 24, 16,
++                       16, 48, 16,
+                        G_PARAM_CONSTRUCT | G_PARAM_WRITABLE |
+                        G_PARAM_EXPLICIT_NOTIFY |
+                        G_PARAM_STATIC_STRINGS);
+diff --git a/modules/menu/gp-menu-button-applet.c b/modules/menu/gp-menu-button-applet.c
+index b864b9c8a..f6884bdb7 100644
+--- a/modules/menu/gp-menu-button-applet.c
++++ b/modules/menu/gp-menu-button-applet.c
+@@ -220,16 +220,26 @@ append_places_item (GpMenuButtonApplet *menu_button,
+                           G_BINDING_SYNC_CREATE);
+ }
+ 
++static void
++append_lock_logout (GtkMenu                   *menu,
++                    GpMenuButtonAppletPrivate *priv)
++{
++  gp_lock_logout_append_to_menu (priv->lock_logout, menu);
++}
++
+ static void
+ append_user_item (GpMenuButtonApplet *menu_button,
+                   GtkMenu            *menu)
+ {
++  GpMenuButtonAppletPrivate *priv;
+   guint icon_size;
+   GtkWidget *icon;
+   gchar *user_name;
+   GtkWidget *item;
+   GtkWidget *user_menu;
+ 
++  priv = gp_menu_button_applet_get_instance_private (menu_button);
++
+   icon_size = gp_applet_get_menu_icon_size (GP_APPLET (menu_button));
+   icon = gtk_image_new_from_icon_name ("computer", GTK_ICON_SIZE_MENU);
+   gtk_image_set_pixel_size (GTK_IMAGE (icon), icon_size);
+@@ -266,21 +276,19 @@ append_user_item (GpMenuButtonApplet *menu_button,
+   g_object_bind_property (user_menu, "empty", item, "visible",
+                           G_BINDING_DEFAULT | G_BINDING_SYNC_CREATE |
+                           G_BINDING_INVERT_BOOLEAN);
++
++  gp_user_menu_set_append_func (GP_USER_MENU (user_menu),
++                                (GpAppendMenuItemsFunc) append_lock_logout,
++                                priv);
+ }
+ 
+ static void
+ append_menu_items_cb (GtkMenu            *menu,
+                       GpMenuButtonApplet *menu_button)
+ {
+-  GpMenuButtonAppletPrivate *priv;
+-
+-  priv = gp_menu_button_applet_get_instance_private (menu_button);
+-
+   append_separator_if_needed (menu);
+   append_places_item (menu_button, menu);
+   append_user_item (menu_button, menu);
+-
+-  gp_lock_logout_append_to_menu (priv->lock_logout, menu);
+ }
+ 
+ static gboolean
+@@ -418,7 +426,7 @@ settings_changed_cb (GSettings          *settings,
+       gboolean show_arrow;
+ 
+       show_arrow = g_settings_get_boolean (priv->settings, "show-arrow");
+-      gtk_widget_set_visible (priv->image, show_arrow);
++      gtk_widget_set_visible (priv->arrow, show_arrow);
+     }
+   else if (g_strcmp0 (key, "tooltip") == 0)
+     {
+diff --git a/modules/menu/gp-menu-module.c b/modules/menu/gp-menu-module.c
+index 966bd5782..c27065dea 100644
+--- a/modules/menu/gp-menu-module.c
++++ b/modules/menu/gp-menu-module.c
+@@ -476,6 +476,13 @@ append_places_item (StandaloneMenuData *data,
+                 NULL);
+ }
+ 
++static void
++append_lock_logout (GtkMenu            *menu,
++                    StandaloneMenuData *data)
++{
++  gp_lock_logout_append_to_menu (data->lock_logout, menu);
++}
++
+ static void
+ append_user_item (StandaloneMenuData *data,
+                   GtkMenu            *menu)
+@@ -509,6 +516,10 @@ append_user_item (StandaloneMenuData *data,
+   g_object_bind_property (user_menu, "empty", item, "visible",
+                           G_BINDING_DEFAULT | G_BINDING_SYNC_CREATE |
+                           G_BINDING_INVERT_BOOLEAN);
++
++  gp_user_menu_set_append_func (GP_USER_MENU (user_menu),
++                                (GpAppendMenuItemsFunc) append_lock_logout,
++                                data);
+ }
+ 
+ static void
+@@ -518,8 +529,6 @@ append_menu_items_cb (GtkMenu            *menu,
+   append_separator_if_needed (GTK_MENU (menu));
+   append_places_item (data, menu);
+   append_user_item (data, menu);
+-
+-  gp_lock_logout_append_to_menu (data->lock_logout, GTK_MENU (menu));
+ }
+ 
+ static GtkWidget *
+diff --git a/modules/menu/gp-menu.c b/modules/menu/gp-menu.c
+index 9256be80a..70811e116 100644
+--- a/modules/menu/gp-menu.c
++++ b/modules/menu/gp-menu.c
+@@ -576,7 +576,7 @@ install_properties (GObjectClass *object_class)
+ 
+   menu_properties[PROP_MENU_ICON_SIZE] =
+     g_param_spec_uint ("menu-icon-size", "Menu Icon Size", "Menu Icon Size",
+-                       16, 24, 16,
++                       16, 48, 16,
+                        G_PARAM_CONSTRUCT | G_PARAM_WRITABLE |
+                        G_PARAM_EXPLICIT_NOTIFY |
+                        G_PARAM_STATIC_STRINGS);
+diff --git a/modules/menu/gp-places-menu.c b/modules/menu/gp-places-menu.c
+index f8ce8690d..a96df3bf6 100644
+--- a/modules/menu/gp-places-menu.c
++++ b/modules/menu/gp-places-menu.c
+@@ -850,7 +850,7 @@ install_properties (GObjectClass *object_class)
+ 
+   menu_properties[PROP_MENU_ICON_SIZE] =
+     g_param_spec_uint ("menu-icon-size", "Menu Icon Size", "Menu Icon Size",
+-                       16, 24, 16,
++                       16, 48, 16,
+                        G_PARAM_CONSTRUCT | G_PARAM_READWRITE |
+                        G_PARAM_EXPLICIT_NOTIFY |
+                        G_PARAM_STATIC_STRINGS);
+diff --git a/modules/menu/gp-recent-menu.c b/modules/menu/gp-recent-menu.c
+index ffbd2006c..2f92551be 100644
+--- a/modules/menu/gp-recent-menu.c
++++ b/modules/menu/gp-recent-menu.c
+@@ -230,7 +230,7 @@ append_clear (GpRecentMenu *menu)
+   gtk_widget_set_sensitive (item, FALSE);
+   gtk_widget_show (item);
+ 
+-  icon = gtk_image_new_from_icon_name ("edit-clear", GTK_ICON_SIZE_MENU);
++  icon = gtk_image_new_from_icon_name ("edit-clear-all", GTK_ICON_SIZE_MENU);
+   gtk_image_set_pixel_size (GTK_IMAGE (icon), menu->menu_icon_size);
+ 
+   item = gp_image_menu_item_new_with_label (_("Clear Recent Documents..."));
+@@ -451,7 +451,7 @@ install_properties (GObjectClass *object_class)
+ 
+   menu_properties[PROP_MENU_ICON_SIZE] =
+     g_param_spec_uint ("menu-icon-size", "Menu Icon Size", "Menu Icon Size",
+-                       16, 24, 16,
++                       16, 48, 16,
+                        G_PARAM_CONSTRUCT | G_PARAM_WRITABLE |
+                        G_PARAM_EXPLICIT_NOTIFY |
+                        G_PARAM_STATIC_STRINGS);
+diff --git a/modules/menu/gp-user-menu.c b/modules/menu/gp-user-menu.c
+index e070c4648..fb53cc081 100644
+--- a/modules/menu/gp-user-menu.c
++++ b/modules/menu/gp-user-menu.c
+@@ -370,7 +370,7 @@ install_properties (GObjectClass *object_class)
+ 
+   menu_properties[PROP_MENU_ICON_SIZE] =
+     g_param_spec_uint ("menu-icon-size", "Menu Icon Size", "Menu Icon Size",
+-                       16, 24, 16,
++                       16, 48, 16,
+                        G_PARAM_CONSTRUCT | G_PARAM_WRITABLE |
+                        G_PARAM_EXPLICIT_NOTIFY |
+                        G_PARAM_STATIC_STRINGS);

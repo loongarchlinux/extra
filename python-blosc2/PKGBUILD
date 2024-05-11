@@ -2,21 +2,42 @@
 
 _pyname=blosc2
 pkgname=python-$_pyname
-pkgver=2.2.5
-pkgrel=1
+pkgver=2.5.1
+pkgrel=2
 pkgdesc='Wrapper for the blosc2 compressor'
 arch=(loong64 x86_64)
 url='https://github.com/Blosc/python-blosc2'
-license=(BSD)
-depends=(blosc2 python-py-cpuinfo python-msgpack python-ndindex python-rich)
-makedepends=(python-build python-installer python-setuptools python-scikit-build cmake cython ninja python-numpy)
-checkdepends=(python-pytest)
-source=(https://github.com/Blosc/python-blosc2/archive/v$pkgver/$pkgname-$pkgver.tar.gz)
-sha256sums=('2b0c7c121b7fe620db66a5476d57bb37db3ffd54f7b06510cda9ce89fab95823')
+license=(BSD-3-Clause)
+depends=(
+  blosc2
+  glibc
+  python
+  python-msgpack
+  python-ndindex
+  python-numpy
+  python-py-cpuinfo
+)
+makedepends=(
+  cmake
+  cython
+  ninja
+  python-build
+  python-installer
+  python-setuptools
+  python-scikit-build
+)
+checkdepends=(
+  python-psutil
+  python-pytest
+  python-pytorch
+)
+source=($url/archive/v$pkgver/$pkgname-$pkgver.tar.gz)
+sha256sums=('f5f83d70e1b30b421370f57ba05bf8a32560c5fb274ddc882e228a2270458707')
+b2sums=('90865cc7293cfa1a43a6f71efc0fc1943bd354f908537fad900b11a16165a6a49e21be197dd98e137960f34f0d6942610873d136309f7d07970b2f81388111d3')
 
 prepare() {
-  cd $pkgname-$pkgver
-  sed -e 's|, \"cmake\", \"ninja\", \"oldest-supported-numpy\"||' -i pyproject.toml
+  # remove build dependencies that we do not need
+  sed -e 's/\"cmake\",//g;s/\"ninja\",//g;s/\"oldest-supported-numpy\"//g' -i $pkgname-$pkgver/pyproject.toml
 }
 
 build() {

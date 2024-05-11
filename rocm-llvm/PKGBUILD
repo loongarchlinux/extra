@@ -3,17 +3,27 @@
 
 pkgname=rocm-llvm
 pkgdesc='Radeon Open Compute - LLVM toolchain (llvm, clang, lld)'
-pkgver=5.7.1
+pkgver=6.0.2
 pkgrel=1
 arch=('loong64' 'x86_64')
-url='https://rocm.docs.amd.com/en/latest/reference/rocmcc/rocmcc.html'
-license=('custom:Apache 2.0 with LLVM Exception')
+url='https://rocm.docs.amd.com/en/latest/reference/rocmcc.html'
+license=('Apache-2.0 WITH LLVM-exception')
+depends=('rocm-core' 'perl' 'gcc-libs' 'zlib' 'zstd' 'libffi' 'libedit'
+         'ncurses' 'libxml2')
 makedepends=('cmake' 'python' 'ninja')
-_git='https://github.com/RadeonOpenCompute/llvm-project'
-source=("${pkgname}-${pkgver}.tar.gz::$_git/archive/rocm-$pkgver.tar.gz")
-sha256sums=('6b54c422e45ad19c9bf5ab090ec21753e7f7d854ca78132c30eb146657b168eb')
+_git='https://github.com/ROCm/llvm-project'
+source=("${pkgname}-${pkgver}.tar.gz::$_git/archive/rocm-$pkgver.tar.gz"
+        "${pkgname}-fix-segfault.patch")
+sha256sums=('7d35acc84de1adee65406f92a369a30364703f84279241c444cd93a48c7eeb76'
+            '4d3f198c5422e9987f442c20963223c39b1548ffa00b6c9db81af5070278ce03')
 options=(staticlibs !lto)
 _dirname="$(basename "$_git")-$(basename "${source[0]}" .tar.gz)"
+
+prepare() {
+    cd "$_dirname"
+    # https://github.com/ROCm/ROCm/issues/2918
+    patch -Np1 -i ../"${pkgname}-fix-segfault.patch"
+}
 
 build() {
     # Build only minimal debug info to reduce size
@@ -25,23 +35,26 @@ build() {
         -B build
         -S "$_dirname/llvm"
         -DCMAKE_BUILD_TYPE=Release
-        -DCMAKE_INSTALL_PREFIX='/opt/rocm/llvm'
+        -DCMAKE_INSTALL_PREFIX='/opt/rocm/lib/llvm'
         -DLLVM_HOST_TRIPLE=$CHOST
-        -DLLVM_ENABLE_PROJECTS='llvm;clang;compiler-rt;lld'
+        -DLLVM_ENABLE_PROJECTS='llvm;clang;lld;compiler-rt;clang-tools-extra'
+        -DCLANG_ENABLE_AMDCLANG=ON
+        -DLLVM_ENABLE_RUNTIMES='libcxx;libcxxabi;libunwind'
+        -DLIBCXX_ENABLE_STATIC=ON
+        -DLIBCXXABI_ENABLE_STATIC=ON
         -DLLVM_TARGETS_TO_BUILD='AMDGPU;NVPTX;X86'
         -DCLANG_DEFAULT_LINKER=lld
         -DLLVM_INSTALL_UTILS=ON
         -DLLVM_ENABLE_BINDINGS=OFF
         -DLLVM_LINK_LLVM_DYLIB=OFF
         -DLLVM_BUILD_LLVM_DYLIB=OFF
-        -DLLVM_LINK_LLVM_DYLIB=OFF
         -DLLVM_ENABLE_ASSERTIONS=ON
         -DOCAMLFIND=NO
         -DLLVM_ENABLE_OCAMLDOC=OFF
         -DLLVM_INCLUDE_BENCHMARKS=OFF
-        -DLLVM_BUILD_TESTS=ON
-        -DLLVM_INCLUDE_TESTS=ON
-        -DCLANG_INCLUDE_TESTS=ON
+        -DLLVM_BUILD_TESTS=OFF
+        -DLLVM_INCLUDE_TESTS=OFF
+        -DCLANG_INCLUDE_TESTS=OFF
         -DLLVM_BINUTILS_INCDIR=/usr/include
     )
     
@@ -52,9 +65,12 @@ build() {
 package() {
     DESTDIR="$pkgdir" cmake --install build
 
+    # Provide symlink to old LLVM location, pre ROCm 6.0.0
+    ln -s /opt/rocm/lib/llvm "$pkgdir/opt/rocm/llvm"
+
     # https://bugs.archlinux.org/task/28479
-    install -d "$pkgdir/opt/rocm/llvm/lib/bfd-plugins"
-    ln -s /opt/rocm/llvm/lib/LLVMgold.so "$pkgdir/opt/rocm/llvm/lib/bfd-plugins/LLVMgold.so"
+    install -d "$pkgdir/opt/rocm/lib/llvm/lib/bfd-plugins"
+    ln -s /opt/rocm/lib/llvm/lib/LLVMgold.so "$pkgdir/opt/rocm/lib/llvm/lib/bfd-plugins/LLVMgold.so"
 
     cd "$_dirname"
     install -Dm644 llvm/LICENSE.TXT "$pkgdir/usr/share/licenses/$pkgname/llvm-LICENSE"

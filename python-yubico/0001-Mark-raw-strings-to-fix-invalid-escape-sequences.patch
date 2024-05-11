@@ -1,0 +1,36 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Fabian Bornschein <fabiscafe@archlinux.org>
+Date: Thu, 2 May 2024 13:09:22 +0200
+Subject: [PATCH] Mark raw strings to fix invalid escape sequences
+
+---
+ release.py                       | 2 +-
+ test/usb/test_yubikey_usb_hid.py | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/release.py b/release.py
+index 1f70b2256ed0..926c24603431 100644
+--- a/release.py
++++ b/release.py
+@@ -62,7 +62,7 @@ class release(Command):
+             raise DistutilsSetupError("Incorrect date/version in NEWS!")
+ 
+     def _verify_tag(self):
+-        if os.system('git tag | grep -q "^%s\$"' % self.fullname) == 0:
++        if os.system(r'git tag | grep -q "^%s\$"' % self.fullname) == 0:
+             raise DistutilsSetupError(
+                 "Tag '%s' already exists!" % self.fullname)
+ 
+diff --git a/test/usb/test_yubikey_usb_hid.py b/test/usb/test_yubikey_usb_hid.py
+index c7e105cdc543..dfc6cecc68c7 100644
+--- a/test/usb/test_yubikey_usb_hid.py
++++ b/test/usb/test_yubikey_usb_hid.py
+@@ -34,7 +34,7 @@ class TestYubiKeyUSBHID(unittest.TestCase):
+         status = self.YK.status()
+         version = self.YK.version()
+         print("Version returned: %s" % version)
+-        re_match = re.match("\d+\.\d+\.\d+$", version)
++        re_match = re.match(r"\d+\.\d+\.\d+$", version)
+         self.assertNotEqual(re_match, None)
+ 
+     #@unittest.skipIf(self.YK is None, "No USB HID YubiKey found")

@@ -1,25 +1,64 @@
 # Maintainer: Balló György <ballogyor+arch at gmail dot com>
-# Contributor: Fabian Bornschein <fabiscafe-cat-mailbox-dog-org>
+# Maintainer: Fabian Bornschein <fabiscafe@archlinux.org>
 
 pkgname=gnome-initial-setup
-pkgver=45.0
-pkgrel=2
+pkgver=46.1
+pkgrel=1
 pkgdesc='Helps you to set up your OS when you boot for the first time'
-arch=('loong64' 'x86_64')
 url='https://gitlab.gnome.org/GNOME/gnome-initial-setup'
+arch=('loong64' 'x86_64')
 license=('GPL-2.0-or-later')
-depends=('accountsservice' 'cairo' 'fontconfig' 'gcc-libs' 'gdk-pixbuf2' 'gdm' 'geoclue'
-         'geocode-glib-2' 'glib2' 'glibc' 'gnome-desktop-4' 'gnome-control-center' 'gnome-keyring'
-         'gnome-online-accounts' 'gsettings-desktop-schemas' 'gtk3' 'gtk4' 'json-glib' 'krb5'
-         'libadwaita' 'libgdm' 'libgoa' 'libgweather-4' 'libibus' 'libmalcontent' 'libnm'
-         'libnma-gtk4' 'libpwquality' 'librest' 'libsecret' 'malcontent' 'pango' 'polkit' 'tecla'
-         'webkitgtk-6.0')
-makedepends=('meson')
-source=("https://download.gnome.org/sources/$pkgname/${pkgver%.*}/$pkgname-$pkgver.tar.xz")
-sha256sums=('b1afe764798f8948bedb95c7ab31bd78529ac5cb481c41f7a7777f264de54bd8')
+depends=(
+  'accountsservice'
+  'fontconfig'
+  'gcc-libs'
+  'gdk-pixbuf2'
+  'gdm'
+  'geoclue'
+  'geocode-glib-2'
+  'glib2'
+  'glibc'
+  'gnome-control-center'
+  'gnome-desktop-4'
+  'gnome-keyring'
+  'gsettings-desktop-schemas'
+  'gtk4'
+  'harfbuzz'
+  'krb5'
+  'libadwaita'
+  'libgdm'
+  'libgweather-4'
+  'libibus'
+  'libmalcontent'
+  'libnm'
+  'libnma-gtk4'
+  'libpwquality'
+  'libsecret'
+  'malcontent'
+  'pango'
+  'polkit'
+  'tecla'
+  'webkitgtk-6.0'
+)
+makedepends=(
+  'git'
+  'meson'
+  'python-packaging'
+)
+source=(
+  "git+https://gitlab.gnome.org/GNOME/gnome-initial-setup.git?signed#tag=${pkgver/[a-z]/.&}"
+)
+b2sums=('16fd66267ac18dcd83eb51785eb7e37d0b7c3e685d7860fe87db5c2e772ccd74491f97943f47fe1bfcaa5dbf1ff15d999c46b5cb5ebeb95a73cc8b09112faa7f')
+validpgpkeys=(
+ 1E68E58CF255888301645B563422DC0D7AD482A7 # Will Thompson <will@willthompson.co.uk>
+)
+
+prepare() {
+  cd $pkgname
+}
 
 build() {
-  arch-meson $pkgname-$pkgver build
+  arch-meson $pkgname build
   meson compile -C build
 }
 

@@ -1,40 +1,38 @@
 # Maintainer: David Runge <dvzrv@archlinux.org>
 
-_name=csscompressor
 pkgname=python-csscompressor
+_name="${pkgname#python-}"
 pkgver=0.9.5
-pkgrel=6
+pkgrel=7
 pkgdesc="Port of YUI CSS Compressor to Python"
-arch=('any')
+arch=(any)
 url="https://github.com/sprymix/csscompressor"
-license=('BSD')
-depends=('python')
-makedepends=('python-setuptools')
-checkdepends=('python-pytest')
-source=("https://files.pythonhosted.org/packages/source/${_name::1}/${_name}/${_name}-${pkgver}.tar.gz")
-sha512sums=('aee16b5af8b1b780a0fef10d359864a5a21a90b7196740c8b7efef25d1ba4d8197e9fce03483d0e2331abc736290cc6b862e43ee65d1b76260310aea65fc6eb6')
-
-prepare() {
-  mv -v "${_name}-${pkgver}" "$pkgname-$pkgver"
-}
+license=(BSD-3-Clause)
+depends=(python)
+makedepends=(
+  python-build
+  python-installer
+  python-setuptools
+  python-wheel
+)
+checkdepends=(python-pytest)
+source=($pkgname-$pkgver.tar.gz::$url/archive/refs/tags/v$pkgver.tar.gz)
+sha512sums=('06be3e433555029c5b1207120f4fb8d16a44f7511eb709b35367b5a1024d015a8af5780db78f4568f3d62f44685309cf294ab8111f0ff20bd0c31bc7342892ee')
 
 build() {
-  cd "$pkgname-$pkgver"
-  python setup.py build
+  cd $_name-$pkgver
+  python -m build --wheel --no-isolation
 }
 
 check() {
-  cd "$pkgname-$pkgver"
-  export PYTHONPATH="build:${PYTHONPATH}"
+  cd $_name-$pkgver
+  export PYTHONPATH="build:$PYTHONPATH"
   pytest -v
 }
 
 package() {
-  cd "$pkgname-$pkgver"
-  python setup.py install --skip-build \
-    --optimize=1 \
-    --prefix=/usr \
-    --root="${pkgdir}"
-  install -vDm 644 README.rst -t "${pkgdir}/usr/share/doc/${pkgname}"
-  install -vDm 644 LICENSE -t "${pkgdir}/usr/share/licenses/${pkgname}"
+  cd $_name-$pkgver
+  python -m installer --destdir="$pkgdir" dist/*.whl
+  install -vDm 644 README.rst -t "$pkgdir/usr/share/doc/$pkgname/"
+  install -vDm 644 LICENSE -t "$pkgdir/usr/share/licenses/$pkgname/"
 }

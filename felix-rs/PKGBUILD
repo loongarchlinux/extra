@@ -3,7 +3,7 @@
 
 pkgname=felix-rs
 _pkgname=felix
-pkgver=2.12.0
+pkgver=2.13.0
 pkgrel=1
 pkgdesc="A TUI file manager with Vim-like key mapping"
 arch=('loong64' 'x86_64')
@@ -16,12 +16,15 @@ optdepends=('chafa: preview images'
             'bat: syntax highlighting')
 checkdepends=('zoxide')
 install="$pkgname.install"
-source=("$pkgname-$pkgver.tar.gz::$url/archive/v$pkgver.tar.gz")
-sha512sums=('4b5e51daf2dfc9aa6d2cb55254cbc073060947f1f2b35d0380d627c7f7be9aadcb3d729dca0435489c4e99aa6f4a928cffe45b2726e0446678d4e78fcf30475f')
+source=("$pkgname-$pkgver.tar.gz::$url/archive/v$pkgver.tar.gz"
+        "$pkgname-$pkgver-cargo-lock.patch::$url/commit/5085b147103878ee8138d4fcf7b204223ba2c3eb.patch")
+sha512sums=('545ccf207abbc606ea428edc363067c1976b34d54a0a175bb1cc60406b87b581ae68b1445735655e2ef24ad49a357b6e66f735f52e197f5a55b0bb8998c4ba89'
+            'd2849f8b048c5956011fd6d99606617a0a3b78065db356f70b72ca27848aa2a27d292d4ebeda361bfe1bf262e1400983fb05d9bd4d6747ec71c8cde1e520504b')
 options=('!lto')
 
 prepare() {
   cd "$_pkgname-$pkgver"
+  patch -Np1 -i "../$pkgname-$pkgver-cargo-lock.patch"
   cargo fetch --locked --target "$(rustc -vV | sed -n 's/host: //p')"
 }
 

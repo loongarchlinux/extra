@@ -1,31 +1,31 @@
 # Maintainer: Felix Yan <felixonmars@archlinux.org>
 
 pkgname=python-protego
-pkgver=0.2.1
+pkgver=0.3.1
 pkgrel=2
 pkgdesc="A pure-Python robots.txt parser with support for modern conventions"
 url="https://github.com/scrapy/protego"
-license=('BSD')
+license=('BSD-3-Clause')
 arch=('any')
-depends=('python-six')
-makedepends=('python-setuptools')
-checkdepends=('python-pytest-runner')
+depends=('python')
+makedepends=('python-setuptools' 'python-build' 'python-installer' 'python-wheel')
+checkdepends=('python-pytest')
 source=("$pkgname-$pkgver.tar.gz::https://github.com/scrapy/protego/archive/$pkgver.tar.gz")
-sha512sums=('ef8a8196d8ece577eec90cc2e2cca2899625bd777c18f01c8e72a6130d4c2c13f71fa6e32a3e8e43b749f7556f4e3dbb1662e5e94ae18e6c8a7eef950779be1b')
+sha512sums=('0f6d2915c189c8c04da30b31bee40773a9cec77f8d1025b498d8ec29aea8a5fe918341b0bae9515b83cb276ed5c9218dcb4b075406ee8d57a503ab761a275338')
 
 build() {
   cd protego-$pkgver
-  python setup.py build
+  python -m build --wheel --no-isolation
 }
 
 check() {
   cd protego-$pkgver
-  python setup.py pytest
+  PYTHONPATH="$PWD"/src pytest
 }
 
 package() {
   cd protego-$pkgver
-  python setup.py install --root="$pkgdir" --optimize=1
+  python -m installer --destdir="$pkgdir" dist/*.whl
 
   install -Dm644 LICENSE -t "$pkgdir"/usr/share/licenses/$pkgname/
 }

@@ -1,18 +1,18 @@
 # Maintainer: Felix Yan <felixonmars@archlinux.org>
 
 pkgname=python-flask-caching
-pkgver=2.0.2
-pkgrel=3
+pkgver=2.1.0
+pkgrel=2
 pkgdesc="Adds caching support to your Flask application"
 url="https://github.com/sh4nks/flask-caching"
-license=('BSD')
+license=('BSD-3-Clause')
 arch=('any')
 depends=('python-flask' 'python-cachelib')
-makedepends=('python-setuptools')
-checkdepends=('python-pytest-runner' 'python-pytest-cov' 'python-pytest-xprocess'
+makedepends=('python-setuptools' 'python-build' 'python-installer' 'python-wheel')
+checkdepends=('python-pytest' 'python-pytest-cov' 'python-pytest-xprocess'
               'python-pylibmc' 'python-redis' 'memcached' 'python-asgiref')
 source=("$pkgname-$pkgver.tar.gz::https://github.com/sh4nks/flask-caching/archive/v$pkgver.tar.gz")
-sha512sums=('b019c3e74ebb65bb34eb08cdc886a70694ea218116c84ff3e57e3167da23bef1d50baa94c747557784e440eee5166084a4cdaa9082afe3b914ed012ff143a4c4')
+sha512sums=('b55e5b5f0dbe5fcb850f7155df4ebc5eb1c19f69764d07593299453270a36fd2c443c4834323291859fe9a8c7f6619baf133c78606cecc2b1b4a621e54e60519')
 
 prepare() {
   cd flask-caching-$pkgver
@@ -21,16 +21,16 @@ prepare() {
 
 build() {
   cd flask-caching-$pkgver
-  python setup.py build
+  python -m build --wheel --no-isolation
 }
 
 check() {
   cd flask-caching-$pkgver
-  python setup.py pytest
+  PYTHONPATH="$PWD/src" pytest
 }
 
 package() {
   cd flask-caching-$pkgver
-  python setup.py install --root="$pkgdir" --optimize=1
+  python -m installer --destdir="$pkgdir" dist/*.whl
   install -Dm644 LICENSE "$pkgdir"/usr/share/licenses/$pkgname/LICENSE
 }

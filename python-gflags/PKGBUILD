@@ -2,27 +2,27 @@
 
 pkgname=python-gflags
 pkgver=3.1.2
-pkgrel=8
+pkgrel=9
 pkgdesc="Commandline flags module for Python"
 arch=('any')
 url="https://github.com/google/python-gflags"
-license=('BSD')
-depends=('python')
-makedepends=('python-setuptools')
+license=('BSD-3-Clause')
+depends=('python' 'python-six')
+makedepends=('python-setuptools' 'python-build' 'python-installer' 'python-wheel')
 source=("${pkgname}-${pkgver}.tar.gz::https://github.com/google/${pkgname}/archive/${pkgver}.tar.gz")
 sha256sums=('f1692c79ccf4a55d13895dcd195f0db1ebd55c71024b431ec953703b38d73f96')
 
 build() {
     cd ${pkgname}-${pkgver}
-    python setup.py build
+    python -m build --wheel --no-isolation
 }
 
 package() {
   cd ${pkgname}-${pkgver}
-  python setup.py install --root="${pkgdir}"
+  python -m installer --destdir="$pkgdir" dist/*.whl
   chmod +x "${pkgdir}"/usr/bin/gflags2man.py
-  #chmod +r "${pkgdir}"/* -R
-  #install -dm755 "${pkgdir}"/usr/share/licenses/${pkgname}
+  # chmod +r "${pkgdir}"/* -R
+  # install -dm755 "${pkgdir}"/usr/share/licenses/${pkgname}
   install -Dm644 AUTHORS "${pkgdir}"/usr/share/licenses/${pkgname}/AUTHORS
   install -Dm644 COPYING "${pkgdir}"/usr/share/licenses/${pkgname}/COPYING
 }

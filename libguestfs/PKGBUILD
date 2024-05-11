@@ -7,7 +7,7 @@
 
 pkgname=libguestfs
 pkgver=1.52.0
-pkgrel=1
+pkgrel=5
 pkgdesc="Access and modify virtual machine disk images"
 arch=(loong64 x86_64)
 url="https://libguestfs.org/"
@@ -100,7 +100,7 @@ makedepends=(
   vala
 )
 checkdepends=(
-  linux
+  linux-lts  # test against LTS kernel: https://github.com/libguestfs/libguestfs/issues/139
   ruby-test-unit
 )
 optdepends=(
@@ -119,18 +119,24 @@ backup=(etc/libguestfs-tools.conf)
 source=(
   https://download.libguestfs.org/${pkgver%.*}-stable/$pkgname-$pkgver.tar.gz{,.sig}
   $pkgname-1.48.1-disable_php_tests.patch
+  $pkgname-1.52.0-fix_btrfs_tests.patch::https://github.com/libguestfs/libguestfs/commit/7211aac047a10457650dad1da02383cfb8d24abb.patch
 )
 sha512sums=('48dfaabb6b371ab3476b42310d363addf2fd1dfe43876be3bc984953f6919a30c7de13ef235d83fdd39117d71aa6bbfb5fbb645c1b17bc3031798a2a2b3df9d7'
             'SKIP'
-            'd59cad07e275f1fa5e82448993db5b3a6dc8cdd1fc97a8839ef0403ad3f1753a5d13df27b184d6c73fa8dda8bd75e63ad68aaad26001986682d5bc7eeb58273a')
+            'd59cad07e275f1fa5e82448993db5b3a6dc8cdd1fc97a8839ef0403ad3f1753a5d13df27b184d6c73fa8dda8bd75e63ad68aaad26001986682d5bc7eeb58273a'
+            'ebb2b4e7232a79706730111445de99dec19d1a07ec573efc5ec1df5d05ca45ab709694d725cd527351b60d18f72729ab28d2126a182cca8d50a5963b5da7b25a')
 b2sums=('febcdb074902a9f92014477c423e70da065b336603e63fa4334d46b58158cb63c0c64d610d09d038aa9c7825de3590515ea75ffd789c51faca31cab50c973e2f'
         'SKIP'
-        '2f7c429875d80b2b3a70286f83764ce6ed8be86055232fc059ab55ebf8393f9d29a2241401c7ab55af7ba9180ea85909647fe06ca51880f93bc66b488bcec78c')
+        '2f7c429875d80b2b3a70286f83764ce6ed8be86055232fc059ab55ebf8393f9d29a2241401c7ab55af7ba9180ea85909647fe06ca51880f93bc66b488bcec78c'
+        '54fcf965e915d151d4ef82a791b8fcc09b2926a41304c9d3a8d266153cd0c010332da288176b411ac412cf79e40b4a5d55b8f3799287cd5784d6eff08e775a3f')
 validpgpkeys=('F7774FB1AD074A7E8C8767EA91738F73E1B768A0') # Richard W.M. Jones <rjones@redhat.com>
 
 prepare() {
   # disable php tests, as missing arginfo definition makes them fail: https://github.com/libguestfs/libguestfs/issues/78
   patch -Np1 -d $pkgname-$pkgver -i ../$pkgname-1.48.1-disable_php_tests.patch
+
+  # fix issues with btrfs related tests: https://github.com/libguestfs/libguestfs/issues/136
+  patch -Np1 -d $pkgname-$pkgver -i ../$pkgname-1.52.0-fix_btrfs_tests.patch
 
   cd $pkgname-$pkgver
   autoreconf -fiv
@@ -154,7 +160,8 @@ build() {
 }
 
 check() {
-  LIBGUESTFS_TRACE=1 make -k check -C $pkgname-$pkgver
+  export SKIP_TEST_DISCARD_PL=1  # https://github.com/libguestfs/libguestfs/issues/140
+  LIBGUESTFS_DEBUG=1 LIBGUESTFS_TRACE=1 make -k check -C $pkgname-$pkgver
 }
 
 package() {

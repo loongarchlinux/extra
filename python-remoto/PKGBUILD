@@ -4,34 +4,65 @@
 pkgname=python-remoto
 _pkgbase="${pkgname//python-/}"
 pkgver=1.2.1
-pkgrel=3
+pkgrel=5
 pkgdesc="A very simplistic remote-command-executor using connections to hosts"
 arch=('any')
 url="https://github.com/alfredodeza/${_pkgbase}"
 license=('MIT')
 depends=('python' 'python-execnet')
-makedepends=('git' 'python' 'python-execnet' 'python-setuptools')
-checkdepends=('python-pytest' 'python-mock')
-source=("https://files.pythonhosted.org/packages/source/${_pkgbase:0:1}/${_pkgbase}/${_pkgbase}-${pkgver}.tar.gz")
-sha256sums=('3bad101711b28bb6d339b8e04f835b3645d81735c1f3d496bad8004cd667ade8')
+makedepends=(
+  'python-build'
+  'python-installer'
+  'python-setuptools'
+  'python-wheel'
+  )
+checkdepends=('python-pytest')
+source=(
+  $pkgname-$pkgver.tar.gz::$url/archive/refs/tags/$pkgver.tar.gz
+  $pkgname-1.2.1-remove_mock.patch
+)
+sha512sums=('ec7ade624f82e7e8d13b4ca32db40dfb937b41800b921140b1a43347a90c914f567ef60d6a44deb216413712284caa8778316f2e7424925fba64cd8b423cf775'
+            '33ae22e1e3b35bcc917372fe6470a08096b62bd35923ea22b2cb89a4d34a8ecd59b5443195abb70e5c320f2f0dc2f2f933267b8cad3ea337d9ebf091ed5750c0')
+b2sums=('5e28208fc61c8d330295cb43e6e736b79b542205bf4201f69a5de6451b0fcc76989c92eb4c0e2450c5eed8dd2540cb6056f221143f68a59045815b0b0421838b'
+        '4c1cceb52bbaa7008c1a98aae6c577fb7c0981634afe88330f74c311bd5a4358753096ce4125ce1227a35b7f2dd91b4919508563910cd5a44c02ed406198ad7e')
 
 prepare() {
-  cd "${srcdir}/${_pkgbase}-${pkgver}"
-  :
+  patch -Np1 -d ${_pkgbase}-${pkgver} -i ../$pkgname-1.2.1-remove_mock.patch
 }
 
 build() {
-  cd "${srcdir}/${_pkgbase}-${pkgver}"
-  python setup.py build
+  cd "${_pkgbase}-${pkgver}"
+  python -m build --wheel --no-isolation
 }
 
 check() {
-  cd "${srcdir}/${_pkgbase}-${pkgver}"
-  py.test -v remoto/tests
+  local pytest_options=(
+    -vv
+    # broken with pytest 8
+    --deselect remoto/tests/test_process.py::TestExtendPath::test_no_environment_sets_path
+    --deselect remoto/tests/test_process.py::TestExtendPath::test_custom_path_does_not_get_overridden
+    --deselect remoto/tests/test_process.py::TestExtendPath::test_custom_env_var_extends_existing_env
+    --deselect remoto/tests/test_util.py::TestRemoteError::test_exception_name
+    --deselect remoto/tests/test_util.py::TestRemoteError::test_exception_line
+    --deselect remoto/tests/backends/test_backends.py::TestLegacyRemoteModule::test_importing_it_sets_it_as_remote_module
+    --deselect remoto/tests/backends/test_backends.py::TestLegacyRemoteModule::test_importing_it_returns_the_module_too
+    --deselect remoto/tests/backends/test_backends.py::TestLegacyRemoteModule::test_execute_the_remote_module_send
+    --deselect remoto/tests/backends/test_backends.py::TestLegacyRemoteModule::test_execute_the_remote_module_receive
+    --deselect remoto/tests/backends/test_backends.py::TestLegacyRemoteModule::test_has_connection
+    --deselect remoto/tests/backends/test_backends.py::TestLegacyModuleExecuteArgs::test_single_argument
+    --deselect remoto/tests/backends/test_backends.py::TestLegacyModuleExecuteArgs::test_more_than_one_argument
+    --deselect remoto/tests/backends/test_backends.py::TestLegacyModuleExecuteArgs::test_dictionary_as_argument
+    --deselect remoto/tests/backends/test_backends.py::TestLegacyModuleExecuteGetAttr::test_raise_attribute_error
+    --deselect remoto/tests/backends/test_backends.py::TestDetectSudo::test_does_not_need_sudo
+    --deselect remoto/tests/backends/test_backends.py::TestDetectSudo::test_does_need_sudo
+  )
+
+  cd "${_pkgbase}-${pkgver}"
+  pytest "${pytest_options[@]}"
 }
 
 package() {
-  cd "${srcdir}/${_pkgbase}-${pkgver}"
-  python setup.py install --root="${pkgdir}" --optimize=1
+  cd "${_pkgbase}-${pkgver}"
+  python -m installer --destdir="$pkgdir" dist/*.whl
   install -D -m644 LICENSE "${pkgdir}/usr/share/licenses/${pkgname}/LICENSE"
 }

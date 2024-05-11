@@ -2,25 +2,30 @@
 # Contributor: Mintsuki <mintsuki@protonmail.com>
 
 pkgname=limine
-pkgver=7.0.2
+pkgver=7.5.1
 pkgrel=1
 pkgdesc="An advanced, portable, multiprotocol bootloader"
 arch=('loong64' 'x86_64')
 url="https://limine-bootloader.org/"
 license=('BSD-2-Clause')
 depends=('glibc')
-makedepends=('nasm' 'mtools' 'llvm' 'lld' 'clang')
-source=("https://github.com/limine-bootloader/limine/releases/download/v${pkgver}/${pkgname}-${pkgver}.tar.xz")
-sha256sums=('fbd17039063e5746e441ebe9bb4cdfdb10c6f2ed76f2da1a53f9287576af4e4a')
+makedepends=('git' 'nasm' 'mtools' 'llvm' 'lld' 'clang')
+source=("git+https://github.com/limine-bootloader/limine.git#tag=v${pkgver}")
+sha256sums=('0cf82706d95d8cd3a950ced34d4106fd56d41092720278ce1ea6c17ab86adc0c')
+
+prepare() {
+	cd "${pkgname}"
+	./bootstrap
+}
 
 build() {
-	cd "${pkgname}-${pkgver}"
+	cd "${pkgname}"
 	./configure --prefix=/usr --enable-all TOOLCHAIN_FOR_TARGET=llvm
 	make
 }
 
 package() {
-	cd "${pkgname}-${pkgver}"
+	cd "${pkgname}"
   	make DESTDIR="${pkgdir}" install
 	install -Dm 644 COPYING "${pkgdir}/usr/share/licenses/${pkgname}/COPYING"
 }

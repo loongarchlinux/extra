@@ -3,8 +3,8 @@
 # Contributor: Matt Armand <marmand68 at gmail dot com>
 
 pkgname=rofi-rbw
-pkgver=1.3.0
-pkgrel=3
+pkgver=1.4.2
+pkgrel=1
 pkgdesc='Rofi frontend for Bitwarden'
 arch=('any')
 url=https://github.com/fdw/rofi-rbw
@@ -28,7 +28,7 @@ optdepends=(
   'ydotool: for a generic typer'
 )
 source=("git+$url.git#tag=$pkgver")
-b2sums=('SKIP')
+b2sums=('d8888fe0679576f6b8b3f20d362beb32dfeb2ff35d52c67f254a890122a6d7a3e46e73187a89c315555497e345b09abd30ac4a72d1e0f6026202ceb4047d5263')
 
 build() {
   cd $pkgname
@@ -39,5 +39,10 @@ package() {
   cd $pkgname
   python -m installer --destdir="$pkgdir" dist/*.whl
   install -Dm644 -t "$pkgdir"/usr/share/man/man1 docs/$pkgname.1
-  install -Dm644 -t "$pkgdir"/usr/share/licenses/$pkgname LICENSE
+
+  # Symlink license file
+  local site_packages=$(python -c "import site; print(site.getsitepackages()[0])")
+  install -d "$pkgdir"/usr/share/licenses/$pkgname
+  ln -s "$site_packages"/"${pkgname//-/_}"-$pkgver.dist-info/LICENSE \
+    "$pkgdir"/usr/share/licenses/$pkgname/LICENSE
 }

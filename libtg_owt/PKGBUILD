@@ -4,23 +4,25 @@
 pkgname=libtg_owt
 # It seems the currently desired version can be gotten from
 # https://github.com/telegramdesktop/tdesktop/blob/dev/Telegram/build/docker/centos_env/Dockerfile
-_commit=592b14d13bf9103226e90a83571e24c49f6bfdcd
-pkgver=0.git24.${_commit:0:7}
+_commit=afd9d5d31798d3eacf9ed6c30601e91d0f1e4d60
+pkgver=0.git25.${_commit:0:7}
 pkgrel=1
 pkgdesc='WebRTC library'
 arch=('loong64' 'x86_64')
 url='https://github.com/desktop-app/tg_owt'
 license=('BSD')
 # libdrm is dynamically loaded via dlopen
-depends=('libdrm')
+depends=('libdrm' 'libxdamage')
 makedepends=('git' 'ninja' 'unzip' 'cmake' 'protobuf' 'libxrandr' 'libxcomposite' 'openssl' 'glibc'
              'ffmpeg' 'libva' 'opus' 'yasm' 'libjpeg-turbo' 'pipewire' 'libxtst' 'libepoxy')
 options=('staticlibs')
-source=("tg_owt::git+${url}.git#commit=${_commit}"
-        "libvpx::git+https://chromium.googlesource.com/webm/libvpx.git"
-        "libyuv::git+https://chromium.googlesource.com/libyuv/libyuv.git"
-        "pipewire::git+https://github.com/PipeWire/pipewire.git")
-b2sums=('SKIP'
+source=("git+${url}.git#commit=${_commit}"
+        "git+https://chromium.googlesource.com/libyuv/libyuv/"
+        "git+https://github.com/google/crc32c"
+        "git+https://github.com/abseil/abseil-cpp"
+        "git+https://github.com/cisco/libsrtp")
+b2sums=('b9f1270b273f87bac80c481599a001b67b47aff6127977e21e5cc16fc70312f771accf7d49d1b55706442d04df5b76c53e374c488926cccb47e499aeb9b13f3a'
+        'SKIP'
         'SKIP'
         'SKIP'
         'SKIP')
@@ -28,9 +30,10 @@ b2sums=('SKIP'
 prepare() {
   cd tg_owt
   git submodule init
-  git config submodule.src/third_party/libvpx/source/libvpx.url "$srcdir"/libvpx
-  git config submodule.src/third_party/libyuv.url "$srcdir"/libyuv
-  git config submodule.src/third_party/pipewire.url "$srcdir"/pipewire
+  git submodule set-url src/third_party/libyuv "$srcdir"/libyuv
+  git submodule set-url src/third_party/crc32c/src "$srcdir"/crc32c
+  git submodule set-url src/third_party/abseil-cpp "$srcdir"/abseil-cpp
+  git submodule set-url src/third_party/libsrtp "$srcdir"/libsrtp
   git -c protocol.file.allow=always submodule update
 }
 

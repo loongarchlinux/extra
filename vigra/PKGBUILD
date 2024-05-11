@@ -3,56 +3,115 @@
 # Contributor: AndyRTR <andyrtr@archlinux.org>
 # Contributor: Lukas Jirkovsky <l.jirkovsky@gmail.com>
 
-pkgname=vigra
+pkgbase=vigra
+pkgname=(vigra python-vigra)
 pkgver=1.11.2
-pkgrel=1
+pkgrel=4
 pkgdesc='Computer vision library'
 arch=(loong64 x86_64)
 url="https://ukoethe.github.io/$pkgname"
 _url="https://github.com/ukoethe/$pkgname"
 license=(MIT)
-depends=(fftw
-         gcc-libs
-         hdf5
-         libpng
-         libtiff
-         openexr
-         sh)
-makedepends=(boost
-             cmake
-             python-numpy)
+makedepends=(
+  boost
+  cmake
+  fftw
+  hdf5
+  imath
+  libjpeg-turbo
+  libpng
+  libtiff
+  openexr
+  python-h5py
+  python-matplotlib
+  python-numpy
+  python-scipy
+  zlib
+)
 checkdepends=(python-nose)
-optdepends=('python: for python bindings'
-            'boost-libs: for python bindings')
 _pkgver="Version-${pkgver//./-}"
 _archive="$pkgname-$_pkgver"
 source=("$_url/archive/$_pkgver/$_archive.tar.gz"
-        vigra-openexr3.patch)
+        vigra-openexr3.patch
+        $pkgname-1.11.2-remove_imp.patch)
 sha256sums=('4841936f5c3c137611ec782e293d961df29d3b5b70ade8cb711374de0f4cb5d3'
-            '2572717e39f916c7c463b8f49306b683c5923906be2721f7da181c58b3a2b34b')
+            '2572717e39f916c7c463b8f49306b683c5923906be2721f7da181c58b3a2b34b'
+            '496da081edcd2bb709c6c9f523b328170e8a5e0f85712d41a7faad61af5ede65')
 
 prepare() {
-	cd "$_archive"
-	patch -p1 -i ../vigra-openexr3.patch
+  cd "$_archive"
+  patch -p1 -i ../vigra-openexr3.patch
+  # remove the use of the imp module: https://github.com/ukoethe/vigra/pull/560
+  patch -p1 -i ../$pkgname-1.11.2-remove_imp.patch
 }
 
 build() {
-	cmake -B build -S "$_archive" \
-		-DCMAKE_INSTALL_PREFIX=/usr \
-		-DPYTHON_EXECUTABLE=/usr/bin/python \
-		-DDOCINSTALL=share/doc \
-		-DWITH_OPENEXR=true \
-		-DWITH_VIGRANUMPY=1
-		#-DBUILD_DOCS=OFF \
-	make -C build
+  cmake -B build -S "$_archive" \
+    -DCMAKE_INSTALL_PREFIX=/usr \
+    -DPYTHON_EXECUTABLE=/usr/bin/python \
+    -DDOCINSTALL=share/doc \
+    -DWITH_OPENEXR=true \
+    -DWITH_VIGRANUMPY=1
+    #-DBUILD_DOCS=OFF \
+  make -C build
 }
 
 check() {
-	# https://github.com/ukoethe/vigra/issues/491
-	make -C build -j1 -k check || echo "Tests failed"
+  # https://github.com/ukoethe/vigra/issues/491
+  make -C build -j1 -k check || echo "Tests failed"
 }
 
-package() {
-	  make -C build DESTDIR="$pkgdir" install
-	  install -Dm0644 -t "$pkgdir/usr/share/licenses/$pkgname/" "${_archive}/LICENSE.txt"
+_pick() {
+  local p="$1" f d; shift
+  for f; do
+    d="$srcdir/$p/${f#$pkgdir/}"
+    mkdir -p "$(dirname "$d")"
+    mv "$f" "$d"
+    rmdir -p --ignore-fail-on-non-empty "$(dirname "$f")"
+  done
+}
+
+package_vigra() {
+  depends=(
+    gcc-libs
+    glibc
+    hdf5
+    imath
+    libjpeg-turbo
+    libpng
+    libtiff
+    openexr
+    zlib
+  )
+  optdepends=(
+    'python: for vigra-config'
+    'python-vigra: for Python bindings'
+  )
+
+  make -C build DESTDIR="$pkgdir" install
+  install -Dm0644 -t "$pkgdir/usr/share/licenses/$pkgname/" "${_archive}/LICENSE.txt"
+
+  cd "$pkgdir"
+  _pick python-$pkgbase usr/lib/python*
+  _pick python-$pkgbase usr/lib/vigranumpy
+}
+
+package_python-vigra() {
+  pkgdesc+=' - Python bindings'
+  depends=(
+    boost-libs
+    fftw
+    gcc-libs
+    glibc
+    hdf5
+    python
+    python-h5py
+    python-matplotlib
+    python-numpy
+    python-scipy
+    vigra
+  )
+
+  mv -v $pkgname/* "$pkgdir"
+  install -Dm0644 -t "$pkgdir/usr/share/licenses/$pkgname/" "$pkgbase-Version-${pkgver//./-}/LICENSE.txt"
 }

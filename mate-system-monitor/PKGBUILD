@@ -3,7 +3,7 @@
 # Contributor: Martin Wimpress <code@flexion.org>
 
 pkgname=mate-system-monitor
-pkgver=1.26.2
+pkgver=1.28.1
 pkgrel=1
 pkgdesc="A system monitor for MATE"
 url="https://mate-desktop.org"
@@ -15,7 +15,7 @@ conflicts=('mate-system-monitor-gtk3')
 replaces=('mate-system-monitor-gtk3')
 groups=('mate-extra')
 source=("https://pub.mate-desktop.org/releases/${pkgver%.*}/${pkgname}-${pkgver}.tar.xz")
-sha256sums=('be6d97dec68f5f36bde12f8acaf1ac5642d239a5d24161a82fff5064f4502544')
+sha256sums=('42d663d6b90fb5361ebc13f6547983d6f1e2ac75dc2ae4f1cac6ea6329965a25')
 
 build() {
 	cd "${pkgname}-${pkgver}"

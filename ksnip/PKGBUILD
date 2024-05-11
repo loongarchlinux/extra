@@ -3,19 +3,20 @@
 
 pkgname=ksnip
 pkgver=1.10.1
-pkgrel=2
+pkgrel=4
 pkgdesc='Qt-based screenshot tool that provides many annotation features'
 arch=('loong64' 'x86_64')
 url='https://github.com/ksnip/ksnip'
 license=('GPL2')
 depends=('hicolor-icon-theme' 'kimageannotator-qt5' 'qt5-x11extras')
 makedepends=('cmake' 'extra-cmake-modules' 'ninja' 'qt5-tools')
-source=("https://github.com/ksnip/$pkgname/archive/v$pkgver/$pkgname-$pkgver.tar.gz")
-sha256sums=('41fa6a54b0a88095ccdf7f8f3a96617e91fb15dcedae2aadaf2ee24677e9a88c')
+source=("https://github.com/ksnip/$pkgname/archive/v$pkgver/$pkgname-$pkgver.tar.gz"
+         https://github.com/ksnip/ksnip/commit/76f4b381.patch)
+sha256sums=('41fa6a54b0a88095ccdf7f8f3a96617e91fb15dcedae2aadaf2ee24677e9a88c'
+            '08497204605fec9d4804bbe8d33b0686de64d4eb6afcb57d17ec6604db4e7982')
 
 prepare() {
-  cd $pkgname-$pkgver
-  sed -e 's|kColorPicker::kColorPicker|kColorPicker::kColorPicker-Qt5|g' -i src/CMakeLists.txt # Fix build with kcolorpicker 0.3
+  patch -d $pkgname-$pkgver -p1 < 76f4b381.patch # Fix build with kimageannotator 0.7.1
 }
 
 build() {

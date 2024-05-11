@@ -5,7 +5,7 @@
 
 pkgname=audacious-plugins
 pkgver=4.3.1
-pkgrel=2
+pkgrel=3
 pkgdesc="Plugins for Audacious"
 arch=('loong64' 'x86_64')
 url="https://audacious-media-player.org/"
@@ -15,15 +15,25 @@ depends=('alsa-lib' 'curl' 'dbus-glib' 'faad2' 'ffmpeg' 'flac' 'fluidsynth'
          'libmtp' 'libpulse' 'libnotify' 'libsamplerate' 'libsidplayfp'
          'libvorbis' 'lirc' 'mpg123' 'neon' 'wavpack' 'libbs2b' 'libopenmpt'
          'libcddb' 'qt5-x11extras' 'opusfile' 'libpipewire')
-makedepends=("audacious>=$pkgver" 'meson')
+makedepends=("audacious>=$pkgver" 'meson' 'python-packaging')
 source=(https://distfiles.audacious-media-player.org/$pkgname-$pkgver.tar.bz2
+        $pkgname-replace-xmlParseMemory.patch::https://github.com/audacious-media-player/audacious-plugins/commit/c9246b1c8b09.patch
+        $pkgname-fix-xml-parsing.patch::https://github.com/audacious-media-player/audacious-plugins/commit/5103ba0f504f.patch
         sidplay-rom-paths.patch)
 sha256sums=('2dea26e3af583a2d684df240b27b2b2932bcd653df4db500a85f4fe5d5fdc8a6'
+            '2a412c5eafa9cd982cc281b21e3525dbbaecdedeba6181a2f144832c1c273675'
+            '51e0044dc099fbfd7faff15745ad09bc0e4b4da7be9689495669ff3fc6458ae7'
             'c32cd36f75dd18db082f9b9447f1c0982279703b9d648f5695295ff25c9b678d')
 
 prepare() {
-  # Set paths for ROM files from vice for sidplay
-  patch -d $pkgname-$pkgver -Np1 -i ../sidplay-rom-paths.patch
+  cd $pkgname-$pkgver
+
+  # https://gitlab.archlinux.org/archlinux/packaging/packages/audacious-plugins/-/issues/1
+  patch -Np1 -i ../$pkgname-replace-xmlParseMemory.patch
+  patch -Np1 -i ../$pkgname-fix-xml-parsing.patch
+
+  # set paths for ROM files from vice for sidplay
+  patch -Np1 -i ../sidplay-rom-paths.patch
 }
 
 build() {

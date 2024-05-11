@@ -3,8 +3,8 @@
 # Contributor: Charles Mauch <cmauch@gmail.com>
 
 pkgname=perl-mime-types
-pkgver=2.24
-pkgrel=2
+pkgver=2.26
+pkgrel=1
 pkgdesc="Perl/CPAN Module MIME::Types : Information and processing MIME types"
 arch=('any')
 url="https://search.cpan.org/dist/MIME-Types/"
@@ -12,7 +12,7 @@ license=('PerlArtistic')
 depends=('perl')
 options=('!emptydirs')
 source=("https://cpan.metacpan.org/authors/id/M/MA/MARKOV/MIME-Types-$pkgver.tar.gz")
-sha512sums=('5f1ba7b461eb18438b7e1bcc49291d0a506d937f0020f2a8b17594e4de626110f8d4b4a767d78b491ae788b6a6ea531d8ce2c2245cc614700ac8fa6d320d2bd7')
+sha512sums=('cde3a8c6cbde16143732cf2ac4d648eff167917970357daf0162370cbba375b2aa546af472a73b2a4b26086919ddcc49bd9da999251946a40aee8abb60af2d75')
 
 build() {
   cd MIME-Types-$pkgver

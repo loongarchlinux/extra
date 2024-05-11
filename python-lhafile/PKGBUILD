@@ -3,23 +3,22 @@
 
 pkgname=python-lhafile
 pkgver=0.3.0
-pkgrel=3
+pkgrel=4
 pkgdesc='LHA archive support for Python'
 arch=('loong64' 'x86_64')
 url='https://github.com/FrodeSolheim/python-lhafile/'
-license=('BSD')
+license=('BSD-3-Clause')
 depends=('python')
-makedepends=('python-setuptools')
+makedepends=('python-build' 'python-installer' 'python-setuptools' 'python-wheel')
 source=("https://github.com/FrodeSolheim/python-lhafile/archive/v${pkgver}/${pkgname}-${pkgver}.tar.gz")
 sha256sums=('5565641820813c76c74f2199f19f6ee0e3ae1e1c14de1a3a4ea3602f9094cd29')
 
 build() {
     cd "${pkgname}-${pkgver}"
-    python setup.py build
+    python -m build --wheel --no-isolation
 }
 
 package() {
-    cd "${pkgname}-${pkgver}"
-    python setup.py install --root="$pkgdir" --skip-build --optimize='1'
-    install -D -m644 COPYING.txt "${pkgdir}/usr/share/licenses/${pkgname}/LICENSE"
+    python -m installer --destdir="$pkgdir" "${pkgname}-${pkgver}/dist"/*.whl
+    install -D -m644 "${pkgname}-${pkgver}/COPYING.txt" "${pkgdir}/usr/share/licenses/${pkgname}/LICENSE"
 }

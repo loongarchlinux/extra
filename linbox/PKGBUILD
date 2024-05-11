@@ -2,30 +2,50 @@
 
 pkgname=linbox
 pkgver=1.7.0
-pkgrel=1
+pkgrel=2
 pkgdesc='A template library for exact, high-performance linear algebra computation with dense, sparse, and structured matrices over the integers and over finite fields'
 arch=(loong64 x86_64)
 url='https://linalg.org/'
-license=(LGPL)
-depends=(fflas-ffpack)
-makedepends=(m4rie flint iml fplll)
-source=(https://github.com/linbox-team/linbox/releases/download/v$pkgver/$pkgname-$pkgver.tar.gz)
-sha256sums=('6d2159fd395be0298362dd37f6c696676237bc8e2757341fbc46520e3b466bcc')
+license=(GPL-2.0-or-later
+         LGPL-2.1-or-later)
+depends=(fflas-ffpack
+         gcc-libs
+         glibc
+         ntl
+         sh)
+makedepends=(iml
+             flint
+             fplll
+             git
+             m4rie)
+source=(git+https://github.com/linbox-team/linbox#tag=v$pkgver)
+sha256sums=('e9ffe8860c687e45b3351bf10261e5ba97090b43b5cbd6ee33d9743f39400ed9')
+
+prepare() {
+  cd $pkgname
+  git cherry-pick -n 79acfcbbd0411b79b94ca1f61fc582bab748316d \
+                     b8f2d4ccdc0af4418d14f72caf6c4d01969092a3
+  ./autogen.sh
+}
 
 build() {
-  cd $pkgname-$pkgver
+  cd $pkgname
 
-  ./configure --prefix=/usr --enable-sage --with-fplll=/usr
+  export CXXFLAGS="${CXXFLAGS/_FORTIFY_SOURCE=3/_FORTIFY_SOURCE=2}" # https://github.com/linbox-team/linbox/issues/304
+  ./configure \
+    --prefix=/usr \
+    --enable-sage \
+    --with-fplll=/usr
   sed -i -e 's/ -shared / -Wl,-O1,--as-needed\0/g' libtool # fix overlinking
   make
 }
 
 check() {
-  cd $pkgname-$pkgver
+  cd $pkgname
   make check
 }
 
 package() {
-  cd $pkgname-$pkgver
+  cd $pkgname
   make DESTDIR="$pkgdir" install
 }

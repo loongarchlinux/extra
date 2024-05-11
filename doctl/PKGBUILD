@@ -4,7 +4,7 @@
 # Contributor: Bennett Piater <bennett at piater dot name>
 
 pkgname=doctl
-pkgver=1.104.0
+pkgver=1.106.0
 pkgrel=1
 pkgdesc='The official command line interface for the DigitalOcean API'
 url='https://github.com/digitalocean/doctl'
@@ -12,17 +12,25 @@ arch=('loong64' 'x86_64')
 license=('Apache-2.0')
 depends=('glibc')
 makedepends=('go')
+options=('!lto')
 source=(https://github.com/digitalocean/${pkgname}/archive/v${pkgver}/${pkgname}-${pkgver}.tar.gz)
-sha256sums=('2a9827494c730cf663ebdb6f8b1e4f294366cf847e32ee0d9d274af3bac4bc1b')
-b2sums=('b3aa7d9064ca7d8e4cf30557d8ca75143117d11df3bc82a1cc9a70d4624640f3dc84cbc02dc6abf6c464236a589f50e22b2ac0c08ecf4fc1f6dd9e6362e3155e')
+sha256sums=('d6149354d3be1800a8fa428c3702369c79afc196f4165c453c96ec3b6df2eb31')
+b2sums=('f9bccc49bea841341e70051b024b0db64fac7f73d94c4ca5f4dae9a6a6732a0d75ffa379e35bb37b3f6c4e0b46f456d2ffa5ae3d34eda52224e64714fb2df0df')
 
 build() {
   cd ${pkgname}-${pkgver}
+
+  export CGO_CPPFLAGS="${CPPFLAGS}"
+  export CGO_CFLAGS="${CFLAGS}"
+  export CGO_CXXFLAGS="${CXXFLAGS}"
+  export CGO_LDFLAGS="${LDFLAGS}"
+  export CGO_REQUIRED="1"
+
   go build \
-    -trimpath \
     -buildmode=pie \
     -mod=readonly \
-    -ldflags "-linkmode external -extldflags \"${LDFLAGS}\"
+    -modcacherw \
+    -ldflags "-compressdwarf=false -linkmode=external
       -X github.com/digitalocean/doctl.Major=$(echo $pkgver | cut -d. -f1)
       -X github.com/digitalocean/doctl.Minor=$(echo $pkgver | cut -d. -f2)
       -X github.com/digitalocean/doctl.Patch=$(echo $pkgver | cut -d. -f3)

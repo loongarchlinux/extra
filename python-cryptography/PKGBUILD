@@ -1,33 +1,40 @@
 # Maintainer: Felix Yan <felixonmars@archlinux.org>
 
 pkgname=python-cryptography
-pkgver=41.0.7
-_commit=4054596afc6f2b6cfcc54f56c35c34e0e429cb66
+pkgver=42.0.6
 pkgrel=1
 pkgdesc="A package designed to expose cryptographic recipes and primitives to Python developers"
 arch=('loong64' 'x86_64')
 license=('Apache')
-url="https://pypi.python.org/pypi/cryptography"
+url="https://github.com/pyca/cryptography"
 depends=('python-cffi')
-makedepends=('git' 'python-setuptools-rust' 'llvm' 'clang' 'lld')
+makedepends=('git' 'python-setuptools-rust' 'llvm' 'clang' 'lld' 'python-build' 'python-installer' 'python-wheel')
 checkdepends=('python-pytest' 'python-pytest-subtests' 'python-iso8601' 'python-pretend'
-              'python-hypothesis' 'python-pytz' 'python-pytest-benchmark')
-source=("git+https://github.com/pyca/cryptography.git#commit=$_commit")
-sha512sums=('SKIP')
+              'python-hypothesis' 'python-pytz' 'python-certifi')
+source=("git+https://github.com/pyca/cryptography.git#tag=$pkgver")
+sha512sums=('89b5e3ceffe9d587fc107ff32bce860cd722bf089beec13826f79e3b3799dd4c41d0f074f73c7a43a44b2d58eed6ef0e424d3a8121e2216bd4cf22f737ccb79e')
+
+prepare() {
+  cd cryptography
+  # Drop all benchmark tests, this means we don't have to checkdepends on pytest-benchmark nor are
+  # benchmark tests interesting for a distribution.
+  rm -rf tests/bench
+}
 
 build() {
   cd cryptography
   echo $RUSTFLAGS
   # https://github.com/pyca/cryptography/issues/9023
-  CC=clang RUSTFLAGS+="-Clinker-plugin-lto -Clinker=clang -Clink-arg=-fuse-ld=lld" python setup.py build
+  CC=clang RUSTFLAGS+="-Clinker-plugin-lto -Clinker=clang -Clink-arg=-fuse-ld=lld" python -m build --wheel --no-isolation
 }
 
 check() {
   cd cryptography
-  PYTHONPATH="$PWD/build/lib.linux-$CARCH-cpython-311:$PWD/vectors" pytest
+  local python_version=$(python -c 'import sys; print("".join(map(str, sys.version_info[:2])))')
+  PYTHONPATH="$PWD/build/lib.linux-$CARCH-cpython-$python_version:$PWD/vectors" pytest -o addopts=''
 }
 
 package() {
   cd cryptography
-  python setup.py install --root="$pkgdir" --optimize=1 --skip-build
+  python -m installer --destdir="$pkgdir" dist/*.whl
 }

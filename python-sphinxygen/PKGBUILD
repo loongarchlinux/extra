@@ -3,7 +3,7 @@
 _name=sphinxygen
 pkgname=python-sphinxygen
 pkgver=1.0.4
-pkgrel=1
+pkgrel=2
 pkgdesc="A script to read Doxygen XML output and emit ReST for Sphinx"
 arch=(any)
 url="https://gitlab.com/drobilla/sphinxygen"

@@ -1,12 +1,14 @@
-# Maintainer: Jonas Witschel <diabonas@archlinux.org>
+# Maintainer:
 pkgname=python-tpm2-pytss
-pkgver=2.1.0
-_commit=d4cccb9e1164281455a3c05f4aab2e663133726b  # refs/tags/2.1.0
-pkgrel=2
+_name=${pkgname#python-}
+# NOTE: no trust path: https://github.com/tpm2-software/tpm2-pytss/issues/566
+pkgver=2.1.0.r40.70a4ccc
+_commit=70a4ccc850bd9dba05043a90f08f818a1860826c # refs/tags/2.1.1
+pkgrel=1
 pkgdesc='Python bindings for tpm2-tss'
 arch=(loong64 x86_64)
 url='https://github.com/tpm2-software/tpm2-pytss'
-license=(BSD)
+license=(BSD-2-Clause)
 depends=(
   glibc
   python
@@ -15,7 +17,6 @@ depends=(
   python-cryptography
   python-packaging
   python-yaml
-  tpm2-tss libtss2-esys.so libtss2-fapi.so libtss2-mu.so libtss2-rc.so libtss2-tctildr.so
 )
 makedepends=(
   git
@@ -25,6 +26,7 @@ makedepends=(
   python-setuptools
   python-setuptools-scm
   python-wheel
+  tpm2-tss
 )
 checkdepends=(
   python-pytest
@@ -32,24 +34,18 @@ checkdepends=(
   tpm2-tools
 )
 source=(
-  "git+$url.git#tag=$_commit?signed"
-  $pkgname-2.1.0-cryptography_renames.patch::https://github.com/tpm2-software/tpm2-pytss/commit/e4006e6066c015d9ed55befa9b98247fbdcafd7d.patch
+  "git+$url.git#tag=$_commit"
 )
-sha512sums=('SKIP'
-            '5168d36ccd4b0f7ba51ccc03111820650866d1aa3bc5fefaec601f94af979d887d77111eaa5869e27d918d77c6e414065e97d7656153a2873bb92c5405b8ac65')
+sha512sums=('SKIP')
 validpgpkeys=('5B482B8E3E19DA7C978E1D016DE2E9078E1F50C1') # William Roberts (Bill Roberts) <william.c.roberts@intel.com>
 
 pkgver() {
-  cd "${pkgname#python-}"
+  cd $_name
   git describe | sed 's/\([^-]*-\)g/r\1/;s/-/./g'
 }
 
-prepare() {
-  patch -Np1 -d "${pkgname#python-}" -i ../$pkgname-2.1.0-cryptography_renames.patch
-}
-
 build() {
-  cd "${pkgname#python-}"
+  cd $_name
   python -m build --wheel --no-isolation
 }
 
@@ -58,13 +54,17 @@ check() {
     -vv
   )
 
-  cd "${pkgname#python-}"
+  cd $_name
   local _python_version=$(python -c 'import sys; print("".join(map(str, sys.version_info[:2])))')
   PYTHONPATH="$PWD/build/lib.linux-$CARCH-cpython-$_python_version" pytest "${pytest_options[@]}"
 }
 
 package() {
-  cd "${pkgname#python-}"
+  depends+=(
+    tpm2-tss libtss2-esys.so libtss2-fapi.so libtss2-mu.so libtss2-rc.so libtss2-tctildr.so
+  )
+
+  cd $_name
   python -m installer --destdir="$pkgdir" dist/*.whl
   install -Dm644 LICENSE -t "$pkgdir/usr/share/licenses/$pkgname"
 }

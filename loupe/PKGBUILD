@@ -1,16 +1,19 @@
 # Maintainer: Fabian Bornschein <fabiscafe@archlinux.org>
 
 pkgname=loupe
-pkgver=45.3
+pkgver=46.2
 pkgrel=1
 pkgdesc="A simple image viewer for GNOME"
 arch=(loong64 x86_64)
 url="https://gitlab.gnome.org/GNOME/loupe"
-license=('GPL')
+license=('GPL-3.0-or-later')
 groups=('gnome')
 depends=(
   cairo
+  dconf
+  gcc-libs
   glib2
+  glibc
   glycin
   graphene
   gtk4
@@ -18,6 +21,7 @@ depends=(
   lcms2
   libadwaita
   libgweather-4
+  libseccomp
 )
 makedepends=(
   git
@@ -25,20 +29,17 @@ makedepends=(
   meson
   rust
 )
-_commit=5cc82d315635b7c2fe92410cfef258890f541a84  # tags/45.3^0
-source=("git+https://gitlab.gnome.org/GNOME/loupe.git#commit=$_commit")
-sha256sums=('SKIP')
+source=("git+$url.git?signed#tag=${pkgver/[a-z]/.&}")
+b2sums=('3b217f7cfcc3adadf41f0babd90b7f99c6916e384d77580431f3b945d8549bf99cad82c87a14d18f0c7095a928dab13bcb6dea42383e8a7d10ca0aab69161d0a')
+validpgpkeys=(
+  4587A0EE1EE5478AAB82C0A93BA28A5559F08EBD # Sophie Herold <sophieherold@gnome.org>
+)
 
 # Use LTO
 export CARGO_PROFILE_RELEASE_LTO=true CARGO_PROFILE_RELEASE_CODEGEN_UNITS=1
 
 # Use debug
 export CARGO_PROFILE_RELEASE_DEBUG=2
-
-pkgver() {
-  cd $pkgname
-  git describe --tags | sed -r 's/_/./;s/\.([a-z])/\1/;s/([a-z])\./\1/;s/[^-]*-g/r&/;s/-/+/g'
-}
 
 prepare() {
   cd $pkgname

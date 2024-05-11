@@ -4,17 +4,24 @@
 # Contributor: schuay <jakob.gruber@gmail.com>
 
 pkgname=puzzles
-pkgver=20230624
+pkgver=20240103
 pkgrel=1
-_commit=1d56527
+_commit=7a93ae5
 pkgdesc="Simon Tatham's Portable Puzzle Collection"
 arch=(loong64 x86_64)
 url='https://www.chiark.greenend.org.uk/~sgtatham/puzzles/'
 license=(MIT)
-depends=(gtk3)
-makedepends=(cmake imagemagick)
+depends=(cairo
+         gdk-pixbuf2
+         glib2
+         glibc
+         gtk3
+         pango)
+makedepends=(cmake
+             halibut
+             imagemagick)
 source=(https://www.chiark.greenend.org.uk/~sgtatham/puzzles/puzzles-$pkgver.$_commit.tar.gz)
-sha256sums=('924c3efd8ab0570c1619041bc6f22aaa8d601dbd32e875af8b9fdf3515e9ddf7')
+sha256sums=('d694ebb9217e2a5d70a93148698607aef6c3f69fa4fb53c66b93e95788ef8049')
 
 build() {
   cmake -B build -S puzzles-$pkgver.$_commit \
@@ -25,7 +32,5 @@ build() {
 
 package() {
   DESTDIR="$pkgdir" cmake --install build
-
   install -Dm644 puzzles-$pkgver.$_commit/LICENCE "$pkgdir"/usr/share/licenses/$pkgname/LICENSE
-  install -Dm644 puzzles-$pkgver.$_commit/html/*.html -t "$pkgdir"/usr/share/doc/$pkgname
 }

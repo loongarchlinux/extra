@@ -4,28 +4,28 @@
 
 pkgname=the_silver_searcher
 pkgver=2.2.0
-pkgrel=2
+pkgrel=3
 pkgdesc='Code searching tool similar to Ack, but faster'
 arch=('loong64' 'x86_64')
-url='https://github.com/ggreer/the_silver_searcher'
-license=('Apache')
-depends=('pcre' 'xz')
-makedepends=('git')
-source=("git+https://github.com/ggreer/$pkgname.git#tag=$pkgver")
-md5sums=('SKIP')
+# Using a fork of the_silver_searcher to get pcre2 support.
+# The last commit in ggreer/the_silver_searcher was in 2020.
+url='https://github.com/aswild/the_silver_searcher'
+license=(Apache-2.0)
+depends=(pcre2 xz)
+makedepends=(git)
+source=("git+$url#commit=7b571a8a94d0e22a06e3313cb0d9672b416fb2c1")
+b2sums=('SKIP')
 
 prepare() {
-  sed -i 's,configure,configure --prefix=/usr,' $pkgname/build.sh
+  cd $pkgname
+  sed -i 's,S -,S -fcommon -,' pgo.sh
+  sed -i 's,ure ",ure --prefix=/usr ",' build.sh
 }
 
 build() {
-  CFLAGS+=' -fcommon' # https://wiki.gentoo.org/wiki/Gcc_10_porting_notes/fno_common
-  ./$pkgname/build.sh
+  $pkgname/build.sh
 }
 
 package() {
   make -C $pkgname DESTDIR="$pkgdir" install
 }
-
-# getver: github.com/ggreer/the_silver_searcher
-# vim: ts=2 sw=2 et:

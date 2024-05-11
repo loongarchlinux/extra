@@ -1,0 +1,18 @@
+[Unit]
+Description=Prometheus exporter for PostgreSQL
+Requires=network-online.target
+After=network-online.target
+
+[Service]
+User=postgres_exporter
+Group=postgres_exporter
+Restart=on-failure
+EnvironmentFile=-/etc/conf.d/prometheus-postgres-exporter
+ExecStart=/usr/bin/prometheus-postgres-exporter $POSTGRES_EXPORTER_ARGS
+ExecReload=/bin/kill -HUP $MAINPID
+NoNewPrivileges=true
+ProtectHome=read-only
+ProtectSystem=strict
+
+[Install]
+WantedBy=multi-user.target

@@ -3,20 +3,23 @@
 # Maintainer: Orhun Parmaksız <orhun@archlinux.org>
 
 pkgname=eza
-pkgver=0.17.3
+pkgver=0.18.15
 pkgrel=1
 pkgdesc="A modern replacement for ls (community fork of exa)"
 url="https://github.com/eza-community/eza"
-arch=("loong64" "x86_64")
-license=("MIT")
-provides=('exa')
-replaces=('exa')
-conflicts=('exa')
-depends=('libgit2.so')
+arch=(loong64 x86_64)
+license=(MIT)
+provides=(exa)
+replaces=(exa)
+conflicts=(exa)
+depends=(gcc-libs # libgcc_s.so
+         glibc # libc.so libm.so
+         libgit2
+         zlib)
 makedepends=("cargo" "pandoc")
-source=("${pkgname}-${pkgver}.tar.gz::https://github.com/eza-community/eza/archive/v${pkgver}.tar.gz")
-sha256sums=('8facf4f39fed32b3562b70b2771a8ef3309efd68fd04685446a6df631f133cc9')
-b2sums=('2b5fc01f03f1d9f797112d58f8f95855d409885934f0120fc98d1c824c653d17574f36d31f5226026812913aa08e8d04f9032321e78a05a31eb03d1ef9ae2d06')
+source=("$url/archive/v$pkgver/$pkgname-$pkgver.tar.gz")
+sha256sums=('53c6ea67804dbaa330918f6ce62a1cff866a145b2395c606903c0d128dd8564f')
+b2sums=('515751316fadc656066609c99796b895773985524974fb25c9e6599d11f7927cfbe19fe3b8113f0b0bc1740da4887cf9991d919eb045649ccad558eb919c2b8b')
 
 prepare() {
   cd "${pkgname}-${pkgver}"
@@ -25,6 +28,7 @@ prepare() {
 
 build() {
   cd "${pkgname}-${pkgver}"
+  CFLAGS+=' -ffat-lto-objects'
   cargo build --frozen --release
   mkdir -p target/man
   for manpage in eza.1 eza_colors.5 eza_colors-explanation.5; do
@@ -40,6 +44,8 @@ check() {
 
 
 package() {
+  depends+=(libgit2.so
+            libz.so)
   cd "${pkgname}-${pkgver}"
   install -Dm755 "target/release/${pkgname}" "${pkgdir}/usr/bin/${pkgname}"
   ln -s eza "${pkgdir}/usr/bin/exa"

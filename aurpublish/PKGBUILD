@@ -7,31 +7,32 @@ _commit=3b978be48dde74eae86dff49d55ae29bb4a217ec
 
 pkgname=aurpublish
 pkgver=r43.g3b978be
-pkgrel=1
+pkgrel=2
 pkgdesc="PKGBUILD management/upload framework for the Arch User Repository"
 arch=('any')
-url="https://github.com/eli-schwartz/${pkgname}"
-license=('GPL')
-depends=('git' 'openssh')
-makedepends=('asciidoc')
-source=("git+${url}.git?signed#commit=${_commit}")
-sha512sums=('SKIP')
+url="https://github.com/eli-schwartz/$pkgname"
+license=(GPL-2.0-only)
+depends=(git
+         openssh
+         pacman)
+makedepends=(asciidoc)
+source=("git+$url.git?signed#commit=$_commit")
 validpgpkeys=('BD27B07A5EF45C2ADAF70E0484818A6819AF4A9B') # Eli Schwartz <eschwartz@archlinux.org>
+sha256sums=('bd67d53fb7a4959ed7c62943b02d47c820c01ec8a4888593027341a24aa72900')
 
 pkgver() {
     cd ${pkgname}
-
-    printf "r%s.g%s" "$(git rev-list --count HEAD)" "$(git rev-parse --short HEAD)"
+    printf "r%s.g%s" \
+        "$(git rev-list --count HEAD)" \
+        "$(git rev-parse --short HEAD)"
 }
 
 build() {
     cd ${pkgname}
-
     make PREFIX=/usr
 }
 
 package() {
     cd ${pkgname}
-
     make PREFIX=/usr DESTDIR="${pkgdir}" install
 }

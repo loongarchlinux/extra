@@ -1,0 +1,141 @@
+From 0e9343880171b81e515bc7bfebe8c6156330f9f2 Mon Sep 17 00:00:00 2001
+From: Dmitrii Kovanikov <kovanikov@gmail.com>
+Date: Sun, 14 Mar 2021 12:57:44 +0000
+Subject: [PATCH] Migrate to relude 1.0 (#541)
+
+* Migrate to relude 1.0
+
+* Fix more compilation errors
+---
+ summoner-cli/src/Summoner/CLI.hs            |  7 +++----
+ summoner-cli/src/Summoner/GhcVer.hs         |  2 --
+ summoner-cli/src/Summoner/License.hs        |  1 -
+ summoner-cli/src/Summoner/Project.hs        |  1 -
+ summoner-cli/src/Summoner/Question.hs       |  1 -
+ summoner-cli/src/Summoner/Settings.hs       |  2 --
+ summoner-cli/summoner.cabal                 | 10 +++----
+ summoner-cli/test/Test/TomlSpec.hs          |  1 -
+ 
+ 8 files changed, 6 insertions(+), 16 deletions(-)
+
+diff --git a/summoner-cli/src/Summoner/CLI.hs b/summoner-cli/src/Summoner/CLI.hs
+index 1bf1ae0a..a7506b66 100644
+--- a/summoner-cli/src/Summoner/CLI.hs
++++ b/summoner-cli/src/Summoner/CLI.hs
+@@ -42,7 +42,6 @@ import Options.Applicative (Parser, ParserInfo, ParserPrefs, argument, command,
+                             progDesc, short, showDefault, showHelpOnEmpty, strArgument, strOption,
+                             subparser, subparserInline, switch, value)
+ import Options.Applicative.Help.Chunk (stringChunk)
+-import Relude.Extra.Enum (universe)
+ import System.Directory (doesFileExist)
+ import System.Info (os)
+ import Validation (Validation (..))
+@@ -84,10 +83,10 @@ summonCli = summon Meta.version runCliCommand
+ -- | Run 'summoner' with @CLI@ command
+ runCliCommand :: Command -> IO ()
+ runCliCommand = \case
+-    New opts -> runNew opts
+-    Script opts -> runScript opts
++    New opts      -> runNew opts
++    Script opts   -> runScript opts
+     ShowInfo opts -> runShow opts
+-    Config opts -> runConfig opts
++    Config opts   -> runConfig opts
+ 
+ 
+ {- | Runs @config@ command
+diff --git a/summoner-cli/src/Summoner/GhcVer.hs b/summoner-cli/src/Summoner/GhcVer.hs
+index 3b2d9de5..ab7f0d19 100644
+--- a/summoner-cli/src/Summoner/GhcVer.hs
++++ b/summoner-cli/src/Summoner/GhcVer.hs
+@@ -24,8 +24,6 @@ module Summoner.GhcVer
+        ) where
+ 
+ import Data.List (maximum, minimum)
+-import Relude.Extra.Enum (inverseMap, universe)
+-
+ import qualified Data.Text as T
+ import qualified Text.Show as Show
+ 
+diff --git a/summoner-cli/src/Summoner/License.hs b/summoner-cli/src/Summoner/License.hs
+index 98dc3d1c..77bd894e 100644
+--- a/summoner-cli/src/Summoner/License.hs
++++ b/summoner-cli/src/Summoner/License.hs
+@@ -24,7 +24,6 @@ module Summoner.License
+ 
+ import Colourista (errorMessage)
+ import Data.Aeson (FromJSON (..), decodeStrict, withObject, (.:))
+-import Relude.Extra.Enum (inverseMap)
+ import Shellmet (($|))
+ 
+ import qualified Data.Text as T
+diff --git a/summoner-cli/src/Summoner/Project.hs b/summoner-cli/src/Summoner/Project.hs
+index c13c0d47..171c4783 100644
+--- a/summoner-cli/src/Summoner/Project.hs
++++ b/summoner-cli/src/Summoner/Project.hs
+@@ -21,7 +21,6 @@ module Summoner.Project
+ import Colourista (bold, errorMessage, formattedMessage, green, infoMessage, skipMessage,
+                    successMessage, warningMessage)
+ import Data.List.NonEmpty ((<|))
+ import NeatInterpolation (text)
+-import Relude.Extra.Enum (universe, universeNonEmpty)
+ import Shellmet (($?))
+ import System.Directory (findExecutable, setCurrentDirectory)
+ 
+diff --git a/summoner-cli/src/Summoner/Question.hs b/summoner-cli/src/Summoner/Question.hs
+index 5f689cd9..dd02b5a5 100644
+--- a/summoner-cli/src/Summoner/Question.hs
++++ b/summoner-cli/src/Summoner/Question.hs
+@@ -43,7 +43,6 @@ import Colourista (blue, bold, cyan, errorMessage, formatWith, formattedMessage,
+                    warningMessage)
+ import System.Directory (doesPathExist, getCurrentDirectory)
+ import System.FilePath ((</>))
+-import System.IO (hFlush)
+ 
+ import Summoner.Text (headToUpper, intercalateMap)
+ 
+diff --git a/summoner-cli/src/Summoner/Settings.hs b/summoner-cli/src/Summoner/Settings.hs
+index e8ca6f0a..0298bd17 100644
+--- a/summoner-cli/src/Summoner/Settings.hs
++++ b/summoner-cli/src/Summoner/Settings.hs
+@@ -17,8 +17,6 @@ module Summoner.Settings
+        , parseTool
+        ) where
+ 
+-import Relude.Extra.Enum (inverseMap)
+-
+ import Summoner.CustomPrelude (CustomPrelude)
+ import Summoner.GhcVer (GhcVer)
+ import Summoner.License (License, LicenseName)
+diff --git a/summoner-cli/summoner.cabal b/summoner-cli/summoner.cabal
+index 3a152618..5d4507ea 100644
+--- a/summoner-cli/summoner.cabal
++++ b/summoner-cli/summoner.cabal
+@@ -73,12 +73,11 @@ source-repository head
+ 
+ common common-options
+   build-depends:       base >= 4.11 && < 4.15
+-                     , relude ^>= 0.7.0.0
++                     , relude ^>= 1.0.0.0
+ 
+   mixins:              base hiding (Prelude)
+-                     , relude (Relude as Prelude
+-                              , Relude.Extra.Enum
+-                              )
++                     , relude (Relude as Prelude)
++                     , relude
+ 
+   ghc-options:         -Wall
+                        -Wcompat
+diff --git a/summoner-cli/test/Test/TomlSpec.hs b/summoner-cli/test/Test/TomlSpec.hs
+index 4727c01e..2944d13c 100644
+--- a/summoner-cli/test/Test/TomlSpec.hs
++++ b/summoner-cli/test/Test/TomlSpec.hs
+@@ -3,7 +3,6 @@ module Test.TomlSpec
+        ) where
+ 
+ import Hedgehog (MonadGen, forAll, tripping)
+-import Relude.Extra.Enum (universe)
+ import Test.Hspec (Spec, describe, it, shouldReturn, shouldSatisfy)
+ import Test.Hspec.Hedgehog (hedgehog)
+ import Toml.Codec.Code (decode, encode)

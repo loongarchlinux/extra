@@ -4,13 +4,13 @@
 pkgname=python-cairosvg
 _pkgname=CairoSVG
 pkgver=2.7.1
-pkgrel=2
+pkgrel=3
 pkgdesc='SVG converter based on Cairo. It can export SVG files to PDF, PostScript and PNG files'
 arch=('any')
 url='https://cairosvg.org'
 license=('LGPL3')
 depends=('python-cairocffi' 'python-cssselect2' 'python-defusedxml' 'python-pillow' 'python-tinycss2')
-makedepends=('python-setuptools' 'python-pytest')
+makedepends=('python-build' 'python-installer' 'python-pytest' 'python-setuptools' 'python-wheel')
 checkdepends=('python-pytest')
 replaces=('cairosvg')
 source=("$pkgname-$pkgver.tar.gz::https://github.com/Kozea/CairoSVG/archive/$pkgver.tar.gz")
@@ -26,7 +26,7 @@ prepare() {
 build() {
   cd $_pkgname-$pkgver
 
-  python setup.py build
+  python -m build --wheel --skip-dependency-check --no-isolation
 }
 
 check() {
@@ -38,5 +38,5 @@ check() {
 package() {
   cd $_pkgname-$pkgver
 
-  python setup.py install --root="$pkgdir" --optimize=1 --skip-build
+  python -m installer --destdir="$pkgdir" dist/*.whl
 }

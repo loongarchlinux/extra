@@ -4,20 +4,22 @@
 _pkgname=rawkit
 pkgname=python-rawkit
 pkgver=0.6.0
-pkgrel=12
+pkgrel=14
 pkgdesc="ctypes based libraw bindings "
 arch=('any')
 url="https://rawkit.readthedocs.io/"
 license=('MIT')
 depends=('libraw' 'python')
 makedepends=('python-setuptools')
-checkdepends=('python-mock' 'python-pytest')
+checkdepends=('python-pytest')
 source=(${_pkgname}-${pkgver}.tar.gz::https://github.com/photoshell/rawkit/archive/v${pkgver}.tar.gz
         https://github.com/photoshell/rawkit/pull/140/commits/663e90afa835d398aedd782c87b8cd0bff64bc9f.patch
-        libraw19-support.patch)
+        libraw19-support.patch
+	use-unittest-mock-for-tests.patch)
 sha256sums=('c07971ddbca9568cef93753ebb06a72b5b622f9b827a5d8bf96f2a137cc4219e'
             '1297740c3825d41b394808b3be145d0f41effc415e5dbd6fd1e17e51328ce418'
-            '104598076673c435f863cd25508060c0f2639b46d0fdcce7fa89b7723af443c5')
+            '104598076673c435f863cd25508060c0f2639b46d0fdcce7fa89b7723af443c5'
+            'df6f2f0736bb3e9b666314a423b5b0c4530bcf4a591c391a79ce8f5486f762e5')
 
 prepare() {
   cd "${srcdir}"/${_pkgname}-${pkgver}
@@ -26,6 +28,8 @@ prepare() {
   patch -p1 -i "${srcdir}"/663e90afa835d398aedd782c87b8cd0bff64bc9f.patch
   # FS#60708 fix
   patch -p1 -i "${srcdir}"/libraw19-support.patch
+  # use unittest.mock
+  patch -Np1 -i "${srcdir}"/use-unittest-mock-for-tests.patch
 }
 
 build() {

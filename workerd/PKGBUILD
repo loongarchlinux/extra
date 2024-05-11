@@ -1,0 +1,43 @@
+# Maintainer: kpcyrd <kpcyrd[at]archlinux[dot]org>
+
+pkgname=workerd
+pkgver=1.20240502.0
+pkgrel=1
+pkgdesc="The JavaScript / Wasm runtime that powers Cloudflare Workers"
+url='https://github.com/cloudflare/workerd'
+arch=('loong64' 'x86_64')
+license=('Apache-2.0')
+depends=(
+  'glibc'
+)
+makedepends=(
+  'bazel'
+  'clang'
+  'git'
+  'libc++'
+  'python'
+  'rust'
+  'tcl'
+)
+source=(https://github.com/cloudflare/${pkgname}/archive/v${pkgver}/${pkgname}-${pkgver}.tar.gz)
+sha256sums=('0ef304dfa5bb4923336483a5ad1a92f47ace562aecb74e0ac57c823429193b61')
+b2sums=('2ed87284de06c6d70a3706e959fffca134274022d66a7b3902258ce9937e7da18ae9abf116032cfbd2ccd7d52832a018a52d832fb7d366477db3f29d803bd380')
+
+build() {
+  cd ${pkgname}-${pkgver}
+  rm .bazelversion
+  bazel build \
+    --config=thin-lto \
+    --action_env=BAZEL_LINKLIBS='-l%:libc++.a -l%:libc++abi.a -lm -static-libgcc' \
+    //src/workerd/server:workerd
+}
+
+package() {
+  cd ${pkgname}-${pkgver}
+  install -Dm755 -t "${pkgdir}/usr/bin" \
+    bazel-bin/src/workerd/server/workerd
+  install -Dm644 -t "${pkgdir}/usr/share/doc/${pkgname}" \
+    README.md
+}
+
+# vim: ts=2 sw=2 et:

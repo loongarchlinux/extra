@@ -1,0 +1,24 @@
+# Maintainer: Balló György <ballogyor+arch at gmail dot com>
+
+pkgname=gnome-shell-extension-vitals
+_uuid=Vitals@CoreCoding.com
+pkgver=66.0.1
+pkgrel=1
+pkgdesc="GNOME Shell extension to display computer's temperature, voltage, fan speed, memory usage, processor load, system resources, network speed and storage stats"
+arch=('any')
+url='https://github.com/corecoding/Vitals'
+license=('GPL-2.0-or-later')
+depends=('gnome-shell')
+optdepends=('libgtop: show storage stats')
+source=("$pkgname-$pkgver.zip::https://github.com/corecoding/Vitals/releases/download/v$pkgver/vitals.zip")
+sha256sums=('b039982c67929add4e7fd906768df7f07bbdb64bc1a100315995a2887852960f')
+
+package() {
+  install -dm755 "$pkgdir/usr/share/gnome-shell/extensions/$_uuid"
+  cp -a * "$pkgdir/usr/share/gnome-shell/extensions/$_uuid/"
+  install -dm755 "$pkgdir/usr/share/glib-2.0"
+  mv "$pkgdir"/usr/share/gnome-shell/extensions/*/schemas "$pkgdir/usr/share/glib-2.0"
+  mv "$pkgdir"/usr/share/gnome-shell/extensions/*/locale "$pkgdir/usr/share"
+  rm "$pkgdir/usr/share/glib-2.0/schemas/gschemas.compiled"
+  rm "$pkgdir"/usr/share/gnome-shell/extensions/$_uuid/*.zip
+}

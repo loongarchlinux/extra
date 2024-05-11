@@ -5,12 +5,13 @@
 # Contributor: scj <scj archlinux us>
 
 pkgname=python-levenshtein
-pkgver=0.23.0
-pkgrel=1
+_name=Levenshtein
+pkgver=0.25.0
+pkgrel=2
 pkgdesc='Python extension for computing string edit distances and similarities'
 arch=('loong64' 'x86_64')
-url='https://github.com/maxbachmann/Levenshtein'
-license=('GPL')
+url='https://github.com/rapidfuzz/Levenshtein'
+license=('GPL-2.0-or-later')
 depends=(
   'glibc'
   'gcc-libs'
@@ -18,7 +19,6 @@ depends=(
   'python-rapidfuzz'
 )
 makedepends=(
-  'git'
   'python-build'
   'python-installer'
   'python-setuptools'
@@ -27,31 +27,24 @@ makedepends=(
   'rapidfuzz-cpp'
 )
 checkdepends=('python-pytest')
-_commit='b6069c7940e9274e54b2924d24e3e9861ee3ad34'
-source=("$pkgname::git+$url#commit=$_commit")
-b2sums=('SKIP')
-
-pkgver() {
-  cd "$pkgname"
-
-  git describe --tags | sed 's/^v//'
-}
+source=("$_name-$pkgver.tar.gz::$url/archive/refs/tags/v$pkgver.tar.gz")
+b2sums=('cb3bb55b37b5bfa8dc95d78dc6898154b4d4240c27348c6e03b13cdaa2c8ff19d1e8f2bf3d6b4fcc5c77be917afaa391276e93dcac24c2c19e1b285653a45c72')
 
 build() {
-  cd "$pkgname"
+  cd "$_name-$pkgver"
 
   python -m build --wheel --no-isolation
 }
 
 check() {
-  cd "$pkgname"
+  cd "$_name-$pkgver"
 
   PYTHONPATH=`echo "$(pwd)"/_skbuild/linux-${CARCH}-*/setuptools/lib.linux-${CARCH}-*` \
   pytest -v
 }
 
 package() {
-  cd "$pkgname"
+  cd "$_name-$pkgver"
 
   python -m installer --destdir="$pkgdir" dist/*.whl
 }

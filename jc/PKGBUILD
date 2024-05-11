@@ -2,7 +2,7 @@
 # Contributor: Jameson Pugh <imntreal@gmail.com>
 
 pkgname=jc
-pkgver=1.24.0
+pkgver=1.25.2
 pkgrel=1
 pkgdesc='Converts the output of popular command-line tools and file-types to JSON'
 arch=('any')
@@ -15,36 +15,28 @@ depends=(
   'python-xmltodict'
 )
 makedepends=(
-  'git'
   'python-build'
   'python-installer'
   'python-wheel'
   'python-setuptools'
 )
-_commit='2bccd14c5d547cce0b0a824a02f2c2e55371dc56'
-source=("$pkgname::git+$url.git#commit=$_commit")
-b2sums=('SKIP')
-
-pkgver() {
-  cd "$pkgname"
-
-  git describe --tags | sed 's/^v//'
-}
+source=("$pkgname-$pkgver.tar.gz::$url/archive/refs/tags/v$pkgver.tar.gz")
+b2sums=('2c7ff002d45ed587e1d6578a8f4be9f25a3e1f182e2652faceaa513684b5a02616708f0225217942ba9a20df54675d7cee792ad11bdfdef5bd89f87e53d2df86')
 
 build(){
-  cd "$pkgname"
+  cd "$pkgname-$pkgver"
 
   python -m build --wheel --no-isolation
 }
 
 check() {
-  cd "$pkgname"
+  cd "$pkgname-$pkgver"
 
   python -m unittest -v
 }
 
 package() {
-  cd "$pkgname"
+  cd "$pkgname-$pkgver"
 
   python -m installer --destdir="$pkgdir" dist/*.whl
 

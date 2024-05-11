@@ -1,16 +1,26 @@
 # Maintainer: Jan Alexander Steffens (heftig) <heftig@archlinux.org>
+# Maintainer: Fabian Bornschein <fabiscafe@archlinux.org>
 
 pkgname=tracker3-miners
-pkgver=3.6.2
-pkgrel=2
+pkgver=3.7.3
+pkgrel=1
 pkgdesc="Filesystem indexer and metadata extractor"
 url="https://tracker.gnome.org/"
 arch=(loong64 x86_64)
-license=(GPL)
+license=(
+  LGPL-2.1-or-later
+  GPL-2.0-or-later
+)
 depends=(
+  dconf
   exempi
+  gcc-libs
   giflib
+  glib2
+  glibc
+  gstreamer
   gst-plugins-base-libs
+  icu
   libcue
   libexif
   libgexiv2
@@ -18,37 +28,30 @@ depends=(
   libgsf
   libgxps
   libiptcdata
+  libjpeg-turbo
   libnm
   libosinfo
+  libpng
   libseccomp
+  libtiff
   poppler-glib
   totem-plparser
   tracker3
   upower
+  util-linux-libs
+  libxml2
 )
 makedepends=(
   asciidoc
   git
   meson
-)
-checkdepends=(
-  gst-libav
-  gst-plugins-base
-  gst-plugins-good
-  python-gobject
-  python-tappy
+  python-packaging
 )
 groups=(gnome)
-_commit=c3f8ef3d7b4ec57b948992ddd8137db02f9d25b7  # tags/3.6.2^0
 source=(
-  "git+https://gitlab.gnome.org/GNOME/tracker-miners.git#commit=$_commit"
+  "git+https://gitlab.gnome.org/GNOME/tracker-miners.git#tag=$pkgver"
 )
-b2sums=('SKIP')
-
-pkgver() {
-  cd tracker-miners
-  git describe --tags | sed 's/[^-]*-g/r&/;s/-/+/g'
-}
+b2sums=('bd6bee52a297b443890835abfb73744848e39d41511cd21d21491d26c5fd624c33ad96965eccaddb71572a12b7f61e44c4dd8147e2c31eee527b119e3d077b10')
 
 prepare() {
   cd tracker-miners
@@ -57,15 +60,11 @@ prepare() {
 build() {
   local meson_options=(
     -D tests_tap_protocol=true
+    -D landlock=enabled
   )
 
   arch-meson tracker-miners build "${meson_options[@]}"
   meson compile -C build
-}
-
-check() {
-  # Intermittent test failures: https://gitlab.gnome.org/GNOME/tracker-miners/-/issues/79
-  dbus-run-session meson test -C build --print-errorlogs -t 3 || :
 }
 
 package() {

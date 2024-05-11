@@ -4,41 +4,65 @@
 
 pkgname=libnitrokey
 pkgver=3.8
-pkgrel=1
+pkgrel=2
 pkgdesc='Communicate with Nitrokey stick devices in a clean and easy manner'
-url='https://www.nitrokey.com'
-arch=('loong64' 'x86_64')
-license=('LGPL3')
-depends=('glibc' 'gcc-libs')
-makedepends=('catch2' 'cmake' 'hidapi' 'libusb' 'qt5-tools')
-provides=('libnitrokey.so')
-options=(debug)
-source=(https://github.com/Nitrokey/libnitrokey/releases/download/v${pkgver}/libnitrokey-v${pkgver}.tar.gz{,.sig})
+url='https://github.com/Nitrokey/libnitrokey'
+arch=(loong64 x86_64)
+license=(LGPL-3.0-or-later)
+depends=(
+  glibc
+  gcc-libs
+)
+makedepends=(
+  catch2
+  cmake
+  hidapi
+  libusb
+  qt5-tools
+)
+provides=(libnitrokey.so)
+source=(
+  $url/releases/download/v$pkgver/$pkgname-v$pkgver.tar.gz{,.sig}
+  $pkgname-3.8-catch2_3.patch
+)
 sha512sums=('f986824f642f36d3cd3ebad6fd354843f6045cf0b619f971394f3917f1b447ca72ddae81bdba1886ac95797f07a90b702441b81cbc47618ee629364a348f96ff'
-            'SKIP')
+            'SKIP'
+            '4e553aa186a9b58e407edcd383250d62bf5cf786d7b2ed19096c755889fe85a7b7dd5a38ffa816aa43a5e5eaf54246959684cd9b66a483e2d48ba1ad3bc3b667')
 b2sums=('02166746e5607bad6d89af195ca08a9c780801e5416553a290ac5e8875aa769afdcec4ad02da8ab85f66ea85772780ac74eacde06c0be5a094247c7421104262'
-        'SKIP')
+        'SKIP'
+        'e0c968aa7181faeabfd2c4f80912f5c5a15ca4a8514228fe9b3d77b1bfa836e4d249e51ffe04a5988f5ee183de45c959575278a4c72f60c5d4c78c67efe70ebb')
 validpgpkeys=('868184069239FF65DE0BCD7DD9BAE35991DE5B22') # Szczepan Zalega <szczepan.zalega@gmail.com>
 
+prepare() {
+  patch -Np1 -d $pkgname-v$pkgver -i ../$pkgname-3.8-catch2_3.patch
+}
+
 build() {
-  cmake -B build \
-    -DBUILD_SHARED_LIBS=ON \
-    -DCOMPILE_OFFLINE_TESTS=ON \
-    -DCMAKE_INSTALL_PREFIX=/usr \
-    -DCMAKE_INSTALL_LIBDIR=lib \
+  local cmake_options=(
+    -B build
+    -D BUILD_SHARED_LIBS=ON
+    -D CMAKE_BUILD_TYPE=None
+    -D CMAKE_INSTALL_PREFIX=/usr
+    -D CMAKE_INSTALL_LIBDIR=lib
+    -D COMPILE_OFFLINE_TESTS=ON
     -S $pkgname-v$pkgver
-  make -C build VERBOSE=1
+    -W no-dev
+  )
+
+  cmake "${cmake_options[@]}"
+  cmake --build build --verbose
 }
 
 check() {
-  ctest -VV --test-dir build
+  ctest --test-dir build --output-on-failure
 }
 
 package() {
   depends+=(
     hidapi libusb libhidapi-libusb.so
   )
-  make -C build DESTDIR="${pkgdir}" install
+
+  DESTDIR="$pkgdir" cmake --install build
 }
 
 # vim: ts=2 sw=2 et:

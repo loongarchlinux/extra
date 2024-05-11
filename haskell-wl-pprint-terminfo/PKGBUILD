@@ -3,26 +3,28 @@
 _hkgname=wl-pprint-terminfo
 pkgname=haskell-wl-pprint-terminfo
 pkgver=3.7.1.4
-pkgrel=410
+pkgrel=419
 pkgdesc="A color pretty printer with terminfo support"
 url="https://github.com/ekmett/wl-pprint-terminfo/"
 license=('BSD')
 arch=('loong64' 'x86_64')
 depends=('ghc-libs' 'haskell-wl-pprint-extras')
-makedepends=('ghc')
+makedepends=('ghc' 'uusi')
 source=(https://hackage.haskell.org/packages/archive/${_hkgname}/${pkgver}/${_hkgname}-${pkgver}.tar.gz)
 sha512sums=('1f2a7bd195732fe297c49c50b59812190d5698efa7c2e9b2fbcfbbae71523c25dfcc2a0f098aebe22453cd867bc40480100c8231a6f43a7bd46202f3dcd924b3')
 
 prepare() {
-    sed -e '/nats/d' -e '/semigroups/d' -e 's/< *0.6/<1/' -i ${_hkgname}-${pkgver}/${_hkgname}.cabal
+    cd $_hkgname-$pkgver
+    uusi -d nats -d semigroups -u bytestring -u containers
 }
 
 build() {
     cd $_hkgname-$pkgver
     
+    LDFLAGS="${LDFLAGS/-Wl,-z,pack-relative-relocs/}" \
     runhaskell Setup configure -O --enable-shared --enable-executable-dynamic --disable-library-vanilla \
         --prefix=/usr --docdir=/usr/share/doc/$pkgname --datasubdir=$pkgname \
-        --dynlibdir=/usr/lib --libsubdir=\$compiler/site-local/\$pkgid --ghc-option=-fllvm \
+        --dynlibdir=/usr/lib --libsubdir=\$compiler/site-local/\$pkgid \
             -fCursed
     runhaskell Setup build $MAKEFLAGS
     runhaskell Setup register --gen-script

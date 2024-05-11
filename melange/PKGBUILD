@@ -1,20 +1,32 @@
 # Maintainer: kpcyrd <kpcyrd[at]archlinux[dot]org>
 
 pkgname=melange
-pkgver=0.3.2
+pkgver=0.6.11
 pkgrel=1
 pkgdesc='Build APKs from source code'
 url='https://github.com/chainguard-dev/melange'
 arch=('loong64' 'x86_64')
-license=('Apache')
-depends=('apk-tools' 'alpine-keyring' 'bubblewrap')
+license=('Apache-2.0')
+depends=(
+  'alpine-keyring'
+  'apk-tools'
+  'bubblewrap'
+  'glibc'
+)
 makedepends=('go')
 source=("${pkgname}-${pkgver}.tar.gz::https://github.com/chainguard-dev/melange/archive/v${pkgver}.tar.gz")
-b2sums=('bad4b5d3ac98d67a7532d014692a7a2865591f9a922c0c35ce34cba873e12b5b4e6cacd729c710a0efe694a60785d46ae44b0a6d29e116bfcd88fc337f9d8a71')
+sha256sums=('df809b028d4495f51e23c1954811d79cc21d19aa87ba6a01b14af85fcb8d0ce4')
+b2sums=('997e3592f43944cccd08a6ed4ab77d46cec12bd4fb86268f1eaf7e38bc25d583ac7e99677b0885e9527ba367bcbbdb6bdca01ad6447d3834ff2d835efab955f6')
 
 build() {
   cd ${pkgname}-${pkgver}
-  make melange
+  go build \
+    -trimpath \
+    -buildmode=pie \
+    -mod=readonly \
+    -modcacherw \
+    -ldflags "-linkmode external -extldflags \"${LDFLAGS}\"" \
+    .
 }
 
 package() {

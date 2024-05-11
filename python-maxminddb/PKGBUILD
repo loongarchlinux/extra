@@ -3,7 +3,7 @@
 pkgname=python-maxminddb
 pkgver=2.5.1
 _commit=f72d69bb258b4724bfbea41b68b38e9bc46d4c48
-pkgrel=1
+pkgrel=2
 pkgdesc="Reader for the MaxMind DB format"
 url="https://github.com/maxmind/MaxMind-DB-Reader-python"
 license=('Apache')
@@ -34,7 +34,8 @@ build() {
 check() {
   cd MaxMind-DB-Reader-python
   python -m installer -d tmp_install dist/*.whl
-  PYTHONPATH=tmp_install/usr/lib/python3.11/site-packages pytest
+  local python_version=$(python -c 'import sys; print(".".join(map(str, sys.version_info[:2])))')
+  PYTHONPATH=tmp_install/usr/lib/python${python_version}/site-packages pytest
 }
 
 package() {

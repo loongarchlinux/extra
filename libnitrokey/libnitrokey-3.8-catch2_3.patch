@@ -1,0 +1,173 @@
+diff --git i/CMakeLists.txt w/CMakeLists.txt
+index f6d00b7..3e6fd8c 100644
+--- i/CMakeLists.txt
++++ w/CMakeLists.txt
+@@ -185,7 +185,7 @@ OPTION(COMPILE_OFFLINE_TESTS "Compile offline tests" FALSE)
+ IF(COMPILE_OFFLINE_TESTS OR COMPILE_TESTS)
+     find_package(PkgConfig)
+     IF(PKG_CONFIG_FOUND)
+-        pkg_check_modules(CATCH2 catch2)
++        pkg_check_modules(CATCH2 IMPORTED_TARGET catch2-with-main)
+     ENDIF()
+ 
+     if (CATCH2_FOUND)
+@@ -201,7 +201,7 @@ ENDIF()
+ 
+ IF(COMPILE_OFFLINE_TESTS)
+     add_executable (test_offline unittest/test_offline.cc)
+-    target_link_libraries (test_offline ${EXTRA_LIBS} nitrokey catch)
++    target_link_libraries (test_offline ${EXTRA_LIBS} nitrokey PkgConfig::CATCH2)
+     SET_TARGET_PROPERTIES(test_offline PROPERTIES COMPILE_FLAGS ${COMPILE_FLAGS} )
+     #run with 'make test' or 'ctest'
+     include (CTest)
+@@ -232,7 +232,7 @@ IF (COMPILE_TESTS)
+     foreach(testsourcefile ${TESTS} )
+         get_filename_component(testname ${testsourcefile} NAME_WE )
+         add_executable(${testname} ${testsourcefile} )
+-        target_link_libraries(${testname} ${EXTRA_LIBS} nitrokey catch )
++        target_link_libraries(${testname} ${EXTRA_LIBS} nitrokey PkgConfig::CATCH2)
+         SET_TARGET_PROPERTIES(${testname} PROPERTIES COMPILE_FLAGS ${COMPILE_FLAGS} )
+     endforeach(testsourcefile)
+ 
+diff --git i/unittest/catch_main.cpp w/unittest/catch_main.cpp
+index 11a0a3a..1ea2ccf 100644
+--- i/unittest/catch_main.cpp
++++ w/unittest/catch_main.cpp
+@@ -20,4 +20,4 @@
+  */
+ 
+ #define CATCH_CONFIG_MAIN  // This tells Catch to provide a main()
+-#include "catch2/catch.hpp"
+\ No newline at end of file
++#include "catch2/catch_all.hpp"
+\ No newline at end of file
+diff --git i/unittest/test1.cc w/unittest/test1.cc
+index c8281c3..cb90249 100644
+--- i/unittest/test1.cc
++++ w/unittest/test1.cc
+@@ -19,7 +19,7 @@
+  * SPDX-License-Identifier: LGPL-3.0
+  */
+ 
+-#include "catch2/catch.hpp"
++#include "catch2/catch_all.hpp"
+ 
+ #include <iostream>
+ #include <string.h>
+diff --git i/unittest/test2.cc w/unittest/test2.cc
+index 604b3ba..fded1ec 100644
+--- i/unittest/test2.cc
++++ w/unittest/test2.cc
+@@ -23,7 +23,7 @@
+ static const char *const default_admin_pin = "12345678";
+ static const char *const default_user_pin = "123456";
+ 
+-#include "catch2/catch.hpp"
++#include "catch2/catch_all.hpp"
+ 
+ #include <iostream>
+ #include <string.h>
+diff --git i/unittest/test3.cc w/unittest/test3.cc
+index bb8a376..8b423ae 100644
+--- i/unittest/test3.cc
++++ w/unittest/test3.cc
+@@ -25,7 +25,7 @@ static const char *const default_user_pin = "123456";
+ const char * temporary_password = "123456789012345678901234";
+ const char * RFC_SECRET = "12345678901234567890";
+ 
+-#include "catch2/catch.hpp"
++#include "catch2/catch_all.hpp"
+ 
+ #include <iostream>
+ #include <string.h>
+diff --git i/unittest/test_C_API.cpp w/unittest/test_C_API.cpp
+index 27eb1c4..00f3fd9 100644
+--- i/unittest/test_C_API.cpp
++++ w/unittest/test_C_API.cpp
+@@ -21,7 +21,7 @@
+ 
+ static const int TOO_LONG_STRING = 200;
+ 
+-#include "catch2/catch.hpp"
++#include "catch2/catch_all.hpp"
+ 
+ #include <iostream>
+ #include <string>
+diff --git i/unittest/test_HOTP.cc w/unittest/test_HOTP.cc
+index 0b0b222..0513522 100644
+--- i/unittest/test_HOTP.cc
++++ w/unittest/test_HOTP.cc
+@@ -20,7 +20,7 @@
+  */
+ 
+ 
+-#include "catch2/catch.hpp"
++#include "catch2/catch_all.hpp"
+ #include <iostream>
+ #include "device_proto.h"
+ #include "log.h"
+diff --git i/unittest/test_issues.cc w/unittest/test_issues.cc
+index b588b00..74bef9f 100644
+--- i/unittest/test_issues.cc
++++ w/unittest/test_issues.cc
+@@ -26,7 +26,7 @@ const char * const temporary_password = "123456789012345678901234";
+ const char * const RFC_SECRET = "12345678901234567890";
+ const char * const hidden_volume_pass = "123456789012345";
+ 
+-#include "catch2/catch.hpp"
++#include "catch2/catch_all.hpp"
+ 
+ #include <NitrokeyManager.h>
+ 
+diff --git i/unittest/test_multiple_devices.cc w/unittest/test_multiple_devices.cc
+index 7e10a42..a926583 100644
+--- i/unittest/test_multiple_devices.cc
++++ w/unittest/test_multiple_devices.cc
+@@ -24,7 +24,7 @@ static const char *const default_user_pin = "123456";
+ const char * temporary_password = "123456789012345678901234";
+ const char * RFC_SECRET = "12345678901234567890";
+ 
+-#include "catch2/catch.hpp"
++#include "catch2/catch_all.hpp"
+ 
+ #include <iostream>
+ #include <NitrokeyManager.h>
+diff --git i/unittest/test_offline.cc w/unittest/test_offline.cc
+index 3ca3905..5625cb5 100644
+--- i/unittest/test_offline.cc
++++ w/unittest/test_offline.cc
+@@ -19,7 +19,7 @@
+  * SPDX-License-Identifier: LGPL-3.0
+  */
+ 
+-#include "catch2/catch.hpp"
++#include "catch2/catch_all.hpp"
+ #include <NitrokeyManager.h>
+ #include <memory>
+ #include <string>
+diff --git i/unittest/test_safe.cpp w/unittest/test_safe.cpp
+index a244027..448119c 100644
+--- i/unittest/test_safe.cpp
++++ w/unittest/test_safe.cpp
+@@ -19,7 +19,7 @@
+  * SPDX-License-Identifier: LGPL-3.0
+  */
+ 
+-#include "catch2/catch.hpp"
++#include "catch2/catch_all.hpp"
+ 
+ #include <iostream>
+ #include <cstring>
+diff --git i/unittest/test_strdup.cpp w/unittest/test_strdup.cpp
+index c7f4ea8..470d3e6 100644
+--- i/unittest/test_strdup.cpp
++++ w/unittest/test_strdup.cpp
+@@ -26,7 +26,7 @@
+ #include <cstdio>
+ #include <memory.h>
+ #include "../NK_C_API.h"
+-#include "catch2/catch.hpp"
++#include "catch2/catch_all.hpp"
+ 
+ 
+ static const int SHORT_STRING_LENGTH = 10;

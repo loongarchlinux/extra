@@ -5,18 +5,20 @@
 
 pkgname=pymol
 _project=pymol-open-source
-pkgver=2.5.0
-pkgrel=7
+pkgver=3.0.0
+pkgrel=4
 pkgdesc='Molecular visualization system on an Open Source foundation'
 arch=(loong64 x86_64)
 url=https://pymol.org
 license=(custom)
 depends=(freetype2
+         gcc-libs
          glew
          glm
          glut
          netcdf
          netcdf-cxx
+         python
          python-numpy
          tcsh)
 makedepends=(desktop-file-utils
@@ -29,19 +31,11 @@ optdepends=('python-pyqt5: Qt5 based UI')
 _archive="$_project-$pkgver"
 source=("https://github.com/schrodinger/pymol-open-source/archive/v$pkgver/$_archive.tar.gz"
         "$pkgname.png::https://c.fsdn.com/allura/p/pymol/icon")
-sha256sums=('aa828bf5719bd9a14510118a93182a6e0cadc03a574ba1e327e1e9780a0e80b3'
+sha256sums=('45e800a02680cec62dff7a0f92283f4be7978c13a02934a43ac6bb01f67622cf'
             '0ea81faaf336becc669a193777d0dca55475d303d1236b57df25cf67ff7c2bcd')
 changelog=ChangeLog
 
 prepare() {
-	# create desktop file
-	gendesk -f -n \
-			--pkgname "$pkgname" \
-			--name="PyMOL Molecular Graphics System" \
-			--pkgdesc "$pkgdesc" \
-			--exec="$pkgname %F" \
-			--mimetypes="chemical/x-pdb;chemical/pdby;chemical/x-mol2;chemical/x-mdl-molfile;chemical/x-mdl-sdfile;chemical/x-xyz;chemical/x-macromodel-input;chemical/x-vmd" \
-			--categories="Science;Chemistry"
 	cd "$_archive"
 	# suppress non-zero exit code that breaks makepkg
 	sed -i -e '/sys.exit/ s,2,0,' setup.py
@@ -51,6 +45,14 @@ prepare() {
 }
 
 build() {
+	# create desktop file
+	gendesk -f -n \
+			--pkgname "$pkgname" \
+			--name="PyMOL Molecular Graphics System" \
+			--pkgdesc "$pkgdesc" \
+			--exec="$pkgname %F" \
+			--mimetypes="chemical/x-pdb;chemical/pdby;chemical/x-mol2;chemical/x-mdl-molfile;chemical/x-mdl-sdfile;chemical/x-xyz;chemical/x-macromodel-input;chemical/x-vmd" \
+			--categories="Science;Chemistry"
 	cd "$_archive"
 	python -m build -wn
 }

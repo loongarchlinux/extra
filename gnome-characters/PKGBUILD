@@ -3,21 +3,25 @@
 # Contributor: Jan de Groot <jgc@archlinux.org>
 
 pkgname=gnome-characters
-pkgver=45.0
+pkgver=46.0
 pkgrel=1
 pkgdesc="A character map application"
 url="https://gitlab.gnome.org/GNOME/gnome-characters"
 arch=(loong64 x86_64)
-license=(GPL2)
+license=("BSD-3-Clause AND GPL-2.0-or-later")
 depends=(
+  dconf
   emoji-font
   gjs
+  glib2
+  glibc
   gnome-desktop-4
   gtk4
+  hicolor-icon-theme
   libadwaita
 )
 makedepends=(
-  appstream-glib
+  appstream
   git
   gobject-introspection
   gperf
@@ -25,9 +29,9 @@ makedepends=(
 )
 checkdepends=(weston)
 groups=(gnome)
-_commit=6f25c0380b4125055de035acf63e8fe7d6c774e1  # tags/45.0^0
+_commit=06247c108c0c00d0da33a3675082b1e4a5395d26  # tags/46.0^0
 source=("git+https://gitlab.gnome.org/GNOME/gnome-characters.git#commit=$_commit")
-b2sums=('SKIP')
+b2sums=('60ddc29cf067797ac8d6db93aa33229a21ea12513c63c07a2039183bedc4ce16b1789d32a5952dc6ed7465efab13420324a5ff102fedce9f276e2160e999f6cb')
 
 pkgver() {
   cd $pkgname
@@ -58,6 +62,7 @@ check() (
 
 package() {
   meson install -C build --destdir "$pkgdir"
+  install -Dt "$pkgdir/usr/share/licenses/$pkgname" -m644 $pkgname/COPYING
 }
 
 # vim:set sw=2 sts=-1 et:

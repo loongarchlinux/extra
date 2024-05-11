@@ -2,13 +2,15 @@
 # Maintainer: kpcyrd <kpcyrd[at]archlinux[dot]org>
 
 pkgname=arti
-pkgver=1.1.12
+pkgver=1.2.2
 pkgrel=1
 pkgdesc="An implementation of Tor in Rust"
 arch=('loong64' 'x86_64')
 url="https://gitlab.torproject.org/tpo/core/arti"
-license=('MIT' 'Apache')
+license=('MIT' 'Apache-2.0')
 depends=(
+  'gcc-libs'
+  'glibc'
   'liblzma.so'
   'libsqlite3.so'
   'libssl.so'
@@ -17,18 +19,18 @@ makedepends=('cargo')
 backup=('etc/arti.d/arti.toml')
 options=('!lto')
 source=("$pkgname-$pkgver.tar.gz::$url/-/archive/$pkgname-v$pkgver/$pkgname-$pkgname-v$pkgver.tar.gz")
-sha256sums=('e15dc574ea29391b95839208a59196abfad3ee3c7d14a6e42c8946a16025c9bd')
-b2sums=('f1bec1c26a147372f19a66022dda7a2f8989d40338399f926f84c8ad17d6cd9d92ad565154a7a994152141fcfb72bacb677fd388c1c67032debfd0802f114c79')
+sha256sums=('a255b3ea11bcdb698ad646db542a02d7db9cfc3c94f05f05db029b4e5da290ea')
+b2sums=('37c41fdde54a26894e81237cfa4469fb120a941b9a083ec381ebc27c953bfd1ced2e2687890b29ae3612809d65125721ed0d072ae5e23d353dce100390466025')
 
 prepare() {
   mv "$pkgname-$pkgname-v$pkgver" "$pkgname-$pkgver"
   cd "$pkgname-$pkgver"
-  cargo fetch --locked --target "$CARCH-unknown-linux-gnu"
+  cargo fetch --locked --target "$(rustc -vV | sed -n 's/host: //p')"
 }
 
 build() {
   cd "$pkgname-$pkgver"
-  cargo build --release --frozen
+  cargo build --release --frozen --features full
 }
 
 check() {

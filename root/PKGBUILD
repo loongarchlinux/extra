@@ -1,4 +1,5 @@
 # Maintainer: Konstantin Gizdov < arch at kge dot pw >
+# Maintainer: Jakub Klinkovský <lahwaacz at archlinux dot org>
 # Contributor: Frank Siegert < frank.siegert at googlemail dot com >
 # Contributor: Scott Lawrence < bytbox at gmail dot com >
 # Contributor: Thomas Dziedzic < gostrc at gmail dot com >
@@ -6,7 +7,7 @@
 
 pkgbase=root
 pkgname=('root' 'root-cuda')
-pkgver=6.30.02
+pkgver=6.30.06
 pkgrel=1
 pkgdesc='C++ data analysis framework and interpreter from CERN'
 arch=('loong64' 'x86_64')
@@ -26,12 +27,11 @@ makedepends=(
     'go'
     'libxml2'
     'libmariadbclient'
+    'ninja'
     'ocaml'
     'ocaml-ctypes'
-    'openmp'
     'openmpi'
     'openssl'
-    'openui5'
     'postgresql-libs'
     'pythia8>=8.2.40-1'
     'python-pygments'
@@ -74,10 +74,8 @@ optdepends=(
     'cfitsio: Read images and data from FITS files'
     'libmariadbclient: MySQL support'
     'libxml2: XML parser interface'
-    'openmp: Support OpenMP extensions in Minuit2'
-    'openmpi: Support OpenMPI extensions in Minuit2'
+    'openmpi: Support for Message Passing Interface (MPI)'
     'openssl: OpenSSL support'
-    'openui5: JSROOT support'
     'postgresql-libs: PostgreSQL support'
     'pythia8>=8.2.40-1: Pythia8 EG support'
     'python-pygments: syntax highlighting in interactive console'
@@ -100,12 +98,12 @@ source=(
     'nbman-for-arch.patch'
     'thisroot.fail'
 )
-b2sums=('38b07dff364adac544c927cb76b5f02d69e4a58949b429e6a276906a80769b74f19db72537183c6f33543d2cf924354e626417b386b8952094d6f31e697065f3'
+b2sums=('02830a683971fd55578dad6daf513e947ff9630af919c5f95af33959c9e99bcb01d9db3c589e037b7af56c2689f3085ca69e4353e9ea2a4648d98fa12145ccea'
         '5da6218a171ee0fbd7b03518dde22787bb0e478a18dcf227eea4e65598c0a0bb299747c6503ad3026804e1a4dbcf4d2b674b83e6ed6e482dd3d14ceb4646dee8'
         'b5defce795dbfeee75dab0cc4c20ac84fe55cb11e9acdd5e75831b6db98e6190621867a65427ab44d93b6fe30398db6fd191defb029a6dcd0af087c1e5115451'
         '5e4c589fd9e226fcf7ff9ab880687c10ff0f7b7c03fdf12fc477622d6ec291e2dc62e7f5ce7b68856bccf37b64b2f4331f46788548d39fdca57fd832d1f3b437'
-        'ccca1ff2bfa3eacafcd4bee1991bdeffa0d87c7c9745e5e39562c0849e591f214c93add14be411aecde5935da326b56dc13a67defe2679697226a7922ddd9917'
-        '51976712d41a2dd641e7ea65d8a49f9105e2f3b6c02c24d132ca2bdad68340a43bb7e511a474519258d2932fb62ff1195794618bb411b478029492e5637f8cb9'
+        '0514da5867c0ee0b1cc5b02def2feb976624faf1cc938e0a8ac15a53554724be8b3f4fcd42fe56f7743e6a575e4a5cec0fc85fd1be48d1eec64e260e5d7a6957'
+        '92d6407f09d9bd7735010caf30c1c5d53c793a2189dd7c8da8cc3224f2518265ef30dcf7aa648c0473b797d21c348655982c787fc602e6047130b6b3562a1315'
         '47a7b4491f1455ddb02c3793c7fbaf05184dba9a5fc9d7378608727e69c778dd5832c49f11f4d2c8204dcffc86fc4786b5616fb381c4e3e629d78db9c86913c5'
         'ec89007c4441d0010c0bfa90ca81e78ceeeb97bacaae2cc4814bd9a781062add80eaa6e4b8cf59c1a61e89ca8a14f3af6f1163766550f6db4154f671e5176d39'
         '3501c944e8cab13fe9f5c8ab75a7cdb4b59bc5b00df4bf45ad246ab8cd6cb1ebde19369bc688458c97ff5f5acd4e86fc19b4c8f57ab4cb422d0a5eacac081138')
@@ -157,45 +155,34 @@ prepare() {
     done
     _cuda_arch_vals="${_cuda_arch_vals:0:-1}"
     export CUSTOM_CUDA_ARCH='-DCMAKE_CUDA_ARCHITECTURES='"${_cuda_arch_vals}"
-
-    cp -r "${pkgbase}-${pkgver}" "${pkgbase}-${pkgver}-cuda"
 }
 
 build() {
     ## ROOT
-    mkdir -p "${srcdir}/build"
-    cd "${srcdir}/build"
-
-    cmake -C "${srcdir}/settings.cmake" \
-        ${CUSTOM_CMAKE_FLAGS} \
-        "${srcdir}/${pkgbase}-${pkgver}"
-    make
+    cmake -B build -S ${pkgbase}-${pkgver} -G Ninja \
+        -C settings.cmake \
+        ${CUSTOM_CMAKE_FLAGS}
+    cmake --build build
 
     ## ROOT with CUDA
-    mkdir -p "${srcdir}/build-cuda"
-    cd "${srcdir}/build-cuda"
-
-    cmake -C "${srcdir}/settings-cuda.cmake" \
+    cmake -B build-cuda -S ${pkgbase}-${pkgver} -G Ninja \
+        -C settings-cuda.cmake \
         ${CUSTOM_CMAKE_FLAGS} \
-        ${CUSTOM_CUDA_ARCH} \
-        "${srcdir}/${pkgbase}-${pkgver}-cuda"
-    make
+        ${CUSTOM_CUDA_ARCH}
+    cmake --build build-cuda
 }
 
 _package() {
     local bld_dir="${srcdir}/${1}"
     cd "${bld_dir}"
 
-    make DESTDIR="${pkgdir}" install
+    DESTDIR="${pkgdir}" cmake --install .
 
     # fix missing hardlinks for genreflex and rootcint
     cd "${pkgdir}"/usr/bin
     ln -f rootcling rootcint
     ln -f rootcling genreflex
     cd "${bld_dir}" # go back
-
-    # rename the modulemap
-    mv "${pkgdir}"/usr/include/module.modulemap "${pkgdir}"/usr/include/root.modulemap
 
     # fix python env call
     sed -e 's/@python@/python/' -i "${pkgdir}/usr/lib/root/cmdLineUtils.py"
@@ -293,6 +280,6 @@ package_root-cuda() {
     provides=('root')
     conflicts=('root')
     depends+=('cuda' 'cudnn')
-    optdepends+=('gcc12-fortran: Enable the Fortran components of ROOT')
+    optdepends+=('gcc-fortran: Enable the Fortran components of ROOT')
     _package build-cuda
 }

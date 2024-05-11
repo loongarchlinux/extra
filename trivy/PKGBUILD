@@ -3,7 +3,7 @@
 # Contributor: Hao Long <imlonghao@archlinuxcn.org>
 
 pkgname=trivy
-pkgver=0.48.3
+pkgver=0.51.1
 pkgrel=1
 pkgdesc='A Simple and Comprehensive Vulnerability Scanner for Containers, Suitable for CI'
 arch=('loong64' 'x86_64')
@@ -15,7 +15,7 @@ makedepends=('go' 'btrfs-progs')
 provides=('trivy')
 conflicts=('trivy')
 source=("${pkgname}-${pkgver}.tar.gz::${url}/archive/v${pkgver}.tar.gz")
-b2sums=('80929c399070b5059a36af5a42cb1a2469f0226e96bb0874f91f540390563944b034ca0f14490c2932f65b82729ed19d6ee49491886e7ebf85d87d33345dd0b0')
+b2sums=('3202de0587ceb110088082b5a132f793a9c153cf160736667ffd87cd20b6e299287e41e3801a611a9fb14f99c6012b425379e1af6743d88e7b0ee3e522d641c6')
 
 prepare() {
   cd ${pkgname}-${pkgver}
@@ -34,7 +34,10 @@ build() {
   export CGO_CXXFLAGS="${CXXFLAGS}"
   export CGO_LDFLAGS="${LDFLAGS}"
   export GOFLAGS="-buildmode=pie -trimpath -mod=readonly -modcacherw"
-  go build -ldflags "-linkmode=external -s -w -X=main.version=${pkgver}" .
+
+  GO_LDFLAGS="-linkmode=external -s -w -X=github.com/aquasecurity/trivy/pkg/version.ver=${pkgver}"
+
+  go build -ldflags "${GO_LDFLAGS}" .
 }
 
 package() {

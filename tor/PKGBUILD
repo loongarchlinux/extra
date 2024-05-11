@@ -6,7 +6,7 @@
 # Contributor: Sid Karunaratne
 
 pkgname=tor
-pkgver=0.4.8.10
+pkgver=0.4.8.11
 pkgrel=1
 pkgdesc='Anonymizing overlay network.'
 arch=('loong64' 'x86_64')
@@ -14,6 +14,8 @@ url='https://www.torproject.org/download/tor/'
 license=("BSD-3-Clause" "LGPL-3.0-only" "MIT")
 depends=(
   'bash'
+  'gcc-libs'
+  'glibc'
   'libcap.so'
   'libcrypto.so'
   'libevent'
@@ -28,24 +30,27 @@ optdepends=('torsocks: for torify')
 makedepends=('ca-certificates' 'systemd')
 backup=('etc/tor/torrc')
 source=("https://dist.torproject.org/${pkgname}-${pkgver}.tar.gz"{,.sha256sum{,.asc}}
+        "disable-openssl-dynamic-linking-warning.patch"
         'torrc.patch'
         'tor.sysusers'
         'tor.tmpfiles'
         'tor.service')
-sha256sums=('e628b4fab70edb4727715b23cf2931375a9f7685ac08f2c59ea498a178463a86'
-            '68eb49abb3f8aba6d417699cb333bf6cc944e8276cbf9b237402e23ff298bc83'
+sha256sums=('8f2bdf90e63380781235aa7d604e159570f283ecee674670873d8bb7052c8e07'
+            '29984578036a0a07beb0a4bee5fa9de4eaa7163f554e556ccd9909a7ae2ba97a'
             'SKIP'
+            '4067f5a6589bfaa97dd2b1a20aa73a9d3f1793bb8862c602c24b4f0cefd05dc9'
             'c5c082fd1cda30c95c40043d5be96926fa81e5388a97534373bf0ce100191ade'
             '04eec05b4e61efccc58c5da657363f0c1059d7f122cb15c32331a201af2d7f94'
             '07bedb17660a3673b31b0005b6505065c90b32f2c6b28b969241da675560f926'
-            '6354475c4ee4de0c1204ccc6ae20dea8e812f83f3134ee2d665592a2cfe327e5')
-b2sums=('ef470664d85e019f6cac2366e934d5dc31b8ae92f121a2b4c8c95f8267abce5ce4413d30a24affa40a069d587212364ae5a7c3cd114488e50a535f01c54c6e77'
-        '1410a5e7e486c7c33b6b217a53d250bc3e1d76c87e74ad29f6c6a67cbdacb3627521cc8936f7e8e8d72c3333078cede222d13c825b8d66df7c1d50721043f89e'
+            '8d6d9cf8218029a73d60f044f72826dc0b5001d0a99233eac6ddcdbdbdbc5d8a')
+b2sums=('b7f5bb855a6f8fe7dfd0e0efe7b48798e9d4642e401641c83554ed0f98fe238a5f303e9466e9e24a7ade63488a745b3c957ed6cc53a2f5e21f5f9c3f78f7fa78'
+        '062077991dc4ca70c457a7c1a70c815d288b5afcd54246a51dd86685454fb0cf52aa8e12974e7909ef2c0b8e764c369278113c5b7d84e866fad0a66bdff93ebc'
         'SKIP'
+        'cb9fbdc4bb449975bab57ad11a188ccc0462981132ab9617108d6a92f71e22448e407afc73f252fc4f3f2f6bf9e5c211abd9cdfe6514a76ff2162ef750348b90'
         '98baf96cdac36072086f48bf4701cede6cf31eee207f4a1a4cfc81b483ba53b991082aaf4ed638e50dfd67fb006bbd915af97943ab658df29dfa51ea4aa77dd2'
         '9053da53926f2120ac57b6c1442238f5bbd89bf9270347c4e00b721b39939bebc6adfcf814a9d7289dfd14d085d91c193529305336db93190da5b7f586a031df'
         '5d55d9a7e42b6ce78b8ab985bab37afe8f0bacddb5abd895c4a490adb8f98b9422f90b40066fef05ecf37b7b21e80aadc615c4b7f6e12b05581304113a1b1f1d'
-        '79d35290cd40e407d3102366d585d37e3b50b41e30b7046f8b1c6a7ee199137701b3c5c4e63f5967d6185b66d675b71157d1ef673648162921323732bb0546cf')
+        '79897036eb23e3202a6810cb0ef39b3e96c32638fe44a9cf7f50e26aa2caa2061a45cea33872fe5496c9dd2c0545cb2f7c47d77eb3d478dff52d9af422547a80')
 validpgpkeys=(
   '2133BC600AB133E1D826D173FE43009C4607B1FB' # Nick Mathewson
   'B74417EDDF22AC9F9E90F49142E86A2A11F48D36' # David Goulet
@@ -57,7 +62,8 @@ prepare() {
   sha256sum -c ${pkgname}-${pkgver}.tar.gz.sha256sum
   cd ${pkgname}-${pkgver}
   # uncomment essential config sections in the torrc file
-  patch -Np1 < "${srcdir}/torrc.patch"
+  patch -Np1 -i ../torrc.patch
+  patch -Np1 -i ../disable-openssl-dynamic-linking-warning.patch
 }
 
 build() {

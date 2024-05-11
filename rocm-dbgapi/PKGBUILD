@@ -1,26 +1,28 @@
 # Maintainer: Torsten Keßler <tpkessler at archlinux dot org>
 
 pkgname=rocm-dbgapi
-pkgver=5.7.1
+pkgver=6.0.2
 pkgrel=1
 pkgdesc="Support library necessary for a debugger of AMD's GPUs"
 arch=('loong64' 'x86_64')
-url='https://rocm.docs.amd.com/projects/ROCdbgapi/en/latest'
+url="https://rocm.docs.amd.com/projects/ROCdbgapi/en/latest/"
 license=('MIT')
-depends=('comgr' 'hsa-rocr')
-makedepends=('rocm-cmake')
-_git='https://github.com/ROCm-Developer-Tools/ROCdbgapi'
+depends=('rocm-core' 'glibc' 'gcc-libs' 'comgr' 'hsa-rocr')
+makedepends=('cmake' 'rocm-cmake')
+_git='https://github.com/ROCm/ROCdbgapi'
 source=("$pkgname-$pkgver.tar.gz::$_git/archive/rocm-$pkgver.tar.gz")
-sha256sums=('0ee9c2f083868849f2ea0cec7010e0270c27e7679ccbbadd12072cc0ef6c8a6f')
+sha256sums=('39036f083de421f46afd8d3a8799576242ef64002643d7185767ccbba41ae854')
 _dirname=$(basename "$_git")-$(basename "${source[0]}" ".tar.gz")
 
 build() {
-    cmake \
-      -Wno-dev \
-      -B build \
-      -S "$_dirname" \
-      -DCMAKE_BUILD_TYPE=None \
-      -DCMAKE_INSTALL_PREFIX=/opt/rocm
+    local cmake_args=(
+        -Wno-dev
+        -B build
+        -S "$_dirname"
+        -D CMAKE_BUILD_TYPE=None
+        -D CMAKE_INSTALL_PREFIX=/opt/rocm
+    )
+    cmake "${cmake_args[@]}"
     cmake --build build
 }
 

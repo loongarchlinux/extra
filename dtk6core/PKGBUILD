@@ -3,25 +3,25 @@
 # Contributor: Xu Fasheng <fasheng.xu[AT]gmail.com>
 
 pkgname=dtk6core
-pkgver=6.0.4
-pkgrel=3
+pkgver=6.0.11
+pkgrel=2
 pkgdesc='DTK core modules'
 arch=('loong64' 'x86_64')
 url="https://github.com/linuxdeepin/dtk6core"
 license=('LGPL3')
 depends=('deepin-desktop-base' 'dtkcommon' 'gcc-libs' 'glibc' 'icu' 'libsystemd' 'lshw' 'qt6-base'
          'uchardet' 'spdlog')
-makedepends=('cmake' 'ninja' 'qt6-tools' 'gtest' 'doxygen')
-source=("https://github.com/linuxdeepin/dtk6core/archive/$pkgver/$pkgname-$pkgver.tar.gz")
-sha512sums=('5a1a857e810c56806ff14d7f6f3a0dd7b438d202f401d861e7b2e9557172ebbf26c3d3875558f2983d6c69765f2c940490374d0321f8662a4af6b1fb19117f22')
+makedepends=('git' 'cmake' 'ninja' 'qt6-tools' 'gtest' 'doxygen')
+source=("git+https://github.com/linuxdeepin/dtk6core.git#tag=$pkgver")
+sha512sums=('bd29ad663d86e0252f6d850e07b2c13f8900e0b473c83ef7f3e335c467b2007e9cb250c79f7a28458d9076bb75d9a60972e7bfc5a32940255930c10a2f85c39d')
 
 prepare() {
-  cd dtk6core-$pkgver
+  cd dtk6core
   sed -i 's|/etc/os-version|/etc/uos-version|' src/dsysinfo.cpp
 }
 
 build() {
-  cd dtk6core-$pkgver
+  cd dtk6core
   cmake . -GNinja \
       -DBUILD_DOCS=ON \
       -DBUILD_TESTING=ON \
@@ -30,16 +30,15 @@ build() {
       -DCMAKE_INSTALL_LIBEXECDIR=lib \
       -DCMAKE_INSTALL_PREFIX=/usr \
       -DDTK_VERSION=$pkgver
-
   ninja
 }
 
 check() {
-  cd dtk6core-$pkgver
+  cd dtk6core
   ninja test
 }
 
 package() {
-  cd dtk6core-$pkgver
+  cd dtk6core
   DESTDIR="$pkgdir" ninja install
 }

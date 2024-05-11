@@ -7,24 +7,26 @@
 
 pkgname=bsd-games
 pkgver=3.3
-pkgrel=1
+pkgrel=3
 pkgdesc='Linux port of the collection of BSD command line games'
 url='https://sourceforge.net/projects/bsd-games'
 arch=('loong64' 'x86_64')
 license=('BSD')
+makedepends=('git')
 depends=('ncurses' 'systemd')
 optdepends=('words: for hangman')
-source=("https://downloads.sourceforge.net/sourceforge/bsd-games/${pkgname}-${pkgver}.tar.gz")
-sha256sums=('78bfdf7f4e1f61ed42ad1209ef52520b89a583bd511e9606b8162f813078048d')
+source=($pkgname::"git+https://git.code.sf.net/p/bsd-games/code?signed#tag=v${pkgver}")
+sha256sums=('33b17362808ad950865c06d26d423606b889c5b3cacf9f76105817c75f16f79e')
+validpgpkeys=(F726C152F992ACEFBAE85569F384187A57EF569F) # Mike Sharov
 
 build() {
-    cd "$pkgname-$pkgver"
+    cd "$pkgname"
     ./configure --prefix=/usr
     make
 }
 
 package() {
-    cd "$pkgname-$pkgver"
+    cd "$pkgname"
     make DESTDIR="$pkgdir" install
     install -D -m644 LICENSE "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
 }

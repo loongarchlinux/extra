@@ -1,0 +1,23 @@
+# Maintainer: Caleb Maclennan <caleb@alerque.com>
+
+pkgbase=doulos-sil-font
+_fname=DoulosSIL
+pkgname=ttf-${pkgbase%-font}
+pkgver=6.200
+pkgrel=2
+pkgdesc='Complete support for the International Phonetic Alphabet'
+arch=(any)
+url="https://software.sil.org/${pkgbase/-*}"
+license=(OFL-1.1-RFN)
+_archive="$_fname-$pkgver"
+source=("https://software.sil.org/downloads/r/${pkgbase%%-*}/$_archive.zip")
+sha256sums=('a7ad76326c126b2748297b987a634a56f7e42cd45bc3ff2c90a7909cbb164223')
+
+package_ttf-charis-sil() {
+	cd "$_archive"
+	replaces=(ttf-sil-doulos)
+	provides=("$pkgbase=$pkgver" ttf-sil-doulos)
+	install -Dm0644 -t "$pkgdir/usr/share/fonts/TTF/" *.ttf
+	install -Dm0644 -t "$pkgdir/usr/share/licenses/$pkgname/" OFL.txt
+	install -Dm0644 -t "$pkgdir/usr/share/doc/$pkgname/" README.txt FONTLOG.txt documentation/pdf/*
+}

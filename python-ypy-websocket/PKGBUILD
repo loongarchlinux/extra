@@ -3,7 +3,7 @@
 _pyname=ypy_websocket
 pkgname=python-ypy-websocket
 pkgver=0.12.4
-pkgrel=1
+pkgrel=2
 pkgdesc='WebSocket connector for Ypy'
 arch=(any)
 url='https://github.com/y-crdt/ypy-websocket'

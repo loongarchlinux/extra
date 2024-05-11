@@ -1,22 +1,23 @@
 # Maintainer: Justin Kromlinger <hashworks@archlinux.org>
 
 pkgname=opensearch-performance-analyzer-plugin
-pkgver=2.11.1.0
+pkgver=2.13.0.0
 pkgrel=1
-_opensearchver=2.11.1
+_opensearchver=2.13.0
 _jdkver=11
-_rcaver="$(echo -n "${_opensearchver}" | sed 's/\.[0-9]\+$//')"
+#_rcaver="$(echo -n "${_opensearchver}" | sed 's/\.[0-9]\+$//')"
+_rcaver="2.12"
 pkgdesc="OpenSearch Performance Analyzer Plugin"
 arch=('loong64' 'x86_64')
 url="https://opensearch.org/docs/latest/monitoring-plugins/pa"
-license=('Apache')
+license=('Apache-2.0')
 depends=("opensearch=${_opensearchver}")
 makedepends=("java-environment=${_jdkver}" 'unzip' 'git')
 source=(
   "${pkgname}-${pkgver}.tar.gz::https://github.com/opensearch-project/performance-analyzer/archive/${pkgver}.tar.gz"
   "git+https://github.com/opensearch-project/performance-analyzer-rca.git#branch=${_rcaver}"
 )
-sha256sums=('014fed97bbbb94619f43f0fa6fd8182ae159da42b91ea89e22fd4eb8bad18e9b'
+sha256sums=('510c4fd526ae1730b57d8ac5a48714c397c4f306d7b29dbeccae9138445e50a9'
             'SKIP')
 
 build() {
@@ -27,7 +28,7 @@ build() {
   # integTest (Reaper) requires JDK 14
   ./gradlew assemble \
     -Dperformance-analyzer-rca.build=true \
-    -Dperformance-analyzer-rca.branch=2.3 \
+    -Dperformance-analyzer-rca.branch=${_rcaver} \
     --exclude-task ":integTest" \
     --exclude-task ":jacocoTestReport" \
     --exclude-task ":updateShas"

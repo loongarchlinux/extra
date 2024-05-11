@@ -6,8 +6,8 @@
 # Contributor: Daenyth <Daenyth+Arch AT gmail DOT com>
 # Contributor: Gaetan Bisson <bisson@archlinux.org>
 
-pkgname='ncdu'
-pkgver=2.3
+pkgname=ncdu
+pkgver=2.4
 pkgrel=1
 pkgdesc='Disk usage analyzer with an ncurses interface'
 url='https://dev.yorhel.nl/ncdu'
@@ -16,34 +16,38 @@ depends=('ncurses')
 makedepends=('zig')
 arch=('loong64' 'x86_64')
 source=("https://dev.yorhel.nl/download/${pkgname}-${pkgver}.tar.gz"{,.asc})
-sha256sums=('bbce1d1c70f1247671be4ea2135d8c52cd29a708af5ed62cecda7dc6a8000a3c'
+sha256sums=('4a3d0002309cf6a7cea791938dac9becdece4d529d0d6dc8d91b73b4e6855509'
             'SKIP')
-b2sums=('9fd73fba83c57195f8ffbad5b954140a776d1cd1d7b3e458f832255ee9c07eb8af9888a23ed3c671f508d6ba3795e2361f79e64b4b24630d744470efc5bfaded'
+b2sums=('cbe2db51b86a6ac624d3a0300bb41337ff0c8ce63165dc0f471872c0fa646406bf190d4f0605130d55d981c0a694a6bbbb9092c8857c45f362dd4bf0016b0617'
         'SKIP')
 validpgpkeys=('74460D32B80810EBA9AFA2E962394C698C2739FA') # Yoran Heling <projects@yorhel.nl>
 
 build() {
-    cd "${pkgname}-${pkgver}"
+  cd "${pkgname}-${pkgver}"
 
-    DESTDIR="build" zig build \
-      --prefix /usr \
-      --search-prefix /usr \
-      -Dtarget=native-linux.5.15-gnu \
-      -Dcpu=baseline \
-      -Doptimize=ReleaseSafe \
-      -Dpie=true
+  DESTDIR="build" zig build \
+    --summary all \
+    --global-cache-dir ../zig-global-cache \
+    --prefix /usr \
+    --search-prefix /usr \
+    --release \
+    -Dtarget=native-linux.6.1-gnu.2.38 \
+    -Dcpu=baseline \
+    -Dpie=true
 }
 
 check() {
-    cd "${pkgname}-${pkgver}"
+  cd "${pkgname}-${pkgver}"
 
-    zig build test \
-      --prefix /usr \
-      --search-prefix /usr \
-      -Dtarget=native-linux.5.15-gnu \
-      -Dcpu=baseline \
-      -Doptimize=ReleaseSafe \
-      -Dpie=true
+  zig build test \
+    --summary all \
+    --global-cache-dir ../zig-global-cache \
+    --prefix /usr \
+    --search-prefix /usr \
+    --release \
+    -Dtarget=native-linux.6.1-gnu.2.38 \
+    -Dcpu=baseline \
+    -Dpie=true
 }
 
 package() {

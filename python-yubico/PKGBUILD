@@ -1,0 +1,57 @@
+# Maintainer: Fabian Bornschein <fabiscafe@archlinux.org>
+
+pkgname=python-yubico
+pkgver=1.3.3
+pkgrel=4
+pkgdesc="Python code to talk to YubiKeys"
+arch=('any')
+url="https://developers.yubico.com/python-yubico/"
+license=('BSD-2-Clause')
+depends=(
+  python
+  python-pyusb
+)
+makedepends=(
+  git
+  python-build
+  python-installer
+  python-setuptools
+  python-wheel
+)
+checkdepends=(python-nose)
+
+source=("git+https://github.com/Yubico/python-yubico.git/?signed#tag=python-yubico-${pkgver}"
+        "0001-Mark-raw-strings-to-fix-invalid-escape-sequences.patch")
+b2sums=('c407dc65d5d19cda73f49d4e1944ed96e7fae6861bfdb14b7e48c1e432e015b5370300a698b18948e3cce031852f3bd1c105f23ed4984c2ad7fd3e9ab26eb14b'
+        '917137e198daf4aceda9cf60df19d0f00c494f8fe390898f0a9e9ba34c1268dd473f0c64b5ab6d76e4df8f6d33693b9ec0570e8b5118a3f388730c5dc4f35c85')
+validpgpkeys=('20EE325B86A81BCBD3E56798F04367096FBA95E8') # Dain Nilsson <dain@yubico.com>
+
+prepare() {
+  cd "$pkgname"
+  ## Do not use comparision with "is" for literals
+  git cherry-pick -n b4a53389c3e6ad41c836aa82998149f427fe1ad8
+  
+  ## Mark raw strings to fix invalid escape sequences
+  git apply -3 ../0001-Mark-raw-strings-to-fix-invalid-escape-sequences.patch
+}
+
+build() {
+  cd "$pkgname"
+  python -m build --wheel --no-isolation
+}
+
+check() {
+  cd "$pkgname"
+
+  # Exclude tests that require a connected yubikey.
+  nosetests3 \
+    -e test_challenge_response \
+    -e test_serial \
+    -e test_status
+}
+
+package() {
+  cd "$pkgname"
+  python -m installer --destdir="$pkgdir" dist/*.whl
+  install -Dm644 COPYING -t "$pkgdir/usr/share/licenses/$pkgname"
+}

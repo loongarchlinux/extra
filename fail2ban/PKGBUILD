@@ -6,14 +6,20 @@
 # Contributor: nbags <neilbags@gmail.com>
 
 pkgname=fail2ban
-pkgver=1.0.2
+pkgver=1.1.0
 pkgrel=4
 pkgdesc='Bans IPs after too many failed authentication attempts'
-url='https://www.fail2ban.org/'
-license=('GPL')
 arch=('any')
-depends=('python-pyinotify' 'whois' 'sqlite' 'python-systemd')
-makedepends=('python-setuptools')
+url='https://www.fail2ban.org/'
+license=('GPL-2.0-or-later')
+depends=('python-pyinotify' 'python-systemd' 'sqlite' 'whois')
+makedepends=(
+  'git'
+  'python-build'
+  'python-installer'
+  'python-setuptools'
+  'python-wheel'
+)
 optdepends=(
   'firewalld: for a firewall backend'
   'ipset: for a firewall backend'
@@ -25,24 +31,34 @@ backup=(
   'etc/fail2ban/jail.conf'
   'etc/logrotate.d/fail2ban'
 )
-source=("$pkgname-$pkgver.tar.gz::https://github.com/fail2ban/$pkgname/archive/$pkgver.tar.gz")
-sha512sums=('688a84361b5794e1658f53d2d200ce752fe1e3320ddb1742c32c4b4b82a79ace16ae464e7ea3eeb94a0e862bcac73c2d3a0e61dd7b28e179a4c857f950d74dbb')
+source=("git+https://github.com/$pkgname/$pkgname.git#tag=$pkgver?signed")
+b2sums=('c2859a151abd906ceadc8549a4d337b01b037793e7d9285d44f08405695bdcb1b7dc88998cb7eed0321cacdce1d3fca29e55c63f5f60dadbb15f217f6cbe92d3')
+validpgpkeys=('E6C3F631FBDA716B070C6ED94141C485A81A88CB') # Sergey G. Brester (sebres) <serg.brester@sebres.de>
 
 prepare() {
-  cd $pkgname-$pkgver
+  cd $pkgname
+  # disutils removal
+  git cherry-pick -n -m 1 ac62658c10f492911f8a0037a0bcf97c8521cd78
+
   sed -i 's|self.install_dir|"/usr/bin"|' setup.py
   sed -i 's/^before = paths-debian.conf/before = paths-arch.conf/' config/jail.conf
 }
 
 build() {
-  cd $pkgname-$pkgver
-  ./fail2ban-2to3
-  python setup.py build
+  cd $pkgname
+  python -m build --wheel --skip-dependency-check --no-isolation
+}
+
+# Imports smtpd module that was removed in Python 3.12.
+# aiosmptd is now used in master, but the changes do not cleanly backport
+check() {
+  cd $pkgname
+  ./bin/fail2ban-testcases --ignore unittest.loader._FailedTest.test_smtp
 }
 
 package() {
-  cd $pkgname-$pkgver
-  python setup.py install --root "$pkgdir" --optimize=1
+  cd $pkgname
+  python -m installer --destdir="$pkgdir" dist/*.whl
 
   install -Dm644 build/fail2ban.service \
     "$pkgdir"/usr/lib/systemd/system/$pkgname.service
@@ -53,17 +69,19 @@ package() {
   install -Dm644 files/bash-completion \
     "$pkgdir"/usr/share/bash-completion/completions/fail2ban
 
+  install -Dm644 -t "$pkgdir"/usr/share/man/man1 man/*.1
+  install -Dm644 -t "$pkgdir"/usr/share/man/man5 man/*.5
+
+  cd "$pkgdir"
+  local site_packages=$(python -c "import site; print(site.getsitepackages()[0])")
+  cp -rl ./"$site_packages"/{etc,usr} .
+  rm -r ./"$site_packages"/{etc,usr}
+
+  # PEP 517 workflow doesn't seem to create these empty directories
+  # (avoid "mkdir -p" so these commands fail when the directories are back)
+  mkdir etc/fail2ban/{fail2ban,jail}.d
+  mkdir var{,/lib{,/fail2ban}}
+
   # fix sendmail location
-  sed -i 's/sbin/bin/g' "$pkgdir"/etc/fail2ban/action.d/sendmail*.conf
-
-  install -Dm644 man/fail2ban.1 "$pkgdir"/usr/share/man/man1/fail2ban.1
-  install -Dm644 man/fail2ban-client.1 \
-    "$pkgdir"/usr/share/man/man1/fail2ban-client.1
-  install -Dm644 man/fail2ban-regex.1 \
-    "$pkgdir"/usr/share/man/man1/fail2ban-regex.1
-  install -Dm644 man/fail2ban-server.1 \
-    "$pkgdir"/usr/share/man/man1/fail2ban-server.1
-  install -Dm644 man/jail.conf.5 "$pkgdir"/usr/share/man/man5/jail.conf.5
-
-  rm -r "$pkgdir/run"
+  sed -i 's/sbin/bin/g' etc/fail2ban/action.d/sendmail*.conf
 }

@@ -1,45 +1,61 @@
 # Maintainer: kpcyrd <kpcyrd[at]archlinux[dot]org>
 
-pkgbase=espflash
-pkgname=(espflash cargo-espflash)
-pkgver=2.1.0
+pkgname=espflash
+pkgver=3.0.0
 pkgrel=1
 pkgdesc="Cargo subcommand for flashing Espressif devices over serial"
 url='https://github.com/esp-rs/espflash'
 arch=('loong64' 'x86_64')
-license=('MIT' 'Apache-2.0')
-depends=('libudev.so' 'libuv')
-makedepends=('cargo' 'udev')
+license=('Apache-2.0' 'MIT')
+depends=(
+  'gcc-libs'
+  'glibc'
+  'libcurl.so'
+  'libudev.so'
+  'libz.so'
+)
+makedepends=(
+  'cargo'
+)
+provides=('cargo-espflash')
+conflicts=('cargo-espflash')
+replaces=('cargo-espflash')
 options=(!lto)
-source=(https://github.com/esp-rs/${pkgbase}/archive/v${pkgver}/${pkgbase}-${pkgver}.tar.gz)
-sha256sums=('85a62ee12949eeb9ed0cb186b87f88b1ff04eeabce5c4974cc24c304ed1bf960')
-b2sums=('f4361c5c8f7d31d10cf22c67723847b1597c6ca307c67aa76e9b1620e9f3bb0a18b9f038f3370fb886c530958b40369b5970a51f06c7e30ba3825f036d054878')
+source=(https://github.com/esp-rs/${pkgname}/archive/v${pkgver}/${pkgname}-${pkgver}.tar.gz)
+sha256sums=('ec24f052345f2ffba0e820ac7b389395f6e54f38545eddc62758079f2b9c7697')
+b2sums=('4380003d3c97942fc4984c14b9fc1ca4907c793971305178ab1c70a049acad563f4e03a51a00243a0196cfdc467bf5474f0ab785bacf0489196dc32df71008e5')
 
 prepare() {
-  cd ${pkgbase}-${pkgver}
-  cargo fetch --locked --target "$CARCH-unknown-linux-gnu"
+  cd ${pkgname}-${pkgver}
+  cargo fetch --locked --target "$(rustc -vV | sed -n 's/host: //p')"
 }
 
 build() {
-  cd ${pkgbase}-${pkgver}
+  cd ${pkgname}-${pkgver}
   cargo build --frozen --release
 }
 
 check() {
-  cd ${pkgbase}-${pkgver}
+  cd ${pkgname}-${pkgver}
   cargo test --frozen --workspace
 }
 
-package_espflash() {
-  cd ${pkgbase}-${pkgver}
+package() {
+  cd ${pkgname}-${pkgver}
   install -Dm 755 -t "${pkgdir}/usr/bin" \
-    target/release/espflash
-}
-
-package_cargo-espflash() {
-  cd ${pkgbase}-${pkgver}
-  install -Dm 755 -t "${pkgdir}/usr/bin" \
+    target/release/espflash \
     target/release/cargo-espflash
+
+  # install completions
+  install -d "${pkgdir}/usr/share/bash-completion/completions" \
+             "${pkgdir}/usr/share/zsh/site-functions" \
+             "${pkgdir}/usr/share/fish/vendor_completions.d"
+  "${pkgdir}/usr/bin/${pkgname}" completions bash > "${pkgdir}/usr/share/bash-completion/completions/${pkgname}"
+  "${pkgdir}/usr/bin/${pkgname}" completions zsh > "${pkgdir}/usr/share/zsh/site-functions/_${pkgname}"
+  "${pkgdir}/usr/bin/${pkgname}" completions fish > "${pkgdir}/usr/share/fish/vendor_completions.d/${pkgname}.fish"
+
+  # licenses
+  install -Dm 644 -t "${pkgdir}/usr/share/licenses/${pkgname}" LICENSE-*
 }
 
 # vim: ts=2 sw=2 et:

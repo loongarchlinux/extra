@@ -4,12 +4,13 @@
 
 pkgname=sharutils
 pkgver=4.15.2
-pkgrel=4
+pkgrel=5
 pkgdesc='Makes so-called shell archives out of many files'
 url='https://www.gnu.org/software/sharutils/'
-license=('GPL')
+license=('GPL-3.0-or-later')
 arch=('loong64' 'x86_64')
-depends=('perl' 'gettext' 'texinfo')
+depends=('glibc')
+makedepends=('gettext')
 validpgpkeys=('1F967B15DEB2349CACDF3D71D9204CB5BFBF0221')
 source=("https://ftp.gnu.org/gnu/${pkgname}/${pkgname}-${pkgver}.tar.xz"{,.sig})
 sha256sums=('2b05cff7de5d7b646dc1669bc36c35fdac02ac6ae4b6c19cb3340d87ec553a9a'
@@ -23,6 +24,7 @@ prepare() {
 build() {
 	cd "${srcdir}/${pkgname}-${pkgver}"
 	CFLAGS+=' -fcommon' # https://wiki.gentoo.org/wiki/Gcc_10_porting_notes/fno_common
+	CFLAGS+=' -Wno-format-security' # fix build with gettext function
 	./configure \
 		--prefix=/usr \
 		--mandir=/usr/share/man \

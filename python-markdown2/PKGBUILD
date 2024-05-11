@@ -1,36 +1,30 @@
 # Maintainer: Filipe Laíns (FFY00) <lains@archlinux.org>
 
 pkgname=python-markdown2
-pkgver=2.4.12
+pkgver=2.4.13
 pkgrel=1
 pkgdesc='A fast and complete implementation of Markdown in Python'
 arch=('any')
 url='https://github.com/trentm/python-markdown2'
 license=('MIT')
 depends=('python' 'python-pygments')
-makedepends=('python-setuptools')
-checkdepends=('python-tox-current-env')
+makedepends=('python-build' 'python-installer' 'python-setuptools' 'python-wheel')
 source=("$pkgname-$pkgver.tar.gz::$url/archive/$pkgver.tar.gz")
-sha512sums=('ca794292c877f332fd252846f761744c7a00aeac72201a6c4c069f81484a46965a3c79bb00c05ad7978deafc48fc769a8c3cf05a80aeba1ea9b353ef4fa910d4')
+sha512sums=('cd34552d3070ed967578af2df3b23186c1fcfc439ee01c19bfba3d8060ece704100594abac0fc4f3ef7a612a774bb64a1322139c46c277d0bb5840de9d002def')
 
 build() {
   cd $pkgname-$pkgver
-
-  python setup.py build
+  python -m build --wheel --no-isolation
 }
 
 check() {
-  cd $pkgname-$pkgver
-
-  local python_version=$(python -c 'import sys; print("".join(map(str, sys.version_info[:2])))')
-  tox -e "py${python_version}" --current-env
+  cd $pkgname-$pkgver/test
+  python testall.py
 }
 
 package() {
   cd $pkgname-$pkgver
-
-  python setup.py install --root="$pkgdir" --optimize=1 --skip-build
-
+  python -m installer --destdir="$pkgdir" dist/*.whl
   install -Dm 644 LICENSE.txt "$pkgdir"/usr/share/licenses/$pkgname/LICENSE
 }
 

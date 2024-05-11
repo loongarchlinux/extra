@@ -3,8 +3,8 @@
 
 _hkgname=servant
 pkgname=haskell-servant
-pkgver=0.19.1
-pkgrel=74
+pkgver=0.20.1
+pkgrel=9
 pkgdesc="A family of combinators for defining webservices APIs"
 url="http://haskell-servant.readthedocs.org/"
 license=("BSD")
@@ -14,21 +14,16 @@ depends=('ghc-libs' 'haskell-base-compat' 'haskell-aeson' 'haskell-attoparsec'
          'haskell-http-api-data' 'haskell-http-media' 'haskell-http-types' 'haskell-mmorph'
          'haskell-network-uri' 'haskell-quickcheck' 'haskell-tagged' 'haskell-sop-core'
          'haskell-singleton-bool' 'haskell-string-conversions' 'haskell-vault')
-makedepends=('ghc' 'uusi' 'haskell-hspec' 'haskell-quickcheck-instances')
+makedepends=('ghc' 'haskell-hspec' 'haskell-quickcheck-instances')
 source=("https://hackage.haskell.org/packages/archive/${_hkgname}/${pkgver}/${_hkgname}-${pkgver}.tar.gz")
-sha512sums=('f99ed533f6b0ef819880622509cb452ef53e45a950b0712e56393721e61784b98040336fbed01a097a1da08dbfaa4afc8a515b46dea85218a0ae3b4bf9101124')
-
-prepare() {
-    cd $_hkgname-$pkgver
-    uusi -u bifunctors -u hspec -u hspec-discover -u http-api-data -u singleton-bool $_hkgname.cabal
-}
+sha512sums=('b99b68ac106d1955f3868ed3de47052ea9498cbbff6ea21c7bb3e29f3228be169e09db5b8e1778397072f4bfb26262bafac8483b52da64f8f099fedd1bde7709')
 
 build() {
     cd $_hkgname-$pkgver
 
     runhaskell Setup configure -O --enable-shared --enable-executable-dynamic --disable-library-vanilla \
         --prefix=/usr --docdir=/usr/share/doc/$pkgname --datasubdir=$pkgname --enable-tests \
-        --dynlibdir=/usr/lib --libsubdir=\$compiler/site-local/\$pkgid --ghc-option=-fllvm
+        --dynlibdir=/usr/lib --libsubdir=\$compiler/site-local/\$pkgid
     runhaskell Setup build $MAKEFLAGS
     runhaskell Setup register --gen-script
     runhaskell Setup unregister --gen-script

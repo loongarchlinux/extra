@@ -1,26 +1,27 @@
-# Maintainer: Sven-Hendrik Haase <svenstaro@gmail.com>
+# Maintainer: Sven-Hendrik Haase <svenstaro@archlinux.org>
 # Contributor: robertfoster
 pkgname=rnnoise
-pkgver=0.4.1
+epoch=1
+pkgver=0.2
 pkgrel=1
 pkgdesc="A noise suppression library based on a recurrent neural network"
 arch=(loong64 x86_64)
 url="https://gitlab.xiph.org/xiph/rnnoise"
-license=('custom')
-_commit=1cbdbcf1283499bbb2230a6b0f126eb9b236defd
+license=('BSD-3-Clause')
 depends=('glibc')
-source=("${pkgname}-${_commit}.tar.gz::https://gitlab.xiph.org/xiph/rnnoise/-/archive/${_commit}/rnnoise-${_commit}.tar.gz")
-sha512sums=('7d16f7d68a0a28ecdaaea098df5482d55adf7948292cab8ed78ae5cc6652ebdfc48e623f193ee356fcf527e54883e9d3938195f2fd52c20dff895fd2515617f3')
+makedepends=('wget')
+source=("https://gitlab.xiph.org/xiph/rnnoise/-/archive/v${pkgver}/rnnoise-v${pkgver}.tar.gz")
+sha512sums=('930aa892299edbc1d512803df6b845ea6164eb498cacdab9970e5ae799bc6cf3c8c94d2b9576955fb9a2d8aa13a6d255e58fb99d0367a0d0ef842a1cb938e674')
 
 build() {
-  cd "rnnoise-${_commit}"
+  cd "rnnoise-v${pkgver}"
   ./autogen.sh
-  ./configure --prefix=/usr
+  ./configure --prefix=/usr --enable-x86-rtcd
   make
 }
 
 package() {
-  cd "rnnoise-${_commit}"
+  cd "rnnoise-v${pkgver}"
   make DESTDIR="$pkgdir/" install
   install -Dm644 COPYING "${pkgdir}/usr/share/licenses/${pkgname}/COPYING"
 }

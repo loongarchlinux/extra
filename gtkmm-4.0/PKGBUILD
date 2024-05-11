@@ -6,12 +6,12 @@ pkgname=(
   gtkmm-4.0
   gtkmm-4.0-docs
 )
-pkgver=4.12.0
+pkgver=4.14.0
 pkgrel=1
 pkgdesc="C++ bindings for GTK 4"
 url="https://www.gtkmm.org/"
 arch=(loong64 x86_64)
-license=(LGPL)
+license=(LGPL-2.1-or-later)
 depends=(
   gtk4
   pangomm-2.48
@@ -25,9 +25,9 @@ makedepends=(
   pangomm-2.48-docs
 )
 checkdepends=(xorg-server-xvfb)
-_commit=14b326c168198b0c88d4514b78cc7c954f9d12c8  # tags/4.12.0^0
+_commit=5cafb9bb49b9ec907ba1637dec0d1159a98c6a73  # tags/4.14.0^0
 source=("git+https://gitlab.gnome.org/GNOME/gtkmm.git#commit=$_commit")
-b2sums=('SKIP')
+b2sums=('aba16054f535ad4d6b6d0f6113f21fc480e2a854e69179840e69b25aa19ce02cf5e1b16c297313ded506fdf018555e2201240e223168b6384992f0f76569f8bc')
 
 pkgver() {
   cd gtkmm
@@ -39,23 +39,16 @@ prepare() {
 }
 
 build() {
-  arch-meson gtkmm build -D maintainer-mode=true
+  local meson_options=(
+    -D maintainer-mode=true
+  )
+
+  arch-meson gtkmm build "${meson_options[@]}"
   meson compile -C build
 }
 
 check() {
-  xvfb-run -s '-nolisten local' \
-    meson test -C build --print-errorlogs
-}
-
-_pick() {
-  local p="$1" f d; shift
-  for f; do
-    d="$srcdir/$p/${f#$pkgdir/}"
-    mkdir -p "$(dirname "$d")"
-    mv "$f" "$d"
-    rmdir -p --ignore-fail-on-non-empty "$(dirname "$f")"
-  done
+  xvfb-run -s '-nolisten local' meson test -C build --print-errorlogs
 }
 
 package_gtkmm-4.0() {
@@ -66,11 +59,13 @@ package_gtkmm-4.0() {
     libsigc-3.0.so
   )
   provides=(libgtkmm-4.0.so)
+  options=(!emptydirs)
 
   meson install -C build --destdir "$pkgdir"
 
-  cd "$pkgdir"
-  _pick docs usr/share/{devhelp,doc}
+  # Split -docs
+  mkdir -p docs/usr/share
+  mv -t docs/usr/share "$pkgdir"/usr/share/{devhelp,doc}
 }
 
 package_gtkmm-4.0-docs() {
@@ -78,7 +73,7 @@ package_gtkmm-4.0-docs() {
   depends=()
   options=(!strip)
 
-  mv docs/* "$pkgdir"
+  mv -t "$pkgdir" docs/*
 }
 
 # vim:set sw=2 sts=-1 et:

@@ -6,34 +6,49 @@
 # Contributor: Hiroshi Yui <hiroshiyui@gmail.com>
 
 pkgname=ibus-chewing
-pkgver=1.6.2
+pkgver=2.0.0
 pkgrel=1
 pkgdesc='Chinese Chewing Engine for IBus Framework'
 arch=('loong64' 'x86_64')
-license=('GPL')
-url='https://github.com/definite/ibus-chewing'
-depends=('ibus' 'libchewing' 'gtk3')
-makedepends=('gob2' 'cmake-fedora')
-source=("https://github.com/definite/ibus-chewing/archive/$pkgver/$pkgname-$pkgver.tar.gz")
-sha512sums=('b723202fa844d3f94171a4bf44467f7bacaee7283866698903b705ba26344bf844c5d6df0fd73e875bb5cff0aa6764a881a4633c36ef5585015a63ec01e639bf')
+# "GPLv2+" in https://github.com/chewing/ibus-chewing/blob/1.6.2/CMakeLists.txt#L90
+license=('GPL-2.0-or-later')
+url='https://github.com/chewing/ibus-chewing'
+depends=('ibus' 'libchewing' 'gtk4' 'libadwaita')
+makedepends=('cmake' 'minisign')
+checkdepends=('dbus' 'xorg-server-xvfb')
+source=("https://github.com/chewing/ibus-chewing/releases/download/v$pkgver/$pkgname-$pkgver-Source.tar.xz"{,.minisig})
+sha512sums=('23449ac67c06e63442f859e0c0883d9f55c0de9ccf9c97f8dda4aab1066e0be9dc9f3964989c992c95d8fce17714a624d430a422c6d866646f0f0102165b6190'
+            'a3898a5a84a83e86213760101e753bdcab7111255f0823d878223c534eb39c9443a84d9b3996d098725ff186e0c306bb08eb1f4a0819d0208b3169dffdedcb3d')
+# The key is mentioned on https://github.com/chewing/ibus-chewing
+_validminisignkey='RWRzJFnXiLZleAyCIv1talBjyRewelcy9gzYQq9pd3SKSFBPoy57sf5s'
+
+# XXX: move to verify() when pacman 7.0 is out
+# https://gitlab.archlinux.org/pacman/pacman/-/merge_requests/37
+prepare() {
+  minisign -Vm $pkgname-$pkgver-Source.tar.xz -P $_validminisignkey
+}
 
 build() {
-  cd $pkgname-$pkgver
+  cd $pkgname-$pkgver-Source
 
   cmake -B build -S . \
     -DCMAKE_INSTALL_PREFIX=/usr \
     -DCMAKE_BUILD_TYPE=None \
-    -DLIBEXEC_DIR=/usr/lib/ibus
+    -DCMAKE_INSTALL_LIBEXECDIR=/usr/lib/ibus
 
-  # XXX: updated *.po files contain no translated strings. Maybe because fedora.zanata.org is down
-  # https://github.com/definite/ibus-chewing/issues/150
-  touch build/po/ibus-chewing.pot
-  cp -v po/*.po build/po/
+  make -C build
+}
 
-  make -C build -j1
+check() {
+  cd $pkgname-$pkgver-Source/build
+
+  # glib-compile-schemas is needed for tests
+  # https://github.com/chewing/ibus-chewing/blob/v2.0.0/.github/workflows/ci.yml#L33
+  glib-compile-schemas ../src/setup --targetdir "$srcdir/$pkgname-$pkgver-Source/build/bin"
+  GSETTINGS_SCHEMA_DIR="$srcdir/$_pkgname/build/bin/" xvfb-run --auto-display dbus-run-session make test
 }
 
 package() {
-  cd $pkgname-$pkgver/build
+  cd $pkgname-$pkgver-Source/build
   make DESTDIR="$pkgdir" install
 }

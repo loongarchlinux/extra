@@ -1,0 +1,45 @@
+# Maintainer: Caleb Maclennan <caleb@alerque.com>
+# Contributor: Misaka13514 <Misaka13514 at gmail dot com>
+# Contributor: Luis Martinez <luis dot martinez at disroot dot org>
+# Contributor: pfm <vorticity at mail dot ru>
+
+pkgname=python-pem
+_name=${pkgname#python-}
+pkgver=23.1.0
+pkgrel=3
+pkgdesc='Parsing and splitting PEM files'
+arch=(any)
+url="https://github.com/hynek/$_name"
+license=(MIT)
+depends=(python
+         python-pyopenssl
+         python-twisted)
+makedepends=(python-{build,installer,wheel}
+             python-hatch-fancy-pypi-readme
+             python-hatch-vcs
+             python-hatchling)
+checkdepends=(python-certifi
+              python-pretend
+              python-pytest)
+_archive="$_name-$pkgver"
+source=("https://files.pythonhosted.org/packages/source/${_name::1}/$_name/$_archive.tar.gz")
+sha256sums=('06503ff2441a111f853ce4e8b9eb9d5fedb488ebdbf560115d3dd53a1b4afc73')
+#validpgpkeys=('C2A04F86ACE28ADCF817DBB7AE2536227F69F181') ## Hynek Schlawack
+
+build() {
+	cd "$_archive"
+	python -m build -wn
+}
+
+check() {
+	cd "$_archive"
+	PYTHONPATH=./src pytest -x --disable-warnings -k 'not test_packaging'
+}
+
+package() {
+	cd "$_archive"
+	python -m installer -d "$pkgdir/" dist/*.whl
+	install -d "$pkgdir/usr/share/licenses/$pkgname/"
+	local _site="$(python -c 'import site; print(site.getsitepackages()[0])')"
+	ln -s "$_site/pem-$pkgver.dist-info/licenses/LICENSE" "$pkgdir/usr/share/licenses/$pkgname/"
+}

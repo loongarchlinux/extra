@@ -3,7 +3,7 @@
 pkgname=python-geoip2
 pkgver=4.8.0
 _testdatacommit=1271107ccad72c320bc7dc8aefd767cba550101a
-pkgrel=1
+pkgrel=2
 pkgdesc="MaxMind GeoIP2 API"
 url="https://github.com/maxmind/GeoIP2-python"
 license=('Apache')

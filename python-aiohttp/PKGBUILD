@@ -7,9 +7,8 @@
 
 _pkgname=aiohttp
 pkgname=python-aiohttp
-_gitcommit=6333c026422c6b0fe57ff63cde4104e2d00f47f4
-pkgver=3.9.1
-pkgrel=1
+pkgver=3.9.3
+pkgrel=2
 pkgdesc='HTTP client/server for asyncio'
 arch=('loong64' 'x86_64')
 url='https://aiohttp.readthedocs.io'
@@ -35,6 +34,7 @@ checkdepends=(
   'gunicorn'
   'python-aiodns'
   'python-brotli'
+  'python-freezegun'
   'python-proxy.py'
   'python-pytest'
   'python-pytest-mock'
@@ -50,10 +50,10 @@ optdepends=(
   'python-brotli: for Brotli transfer-encodings support'
 )
 source=(
-  "${pkgname}::git+https://github.com/aio-libs/aiohttp#commit=${_gitcommit}"
+  "${pkgname}::git+https://github.com/aio-libs/aiohttp#tag=v${pkgver}"
   git+https://github.com/nodejs/llhttp.git
 )
-sha512sums=('SKIP'
+sha512sums=('68668a42748423a8ee14eba47ba68ffa6cec09e843fed3b14ea9c5b8a2a080b01c3f9c9478f99cf30ec6f465aac0913ef44238d456530f7d53e1b35741cb6846'
             'SKIP')
 
 pkgver() {
@@ -87,7 +87,8 @@ check() {
   cd ${pkgname}
   local _python_version=$(python -c 'import sys; print("".join(map(str, sys.version_info[:2])))')
   mv tests/autobahn/test_autobahn.py{,.bak} # Docker tests
-  PYTHONPATH="$PWD/build/lib.linux-$CARCH-cpython-${_python_version}" pytest
+  # https://github.com/aio-libs/aiohttp/issues/8234
+  PYTHONPATH="$PWD/build/lib.linux-$CARCH-cpython-${_python_version}" pytest -k 'not test_aiohttp_plugin'
   mv tests/autobahn/test_autobahn.py{.bak,}
 }
 

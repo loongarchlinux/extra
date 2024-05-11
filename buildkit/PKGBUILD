@@ -1,8 +1,9 @@
 # Maintainer: George Rawlinson <grawlinson@archlinux.org>
+# Maintainer: Caleb Maclennan <caleb@alerque.com>
 # Contributor: Kenneth Endfinger <kaendfinger@gmail.com>
 
 pkgname=buildkit
-pkgver=0.12.2
+pkgver=0.13.2
 pkgrel=1
 pkgdesc='A toolkit for converting source code to build artifacts in a repeatable manner'
 arch=('loong64' 'x86_64')
@@ -11,16 +12,8 @@ license=('Apache')
 depends=('runc' 'containerd')
 makedepends=('git' 'go')
 options=('!lto')
-_commit='567a99433ca23402d5e9b9f9124005d2e59b8861'
-source=("$pkgname::git+$url.git#commit=$_commit")
-b2sums=('SKIP')
-
-pkgver() {
-  cd "$pkgname"
-
-  # ignore docker tags
-  git describe --tags --exclude 'dockerfile*' | sed 's/^v//'
-}
+source=("$pkgname::git+$url.git#tag=v$pkgver")
+sha256sums=('75ccb5e112e34daa72f4134051f5b4608ce403552e1b5fda4a80d0311ae4fa5f')
 
 prepare() {
   cd "$pkgname"
@@ -48,13 +41,15 @@ build() {
 
   local package='github.com/moby/buildkit'
 
+  local _commit="$(git rev-list -1 HEAD)"
+
   go build -v \
     -buildmode=pie \
     -mod=readonly \
     -modcacherw \
     -ldflags "-compressdwarf=false \
     -linkmode external \
-    -extldflags ${LDFLAGS} \
+    -extldflags \"${LDFLAGS}\" \
     -X ${package}/version.Version=$pkgver \
     -X ${package}/version.Revision=$_commit" \
     -o build \

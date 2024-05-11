@@ -3,14 +3,14 @@
 
 pkgname=python-ldap
 pkgver=3.4.4
-pkgrel=1
+pkgrel=2
 pkgdesc="LDAP client API for Python"
 url="https://python-ldap.readthedocs.io/"
 arch=('loong64' 'x86_64')
 license=('MIT')
 depends=('python-pyasn1' 'python-pyasn1-modules' 'libldap')
-makedepends=('python-setuptools' 'python-coverage' 'python-pytest')
-checkdepends=('openldap' 'python-pyasn1' 'python-pyasn1-modules')
+makedepends=('python-setuptools' 'python-build' 'python-installer' 'python-wheel')
+checkdepends=('openldap' 'python-pyasn1' 'python-pyasn1-modules' 'python-pytest')
 source=("${pkgname}-${pkgver}.tar.gz::https://github.com/python-ldap/python-ldap/archive/${pkgname}-${pkgver}.tar.gz")
 sha256sums=('98c03c14724636351964606a307bf946fa6248630c2d6b89938a6911b6b84c99')
 
@@ -25,7 +25,7 @@ prepare() {
 
 build(){
   cd "$pkgbase-$pkgbase-$pkgver"
-  python setup.py build
+  python -m build --wheel --no-isolation
 }
 
 check(){
@@ -37,6 +37,6 @@ check(){
 
 package() {
   cd "$pkgbase-$pkgbase-$pkgver"
-  python setup.py install --root="$pkgdir/" --optimize=1 --skip-build
+  python -m installer --destdir="$pkgdir" dist/*.whl
   install -Dm 644 LICENCE "${pkgdir}/usr/share/licenses/${pkgname}/LICENSE"
 }

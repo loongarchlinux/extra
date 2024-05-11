@@ -2,12 +2,12 @@
 
 _pkg=Fiona
 pkgname=python-${_pkg,,}
-pkgver=1.9.5
+pkgver=1.9.6
 pkgrel=2
 pkgdesc="Read and write geographic data files"
 arch=(loong64 x86_64)
 url="https://github.com/Toblerity/Fiona"
-license=(BSD)
+license=(BSD-3-Clause)
 depends=(
     gdal
     python-attrs
@@ -22,15 +22,25 @@ optdepends=(
     'python-shapely: fio-calc functionnality'
     'python-boto3: s3 support'
 )
-makedepends=(cython python-setuptools)
+makedepends=(
+    cython
+    python-build
+    python-installer
+    python-setuptools
+    python-wheel
+)
 checkdepends=(python-pytest python-boto3 python-pytz python-shapely)
 #source=(https://files.pythonhosted.org/packages/source/${_pkg::1}/${_pkg}/${_pkg}-${pkgver}.tar.gz)
 source=(https://github.com/Toblerity/Fiona/archive/${pkgver}/${pkgname}-${pkgver}.tar.gz)
-sha256sums=('97d29982c8a780f3a6c163472a6e4ffa8c942195adc6883b5e6282b29bad71d4')
+sha256sums=('cf96dfbca9a953594b7d42bf5f6f4a53902180474968dd25ef74b81227af228f')
+
+prepare() {
+  sed -i '/oldest-supported-numpy/d' ${_pkg}-${pkgver}/pyproject.toml
+}
 
 build() {
   cd ${_pkg}-${pkgver}
-  python setup.py build
+  python -m build --wheel --no-isolation
 }
 
 check() {
@@ -44,6 +54,6 @@ check() {
 
 package() {
   cd ${_pkg}-${pkgver}
-  python setup.py install --prefix=/usr --root="${pkgdir}" --skip-build --optimize=1
+  python -m installer --destdir="$pkgdir" dist/*.whl
   install -Dm644 LICENSE.txt -t "${pkgdir}"/usr/share/licenses/${pkgname}
 }

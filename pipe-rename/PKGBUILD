@@ -1,35 +1,25 @@
 # Maintainer: George Rawlinson <grawlinson@archlinux.org>
+# Maintainer: Caleb Maclennan <caleb@alerque.com>
 
 pkgname=pipe-rename
 pkgver=1.6.5
-pkgrel=1
+pkgrel=2
 pkgdesc='Rename your files using your favorite text editor'
 arch=('loong64' 'x86_64')
 url='https://github.com/marcusbuffett/pipe-rename'
 license=('MIT')
-depends=('glibc' 'gcc-libs')
-makedepends=('git' 'rust')
+depends=('gcc-libs' 'glibc')
+makedepends=('cargo' 'git')
 options=('!lto')
-_commit='a3c0bafaccdd8d08953745183d3887dc4792e476'
-source=(
-  "$pkgname::git+$url#commit=$_commit"
-  'LICENSE'
-)
-sha512sums=('SKIP'
-            '3a3dbfd7a5a8d02a3a96bb1652bd25cae21d1080b941ecd3bee3f46e98b4a2f30b4a7ecdeb1e55ec2bf8bfefbeb9500287acb964ccb7149a405ee28eebd05889')
-b2sums=('SKIP'
-        'abec091be86ec71b15a70251d769d4177639881c28d71fb9127d86cf711514e0fe40e80edd645e97df532980baf13380433fd2b497e03b4021d49e87434a4965')
-
-pkgver() {
-  cd "$pkgname"
-
-  git describe --tags | sed 's/^v//'
-}
+source=("git+$url#tag=$pkgver"
+        'LICENSE')
+sha256sums=('7f19f03aae18641ca8b52528eba6779ef11dc59b0948d5c6386d59b9a4417128'
+            '9d548c1d09d68ad9e6275dfa9574e4c09b7d5c29d8436d883692c1ddd5155772')
 
 prepare() {
   cd "$pkgname"
 
-  cargo fetch --locked --target "$CARCH-unknown-linux-gnu"
+  cargo fetch --locked --target "$(rustc -vV | sed -n 's/host: //p')"
 }
 
 build() {

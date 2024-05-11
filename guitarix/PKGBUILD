@@ -1,8 +1,8 @@
 # Maintainer: David Runge <dvzrv@archlinux.org
 
 pkgname=guitarix
-pkgver=0.44.1
-pkgrel=6
+pkgver=0.46.0
+pkgrel=1
 pkgdesc="A simple mono guitar amplifier and FX for JACK using Faust"
 arch=(loong64 x86_64)
 url="https://guitarix.org"
@@ -12,7 +12,6 @@ license=(
   LGPL-3.0-or-later
 )
 groups=(
-  ladspa-plugins
   lv2-plugins
   pro-audio
 )
@@ -43,10 +42,10 @@ makedepends=(
   gtk3
   intltool
   jack
-  ladspa
   liblo
   liblrdf
   libsndfile
+  libx11
   lilv
   lv2
   pango
@@ -58,50 +57,37 @@ makedepends=(
 optdepends=('new-session-manager: for session management')
 provides=(
   guitarix2 libgxw.so libgxwmm.so
-  ladspa-host
   lv2-host
 )
 conflicts=(guitarix2)
 replaces=(guitarix2)
 source=(
-  $pkgname-$pkgver.tar.xz::https://download.sourceforge.net/project/guitarix/guitarix/${pkgname}2-$pkgver.tar.xz
-  05802808.patch
-  always_inline.patch
-  gcc-13.patch
-  python-3.11.patch
+  $pkgname-$pkgver.tar.xz::https://github.com/brummer10/guitarix/releases/download/V$pkgver/${pkgname}2-$pkgver.tar.xz
+  $pkgname-0.46.0-waf_libx11.patch::https://github.com/brummer10/guitarix/commit/af86767f3196eeb153fd62e76c61ddf7881b8959.patch
 )
-sha512sums=('d2c0e40762d97ed7ce61c3115fc3800cc569a2bb4f66e09147507a9eaa815fb9d1363444353a5854035755bd1b1e247ccb341aed60ca0ecf6a77019da73064c1'
-            'f8d56a27a4163cb0b322f5597fbeb1bf15c2e0e43bfac2f0cd4f9d4e81651ccd570157e937fb3c8da171fc70243af34fde1dab69a3b3d18fcd00de8935efca0b'
-            '880ecbbaf44edfa90b39c27ff01f77da6351a12852eb90f6ee5f053431448d860cc8d2a5823cc1933ede4ceefb3345fcbe68ffaa71316689bb2e75a7c3b8dd77'
-            '06fbd8a658b87f8fe6c8b08cfbb965633c5c1673ace226b18f9a9deccb5a97e257e118c9e2383e3e607573098fa34460232fed798a868f3e7296886f280d873b'
-            '9dc884dfc279e1dff45e8d562a23a1ec8245a9c1b9808723660ba837486255a457ba843380de63e68a52ce4a4b6f2a67d4e108fe342005005fd670c6e3e2b666')
-b2sums=('57a1ad0be133fe2851ff7539d5c467a649774a1de90569e83feeb3ba2b05324ce0ee6d4388122cdb3fdcb36afac4cb7cfd2d6ab0216ff2f56d8e7c2886d14152'
-        '699bbb584cd755db978bffc7a60b84cd48d7e115b236ca15c4bbcc0440463a8c953fb305f03dd68f69d6444ea813aa31954a8a2aec40a3e68f1542b6d90bec96'
-        'b74bfa683bcfae8dbe0e67c7117ed5619a2e2576a1d32691de905c9278d6a07616af9c2b6bf7f10cf8f63b95a1618331244a5aa97d42bff890eb382cb86ee767'
-        '9c4173a0b16e4b5cab03a115ed6dd2673247ce13a01c5705bc1b18320b4d96f52e3579884ca3f12b20dc05b440e01b15a7895ea47601d44ee7e10a10a36fa3ee'
-        '1d89121af45f23476eb22731400c524af4354a7cc1cc51ff32d299a56809f1cc1b81e54c4263d519ff7ac17266e662883d7dc9d077124c624049f796bf745fb2')
+sha512sums=('cdb8eccdd230bade493cf0b7fd2a6e748fcaf3c3fd6b5ed5fbd6134d08be9518c93400625d63e386b436fcef3e1738cae543256b09941445436d7f2bf41649a0'
+            '6b0632a7eccce88ee001d31b0019e432366f6aeb90d3683441e65fd1f04f92301bc5117450b35cf7cd3c66b350802f8ff334a42cc7b314481d20410aad5d363e')
+b2sums=('b650d53f4e73539419bbe194e07ee770494f80b547d407f5a269c035b91fbf3e0fe078a9e82da21f773d69395523f70fc179be7942f08e2b8689b220414c9925'
+        'd96d726be2d986a91285c0087e147f6cba646caf6dd765ca52a769910c132d862c01eed5744250be2bdfa7e0856463108410fdb69556a27760074c18bfae86f9')
 
 prepare() {
-  patch -d $pkgname-$pkgver -p1 < 05802808.patch # Fix build with zita-resampler 1.10
-  patch -d $pkgname-$pkgver -p2 < always_inline.patch # fix always_inline redefinition
-  patch -d $pkgname-$pkgver -p2 < gcc-13.patch
-  patch -d $pkgname-$pkgver -p2 < python-3.11.patch
+  # fix issue with older waf: https://github.com/brummer10/guitarix/issues/151
+  patch -Np2 -d $pkgname-$pkgver -i ../$pkgname-0.46.0-waf_libx11.patch
 }
 
 build() {
   local waf_options=(
     --prefix=/usr
     --enable-nls
-    --ladspa
-    --new-ladspa
     --shared-lib
     --lib-dev
     --cxxflags='-flto'
     --ldflags="$LDFLAGS"
   )
 
-  cd $pkgname-$pkgver
   export LINKFLAGS="$LDFLAGS"
+
+  cd $pkgname-$pkgver
   waf configure "${waf_options[@]}"
   waf build -vv
 }

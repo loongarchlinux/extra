@@ -4,7 +4,7 @@
 # Contributor:  <godeater@gmail.com>
 
 pkgname=chezmoi
-pkgver=2.46.0
+pkgver=2.48.0
 pkgrel=1
 pkgdesc="Manage your dotfiles across multiple machines"
 arch=('loong64' 'x86_64')
@@ -15,7 +15,7 @@ depends=('glibc')
 checkdepends=('zip')
 options=('!lto')
 source=("${pkgname}-${pkgver}.tar.gz::https://github.com/twpayne/chezmoi/archive/v${pkgver}.tar.gz")
-sha512sums=('02aa8330f23f91842bf3af1dbe6f27bc06d89cc20c308b949a4a924ddc6f73d3b0b8ae1a9be989ac9d9518b5d1937d5a9b3f97968904d3d8ba40d465f31b1265')
+sha512sums=('9c8b4de4d66b92de5cfcb870c8c0675364c200e34e7259db367b9e7b4433cbedbe51decd796212d33e1594e9510a173e5e6f65c8a553bb0dd9b1ceafca1b52a8')
 
 prepare() {
   cd "$pkgname-$pkgver"
@@ -26,10 +26,10 @@ prepare() {
 build() {
   cd "$pkgname-$pkgver"
 
-  export CGO_LDFLAGS="${LDFLAGS}"
-  export CGO_CFLAGS="${CFLAGS}"
-  export CGO_CPPFLAGS="${CPPFLAGS}"
-  export CGO_CXXFLAGS="${CXXFLAGS}"
+  export CGO_LDFLAGS="$LDFLAGS"
+  export CGO_CFLAGS="$CFLAGS"
+  export CGO_CPPFLAGS="$CPPFLAGS"
+  export CGO_CXXFLAGS="$CXXFLAGS"
   export GOPROXY=off
   go build \
     -buildmode=pie \
@@ -38,8 +38,8 @@ build() {
     -ldflags "-compressdwarf=false \
               -X github.com/twpayne/chezmoi/cmd.DocsDir=/usr/share/doc/$pkgname \
               -X main.version=$pkgver \
-              -X main.date=$(date -u +'%Y-%m-%dT%H:%M:%SZ' --date=@${SOURCE_DATE_EPOCH}) \
-              -extldflags ${LDFLAGS}" \
+              -X main.date=$(date -u +'%Y-%m-%dT%H:%M:%SZ' --date=@$SOURCE_DATE_EPOCH) \
+              -extldflags \"$LDFLAGS\"" \
     .
 }
 

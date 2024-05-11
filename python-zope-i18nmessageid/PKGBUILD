@@ -2,29 +2,31 @@
 
 pkgname=python-zope-i18nmessageid
 pkgver=6.1.0
-pkgrel=1
+pkgrel=2
 pkgdesc="Message Identifiers for internationalization"
 arch=('loong64' 'x86_64')
 url="https://github.com/zopefoundation/zope.i18nmessageid"
-license=('ZPL')
+license=('ZPL-2.1')
 depends=('python-setuptools')
+makedepends=('python-build' 'python-installer' 'python-wheel')
 checkdepends=('python-zope-testrunner')
 source=("$pkgname-$pkgver.tar.gz::https://github.com/zopefoundation/zope.i18nmessageid/archive/$pkgver.tar.gz")
 sha512sums=('31a18cf8f4639d21e9d3a8eeb39205e778521353f49a53a0bc807ca520ca437cfd83aeb1246e4631b323f1197f02b1246b6d254e2f0d917b6a3353426fb9725e')
 
 build() {
   cd zope.i18nmessageid-$pkgver
-  python setup.py build
+  python -m build --wheel --no-isolation
 }
 
 check() {
   cd zope.i18nmessageid-$pkgver
-  PYTHONPATH="$PWD/build/lib.linux-$CARCH-cpython-311" python -m zope.testrunner --test-path=src
+  local python_version=$(python -c 'import sys; print("".join(map(str, sys.version_info[:2])))')
+  PYTHONPATH="$PWD/build/lib.linux-$CARCH-cpython-$python_version" python -m zope.testrunner --test-path=src
 }
 
 package() {
   cd zope.i18nmessageid-$pkgver
-  python setup.py install --root="$pkgdir" --optimize=1
+  python -m installer --destdir="$pkgdir" dist/*.whl
 }
 
 # vim:set ts=2 sw=2 et:

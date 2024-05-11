@@ -4,27 +4,27 @@
 
 pkgname=shotcut
 pkgdesc='Cross-platform Qt based Video Editor'
-pkgver=24.01
-_tag=24.01.28
+pkgver=24.04
+_tag=24.04.28
 pkgrel=1
 arch=('loong64' 'x86_64')
 url='https://www.shotcut.org'
 license=('GPL3')
-depends=('qt6-base' 'qt6-declarative' 'qt6-5compat' 'qt6-imageformats' 'qt6-multimedia' 'qt6-translations'
+depends=('qt6-base' 'qt6-declarative' 'qt6-imageformats' 'qt6-multimedia' 'qt6-translations'
          'mlt' 'movit' 'ffmpeg' 'libx264' 'libvpx' 'lame' 'frei0r-plugins' 'ladspa' 'qt6-charts')
 optdepends=('swh-plugins: Several audio filters')
-makedepends=('qt6-tools' 'cmake' 'ninja' 'clang')
-source=("$pkgname-$pkgver.tar.gz::https://github.com/mltframework/shotcut/archive/v$_tag.tar.gz")
-sha512sums=('b12a912d4cef3724138bb96fc1868bdd7f1bf326c163ddf25bd2fdb1190652e20c964c1e80378e27fd9787eaea13b15845b237f5e055f67c462b2989e5d920f5')
+makedepends=('qt6-tools' 'git' 'cmake' 'ninja' 'clang')
+source=("git+https://github.com/mltframework/shotcut.git#tag=v${_tag}")
+sha512sums=('8f3eb70c07be77cfd515174bb9df8e8edc8a2ae0bb8ef5efe55836bfb5b31c5a1b12fa99eec308439396e56919d8c942bf53bdb983fd2a69a7a50ff3cb9636e0')
 
 prepare() {
-  cd "${pkgname}-${_tag}"
+  cd "${pkgname}"
 
   sed -e 's|${Qt6_LUPDATE_EXECUTABLE}|/usr/lib/qt6/bin/lupdate|' -i translations/CMakeLists.txt
 }
 
 build() {
-  cd "${pkgname}-${_tag}"
+  cd "${pkgname}"
 
   # https://github.com/mltframework/shotcut/issues/1275
   export CXXFLAGS+=" -DSHOTCUT_NOUPGRADE"
@@ -36,12 +36,10 @@ build() {
     -DCMAKE_INSTALL_PREFIX=/usr \
     -DSHOTCUT_VERSION=${pkgver}
   cmake --build build --verbose
-
-  ninja -C build translations
 }
 
 package() {
-  cd "${pkgname}-${_tag}"
+  cd "${pkgname}"
 
   DESTDIR="${pkgdir}" cmake --install build
 }

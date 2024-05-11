@@ -2,13 +2,13 @@
 
 pkgname=python-pytest-benchmark
 pkgver=4.0.0
-pkgrel=4
+pkgrel=6
 pkgdesc='A py.test fixture for benchmarking code'
 arch=('any')
-license=('BSD')
+license=('BSD-2-Clause')
 url='https://github.com/ionelmc/pytest-benchmark'
 depends=('python-pytest' 'python-py-cpuinfo')
-makedepends=('python-setuptools')
+makedepends=('python-setuptools' 'python-build' 'python-installer' 'python-wheel')
 checkdepends=('python-pygal' 'python-pygaljs' 'python-freezegun' 'mercurial' 'python-aspectlib'
               'python-pytest-xdist' 'python-elasticsearch' 'git')
 source=("$pkgname-$pkgver.tar.gz::https://github.com/ionelmc/pytest-benchmark/archive/v$pkgver.tar.gz"
@@ -18,13 +18,14 @@ sha512sums=('88636e44c184f5072ad081a89f08e8838a11397e6b88298d7f235b531f894792001
 
 prepare() {
   cd pytest-benchmark-$pkgver
-  sed -i '/ error/d' pytest.ini
+  # Do not treat warnings as errors
+  sed -i '/^    error$/d' pytest.ini
   patch --forward --strip=1 --input=../pytest-benchmark-backport-232.patch
 }
 
 build() {
   cd pytest-benchmark-$pkgver
-  python setup.py build
+  python -m build --wheel --no-isolation
 }
 
 check() {
@@ -38,7 +39,7 @@ check() {
 
 package() {
   cd "$srcdir"/pytest-benchmark-$pkgver
-  python setup.py install --root="$pkgdir"/ --optimize=1
+  python -m installer --destdir="$pkgdir" dist/*.whl
   install -D -m644 LICENSE "$pkgdir"/usr/share/licenses/$pkgname/LICENSE
 }
 

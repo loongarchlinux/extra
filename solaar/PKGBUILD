@@ -4,15 +4,15 @@
 
 _name=Solaar
 pkgname=solaar
-pkgver=1.1.10
-_commit=eafaf333bf5e1d517a8099ead2a1228596477fb1  # refs/tags/1.1.10
-pkgrel=2
+pkgver=1.1.12
+pkgrel=1
 pkgdesc="Linux device manager for a wide range of Logitech devices"
 url="https://pwr-solaar.github.io/Solaar/"
 _url="https://github.com/pwr-Solaar/Solaar"
 license=(GPL-2.0-or-later)
 arch=(any)
 depends=(
+  glib2
   gobject-introspection-runtime
   gtk3
   hicolor-icon-theme
@@ -21,7 +21,6 @@ depends=(
   python-dbus
   python-evdev
   python-gobject
-  python-hid-parser
   python-psutil
   python-pyudev
   python-xlib
@@ -35,18 +34,14 @@ makedepends=(
   python-wheel
 )
 optdepends=('libayatana-appindicator: Display tray icon')
-source=("git+$_url.git#tag=$_commit?signed")
-sha512sums=('SKIP')
+source=(
+  "git+$_url.git?signed#tag=$pkgver"
+)
+sha512sums=('a2ffdf3ef2a6bdab39601ec7b1db70f4a83c8b1cb60f04ea87ecc4572991354aec5faed37d7f4ca9ca71827dd7c3c4db30ab3927749648a352a7bd214c437253')
 validpgpkeys=('2FF2ACA9D97FF7B42CF8494A1E32E75672D6A196') # Peter F. Patel-Schneider (key generated for github) <pfpschneider@gmail.com>
-
-pkgver() {
-  cd $_name
-  git describe --tags | sed 's/\([^-]*-g\)/r\1/;s/-/./g'
-}
 
 prepare() {
   cd $_name
-  git cherry-pick -n 15f4733032b77ee164f22d5a76081af35da1fe06  # https://gitlab.archlinux.org/archlinux/packaging/packages/solaar/-/issues/1
   tools/po-compile.sh
 }
 
@@ -63,6 +58,6 @@ package() {
   rm -rf "$pkgdir/etc"
   install -vDm 644 rules.d/42-logitech-unify-permissions.rules -t "$pkgdir/usr/lib/udev/rules.d/"
   # docs
-  install -vDm 644 {ChangeLog.md,README.md} -t "$pkgdir/usr/share/doc/$pkgname/"
+  install -vDm 644 {CHANGELOG,README}.md -t "$pkgdir/usr/share/doc/$pkgname/"
 }
 # vim:set ts=2 sw=2 et:

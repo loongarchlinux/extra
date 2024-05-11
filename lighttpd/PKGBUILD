@@ -1,70 +1,94 @@
 # Maintainer: Pierre Schmitz <pierre@archlinux.de>
 
 pkgname=lighttpd
-pkgver=1.4.73
+pkgver=1.4.76
 pkgrel=1
 pkgdesc='A secure, fast, compliant and very flexible web-server'
-license=('custom')
+license=('BSD-3-Clause')
 arch=('loong64' 'x86_64')
 url="https://www.lighttpd.net/"
-depends=('pcre2' 'systemd' 'brotli')
-makedepends=('mariadb-libs' 'lua' 'libxml2' 'e2fsprogs' 'sqlite' 'pkgconfig')
-optdepends=('libxml2: mod_webdav'
-            'lua: mod_cml/mod_magnet'
-            'mariadb-libs: mod_mysql_vhost/mod_authn_mysql'
-            'sqlite: mod_webdav')
-backup=('etc/lighttpd/lighttpd.conf' 'etc/logrotate.d/lighttpd')
+depends=(
+	'pcre2'
+)
+makedepends=(
+	'brotli'
+	'git'
+	'krb5'
+	'libdbi'
+	'libldap'
+	'libmaxminddb'
+	'libxml2'
+	'lua'
+	'mariadb-libs'
+	'meson'
+	'sqlite'
+)
+optdepends=(
+	'brotli: mod_deflate'
+	'krb5: mod_authn_gssapi'
+	'libdbi: mod_authn_dbi/mod_vhostdb_dbi'
+	'libldap: mod_authn_ldap/mod_vhostdb_ldap'
+	'libmaxminddb: mod_maxminddb'
+	'libxml2: mod_webdav'
+	'lua: mod_magnet'
+	'mariadb-libs: mod_authn_mysql/mod_vhostdb_mysql'
+	'sqlite: mod_webdav'
+)
+backup=(
+	'etc/lighttpd/lighttpd.conf'
+	'etc/logrotate.d/lighttpd'
+)
 options=('emptydirs')
-source=("https://download.lighttpd.net/lighttpd/releases-1.4.x/lighttpd-${pkgver}.tar.xz"{,.asc}
-        'lighttpd.logrotate.d' 'lighttpd.conf' 'lighttpd.tmpfiles' 'lighttpd.service')
-sha256sums=('818816d0b314b0aa8728a7076513435f6d5eb227f3b61323468e1f10dbe84ca8'
-            'SKIP'
+source=(
+	"git+https://github.com/lighttpd/lighttpd1.4.git#tag=lighttpd-${pkgver}?signed"
+	'lighttpd.logrotate.d'
+	'lighttpd.conf'
+	'lighttpd.tmpfiles'
+)
+sha256sums=('19a15e49267a2d0ec1d4c6a9d5d28828690e15a8ad7ed6c5de654e2a2ba502f7'
             '41f6c0042bb61021553779f861910e335834f6c15e4411756cdc6233b31076fe'
-            'fece4581bebf39768571962dedce176b2b5f487c0abb5c1cfb35395de216c01f'
-            'd8a185145a7c08b4fd8c8e6c12dae3e176389dd9b1c66e239757b2ba5108c871'
-            '0c88403364e732c06090f6807105dedbac25aa82add0499d28007f8aaa780b78')
+            '3aaa31c3d200e5346e9b8bb0eec293c2b7582598f3baf46537f05b46d6d4becd'
+            'da6878d1649572259f29ae50236a129ff131c9b1730af81498581824cf8c4c35')
 validpgpkeys=('C7CA1E9E29DC77F5480894B2E0E7D0171E95BAD7'
               '649D0DD767FF206202A76C5158F14A786FE198C8'
               'EAAF41A8BE3BB8D001CACD136DE62CA242909B84')
 
 build() {
-	cd "$srcdir/$pkgname-$pkgver"
+	arch-meson ${pkgname}1.4 build \
+	  -D with_xattr=true \
+	  -D with_brotli=enabled \
+	  -D with_dbi=enabled \
+	  -D with_krb5=enabled \
+	  -D with_ldap=enabled \
+	  -D with_lua=true \
+	  -D with_maxminddb=enabled \
+	  -D with_mysql=enabled \
+	  -D with_openssl=true \
+	  -D with_pcre2=true \
+	  -D with_webdav_props=enabled \
+	  -D with_webdav_locks=enabled
 
-	./configure --prefix=/usr \
-		--sbindir=/usr/bin \
-		--libdir=/usr/lib/lighttpd/ \
-		--sysconfdir=/etc/lighttpd \
-		--with-mysql \
-		--with-ldap \
-		--with-attr \
-		--with-openssl \
-		--with-webdav-props \
-		--with-webdav-locks \
-		--with-lua \
-		--with-pcre2 \
-		--with-brotli
-	sed -i -e 's/ -shared / -Wl,-O1,--as-needed\0/g' libtool
-	make
+		# sed -i -e 's/ -shared / -Wl,-O1,--as-needed\0/g' libtool
+	# make
+	meson compile -C build
 }
 
 check() {
-	cd "$srcdir/$pkgname-$pkgver"
-	make check
+	meson test -C build --print-errorlogs
 }
 
 package() {
-	cd "$srcdir/$pkgname-$pkgver"
-	make DESTDIR="$pkgdir" install
+	meson install -C build --destdir "${pkgdir}"
 
-	install -D -m644 "$srcdir/lighttpd.logrotate.d" "$pkgdir/etc/logrotate.d/lighttpd"
-	install -D -m644 "$srcdir/lighttpd.conf" "$pkgdir/etc/lighttpd/lighttpd.conf"
-	install -d -m700 -o http -g http "$pkgdir"/var/{log,cache}/lighttpd/
-	install -D -m644 "${srcdir}/lighttpd.tmpfiles" "${pkgdir}/usr/lib/tmpfiles.d/lighttpd.conf"
-	install -D -m644 "${srcdir}/lighttpd.service" "${pkgdir}/usr/lib/systemd/system/lighttpd.service"
+	install -D -m644 lighttpd.logrotate.d "${pkgdir}"/etc/logrotate.d/lighttpd
+	install -D -m644 lighttpd.conf "${pkgdir}"/etc/lighttpd/lighttpd.conf
+	install -d -m700 -o 33 -g 33 "${pkgdir}"/var/{log,cache}/lighttpd/
+	install -D -m644 lighttpd.tmpfiles "${pkgdir}"/usr/lib/tmpfiles.d/lighttpd.conf
+	install -D -m644 -t "${pkgdir}"/usr/lib/systemd/system/ ${pkgname}1.4/doc/systemd/lighttpd.{service,socket}
 
-	pushd doc/config >/dev/null
+	pushd ${pkgname}1.4/doc/config >/dev/null
 	find . -type f ! -name 'Makefile*' -exec install -D -m644 {} "${pkgdir}"/usr/share/doc/lighttpd/config/{} \;
 	popd >/dev/null
 
-	install -D -m644 COPYING "$pkgdir/usr/share/licenses/$pkgname/COPYING"
+	install -D -m644 ${pkgname}1.4/COPYING "${pkgdir}"/usr/share/licenses/${pkgname}/COPYING
 }

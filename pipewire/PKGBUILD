@@ -22,10 +22,9 @@ pkgname=(
   pipewire-session-manager
   pulse-native-provider
 )
-_commit=79b98884af80329f59596906231da5597bcdb7b6  # tags/1.0.1
-pkgver=1.0.1
+pkgver=1.0.6
 _so_ver=0.3
-pkgrel=2
+pkgrel=1
 epoch=1
 pkgdesc="Low-latency audio/video router and processor"
 url="https://pipewire.org"
@@ -60,6 +59,7 @@ makedepends=(
   ncurses
   opus
   python-docutils
+  python-packaging
   readline
   roc-toolkit
   rtkit
@@ -74,9 +74,17 @@ checkdepends=(
   openal
 )
 source=(
-  "git+https://gitlab.freedesktop.org/pipewire/pipewire.git#commit=$_commit"
+  "git+https://gitlab.freedesktop.org/pipewire/pipewire.git#tag=$pkgver"
+  0001-gst-Add-support-for-DMA_DRM-explicit-modifiers.patch
+  0002-gst-Sanitize-caps-before-translating.patch
+  0003-gst-Fix-sanitization-of-non-writable-caps.patch
+  0004-gst-Re-enable-handling-of-single-long-modifiers.patch
 )
-b2sums=('SKIP')
+b2sums=('77e01e262df0b0159cc4bbc79387268798d01c6fe035e779e85937e53f486412b210f94454fb6ed78c8f073e9cb1ea4cda551f57e1129cdd30020254e4be778b'
+        'a32e85e5535664d960ad2452638703885e488ad8cf02e6df8378fd4bb9ff8b3c851645fa47ba2037cf597bbfe4b048c33a82977d551df9c3746e175edbd208b3'
+        '5aca6a491907cabeee40765ef6591448bfd5a684327db5f0ffe0b59c99e23bd7cc13994f8aa42b8f5ae9c1bbd8cd69c487c4b04c6fa1dd98e9934bc4b80a17cb'
+        '902effec51d1c40191a0a5a8e5dcf54e24062f7228c8de1e25dae5ab622a3adcbbc8156d398fa14ea74a0c8e8fc489144771fbead86f91a79f4435c08f419767'
+        '87dc2c9e67121311cd960aae0751ac77652cacd6e27b70be71d0738d356d0675e731f0dad3a82f6e71b9ada2a458a13ebb572fccba3d33f88be4dc350cd5e8b3')
 
 pkgver() {
   cd pipewire
@@ -85,8 +93,12 @@ pkgver() {
 
 prepare() {
   cd pipewire
-  # fix libcamera integration for 0.2.0
-  git cherry-pick -n fd33d2d3bb6333c7d6e74cbaa806bff2d908f589
+
+  # Gst plugin fixes
+  git apply -3 ../0001-gst-Add-support-for-DMA_DRM-explicit-modifiers.patch
+  git apply -3 ../0002-gst-Sanitize-caps-before-translating.patch
+  git apply -3 ../0003-gst-Fix-sanitization-of-non-writable-caps.patch
+  git apply -3 ../0004-gst-Re-enable-handling-of-single-long-modifiers.patch
 }
 
 build() {
@@ -185,15 +197,17 @@ package_pipewire() {
     _pick audio usr/lib/pipewire-$_so_ver/libpipewire-module-fallback-sink.so
     _pick audio usr/lib/pipewire-$_so_ver/libpipewire-module-filter-chain*.so
     _pick audio usr/lib/pipewire-$_so_ver/libpipewire-module-loopback.so
-    _pick audio usr/lib/pipewire-$_so_ver/libpipewire-module-netjack2-*.so
+    _pick audio usr/lib/pipewire-$_so_ver/libpipewire-module-netjack2*.so
     _pick audio usr/lib/pipewire-$_so_ver/libpipewire-module-pipe-tunnel.so
     _pick audio usr/lib/pipewire-$_so_ver/libpipewire-module-protocol-simple.so
     _pick audio usr/lib/pipewire-$_so_ver/libpipewire-module-rtp-{sap,sink,source}.so
-    _pick audio usr/lib/pipewire-$_so_ver/libpipewire-module-vban-{recv,send}.so
+    _pick audio usr/lib/pipewire-$_so_ver/libpipewire-module-vban*.so
     _pick audio usr/lib/spa-0.2/{aec,alsa,audio*,avb,bluez5}
     _pick audio usr/lib/systemd/user/filter-chain.service
     _pick audio usr/share/alsa
     _pick audio usr/share/man/man1/pw-{cat,loopback,mididump}.1
+    _pick audio usr/share/man/man1/spa-{acp-tool,resample}.1
+    _pick audio usr/share/man/man5/pipewire-filter-chain.conf.5
     _pick audio usr/share/man/man7/libpipewire-module-{avb,echo-cancel,fallback-sink,filter-chain*,loopback,netjack2*,pipe-tunnel,protocol-simple,rtp-{sap,sink,source},vban*}.7
     _pick audio usr/share/pipewire/filter-chain*
     _pick audio usr/share/pipewire/pipewire-{aes67,avb}.conf
@@ -211,6 +225,7 @@ package_pipewire() {
     _pick jack usr/lib/libjack*
     _pick jack usr/lib/pkgconfig/jack.pc
     _pick jack usr/share/man/man1/pw-jack.1
+    _pick jack usr/share/man/man5/pipewire-jack.conf.5
     _pick jack usr/share/pipewire/jack.conf
 
     _pick pulse usr/bin/pipewire-pulse
@@ -233,6 +248,7 @@ package_pipewire() {
     _pick zeroconf usr/share/man/man7/libpipewire-module-{raop-*,rtp-session,zeroconf*}.7
 
     _pick v4l2 usr/bin/pw-v4l2 usr/lib/pipewire-$_so_ver/v4l2
+    _pick v4l2 usr/share/man/man1/pw-v4l2.1
 
     _pick x11-bell usr/lib/pipewire-$_so_ver/libpipewire-module-x11-bell.so
     _pick x11-bell usr/share/man/man7/libpipewire-module-x11-bell.7

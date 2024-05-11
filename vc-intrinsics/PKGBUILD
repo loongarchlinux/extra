@@ -2,26 +2,20 @@
 # Maintainer: Daniel Bermond <dbermond@archlinux.org>
 
 pkgname=vc-intrinsics
-pkgver=0.13.0.r2+g910db48
+pkgver=0.18.0
+_commit=f9c34404d0ea9abad83875a10bd48d88cea90ebd  # refs/tags/v0.18.0
 pkgrel=1
 pkgdesc="Set of new intrinsics on top of core LLVM IR instructions that represent SIMD semantics of a program targeting GPU"
 arch=(loong64 x86_64)
 url="https://github.com/intel/vc-intrinsics"
 license=(MIT)
 makedepends=(cmake python llvm git)
-# From IGC release notes or latest release
-_commit=910db4801d4a029834606e3e42a8d60358e74fdf
 source=(git+${url}.git#commit=$_commit)
 sha256sums=('SKIP')
 
 pkgver() {
   cd ${pkgname}
   git describe --tags | sed 's/^v//;s/\([^-]*-g\)/r\1/;s/-/./;s/-/+/'
-}
-
-prepare() {
-  cd ${pkgname}
-  git revert -n bda6db9b23d695998faac74ace4094adb285ca28
 }
 
 build() {
@@ -37,4 +31,5 @@ build() {
 
 package() {
   DESTDIR="${pkgdir}" cmake --install build
+  install -vDm 644 $pkgname/LICENSE.md -t "$pkgdir/usr/share/licenses/$pkgname/"
 }

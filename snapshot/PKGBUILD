@@ -1,7 +1,7 @@
 # Maintainer: Fabian Bornschein <fabiscafe@archlinux.org>
 
 pkgname=snapshot
-pkgver=45.2
+pkgver=46.3
 pkgrel=1
 pkgdesc="Take pictures and videos"
 arch=(loong64 x86_64)
@@ -10,6 +10,9 @@ license=(GPL-3.0-or-later)
 groups=(gnome)
 depends=(
   dconf
+  gcc-libs
+  glib2
+  glibc
   graphene
   gst-plugin-pipewire
   gst-plugins-bad-libs
@@ -26,21 +29,18 @@ makedepends=(
   meson
   rust
 )
-_commit=e960f32b23fd8b7edc1daeec41f4c80be938719f # tags/45.2^0
-source=("git+https://gitlab.gnome.org/GNOME/snapshot.git#commit=$_commit")
-sha256sums=('SKIP')
+source=("git+https://gitlab.gnome.org/GNOME/snapshot.git?signed#tag=${pkgver/[a-z]/.&}")
+b2sums=('1738824ddccb3c5e0dcb7be2a46f05e308d0366e7cb41e7a01c2417a0fdd2e5b38664810d4e0ce24e3aa3b1a45177695fc522d591dbd7763287b629bae7bd92a')
+validpgpkeys=(
+  3475CBA8D3483594C889B470D64A8D747F6FE706 # Maximiliano Sandoval <msandova@gnome.org>
+)
 
 prepare() {
-  cd ${pkgname}
-}
-
-pkgver() {
-  cd ${pkgname}
-  git describe --tags | sed 's/[^-]*-g/r&/;s/-/+/g'
+  cd snapshot
 }
 
 build() {
-  arch-meson ${pkgname} build
+  arch-meson snapshot build
   meson compile -C build
 }
 

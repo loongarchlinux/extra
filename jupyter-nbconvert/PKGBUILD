@@ -3,12 +3,12 @@
 
 pkgname=jupyter-nbconvert
 _name=nbconvert
-pkgver=7.14.2
+pkgver=7.16.4
 pkgrel=1
 pkgdesc='Jupyter Notebook Conversion'
 arch=(any)
 url='https://pypi.python.org/pypi/nbconvert'
-license=(BSD)
+license=(BSD-3-Clause)
 depends=(ipython
          jupyter-nbclient
          jupyter-nbformat
@@ -29,7 +29,8 @@ depends=(ipython
          python-tinycss2
          python-tornado
          python-traitlets)
-makedepends=(python-build
+makedepends=(git
+             python-build
              python-hatchling
              python-installer)
 checkdepends=(python-flaky
@@ -38,16 +39,16 @@ checkdepends=(python-flaky
               python-pytest)
 optdepends=('pandoc: non-html conversion output'
             'python-pyppeteer: for webPDF conversion support')
-source=(https://github.com/jupyter/nbconvert/archive/v$pkgver/$pkgname-$pkgver.tar.gz)
-sha256sums=('b803d2753360c74d8090e93d4cc06e26f659e02280e96c2f35900f8a9da269b6')
+source=(git+https://github.com/jupyter/nbconvert#tag=v$pkgver)
+sha256sums=('fee1c568bf62ab23616d7e8f0388a8a56500725484e2fd1cb38b99db1d8091a9')
 
 build() {
-  cd nbconvert-$pkgver
+  cd nbconvert
   python -m build --wheel --no-isolation
 }
 
 check() {
-  cd nbconvert-$pkgver
+  cd nbconvert
   python -m venv --system-site-packages test-env
   test-env/bin/python -m pip install -e .
   # disable tests that download chromium and (probably) require a graphical session
@@ -58,7 +59,7 @@ check() {
 }
 
 package() {
-  cd nbconvert-$pkgver
+  cd nbconvert
   python -m installer --destdir="$pkgdir" dist/*.whl
 
   install -Dm644 LICENSE -t "$pkgdir"/usr/share/licenses/$pkgname

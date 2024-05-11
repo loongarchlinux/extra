@@ -3,21 +3,32 @@
 _pkg=cftime
 pkgname=python-${_pkg}
 pkgver=1.6.3
-pkgrel=1
+pkgrel=3
 pkgdesc="Time-handling functionality from python-netcdf4"
 arch=(loong64 x86_64)
 url="https://unidata.github.io/cftime"
 license=(MIT)
 depends=(python-numpy)
-makedepends=(cython python-setuptools)
+makedepends=(
+  cython
+  python-build
+  python-installer
+  python-setuptools
+  python-wheel
+)
 checkdepends=(python-pytest)
 #source=(https://files.pythonhosted.org/packages/source/${_pkg::1}/${_pkg}/${_pkg}-${pkgver}.tar.gz)
 source=(https://github.com/Unidata/cftime/archive/v${pkgver}rel/${pkgname}-${pkgver}.tar.gz)
 sha256sums=('38a20e2c088abe814a5e5ccf365d994dac925f29b7b4b9b57ee4f55e13a017a2')
 
+prepare() {
+  cd ${_pkg}-${pkgver}rel
+  sed -i 's/ "oldest-supported-numpy.*,//' pyproject.toml
+}
+
 build() {
   cd ${_pkg}-${pkgver}rel
-  python setup.py build
+  python -m build --wheel --no-isolation
 }
 
 check() {
@@ -29,6 +40,6 @@ check() {
 
 package() {
   cd ${_pkg}-${pkgver}rel
-  python setup.py install --prefix=/usr --root="${pkgdir}" --skip-build --optimize=1
+  python -m installer --destdir="$pkgdir" dist/*.whl
   install -Dm644 LICENSE -t "${pkgdir}"/usr/share/licenses/${pkgname}
 }

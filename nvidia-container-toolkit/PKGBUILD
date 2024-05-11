@@ -1,0 +1,66 @@
+# Maintainer: Jakub Klinkovský <lahwaacz at archlinux dot org>
+# Contributor: Mark Wagie <mark dot wagie at proton dot me>
+# Contributor: Kien Dang <mail at kien dot ai>
+# Contributor: Julie Shapiro <jshapiro at nvidia dot com>
+
+pkgname=nvidia-container-toolkit
+pkgver=1.15.0
+pkgrel=2
+pkgdesc="NVIDIA container toolkit"
+arch=(loong64 x86_64)
+url="https://github.com/NVIDIA/nvidia-container-toolkit"
+license=(Apache-2.0)
+depends=(glibc libnvidia-container=$pkgver)
+makedepends=(go)
+backup=('etc/nvidia-container-runtime/config.toml')
+# we cannot use LTO as otherwise we do not get reproducible package with full RELRO
+options=('!lto')
+source=("$pkgname-$pkgver.tar.gz::$url/archive/v$pkgver.tar.gz"
+        nvidia-ctk-cdi
+        nvidia-ctk-cdi.hook)
+b2sums=('6f8764a71490d2836af690d4ef4ee4831d9613add430f720cb08c7e347d1675411471bbeda2155e567b5ae3f99220bfc4524081ab364c451d30e12b12be6196e'
+        '196ba959e25b7bc9a6087b192a09196c6c46e4a2a0a6dbf1de158c06dc852b822235fb6193f10311c89d06bc722035fd807cab3afa560bf49e6181a9e14b6bd6'
+        '35bf8bacda43f571858d40a99f6606400f4087265267f337432c72aab856aadc0b1544a83517419c19c5b57dcabaa721f3b28de21ae0b34a8dd82ea0cdb9e847')
+
+prepare() {
+  cd "$pkgname-$pkgver"
+  mkdir -p build
+}
+
+build() {
+  cd "$pkgname-$pkgver"
+
+  # set GOPATH so makepkg puts source files into the debug package
+  export GOPATH="$srcdir"
+
+  # FIXME: nvml requires lazy binding (-Wl,-z,lazy) which prevents FULL RELRO: https://github.com/NVIDIA/nvidia-container-toolkit/issues/49
+  go build -v \
+    -buildmode=pie \
+    -mod=vendor \
+    -modcacherw \
+    -ldflags "-compressdwarf=false -linkmode external -extldflags \"$LDFLAGS -Wl,-z,lazy\" -X github.com/NVIDIA/$pkgname/internal/info.version=$pkgver" \
+    -o build ./...
+}
+
+check() {
+  cd "$pkgname-$pkgver"
+  PATH="$PATH:$PWD/build" go test -v ./...
+}
+
+package() {
+  cd "$pkgname-$pkgver"
+
+  # install binaries
+  install -vDm 755 build/nvidia-{ctk,container-runtime{,.cdi,.legacy,-hook}} -t "$pkgdir/usr/bin/"
+  ln -s nvidia-container-runtime-hook "$pkgdir/usr/bin/nvidia-container-toolkit"
+
+  # install pacman hook
+  install -vDm 644 ../nvidia-ctk-cdi.hook -t "$pkgdir/usr/share/libalpm/hooks/"
+  install -vDm 755 ../nvidia-ctk-cdi -t "$pkgdir/usr/share/libalpm/scripts/"
+
+  # install the license
+  install -vDm 644 LICENSE -t "$pkgdir/usr/share/licenses/$pkgname/"
+
+  # generate the default config
+  "$pkgdir"/usr/bin/nvidia-ctk --quiet config --config-file="$pkgdir"/etc/nvidia-container-runtime/config.toml --in-place
+}

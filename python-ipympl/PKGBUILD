@@ -5,45 +5,51 @@
 
 _pyname=ipympl
 pkgname=python-$_pyname
-pkgver=0.9.3
-pkgrel=4
+pkgver=0.9.4
+pkgrel=3
 pkgdesc='Matplotlib Jupyter Extension'
 url='https://pypi.org/project/ipympl/'
-depends=(python-ipython-genutils
+depends=(ipython
+         python
+         python-ipython-genutils
          python-ipywidgets
-         python-matplotlib)
-makedepends=(jupyterlab
+         python-matplotlib
+         python-numpy
+         python-pillow
+         python-traitlets)
+makedepends=(git
+             jupyterlab
+             nodejs
              python-build
-             python-installer
-             python-jupyter-packaging
-             python-setuptools)
+             python-hatch-jupyter-builder
+             python-hatchling
+             python-installer)
 checkdepends=(python-numpy
               python-nbval
               python-pytest)
-license=(BSD)
+license=(BSD-3-Clause)
 arch=(any)
-source=(https://pypi.io/packages/source/${_pyname:0:1}/$_pyname/$_pyname-$pkgver.tar.gz)
-sha256sums=('49bab75c05673a6881d1aaec5d8ac81d4624f73d292d154c5fb7096f10236a2b')
+source=(git+https://github.com/matplotlib/ipympl#tag=$pkgver)
+sha256sums=('61661074ffe5e1c4c62e87f98605db58af69d4fe8d6af7839e54b23283164056')
 
 prepare() {
-  sed -e 's|>=.*\"|\"|g' -e 's|~=.*\"|\"|g' -i $_pyname-$pkgver/pyproject.toml
-  sed -e '/index.js/d' -e '/plugin.js/d' -i $_pyname-$pkgver/setup.py
+  sed -e 's|>=.*\"|\"|g' -e 's|~=.*\"|\"|g' -i $_pyname/pyproject.toml
+#  sed -e '/index.js/d' -e '/plugin.js/d' -i $_pyname/setup.py
 }
 
 build() {
-  cd $_pyname-$pkgver
-  python -m build --wheel --no-isolation
+  cd $_pyname
+  python -m build --wheel --no-isolation --skip-dependency-check
 }
 
-# pypi tarball missing tests
-#check() {
-#  cd $_pyname-$pkgver
-#  PYTHONPATH="$PWD" \
-#  pytest -v
-#}
+check() {
+  cd $_pyname
+  PYTHONPATH="$PWD" \
+  pytest -v
+}
 
 package() {
-  cd $_pyname-$pkgver
+  cd $_pyname
   python -m installer --destdir="$pkgdir" dist/*.whl
   mv "$pkgdir"/{usr/,}etc
   install -Dm644 LICENSE -t "$pkgdir"/usr/share/licenses/$pkgname

@@ -1,0 +1,254 @@
+From 8bbb2e4a5fd3ca20aac211c932130d6807b4ae18 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Ball=C3=B3=20Gy=C3=B6rgy?= <ballogyor@gmail.com>
+Date: Wed, 31 Jan 2024 18:59:57 +0100
+Subject: [PATCH] layout: Add the ability to reset the panel
+
+- Load the default layout if all toplevels were removed. This makes it possible to reset the panel layout without restarting the gnome-panel.
+
+- Add option to the context menu to reset the panel. When the user choose this option, a confirmation dialog is opened. If it's confirmed, it deletes all toplevels, which triggers the panel to recreate the default layout.
+---
+ gnome-panel/panel-context-menu.c | 101 +++++++++++++++++++++++++++++++
+ gnome-panel/panel-context-menu.h |   2 +
+ gnome-panel/panel-layout.c       |  47 +++++++++++---
+ gnome-panel/panel-layout.h       |   2 +
+ 4 files changed, 143 insertions(+), 9 deletions(-)
+
+diff --git a/gnome-panel/panel-context-menu.c b/gnome-panel/panel-context-menu.c
+index a64a05c91..de4aa733e 100644
+--- a/gnome-panel/panel-context-menu.c
++++ b/gnome-panel/panel-context-menu.c
+@@ -57,6 +57,100 @@ panel_context_menu_create_new_panel (GtkWidget     *menuitem,
+   panel_layout_toplevel_create (layout, gtk_widget_get_screen (menuitem));
+ }
+ 
++static void
++panel_reset_response (GtkWidget     *dialog,
++		      int            response,
++		      PanelToplevel *toplevel)
++{
++	GpApplication *application;
++	PanelLayout *layout;
++
++	application = panel_toplevel_get_application (toplevel);
++	layout = gp_application_get_layout (application);
++
++	if (response == GTK_RESPONSE_OK) {
++		panel_push_window_busy (dialog);
++		panel_layout_reset (layout);
++		panel_pop_window_busy (dialog);
++	}
++
++	gtk_widget_destroy (dialog);
++}
++
++static void
++panel_reset_destroy_dialog (GtkWidget *widget,
++			    PanelToplevel *toplevel)
++{
++	panel_toplevel_pop_autohide_disabler (toplevel);
++	g_object_set_data (G_OBJECT (toplevel), "panel-reset-dialog", NULL);
++}
++
++GtkWidget *
++panel_reset_dialog (PanelToplevel *toplevel)
++{
++
++	GtkWidget *dialog;
++
++	dialog = gtk_message_dialog_new (
++			GTK_WINDOW (toplevel),
++			GTK_DIALOG_MODAL,
++			GTK_MESSAGE_WARNING,
++			GTK_BUTTONS_NONE,
++			"%s", _("Reset all panels?"));
++
++	gtk_message_dialog_format_secondary_text (GTK_MESSAGE_DIALOG (dialog),
++	                                          "%s",
++						  _("When the panels are reset, all panels and its\n"
++						  "settings are lost."));
++
++	gtk_dialog_add_buttons (GTK_DIALOG (dialog),
++				_("_Cancel"), GTK_RESPONSE_CANCEL,
++				_("_Reset Panels"), GTK_RESPONSE_OK,
++				NULL);
++
++	gtk_dialog_set_default_response (GTK_DIALOG (dialog), GTK_RESPONSE_CANCEL);
++
++	gtk_window_set_screen (GTK_WINDOW (dialog),
++				gtk_window_get_screen (GTK_WINDOW (toplevel)));
++
++	gtk_window_set_position (GTK_WINDOW (dialog), GTK_WIN_POS_CENTER);
++
++        g_signal_connect (dialog, "destroy",
++                          G_CALLBACK (panel_reset_destroy_dialog),
++                          toplevel);
++
++	g_object_set_data (G_OBJECT (toplevel), "panel-reset-dialog", dialog);
++	panel_toplevel_push_autohide_disabler (toplevel);
++
++	return dialog;
++}
++
++static void
++panel_query_reset (PanelToplevel *toplevel)
++{
++	GtkWidget *dialog;
++
++	dialog = g_object_get_data (G_OBJECT (toplevel), "panel-reset-dialog");
++
++	if (dialog) {
++		gtk_window_present (GTK_WINDOW (dialog));
++		return;
++	}
++
++	dialog = panel_reset_dialog (toplevel);
++
++	g_signal_connect (dialog, "response",
++			  G_CALLBACK (panel_reset_response),
++			  toplevel);
++
++	g_signal_connect_object (toplevel, "destroy",
++				 G_CALLBACK (gtk_widget_destroy),
++				 dialog,
++				 G_CONNECT_SWAPPED);
++
++	gtk_widget_show_all (dialog);
++}
++
+ static gboolean
+ is_last_toplevel (PanelToplevel *toplevel)
+ {
+@@ -233,6 +327,13 @@ panel_context_menu_build_edition (PanelWidget *panel_widget,
+ 	                  G_CALLBACK (present_properties_dialog),
+ 	                  panel_widget->toplevel);
+ 
++	menuitem = gtk_menu_item_new_with_mnemonic (_("_Reset All Panels"));
++	gtk_widget_show (menuitem);
++	gtk_menu_shell_append (GTK_MENU_SHELL (menu), menuitem);
++	g_signal_connect_swapped (menuitem, "activate",
++	                          G_CALLBACK (panel_query_reset),
++	                          panel_widget->toplevel);
++
+ 	menuitem = gtk_menu_item_new_with_mnemonic (_("_Delete This Panel"));
+ 	gtk_widget_show (menuitem);
+ 	gtk_menu_shell_append (GTK_MENU_SHELL (menu), menuitem);
+diff --git a/gnome-panel/panel-context-menu.h b/gnome-panel/panel-context-menu.h
+index 40aa5fa27..74868e49c 100644
+--- a/gnome-panel/panel-context-menu.h
++++ b/gnome-panel/panel-context-menu.h
+@@ -28,4 +28,6 @@
+ 
+ GtkWidget *panel_context_menu_create (PanelWidget *panel);
+ 
++GtkWidget *panel_reset_dialog (PanelToplevel *toplevel);
++
+ #endif /* __PANEL_CONTEXT_MENU_H__ */
+diff --git a/gnome-panel/panel-layout.c b/gnome-panel/panel-layout.c
+index 36325a2bd..b23ce604b 100644
+--- a/gnome-panel/panel-layout.c
++++ b/gnome-panel/panel-layout.c
+@@ -62,6 +62,8 @@ static void panel_layout_load_object      (PanelLayout *self,
+                                            const char  *object_id);
+ static void panel_layout_changed_toplevel (PanelLayout *self);
+ static void panel_layout_changed_object   (PanelLayout *self);
++static char **panel_layout_load_default   (PanelLayout  *self,
++                                           GError      **error);
+ 
+ static GQuark
+ panel_layout_error_quark (void)
+@@ -880,6 +882,31 @@ panel_layout_is_writable (PanelLayout *self)
+                                         PANEL_LAYOUT_OBJECT_ID_LIST_KEY));
+ }
+ 
++static gboolean
++panel_layout_dconf_reset_cb (gpointer data) {
++        gchar *path;
++
++        path = (gchar *) data;
++        panel_dconf_recursive_reset (path, NULL);
++        g_free (path);
++
++        return FALSE;
++}
++
++void
++panel_layout_reset (PanelLayout *self)
++{
++        GList *toplevels;
++        GList *l;
++
++        toplevels = gp_application_get_toplevels (self->application);
++
++        for (l = toplevels; l != NULL; l = l->next)
++                panel_layout_delete_toplevel (self, panel_toplevel_get_id (l->data));
++
++        g_list_free (toplevels);
++}
++
+ void
+ panel_layout_delete_toplevel (PanelLayout *self,
+                               const char  *toplevel_id)
+@@ -902,9 +929,8 @@ panel_layout_delete_toplevel (PanelLayout *self,
+                 return;
+         }
+ 
+-        path = g_strdup_printf ("%s%s/",
+-                                PANEL_LAYOUT_TOPLEVEL_PATH, id_copy);
+-        panel_dconf_recursive_reset (path, NULL);
++        g_idle_add ((GSourceFunc) panel_layout_dconf_reset_cb,
++                    (gpointer) g_strdup_printf ("%s%s/", PANEL_LAYOUT_TOPLEVEL_PATH, id_copy));
+ 
+         /* remove all applets that were on this toplevel */
+ 
+@@ -940,7 +966,6 @@ void
+ panel_layout_delete_object (PanelLayout *self,
+                             const char  *object_id)
+ {
+-        char *path;
+         char *id_copy;
+ 
+         if (PANEL_GLIB_STR_EMPTY (object_id))
+@@ -956,11 +981,8 @@ panel_layout_delete_object (PanelLayout *self,
+                 return;
+         }
+ 
+-        path = g_strdup_printf ("%s%s/",
+-                                PANEL_LAYOUT_OBJECT_PATH, id_copy);
+-        panel_dconf_recursive_reset (path, NULL);
+-        g_free (path);
+-
++        g_idle_add ((GSourceFunc) panel_layout_dconf_reset_cb,
++                    (gpointer) g_strdup_printf ("%s%s/", PANEL_LAYOUT_OBJECT_PATH, id_copy));
+         g_free (id_copy);
+ }
+ 
+@@ -1009,6 +1031,13 @@ panel_layout_changed_toplevel (PanelLayout *self)
+ 
+         g_list_free (to_remove);
+ 
++        /* Load the default layout if all toplevels were removed */
++
++        if (!ids[0]) {
++                g_strfreev (ids);
++                ids = panel_layout_load_default (self, NULL);
++        }
++
+         /* Add what appeared in the layout */
+ 
+         loading = FALSE;
+diff --git a/gnome-panel/panel-layout.h b/gnome-panel/panel-layout.h
+index a552b58aa..17b99a188 100644
+--- a/gnome-panel/panel-layout.h
++++ b/gnome-panel/panel-layout.h
+@@ -63,6 +63,8 @@ char        *panel_layout_object_create_start (PanelLayout          *self,
+ void        panel_layout_object_create_finish (PanelLayout          *self,
+                                                const char           *object_id);
+ 
++void        panel_layout_reset                (PanelLayout          *self);
++
+ void        panel_layout_delete_toplevel      (PanelLayout          *self,
+                                                const char           *toplevel_id);
+ 
+-- 
+GitLab
+

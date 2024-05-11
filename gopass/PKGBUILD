@@ -1,7 +1,7 @@
 # Maintainer: Morten Linderud <foxboron@archlinux.org>
 
 pkgname=gopass
-pkgver=1.15.11
+pkgver=1.15.13
 pkgrel=1
 pkgdesc="The slightly more awesome standard unix password manager for teams."
 arch=('loong64' 'x86_64')
@@ -14,10 +14,11 @@ optdepends=('xdotool: for typing passwords selected by dmenu'
             'wl-clipboard: clipboard support (wayland)')
 options=("!lto")
 source=("https://github.com/gopasspw/gopass/releases/download/v${pkgver}/gopass-${pkgver}.tar.gz")
-sha512sums=('5302af7db8b10d23ee27bedbe642b771f96eb6ae86bf25a4df43b490b2456d0502ce20b24516f0e399c77caf9ba14857636a9a39de8a58a33ee43957695d5222')
+sha512sums=('4f0464ef39421ee8be789cad6d91dd080b8019dcef1817b0a8f1cbc645d20108c473f7b8721ce03f81d65047e083a8691e11678a66088760f67650b5def4af6c')
 
 prepare(){
   sed -i 's|-gcflags="-trimpath=$(GOPATH)" -asmflags="-trimpath=$(GOPATH)"||' Makefile
+  sed -i 's|CGO_ENABLED=0||' Makefile
 }
 
 build(){
@@ -25,8 +26,8 @@ build(){
   export CGO_CFLAGS="${CFLAGS}"
   export CGO_CXXFLAGS="${CXXFLAGS}"
   export CGO_LDFLAGS="${LDFLAGS}"
-  export GOFLAGS="-buildmode=pie -trimpath -mod=readonly -modcacherw"
-  make 
+  export GOFLAGS="-buildmode=pie -trimpath -ldflags=-linkmode=external -mod=readonly -modcacherw"
+  make
 }
 
 package() {

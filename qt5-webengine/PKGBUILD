@@ -2,14 +2,14 @@
 # Contributor: Andrea Scarpino <andrea@archlinux.org>
 
 pkgname=qt5-webengine
-_basever=5.15.12
+_basever=5.15.13
 pkgver=5.15.16
-pkgrel=3
+pkgrel=6
 arch=('loong64' 'x86_64')
 url='https://www.qt.io'
 license=('LGPL3' 'LGPL2.1' 'BSD')
 pkgdesc='Provides support for web applications using the Chromium browser project'
-depends=('qt5-webchannel' 'qt5-location' 'libxcomposite' 'libxrandr' 'pciutils' 'libxss' 'libxkbfile' 
+depends=('qt5-webchannel' 'qt5-location' 'libxcomposite' 'libxrandr' 'pciutils' 'libxss' 'libxkbfile' 'libxdamage'
          'libevent' 'snappy' 'nss' 'libxslt' 'minizip' 'ffmpeg' 'libvpx' 'libxtst' 'ttf-font')
 makedepends=('git' 'python' 'gperf' 'jsoncpp' 'ninja' 'qt5-tools' 'poppler' 'pipewire' 'nodejs')
 optdepends=('pipewire: WebRTC desktop sharing under Wayland')
@@ -51,6 +51,10 @@ prepare() {
 }
 
 build() {
+  # this uses malloc_usable_size, which is incompatible with fortification level 3
+  export CFLAGS="${CFLAGS/_FORTIFY_SOURCE=3/_FORTIFY_SOURCE=2}"
+  export CXXFLAGS="${CXXFLAGS/_FORTIFY_SOURCE=3/_FORTIFY_SOURCE=2}"
+
   cd build
   qmake ../${_pkgfqn} CONFIG+=force_debug_info -- \
     -proprietary-codecs \
@@ -64,6 +68,10 @@ build() {
 }
 
 package() {
+  # this uses malloc_usable_size, which is incompatible with fortification level 3
+  export CFLAGS="${CFLAGS/_FORTIFY_SOURCE=3/_FORTIFY_SOURCE=2}"
+  export CXXFLAGS="${CXXFLAGS/_FORTIFY_SOURCE=3/_FORTIFY_SOURCE=2}"
+
   cd build
   make INSTALL_ROOT="$pkgdir" install
 

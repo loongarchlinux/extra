@@ -2,44 +2,44 @@
 # Contributor: Guillermo Ramos <0xwille at gmail dot com>
 
 pkgname=radare2
-pkgver=5.8.8
+pkgver=5.9.0
 pkgrel=1
 pkgdesc='Open-source tools to disasm, debug, analyze and manipulate binary files'
 url='https://radare.org'
 arch=('loong64' 'x86_64')
 license=('GPL3' 'LGPL3')
-depends=('sh' 'capstone' 'libcapstone.so' 'openssl' 'libzip' 'zlib'
-         'lz4' 'xxhash' 'libxxhash.so' 'file' 'libuv'
-         'libzip.so' 'libmagic.so')
-makedepends=('meson')
+depends=(
+  glibc
+  gcc-libs
+  capstone
+  file
+  libuv
+  libzip
+  lz4
+  sh
+  xxhash
+  zlib
+)
+makedepends=(
+  meson
+)
 optdepends=('r2ghidra: ghidra decompiler plugin')
 options=('!emptydirs')
-source=(https://github.com/radare/radare2/archive/${pkgver}/${pkgname}-${pkgver}.tar.gz
-        wasm.patch)
-sha512sums=('38f3373cc3029a7d92e1ae44ab515f0bea4c897cb981a904b40a7e05c04c29786dc8ac2f46fc97b495c4a2ec4905e0e196633dd3144c557c550239c462c9360b'
-            '77728bc0d2cd0eb383ea845923e02bed7e8ce19e2cd7d7170d40eb91a37f85ed8582bf3331dd85be441131c68663782b2acd53192dd2d3dc6e1866c1c916b666')
-b2sums=('7730bfefba5e5b9196404219800693fe37bf86b97f196b200dfbda913c07001e970c98f4b999a059e9636983b7311880e37f436890a68397d732a5a463ce7015'
-        'bbe9118239735e513beab1c8ebc01c2e5330b0f6aba033e25f2e139a21b4c6188690a22cd7742b4e89bc750b309ec27ddb80b33933bb64e0fd704ef36d59989f')
-
-prepare() {
-  cd ${pkgname}-${pkgver}
-# Add wasm to the default plugin list. There is currently no way to append a single plugin to the default list via the meson command line
-# https://github.com/radareorg/radare2/discussions/21712#discussioncomment-5826108
-  patch -p1 -i ../wasm.patch
-}
+source=(https://github.com/radare/radare2/archive/${pkgver}/${pkgname}-${pkgver}.tar.gz)
+sha512sums=('f184ad6e066a5113091912c11cca87cb9450eff20e920a00dc9da0efa9de97d6bfdaf44ae4d9e08a4760f4ebca82732832a309fad8452930adb4ee2438d9668e')
+b2sums=('4e345eb93f50dd57f65d659e82918a3e83c29f86d758d6b98efbfea8a3ecebf2648d32dac53cc43c2a36b8a71aa969b6e1eaab87dd9bf667570110eb6ed056b1')
 
 build() {
   cd ${pkgname}-${pkgver}
   touch libr/config.mk
   arch-meson build \
     -D use_sys_capstone=true \
-    -D use_capstone_version=v4 \
+    -D use_capstone_version=v5 \
     -D use_sys_magic=true \
     -D use_sys_zip=true \
     -D use_sys_zlib=true \
     -D use_sys_lz4=true \
     -D use_sys_xxhash=true \
-    -D use_sys_openssl=true \
     -D use_libuv=true \
     -D use_webui=true \
     -D want_threads=false
@@ -48,6 +48,12 @@ build() {
 }
 
 package() {
+  depends+=(
+    libcapstone.so
+    libmagic.so
+    libzip.so
+  )
+
   cd ${pkgname}-${pkgver}
   DESTDIR="${pkgdir}" ninja -C build install
   cp -r doc/* "${pkgdir}/usr/share/doc/radare2"

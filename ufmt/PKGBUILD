@@ -2,7 +2,7 @@
 
 pkgname=ufmt
 pkgver=2.1.0
-pkgrel=1
+pkgrel=2
 pkgdesc='Safe, atomic formatting with black and µsort'
 arch=('any')
 url='https://github.com/omnilib/ufmt'

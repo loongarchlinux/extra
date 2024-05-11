@@ -2,7 +2,7 @@
 
 pkgname=python-update-checker
 pkgver=0.18.0
-pkgrel=6
+pkgrel=7
 pkgdesc="A python module that will check for package updates"
 arch=('any')
 license=('BSD')

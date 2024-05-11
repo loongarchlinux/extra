@@ -2,7 +2,7 @@
 
 pkgname=python-bracex
 pkgver=2.4
-pkgrel=1
+pkgrel=2
 pkgdesc='Bash style brace expansion for Python'
 arch=('any')
 url='https://github.com/facelessuser/bracex'

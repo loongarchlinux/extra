@@ -2,8 +2,8 @@
 # Maintainer: Aaron Ali <t0nedef@causal.ca>
 
 pkgname=klayout
-pkgver=0.28.15
-pkgrel=1
+pkgver=0.29.0
+pkgrel=4
 pkgdesc="High Performance Layout Viewer And Editor. Support of GDS and OASIS files."
 arch=('loong64' 'x86_64')
 url="https://www.klayout.de"
@@ -12,7 +12,7 @@ depends=('libgit2' 'qt5-base' 'qt5-tools' 'qt5-multimedia' 'qt5-xmlpatterns' 'qt
          'ruby')
 source=(http://www.klayout.org/downloads/source/klayout-$pkgver.tar.bz2
         klayoutEditor.desktop klayoutViewer.desktop)
-sha512sums=('e5914f66937d40126bdf7c79ff49ced594e6b57be5949f0b4309747d9c513e7aaf7503dce5fd2afdc5d63e388c5b511ca33104fac1446f4b4bfe83ebdf1302ba'
+sha512sums=('0f1b317e71edd25559e07de188cd93142348e4652bc85a90a21927befe7d6590c58744bc9f0aa2f30325f3770650354fd0dcabf1bc6955d95f478f488056ad4a'
             'bc6c7621e5cda754509a86664fb3e7ecd15f577dec712f4b0c52c9a7455ba692043a67145f5bf143d8fdc502b84e4212303906d62107537eefb4bebe57b2ffe1'
             '37a3bbb06ab155c1c22e3990cf160383570e8ea945dbf4964bc94b6fd4e6321627d31071a29d3dbeafc9e2fc406b6905761e299bfccdfe0a35663f2021624f4f')
 
@@ -26,12 +26,7 @@ package() {
   install -D -m 644 klayoutViewer.desktop "$pkgdir"/usr/share/applications/klayoutViewer.desktop
   cd klayout-$pkgver
   install -D -m 644 etc/logo.png "$pkgdir"/usr/share/icons/hicolor/32x32/apps/klayout.png
-  install -D -m 755 build-release/klayout "$pkgdir"/usr/bin/klayout
-  cd bin-release
-  for lib in `find . -type f | grep so`; do
-    install -D -m 755 $lib "$pkgdir"/usr/lib/$lib
-  done
-  for lib in `find . -type l | grep so`; do
-    cp -a $lib "$pkgdir"/usr/lib/$lib
-  done
+  install -D -m 755 bin-release/{klayout,strm*} -t "$pkgdir"/usr/bin/
+  cp -ar bin-release "$pkgdir"/usr/lib/
+  rm "$pkgdir"/usr/lib/{klayout,strm*}
 }

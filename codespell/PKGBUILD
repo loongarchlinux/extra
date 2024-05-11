@@ -3,7 +3,7 @@
 
 pkgname=codespell
 pkgver=2.2.6
-pkgrel=1
+pkgrel=2
 pkgdesc='check code for common misspellings'
 arch=('any')
 url='https://github.com/codespell-project/codespell'

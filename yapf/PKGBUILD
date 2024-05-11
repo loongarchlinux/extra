@@ -2,7 +2,7 @@
 
 pkgname=yapf
 pkgver=0.40.2
-pkgrel=1
+pkgrel=2
 pkgdesc="Python style guide checker"
 arch=('any')
 url="https://github.com/google/yapf"

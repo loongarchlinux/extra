@@ -2,7 +2,7 @@
 
 pkgname=python-puremagic
 pkgver=1.15
-pkgrel=1
+pkgrel=2
 pkgdesc="A Python module that will identify a file based off it's magic numbers"
 arch=('any')
 url='https://github.com/cdgriffith/puremagic'

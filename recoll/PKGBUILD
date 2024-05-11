@@ -5,20 +5,20 @@
 # Contributor: Robert Emil Berge <filoktetes@linuxophic.org>
 
 pkgname=recoll
-pkgver=1.37.0
+pkgver=1.37.5
 pkgrel=1
 pkgdesc="Full text search tool based on Xapian backend"
 arch=('loong64' 'x86_64')
-url="https://www.lesbonscomptes.com/recoll/"
+url="https://www.recoll.org"
 license=('GPL')
-depends=('xapian-core>=1.0.15-1' 'qt5-base' 'openssl' 'hicolor-icon-theme' 'qt5-webengine'
+depends=('xapian-core>=1.0.15-1' 'qt6-base' 'openssl' 'hicolor-icon-theme' 'qt6-webengine'
 	 'chmlib' 'aspell')
-makedepends=('python' 'python-setuptools' 'qt5-tools'
-	     'cmake' 'extra-cmake-modules' 'kcoreaddons5' 'kio5' 'krunner5')
+makedepends=('python' 'python-setuptools' 'qt6-tools'
+	     'cmake' 'extra-cmake-modules')
 optdepends=('libxslt: for XML based formats (fb2,etc)'
 	    'unzip: for the OpenOffice.org documents'
 	    'poppler: for pdf'
-	    'pstotext: for postscipt'
+	    # 'pstotext: for postscipt' # Dropped to AUR as upstream has disappeared
 	    'antiword: for msword'
 	    'catdoc: for ms excel and powerpoint'
 	    'unrtf: for RTF'
@@ -29,12 +29,12 @@ optdepends=('libxslt: for XML based formats (fb2,etc)'
 	    'perl-image-exiftool: EXIF data from image files'
 	    'python-lxml: indexing spreadsheets'
 	    'python-pychm: CHM filter'
-	    'kcoreaddons5: KDE plugins'
-	    'kio5: KDE plugins'
-	    'krunner5: KDE plugins'
+#	    'kcoreaddons5: KDE plugins'
+#	    'kio5: KDE plugins'
+#	    'krunner5: KDE plugins'
 	    'aspell-en: English stemming support')
-source=("https://www.lesbonscomptes.com/$pkgname/$pkgname-${pkgver/_/}.tar.gz")
-sha512sums=('cdab2623f48727178d37565f565f938d3e4364224ea85ddfd59bb3a68897574e3c5bcc985ef342f14e020b92f9e1672962bf31312f7f7fb2abea414425970b52')
+source=("https://www.recoll.org/$pkgname-${pkgver/_/}.tar.gz")
+sha512sums=('594a81de809a2f2f08986ef1220ea2d7df8292923f55cf41c5813eb50be9ca63aa9f77c38bd27466486e72b030f2df28a093bca32dae1682d514acbb11a76382')
 
 prepare() {
   cd "$srcdir/$pkgname-${pkgver/_/}"
@@ -43,9 +43,7 @@ prepare() {
 
 build() {
   cd "$srcdir/$pkgname-${pkgver/_/}"
-  export CFLAGS="$CFLAGS -fpermissive"
-  export CPPFLAGS="$CPPFLAGS -fpermissive"
-  QMAKE=qmake-qt5 ./configure \
+  QMAKE=qmake6 ./configure \
     --prefix=/usr \
     --mandir=/usr/share/man \
     --enable-recollq \
@@ -54,24 +52,25 @@ build() {
     --enable-publiclib
   make
 
-  pushd kde/kioslave/kio_recoll
-  mkdir -p build
-  cd build
-  cmake -DCMAKE_INSTALL_PREFIX=/usr -DRECOLL_PUBLIC_LIB=ON ..
-  make
-  popd
+#  KDE Applets not ported to KF6 yet
+#  pushd kde/kioslave/kio_recoll
+#  mkdir -p build
+#  cd build
+#  cmake -DCMAKE_INSTALL_PREFIX=/usr -DRECOLL_PUBLIC_LIB=ON -DQT_MAJOR_VERSION=6 ..
+#  make
+#  popd
 
-  pushd kde/krunner
-  mkdir -p build
-  cd build
-  cmake -DCMAKE_INSTALL_PREFIX=/usr -DRECOLL_PUBLIC_LIB=ON ..
-  make
-  popd
+#  pushd kde/krunner
+#  mkdir -p build
+#  cd build
+#  cmake -DCMAKE_INSTALL_PREFIX=/usr -DRECOLL_PUBLIC_LIB=ON -DQT_MAJOR_VERSION=6 ..
+#  make
+#  popd
 }
 
 package() {
   cd "$srcdir/$pkgname-${pkgver/_/}"
   make DESTDIR="$pkgdir" install
-  make -C "kde/kioslave/kio_recoll/build" DESTDIR="$pkgdir" install
-  make -C "kde/krunner/build" DESTDIR="$pkgdir" install
+#  make -C "kde/kioslave/kio_recoll/build" DESTDIR="$pkgdir" install
+#  make -C "kde/krunner/build" DESTDIR="$pkgdir" install
 }

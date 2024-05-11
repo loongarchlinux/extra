@@ -3,22 +3,27 @@
 _hkgname=czipwith
 pkgname=haskell-czipwith
 pkgver=1.0.1.4
-pkgrel=2
+pkgrel=3
 pkgdesc="CZipWith class and deriving via TH"
 url="https://github.com/lspitzner/czipwith/"
 license=("BSD")
 arch=('loong64' 'x86_64')
 depends=('ghc-libs')
-makedepends=('ghc')
+makedepends=('ghc' 'uusi')
 source=("https://hackage.haskell.org/packages/archive/$_hkgname/$pkgver/$_hkgname-$pkgver.tar.gz")
 sha512sums=('68bf5ac19db614cb8983e7b19a1dfaafa14b56480e3f1191bf86aed6fc678b5454d303b7da81b414f11b4c7105447c7a9bd416da1e026184090b323e67bdbe72')
+
+prepare() {
+  cd $_hkgname-$pkgver
+  uusi -u base -u template-haskell
+}
 
 build() {
   cd $_hkgname-$pkgver
 
   runhaskell Setup configure -O --enable-shared --enable-executable-dynamic --disable-library-vanilla \
-    --prefix=/usr --docdir=/usr/share/doc/$pkgname --enable-tests \
-    --dynlibdir=/usr/lib --libsubdir=\$compiler/site-local/\$pkgid --ghc-option=-fllvm \
+    --prefix=/usr --docdir=/usr/share/doc/$pkgname --datasubdir=$pkgname --enable-tests \
+    --dynlibdir=/usr/lib --libsubdir=\$compiler/site-local/\$pkgid \
     --ghc-option=-optl-Wl\,-z\,relro\,-z\,now \
     --ghc-option='-pie'
 

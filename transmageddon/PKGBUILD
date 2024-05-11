@@ -4,13 +4,13 @@
 
 pkgname=transmageddon
 pkgver=1.5
-pkgrel=10
+pkgrel=11
 pkgdesc='Simple python application for transcoding video into formats supported by GStreamer'
 arch=('any')
 url='http://www.linuxrising.org/'
 license=('LGPL')
 depends=('gst-plugins-base' 'gst-python' 'gtk3' 'libnotify' 'python-gobject')
-makedepends=('intltool')
+makedepends=('intltool' 'appstream-glib')
 optdepends=('gst-plugins-good: Extra media codecs'
             'gst-plugins-bad: Extra media codecs'
             'gst-plugins-ugly: Extra media codecs'            
@@ -36,12 +36,17 @@ prepare() {
   # Fix AppStream metadata validation
   patch -Np1 -i ../0001-Fix-AppStream-metadata-validation.patch
   sed -i 's|${datadir}/appdata|${datadir}/metainfo|' configure{,.ac}
+
+  rm common/m4/glib-gettext.m4
+  mkdir m4
+#  sed -e '/APPDATA_XML_RULES/d' -i appdata/Makefile.am
+  autoreconf -vif
 }
 
 build() {
   cd $pkgname-$pkgver
   ./configure --prefix=/usr
-  make
+  make VERBOSE=1 -j1
 }
 
 package() {

@@ -2,7 +2,7 @@
 
 pkgname=scour
 pkgver=0.38.2
-pkgrel=3
+pkgrel=4
 pkgdesc='An SVG scrubber'
 arch=(any)
 url=https://github.com/scour-project/scour

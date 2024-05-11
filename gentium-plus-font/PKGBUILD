@@ -3,28 +3,24 @@
 # Contributor: Lukas Jirkovsky <l.jirkovsky@gmail.com>
 
 # Gentium Plus is upstream's replacement for ttf-gentium, now called Gentium Basic.
-pkgname=gentium-plus-font
+pkgbase=gentium-plus-font
+_fname=GentiumPlus
+pkgname=ttf-${pkgbase%-font}
 pkgver=6.200
-pkgrel=1
-
+pkgrel=5
 pkgdesc='Font supporting a wide range of Latin- and Cyrillic-based alphabets'
-url='https://scripts.sil.org/Gentium'
-license=('custom:OFL')
-
-replaces=(ttf-gentium ttf-gentium-plus)
-
 arch=(any)
-source=("https://software.sil.org/downloads/r/gentium/GentiumPlus-$pkgver.zip")
-# Checksum provided by packager, not upstream.
+url="https://software.sil.org/${pkgbase/-*}"
+license=(OFL-1.1-RFN)
+_archive="$_fname-$pkgver"
+source=("https://software.sil.org/downloads/r/${pkgbase%%-*}/$_archive.zip")
 sha256sums=('9b21103b79961149b6508791572acb3b2fe7eb621474c57d5e4ee37e76d7b073')
 
-package() {
-	mkdir -p "$pkgdir/usr/share/fonts/gentium/" \
-		"$pkgdir/usr/share/licenses/gentium-plus-font" \
-		"$pkgdir/usr/share/doc/gentium-plus-font"
-
-	cd "GentiumPlus-$pkgver"
-	install -m644 *.ttf "$pkgdir/usr/share/fonts/gentium"
-	install -m644 OFL.txt OFL-FAQ.txt \
-		"$pkgdir/usr/share/licenses/gentium-plus-font"
+package_ttf-gentium-plus() {
+	cd "$_archive"
+	replaces=("$pkgbase")
+	provides=("$pkgbase=$pkgver")
+	install -Dm0644 -t "$pkgdir/usr/share/fonts/TTF/" *.ttf
+	install -Dm0644 -t "$pkgdir/usr/share/licenses/$pkgname/" OFL.txt
+	install -Dm0644 -t "$pkgdir/usr/share/doc/$pkgname/" README.txt FONTLOG.txt documentation/pdf/*
 }

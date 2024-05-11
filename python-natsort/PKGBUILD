@@ -3,14 +3,14 @@
 _name=natsort
 pkgname=python-natsort
 pkgver=8.4.0
-pkgrel=1
+pkgrel=2
 pkgdesc="Simple yet flexible natural sorting in Python"
 arch=(any)
 url="https://github.com/SethMMorton/natsort"
 license=(MIT)
 depends=(
   python
-  python-typing-extensions
+  python-typing_extensions
 )
 makedepends=(
   python-build

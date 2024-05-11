@@ -1,8 +1,8 @@
 # Maintainer: Balló György <ballogyor+arch at gmail dot com>
 
 pkgname=gnome-flashback
-pkgver=3.50.0
-pkgrel=2
+pkgver=3.52.1
+pkgrel=1
 pkgdesc='GNOME Flashback session'
 arch=('loong64' 'x86_64')
 url='https://wiki.gnome.org/Projects/GnomeFlashback'
@@ -18,17 +18,17 @@ optdepends=('gnome-backgrounds: Default background'
             'network-manager-applet: Network management')
 source=("https://download.gnome.org/sources/$pkgname/${pkgver%.*}/$pkgname-$pkgver.tar.xz"
         '0001-background-Support-dark-wallpapers.patch'
-        '0001-polkit-Don-t-reset-the-idle_id.patch'
+        '0001-polkit-Reset-the-idle_id-before-emitting-the-signal.patch'
         '0001-application-honor-color-scheme-setting.patch'
         '0001-theme-improve-screensaver-style.patch'
-        '0001-autostart-add-launcher-for-Geoclue-Demo-agent.patch'
+        '0001-notifications-Fix-use-after-free-in-timeout_bubble.patch'
         'gnome-flashback.pam')
-sha256sums=('d04c434822022c9fa7e60874e5c8cd2060c8f3c0703c19f2b4032be254272afe'
-            '3a99c7471d1b33b4a140dbf1a9684f5823ab772ead9164b6bc60f173cad2c26b'
-            '674b1681e10128a91d26e3601f8f251ce9a37f67c5003fe9aa2d8a2df5e22041'
-            '7648d3954f5e1b8cabd61bd47062a86d39af1c542172997051cfc50af7a3f917'
-            'd61e51a2d10bf3c6c3f30ec666e21ab548fec23ac5e8e22782ed16fc3731ebf8'
-            '43faf94d4081407156a334f609be768c02b80ed5f2dbffeaddac1d72819a6192'
+sha256sums=('ba04613cdadb62bda206437c047299e16025cde1bd8095e094aa77769c78603a'
+            'f02afd29538555ab408085c60d8a7139f34fa639add7cd4c3c08a236dc027dc8'
+            'd5637b43428b84271d0a5658997b6f3aa7b4ccb808651454b685b90e227944fa'
+            '04fffb068a2b6653f041cfa7d22b6a38e40bf255b92300c6eaa5323f62ccc4a0'
+            '095a05c12ca0689149f9c9543ebea2229c62755a85be35b34087437dbbfe31a3'
+            '79a2e9112590968b5cd27de33ea9c5eb661ffda0907089a749d475f9c3605e31'
             '7148b3b1773fa312d6cd14798338cc70cffb6df7504ff1787687edd0363138d2')
 
 prepare() {
@@ -38,17 +38,21 @@ prepare() {
   patch -Np1 -i ../0001-background-Support-dark-wallpapers.patch
 
   # https://gitlab.gnome.org/GNOME/gnome-flashback/-/merge_requests/52
-  patch -Np1 -i ../0001-polkit-Don-t-reset-the-idle_id.patch
+  patch -Np1 -i ../0001-polkit-Reset-the-idle_id-before-emitting-the-signal.patch
 
   # https://gitlab.gnome.org/GNOME/gnome-flashback/-/merge_requests/53
   patch -Np1 -i ../0001-application-honor-color-scheme-setting.patch
 
   # https://gitlab.gnome.org/GNOME/gnome-flashback/-/merge_requests/54
   patch -Np1 -i ../0001-theme-improve-screensaver-style.patch
+
+  # https://gitlab.gnome.org/GNOME/gnome-flashback/-/merge_requests/63
+  patch -Np1 -i ../0001-notifications-Fix-use-after-free-in-timeout_bubble.patch
+
+  # Regenerate resources file
   rm gnome-flashback/gf-resources.{c,h}
 
-  # https://gitlab.gnome.org/GNOME/gnome-flashback/-/merge_requests/55
-  patch -Np1 -i ../0001-autostart-add-launcher-for-Geoclue-Demo-agent.patch
+  # Recreate autotools
   autoreconf -fi
 }
 

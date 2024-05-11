@@ -1,9 +1,9 @@
-# Maintainer: Fabian Bornschein <fabiscafe-at-mailbox-dot-org>
+# Maintainer: Fabian Bornschein <fabiscafe@archlinux.org>
 # Maintainer: Jan Alexander Steffens (heftig) <heftig@archlinux.org>
 # Contributor: Jan de Groot <jgc@archlinux.org>
 
 pkgname=gnome-control-center
-pkgver=45.2
+pkgver=46.1
 pkgrel=2
 pkgdesc="GNOME's main interface to configure various aspects of the desktop"
 url="https://gitlab.gnome.org/GNOME/gnome-control-center"
@@ -17,20 +17,23 @@ depends=(
   cups-pk-helper
   dconf
   fontconfig
-  gcr
+  gcc-libs
+  gcr-4
   gdk-pixbuf2
   glib2
+  glibc
   gnome-bluetooth-3.0
   gnome-color-manager
   gnome-desktop-4
   gnome-online-accounts
   gnome-settings-daemon
   gnutls
+  graphene
   gsettings-desktop-schemas
   gsound
-  gtk3
   gtk4
   hicolor-icon-theme
+  json-glib
   krb5
   libadwaita
   libcolord
@@ -47,6 +50,7 @@ depends=(
   libpulse
   libpwquality
   libsecret
+  libsoup3
   libwacom
   libx11
   libxi
@@ -65,6 +69,7 @@ makedepends=(
   meson
   modemmanager
   python
+  python-packaging
 )
 checkdepends=(
   python-dbusmock
@@ -89,36 +94,29 @@ optdepends=(
   'system-config-printer: printer settings'
 )
 groups=(gnome)
-_commit=cc5da95fecaeb5486435c54917edf9633addc02d  # tags/45.2^0
 source=(
-  "git+https://gitlab.gnome.org/GNOME/gnome-control-center.git#commit=$_commit"
+  "git+https://gitlab.gnome.org/GNOME/gnome-control-center.git?signed#tag=$pkgver"
   "git+https://gitlab.gnome.org/GNOME/libgnome-volume-control.git"
-  pixmaps-dir.diff
 )
-b2sums=('SKIP'
-        'SKIP'
-        'a133d524de9e8a2a27b61dd68b95238fa916c30d60e092f7ed3a371edb1e4ca233f46941d004dbfa2b8c13f464dab2e2729bb023ddd0e8c4d7e147b11e8e82ef')
-
-pkgver() {
-  cd $pkgname
-  git describe --tags | sed 's/[^-]*-g/r&/;s/-/+/g'
-}
+b2sums=('f066316f436f7d58b9341daa346bb173fbeee2a302a7b3f1b0db878aabd2deb20c736b5a08beef7612f4366bbc84a82a2fee12dc1ff39344cc5f493e2b099677'
+        'SKIP')
+validpgpkeys=(
+  9B60FE7947F0A3C58136817F2C2A218742E016BE # Felipe Borges (GNOME) <felipeborges@gnome.org>
+)
 
 prepare() {
   cd $pkgname
 
-  # Install bare logos into pixmaps, not icons
-  git apply -3 ../pixmaps-dir.diff
-
   git submodule init subprojects/gvc
   git submodule set-url subprojects/gvc "$srcdir/libgnome-volume-control"
-  git -c protocol.file.allow=always submodule update
+  git -c protocol.file.allow=always -c protocol.allow=never submodule update
 }
 
 
 build() {
   local meson_options=(
     -D documentation=true
+    -D location-services=enabled
     -D malcontent=true
   )
 

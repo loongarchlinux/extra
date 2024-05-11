@@ -3,22 +3,27 @@
 _hkgname=readable
 pkgname=haskell-readable
 pkgver=0.3.1
-pkgrel=18
+pkgrel=20
 pkgdesc="Reading from Text and ByteString"
 url="https://github.com/mightybyte/readable"
 license=('BSD')
 arch=('loong64' 'x86_64')
 depends=('ghc-libs')
-makedepends=('ghc')
+makedepends=('ghc' 'uusi')
 source=(https://hackage.haskell.org/packages/archive/${_hkgname}/${pkgver}/${_hkgname}-${pkgver}.tar.gz)
 sha512sums=('237467c4b6dfef9fe090c53e45a1f4261e34fc947b16878575c2b1d2b93400a67678bfde3ad8500f82c56a4b87c5b45e561304c9936572a033d7b295740fb3be')
+
+prepare() {
+    cd $_hkgname-$pkgver
+    uusi -u bytestring $_hkgname.cabal
+}
 
 build() {
     cd $_hkgname-$pkgver
     
     runhaskell Setup configure -O --enable-shared --enable-executable-dynamic --disable-library-vanilla \
-        --prefix=/usr --docdir=/usr/share/doc/$pkgname --enable-tests \
-        --dynlibdir=/usr/lib --libsubdir=\$compiler/site-local/\$pkgid --ghc-option=-fllvm
+        --prefix=/usr --docdir=/usr/share/doc/$pkgname --datasubdir=$pkgname --enable-tests \
+        --dynlibdir=/usr/lib --libsubdir=\$compiler/site-local/\$pkgid
     runhaskell Setup build $MAKEFLAGS
     runhaskell Setup register --gen-script
     runhaskell Setup unregister --gen-script

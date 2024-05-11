@@ -1,31 +1,30 @@
 # Maintainer: Felix Yan <felixonmars@archlinux.org>
 
 pkgname=python-itemloaders
-pkgver=1.0.6
-pkgrel=2
+pkgver=1.2.0
+pkgrel=1
 pkgdesc="Library to populate items using XPath and CSS with a convenient API"
 url="https://github.com/scrapy/itemloaders"
 license=('BSD')
 arch=('any')
 depends=('python-w3lib' 'python-parsel' 'python-jmespath' 'python-itemadapter')
-makedepends=('python-setuptools')
+makedepends=('git' 'python-setuptools')
 checkdepends=('python-pytest')
-source=("https://github.com/scrapy/itemloaders/archive/v$pkgver/$pkgname-$pkgver.tar.gz")
-sha512sums=('60f81dcaca51b9050c2a4a3abcedc9328943eda353a26c1ad28e489c338ea9d18d9ce76333d3d832746ce636571a1e49965f897bba7c4081d805684bb2ec2682')
+source=("git+https://github.com/scrapy/itemloaders.git#tag=v$pkgver")
+sha512sums=('7f9105d0f7b342b212e61a38833f1d75a281af7a2100d1a870270ca66e80cff063a87e8821dcf5ed391d41cf1187241ca80ddff765e30d68ec8fb2982345bea5')
 
 build() {
-  cd itemloaders-$pkgver
+  cd itemloaders
   python setup.py build
 }
 
 check() {
-  cd itemloaders-$pkgver
+  cd itemloaders
   python -m pytest
 }
 
 package() {
-  cd itemloaders-$pkgver
+  cd itemloaders
   python setup.py install --root="$pkgdir" --optimize=1
-
   install -Dm644 LICENSE -t "$pkgdir"/usr/share/licenses/$pkgname/
 }
