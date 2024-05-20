@@ -41,7 +41,8 @@ _libdir=usr/lib/gcc/$CHOST/${pkgver%%+*}
 source=(git+https://sourceware.org/git/gcc.git#commit=${_commit}
         c89 c99
         fix-asan-allocator-aslr.patch
-	gcc-12-loong64.patch
+	gcc-lib64-lib.patch
+        gcc-loong64.patch # backport from master to add lsx/lasx support
 )
 validpgpkeys=(F3691687D867B81B51CE07D9BBE43771487328A9  # bpiotrowski@archlinux.org
               86CFFCA918CF3AF47147588051E8B148A9999C34  # evangelos@foutrelis.com
@@ -50,7 +51,9 @@ validpgpkeys=(F3691687D867B81B51CE07D9BBE43771487328A9  # bpiotrowski@archlinux.
 sha256sums=('4730129b2d8bc80630bfe512e6cbe69151395be6bd2eb1967d64ca87ed8c0e09'
             'de48736f6e4153f03d0a5d38ceb6c6fdb7f054e8f47ddd6af0a3dbf14f27b931'
             '2513c6d9984dd0a2058557bf00f06d8d5181734e41dcfe07be7ed86f2959622a'
-            '5ede1f5fec5b664428412a0849b28895be1c8d8982d3c0d246a4e95fd4730d65')
+            '5ede1f5fec5b664428412a0849b28895be1c8d8982d3c0d246a4e95fd4730d65'
+            'a5904483163c3086f24088a2b422988bb3bc55f493d946e6a54f95ac48d83fb9'
+            '49fc1bd364c19fcd9e43c9b7d88a5b1f5da6eebe0f440124e5ec7843e5575d14')
 
 prepare() {
   [[ ! -d gcc ]] && ln -s gcc-${pkgver/+/-} gcc
@@ -65,7 +68,8 @@ prepare() {
   #ASan: move allocator base to avoid conflict with high-entropy ASLR for x86-64 Linux'
   patch -Np3 < "$srcdir/fix-asan-allocator-aslr.patch" -d libsanitizer/
 
-  patch -p1 -i $srcdir/gcc-12-loong64.patch
+  patch -p1 -i $srcdir/gcc-lib64-lib.patch
+  patch -p1 -i $srcdir/gcc-loong64.patch
   mkdir -p "$srcdir/gcc-build"
 }
 
