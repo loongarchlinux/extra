@@ -2,28 +2,26 @@
 # Contributor: Vincent B. <vb@luminar.eu.org>
 
 pkgname=opam
-pkgver=2.1.5
-pkgrel=3
+pkgver=2.2.0_2
+pkgrel=2
 pkgdesc='OCaml package manager'
 arch=(loong64 x86_64)
 url='https://opam.ocaml.org/'
-license=(GPL)
+license=(LGPL-2.1-only)
 depends=(bubblewrap ocaml-compiler-libs unzip)
 optdepends=('darcs: For downloading packages with darcs'
             'git: For downloading packages with git'
             'mercurial: For downloading packages with mercurial'
             'rsync: For downloading packages with rsync')
-source=("https://github.com/ocaml/opam/releases/download/$pkgver/opam-full-$pkgver.tar.gz")
-b2sums=('5e6b1140e279931dfb61f68d0c4888cb14d05ff610e2b151115efe6b6420d74e7079894b6f4360f377b155008530ba4ace9708bc9d1e1d8c13950c0a5be4de11')
+source=("https://github.com/ocaml/opam/releases/download/$pkgver/opam-full-${pkgver/_/-}.tar.gz")
+b2sums=('808f896c07462f69d31c84266be5e430bea0084f2c463b60724ce5b861e0565dae72fae10a88fb0ff33b11a290606321360c378b9b9b0e274f04c8869b933557')
 
 build() {
-  cd opam-full-$pkgver
-  ./configure --prefix=/usr
-  make lib-ext all -j1 \
-    OCAMLC='ocamlc -unsafe-string' \
-    OCAMLOPT='ocamlopt -unsafe-string'
+  cd opam-full-${pkgver%_*}
+  ./configure --prefix=/usr --with-mccs --with-vendored-deps
+  make all -j1
 }
 
 package() {
-  make -C opam-full-$pkgver DESTDIR="$pkgdir" install
+  make -C opam-full-${pkgver%_*} DESTDIR="$pkgdir" install
 }

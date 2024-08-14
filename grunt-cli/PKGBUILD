@@ -5,7 +5,7 @@
 
 pkgname=grunt-cli
 pkgver=1.4.3
-pkgrel=2
+pkgrel=3
 pkgdesc="The grunt command line interface."
 arch=('any')
 url="https://gruntjs.com/"

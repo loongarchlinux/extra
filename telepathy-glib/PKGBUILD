@@ -6,32 +6,65 @@
 
 pkgname=telepathy-glib
 pkgver=0.24.2
-pkgrel=3
+pkgrel=4
 pkgdesc='GLib bindings for the Telepathy D-Bus protocol'
-arch=('loong64' 'x86_64')
+arch=(loong64 x86_64)
 url='https://telepathy.freedesktop.org/'
-license=('LGPL-2.1-or-later')
-depends=('dbus' 'dbus-glib' 'glib2' 'glibc')
-makedepends=('gobject-introspection' 'vala')
-source=("https://telepathy.freedesktop.org/releases/$pkgname/$pkgname-$pkgver.tar.gz"{,.asc})
-sha256sums=('b0a374d771cdd081125f38c3abd079657642301c71a543d555e2bf21919273f0'
-            'SKIP')
-validpgpkeys=('AA33B0D27868E36C151780F0FE0B6D736B1195ED') # Alexandr Akulich <akulichalexander@gmail.com>
+license=(LGPL-2.1-or-later)
+depends=(
+  dbus
+  dbus-glib
+  glib2
+  glibc
+)
+makedepends=(
+  git
+  glib2-devel
+  gobject-introspection
+  vala
+)
+source=(
+  "git+https://github.com/TelepathyIM/$pkgname.git?signed#tag=$pkgname-$pkgver"
+  telepathy-glib-function-type-cast.patch
+  telepathy-glib-pr3-test-cm-with-newer-glib.patch
+)
+b2sums=(
+  529f200eeb03a65e3722928b4bacb81469c81f586e4f87d509beb70434bbeb226e8024ff78827c63bb3976ea44246293f680fcbe9aa2a321b52b138e12c04113
+  7a2fd782f700741f97133203f7ca23cbe6028c99cd5118b97eb6d35191868097bc50fbfd8b149f83c622a9c86309a580f06c680051f52d93416a98323ad45fa1
+  2e18ed3b4957a072b6f5441f976117ef4af45c60fa37b30fc21f34c516cf2d7f4e48f0120588c019d443862b53c7ce3187485df5da5ba4cd153c3a8a8c14bf71
+)
+validpgpkeys=(AA33B0D27868E36C151780F0FE0B6D736B1195ED) # Alexandr Akulich <akulichalexander@gmail.com>
+
+prepare() {
+  cd $pkgname
+
+  # Fix build
+  git apply -3 ../telepathy-glib-function-type-cast.patch
+
+  # Fix tests
+  git apply -3 ../telepathy-glib-pr3-test-cm-with-newer-glib.patch
+
+  autoreconf -fi
+}
 
 build() {
-  cd $pkgname-$pkgver
-  ./configure --prefix=/usr \
-      --libexecdir=/usr/lib/telepathy \
-      --enable-vala-bindings
+  cd $pkgname
+  ./configure \
+    --prefix=/usr \
+    --sysconfdir=/etc \
+    --localstatedir=/var \
+    --libexecdir=/usr/lib/telepathy \
+    --enable-gtk-doc \
+    --enable-vala-bindings
   make
 }
 
 check() {
-  cd $pkgname-$pkgver
+  cd $pkgname
   make check
 }
 
 package() {
-  cd $pkgname-$pkgver
+  cd $pkgname
   make DESTDIR="$pkgdir" install
 }

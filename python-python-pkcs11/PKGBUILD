@@ -2,22 +2,27 @@
 pkgname=python-python-pkcs11
 _name=${pkgname#python-}
 pkgver=0.7.0
-pkgrel=7
+pkgrel=8
 pkgdesc='PKCS#11/Cryptoki support for Python'
 arch=('loong64' 'x86_64')
 url='https://github.com/danni/python-pkcs11'
 license=('MIT')
-depends=('python' 'python-asn1crypto' 'python-cached-property')
+depends=('python' 'python-asn1crypto')
 makedepends=('cython' 'python-build' 'python-installer' 'python-setuptools'
              'python-setuptools-scm' 'python-wheel')
 checkdepends=('python-cryptography' 'python-oscrypto' 'python-pytest' 'softhsm')
 source=("https://files.pythonhosted.org/packages/source/${_name::1}/$_name/$_name-$pkgver.tar.gz"
-        'python-pkcs11_mark-tests-as-xfail.patch')
+        'python-pkcs11_mark-tests-as-xfail.patch'
+	'use-functools-cached-property.patch')
 sha256sums=('9737e0c24cabb8bc9d48bf8c57c3df2a70f8cdd96b70c50290803286f9e46bf7'
-            '28a5ce996fe6cb455b55c98e8a46fcd0539dc0b3a70677a390f4dddbe1b55d65')
+            '28a5ce996fe6cb455b55c98e8a46fcd0539dc0b3a70677a390f4dddbe1b55d65'
+            '33a3d051e2730d28f68735c73697f8ca24ea61dad93f2dc387e1375cec15d073')
 
 prepare() {
 	cd "$_name-$pkgver"
+
+	# https://github.com/pyauth/python-pkcs11/pull/176
+	patch -Np1 -i ${srcdir}/use-functools-cached-property.patch
 
 	sed -n '/^Copyright/,$p' README.rst > LICENSE
 

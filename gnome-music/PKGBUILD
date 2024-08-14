@@ -3,23 +3,34 @@
 # Contributor: Jan de Groot <jgc@archlinux.org>
 
 pkgname=gnome-music
-pkgver=46.0
-pkgrel=2
+pkgver=46.1
+pkgrel=1
 epoch=1
 pkgdesc="Music player and management application"
-url="https://wiki.gnome.org/Apps/Music"
+url="https://apps.gnome.org/Music/"
 arch=(any)
 license=(GPL-2.0-or-later)
 depends=(
+  dconf
+  gdk-pixbuf2
+  glib2
+  graphene
   grilo
   grilo-plugins
   gst-plugins-base
+  gst-plugins-base-libs
   gst-plugins-good
+  gstreamer
   gtk4
+  hicolor-icon-theme
   libadwaita
+  libgirepository
   libmediaart
+  libsoup3
+  python
   python-cairo
   python-gobject
+  tracker3
   tracker3-miners
 )
 makedepends=(
@@ -35,14 +46,8 @@ optdepends=(
   'gst-plugins-ugly: Extra media codecs'
 )
 groups=(gnome)
-_commit=1748d79846bfde7b9234f14da99c98eaf21e1e69  # tags/46.0^0
-source=("git+https://gitlab.gnome.org/GNOME/gnome-music.git#commit=$_commit")
-b2sums=('d94428118d36a79408af0eed873131e738b2a7923c0106c6e7a1c7e9703bd0f5af0fc2f105c1df91c4c8f3ea8c17ec0046286d8af29ff20a4d9f59763cdbf9bf')
-
-pkgver() {
-  cd $pkgname
-  git describe --tags | sed -r 's/\.([a-z])/\1/;s/([a-z])\./\1/;s/[^-]*-g/r&/;s/-/+/g'
-}
+source=("git+https://gitlab.gnome.org/GNOME/gnome-music.git#tag=${pkgver/[a-z]/.&}")
+b2sums=('1cb6110e135dd1a07f7ae1cacbeb212c1139108d2d7d8a63d51affc0df5ab0167b070ab417190f24a81fc535df47f1fc2525c63d99df7de648d24cfd6847a0b2')
 
 prepare() {
   cd $pkgname
@@ -59,9 +64,6 @@ check() {
 
 package() {
   meson install -C build --destdir "$pkgdir"
-
-  python -m compileall -d /usr/lib "$pkgdir/usr/lib"
-  python -O -m compileall -d /usr/lib "$pkgdir/usr/lib"
 }
 
 # vim:set sw=2 sts=-1 et:

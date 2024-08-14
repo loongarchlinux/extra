@@ -2,7 +2,7 @@
 # Contributor: Guillaume Horel <guillaume.horel@gmail.com>
 
 pkgname=python-snappy
-pkgver=0.7.1
+pkgver=0.7.2
 pkgrel=1
 pkgdesc='Python bindings for the snappy compression library.'
 url='https://github.com/intake/python-snappy'
@@ -13,7 +13,7 @@ checkdepends=(python-pytest)
 license=('BSD-3-Clause')
 arch=(any)
 source=("git+https://github.com/intake/python-snappy#tag=$pkgver")
-sha256sums=('ee39c2cab15dde409732c3d262d628c32c4038cfed0664ae8f0f1dcec0cfe315')
+sha256sums=('e25a645a49b315e084d404f1ef183052b3d4cb89917332699f8fbe0c336f8330')
 
 build() {
   cd $pkgname

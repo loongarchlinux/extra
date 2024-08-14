@@ -9,31 +9,28 @@ pkgname=(
   vhba-module-dkms
 )
 pkgver=20240202
-pkgrel=20
+pkgrel=42
 pkgdesc="Kernel module that emulates SCSI devices"
 url="https://cdemu.sourceforge.io/"
 arch=(loong64 x86_64)
 license=(GPL-2.0-or-later)
-makedepends=(linux-headers)
+makedepends=(
+  git
+  linux-headers
+)
 source=(
-  "https://downloads.sourceforge.net/cdemu/$pkgbase-$pkgver.tar.xz"
+  "cdemu-code::git+https://git.code.sf.net/p/cdemu/code#tag=$pkgbase-$pkgver"
   dkms.conf
 )
-b2sums=('7974f60b73c634528afdd44e94c6da34bdc481d874f19845efc0464435a7e560494dd703b0fb1df34c96fce5f1afb300a1e6e2b3b9730e91c956816905eb2f44'
+b2sums=('2c97148e88aac9281ffcaee579b0cd9f00117086e69f9035e44e4288f5ba28a6a3b1246c922647742dbed7666fd8158431d600387247132808097bdb33f74981'
         'f1f3d97fc450de4a0257fa4c864eb7245f6c9657472eec67949b1335681ba86a40273b7fb11d023e406f792709252d80e635791674bdf79153f53161b4c5d871')
 
-# https://sourceforge.net/projects/cdemu/files/vhba-module/
-md5sums=('ba66d25b257daba715d4870addbd131c'
-         '7da9314812d9ea665df0db33052c7452')
-sha1sums=('84f281612d18978959216a8b9eae6e5a94dcb6cf'
-          'c3b46eeceef6124483020ae52ccb801c534996b2')
-
 prepare() {
-  cd $pkgbase-$pkgver
+  cd cdemu-code/$pkgbase
 }
 
 build() {
-  cd $pkgbase-$pkgver
+  cd cdemu-code/$pkgbase
   make KERNELRELEASE="$(</usr/src/linux/version)"
 }
 
@@ -42,10 +39,10 @@ package_vhba-module() {
   provides=(VHBA-MODULE)
 
   local extradir="/usr/lib/modules/$(</usr/src/linux/version)/extramodules"
-  install -Dt "$pkgdir$extradir" -m644 $pkgbase-$pkgver/*.ko
+  install -Dt "$pkgdir$extradir" -m644 cdemu-code/$pkgbase/*.ko
 
-  find "$pkgdir" -name '*.ko' -exec strip --strip-debug {} +
-  find "$pkgdir" -name '*.ko' -exec xz {} +
+  # compress kernel modules
+  find "${pkgdir}" -name '*.ko' -exec zstd --rm -19 {} +
 }
 
 package_vhba-module-dkms() {
@@ -54,7 +51,7 @@ package_vhba-module-dkms() {
   conflicts=(vhba-module)
 
   install -Dt "$pkgdir/usr/src/$pkgbase-$pkgver" -m644 \
-    dkms.conf $pkgbase-$pkgver/{Makefile,vhba.c}
+    dkms.conf cdemu-code/$pkgbase/{Makefile,vhba.c}
 }
 
 # vim:set sw=2 sts=-1 et:

@@ -4,17 +4,31 @@
 
 pkgname=ruby-shadow
 pkgver=2.5.1
-pkgrel=1
+pkgrel=2
 pkgdesc="Shadow password module"
 arch=('loong64' 'x86_64')
 url="https://github.com/apalmblad/${pkgname}"
 license=('Unlicense')
 depends=('ruby')
-source=($pkgname-$pkgver.tar.gz::https://github.com/apalmblad/$pkgname/archive/$pkgver.tar.gz)
-sha512sums=('04b73809fe2615b2a4b34b8e08ddce032fc5d7e6d55a93162424db9067e7b7bcb46fb48156ba4cc346a9f8bd0bc54163cdbbdeedb64f43b473269e6bf9e606af')
+source=(
+  "$pkgname-$pkgver.tar.gz::${url}/archive/$pkgver.tar.gz"
+  # https://github.com/apalmblad/ruby-shadow/pull/31
+  "${pkgname}_fix_config.patch::${url}/pull/31/commits/eab4aba3f5e06ea8f124d3e5ff6b3fa88c4807cd.patch"
+  # https://github.com/apalmblad/ruby-shadow/pull/29
+  "${pkgname}_remove_taint.patch::${url}/pull/29/commits/70330521b99e84c8f7445c213dfde0768f45a690.patch"
+)
+sha512sums=('04b73809fe2615b2a4b34b8e08ddce032fc5d7e6d55a93162424db9067e7b7bcb46fb48156ba4cc346a9f8bd0bc54163cdbbdeedb64f43b473269e6bf9e606af'
+            'f56e3a94055b6c12ef3944662eaefd5f89193c6915a00820ee5ebe6ef9b6741a75b10465508af2f20939ea7b52a7e0f0710c83f320cfb9a7ea9434660dc717b4'
+            '6dc7211372537eb1f43f735c35e5241311b8b44b99cac1e3bd54fd0f74ceb5057cf519d3162a15224cad7851eb604e515978698a5b4466cabad15d13e757e3a1')
+b2sums=('89fa2b8e707516909599dc9fb257c139d6b0a490a6cef4df82d224b76731f59bb805942271af58a8d4ac23fddc424a224149398449155e107dcc70c69d360212'
+        '654a3776fdfdf9bfb5c3d431ac2709392483bc2f3f576c43855c458f1b69e224bff14975ffbb48c55866084b741beef7175738936ad06fe6dc770d91ce90cd1a'
+        '6fd9443e10f85578f22d17ae63728d19eec5b7823a147c3edcf7b3ddb4c9e1eb3adb6c4d78fd63e9914a695575bc29e7fd6929ca99d60a02a2fe7fa5d37a944a')
 
 prepare() {
   cd "${pkgname}-${pkgver}"
+
+  patch --verbose --strip=1 --input="../${pkgname}_fix_config.patch"
+  patch --verbose --strip=1 --input="../${pkgname}_remove_taint.patch"
 }
 
 build() {

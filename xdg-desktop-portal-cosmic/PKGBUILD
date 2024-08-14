@@ -1,0 +1,54 @@
+# Maintainer: Maxime Gauduin <alucryd@archlinux.org>
+# Contributor: Mark Wagie <mark.wagie@proton.me>
+
+pkgname=xdg-desktop-portal-cosmic
+pkgver=1.0.0.alpha.1
+pkgrel=1
+pkgdesc='A backend implementation for xdg-desktop-portal for the COSMIC desktop environment'
+arch=(loong64 x86_64)
+url=https://github.com/pop-os/xdg-desktop-portal-cosmic
+license=(GPL-3.0-only)
+groups=(cosmic)
+depends=(
+  cosmic-icon-theme
+  gcc-libs
+  glibc
+  libpipewire
+  libxkbcommon
+  mesa
+  wayland
+  xdg-desktop-portal
+)
+makedepends=(
+  cargo
+  clang
+  git
+  just
+  lld
+)
+_tag=41c1e7cfd0779db6005fc64798ac75b630332678
+source=(git+https://github.com/pop-os/xdg-desktop-portal-cosmic.git#tag=${_tag})
+b2sums=('307865d8515425b1b77eaf2b6a73f2ddf056992bc55c4bbc7c55265ab00cdeda97088f57924c314b5bee865235f5470694933b644b5d7af2c4660f8699e15c59')
+
+prepare() {
+  cd xdg-desktop-portal-cosmic
+  cargo fetch --locked
+}
+
+pkgver() {
+  cd xdg-desktop-portal-cosmic
+  git describe --tags | sed 's/^epoch-//; s/-/./g'
+}
+
+build() {
+  cd xdg-desktop-portal-cosmic
+  RUSTFLAGS+=" -C link-arg=-fuse-ld=lld"
+  make ARGS+=" --frozen --release"
+}
+
+package() {
+  cd xdg-desktop-portal-cosmic
+  make prefix='/usr' libexecdir='/usr/lib' DESTDIR="${pkgdir}" install
+}
+
+# vim: ts=2 sw=2 et:

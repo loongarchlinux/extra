@@ -3,29 +3,38 @@
 
 pkgname=m4ri
 pkgver=20200125
-pkgrel=2
+pkgrel=3
 pkgdesc='Algorithms for linear algebra over F_2'
 arch=(loong64 x86_64)
 url='https://bitbucket.org/malb/m4ri'
-license=(GPL)
-depends=(libpng)
-source=(https://bitbucket.org/malb/m4ri/downloads/$pkgname-$pkgver.tar.gz)
-sha256sums=('0dfb34aed351882a0f2281535ea6f81c690a5efeb14edab131d9ba0dffe44863')
+license=(GPL-2.0-or-later)
+depends=(gcc-libs
+         glibc
+         libpng)
+makedepends=(git)
+source=(git+https://bitbucket.org/malb/m4ri#tag=release-$pkgver)
+sha256sums=('3688051e6ee9e81097decf9969bdb7348a497041f5defde2b8abfdb2017a85a5')
+
+prepare() {
+  cd $pkgname
+  autoreconf -vi
+}
 
 build() {
-  cd $pkgname-$pkgver
-  ./configure --prefix=/usr \
+  cd $pkgname
+  ./configure \
+    --prefix=/usr \
     --enable-openmp \
     --enable-thread-safe
   make
 }
 
 check() {
-  cd $pkgname-$pkgver
+  cd $pkgname
   make check
 }
 
 package() {
-  cd $pkgname-$pkgver
+  cd $pkgname
   make install DESTDIR="$pkgdir"
 }

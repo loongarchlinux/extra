@@ -4,7 +4,7 @@
 
 pkgname=lxde-icon-theme
 pkgver=0.5.1
-pkgrel=5
+pkgrel=6
 pkgdesc="LXDE default icon theme based on nuoveXT2"
 arch=('any')
 url="https://lxde.org/"
@@ -12,7 +12,7 @@ license=('GPL')
 groups=('lxde' 'lxde-gtk3')
 depends=('gtk-update-icon-cache')
 source=(https://downloads.sourceforge.net/lxde/$pkgname-$pkgver.tar.xz)
-md5sums=('7467133275edbbcc79349379235d4411')
+sha256sums=('e3d0b7399f28a360a3755171c9a08147d68f853f518be5485f5064675037916c')
 
 build() {
   cd $pkgname-$pkgver

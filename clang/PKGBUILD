@@ -1,15 +1,15 @@
-# Maintainer: Evangelos Foutras <evangelos@foutrelis.com>
+# Maintainer: Evangelos Foutras <foutrelis@archlinux.org>
 # Contributor: Jan "heftig" Steffens <jan.steffens@gmail.com>
 
 pkgname=clang
-pkgver=17.0.6
+pkgver=18.1.8
 pkgrel=2
 pkgdesc="C language family frontend for LLVM"
 arch=('loong64' 'x86_64')
 url="https://clang.llvm.org/"
-license=('custom:Apache 2.0 with LLVM Exception')
+license=('Apache-2.0 WITH LLVM-exception')
 depends=('llvm-libs' 'gcc' 'compiler-rt')
-makedepends=('llvm' 'cmake' 'ninja' 'python-sphinx' 'python-recommonmark')
+makedepends=('llvm' 'cmake' 'ninja' 'python-sphinx' 'python-myst-parser')
 optdepends=('openmp: OpenMP support in clang with -fopenmp'
             'python: for scan-view and git-clang-format'
             'llvm: referenced by some clang headers')
@@ -24,20 +24,19 @@ source=($_source_base/clang-$pkgver.src.tar.xz{,.sig}
         $_source_base/third-party-$pkgver.src.tar.xz{,.sig}
         clangd-handle-missing-ending-brace.patch::https://github.com/llvm/llvm-project/commit/9d1dada57741.patch
         enable-fstack-protector-strong-by-default.patch)
-sha256sums=('a78f668a726ae1d3d9a7179996d97b12b90fb76ab9442a43110b972ff7ad9029'
+sha256sums=('5724fe0a13087d5579104cedd2f8b3bc10a212fb79a0fcdac98f4880e19f4519'
             'SKIP'
-            'aa774642415d338d7b77a66fcbad6fd1f77f382dabcb67422a6230614eff1ab9'
+            'e58877fcd95ed106824bd1a31276dd17ed0c53adcd60ca75289eac0654f0a7f1'
             'SKIP'
-            'b638167da139126ca11917b6880207cc6e8f9d1cbb1a48d87d017f697ef78188'
+            'f68cf90f369bc7d0158ba70d860b0cb34dbc163d6ff0ebc6cfa5e515b9b2e28d'
             'SKIP'
-            '807f069c54dc20cb47b21c1f6acafdd9c649f3ae015609040d6182cab01140f4'
+            '59badef592dd34893cd319d42b323aaa990b452d05c7180ff20f23ab1b41e837'
             'SKIP'
-            '3054d0a9c9375dab1a4539cc2cc45ab340341c5d71475f9599ba7752e222947b'
+            'b76b810f3d3dc5d08e83c4236cb6e395aa9bd5e3ea861e8c319b216d093db074'
             'SKIP'
-            'c102e8a6a2adb0e8729865ffb8799b22bb8a9bdf0f421991880fa4393378370a'
-            '45da5783f4e89e4507a351ed0ffbbe6ec240e21ff7070797a89c5ccf434ac612')
-validpgpkeys=('474E22316ABF4785A88C6E8EA2C794A986419D8A'  # Tom Stellard <tstellar@redhat.com>
-              'D574BD5D1D0E98895E3BF90044F2485E45D59042') # Tobias Hieta <tobias@hieta.se>
+            '0d4dc477f5a28f9f16639dc094b6d9bc14228d5de771547394799d2d5f8cd1df'
+            'ef319e65f927718e1d3b1a23c480d686b1d292e2a0bf27229540964f9734117a')
+validpgpkeys=('474E22316ABF4785A88C6E8EA2C794A986419D8A') # Tom Stellard <tstellar@redhat.com>
 
 # Utilizing LLVM_DISTRIBUTION_COMPONENTS to avoid
 # installing static libraries; inspired by Gentoo
@@ -46,9 +45,6 @@ _get_distribution_components() {
   ninja -t targets | grep -Po 'install-\K.*(?=-stripped:)' | while read -r target; do
     case $target in
       clang-libraries|distribution)
-        continue
-        ;;
-      clang-tidy-headers)
         continue
         ;;
       clang|clangd|clang-*)

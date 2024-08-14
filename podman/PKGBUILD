@@ -4,7 +4,7 @@
 
 pkgbase=podman
 pkgname=(podman podman-docker)
-pkgver=5.0.2
+pkgver=5.2.0
 pkgrel=1
 pkgdesc='Tool and library for running OCI-based containers in pods'
 arch=(loong64 x86_64)
@@ -20,13 +20,13 @@ makedepends=(
   go-md2man
   gpgme
   libseccomp
+  man-db
   systemd
 )
 # https://github.com/containers/podman/issues/13297
 options=(!lto)
 source=(
-  "git+$url#tag=v$pkgver?signed"
-  $pkgname-4.6.0-defaultinitpath.patch
+  "git+$url?signed#tag=v$pkgver"
 )
 # See the release-keys repository
 # https://github.com/containers/release-keys
@@ -35,15 +35,7 @@ validpgpkeys=(
   7CE1E6F8C90CB53E7E4D8F2D502E08DB0BBF8EEE  # Ashley Cui <acui@redhat.com>
   9E33DD8704CC03E2DEB84D9A1C1EDD7CC7C3A0DD  # Lokesh Mandvekar <lsm5@redhat.com>
 )
-sha256sums=('75034e1437e6fcf5710864a02982b5273e4b3f8e2f8e76e610135aad79d6e362'
-            'eeacf654707b9b8d6a6c08453b5625d9cf31010d666f82f4851aa34433b97700')
-
-prepare() {
-  # set default init_path to /usr/lib/podman/catatonit
-  # https://bugs.archlinux.org/task/75493
-  # https://github.com/containers/common/issues/1110
-  patch -Np1 -d $pkgname -i ../$pkgname-4.6.0-defaultinitpath.patch
-}
+sha256sums=('cfd66b5fccd1613627e885f22488b2020c77cb0f2408aabd8bfbcf4623559648')
 
 build() {
   # NOTE: the BUILDTAGS may change over time
@@ -64,7 +56,7 @@ package_podman() {
     catatonit
     conmon
     containers-common
-    crun
+    oci-runtime
     gcc-libs
     glibc
     iptables

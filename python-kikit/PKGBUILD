@@ -1,35 +1,52 @@
-# Maintainer: Filipe Laíns (FFY00) <lains@archlinux.org>
+# Maintainer: George Rawlinson <grawlinson@archlinux.org>
+# Contributor: Filipe Laíns (FFY00) <lains@archlinux.org>
 
 _pkgname=KiKit
 pkgname=python-kikit
-pkgver=1.5.1
-pkgrel=2
+pkgver=1.6.0
+pkgrel=1
 pkgdesc='Automation tools for KiCAD'
 arch=('any')
 url='https://github.com/yaqwsx/KiKit'
 license=('MIT')
-depends=('python' 'kicad' 'python-numpy' 'python-shapely' 'python-click' 'python-markdown2'
-         'python-pybars3' 'python-solidpython' 'python-pcbnewtransition' 'python-commentjson')
-makedepends=('python-build' 'python-installer' 'python-setuptools' 'python-wheel')
-source=("$pkgname-$pkgver.tar.gz::$url/archive/v$pkgver.tar.gz")
-sha512sums=('1090211f1840ebb6f2f0533b3f588405b5eb007cca6d391183e0450361f55631912891c2e25768431dc4ae0e79025313752d72e00fd049ee9e48b10cf470fcac')
+depends=(
+  'python'
+  'kicad'
+  'python-numpy'
+  'python-shapely'
+  'python-click'
+  'python-markdown2'
+  'python-pybars3'
+  'python-solidpython'
+  'python-pcbnewtransition'
+  'python-commentjson'
+)
+makedepends=(
+  'git'
+  'python-build'
+  'python-installer'
+  'python-setuptools'
+  'python-wheel'
+)
+source=("$pkgname::git+$url#tag=v$pkgver")
+sha512sums=('4ac8b8948eb31c0711e93ab7caeee684d2bfc3e258396ac73147b914b7a48a79b008c37354d5ac76284d8f4c1abb17cea3d90497b54a65281e11955c2b65b256')
+b2sums=('63a7774d546cc66547ee72273a1131a27381d0252b4a4c720ed976ac24b1188b3f14d4cc26bb1a52b12bc24e5e8980ea1b6394e9a4776ed6c5c9a06cd0aab1cd')
 
 prepare() {
-  sed -i '/versioneer/d' $_pkgname-$pkgver/setup.py
+  sed -i '/versioneer/d' $pkgname/setup.py
 }
 
 build() {
-  cd $_pkgname-$pkgver
+  cd "$pkgname"
 
-  python -m build -nw
+  python -m build --wheel --no-isolation
 }
 
 package() {
-  cd $_pkgname-$pkgver
+  cd "$pkgname"
 
-  python -m installer -d "$pkgdir" dist/*.whl
+  python -m installer --destdir="$pkgdir" dist/*.whl
 
-  install -Dm 644 LICENCE "$pkgdir"/usr/share/licenses/$pkgname/LICENCE
+  # license
+  install -vDm644 -t "$pkgdir/usr/share/licenses/$pkgname" LICENCE
 }
-
-# vim:set ts=2 sw=2 et:

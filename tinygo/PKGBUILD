@@ -1,13 +1,13 @@
 # Maintainer: Anatol Pomozov <anatol.pomozov@gmail.com>
 
 pkgname=tinygo
-pkgver=0.31.2
+pkgver=0.32.0
 pkgrel=1
 pkgdesc='Go compiler for small places. Microcontrollers, WebAssembly, and command-line tools. Based on LLVM.'
 arch=(loong64 x86_64)
 url='https://github.com/tinygo-org/tinygo'
 license=(BSD)
-options=(!strip !lto)
+options=(!lto)
 # TODO: re-add these deps when switching back to system LLVM
 #depends=(llvm-libs clang lld)
 # TODO: add llvm + remove cmake/ninja/python from build deps
@@ -17,7 +17,7 @@ source=(git+https://github.com/tinygo-org/tinygo#tag=v$pkgver
         git+https://github.com/NordicSemiconductor/nrfx.git
         git+https://github.com/ARM-software/CMSIS.git
         git+https://github.com/avr-rust/avr-mcu.git
-        git+https://github.com/cmsis-svd/cmsis-svd-data
+        git+https://github.com/cmsis-svd/cmsis-svd-data#branch=main
         git+https://github.com/WebAssembly/wasi-libc
         git+https://github.com/keith-packard/picolibc.git
         git+https://github.com/tinygo-org/stm32-svd
@@ -26,9 +26,10 @@ source=(git+https://github.com/tinygo-org/tinygo#tag=v$pkgver
         git+https://github.com/mingw-w64/mingw-w64.git
         git+https://github.com/aykevl/macos-minimal-sdk.git
         git+https://github.com/tinygo-org/renesas-svd.git
-        git+https://github.com/tinygo-org/net.git
-	git+https://github.com/espressif/llvm-project#branch=xtensa_release_17.0.1)
-sha256sums=('SKIP'
+        git+https://github.com/tinygo-org/net.git#branch=dev
+        git+https://github.com/tinygo-org/llvm-project#branch=tinygo_xtensa_release_18.1.2
+        disable_werror_binaryen.patch)
+sha256sums=('7501e324cc21b1fe5b5bf4dfac3837d84a2543fc7775e40e047a864c0b5c04b0'
             'SKIP'
             'SKIP'
             'SKIP'
@@ -42,7 +43,8 @@ sha256sums=('SKIP'
             'SKIP'
             'SKIP'
             'SKIP'
-            'SKIP')
+            'SKIP'
+            'a40313ae7b1cb10fcf103ac4cb85010ef5f433bcd254e0e5eb3548ac4acbb7cf')
 
 prepare() {
   cd tinygo
@@ -68,6 +70,8 @@ prepare() {
   git -c protocol.file.allow=always submodule update
 
   ln -sf ../llvm-project
+
+  patch -p1 < ../disable_werror_binaryen.patch # https://github.com/tinygo-org/tinygo/issues/4332
 }
 
 build() {

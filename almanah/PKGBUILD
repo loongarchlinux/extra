@@ -2,25 +2,49 @@
 
 pkgname=almanah
 pkgver=0.12.3
-pkgrel=6
+pkgrel=7
 pkgdesc='Small GTK application to allow you to keep a diary of your life'
-arch=('loong64' 'x86_64')
+arch=(loong64 x86_64)
 url='https://wiki.gnome.org/Apps/Almanah_Diary'
-license=('GPL3')
-depends=('evolution-data-server' 'libcryptui' 'gtkspell3' 'gtksourceview3')
-makedepends=('appstream-glib' 'meson')
-source=("https://download.gnome.org/sources/$pkgname/${pkgver%.*}/$pkgname-$pkgver.tar.xz"
-         https://gitlab.gnome.org/GNOME/almanah/-/commit/8c42a676.patch)
-sha256sums=('94ca4340ec651a58cfeba00f478f5a3db4d99dfac66a46d0d99705be688f305a'
-            'db268e25c626ece9a097e03debb3d6b302c42b6c089cb673d6c9ed459036bd09')
+license=(GPL-3.0-or-later)
+depends=(
+  at-spi2-core
+  cairo
+  dconf
+  evolution-data-server
+  gcr
+  glib2
+  glibc
+  gpgme
+  gtk3
+  gtksourceview3
+  gtkspell3
+  hicolor-icon-theme
+  libcryptui
+  libical
+  pango
+  sqlite
+)
+makedepends=(
+  appstream-glib
+  git
+  glib2-devel
+  meson
+)
+source=("git+https://gitlab.gnome.org/GNOME/almanah.git?signed#tag=$pkgver")
+b2sums=(1a7f0c3c706efa6043ea7c2710a0df1868aa9376793bb23facca366cb9956689bc56d3e057bc28b03d4ae45188083de8aee7a39ec83eb21e38cbf17854e8bf5c)
+validpgpkeys=(923B7025EE03C1C59F42684CF0942E894B2EAFA0) # Philip Withnall
 
 prepare() {
-  cd $pkgname-$pkgver
-  patch -p1 < ../8c42a676.patch # Fix build with recent meson
+  cd $pkgname
+
+  # Fix build with meson 0.61
+  # https://gitlab.gnome.org/GNOME/almanah/-/merge_requests/13
+  git cherry-pick -n 8c42a67695621d1e30cec933a04e633e6030bbaf
 }
 
 build() {
-  arch-meson $pkgname-$pkgver build
+  arch-meson $pkgname build
   meson compile -C build
 }
 

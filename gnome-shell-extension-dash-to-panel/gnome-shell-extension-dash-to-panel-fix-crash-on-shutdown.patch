@@ -1,0 +1,29 @@
+From b6b0c2c57e45a20681c78c1c965016c28e3439f0 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Ball=C3=B3=20Gy=C3=B6rgy?= <ballogyor@gmail.com>
+Date: Sun, 30 Jun 2024 01:53:37 +0200
+Subject: [PATCH] Destroy panel barriers on shutdown
+
+It was being leaked, which is detected on mutter shutdown and caused SIGABRT in the Xorg session.
+---
+ panelManager.js | 8 ++++++++
+ 1 file changed, 8 insertions(+)
+
+diff --git a/panelManager.js b/panelManager.js
+index 917c91dd..5ddedea7 100755
+--- a/panelManager.js
++++ b/panelManager.js
+@@ -59,6 +59,14 @@ export const PanelManager = class {
+         this._injectionManager = new InjectionManager();
+ 
+         this._saveMonitors();
++
++        global.connect('shutdown', () => {
++            if (this.allPanels) {
++                this.allPanels.forEach(p => {
++                    this._removePanelBarriers(p);
++                });
++            }
++        });
+     }
+ 
+     enable(reset) {

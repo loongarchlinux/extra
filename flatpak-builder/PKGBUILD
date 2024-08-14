@@ -1,7 +1,7 @@
 # Maintainer: Jan Alexander Steffens (heftig) <heftig@archlinux.org>
 
 pkgname=flatpak-builder
-pkgver=1.4.2
+pkgver=1.4.4
 pkgrel=1
 pkgdesc="Tool to build flatpaks from source"
 url="https://flatpak.org"
@@ -12,11 +12,20 @@ depends=(
   binutils
   breezy
   cpio
+  curl
   debugedit
   elfutils
   flatpak
   fuse3
+  gcc-libs
   git
+  glib2
+  glibc
+  json-glib
+  libelf
+  libxml2
+  libyaml
+  ostree
   patch
   rpmextract
   tar
@@ -31,32 +40,24 @@ makedepends=(
 )
 checkdepends=(valgrind)
 replaces=('flatpak<0.9.10')
-_commit=0b9070037a573a6061d7893312611957561ca841  # tags/1.4.2
 source=(
-  "git+https://github.com/flatpak/flatpak-builder#commit=$_commit"
+  "git+https://github.com/flatpak/flatpak-builder#tag=$pkgver"
   "git+https://gitlab.gnome.org/GNOME/libglnx.git"
   fusermount3.diff
 )
-b2sums=('SKIP'
+b2sums=('04a6e52e225ebebeff17e3c7e712f09a926b341bea6051fb819c9d0bfdaecc0e789d0c7770c7ffd562acec8a22cb29f406c28af248f8d11d16b46a2690126b3b'
         'SKIP'
         'ef1a73c8e2876a8c0c1401300b4367cfc3e656d2144fb66fbf22a57c178588a42ac842f5d7ccec9fba15084dc8bb6a544b2b77c1877c4c924dbe4ab6cd1962c4')
 
-pkgver() {
-  cd $pkgname
-  git describe --tags | sed 's/[^-]*-g/r&/;s/-/+/g'
-}
-
 prepare() {
   cd $pkgname
-
-  # Fix build (update libglnx)
-  git cherry-pick -n ae86bde81fbb0316f08121793c0824c18b1cfb9a
 
   # https://bugs.archlinux.org/task/75649
   git apply -3 ../fusermount3.diff
 
   git submodule set-url subprojects/libglnx "$srcdir/libglnx"
-  git -c protocol.file.allow=always submodule update --init -- subprojects/libglnx
+  git -c protocol.file.allow=always -c protocol.allow=never \
+    submodule update --init -- subprojects/libglnx
 }
 
 build() {

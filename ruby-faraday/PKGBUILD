@@ -6,60 +6,109 @@
 
 _gemname='faraday'
 pkgname="ruby-${_gemname}"
-pkgver=1.8.0
-pkgrel=1
+pkgver=2.10.1
+pkgrel=2
 pkgdesc='HTTP/REST API client library.'
 arch=('any')
 url="https://github.com/lostisland/${_gemname}"
 license=('MIT')
-depends=('ruby' 'ruby-multipart-post' 'ruby-ruby2_keywords' 'ruby-faraday-net_http' 'ruby-faraday-em_http' 'ruby-faraday-em_synchrony' 'ruby-faraday-excon' 'ruby-faraday-httpclient' 'ruby-faraday-net_http' 'ruby-faraday-net_http_persistent' 'ruby-faraday-patron' 'ruby-faraday-rack')
-makedepends=('ruby-rdoc' 'ruby-rake' 'ruby-rspec')
-checkdepends=('ruby-rack' 'ruby-webmock' 'ruby-rspec-expectations' 'ruby-multipart-parser' 'ruby-rack-test')
+depends=(
+  ruby
+  ruby-faraday-net_http
+)
+makedepends=(
+  ruby-rdoc
+)
+checkdepends=(
+  ruby-bundler
+  ruby-pry
+  ruby-rack
+  ruby-rake
+  ruby-rspec
+  ruby-webmock
+)
 options=('!emptydirs')
-source=("${url}/archive/v${pkgver}/${_gemname}-v${pkgver}.tar.gz" 'disable-simplecov-and-coveralls.patch')
-sha512sums=('1614a31475cd96d3411a2d576eadf17670ee0e5b7c9900235c79160c35b9c198a170e8e666a85bfaed9e940eeb5632cf8c81a52987798e9078baa5d05d2d9f3e'
-            '8ab1687d1c0e7d217b20df673acc8038507dd8a24e2f833e32de8da4e0034b73f7140df750c74733b8c9260e190f271620171aeeb600cc04c056d4a77ccf4480')
+source=("${url}/archive/v${pkgver}/${_gemname}-v${pkgver}.tar.gz")
+sha512sums=('21a1777e1bb2f7b62963ad9063bc5ac373a9d1c6e827cf346630ea9dc1bd8f09009a554363dc92e030ce07bca002a24e10dce2736f43414e4e20bd394e55cdb4')
+b2sums=('2df625d91cedcfc3f78b97570e0a87404db74728f82e7c77776f806a0e388d629cb1fe0b35157c4b300db93db056a9c2bd1aff90f39a9dc326c6cae76e37fc0e')
 
 prepare() {
-  cd "${srcdir}/${_gemname}-${pkgver}"
-  # allow latest dependencies
-  sed --in-place 's|~>|>=|g' "${_gemname}.gemspec"
+  cd "${_gemname}-${pkgver}"
 
-  # drop coverage reporting. We don't have simplecov in our repos
-  patch -p1 -N -i "${srcdir}/disable-simplecov-and-coveralls.patch"
-  # don't load pry during tests. that's only required for interactive debugging
-  sed --in-place '/pry/d' spec/spec_helper.rb
-  # disable testing/support for faraday with em-http. We don't have em-http in our repos
-  rm spec/faraday/adapter/em_http_spec.rb
-  # disable testing for em-synchrony. We don't have the gem in our repos
-  rm spec/faraday/adapter/em_synchrony_spec.rb
-  # We don't have exon in the repos
-  rm spec/faraday/adapter/excon_spec.rb
-  # we don't have typheus in the repos
-  rm spec/faraday/adapter/typhoeus_spec.rb
-  # we don't have patron in our repos
-  rm spec/faraday/adapter/patron_spec.rb
+  # allow latest dependencies
+  sed --in-place --regexp-extended \
+    --expression 's|~>|>=|g' \
+    --expression "s|, '< [0-9\.]+'||g" \
+    "${_gemname}.gemspec"
+
+  # we don't need test coverage
+  sed --in-place --regexp-extended \
+    --expression '/SimpleCov\.start/,/end/d' \
+    --expression '/simplecov/Id' \
+    --expression '/coveralls/d' \
+    spec/spec_helper.rb
 }
 
 build() {
-  cd "${srcdir}/${_gemname}-${pkgver}"
-  gem build "${_gemname}.gemspec"
+  cd "${_gemname}-${pkgver}"
+
+  local _gemdir="$(gem env gemdir)"
+
+  gem build --verbose "${_gemname}.gemspec"
+
+  gem install \
+    --local \
+    --verbose \
+    --ignore-dependencies \
+    --no-user-install \
+    --install-dir "tmp_install${_gemdir}" \
+    --bindir "tmp_install/usr/bin" \
+    "${_gemname}-${pkgver}.gem"
+
+  # remove unrepreducible files
+  rm --force --recursive --verbose \
+    "tmp_install${_gemdir}/cache/" \
+    "tmp_install${_gemdir}/gems/${_gemname}-${pkgver}/vendor/" \
+    "tmp_install${_gemdir}/doc/${_gemname}-${pkgver}/ri/ext/"
+
+  find "tmp_install${_gemdir}/gems/" \
+    -type f \
+    \( \
+      -iname "*.o" -o \
+      -iname "*.c" -o \
+      -iname "*.so" -o \
+      -iname "*.time" -o \
+      -iname "gem.build_complete" -o \
+      -iname "Makefile" \
+    \) \
+    -delete
+
+  find "tmp_install${_gemdir}/extensions/" \
+    -type f \
+    \( \
+      -iname "mkmf.log" -o \
+      -iname "gem_make.out" \
+    \) \
+    -delete
 }
 
 check() {
-  cd "${srcdir}/${_gemname}-${pkgver}"
-  # tests don't yet pass because some deps are missing in the repos
-  rake spec
+  cd "${_gemname}-${pkgver}"
+
+  local _gemdir="$(gem env gemdir)"
+
+  GEM_HOME="tmp_install${_gemdir}" rake spec
 }
 
 package() {
-cd "${srcdir}/${_gemname}-${pkgver}"
+  cd "${_gemname}-${pkgver}"
+
   local _gemdir="$(gem env gemdir)"
-  gem install --verbose --ignore-dependencies --no-user-install --install-dir "${pkgdir}/${_gemdir}" --bindir "${pkgdir}/usr/bin" "${_gemname}-${pkgver}.gem"
 
-  install -Dm 644 LICENSE.md -t "${pkgdir}/usr/share/licenses/${pkgname}/"
+  cp --archive --verbose tmp_install/* "${pkgdir}"
 
-  install -Dm 644 README.md UPGRADING.md CHANGELOG.md -t "${pkgdir}/usr/share/doc/${pkgname}"
-
-  rm -rf "${pkgdir}/${_gemdir}/cache"
+  install --verbose -D --mode=0644 LICENSE* --target-directory "${pkgdir}/usr/share/licenses/${pkgname}"
+  install --verbose -D --mode=0644 *.md --target-directory "${pkgdir}/usr/share/doc/${pkgname}"
 }
+
+# vim: tabstop=2 shiftwidth=2 expandtab:

@@ -1,0 +1,46 @@
+# Maintainer: Jakub Klinkovský <lahwaacz at archlinux dot org>
+
+pkgname=python-kubernetes-validate
+_name="${pkgname#python-}"
+pkgver=1.30.0
+pkgrel=1
+license=(Apache-2.0)
+pkgdesc="Validate Kubernetes resource definitions against the declared Kubernetes schemas"
+arch=(any)
+url="https://github.com/willthames/kubernetes-validate"
+depends=(
+  python
+  python-importlib-resources
+  python-jsonschema
+  python-packaging
+  python-referencing
+  python-typing_extensions
+  python-yaml
+)
+makedepends=(
+  python-build
+  python-installer
+  python-wheel
+  python-setuptools
+)
+checkdepends=(
+  python-pytest
+)
+source=("$_name-$pkgver.tar.gz::$url/archive/v$pkgver.tar.gz")
+b2sums=('f695e349a983e92e4d815cdef238ff9777942b30e2c26b7edc8e96dc6f125e8d59adbf875544d836fb253f56356b54edae417fcd5814e496117f028a72b8454a')
+
+build() {
+  cd $_name-$pkgver
+  python -m build --wheel --no-isolation
+}
+
+check() {
+  cd $_name-$pkgver
+  PYTHONPATH="$PWD/build/lib" pytest
+}
+
+package() {
+  cd $_name-$pkgver
+  python -m installer --destdir="$pkgdir" dist/*.whl
+  install -vDm 644 LICENSE -t "$pkgdir/usr/share/licenses/$pkgname/"
+}

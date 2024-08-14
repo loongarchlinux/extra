@@ -1,34 +1,31 @@
 # Maintainer: Felix Yan <felixonmars@archlinux.org>
 
 pkgname=python-persistent
-pkgver=5.1
-pkgrel=2
+pkgver=5.2
+pkgrel=1
 pkgdesc="Translucent persistent objects"
 arch=('loong64' 'x86_64')
-license=('ZPL')
+license=('ZPL-2.1')
 url="https://github.com/zopefoundation/persistent/"
 depends=('python-cffi' 'python-zope-interface')
-makedepends=('python-setuptools')
+makedepends=('git' 'python-setuptools')
 checkdepends=('python-zope-testrunner' 'python-manuel')
-source=("https://github.com/zopefoundation/persistent/archive/$pkgver/$pkgname-$pkgver.tar.gz")
-sha512sums=('1dfeefa0437d37b075b9fdbec7a2e7cc8e7bb665b46e384204bf922fe13fc4280a6e0b419d97c9899725db478ac8589ed7f22887f267e58f418baa26f921e318')
+source=("git+https://github.com/zopefoundation/persistent.git#tag=$pkgver")
+sha512sums=('76f6dd20021c28f9ea61271bbcf4358fe278488715db086601600bba63276fb4e8d7f7ef27b86cd1d8d9398c073c97ccd1b47bcc806c077d351551ed65fc2134')
 
 build() {
-  cd persistent-$pkgver
+  cd persistent
   python setup.py build
 }
 
 check() {
-  cd persistent-$pkgver
-  python -m venv "$srcdir/pyvenv" --system-site-packages
-  (
-    . "$srcdir/pyvenv/bin/activate"
-    python setup.py develop
-    python -m zope.testrunner --test-path=src
-  )
+  cd persistent
+  python -m venv "$srcdir"/pyvenv --system-site-packages
+  "$srcdir"/pyvenv/bin/python setup.py develop
+  "$srcdir"/pyvenv/bin/python -m zope.testrunner --test-path=src
 }
 
 package() {
-  cd persistent-$pkgver
+  cd persistent
   python setup.py install --root="$pkgdir" --optimize=1
 }

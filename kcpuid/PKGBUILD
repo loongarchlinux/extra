@@ -1,0 +1,35 @@
+# Maintainer: Christian Heusel <gromit@archlinux.org>
+
+pkgname=kcpuid
+_tag=v6.10-rc1
+pkgver=6.10rc1
+pkgrel=1
+pkgdesc="Kernel tool for various cpu debug outputs"
+arch=(loong64 x86_64)
+url="https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/tools/arch/x86/kcpuid"
+license=(GPL-2.0-only)
+depends=(glibc)
+makedepends=(git)
+_srcname=linux-mainline
+source=(
+  "$_srcname::git+https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git#tag=$_tag"
+  "fix-Makefile.patch"
+)
+sha256sums=('16ff7a4ac413f1ea117079ca20d5e7dd0675763c32c392c15c2bf056622897b7'
+            'c5b255f640cdaa949306f99eb2caaa39d00820de516f51e3218e156c3dd1d18d')
+
+prepare() {
+    cd $_srcname
+    patch -Np1 < ../fix-Makefile.patch
+}
+
+build() {
+    cd $_srcname
+    make -C tools/arch/x86/kcpuid
+}
+
+package() {
+    cd $_srcname
+
+    make BINDIR=/usr/bin HWDATADIR="/usr/share/misc" DESTDIR="$pkgdir" -C tools/arch/x86/kcpuid install
+}

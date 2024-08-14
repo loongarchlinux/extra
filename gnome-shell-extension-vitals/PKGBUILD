@@ -2,23 +2,33 @@
 
 pkgname=gnome-shell-extension-vitals
 _uuid=Vitals@CoreCoding.com
-pkgver=66.0.1
+pkgver=67.0.0
 pkgrel=1
 pkgdesc="GNOME Shell extension to display computer's temperature, voltage, fan speed, memory usage, processor load, system resources, network speed and storage stats"
 arch=('any')
 url='https://github.com/corecoding/Vitals'
 license=('GPL-2.0-or-later')
 depends=('gnome-shell')
+makedepends=('git')
 optdepends=('libgtop: show storage stats')
-source=("$pkgname-$pkgver.zip::https://github.com/corecoding/Vitals/releases/download/v$pkgver/vitals.zip")
-sha256sums=('b039982c67929add4e7fd906768df7f07bbdb64bc1a100315995a2887852960f')
+source=("git+https://github.com/corecoding/Vitals.git#tag=v$pkgver")
+b2sums=('4b08a33b009efd21b603cff90f646e282c1577b6e79a6ff798af67d9ee584bd011a6278b4d1e9d0b2cbcc239a4e828abed1e989a6da7f4a9eb91360eee31cdd9')
+
+
+build() {
+  cd Vitals
+  for i in locale/*/; do
+    msgfmt $i/LC_MESSAGES/vitals.po -o $i/LC_MESSAGES/vitals.mo
+  done
+}
 
 package() {
+  cd Vitals
   install -dm755 "$pkgdir/usr/share/gnome-shell/extensions/$_uuid"
-  cp -a * "$pkgdir/usr/share/gnome-shell/extensions/$_uuid/"
-  install -dm755 "$pkgdir/usr/share/glib-2.0"
-  mv "$pkgdir"/usr/share/gnome-shell/extensions/*/schemas "$pkgdir/usr/share/glib-2.0"
-  mv "$pkgdir"/usr/share/gnome-shell/extensions/*/locale "$pkgdir/usr/share"
-  rm "$pkgdir/usr/share/glib-2.0/schemas/gschemas.compiled"
-  rm "$pkgdir"/usr/share/gnome-shell/extensions/$_uuid/*.zip
+  cp -a helpers icons metadata.json *.css *.js *.ui LICENSE "$pkgdir/usr/share/gnome-shell/extensions/$_uuid/"
+  install -Dm644 -t "$pkgdir/usr/share/glib-2.0/schemas" schemas/org.gnome.shell.extensions.vitals.gschema.xml
+
+  for i in locale/*/; do
+    install -Dm644 -t "$pkgdir"/usr/share/$i/LC_MESSAGES $i/LC_MESSAGES/vitals.mo
+  done
 }

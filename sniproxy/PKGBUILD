@@ -1,26 +1,27 @@
 pkgname=sniproxy
 pkgver=0.6.1
-pkgrel=1
+pkgrel=2
 pkgdesc="TLS SNI proxy"
 arch=(i686 loong64 x86_64)
 url="https://github.com/dlundquist/sniproxy"
-license=('BSD')
-depends=(libev pcre udns)
+license=('BSD-2-Clause')
+depends=(libev pcre2 udns)
 backup=('etc/sniproxy.conf')
 source=($pkgname-$pkgver.tar.gz::https://github.com/dlundquist/sniproxy/archive/$pkgver.tar.gz
 	sniproxy.service
 	sniproxy.conf
 	sniproxy.tmpfiles.d
-	build-fix.patch)
+	$pkgname-0.6.1-pcre2.patch)
 sha256sums=('6a06d12bedcbd5295a2c75d60a9df1cfde9e26efa31f44a34979b5cb8fb0bc1a'
             '652e7f9e605fd24bb0c45c2227b8ed32d7c4b219066da0b0dc6fc0b87500d908'
             'b199717c01176c7d38e6508b049d2aa12a440a2d1a28039b03fd0b060b00058c'
             'a0ded4090c83f50457e5521773d87a33821781055eb5dee503cf69388ff5b207'
-            '80ae420f08138fdd6047c7a8a7937af5063f1bc00c147a2adfdd389c4499c805')
+            'bfaa9d0405978add19838dceb20cc24dbe1c48f9bb82c11755ded6f0bbc180c9')
 
 prepare() {
 	cd "$srcdir/$pkgname-$pkgver"
-#	patch -p1 <../build-fix.patch
+	# libpcre2 support
+	patch -p1 <../$pkgname-0.6.1-pcre2.patch
 }
 
 build() {

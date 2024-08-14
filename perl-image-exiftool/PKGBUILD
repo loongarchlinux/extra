@@ -1,12 +1,12 @@
-# Maintainer: Florian Pritz <bluewind@xinu.at>
 # Maintainer: T.J. Townsend <blakkheim@archlinux.org>
+# Contributor: Florian Pritz <bluewind@xinu.at>
 # Contributor: tobias <tobias@archlinux.org>
 # Contributor: Tobias Kieslich <tobias@justdreams.de>
 # Contributor: Firmicus <francois.archlinux.org>
 
 pkgname=perl-image-exiftool
-pkgver=12.76
-pkgrel=2
+pkgver=12.92
+pkgrel=1
 pkgdesc="Reader and rewriter of EXIF information that supports raw files"
 arch=('any')
 url="https://exiftool.org/"
@@ -19,7 +19,7 @@ provides=("perl-exiftool=${pkgver}")
 replaces=("perl-exiftool")
 options=('!emptydirs')
 source=("git+https://github.com/exiftool/exiftool.git#tag=${pkgver}")
-sha256sums=('f13c7210a28990a6aad1cfb3e683aaa601e796ccbee3c10d12e45fea52cf4b49')
+sha256sums=('4127b415e560eba6991b01d2a6a089305df08953460401635692e65c3d8a9208')
 
 build() {
   cd exiftool

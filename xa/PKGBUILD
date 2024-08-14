@@ -3,24 +3,28 @@
 # Contributor: Chris Mosher <cmosher01@gmail.com>
 
 pkgname=xa
-pkgver=2.3.14
+pkgver=2.4.1
 pkgrel=1
 pkgdesc='Cross-assembler for the 6502 microprocessor'
 arch=(loong64 x86_64)
-url='https://www.floodgap.com/retrotech/xa/'
-license=(GPL2)
+url='https://www.floodgap.com/retrotech/xa'
+license=(GPL-2.0-only)
 makedepends=(setconf)
-source=("http://www.floodgap.com/retrotech/xa/dists/$pkgname-$pkgver.tar.gz")
-b2sums=('3dd4f369d69cd85c7c545e4aba7698deb9402946c755ac2709c43cb4a795d1cde730286a4a0df2615c39367443788cd4314bf526def863fa57bc85d36ca2dc60')
+source=("$url/dists/$pkgname-$pkgver.tar.gz")
+b2sums=('86092d2a215d141f76bb8a31861f20e5124f2ec7125a5649b9b28a86e727d5f201826581c38aea8693d16692d8be13103a917c1152980d6a4764555751af7dac')
 
 prepare() {
   cd $pkgname-$pkgver
   setconf Makefile CFLAGS="$CFLAGS -fPIC -Wl,-z,relro,-z,now"
-  setconf Makefile LDFLAGS="$LDFLAGS -z,relro,-z,now"
+  sed -i 's/all: killxa/all:/' Makefile
 }
 
 build() {
   make -C $pkgname-$pkgver
+}
+
+check() {
+  make -C $pkgname-$pkgver test
 }
 
 package() {

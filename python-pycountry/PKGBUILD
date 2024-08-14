@@ -4,17 +4,17 @@
 # Contributor:  Pawel "kTT" Salata <rockplayer.pl@gmail.com>
 
 pkgname=python-pycountry
-pkgver=23.12.11
-pkgrel=2
+pkgver=24.6.1
+pkgrel=1
 pkgdesc="ISO country, subdivision, language, currency and script definitions and their translations"
 arch=('any')
 url="https://pypi.org/project/pycountry/"
 license=('LGPL2.1')
 depends=(python python-lxml)
 makedepends=('python' 'python-build' 'python-installer' 'python-poetry-core')
-checkdepends=('python-pytest' 'python-importlib-metadata')
+checkdepends=('python-pytest' 'python-importlib-metadata' 'python-pytest-cov')
 source=("https://pypi.io/packages/source/p/pycountry/pycountry-${pkgver}.tar.gz")
-sha512sums=('25b5a74c0dd8115473571976a64b6fed7010f62c1b3b4c1888b9e13a7cf4f533173f51d4652d55c426adee4e0ff119bb6e3132d04dce150b9d1ca4b11366c579')
+sha512sums=('36d8f68b830d74259a5f9ac1c9c97c1b228b0072613229e6f579ea5af587ab1cd25f0637a2cdd1dbf2ae8225e2aa2958d25f1e6df42d577da821d85c4c49ae93')
 
 build(){
   cd "pycountry-${pkgver}"

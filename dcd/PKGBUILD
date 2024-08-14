@@ -1,17 +1,17 @@
 # Maintainer: Dan Printzell <wild@archlinux.org>
-# Maintainer: Filipe Laíns (FFY00) <lains@archlinux.org>
+# Contributor: Filipe Laíns (FFY00) <lains@archlinux.org>
 # Contributor: Jaroslav Lichtblau <svetlemodry@archlinux.org>
 # Contributor: Mihails Strasuns <public@dicebot.lv>
 
 pkgname=dcd
 pkgver=0.15.2
-pkgrel=1
+pkgrel=2
 epoch=1
 _pkgcommit=4946d49abdc35810254151923bab30fb3cc2c004
 pkgdesc="D Completion Daemon: auto-complete for the D programming language"
 arch=('loong64' 'x86_64')
 url="https://github.com/dlang-community/DCD"
-license=('GPL3')
+license=('GPL-3.0-only')
 groups=('dlang')
 makedepends=('ldc' 'git')
 depends=('liblphobos')
@@ -41,7 +41,8 @@ prepare() {
   git -c protocol.file.allow=always submodule update
 
   # Only LDC have -O5
-  sed -i "/-O5/ a -flto=full -linker=gold -link-defaultlib-shared=false -L=\"$LDFLAGS\"\\\\" makefile
+  export _ldFlags="$(echo -ne $LDFLAGS | sed -e 's/-Wl,/-L=/g' -e 's/=auto/=full')"
+  sed -i "/-O5/ a -linker=gold -link-defaultlib-shared=false $ldFlags\\\\" makefile
 }
 
 build() {

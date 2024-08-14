@@ -1,22 +1,25 @@
-# Maintainer: David Runge <dvzrv@archlinux.org>
+# Maintainer: Caleb Maclennan <caleb@alerque.com>
+# Contributor: David Runge <dvzrv@archlinux.org>
 
 _name=lspconfig
 _upstream=nvim-lspconfig
 pkgname=neovim-lspconfig
-pkgver=0.1.7
-pkgrel=1
-pkgdesc="Collection of common configurations for Neovim's built-in language server client"
+pkgver=0.1.8
+pkgrel=2
+pkgdesc='Collection of common configurations for Neovim’s built-in language server client'
 arch=(any)
-url="https://github.com/neovim/nvim-lspconfig"
+url="https://github.com/neovim/$_upstream"
 license=(Apache-2.0)
+depends=(luajit
+         neovim)
 groups=(neovim-plugins)
-depends=(luajit neovim)
-source=($url/archive/v$pkgver/$pkgname-v$pkgver.tar.gz)
-sha512sums=('62bbfa55f418da4819e3d4f69b967515687d0294768381ecb8e07af7e7a1b84cd4695563c373e89929e60ceaa0d44400e5b706d6909858e6786e1c467f837e23')
-b2sums=('f443a8429259223e19c56eb059e5e8678cf0cff8b6c898aec5cede1026ef5e49f71dd3c95f7909463906cd5c2ccde4dc4831a2c90f2d1901d8aaa83e5fa1e519')
+_archive="$_upstream-$pkgver"
+source=("$url/archive/v$pkgver/$_archive.tar.gz")
+sha256sums=('f7947cc6a028664bbc26c9ed445e01c3c5c5b61b3588c15461a926a1811b73cc')
 
 package() {
-  cd $_upstream-$pkgver
-  find doc lua plugin -type f -exec install -vDm 644 {} "$pkgdir/usr/share/nvim/site/pack/dist/start/$_name/{}" \;
-  install -vDm 644 README.md -t "$pkgdir/usr/share/doc/$pkgname/"
+	cd "$_archive"
+	find doc lua plugin -type f -exec \
+	  install -Dm0644 {} "$pkgdir/usr/share/nvim/site/pack/dist/start/$_name/{}" \;
+	install -Dm0644 -t "$pkgdir/usr/share/doc/$pkgname/" README.md
 }

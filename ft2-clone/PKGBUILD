@@ -3,15 +3,15 @@
 # Contributor: Alex Gentilucci <alexander.gentilucci@gmail.com>
 
 pkgname=ft2-clone
-pkgver=1.79.2
+pkgver=1.84
 pkgrel=1
 pkgdesc='Portable Fasttracker II clone'
 arch=('loong64' 'x86_64')
 url='https://16-bits.org/ft2.php'
 license=(
-  'BSD'
+  'BSD-3-Clause'
   'MIT'
-  'custom:CC-BY-NC-SA-4.0'
+  'CC-BY-NC-SA-4.0'
 )
 depends=(
   'glibc'
@@ -27,19 +27,14 @@ makedepends=(
   'cmake'
   'gendesk'
 )
-_commit='222085f30fbe34639ba07ee5bf7ebc1a179384d6'
 source=(
-  "$pkgname::git+https://github.com/8bitbubsy/ft2-clone#commit=$_commit"
+  "$pkgname::git+https://github.com/8bitbubsy/ft2-clone#tag=v$pkgver"
   'templatify-build-date.patch'
 )
-b2sums=('SKIP'
-        '0c049b7e0fa02056fd4d7e8d3e4afb394b0aa9f0a38bb1de794ea6c83645e0c509ac2a014678a3e4d82f08293308ce6cc5bbca2b36fa82a3962290b303172383')
-
-pkgver() {
-  cd "$pkgname"
-
-  git describe --tags | sed 's/^v//'
-}
+sha512sums=('14cc558c41dbfeb37f1b48eef33897c1eb87f06711f9916aaacebf24a5c5c708c3343a4517a23c2402aa56550f52abe8a0d1e58d6bd6fe079358bb71f25f04f9'
+            'bd9024bf8eb1f08a18079963eeba05ff3018cdf51c9912236e23b3a71625a96a322f75bf2ca510fcbbb759ba240dcaea480a67ce11912fef30db14f608757523')
+b2sums=('e0c72dee00132de7993a42f6dded4e028382800c277238c4c65f4fb0632e304af3baff2458f960227403621869c44a8ca132da30f356d8cc50a4f9ecaca8c2d7'
+        '240a718bae59b9d6b5cd2027c6906788007beab9181dae477fdcb7189cb77e3dcf2e3cb621219d6205edf06b9729036558ed86db54227b4f28a2b5525475a8c0')
 
 prepare() {
   cd "$pkgname"
@@ -55,7 +50,7 @@ prepare() {
     --pkgname "$pkgname" \
     --pkgdesc "$pkgdesc" \
     --icon "$pkgname" \
-    --genericname 'Chiptune Tracker'
+    --genericname 'Music Tracker'
 
   # attempt repro build by using commit date as build date
   local commit_date="$(git show --no-patch --format=%cd --date=format:'%d %B %Y')"
@@ -94,5 +89,5 @@ package() {
   install -vDm644 -t "$pkgdir/usr/share/doc/$pkgname" README.md
 
   # licensing
-  install -vDm644 -t "$pkgdir/usr/share/licenses/$pkgname" release/LICENSES.txt
+  install -vDm644 -t "$pkgdir/usr/share/licenses/$pkgname" LICENSE*
 }

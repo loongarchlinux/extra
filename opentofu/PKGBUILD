@@ -1,0 +1,58 @@
+# Maintainer: Carl Smedstad <carsme@archlinux.org>
+# Contributor: Marcel Campello <marcel@prafrentex.com.br>
+
+pkgname=opentofu
+pkgver=1.8.0
+pkgrel=1
+pkgdesc="Lets you declaratively manage your cloud infrastructure"
+arch=(loong64 x86_64)
+url="https://github.com/opentofu/opentofu"
+license=(MPL-2.0)
+depends=(glibc)
+makedepends=(go)
+options=(!lto)
+source=(
+  "$pkgname-$pkgver.tar.gz::$url/archive/v$pkgver.tar.gz"
+  "tofu.fish"
+)
+sha256sums=('9e3f622741a0df00a10fcd42653260742c966936b252d3171d1ad952de6e40e0'
+            '312fe00a97ed3098fa141a54dfc0694c13766957acedec19f10347b80f813ce8')
+
+prepare() {
+  cd $pkgname-$pkgver
+
+  GOFLAGS="-mod=readonly" go mod vendor -v
+}
+
+build() {
+  cd $pkgname-$pkgver
+
+  export CGO_CPPFLAGS="$CPPFLAGS"
+  export CGO_CFLAGS="$CFLAGS"
+  export CGO_CXXFLAGS="$CXXFLAGS"
+  export CGO_LDFLAGS="$LDFLAGS"
+  export GOFLAGS="-buildmode=pie -mod=vendor -modcacherw"
+  export GOPATH="$srcdir"
+
+  local ld_flags="-compressdwarf=false -linkmode=external -X github.com/opentofu/opentofu/version.dev=no"
+  go build -v -buildvcs=false -ldflags="$ld_flags" ./cmd/...
+}
+
+check() {
+  cd $pkgname-$pkgver
+
+  go test ./...
+}
+
+package() {
+  cd $pkgname-$pkgver
+
+  install -vDm755 -t "$pkgdir/usr/bin" tofu
+
+  echo 'complete -C /usr/bin/tofu tofu' \
+    | install -vDm644 /dev/stdin "$pkgdir/usr/share/bash-completion/completions/tofu"
+  install -vDm644 "$srcdir/tofu.fish" "$pkgdir/usr/share/fish/completions/tofu.fish"
+
+  install -vDm644 -t "$pkgdir/usr/share/doc/$pkgname" ./*.md
+  cp -a -t "$pkgdir/usr/share/doc/$pkgname" docs
+}

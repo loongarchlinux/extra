@@ -2,30 +2,42 @@
 # Contributor: Knut Ahlers <knut at ahlers dot me>
 
 pkgname=yggdrasil
-pkgver=0.5.5
+pkgver=0.5.8
 pkgrel=1
 pkgdesc="An experiment in scalable routing as an encrypted IPv6 overlay network"
 arch=('loong64' 'x86_64')
 url="https://github.com/yggdrasil-network/yggdrasil-go"
 license=('LGPL-3.0-only')
-depends=('glibc')
-makedepends=('go')
+depends=(
+  'glibc'
+)
+makedepends=(
+  'go'
+)
+# we can not use LTO as otherwise we get no reproducible package with full RELRO
+options=(!lto)
 source=("${pkgname}-${pkgver}.tar.gz::https://github.com/yggdrasil-network/yggdrasil-go/archive/v${pkgver}.tar.gz"
         'yggdrasil.sysusers')
-sha256sums=('cdbb56b19b91b828afa282554862efb2a79dd4ada26dfb5a7bf3b0c5220f6c17'
+sha256sums=('34845eff314d971e56c12186ef15ce52efdf78d787d17381ea4cefaf4b853df3'
             '233f436a5b4ff62f3da66f871ae9b49ed2b4a13572a83f057a07232627c4b3fd')
-b2sums=('7afbde70e2aec71f47ba32730611d22b87fa23ff4d488a33ca82124cb4ec211c654e780b3c8c703100eb065c05c54561ca36136765050c96e297f30a5656bc61'
+b2sums=('95944001bed16fefc2903a2a6034929d0a7e707b14d05eaa3b7cb64ee3b9fd6cd486d464f95841210a8d96cfb895e996a89f03ddbb1a29fc0cc27d19f05a11d8'
         '3cf5bfb3c09908f841b39f7206bb472e50e60f10d1b87ab6def97a7212e27627f1e795bbaffd964d2d27a80fbbd1a3be63d63c59793ec1967c02f48b8462c08b')
 
 build() {
   cd "${pkgname}-go-${pkgver}"
+
+  export CGO_CPPFLAGS="${CPPFLAGS}"
+  export CGO_CFLAGS="${CFLAGS}"
+  export CGO_CXXFLAGS="${CXXFLAGS}"
+  export CGO_LDFLAGS="${LDFLAGS}"
+  export CGO_REQUIRED="1"
+
   for bin in yggdrasil yggdrasilctl; do
     go build \
-      -trimpath \
       -buildmode=pie \
       -mod=readonly \
       -modcacherw \
-      -ldflags "-linkmode external -extldflags \"${LDFLAGS}\"
+      -ldflags "-compressdwarf=false -linkmode=external
 -X github.com/yggdrasil-network/yggdrasil-go/src/version.buildName=yggdrasil
 -X github.com/yggdrasil-network/yggdrasil-go/src/version.buildVersion=${pkgver}
 " \

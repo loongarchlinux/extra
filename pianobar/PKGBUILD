@@ -5,16 +5,23 @@
 
 pkgname=pianobar
 pkgver=2022.04.01
-pkgrel=2
+pkgrel=3
 pkgdesc="Console-based frontend for Pandora"
 arch=('loong64' 'x86_64')
 url="https://6xq.net/pianobar/"
 license=('MIT')
 depends=('libao' 'ffmpeg' 'curl' 'json-c')
-source=(https://6xq.net/pianobar/$pkgname-$pkgver.tar.bz2{,.asc})
+source=(https://6xq.net/pianobar/$pkgname-$pkgver.tar.bz2{,.asc}
+        https://github.com/PromyLOPh/pianobar/commit/8bf4c1bb.patch)
 validpgpkeys=('017D74E27F5856963801781DF663943E08D8092A') # Lars-Dominik Braun <lars@6xq.net>
 sha256sums=('1670b28865a8b82a57bb6dfea7f16e2fa4145d2f354910bb17380b32c9b94763'
-            'SKIP')
+            'SKIP'
+            'ab8f7539189a21064b1773551b393df16c34a371d23f38bf5394ca7b6e0ec411')
+
+prepare() {
+  cd $pkgname-$pkgver
+  patch -p1 -i ../8bf4c1bb.patch # Fix build with ffmpeg 7
+}
 
 build() {
   make -C ${pkgname}-${pkgver}

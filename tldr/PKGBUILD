@@ -2,8 +2,8 @@
 # Maintainer: Brett Cornwall <ainola@archlinux.org>
 
 pkgname=tldr
-pkgver=3.2.0
-pkgrel=3
+pkgver=3.3.0
+pkgrel=1
 pkgdesc="Command line client for tldr, a collection of simplified man pages."
 arch=('any')
 url="https://github.com/tldr-pages/tldr-python-client"
@@ -18,7 +18,7 @@ makedepends=(
 )
 checkdepends=('python-pytest')
 source=("https://github.com/tldr-pages/tldr-python-client/archive/$pkgver/$pkgname-$pkgver.tar.gz")
-sha512sums=('1535979548b49cd8b0312f2cd11f69ba3f710e16a27c074dc5a8cb5617d7f343df30ba01a83388b460508ab519045140852767bfc8ff1189d612d71a3d35d76b')
+sha512sums=('137560c401540ff1e747f443a3c0686ddba8c512772eadbff6b735aa9c20dd02a9c7b101b2238888daa20b2886dc4318bc7c1366d8b73f71dd2f797b1787b632')
 
 build() {
   cd "tldr-python-client-$pkgver"

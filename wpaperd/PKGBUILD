@@ -3,7 +3,7 @@
 
 pkgname=wpaperd
 pkgver=1.0.1
-pkgrel=2
+pkgrel=3
 pkgdesc="Modern wallpaper daemon for Wayland"
 url="https://github.com/danyspin97/wpaperd"
 arch=('loong64' 'x86_64')
@@ -37,6 +37,16 @@ check() {
 package() {
 	cd "${pkgname}"
 	install -Dm 755 "target/release/${pkgname}" "${pkgdir}/usr/bin/${pkgname}" 
+	install -Dm 755 target/release/wpaperctl "${pkgdir}/usr/bin/wpaperctl"
+
+	install -Dm 644 "target/release/completions/${pkgname}.bash" "${pkgdir}/usr/share/bash-completion/completions/${pkgname}"
+	install -Dm 644 "target/release/completions/${pkgname}.fish" "${pkgdir}/usr/share/fish/vendor_completions.d/${pkgname}.fish"
+	install -Dm 644 target/release/completions/wpaperctl.bash "${pkgdir}/usr/share/bash-completion/completions/wpaperctl"
+	install -Dm 644 target/release/completions/wpaperctl.fish "${pkgdir}/usr/share/fish/vendor_completions.d/wpaperctl.fish"
+
 	install -Dm 644 "man/${pkgname}-output.5" "${pkgdir}/usr/share/man/man5/${pkgname}-output.5"
+	install -Dm 644 "target/release/man/${pkgname}.1" "${pkgdir}/usr/share/man/man1/${pkgname}.1"
+	install -Dm 644 target/release/man/wpaperctl.1 "${pkgdir}/usr/share/man/man1/wpaperctl.1"
+
 	install -Dm 644 README.md "${pkgdir}/usr/share/doc/${pkgname}/README.md"
 }

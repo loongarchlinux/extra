@@ -1,0 +1,54 @@
+# Maintainer: Jan Alexander Steffens (heftig) <heftig@archlinux.org>
+# Contributor: greyltc (AUR)
+
+pkgname=wasm-component-ld
+pkgver=0.5.4
+pkgrel=1
+pkgdesc="Command line linker for creating WebAssembly components"
+arch=(loong64 x86_64)
+url="https://github.com/bytecodealliance/wasm-component-ld"
+license=('Apache-2.0 WITH LLVM-exception AND Apache-2.0 AND MIT')
+depends=(
+  gcc-libs
+  glibc
+  lld
+)
+makedepends=(
+  cargo
+  git
+)
+checkdepends=(rust-wasm)
+_commit=ef524ad0747ebe0060feb5060753642ea98bad4b
+source=("git+$url#tag=v$pkgver")
+b2sums=('dc70ca61ca0832729a9ceee9ab584d73f3cd3cfda275bd40fe81a5bb138e2fd288dcd5feaf6e330f7186e5c6cda7d84e9a11878db4d00bb097ea15d2de458242')
+
+prepare() {
+  cd wasm-component-ld
+  cargo fetch --locked --target x86_64-unknown-linux-gnu
+}
+
+build() {
+  cd wasm-component-ld
+
+  # Use debug
+  export CARGO_PROFILE_RELEASE_DEBUG=2
+
+  # Use LTO
+  export CARGO_PROFILE_RELEASE_LTO=true CARGO_PROFILE_RELEASE_CODEGEN_UNITS=1
+
+  cargo build --release --frozen --all-targets
+}
+
+check() {
+  cd wasm-component-ld
+  cargo test --frozen
+}
+
+package() {
+  cd wasm-component-ld
+  install -D target/release/wasm-component-ld -t "$pkgdir/usr/bin"
+  install -Dm644 README.md -t "$pkgdir/usr/share/doc/$pkgname"
+  install -Dm644 LICENSE* -t "$pkgdir/usr/share/licenses/$pkgname"
+}
+
+# vim:set sw=2 sts=-1 et:

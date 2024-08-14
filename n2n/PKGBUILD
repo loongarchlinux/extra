@@ -2,7 +2,7 @@
 
 pkgname=n2n
 pkgver=3.1.1
-pkgrel=2
+pkgrel=3
 pkgdesc="A Peer-to-peer VPN software which makes it easy to create virtual networks bypassing intermediate firewalls"
 arch=('loong64' 'x86_64')
 url="https://github.com/ntop/n2n"
@@ -12,8 +12,10 @@ optdepends=('libpcap: for n2n-decode')
 makedepends=('libpcap')
 backup=('etc/n2n/edge.conf'
         'etc/n2n/supernode.conf')
-source=("https://github.com/ntop/n2n/archive/$pkgver/n2n-$pkgver.tar.gz")
-sha512sums=('ba4ffbc758c399758e35b47308a663f33d04ecb9595f296fd77b13631cea08e04a7cd7369fe82e09149a31e145cd25610dd0a387853ec149e479df866b778cb6')
+source=("https://github.com/ntop/n2n/archive/$pkgver/n2n-$pkgver.tar.gz"
+         miniupnpc-2.2.8.patch)
+sha512sums=('ba4ffbc758c399758e35b47308a663f33d04ecb9595f296fd77b13631cea08e04a7cd7369fe82e09149a31e145cd25610dd0a387853ec149e479df866b778cb6'
+            'ca3a5d9c5df9f7e0e766191337f54c46c7032e4fd12f05b2dab148e8a476ca5e8a940dda3ebf766fc742f5d595e3f90d7aa2f480257038116e50e27f409ad5bd')
 
 prepare() {
   cd $pkgname-$pkgver
@@ -22,6 +24,8 @@ prepare() {
 
   # We need a better way to make the conf file owned by the user created in sysusers.d...
   sed -i '/User=n2n/d;/Group=n2n/d' packages/etc/systemd/system/supernode.service.in
+
+  patch -p1 -i ../miniupnpc-2.2.8.patch
 }
 
 build() {

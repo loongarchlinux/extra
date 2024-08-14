@@ -1,7 +1,7 @@
 # Maintainer: Felix Yan <felixonmars@archlinux.org>
 
 pkgname=python-ini2toml
-pkgver=0.14
+pkgver=0.15
 pkgrel=1
 pkgdesc="Automatically conversion of .ini/.cfg files to TOML equivalents"
 url="https://github.com/abravalheri/ini2toml"
@@ -12,7 +12,7 @@ depends=('python-packaging' 'python-setuptools' 'python-configupdater' 'python-t
 makedepends=('git' 'python-setuptools-scm' 'python-build' 'python-installer' 'python-wheel')
 checkdepends=('python-pytest-randomly' 'python-tomli-w' 'python-validate-pyproject')
 source=("git+https://github.com/abravalheri/ini2toml.git#tag=v$pkgver")
-sha512sums=('7828b2a042d4510bc30e9037d897f56844ce6953c1d7dfbc51285cf28f274a9bdde8804242486f036fef3a4b32b518533c64a293c1e3e0efcc104d2f0cfb5238')
+sha512sums=('982cd47e78cadfd8ccf4d20af70d9e5828bc62e4d96d247d7713a1f6a700d4a94e9f7c28fb5ee53d32dd2e006b4e5606c5ce52019c0a66e854bb40686ae11b6c')
 
 prepare() {
   cd ini2toml

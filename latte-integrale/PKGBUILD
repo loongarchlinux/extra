@@ -2,29 +2,44 @@
 
 pkgname=latte-integrale
 pkgver=1.7.6
-pkgrel=2
+pkgrel=3
 pkgdesc='Computer software dedicated to the problems of counting lattice points and integration inside convex polytopes'
 arch=(loong64 x86_64)
 url='https://www.math.ucdavis.edu/~latte/'
-license=(GPL)
-depends=(4ti2 ntl cddlib lidia)
-source=(https://github.com/latte-int/latte/releases/download/version_${pkgver//./_}/latte-int-$pkgver.tar.gz)
-sha256sums=('006c10ebe5d5bfdc9b159cba6264a4432861fe763ce05fe821624ab7d3fc2170')
+license=(GPL-2.0-or-later)
+depends=(4ti2
+         cddlib
+         gcc-libs
+         glibc
+         gmp
+         lidia
+         ntl)
+makedepends=(git)
+source=(git+https://github.com/latte-int/latte#tag=version_${pkgver//./_})
+sha256sums=('3a9f6844187a268587a2989ce0cc86243bc98d5b3f410a9677ab2d27ef40a9b0')
+
+prepare() {
+  cd latte
+  git cherry-pick -n ea6a20d12c40b83d3ce8cbe75144a7b7a106797d # Fix build with autoconf 2.70
+  autoreconf -vi
+}
 
 build() {
-  cd latte-int-$pkgver
+  cd latte
 
   export CXXFLAGS+=" -std=c++14" # Fix build with GCC 11
-  ./configure --prefix=/usr --enable-shared --with-ntl=/usr
+  ./configure \
+    --prefix=/usr \
+    --enable-shared \
+    --with-ntl=/usr
   sed -i -e 's/ -shared / -Wl,-O1,--as-needed\0/g' libtool # Fix overlinking
   make
 }
 
 package() {
-  cd latte-int-$pkgver
+  cd latte
   make DESTDIR="$pkgdir" install
 
 # Fix conflicts with LLVM
   mv "$pkgdir"/usr/bin/{count,latte-count}
 }
-

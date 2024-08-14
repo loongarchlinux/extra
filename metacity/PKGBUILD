@@ -3,7 +3,7 @@
 
 pkgname=metacity
 pkgver=3.52.0
-pkgrel=1
+pkgrel=2
 pkgdesc='Window manager of GNOME Flashback'
 arch=('loong64' 'x86_64')
 url='https://wiki.gnome.org/Projects/Metacity'
@@ -12,26 +12,30 @@ depends=('at-spi2-core' 'cairo' 'dconf' 'gdk-pixbuf2' 'glib2' 'glibc' 'gsettings
          'gtk3' 'libcanberra' 'libice' 'libgtop' 'libsm' 'libx11' 'libxcomposite' 'libxcursor'
          'libxdamage' 'libxext' 'libxfixes' 'libxinerama' 'libxpresent' 'libxrandr' 'libxres'
          'libxrender' 'pango' 'startup-notification' 'zenity')
-makedepends=('python')
-source=("https://download.gnome.org/sources/$pkgname/${pkgver%.*}/$pkgname-$pkgver.tar.xz"
+makedepends=('autoconf-archive' 'git' 'glib2-devel' 'python')
+source=("git+https://gitlab.gnome.org/GNOME/$pkgname.git?signed#tag=$pkgver"
         '0001-frames-Add-basic-color-scheme-support.patch')
-sha256sums=('a72438ace6d5903ae79338c6098b1b35ab91c8a97c4323701d3bef1f3eeb191c'
-            '66e54af887dbc41742f5845f195f202113b38861e5b481dc401f9e8b78d665fb')
+b2sums=('99cf83b1792c3d723564f409b61bcf7da9b279bb707a5a00add48d9a331b21ec0ab15335b858a54d8a0000d9ba7cb96890588c75ac9b3c640e95c6617720445e'
+        '3b0c2ae18687912b8d67d11b6046a534bff3c0cdaed1907e9b840a19fdc7ab8a9894cc13351f4dfa51e73acde057c054b5d3c1a98b4e8672abed37bc9b025cd4')
+validpgpkeys=('7B44FD78E49334EC10B3B288A3D013EC303E1894') # Alberts Muktupāvels <alberts.muktupavels@gmail.com>
 
 prepare() {
-  cd $pkgname-$pkgver
+  cd $pkgname
+
   # https://gitlab.gnome.org/GNOME/metacity/-/merge_requests/36
   patch -Np1 -i ../0001-frames-Add-basic-color-scheme-support.patch
+
+  autoreconf -fi
 }
 
 build() {
-  cd $pkgname-$pkgver
-  ./configure --prefix=/usr --disable-vulkan
+  cd $pkgname
+  ./configure --prefix=/usr --disable-debug --enable-compile-warnings --disable-vulkan
   sed -i -e 's/ -shared / -Wl,-O1,--as-needed\0/g' libtool
   make
 }
 
 package() {
-  cd $pkgname-$pkgver
+  cd $pkgname
   make DESTDIR="$pkgdir" install
 }

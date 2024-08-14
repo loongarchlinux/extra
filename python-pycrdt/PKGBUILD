@@ -2,7 +2,7 @@
 
 _pyname=pycrdt
 pkgname=python-$_pyname
-pkgver=0.8.24
+pkgver=0.9.8
 pkgrel=1
 pkgdesc='CRDTs based on Yrs'
 arch=(loong64 x86_64)
@@ -11,30 +11,33 @@ license=(MIT)
 depends=(gcc-libs
          glibc
          python)
-makedepends=(python-build
+makedepends=(git
+             python-build
              python-installer
              python-maturin)
-checkdepends=(python-objsize
+checkdepends=(python-anyio
+              python-objsize
               python-pydantic
               python-pytest
+              python-trio
               python-y-py)
-source=(https://github.com/jupyter-server/pycrdt/archive/v$pkgver/$pkgname-$pkgver.tar.gz)
-sha256sums=('9682d2ca28c0da83c9b6fc26b11ae5e184fee840eba70f793267e4d3475a1913')
+source=(git+https://github.com/jupyter-server/pycrdt#tag=v$pkgver)
+sha256sums=('b6345c75f44c3f417e8044c73b034f0b2280d09694b572178a0654b926a87bc7')
 
 build() {
-  cd $_pyname-$pkgver
+  cd $_pyname
   python -m build --wheel --no-isolation
 }
 
 check() {
-  cd $_pyname-$pkgver
+  cd $_pyname
   python -m venv --system-site-packages test-env
   test-env/bin/python -m installer dist/*.whl
   test-env/bin/python -m pytest -v
 }
 
 package() {
-  cd $_pyname-$pkgver
+  cd $_pyname
   python -m installer --destdir="$pkgdir" dist/*.whl
   install -Dm644 LICENSE -t "$pkgdir"/usr/share/licenses/$pkgname
 }

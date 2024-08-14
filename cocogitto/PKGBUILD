@@ -4,14 +4,14 @@
 pkgname=cocogitto
 _pkgname=cog
 pkgver=6.1.0
-pkgrel=2
+pkgrel=3
 pkgdesc='Set of CLI tools for the conventional commit and semver specifications'
 arch=(loong64 x86_64)
 url="https://github.com/$pkgname/$pkgname"
 license=(MIT)
-depends=(git
-         gcc-libs
-         libgit2.so
+depends=(git # libc.so libm.so
+         gcc-libs # libgcc_s.so
+         libgit2
          zlib)
 makedepends=(cargo)
 _archive="$pkgname-$pkgver"
@@ -43,6 +43,8 @@ check() {
 }
 
 package() {
+	depends+=(libgit2.so
+	          libz.so)
 	cd "$_archive"
 	install -Dm0755 -t "$pkgdir/usr/bin/" "target/release/$_pkgname"
 	install -Dm0644 -t "$pkgdir/usr/share/bash-completion/completions/" "completions/$_pkgname"

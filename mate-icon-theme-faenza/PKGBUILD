@@ -2,7 +2,7 @@
 
 pkgname=mate-icon-theme-faenza
 pkgver=1.20.0
-pkgrel=2
+pkgrel=3
 pkgdesc="Faenza icon theme for MATE"
 url="https://mate-desktop.org"
 arch=('any')
@@ -10,7 +10,7 @@ license=('GPL')
 makedepends=('mate-common')
 groups=('mate-extra')
 source=("https://pub.mate-desktop.org/releases/${pkgver%.*}/${pkgname}-${pkgver}.tar.xz")
-sha1sums=('08f32e19012bc7501ac445b1a6e13f7cba0a113a')
+sha256sums=('ca7202b7c880399d3d1ccd409b79fd0de728350dcf3fe1b4a758d06559ca1b00')
 
 build() {
     cd ${pkgname}-${pkgver}

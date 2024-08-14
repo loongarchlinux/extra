@@ -1,0 +1,119 @@
+# Maintainer: David Runge <dvzrv@archlinux.org>
+
+pkgname=deltachat-desktop
+pkgver=1.46.2
+pkgrel=1
+pkgdesc="Email-based instant messaging for Desktop"
+arch=(any)
+url="https://github.com/deltachat/deltachat-desktop"
+license=(GPL-3.0-or-later)
+_electron=electron30
+depends=(
+  bash
+  deltachat-rpc-server
+  $_electron
+  hicolor-icon-theme
+)
+makedepends=(
+  inkscape
+  jq
+  node-gyp
+  nodejs
+  npm
+  moreutils
+)
+source=(
+  $pkgname-$pkgver.tar.gz::$url/archive/refs/tags/v$pkgver.tar.gz
+  $pkgname.desktop
+  $pkgname.sh.in
+  $pkgname.xml
+)
+sha512sums=('03329273707203fe52dbbbafc100c9f10292e7960fa648ae5f1926b65fba6f9d5992b885a5100455792e575e9078955864e951e446818a62e3c6552b5688614a'
+            '15c500b06f28625c65f09f2cbc8fa8c1ce4b7bb5a8e2b6a74136247a29cda5f1f58232b213bfe94700d17190fe4e994b893bd7ebda387942d409b4d000b0577d'
+            'b535f19762d6f8d3b23a6bfdac191e65b48df2f51e85312ccf62aea4c65252ab9a546296abd70cef6c53fcf9757bbdc1ee9ce73a6c4d6593854b6d3d0e6de5b3'
+            'd725ac91703cdfc4cb14e73cd786456eb4bfc374a591e9508edc70e59350915c365a367b84c1fafce225da01cfb716c516aa7159ecb484635d58467359fb89d7')
+b2sums=('2d60f77d6dbdb55aea56fd592e49d254a542f3b92efc2f042c597ba6d2e938064ed6de9d2d404e610bee9ad2dd0c3e4b2840bf2134992d7e2a0e0f3894ef39cd'
+        '9826771b90c460169f1fa5c15cc603e28887d669c0ee3ceed9bf1b027a0df7de4bcdbedf4775e8bd8d5b7692ed084a5837a7bcc6c64bf6acf08e8a44586ccf77'
+        'f1f34820c56196d0b0c630ddad51c2b650a45a2d5dd3025f479a1f72c9d817b7446fd6793a13b72b90f2b81a4f27f9dd5fc61d110725b5502cb1ec298693a113'
+        '382dd6312e10d1881c39d74179f19d41beccb25a5e25a43aa9721fba30e3138ce521df483beed1b6101e1801233b0d189846b7614652d05c5d41feae03f1c5fe')
+
+_resolutions=( 16 32 48 64 96 128 256 512 1024 )
+
+prepare() {
+  local electron_version="$(< "/usr/lib/$_electron/version")"
+  local jq_options_package=(
+    '.devDependencies["electron"] = $electronVersion | .config.target = $electronVersion | .config.runteime = $electronRuntime | .scripts["pack:linux:dir"] = $packScript'
+    --arg deltachatNode "file:../deltachat-core-rust/"
+    --arg electronRuntime "$_electron"
+    --arg electronDist "/usr/lib/$_electron/"
+    --arg packScript "electron-builder --config ./electron-builder.json5 --linux --x64 --dir -c.electronDist=/usr/lib/$_electron/ -c.electronVersion=$electron_version"
+    --arg electronVersion "$electron_version"
+  )
+  local npm_options=(
+    --cache "$srcdir/npm-cache"
+    --no-audit
+    --no-fund
+  )
+
+  # set electron version for start script
+  sed "s/@ELECTRON@/$_electron/" $pkgname.sh.in > $pkgname.sh
+
+  cd $pkgname-$pkgver
+  # set electron runtime and version for npm install and build
+  jq "${jq_options_package[@]}" package.json | sponge package.json
+
+  # generate icons for XDG integration
+  for resolution in ${_resolutions[@]}; do
+    inkscape -o $pkgname-$resolution.png -w $resolution -h $resolution images/tray/${pkgname/-desktop/}.svg
+  done
+
+  # download all dependencies
+  npm "${npm_options[@]}" install
+
+}
+
+build() {
+  local electron_version="$(< "/usr/lib/$_electron/version")"
+  local npm_options=(
+    --cache "$srcdir/npm-cache"
+    --no-audit
+    --no-fund
+    --offline
+  )
+
+  cd $pkgname-$pkgver
+  export NODE_ENV=production
+  export RUSTUP_TOOLCHAIN=stable
+  export CARGO_TARGET_DIR=target
+  # set a bogus git ref as we are building from source tarball
+  export VERSION_INFO_GIT_REF=none
+  npm "${npm_options[@]}" run build
+  npm "${npm_options[@]}" run pack:linux:dir
+
+  # symlink bundled stdio-rpc-server to the one provided by the deltachat-rpc-server package
+  ln -fsv /usr/bin/deltachat-rpc-server dist/linux-unpacked/resources/app.asar.unpacked/node_modules/@deltachat/stdio-rpc-server-linux-x64/deltachat-rpc-server
+}
+
+check() {
+  cd $pkgname-$pkgver
+}
+
+package() {
+  install -vDm 755 $pkgname.sh "$pkgdir/usr/bin/$pkgname"
+
+  cd $pkgname-$pkgver
+  install -vdm 755 "$pkgdir/usr/lib/$pkgname/"
+  cp -rv dist/linux-unpacked/resources/* "$pkgdir/usr/lib/$pkgname/"
+
+  # icons
+  install -vDm 644 images/tray/${pkgname/-desktop/}.svg "$pkgdir/usr/share/icons/hicolor/scalable/apps/$pkgname.svg"
+  for resolution in ${_resolutions[@]}; do
+    install -vDm 644 $pkgname-$resolution.png "$pkgdir/usr/share/icons/hicolor/${resolution}x${resolution}/apps/$pkgname.png"
+  done
+
+  #XDG
+  install -vDm 644 ../$pkgname.desktop -t "$pkgdir/usr/share/applications/"
+  install -vDm 644 ../$pkgname.xml -t "$pkgdir/usr/share/mime/packages/"
+
+  install -vDm 644 {CHANGELOG,CONTRIBUTING,README,SECURITY}.md -t "$pkgdir/usr/share/doc/$pkgname/"
+}

@@ -9,26 +9,23 @@
 
 pkgname=chrony
 pkgver=4.5
-pkgrel=1
+pkgrel=3
 pkgdesc='Lightweight NTP client and server'
-url='https://chrony.tuxfamily.org/'
+url=https://chrony-project.org/
 arch=('loong64' 'x86_64')
-license=('GPL2')
+license=('GPL-2.0-only')
 depends=('glibc' 'libcap' 'libcap.so' 'libedit' 'libedit.so' 'libseccomp' 'libseccomp.so'
          'nettle' 'libnettle.so' 'gnutls')
-makedepends=('asciidoctor')
+makedepends=('asciidoctor' 'git' 'pps-tools')
 options=('!emptydirs')
 backup=('etc/chrony.conf')
-source=(https://download.tuxfamily.org/chrony/${pkgname}-${pkgver}.tar.gz
-        ${pkgname}-${pkgver}.tar.gz.asc::https://download.tuxfamily.org/chrony/${pkgname}-${pkgver}-tar-gz-asc.txt
+source=(git+https://gitlab.com/chrony/chrony.git?signed#tag=$pkgver
         chrony.sysusers
         chrony.tmpfiles)
-sha256sums=('19fe1d9f4664d445a69a96c71e8fdb60bcd8df24c73d1386e02287f7366ad422'
-            'SKIP'
+sha256sums=('b02267420b3fa645c2a9099b8e20f0aad5a5d0e21cfc0a8c153b5917f5b9c591'
             '56aa817638c8f959169d514f1e7fc727ef31e7d3beda4fca5165292c7602ee42'
             'c0b52787f68f3ef365eef64f53f22b4fb0046a91f0e38923f9d16f1ca19c3f3a')
-b2sums=('e89665e6ff700805b41f89e9349d280579aebab31a30817512a165da939c8f39dc55ef9a17a50e3d7e298015620667638ab119901a71868a9188093606a95d32'
-        'SKIP'
+b2sums=('15bc77bfa6c5088ce306e32a6c0398fd823bc06df15a49111e8d97a59345129dc4afbccfb4f8e875e3231b218cbda2aea9757544a426ebe9633ee70626849007'
         'e310a05f95d84741f7ddbbc496c52a9f603bb79afc47e57d291a92ae02efb630a357fda378ab5a11875c3997d073e05019d88dce7bbf4377a0228f328ba78fec'
         'e709df2f97b523ef1c7a9dae3232ccbd235ac8f025eba866165272f8ba0372a0aba965d3aae1402395e43331bd629b9d8f3fbffd75fc254f4a7e5ecd47f73130')
 validpgpkeys=(
@@ -36,7 +33,7 @@ validpgpkeys=(
 )
 
 prepare() {
-  cd ${pkgname}-${pkgver}
+  cd $pkgname
   sed -i \
     -e 's|pool pool.ntp.org|pool 2.arch.pool.ntp.org|g' \
     -e 's|server foo.example.net|server 0.arch.pool.ntp.org|g' \
@@ -44,10 +41,11 @@ prepare() {
     -e 's|server baz.example.net|server 3.arch.pool.ntp.org|g' \
     examples/chrony.conf.example*
   sed 's|/usr/sbin|/usr/bin|g' -i examples/*.service
+  echo $pkgver > version.txt
 }
 
 build() {
-  cd ${pkgname}-${pkgver}
+  cd $pkgname
   ./configure \
     --prefix=/usr \
     --enable-scfilter \
@@ -61,21 +59,21 @@ build() {
 }
 
 check() {
-  cd ${pkgname}-${pkgver}
+  cd $pkgname
   make check
 }
 
 package() {
-  cd ${pkgname}-${pkgver}
+  cd $pkgname
   make DESTDIR="${pkgdir}" install install-docs
 
   install -Dm 644 "${srcdir}/chrony.sysusers" "${pkgdir}/usr/lib/sysusers.d/chrony.conf"
   install -Dm 644 "${srcdir}/chrony.tmpfiles" "${pkgdir}/usr/lib/tmpfiles.d/chrony.conf"
   install -Dm 644 examples/{chronyd,chrony-wait}.service -t "${pkgdir}/usr/lib/systemd/system"
   install -Dm 644 examples/chrony.logrotate "${pkgdir}/etc/logrotate.d/chrony"
-  install -Dm 644 README NEWS FAQ -t "${pkgdir}/usr/share/doc/${pkgname}"
+  install -Dm 644 README NEWS -t "${pkgdir}/usr/share/doc/${pkgname}"
   install -Dm 644 examples/* -t "${pkgdir}/usr/share/doc/${pkgname}/examples"
-  echo "chronyd.service" | install -Dm 644 /dev/stdin "${pkgdir}/usr/lib/systemd/ntp-units.d/chrony.list"
+  echo "chronyd.service" | install -Dm 644 /dev/stdin "${pkgdir}/usr/lib/systemd/ntp-units.d/50-chrony.list"
 
   install -Dm 644 examples/chrony.conf.example3 "${pkgdir}/etc/chrony.conf"
   sed -i \

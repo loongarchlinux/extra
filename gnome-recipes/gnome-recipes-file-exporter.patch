@@ -1,0 +1,92 @@
+From 0a1b7376b8d10cd07701a45ebd3e77b410cff773 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Ball=C3=B3=20Gy=C3=B6rgy?= <ballogyor@gmail.com>
+Date: Wed, 31 Jul 2024 03:02:14 +0200
+Subject: [PATCH] Fix saving shopping list into a file
+
+- Don't free ingredient list too early, needed for file export.
+- Set length of the file to avoid filling it with garbage.
+- Close exporter dialog after file chooser dialog is shown.
+- Set default filename.
+---
+ src/gr-shopping-list-exporter.c | 20 +++++++++-----------
+ 1 file changed, 9 insertions(+), 11 deletions(-)
+
+diff --git a/src/gr-shopping-list-exporter.c b/src/gr-shopping-list-exporter.c
+index 86757ef2..979ba277 100644
+--- a/src/gr-shopping-list-exporter.c
++++ b/src/gr-shopping-list-exporter.c
+@@ -655,25 +655,22 @@ file_chooser_response (GtkNativeDialog  *self,
+ {
+ 	GrRecipeStore *store;
+ 	if (response_id == GTK_RESPONSE_ACCEPT) {
+-		GList *recipes, *items;
++		GList *recipes;
+ 		g_autoptr (GFile) file = NULL;
+ 		g_autofree char *text = NULL;
+ 
+ 		store = gr_recipe_store_get ();
+ 		recipes = gr_recipe_store_get_shopping_list (store);
+ 
+-		items = exporter->ingredients;
+-		exporter->ingredients = NULL;
+-
+-		text = gr_shopping_list_format (recipes, items);
++		text = gr_shopping_list_format (recipes, exporter->ingredients);
+ 
+ 		g_list_free_full (recipes, g_object_unref);
+-		g_list_free_full (items, item_free);
+ 
+ 		file = gtk_file_chooser_get_file (GTK_FILE_CHOOSER (self));
+-		g_file_replace_contents (file, text, -1, NULL, FALSE, 0, NULL, NULL, NULL);
++		g_file_replace_contents (file, text, strlen(text), NULL, FALSE, 0, NULL, NULL, NULL);
+         }
+         gtk_native_dialog_destroy (self);
++        g_list_free_full (exporter->ingredients, item_free);
+ }
+ 
+ static void
+@@ -696,28 +693,30 @@ mail_done (GObject      *source,
+                                                                        GTK_FILE_CHOOSER_ACTION_SAVE,
+                                                                        _("Save"),
+                                                                        _("Cancel"));
++                gtk_file_chooser_set_current_name (GTK_FILE_CHOOSER (file_chooser), "shopping-list.txt");
+                 gtk_native_dialog_set_modal (GTK_NATIVE_DIALOG (file_chooser), TRUE);
+ 
+                 g_signal_connect (file_chooser, "response", G_CALLBACK (file_chooser_response), exporter);
+                 gtk_native_dialog_show (GTK_NATIVE_DIALOG (file_chooser));
++                close_dialog (exporter);
+                 return;
+         }
+         close_dialog (exporter);
++        g_list_free_full (exporter->ingredients, item_free);
+ }
+ 
+ static void
+ share_list (GrShoppingListExporter *exporter)
+ {
+-        GList *recipes, *items;
++        GList *recipes;
+         g_autofree char *text = NULL;
+         GtkWidget *window;
+         GrRecipeStore *store;
+ 
+         store = gr_recipe_store_get ();
+         recipes = gr_recipe_store_get_shopping_list (store);
+-        items = exporter->ingredients;
+ 
+-        text = gr_shopping_list_format (recipes, items);
++        text = gr_shopping_list_format (recipes, exporter->ingredients);
+         window = GTK_WIDGET (exporter->window);
+ 
+         gr_send_mail (GTK_WINDOW (window),
+@@ -725,7 +724,6 @@ share_list (GrShoppingListExporter *exporter)
+                       mail_done, exporter);
+ 
+         g_list_free_full (recipes, g_object_unref);
+-        g_list_free_full (items, item_free);
+ }
+ 
+ static void
+-- 
+GitLab
+

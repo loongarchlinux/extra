@@ -1,8 +1,8 @@
 # Maintainer: Antonio Rojas <arojas@archlinux.org>
 
 pkgname=jupyter-server
-pkgver=2.14.0
-pkgrel=2
+pkgver=2.14.2
+pkgrel=1
 pkgdesc='Provides the backend for Jupyter web applications like Jupyter notebook, JupyterLab, and Voila'
 arch=(any)
 url='https://jupyter.org/'
@@ -24,7 +24,9 @@ depends=(jupyter-nbconvert
          python-tornado
          python-traitlets
          python-websocket-client)
-makedepends=(python-build
+makedepends=(git
+             npm
+             python-build
              python-hatch-jupyter-builder
              python-installer)
 checkdepends=(python-flaky
@@ -38,21 +40,21 @@ checkdepends=(python-flaky
               python-terminado)
 optdepends=('jupyter-server-mathjax: to use local MathJax'
             'python-jupyter-server-terminals: terminals support')
-source=(https://github.com/jupyter-server/${pkgname/-/_}/releases/download/v$pkgver/${pkgname/-/_}-$pkgver.tar.gz)
-sha256sums=('659154cea512083434fd7c93b7fe0897af7a2fd0b9dd4749282b42eaac4ae677')
+source=(git+https://github.com/jupyter-server/jupyter_server#tag=v$pkgver)
+sha256sums=('6b3872722970ed0f554d3a530c94e0410290eb9f4e47c49b64609ec4ffad812c')
 
 prepare() {
-  cd ${pkgname/-/_}-$pkgver
+  cd ${pkgname/-/_}
   sed -e '/jupyter_server_terminals/d' -i pyproject.toml # Prevent cyclic dependencies
 }
 
 build() {
-  cd ${pkgname/-/_}-$pkgver
+  cd ${pkgname/-/_}
   python -m build --wheel --no-isolation
 }
 
 check() {
-  cd ${pkgname/-/_}-$pkgver
+  cd ${pkgname/-/_}
 # Testing is useless, most tests fail on the build server
 #  python -m venv --system-site-packages test-env
 #  test-env/bin/python -m installer dist/*.whl
@@ -60,7 +62,7 @@ check() {
 }
 
 package() {
-  cd ${pkgname/-/_}-$pkgver
+  cd ${pkgname/-/_}
   python -m installer --destdir="$pkgdir" dist/*.whl
 
   install -Dm644 LICENSE -t "$pkgdir"/usr/share/licenses/$pkgname

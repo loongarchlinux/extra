@@ -2,44 +2,96 @@
 
 _gemname='faraday-net_http'
 pkgname="ruby-${_gemname}"
-pkgver=1.0.1
-pkgrel=1
+pkgver=3.2.0
+pkgrel=2
 pkgdesc='Faraday adapter for Net::HTTP'
 arch=('any')
 url='https://github.com/lostisland/faraday-net_http'
 license=('MIT')
-depends=('ruby')
-makedepends=('ruby-rspec')
-checkdepends=('ruby-rspec' 'ruby-faraday' 'ruby-webmock' 'ruby-multipart-parser')
+depends=(
+  ruby
+)
+makedepends=(
+  ruby-rspec
+)
+checkdepends=(
+  ruby-bundler
+  ruby-faraday
+  ruby-rake
+  ruby-webmock
+)
 options=('!emptydirs')
 source=("${url}/archive/v${pkgver}/${_gemname}-v${pkgver}.tar.gz")
-sha512sums=('57a7ea2f452844200119cb9e99ae4bfee5e01b0630b38b4ef4e615dfcc05e1476e3da8511698bf199c62b816b5253fb364ed6cffdc59dcd4e9d706c7f1e6e56b')
+sha512sums=('27966aaa0da55d398869fede0196de9859750227189564480f6129684a76fe617a477142559a717d5431c568aeea8357474f89ae8226f2398f3a4372001e8554')
+b2sums=('07ada54d9430d5255d7683d6eec0b86967657d9eceff631a343a49a943ed2fad4168a48f0faf1ddef7d680ec1d11f34c2a560272bd9701c8e0be89dfb43ce082')
 
 prepare() {
-  cd "${srcdir}/${_gemname}-${pkgver}"
+  cd "${_gemname}-${pkgver}"
 
-  # drop broken/cirular dependencies
-  sed --in-place '/add_development_dependency/d' "${_gemname}.gemspec"
+  # update gemspec/Gemfile to allow newer version of the dependencies
+  sed --in-place --regexp-extended 's|~>|>=|g' "${_gemname}.gemspec"
 }
 
 build() {
-  cd "${srcdir}/${_gemname}-${pkgver}"
-  gem build "${_gemname}.gemspec"
+  cd "${_gemname}-${pkgver}"
+
+  local _gemdir="$(gem env gemdir)"
+
+  gem build --verbose "${_gemname}.gemspec"
+
+  gem install \
+    --local \
+    --verbose \
+    --ignore-dependencies \
+    --no-user-install \
+    --install-dir "tmp_install${_gemdir}" \
+    --bindir "tmp_install/usr/bin" \
+    "${_gemname}-${pkgver}.gem"
+
+  # remove unrepreducible files
+  rm --force --recursive --verbose \
+    "tmp_install${_gemdir}/cache/" \
+    "tmp_install${_gemdir}/gems/${_gemname}-${pkgver}/vendor/" \
+    "tmp_install${_gemdir}/doc/${_gemname}-${pkgver}/ri/ext/"
+
+  find "tmp_install${_gemdir}/gems/" \
+    -type f \
+    \( \
+      -iname "*.o" -o \
+      -iname "*.c" -o \
+      -iname "*.so" -o \
+      -iname "*.time" -o \
+      -iname "gem.build_complete" -o \
+      -iname "Makefile" \
+    \) \
+    -delete
+
+  find "tmp_install${_gemdir}/extensions/" \
+    -type f \
+    \( \
+      -iname "mkmf.log" -o \
+      -iname "gem_make.out" \
+    \) \
+    -delete
 }
 
 check() {
-  cd "${srcdir}/${_gemname}-${pkgver}"
-   rspec
+  cd "${_gemname}-${pkgver}"
+
+  local _gemdir="$(gem env gemdir)"
+
+  GEM_HOME="tmp_install${_gemdir}" rake spec
 }
 
 package() {
-cd "${srcdir}/${_gemname}-${pkgver}"
+  cd "${_gemname}-${pkgver}"
+
   local _gemdir="$(gem env gemdir)"
-  gem install --verbose --ignore-dependencies --no-user-install --install-dir "${pkgdir}/${_gemdir}" --bindir "${pkgdir}/usr/bin" "${_gemname}-${pkgver}.gem"
 
-  install -Dm 644 LICENSE.md -t "${pkgdir}/usr/share/licenses/${pkgname}/"
+  cp --archive --verbose tmp_install/* "${pkgdir}"
 
-  install -Dm 644 README.md CODE_OF_CONDUCT.md -t "${pkgdir}/usr/share/doc/${pkgname}"
-
-  rm -rf "${pkgdir}/${_gemdir}/cache"
+  install --verbose -D --mode=0644 LICENSE.* --target-directory "${pkgdir}/usr/share/licenses/${pkgname}/"
+  install --verbose -D --mode=0644 *.md --target-directory "${pkgdir}/usr/share/doc/${pkgname}"
 }
+
+# vim: tabstop=2 shiftwidth=2 expandtab:

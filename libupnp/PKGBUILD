@@ -6,7 +6,7 @@
 _name=pupnp
 pkgname=libupnp
 pkgver=1.14.19
-pkgrel=2
+pkgrel=3
 pkgdesc='Portable Open Source UPnP Development Kit'
 arch=(loong64 x86_64)
 url="https://pupnp.sourceforge.io/"
@@ -17,15 +17,22 @@ provides=(
   libixml.so
   libupnp.so
 )
-source=(https://github.com/$_name/$_name/archive/release-$pkgver/$_name-release-$pkgver.tar.gz)
-sha512sums=('76ae3bf8b69fd649ede0b92e03b36a6cbc7a9df9fa7828386c97761df12f2ae6346dec9ab45f78e17eb793d4d225707ecb3a7628d7678287979115cd4ba65c49')
-b2sums=('119281a2e220b3b9398566b649d76fc047741a251097059920e84ef9376db03ee953ebf10934423a56613ad85aa9f77b777e33d92095b1468dfffb12e37e86bd')
+source=(https://github.com/$_name/$_name/archive/release-$pkgver/$_name-release-$pkgver.tar.gz
+        https://github.com/pupnp/pupnp/commit/9d261799.patch
+        https://github.com/pupnp/pupnp/commit/61b7944c.patch)
+sha512sums=('76ae3bf8b69fd649ede0b92e03b36a6cbc7a9df9fa7828386c97761df12f2ae6346dec9ab45f78e17eb793d4d225707ecb3a7628d7678287979115cd4ba65c49'
+            'a5aa59acdde9e0f13a5cc57e98fd14bf66e0492f14946bf25086de9d691622a91c89e8c21910cba0f80bbfc40e90715bedb1bf4fcc84e57f71f67fd9a1c4062a'
+            '88fd7a0c4e2a2b602459607d2acc0a923fd2ddfaafb04b1804bda6a3189335dfba8d709fdd38d29f15389f3a78cb1c84b4d2030f991fa53f95c342ab6c755646')
+b2sums=('119281a2e220b3b9398566b649d76fc047741a251097059920e84ef9376db03ee953ebf10934423a56613ad85aa9f77b777e33d92095b1468dfffb12e37e86bd'
+        'f784cf10480474590985b9ab09b7a6a851997ad1c5f961ab4d7abec780a78edf2643aab26702801cfa81148b834ccab0ee2808d227ee5c958e93a337d3d3de6d'
+        'da3cc96637daa1d8af205db8069f0bc3cca40a0197b0d8ce9d3fb117ca3d576dd1613418dfd6ccd4d372d9d8d4137d71a6e44740289c45e65bd41d1a1e709ad1')
 
 prepare() {
   # upstream derives project/pkgconfig version from autotools macros and this is broken:
   # https://github.com/pupnp/pupnp/issues/442
   # https://gitlab.archlinux.org/archlinux/packaging/packages/libupnp/-/issues/1
-  sed "s/\${PUPNP_VERSION_STRING}/$pkgver/g" -i $_name-release-$pkgver/CMakeLists.txt
+  patch -d $_name-release-$pkgver -p1 -i ../9d261799.patch
+  patch -d $_name-release-$pkgver -p1 -i ../61b7944c.patch
 }
 
 build() {

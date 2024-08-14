@@ -1,0 +1,476 @@
+diff -ru CyLP-0.92.2.orig/cylp/cpp/ICbcModel.cpp CyLP-0.92.2/cylp/cpp/ICbcModel.cpp
+--- CyLP-0.92.2.orig/cylp/cpp/ICbcModel.cpp	2024-06-22 23:03:22.354877231 +0200
++++ CyLP-0.92.2/cylp/cpp/ICbcModel.cpp	2024-06-22 23:21:36.750839604 +0200
+@@ -8,7 +8,7 @@
+     _import_array();
+     npy_intp dims = this->solver()->getNumCols();
+     double* d = (double*)(this->solver()->getColSolution());
+-    PyObject *Arr = PyArray_SimpleNewFromData( 1, &dims, PyArray_DOUBLE, d );
++    PyObject *Arr = PyArray_SimpleNewFromData( 1, &dims, NPY_DOUBLE, d );
+ 
+     return Arr;
+ }
+diff -ru CyLP-0.92.2.orig/cylp/cpp/IClpSimplex.cpp CyLP-0.92.2/cylp/cpp/IClpSimplex.cpp
+--- CyLP-0.92.2.orig/cylp/cpp/IClpSimplex.cpp	2024-06-22 23:03:22.358210636 +0200
++++ CyLP-0.92.2/cylp/cpp/IClpSimplex.cpp	2024-06-22 23:30:48.335977434 +0200
+@@ -20,7 +20,7 @@
+ int IClpSimplex::argWeightedMax(PyObject* arr, PyObject* arr_ind, PyObject* w, PyObject* w_ind){
+     //_import_array();
+ 
+-    npy_intp w_ind_len = PyArray_DIM(w_ind, 0);
++    npy_intp w_ind_len = PyArray_DIM(reinterpret_cast<PyArrayObject*>(w_ind), 0);
+     if (w_ind_len == 0)
+         return -1; //return PyArray_ArgMax(reinterpret_cast<PyArrayObject*>(arr));
+ 
+@@ -57,7 +57,7 @@
+ 
+     PyObject* arr_it = PyArray_IterNew(arr);
+ 
+-    npy_intp arr_len = PyArray_DIM(arr, 0);
++    npy_intp arr_len = PyArray_DIM(reinterpret_cast<PyArrayObject*>(arr), 0);
+ 
+     if (arr_len == 0)
+         return 0;
+@@ -107,8 +107,8 @@
+             }
+         }
+         else{ //look in whole array, weights array
+-            npy_intp w_len = PyArray_DIM(w, 0);
+-            npy_intp w_ind_len = PyArray_DIM(w_ind, 0);
++            npy_intp w_len = PyArray_DIM(reinterpret_cast<PyArrayObject*>(w), 0);
++            npy_intp w_ind_len = PyArray_DIM(reinterpret_cast<PyArrayObject*>(w_ind), 0);
+             if (w_ind_len != w_len){
+                 PyErr_SetString(PyExc_ValueError,
+                         "If w is a numpy array, w_ind should be a numpy array of the same size.");
+@@ -148,8 +148,8 @@
+     }
+     else{  //only indices specified in arr_ind
+ 
+-        npy_intp arr_ind_len = PyArray_DIM(arr_ind, 0);
+-        npy_intp arr_len = PyArray_DIM(arr, 0);
++        npy_intp arr_ind_len = PyArray_DIM(reinterpret_cast<PyArrayObject*>(arr_ind), 0);
++        npy_intp arr_len = PyArray_DIM(reinterpret_cast<PyArrayObject*>(arr), 0);
+ 
+         if (arr_ind_len != arr_len){
+             PyErr_SetString(PyExc_ValueError,
+@@ -206,8 +206,8 @@
+         }
+         else{  //just elements specified in arr_ind, weight's an array
+ 
+-            npy_intp arr_ind_len = PyArray_DIM(arr_ind, 0);
+-            npy_intp arr_len = PyArray_DIM(arr, 0);
++            npy_intp arr_ind_len = PyArray_DIM(reinterpret_cast<PyArrayObject*>(arr_ind), 0);
++            npy_intp arr_len = PyArray_DIM(reinterpret_cast<PyArrayObject*>(arr), 0);
+ 
+             if (arr_ind_len != arr_len){
+                 PyErr_SetString(PyExc_ValueError,
+@@ -216,8 +216,8 @@
+             }
+ 
+ 
+-            npy_intp w_len = PyArray_DIM(w, 0);
+-            npy_intp w_ind_len = PyArray_DIM(w_ind, 0);
++            npy_intp w_len = PyArray_DIM(reinterpret_cast<PyArrayObject*>(w), 0);
++            npy_intp w_ind_len = PyArray_DIM(reinterpret_cast<PyArrayObject*>(w_ind), 0);
+             if (w_ind_len != w_len){
+                 PyErr_SetString(PyExc_ValueError,
+                         "If w is a numpy array, w_ind should be a numpy array of the same size.");
+@@ -291,7 +291,7 @@
+     PyObject* arr_it = PyArray_IterNew(arr);
+     PyObject* whr_it = PyArray_IterNew(whr);
+ 
+-    npy_intp arr_len = PyArray_DIM(arr, 0);
++    npy_intp arr_len = PyArray_DIM(reinterpret_cast<PyArrayObject*>(arr), 0);
+ 
+     if (arr_len == 0)
+         return 0;
+@@ -354,7 +354,7 @@
+ PyObject* IClpSimplex::getStatusArray(){
+ 
+     npy_intp dims = getNumCols() + getNumRows();
+-    PyObject *Arr = PyArray_SimpleNewFromData( 1, &dims, PyArray_UINT8, this->status_ );
++    PyObject *Arr = PyArray_SimpleNewFromData( 1, &dims, NPY_UINT8, this->status_ );
+ 
+     return Arr;
+ }
+@@ -363,7 +363,7 @@
+ PyObject* IClpSimplex::getReducedCosts(){
+ 
+     npy_intp dims = getNumCols() + getNumRows();
+-    PyObject *Arr = PyArray_SimpleNewFromData( 1, &dims, PyArray_DOUBLE, this->djRegion() );
++    PyObject *Arr = PyArray_SimpleNewFromData( 1, &dims, NPY_DOUBLE, this->djRegion() );
+ 
+     return Arr;
+ }
+@@ -379,7 +379,7 @@
+ PyObject* IClpSimplex::getComplementarityList(){
+ 
+     npy_intp dims = getNumCols() + getNumRows();
+-    PyObject *Arr = PyArray_SimpleNewFromData( 1, &dims, PyArray_INT32, QP_ComplementarityList );
++    PyObject *Arr = PyArray_SimpleNewFromData( 1, &dims, NPY_INT32, QP_ComplementarityList );
+ 
+     return Arr;
+ }
+@@ -387,7 +387,7 @@
+ PyObject* IClpSimplex::getPivotVariable(){
+ 
+     npy_intp dims = getNumRows();
+-    PyObject *Arr = PyArray_SimpleNewFromData( 1, &dims, PyArray_INT32, this->pivotVariable() );
++    PyObject *Arr = PyArray_SimpleNewFromData( 1, &dims, NPY_INT32, this->pivotVariable() );
+ 
+     return Arr;
+ }
+@@ -396,7 +396,7 @@
+ PyObject* IClpSimplex::getPrimalRowSolution(){
+ 
+     npy_intp dims = getNumRows();
+-    PyObject *Arr = PyArray_SimpleNewFromData( 1, &dims, PyArray_DOUBLE, this->primalRowSolution() );
++    PyObject *Arr = PyArray_SimpleNewFromData( 1, &dims, NPY_DOUBLE, this->primalRowSolution() );
+ 
+     return Arr;
+ }
+@@ -404,33 +404,33 @@
+ PyObject* IClpSimplex::getPrimalColumnSolution(){
+ 
+     npy_intp dims = getNumCols();
+-    PyObject *Arr = PyArray_SimpleNewFromData(1, &dims, PyArray_DOUBLE, this->primalColumnSolution() );
++    PyObject *Arr = PyArray_SimpleNewFromData(1, &dims, NPY_DOUBLE, this->primalColumnSolution() );
+ 
+     return Arr;
+ }
+ 
+ PyObject* IClpSimplex::getPrimalColumnSolutionAll(){
+     npy_intp dims = getNumCols() + getNumRows();
+-    PyObject *Arr = PyArray_SimpleNewFromData(1, &dims, PyArray_DOUBLE, this->primalColumnSolution() );
++    PyObject *Arr = PyArray_SimpleNewFromData(1, &dims, NPY_DOUBLE, this->primalColumnSolution() );
+     return Arr;
+ }
+ 
+ PyObject* IClpSimplex::getSolutionRegion(){
+     npy_intp dims = getNumCols() + getNumRows();
+-    PyObject *Arr = PyArray_SimpleNewFromData(1, &dims, PyArray_DOUBLE, this->solutionRegion() );
++    PyObject *Arr = PyArray_SimpleNewFromData(1, &dims, NPY_DOUBLE, this->solutionRegion() );
+     return Arr;
+ }
+ 
+ PyObject* IClpSimplex::getCostRegion(){
+     npy_intp dims = getNumCols() + getNumRows();
+-    PyObject *Arr = PyArray_SimpleNewFromData(1, &dims, PyArray_DOUBLE, this->costRegion() );
++    PyObject *Arr = PyArray_SimpleNewFromData(1, &dims, NPY_DOUBLE, this->costRegion() );
+     return Arr;
+ }
+ 
+ PyObject* IClpSimplex::getDualRowSolution(){
+ 
+     npy_intp dims = getNumRows();
+-    PyObject *Arr = PyArray_SimpleNewFromData( 1, &dims, PyArray_DOUBLE, this->dualRowSolution() );
++    PyObject *Arr = PyArray_SimpleNewFromData( 1, &dims, NPY_DOUBLE, this->dualRowSolution() );
+ 
+     return Arr;
+ }
+@@ -438,7 +438,7 @@
+ PyObject* IClpSimplex::getDualColumnSolution(){
+ 
+     npy_intp dims = getNumCols();
+-    PyObject *Arr = PyArray_SimpleNewFromData( 1, &dims, PyArray_DOUBLE, this->dualColumnSolution() );
++    PyObject *Arr = PyArray_SimpleNewFromData( 1, &dims, NPY_DOUBLE, this->dualColumnSolution() );
+ 
+     return Arr;
+ }
+@@ -446,63 +446,63 @@
+ PyObject* IClpSimplex::getObjective(){
+ 
+     npy_intp dims = getNumCols();
+-    PyObject *Arr = PyArray_SimpleNewFromData( 1, &dims, PyArray_DOUBLE, this->objective() );
++    PyObject *Arr = PyArray_SimpleNewFromData( 1, &dims, NPY_DOUBLE, this->objective() );
+     return Arr;
+ }
+ 
+ PyObject* IClpSimplex::getRowLower(){
+ 
+     npy_intp dims = getNumRows();
+-    PyObject *Arr = PyArray_SimpleNewFromData( 1, &dims, PyArray_DOUBLE, this->rowLower() );
++    PyObject *Arr = PyArray_SimpleNewFromData( 1, &dims, NPY_DOUBLE, this->rowLower() );
+     return Arr;
+ }
+ 
+ PyObject* IClpSimplex::getRowUpper(){
+ 
+     npy_intp dims = getNumRows();
+-    PyObject *Arr = PyArray_SimpleNewFromData( 1, &dims, PyArray_DOUBLE, this->rowUpper() );
++    PyObject *Arr = PyArray_SimpleNewFromData( 1, &dims, NPY_DOUBLE, this->rowUpper() );
+     return Arr;
+ }
+ 
+ PyObject* IClpSimplex::getUpper(){
+ 
+     npy_intp dims = getNumRows() + getNumCols();
+-    PyObject *Arr = PyArray_SimpleNewFromData( 1, &dims, PyArray_DOUBLE, this->upperRegion() );
++    PyObject *Arr = PyArray_SimpleNewFromData( 1, &dims, NPY_DOUBLE, this->upperRegion() );
+     return Arr;
+ }
+ 
+ PyObject* IClpSimplex::getLower(){
+ 
+     npy_intp dims = getNumRows() + getNumCols();
+-    PyObject *Arr = PyArray_SimpleNewFromData( 1, &dims, PyArray_DOUBLE, this->lowerRegion() );
++    PyObject *Arr = PyArray_SimpleNewFromData( 1, &dims, NPY_DOUBLE, this->lowerRegion() );
+     return Arr;
+ }
+ 
+ PyObject* IClpSimplex::getColLower(){
+ 
+     npy_intp dims = getNumCols();
+-    PyObject *Arr = PyArray_SimpleNewFromData( 1, &dims, PyArray_DOUBLE, this->columnLower() );
++    PyObject *Arr = PyArray_SimpleNewFromData( 1, &dims, NPY_DOUBLE, this->columnLower() );
+     return Arr;
+ }
+ 
+ PyObject* IClpSimplex::getColUpper(){
+ 
+     npy_intp dims = getNumCols();
+-    PyObject *Arr = PyArray_SimpleNewFromData( 1, &dims, PyArray_DOUBLE, this->columnUpper() );
++    PyObject *Arr = PyArray_SimpleNewFromData( 1, &dims, NPY_DOUBLE, this->columnUpper() );
+     return Arr;
+ }
+ 
+ PyObject* IClpSimplex::getColumnScale(){
+ 
+     npy_intp dims = getNumCols();
+-    PyObject *Arr = PyArray_SimpleNewFromData( 1, &dims, PyArray_DOUBLE,  columnScale_);
++    PyObject *Arr = PyArray_SimpleNewFromData( 1, &dims, NPY_DOUBLE,  columnScale_);
+     return Arr;
+ }
+ 
+ PyObject* IClpSimplex::getRowScale(){
+ 
+     npy_intp dims = getNumRows();
+-    PyObject *Arr = PyArray_SimpleNewFromData( 1, &dims, PyArray_DOUBLE, rowScale_ );
++    PyObject *Arr = PyArray_SimpleNewFromData( 1, &dims, NPY_DOUBLE, rowScale_ );
+     return Arr;
+ }
+ 
+@@ -512,9 +512,9 @@
+     npy_intp dims = getNumCols();
+     PyObject* Arr;
+     if (this->integerInformation())
+-        Arr = PyArray_SimpleNewFromData(1, &dims, PyArray_INT8, this->integerInformation());
++        Arr = PyArray_SimpleNewFromData(1, &dims, NPY_INT8, this->integerInformation());
+     else
+-        Arr = PyArray_ZEROS(1, &dims, PyArray_INT8, 0);
++        Arr = PyArray_ZEROS(1, &dims, NPY_INT8, 0);
+     return Arr;
+ }
+ 
+@@ -1397,10 +1397,10 @@
+         return NULL;
+     }
+ 
+-    npy_intp inds_len = PyArray_DIM(inds, 0);
++    npy_intp inds_len = PyArray_DIM(reinterpret_cast<PyArrayObject*>(inds), 0);
+     if (inds_len == 0){
+         npy_intp dims = 0;
+-        PyObject *Arr = PyArray_SimpleNewFromData( 1, &dims, PyArray_INT, tempIntArray );
++        PyObject *Arr = PyArray_SimpleNewFromData( 1, &dims, NPY_INT, tempIntArray );
+         return Arr;
+     }
+     if (tempArrayExists == false)
+@@ -1426,7 +1426,7 @@
+     }
+ 
+     npy_intp dims = ind_count;
+-    PyObject *Arr = PyArray_SimpleNewFromData( 1, &dims, PyArray_INT, tempIntArray );
++    PyObject *Arr = PyArray_SimpleNewFromData( 1, &dims, NPY_INT, tempIntArray );
+     return Arr;
+ 
+ }
+diff -ru CyLP-0.92.2.orig/cylp/cpp/ICoinIndexedVector.cpp CyLP-0.92.2/cylp/cpp/ICoinIndexedVector.cpp
+--- CyLP-0.92.2.orig/cylp/cpp/ICoinIndexedVector.cpp	2024-06-22 23:03:22.358210636 +0200
++++ CyLP-0.92.2/cylp/cpp/ICoinIndexedVector.cpp	2024-06-22 23:12:49.922277803 +0200
+@@ -17,7 +17,7 @@
+ 
+     npy_intp dims = this->getNumElements();
+     PyObject *Arr = PyArray_SimpleNewFromData(1, &dims, 
+-            PyArray_INT32, 
++            NPY_INT32, 
+             this->getIndices());
+     return Arr;
+ }
+@@ -26,7 +26,7 @@
+ 
+     npy_intp dims = this->capacity();
+     PyObject *Arr = PyArray_SimpleNewFromData(1, &dims, 
+-            PyArray_DOUBLE, 
++            NPY_DOUBLE, 
+             this->denseVector());
+     return Arr;
+ }
+@@ -126,7 +126,7 @@
+                         PyFloat_AsDouble(PyList_GetItem(other, (Py_ssize_t)i)));
+             }
+         }else if (other_is_array){
+-            npy_intp other_length = PyArray_DIM(other, 0);
++            npy_intp other_length = PyArray_DIM(reinterpret_cast<PyArrayObject*>(other), 0);
+             PyObject* iterator = PyArray_IterNew(other);
+             if (ind_length != other_length){
+                 PyErr_SetString(PyExc_ValueError, 
+@@ -149,7 +149,7 @@
+ 
+         // If the index set is a numpy array 3 possibilities for the rhs: number, list, array 
+         else if (ind_is_array){
+-            npy_intp ind_length = PyArray_DIM(ind, 0);
++            npy_intp ind_length = PyArray_DIM(reinterpret_cast<PyArrayObject*>(ind), 0);
+             PyObject* ind_iterator = PyArray_IterNew(ind);
+ 
+             if (other_is_num){
+@@ -174,7 +174,7 @@
+                         PyArray_ITER_NEXT(ind_iterator);
+                     }
+                 }else if (other_is_array){
+-                    npy_intp other_length = PyArray_DIM(other, 0);
++                    npy_intp other_length = PyArray_DIM(reinterpret_cast<PyArrayObject*>(other), 0);
+                     PyObject* iterator = PyArray_IterNew(other);
+                     if (ind_length != other_length){
+                         PyErr_SetString(PyExc_ValueError, 
+diff -ru CyLP-0.92.2.orig/cylp/cpp/ICoinMpsIO.cpp CyLP-0.92.2/cylp/cpp/ICoinMpsIO.cpp
+--- CyLP-0.92.2.orig/cylp/cpp/ICoinMpsIO.cpp	2024-06-22 23:03:22.358210636 +0200
++++ CyLP-0.92.2/cylp/cpp/ICoinMpsIO.cpp	2024-06-22 23:19:19.605342319 +0200
+@@ -88,7 +88,7 @@
+ PyObject* ICoinMpsIO::np_getColLower(){
+ 	npy_intp dims = this->getNumCols();
+ 	_import_array();
+-	PyObject *Arr = PyArray_SimpleNewFromData( 1, &dims, PyArray_DOUBLE, this->IColLower() );
++	PyObject *Arr = PyArray_SimpleNewFromData( 1, &dims, NPY_DOUBLE, this->IColLower() );
+ 	return Arr;
+ }
+ 
+@@ -96,14 +96,14 @@
+ PyObject* ICoinMpsIO::np_getColUpper(){
+ 	npy_intp dims = this->getNumCols();
+ 	_import_array();
+-	PyObject *Arr = PyArray_SimpleNewFromData( 1, &dims, PyArray_DOUBLE, this->IColUpper() );
++	PyObject *Arr = PyArray_SimpleNewFromData( 1, &dims, NPY_DOUBLE, this->IColUpper() );
+ 	return Arr;
+ }
+ 
+ PyObject* ICoinMpsIO::np_getRowSense(){
+ 	npy_intp dims = this->getNumRows();
+ 	_import_array();
+-	PyObject *Arr = PyArray_SimpleNewFromData( 1, &dims, PyArray_INT8, this->IRowSense() );
++	PyObject *Arr = PyArray_SimpleNewFromData( 1, &dims, NPY_INT8, this->IRowSense() );
+ 	return Arr;
+ }
+ 
+@@ -111,42 +111,42 @@
+ PyObject* ICoinMpsIO::np_getRightHandSide(){
+ 	npy_intp dims = this->getNumRows();
+ 	_import_array();
+-	PyObject *Arr = PyArray_SimpleNewFromData( 1, &dims, PyArray_DOUBLE, this->IRightHandSide() );
++	PyObject *Arr = PyArray_SimpleNewFromData( 1, &dims, NPY_DOUBLE, this->IRightHandSide() );
+ 	return Arr;
+ }
+ 
+ PyObject* ICoinMpsIO::np_getRowRange(){
+ 	npy_intp dims = this->getNumRows();
+ 	_import_array();
+-	PyObject *Arr = PyArray_SimpleNewFromData( 1, &dims, PyArray_DOUBLE, this->IRowRange() );
++	PyObject *Arr = PyArray_SimpleNewFromData( 1, &dims, NPY_DOUBLE, this->IRowRange() );
+ 	return Arr;
+ }
+ 
+ PyObject* ICoinMpsIO::np_getRowLower(){
+ 	npy_intp dims = this->getNumRows();
+ 	_import_array();
+-	PyObject *Arr = PyArray_SimpleNewFromData( 1, &dims, PyArray_DOUBLE, this->IRowLower() );
++	PyObject *Arr = PyArray_SimpleNewFromData( 1, &dims, NPY_DOUBLE, this->IRowLower() );
+ 	return Arr;
+ }
+ 
+ PyObject* ICoinMpsIO::np_getRowUpper(){
+ 	npy_intp dims = this->getNumRows();
+ 	_import_array();
+-	PyObject *Arr = PyArray_SimpleNewFromData( 1, &dims, PyArray_DOUBLE, this->IRowUpper() );
++	PyObject *Arr = PyArray_SimpleNewFromData( 1, &dims, NPY_DOUBLE, this->IRowUpper() );
+ 	return Arr;
+ }
+ 
+ PyObject* ICoinMpsIO::np_getObjCoefficients(){
+ 	npy_intp dims = this->getNumCols();
+ 	_import_array();
+-	PyObject *Arr = PyArray_SimpleNewFromData( 1, &dims, PyArray_DOUBLE, this->IObjCoefficients() );
++	PyObject *Arr = PyArray_SimpleNewFromData( 1, &dims, NPY_DOUBLE, this->IObjCoefficients() );
+ 	return Arr;
+ }
+ 
+ PyObject* ICoinMpsIO::np_integerColumns(){
+ 	npy_intp dims = this->getNumCols();
+ 	_import_array();
+-	PyObject *Arr = PyArray_SimpleNewFromData( 1, &dims, PyArray_INT8, this->IintegerColumns() );
++	PyObject *Arr = PyArray_SimpleNewFromData( 1, &dims, NPY_INT8, this->IintegerColumns() );
+ 	return Arr;
+ }
+ 
+@@ -154,21 +154,21 @@
+ PyObject* ICoinMpsIO::getQPColumnStarts(){
+ 	npy_intp dims = this->getNumCols() + 1;
+ 	_import_array();
+-	PyObject *Arr = PyArray_SimpleNewFromData( 1, &dims, PyArray_INT32, d_colStart );
++	PyObject *Arr = PyArray_SimpleNewFromData( 1, &dims, NPY_INT32, d_colStart );
+ 	return Arr;
+ }
+ 
+ PyObject* ICoinMpsIO::getQPColumns(){
+ 	npy_intp dims = d_colStart[this->getNumCols()];
+ 	_import_array();
+-	PyObject *Arr = PyArray_SimpleNewFromData( 1, &dims, PyArray_INT32, d_cols );
++	PyObject *Arr = PyArray_SimpleNewFromData( 1, &dims, NPY_INT32, d_cols );
+ 	return Arr;
+ }
+ 
+ PyObject* ICoinMpsIO::getQPElements(){
+ 	npy_intp dims = d_colStart[this->getNumCols()];
+ 	_import_array();
+-	PyObject *Arr = PyArray_SimpleNewFromData( 1, &dims, PyArray_DOUBLE, d_elements );
++	PyObject *Arr = PyArray_SimpleNewFromData( 1, &dims, NPY_DOUBLE, d_elements );
+ 	return Arr;
+ }
+ 
+diff -ru CyLP-0.92.2.orig/cylp/cpp/ICoinPackedMatrix.cpp CyLP-0.92.2/cylp/cpp/ICoinPackedMatrix.cpp
+--- CyLP-0.92.2.orig/cylp/cpp/ICoinPackedMatrix.cpp	2024-06-22 23:03:22.358210636 +0200
++++ CyLP-0.92.2/cylp/cpp/ICoinPackedMatrix.cpp	2024-06-22 23:16:36.902724905 +0200
+@@ -4,7 +4,7 @@
+ 
+ 	npy_intp dims = this->getNumElements();
+ 	_import_array();
+-	PyObject *Arr = PyArray_SimpleNewFromData( 1, &dims, PyArray_INT32, this->IgetIndices() );
++	PyObject *Arr = PyArray_SimpleNewFromData( 1, &dims, NPY_INT32, this->IgetIndices() );
+ 	return Arr;
+ }
+ 
+@@ -12,7 +12,7 @@
+ 
+ 	npy_intp dims = this->getNumElements();
+ 	_import_array();
+-	PyObject *Arr = PyArray_SimpleNewFromData( 1, &dims, PyArray_DOUBLE, this->IgetElements() );
++	PyObject *Arr = PyArray_SimpleNewFromData( 1, &dims, NPY_DOUBLE, this->IgetElements() );
+ 	return Arr;
+ }
+ 
+@@ -20,7 +20,7 @@
+ 
+     npy_intp dims = this->getNumElements();
+     _import_array();
+-    PyObject *Arr = PyArray_SimpleNewFromData( 1, &dims, PyArray_INT32, this->getMajorIndices() );
++    PyObject *Arr = PyArray_SimpleNewFromData( 1, &dims, NPY_INT32, this->getMajorIndices() );
+     return Arr;
+ }
+ 
+@@ -28,7 +28,7 @@
+ PyObject* ICoinPackedMatrix::np_getVectorStarts(){
+ 	npy_intp dims = this->getMajorDim() + 1;
+ 	_import_array();
+-	PyObject *Arr = PyArray_SimpleNewFromData( 1, &dims, PyArray_INT32, this->IgetVectorStarts() );
++	PyObject *Arr = PyArray_SimpleNewFromData( 1, &dims, NPY_INT32, this->IgetVectorStarts() );
+ 	return Arr;
+ }
+ 

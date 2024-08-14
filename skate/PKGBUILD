@@ -3,7 +3,7 @@
 
 pkgname=skate
 pkgver=0.2.2
-pkgrel=1
+pkgrel=2
 pkgdesc='A personal key value store'
 arch=('loong64' 'x86_64')
 url='https://github.com/charmbracelet/skate'
@@ -11,15 +11,9 @@ license=('MIT')
 depends=('glibc')
 makedepends=('git' 'go')
 options=('!lto')
-_commit='b8e7bbcc205c5cc0f9010f78f8201528f01b124e'
-source=("git+$url.git#commit=$_commit")
-b2sums=('SKIP')
-
-pkgver() {
-  cd skate
-
-  git describe --tags | sed 's/^v//'
-}
+source=("git+$url.git#tag=v$pkgver")
+sha512sums=('9f1c9eb4b8e3289e98b88ccff13b06bcaa89c70e45b7c881f03704593eeae524a737fe570b139f795afad058ced838fc01cea8562ac1eed97047f997f6e1b872')
+b2sums=('2b6ae00a9c9596447a4cec3d0424c0380af349f5a229ce462008ed8f7675280c8ccbf477176a7efd8551dc832360671ca27ac554c08eb691b5f168bb73de7f58')
 
 prepare() {
   cd skate
@@ -47,9 +41,9 @@ build() {
     -modcacherw \
     -ldflags "-compressdwarf=false \
     -linkmode external \
-    -extldflags ${LDFLAGS} \
+    -extldflags '${LDFLAGS}' \
     -X main.Version=$pkgver \
-    -X main.CommitSHA=$_commit" \
+    -X main.CommitSHA=$(git rev-parse HEAD)" \
     -o build \
     .
 

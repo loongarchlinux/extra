@@ -8,18 +8,17 @@ pkgname=(
   'woodpecker-agent'
   'woodpecker-cli'
 )
-pkgver=2.4.1
+pkgver=2.7.0
 pkgrel=1
 pkgdesc='A simple CI engine with great extensibility'
 arch=('loong64' 'x86_64')
 url='https://woodpecker-ci.org'
-license=('Apache')
+license=('Apache-2.0')
 depends=('glibc')
-makedepends=('git' 'go' 'yarn')
+makedepends=('git' 'go' 'pnpm')
 options=('!lto')
-_commit='5a2a4bd53c6f5dc488e96a1a266b48e827da3e47'
 source=(
-  "$pkgbase::git+https://github.com/woodpecker-ci/woodpecker#commit=$_commit"
+  "$pkgbase::git+https://github.com/woodpecker-ci/woodpecker#tag=v$pkgver"
   'server-systemd.service'
   'server-sysusers.conf'
   'server-tmpfiles.conf'
@@ -29,7 +28,16 @@ source=(
   'agent-tmpfiles.conf'
   'agent.env'
 )
-b2sums=('SKIP'
+sha512sums=('79528aeb7e9834962b59bd65292322aaa711c83bacaef04d3bc2618d79ad436f51ced853520a9e6745e947b6c99429ea37cfa08d2210618733c13758713a24bc'
+            'd67dee276cd07db05194cf19a9123ff3d1c12f7563b5d4edd7f04c315e41f1ad3a92026fe96e6186f136e4cec90bbba9ace4f4ca473ab1f6ef25399151ff3093'
+            'f4b9bd5398a7b18dade368090dc46fa7ce65a85fd06a549aef32ebffc66edcc5be831851ba078689fd5949121eb9cffc50e66511d78bf1fbb0022fc20e1f0395'
+            'b50fdb8369d3120e4f1971b3279b7926dcd65f42d266d1f8aba7b952ced684ac30e55a48ea641590252ab566b72dba306724c74a93b1accef609aa10ebca4da9'
+            'f026c87c373403a5368e98d309f090487860ca86a93d732604c2b64a47691adf801a71a315c4bcaf985e038a012f514fa8c14af928f412dc351c796647ca02bf'
+            '4262edaad1f29d300010a7685eead05612482587d990b0ea0094c3152be641a98992d8450be7c79ed21d7ab7f6cda370957de01fc3c30edb5da1a4e6493de9b4'
+            'b754024eeffb563418ac331c6297ff260a10b1315af1d64a1de765fb9197e6b8f1bdcb2042399f09a116085eaf2b84da593d6c3bf758ae722e3ed9b435ce1db8'
+            'a4fb54d8f8c5bcd79e6934fff335cc06dfa7490d25418717581e1b6019a0429c9bd82509f6d4eda345a41476eefce55bc6892be4ffd0fdaa5f968aec3d59e1c1'
+            '5cb05106133fdee058c6345e7e5c6b6bd67beb51a6bca80f742a7de403ee8a03224e9c2850d5c81d61b9720a80ddc07f10f13e1f6f5ef66666b23b49b80217e0')
+b2sums=('cd2bc5ae0da65939cbc05212edf79ef595ab39a25ce382d931645d807baf631a34247a072b34b72008bbc620c0a06e941d2645fb5e2e37082e95ada1428432a0'
         '9435cd7af8128a91fc939206fedd767c719c94abd027150599d2079dbffd67f6886ef7ccb53449e09f8f3e86b0ad2bfa33b7002140c772421f5b6e936d008e6f'
         '92d4b131ac328661bc35f59904bc94bd59df8e61d16dcf13d279641fb825d75949b3da469800573e03bea407a2eb2c5b1536f6c5ae4d33db218a20fb42068f5b'
         'd28d74767a4e36a34632308449a902abcb62c3f06260bab966825d937e04862c531f2c25273186a0ca3503274560770142154f7829fc850e980455f7c902734a'
@@ -38,12 +46,6 @@ b2sums=('SKIP'
         '373a5889c899445c4b583a48e6d0ff67d4572e30e0dfd0842b389e9338712771ec053ee3771202fe2874ee8bbfb7cb5965a04cf10d4071100c4f7c89cf2a14f3'
         'b6479a7f3b3cf1ecaf0fc4e0653de10176af29b780ff716bf038077d70b0440e45a649ccd5ad9a12d5f52c9eecf9b5d8b5a01510a53eec7b664162c8bb9153ab'
         '9d64fa22d5fcfb8634926220aeb89b0fa914d8e04ee39fe14abf3f170292ab2dc875fe3fe14b054ca8173c167cec4d93518d15d5f08698bd70d86dec7728dee8')
-
-pkgver() {
-  cd "$pkgbase"
-
-  git describe --tags | sed 's/^v//'
-}
 
 prepare() {
   cd "$pkgbase"
@@ -61,8 +63,8 @@ build() {
 
   # generate web interface to embed in woodpecker-server
   pushd web
-  yarn install --frozen-lockfile
-  yarn build
+  pnpm install --frozen-lockfile
+  pnpm build
   popd
 
   # set Go flags

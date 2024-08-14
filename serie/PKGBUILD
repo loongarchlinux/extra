@@ -1,0 +1,39 @@
+# Maintainer: Orhun Parmaksız <orhun@archlinux.org>
+# Maintainer: Caleb Maclennan <caleb@alerque.com>
+
+pkgname=serie
+pkgver=0.1.2
+pkgrel=1
+pkgdesc="A rich git commit graph in your terminal"
+url="https://github.com/lusingander/serie"
+depends=(gcc-libs
+         glibc)
+makedepends=(cargo 'git')
+arch=(loong64 x86_64)
+license=(MIT)
+source=("git+$url?tag=v$pkgver")
+sha512sums=('SKIP')
+
+prepare() {
+  cd "$pkgname"
+  cargo fetch --locked --target "$(rustc -vV | sed -n 's/host: //p')"
+}
+
+build() {
+  cd "$pkgname"
+  cargo build --release --frozen
+}
+
+check() {
+  cd "$pkgname"
+  cargo test --frozen
+}
+
+package() {
+  cd "$pkgname"
+  install -Dm 755 "target/release/$pkgname" "${pkgdir}/usr/bin/${pkgname}"
+  install -Dm 644 README.md -t "${pkgdir}/usr/share/doc/${pkgname}/"
+  install -Dm 644 LICENSE -t "$pkgdir/usr/share/licenses/$pkgname/"
+}
+
+# vim: ts=2 sw=2 et:

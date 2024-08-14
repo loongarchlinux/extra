@@ -6,13 +6,13 @@ _ndkver=0.3.3
 pkgbase=nginx-mod-ndk-set-misc
 pkgname=(nginx-mod-ndk nginx-mod-set-misc)
 pkgver=$_setmiscver+$_ndkver
-pkgrel=7
+pkgrel=8
 
+pkgdesc="Nginx module that adds additional generic tools that module developers can use in their own modules"
 arch=('loong64' 'x86_64')
-depends=('nginx')
-makedepends=('nginx-src')
+makedepends=('nginx' 'nginx-src')
 url="https://github.com/openresty/set-misc-nginx-module"
-license=('BSD')
+license=('BSD-2-Clause')
 
 source=(
 	https://github.com/openresty/set-misc-nginx-module/archive/v$_setmiscver/set-misc-$_setmiscver.tar.gz
@@ -39,6 +39,9 @@ build() {
 
 package_nginx-mod-ndk() {
 	pkgdesc="Nginx module that adds additional generic tools that module developers can use in their own modules"
+	local _nginx_version=$(nginx -v 2>&1)
+	_nginx_version=${_nginx_version/* nginx\/}
+	depends+=("nginx=${_nginx_version}")
 
 	cd build/objs
 	install -Dm755 ndk_http_module.so "$pkgdir"/usr/lib/nginx/modules/ndk_http_module.so
@@ -49,7 +52,10 @@ package_nginx-mod-ndk() {
 
 package_nginx-mod-set-misc() {
 	pkgdesc="Nginx module that adds various set_xxx directives"
-	depends=("nginx" 'nginx-mod-ndk')
+	depends=('nginx-mod-ndk')
+	local _nginx_version=$(nginx -v 2>&1)
+	_nginx_version=${_nginx_version/* nginx\/}
+	depends+=("nginx=${_nginx_version}")
 
 	cd build/objs
 	install -Dm755 ngx_http_set_misc_module.so "$pkgdir"/usr/lib/nginx/modules/ngx_http_set_misc_module.so

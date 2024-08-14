@@ -5,7 +5,7 @@
 
 pkgname=mosquitto
 pkgver=2.0.18
-pkgrel=1
+pkgrel=2
 pkgdesc="An Open Source MQTT Broker"
 arch=(loong64 x86_64)
 url="https://mosquitto.org/"
@@ -52,6 +52,10 @@ prepare() {
 }
 
 build() {
+  # /usr/bin/mosquitto uses malloc_usable_size, which is incompatible with fortification level 3
+  export CFLAGS="${CFLAGS/_FORTIFY_SOURCE=3/_FORTIFY_SOURCE=2}"
+  export CXXFLAGS="${CXXFLAGS/_FORTIFY_SOURCE=3/_FORTIFY_SOURCE=2}"
+
   local cmake_options=(
     -B build
     -D CMAKE_BUILD_TYPE=None

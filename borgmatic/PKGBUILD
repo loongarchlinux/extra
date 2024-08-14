@@ -7,29 +7,39 @@
 # Contributor: stef204 <https://aur.archlinux.org/account/stef204>
 
 pkgname=borgmatic
-pkgver=1.8.11
+pkgver=1.8.13
 pkgrel=1
 pkgdesc='Simple, configuration-driven backup software for servers and workstations'
-arch=('any')
+arch=(any)
 url=https://torsion.org/borgmatic
-license=('GPL-3.0-or-later')
+license=(GPL-3.0-or-later)
 depends=(
-  'borg'
-  'python'
-  'python-colorama'
-  'python-jsonschema'
-  'python-requests'
-  'python-ruamel-yaml'
-  'python-packaging'
+  borg
+  python
+  python-colorama
+  python-jsonschema
+  python-packaging
+  python-requests
+  python-ruamel-yaml
 )
-makedepends=('git' 'python-build' 'python-installer' 'python-wheel' 'python-setuptools')
-checkdepends=('apprise' 'python-flexmock' 'python-pytest')
+makedepends=(
+  git
+  python-build
+  python-installer
+  python-setuptools
+  python-wheel
+)
+checkdepends=(
+  apprise
+  python-flexmock
+  python-pytest
+)
 optdepends=(
   'apprise: for Apprise notifications'
   'python-llfuse: for mount action'
 )
 source=("git+https://projects.torsion.org/borgmatic-collective/borgmatic.git#tag=$pkgver")
-b2sums=('b923e7a6e93159faabc37b9c88f92dba1a4788917cc80555db27beaf2a0d10c617f5935c40bc7ae977ad728d33f5daa370fc16892a80c16ddbefb7266b9999d5')
+b2sums=('c528f3d10dec476e00d95483e72ad00c8522bed5a9c51ed0eba46cf518217cd6c8d5f44c7211da1292a0b42804ec672366a0642423e38730663e5bdc3f832a14')
 
 prepare() {
   cd $pkgname
@@ -40,7 +50,7 @@ build() {
   cd $pkgname
   python -m build --wheel --skip-dependency-check --no-isolation
 
-  # build the completions
+  # Build shell completions
   python -m venv --system-site-packages test-env
   test-env/bin/python -m installer dist/*.whl
   mkdir completions
@@ -58,9 +68,13 @@ check() {
 package() {
   cd $pkgname
   python -m installer --destdir="$pkgdir" dist/*.whl
-  install -Dm644 -t "$pkgdir"/usr/lib/systemd/system sample/systemd/borgmatic.{service,timer}
-  install -Dm644 -t "$pkgdir"/usr/lib/systemd/user sample/systemd/borgmatic-user.{service,timer}
+  install -Dm644 -t "$pkgdir"/usr/lib/systemd/system \
+    sample/systemd/borgmatic.{service,timer}
+  install -Dm644 -t "$pkgdir"/usr/lib/systemd/user \
+    sample/systemd/borgmatic-user.{service,timer}
 
-  install -Dm644 completions/bash "$pkgdir"/usr/share/bash-completion/completions/$pkgname
-  install -Dm644 completions/fish "$pkgdir"/usr/share/fish/vendor_completions.d/$pkgname.fish
+  install -Dm644 completions/bash \
+    "$pkgdir"/usr/share/bash-completion/completions/$pkgname
+  install -Dm644 completions/fish \
+    "$pkgdir"/usr/share/fish/vendor_completions.d/$pkgname.fish
 }

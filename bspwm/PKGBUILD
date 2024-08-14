@@ -3,31 +3,25 @@
 
 pkgname=bspwm
 pkgver=0.9.10
-pkgrel=3
+pkgrel=4
 pkgdesc='Tiling window manager based on binary space partitioning'
 arch=(loong64 x86_64)
 url='https://github.com/baskerville/bspwm'
-license=(BSD)
+license=(BSD-2-Clause)
 makedepends=(git)
-depends=(xcb-util xcb-util-wm xcb-util-keysyms)
+depends=(xcb-util xcb-util-keysyms xcb-util-wm)
 optdepends=('sxhkd: to define keyboard and pointer bindings'
             'xdo: for the example panel')
 source=("git+$url#commit=2492695ad47c7ae8c630bdf22328334f57e41c1a") # tag: 0.9.10
-md5sums=('SKIP')
+b2sums=('f3102065c339401eef0ca982033b626808abee4955a145760949b2c50f9e041f205a633d4f8d211fc25735b4857596f132a1a88b7d602d086c47cfc322ca41fb')
 
 build() {
   CFLAGS+=' -fcommon' # https://wiki.gentoo.org/wiki/Gcc_10_porting_notes/fno_common
-  make -C "$pkgname" PREFIX=/usr
+  make -C $pkgname PREFIX=/usr
 }
 
 package() {
-  cd "$pkgname"
-
+  cd $pkgname
   make PREFIX=/usr DESTDIR="$pkgdir" install
-
-  # BSD 2-clause
   install -Dm644 LICENSE "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
 }
-
-# getver: -u 2 raw.githubusercontent.com/baskerville/bspwm/master/doc/bspwm.1
-# vim: ts=2 sw=2 et:

@@ -5,20 +5,32 @@
 
 pkgname=gnome-shell-extension-desktop-icons-ng
 _pkgname=desktop-icons-ng
-pkgver=47.0.9
-pkgrel=1
+pkgver=47.0.11
+pkgrel=2
 pkgdesc='Desktop icons extension for GNOME Shell'
 arch=('any')
 url='https://www.rastersoft.com/programas/ding.html'
 license=('GPL-3.0-only')
-depends=('cairo' 'gdk-pixbuf2' 'glib2' 'gjs' 'gnome-autoar' 'gnome-desktop' 'gnome-shell' 'gtk3'
-         'nautilus' 'pango')
-makedepends=('meson')
-source=("https://gitlab.com/rastersoft/$_pkgname/-/archive/$pkgver/$_pkgname-$pkgver.tar.gz")
-sha256sums=('3fe94f0dc4d0cdcd84b586908d6ec285065c046229ea5c73ceb4b4f3ea9c50db')
+depends=('cairo' 'dconf' 'gdk-pixbuf2' 'glib2' 'gjs' 'gnome-autoar' 'gnome-desktop' 'gnome-shell'
+         'gtk3' 'nautilus' 'pango')
+makedepends=('git' 'meson')
+source=("git+https://gitlab.com/rastersoft/$_pkgname.git#tag=$pkgver"
+        'gnome-shell-extension-desktop-icons-ng-fix-dialogs.patch')
+b2sums=('29b3fbab926e8e0f490d71c7827449ac97c80dda9a48ba2e4184b50b293cfd773b3e31d59e430c4bb1c621f518d43f7823456218f52302c7ba9edb0989be1315'
+        '33bd978919547094c1949db3981c2590e548699b3f1f8b0796deadec52676205deddb8c46fbc82e6e4f1635e3db8279a8883705472438c9e273afa7ce2f30394')
+
+prepare() {
+  cd $_pkgname
+
+  # https://gitlab.com/rastersoft/desktop-icons-ng/-/merge_requests/426
+  git cherry-pick -n ef2f01b28000992c62fe2e3c70a6a6fb4e037fcc
+
+  # https://gitlab.com/rastersoft/desktop-icons-ng/-/merge_requests/423
+  patch -Np1 -i ../gnome-shell-extension-desktop-icons-ng-fix-dialogs.patch
+}
 
 build() {
-  arch-meson $_pkgname-$pkgver build
+  arch-meson $_pkgname build
   meson compile -C build
 }
 

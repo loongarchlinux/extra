@@ -3,7 +3,7 @@
 
 pkgname=gnome-panel
 pkgver=3.52.0
-pkgrel=2
+pkgrel=4
 pkgdesc='Panel of GNOME Flashback'
 arch=('loong64' 'x86_64')
 url='https://wiki.gnome.org/Projects/GnomePanel'
@@ -12,42 +12,48 @@ depends=('at-spi2-core' 'cairo' 'dconf' 'evolution-data-server' 'gdk-pixbuf2' 'g
          'glib2' 'glibc' 'gnome-desktop' 'gnome-menus' 'gsettings-desktop-schemas' 'gtk3'
          'hicolor-icon-theme' 'libgdm' 'libgweather-4' 'libical' 'libwnck3' 'libx11' 'libxrandr'
          'nautilus' 'pango' 'polkit' 'systemd-libs')
-makedepends=('itstool')
+makedepends=('autoconf-archive' 'git' 'glib2-devel' 'yelp-tools')
 optdepends=('alacarte: Main menu editor'
             'gnome-applets: Extra applets for the panel')
-source=("https://download.gnome.org/sources/$pkgname/${pkgver%.*}/$pkgname-$pkgver.tar.xz"
+source=("git+https://gitlab.gnome.org/GNOME/$pkgname.git?signed#tag=$pkgver"
         'gnome-panel-60.patch'
         'gnome-panel-64.patch'
         'gnome-panel-65.patch')
-sha256sums=('9e29ba8873cde40d40c2934a464f8f43ba2eb1b522b191447caa27dd7853c5d4'
-            '3ea598905185d8f19381c93766734ae0f99491329548a816740ff6bc2449c848'
-            '83a951c262707e4e8baf218e3da05abb041560268bb0afd93f61bd95f27b7c8b'
-            'f0a9ac2d5cf69e276d9446925df79dc633b4f58b7cd6757e4313f4dffa7403f7')
+b2sums=('c6dfba78c22870287b35e1ef24fa3b5a19fc5e1c9ce1050c0560bef22ca594c7d76d8b7a98de5df1d9cef931455e0cd5192f940cae331a6ca377cfdb705b5733'
+        'aefa0a36a5a9bf7ba08c53c5b8f651df24cb2e3b39c5860aebf2be545d8c733e97465824ae1d2c91cf132d0adf484dd9cbf0d36a867b1a1e570b6b3a3ab08c74'
+        'ccf3f767d6072785a7c128e28d4801f17c4a76769a3cc9c47f2a583e4e62e38d3c6c6625bb21722d019396b929ca3d596a272c0c1e16db50d76cb3e85149b59a'
+        '3dc41fe465dade3d63e19ae4fc4045b06d572ea2d3123996b294bcf0eaf31553b4eeaacbcd36265a9692ed5936994802e5a0ab910ab36bb40e4b348d5064605a')
+validpgpkeys=('7B44FD78E49334EC10B3B288A3D013EC303E1894') # Alberts Muktupāvels <alberts.muktupavels@gmail.com>
 
 prepare() {
-  cd $pkgname-$pkgver
+  cd $pkgname
+
+  # https://gitlab.gnome.org/GNOME/gnome-panel/-/merge_requests/72
+  git cherry-pick -n 569e08f292f8c29252046b9a9f932e24db592ab2
+
+  # https://gitlab.gnome.org/GNOME/gnome-panel/-/merge_requests/73
+  git cherry-pick -n 1f625434826f3536aea03fa8dcc933db8e48850c
 
   # https://gitlab.gnome.org/GNOME/gnome-panel/-/merge_requests/60
-  patch -Np1 -i ../gnome-panel-60.patch
+  git apply -3 ../gnome-panel-60.patch
 
   # https://gitlab.gnome.org/GNOME/gnome-panel/-/merge_requests/64
-  patch -Np1 -i ../gnome-panel-64.patch
+  git apply -3 ../gnome-panel-64.patch
 
   # https://gitlab.gnome.org/GNOME/gnome-panel/-/merge_requests/65
-  patch -Np1 -i ../gnome-panel-65.patch
+  git apply -3 ../gnome-panel-65.patch
 
-  # Regenerate resources file
-  rm gnome-panel/panel-resources.{c,h}
+  autoreconf -fi
 }
 
 build() {
-  cd $pkgname-$pkgver
-  ./configure --prefix=/usr
+  cd $pkgname
+  ./configure --prefix=/usr --disable-debug --enable-compile-warnings
   sed -i -e 's/ -shared / -Wl,-O1,--as-needed\0/g' libtool
   make
 }
 
 package() {
-  cd $pkgname-$pkgver
+  cd $pkgname
   make DESTDIR="$pkgdir" install
 }

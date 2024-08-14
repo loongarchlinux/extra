@@ -2,7 +2,7 @@
 # Contributor: François Charette <firmicus ατ gmx δοτ net>
 
 pkgname=perl-datetime-locale
-pkgver=1.42
+pkgver=1.43
 pkgrel=1
 pkgdesc="Localization support for DateTime.pm "
 arch=(any)
@@ -12,7 +12,7 @@ depends=('perl-params-validate' 'perl-list-moreutils'
 	 'perl-file-sharedir' 'perl-file-sharedir-install')
 options=('!emptydirs')
 source=(https://www.cpan.org/authors/id/D/DR/DROLSKY/DateTime-Locale-$pkgver.tar.gz)
-sha256sums=('7d8a138fa32faf24af30a1dbdee4dd11988ddb6a129138004d220b6cc4053cb0')
+sha256sums=('6c859c17cf274749dfc2c6aaf6bf4b492b605fabdddd23712efbbd5caf601de1')
 
 build() {
   cd  "$srcdir"/DateTime-Locale-$pkgver

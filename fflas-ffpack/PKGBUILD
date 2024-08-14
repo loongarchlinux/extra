@@ -2,28 +2,42 @@
 
 pkgname=fflas-ffpack
 pkgver=2.5.0
-pkgrel=1
+pkgrel=2
 pkgdesc='A library for dense linear algebra over word-size finite fields'
-arch=(loong64 x86_64) # pkgconfig file is arch-specific
+arch=(loong64 x86_64)
 url='https://linbox-team.github.io/fflas-ffpack/'
-license=(LGPL)
-depends=(givaro cblas lapack)
-source=(https://github.com/linbox-team/fflas-ffpack/releases/download/v$pkgver/$pkgname-$pkgver.tar.gz)
-sha256sums=('dafb4c0835824d28e4f823748579be6e4c8889c9570c6ce9cce1e186c3ebbb23')
+license=(LGPL-2.1-or-later)
+depends=(cblas
+         gcc-libs
+         givaro
+         glibc
+         sh)
+makedepends=(git
+             lapack)
+source=(git+https://github.com/linbox-team/fflas-ffpack#tag=v$pkgver)
+sha256sums=('22e118ca6c9663b9184b36b8a8383c4febce688ae191ec3e7cb1c99847da9fb8')
+
+prepare() {
+  cd $pkgname
+  autoreconf -vi
+}
 
 build() {
-  cd $pkgname-$pkgver
-  ./configure --prefix=/usr --enable-precompilation --with-blas-libs="-lblas -lcblas -llapack"
+  cd $pkgname
+  ./configure \
+    --prefix=/usr \
+    --enable-precompilation \
+    --with-blas-libs="-lblas -lcblas -llapack"
   sed -i -e 's/ -shared / -Wl,-O1,--as-needed\0/g' libtool # Fix overlinking
   make
 }
 
 check() {
-  cd $pkgname-$pkgver
+  cd $pkgname
   make check || true # tests are flaky
 }
 
 package() {
-  cd $pkgname-$pkgver
+  cd $pkgname
   make DESTDIR="$pkgdir" install
 }

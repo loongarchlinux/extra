@@ -2,7 +2,7 @@
 
 pkgname=hacksaw
 pkgver=1.0.4
-pkgrel=1
+pkgrel=2
 pkgdesc='Lightweight selection tool for usage in screenshot scripts etc.'
 arch=('loong64' 'x86_64')
 url=https://github.com/neXromancers/hacksaw
@@ -12,14 +12,17 @@ makedepends=('python' 'rust')
 source=("hacksaw-$pkgver.tar.gz::https://static.crates.io/crates/hacksaw/hacksaw-$pkgver.crate")
 sha512sums=('266cf94efa03a89a68d3d1f28fa9772b7815f0d4faf8126da757022624b174fc0246b5d576f1e767c2d7571a9c69725af8e28eec1a541d6f0ee5b3851a21147b')
 
+prepare() {
+  cd hacksaw-$pkgver
+  cargo fetch --locked --target "$(rustc -vV | sed -n 's/host: //p')"
+}
+
 build() {
   cd hacksaw-$pkgver
-  cargo build --release --locked
+  cargo build --release --locked --offline
 }
 
 package() {
   cd hacksaw-$pkgver
   install -Dt "$pkgdir"/usr/bin target/release/hacksaw
 }
-
-# vim:set ts=2 sw=2 et:

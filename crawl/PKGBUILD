@@ -1,52 +1,86 @@
-# Maintainer: Ivy Foster <iff@archlinux.org>
+# Maintainer: Jan Alexander Steffens (heftig) <heftig@archlinux.org>
+# Contributor: Ivy Foster <iff@archlinux.org>
 # Contributor: Jakob Gruber <jakob.gruber@gmail.com>
 
 pkgbase=crawl
-pkgname=(crawl-data crawl-ncurses crawl-tiles)
+pkgname=(
+  crawl-data
+  crawl-ncurses
+  crawl-tiles
+)
+pkgver=0.31.0
+pkgrel=3
 pkgdesc="Dungeon Crawl Stone Soup: open-source, single-player, role-playing \
          roguelike game of exploration and treasure-hunting"
-url='https://crawl.develz.org/'
+url="https://crawl.develz.org/"
 license=(GPL-2.0-or-later)
-
-pkgver=0.31.0
-pkgrel=2
 arch=(loong64 x86_64)
-
-# line-by-line: both versions, graphical, ncurses, makedepends
-makedepends=(
-	gcc-libs glibc hicolor-icon-theme lua51 sqlite zlib
-	freetype2 glu libglvnd sdl2 sdl2_image sdl2_mixer ttf-dejavu
-	ncurses
-	bison flex imagemagick mesa perl pngcrush python-yaml
+depends=(
+  gcc-libs
+  glibc
+  hicolor-icon-theme
+  lua51
+  sqlite
+  zlib
 )
-
-source=("https://github.com/crawl/crawl/releases/download/$pkgver/stone_soup-$pkgver-nodeps.tar.xz")
-# Checksum provided by packager
-b2sums=('5b46b31f275ce6dec718428cb90ee492b45ca65a4122573b93337c8b5429a4292d318c0873290a541ee0b98882fa97d971b5e07c607671a22c3202a4a4ef16ea')
+_ncurses_depends=(
+  ncurses
+)
+_tiles_depends=(
+  freetype2
+  glu
+  libglvnd
+  sdl2
+  sdl2_image
+  sdl2_mixer
+  ttf-dejavu
+)
+makedepends=(
+  "${_ncurses_depends[@]}"
+  "${_tiles_depends[@]}"
+  bison
+  flex
+  git
+  imagemagick
+  mesa
+  perl
+  pngcrush
+  python-yaml
+)
+source=("git+https://github.com/crawl/crawl#tag=$pkgver")
+b2sums=('37868568adf787ef85df13b8241e5c8155eb782e4ef7fa12f7500ba5584ab97218f0b272d92cd780352df1ab65dc0634a7b0c67184204b0e308139ce82724ac3')
 
 prepare() {
-	mv stone_soup-$pkgver crawl
-	cp -a crawl crawl-tiles
+  cp -a crawl crawl-tiles
 }
 
 _make() {
-	make -C "$1/source" \
-		EXTERNAL_FLAGS="$CXXFLAGS" \
-		EXTERNAL_LDFLAGS="$LDFLAGS" \
-		INSTALL_UGRP=root:root \
-		MCHMOD=755 \
-		NO_TRY_GOLD=1 \
-		NO_TRY_LLD=1 \
-		SOUND=1 \
-		STRIP=/usr/bin/true \
-		bin_prefix=bin \
-		prefix=/usr \
-		"${@:2}"
+  local make_options=(
+    EXTERNAL_FLAGS="$CXXFLAGS"
+    EXTERNAL_LDFLAGS="$LDFLAGS"
+    INSTALL_UGRP=root:root
+    MCHMOD=755
+    NO_TRY_GOLD=1
+    NO_TRY_LLD=1
+    SOUND=1
+    STRIP=/usr/bin/true
+    bin_prefix=bin
+    prefix=/usr
+  )
+
+  if [[ $1 == crawl-tiles ]]; then
+    make_options+=(
+      GAME=crawl-tiles
+      TILES=y
+    )
+  fi
+
+  make -C "$1/crawl-ref/source" "${make_options[@]}" "${@:2}"
 }
 
 build() {
-	_make crawl       all
-	_make crawl-tiles all TILES=y GAME=crawl-tiles
+  _make crawl       all
+  _make crawl-tiles all
 }
 
 _pick() {
@@ -60,56 +94,55 @@ _pick() {
 }
 
 package_crawl-data() {
-	pkgdesc="Data files for $pkgdesc"
-	depends=(crawl-game)
-	optdepends=(
-		'crawl-ncurses: ncurses user interface'
-		'crawl-tiles: graphical user interface'
-	)
-	provides=(stone-soup)
-	conflicts=(stone-soup)
-	replaces=(stone-soup)
-	# Apparently, dbscripts [doesn't support][1] split packages with different architecture
-	# [1]: https://wiki.archlinux.org/title/DeveloperWiki:HOWTO_Be_A_Packager#Adding_a_new_Package
-#	arch=(any)
+  pkgdesc+=" - game data"
+  depends=()
+  optdepends=(
+    'crawl-ncurses: ncurses user interface'
+    'crawl-tiles: graphical user interface'
+  )
 
-	_make crawl       DESTDIR="$pkgdir" install
-	_make crawl-tiles DESTDIR="$pkgdir" install TILES=y GAME=crawl-tiles
+  _make crawl       DESTDIR="$pkgdir" install install-xdg-data
+  _make crawl-tiles DESTDIR="$pkgdir" install install-xdg-data
 
-	_pick ncurses "$pkgdir/usr/bin/crawl"
-	_pick tiles   "$pkgdir/usr/bin/crawl-tiles" "$pkgdir/usr/share/crawl/dat/tiles"
+  (
+    cd "$pkgdir"
 
-	install -Dm644 crawl/LICENSE -t "$pkgdir/usr/share/licenses/$pkgname"
+    _pick ncurses usr/bin/crawl
+    _pick ncurses usr/share/applications/org.develz.Crawl_console.*
+    _pick ncurses usr/share/icons/hicolor/*/apps/org.develz.Crawl_console.*
+    _pick ncurses usr/share/metainfo/org.develz.Crawl_console.*
+
+    _pick tiles usr/bin/crawl-tiles usr/share/crawl/dat/tiles
+    _pick tiles usr/share/applications/org.develz.Crawl_tiles.*
+    _pick tiles usr/share/icons/hicolor/*/apps/org.develz.Crawl_tiles.*
+    _pick tiles usr/share/metainfo/org.develz.Crawl_tiles.*
+  )
+
+  install -Dm644 crawl/LICENSE -t "$pkgdir/usr/share/licenses/$pkgname"
 }
 
 package_crawl-ncurses() {
-	pkgdesc="$pkgdesc (ncurses version)"
-	provides=(crawl-game)
-	depends=(
-		crawl-data
-		gcc-libs glibc hicolor-icon-theme lua51 sqlite zlib
-		ncurses
-	)
+  pkgdesc+=" - ncurses version (terminal)"
+  depends+=(
+    "crawl-data=$pkgver-$pkgrel"
+    "${_ncurses_depends[@]}"
+  )
 
-	mv ncurses/* "$pkgdir"
-	_make crawl DESTDIR="$pkgdir" install-xdg-data
+  mv ncurses/* "$pkgdir"
 
-	install -Dm644 crawl/LICENSE -t "$pkgdir/usr/share/licenses/$pkgname"
+  install -Dm644 crawl/LICENSE -t "$pkgdir/usr/share/licenses/$pkgname"
 }
 
 package_crawl-tiles() {
-	pkgdesc="$pkgdesc (graphical version)"
-	provides=(crawl-game)
-	depends=(
-		crawl-data
-		gcc-libs glibc hicolor-icon-theme lua51 sqlite zlib
-		freetype2 glu libglvnd sdl2 sdl2_image sdl2_mixer ttf-dejavu
-	)
+  pkgdesc+=" - graphical version (SDL)"
+  depends+=(
+    "crawl-data=$pkgver-$pkgrel"
+    "${_tiles_depends[@]}"
+  )
 
-	mv tiles/* "$pkgdir"
-	_make crawl DESTDIR="$pkgdir" install-xdg-data TILES=y GAME=crawl-tiles
+  mv tiles/* "$pkgdir"
 
-	install -Dm644 crawl/LICENSE -t "$pkgdir/usr/share/licenses/$pkgname"
+  install -Dm644 crawl/LICENSE -t "$pkgdir/usr/share/licenses/$pkgname"
 }
 
-# vim:set sw=0 sts=-1 noet:
+# vim:set sw=2 sts=-1 et:

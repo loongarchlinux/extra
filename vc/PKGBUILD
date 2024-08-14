@@ -3,18 +3,19 @@
 # Contributor: PedsXing <pedsxing at gmx dot net>
 
 pkgname=vc
-pkgver=1.4.4
+pkgver=1.4.5
 pkgrel=1
 pkgdesc='A library to ease explicit vectorization of C++ code'
 url='https://github.com/VcDevel/Vc'
 arch=(loong64 x86_64)
-license=(LGPL3)
-makedepends=(cmake)
-source=(https://github.com/VcDevel/Vc/archive/$pkgver/$pkgname-$pkgver.tar.gz)
-sha256sums=('5933108196be44c41613884cd56305df320263981fe6a49e648aebb3354d57f3')
+license=(BSD-3-Clause)
+makedepends=(cmake
+             git)
+source=(git+https://github.com/VcDevel/Vc#tag=$pkgver)
+sha256sums=('6fd6b62bcffe898abcc5058674719fc82715bb60d21e44f44d3710c9434f8a61')
 
 build() {
-  cmake -B build -S Vc-$pkgver \
+  cmake -B build -S Vc \
     -DCMAKE_INSTALL_PREFIX=/usr \
     -DCMAKE_CXX_FLAGS="$CXXFLAGS -ffat-lto-objects" \
     -DTARGET_ARCHITECTURE=generic
@@ -23,4 +24,5 @@ build() {
 
 package() {
   DESTDIR="$pkgdir" cmake --install build
+  install -Dm644 Vc/LICENSE -t "$pkgdir"/usr/share/licenses/$pkgname
 }

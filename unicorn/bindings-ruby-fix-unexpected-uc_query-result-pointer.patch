@@ -1,0 +1,54 @@
+From 076381004c08f5700f81d6983086182b65876f22 Mon Sep 17 00:00:00 2001
+From: Levente Polyak <levente@leventepolyak.net>
+Date: Wed, 5 Jun 2024 19:40:48 +0200
+Subject: [PATCH] bindings: ruby: fix unexpected uc_query result pointer type
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+uc_query expects a size_t *, while we are passing uc_arch *. This has
+been working for a while as gcc just warned about this, however with
+latest gcc this changed into an error:
+
+unicorn.c:122:34: error: passing argument 3 of ‘uc_query’ from incompatible pointer type [-Wincompatible-pointer-types]
+  206 |     uc_query(_uc, UC_QUERY_ARCH, &arch);
+unicorn.h:689:60: note: expected ‘size_t *’ {aka ‘long unsigned int *’} but argument is of type ‘uc_arch *’
+  689 | uc_err uc_query(uc_engine *uc, uc_query_type type, size_t *result);
+
+Fix this issue by querying the result into a size_t and later downcast
+the result into an uc_arch enum.
+---
+ bindings/ruby/unicorn_gem/ext/unicorn.c | 10 ++++++----
+ 1 file changed, 6 insertions(+), 4 deletions(-)
+
+diff --git a/bindings/ruby/unicorn_gem/ext/unicorn.c b/bindings/ruby/unicorn_gem/ext/unicorn.c
+index bb7363f8..de73b989 100644
+--- a/bindings/ruby/unicorn_gem/ext/unicorn.c
++++ b/bindings/ruby/unicorn_gem/ext/unicorn.c
+@@ -118,8 +118,9 @@ VALUE m_uc_reg_read(VALUE self, VALUE reg_id){
+     uc_engine *_uc;
+     Data_Get_Struct(rb_iv_get(self,"@uch"), uc_engine, _uc);
+ 
+-    uc_arch arch;
+-    uc_query(_uc, UC_QUERY_ARCH, &arch);
++    size_t arch_result;
++    uc_query(_uc, UC_QUERY_ARCH, &arch_result);
++    uc_arch arch = (uc_arch) arch_result;
+ 
+     if(arch == UC_ARCH_X86) {
+         switch(tmp_reg){
+@@ -202,8 +203,9 @@ VALUE m_uc_reg_write(VALUE self, VALUE reg_id, VALUE reg_value){
+     uc_engine *_uc;
+     Data_Get_Struct(rb_iv_get(self,"@uch"), uc_engine, _uc);
+     
+-    uc_arch arch;
+-    uc_query(_uc, UC_QUERY_ARCH, &arch);
++    size_t arch_result;
++    uc_query(_uc, UC_QUERY_ARCH, &arch_result);
++    uc_arch arch = (uc_arch) arch_result;
+ 
+     if(arch == UC_ARCH_X86) {
+         switch(tmp_reg){
+-- 
+2.45.2
+

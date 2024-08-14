@@ -1,19 +1,26 @@
 # Maintainer: Antonio Rojas <arojas@archlinux.org>
 
 pkgname=stellarsolver
-pkgver=2.5
+pkgver=2.6
 pkgrel=1
 pkgdesc='The cross platform Sextractor and Astrometry.net-Based internal astrometric solver'
 arch=(loong64 x86_64)
 url='https://github.com/rlancaste/stellarsolver'
-license=(GPL3)
-depends=(qt5-base gsl wcslib hicolor-icon-theme)
-makedepends=(cmake)
-source=(https://github.com/rlancaste/stellarsolver/archive/$pkgver/$pkgname-$pkgver.tar.gz)
-sha256sums=('539f3c312a3095afc117ae2c3111630f974a1c99dde7b0b7bebf16ee7a862a07')
+license=(GPL-3.0-or-later)
+depends=(cfitsio
+         gcc-libs
+         glibc
+         gsl
+         qt5-base
+         wcslib)
+makedepends=(cmake
+             git)
+source=(git+https://github.com/rlancaste/stellarsolver#tag=$pkgver)
+sha256sums=('52c300aa7b145ce033b77afc4877866b86809c269b58c566af57a925ffff5d5f')
 
 build() {
-  cmake -B build -S $pkgname-$pkgver \
+  CFLAGS+=" -Wno-implicit-function-declaration" \
+  cmake -B build -S $pkgname \
     -DCMAKE_INSTALL_PREFIX=/usr \
     -DBUILD_TESTER=ON
   cmake --build build

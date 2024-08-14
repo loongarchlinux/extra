@@ -1,7 +1,8 @@
 # Maintainer: Jonas Witschel <diabonas@archlinux.org>
+
 pkgname=tpm2-pkcs11
 pkgver=1.9.0
-pkgrel=1
+pkgrel=2
 pkgdesc='PKCS#11 interface for Trusted Platform Module 2.0 hardware'
 arch=('loong64' 'x86_64')
 url='https://github.com/tpm2-software/tpm2-pkcs11'
@@ -12,9 +13,11 @@ depends=('glibc' 'libyaml' 'openssl' 'python' 'python-bcrypt' 'python-cryptograp
 makedepends=('cmocka' 'python-build' 'python-installer' 'python-setuptools' 'python-wheel')
 checkdepends=('expect' 'iproute2' 'java-hamcrest' 'junit' 'libp11' 'opensc' 'openssh'
               'python-python-pkcs11' 'swtpm' 'tpm2-abrmd' 'tpm2-openssl' 'wget' 'xxd')
-source=("$url/releases/download/$pkgver/$pkgname-$pkgver.tar.gz"{,.asc})
+source=("$url/releases/download/$pkgver/$pkgname-$pkgver.tar.gz"{,.asc}
+	'default-provider.patch')
 sha512sums=('e88e78790a8d4d5a67713855106860e90dd18da00dc738ca7bfebf7979cdde54ce5089d0be015e7a208117bf393db700ca7739986c5e8138ee0e3b37344614b0'
-            'SKIP')
+            'SKIP'
+	    '103f214ddc849def2807210c277c2cd8cf108bb388985b8304c861b962b1d0fbe1f78d30fecaf6b3d5cd933154872d7669e7ba48693e75b9eaffe05cc55f4afd')
 validpgpkeys=('5B482B8E3E19DA7C978E1D016DE2E9078E1F50C1') # William Roberts (Bill Roberts) <william.c.roberts@intel.com>
 
 prepare() {
@@ -23,6 +26,9 @@ prepare() {
 
 	# disable broken test: https://github.com/tpm2-software/tpm2-pkcs11/issues/836
 	sed -e 's|test/integration/pkcs11-tool.sh||' -i Makefile*
+
+	# Use default provider instead of base provider
+	patch -p0 < ${srcdir}/default-provider.patch
 }
 
 build() {

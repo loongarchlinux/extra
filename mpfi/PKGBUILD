@@ -3,27 +3,34 @@
 
 pkgname=mpfi
 pkgver=1.5.4
-pkgrel=4
+pkgrel=5
 pkgdesc='C library for interval arithmetic'
 arch=(loong64 x86_64)
 url='http://perso.ens-lyon.fr/nathalie.revol/software.html'
-license=(GPL)
-depends=(mpfr)
-source=(https://github.com/arpra-project/mpfi/archive/$pkgver/$pkgname-$pkgver.tar.gz)
-sha256sums=('32e6ad529c97aa5ce03e28d01c921d1bce1a464fb4c57fbc248d7be21e652782')
+license=(GPL-3.0-or-later
+         LGPL-3.0-or-later)
+depends=(glibc
+         gmp
+         mpfr)
+makedepends=(git)
+source=(git+https://github.com/arpra-project/mpfi#tag=$pkgver)
+sha256sums=('b13c9bad628b2c339fd89452f2597d4ff808574cc520779e259493a880a88af8')
 
 prepare() {
-  cd $pkgname-$pkgver
-  ./autogen.sh
+  cd $pkgname
+  autoreconf -vi
 }
 
 build() {
-  cd $pkgname-$pkgver
-  ./configure --prefix=/usr --enable-shared 
+  cd $pkgname
+  CFLAGS+=" -Wno-incompatible-pointer-types" \
+  ./configure \
+    --prefix=/usr \
+    --enable-shared
   make
 }
 
 package() {
-  cd $pkgname-$pkgver
+  cd $pkgname
   make DESTDIR="$pkgdir" install
 }

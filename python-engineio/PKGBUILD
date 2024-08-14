@@ -1,26 +1,46 @@
 # Maintainer: Levente Polyak <anthraxx[at]archlinux[dot]org>
 
 pkgname=python-engineio
-pkgver=4.9.0
+pkgver=4.9.1
 pkgrel=1
 pkgdesc='Python implementation of the Engine.IO realtime server'
 url='https://github.com/miguelgrinberg/python-engineio'
-arch=('any')
-license=('MIT')
-depends=('python' 'python-websocket-client' 'python-websockets' 'python-requests')
-optdepends=('python-eventlet: eventlet driver'
-            'python-aiohttp: aiohttp driver'
-            'python-tornado: tornado driver'
-            'python-gevent: gevent driver'
-            'python-gevent-websocket: gevent driver')
-makedepends=('python-setuptools' 'python-sphinx' 'python-six' 'python-eventlet' 'python-aiohttp' 'python-tornado'
-             'python-urllib3' 'python-gevent' 'python-gevent-websocket'
-             'python-build' 'python-installer' 'python-wheel')
-checkdepends=('python-pytest')
+arch=(any)
+license=(MIT)
+depends=(
+  python
+  python-requests
+  python-websocket-client
+  python-websockets
+)
+optdepends=(
+  'python-eventlet: eventlet driver'
+  'python-aiohttp: aiohttp driver'
+  'python-tornado: tornado driver'
+  'python-gevent: gevent driver'
+  'python-gevent-websocket: gevent driver'
+)
+makedepends=(
+  python-aiohttp
+  python-build
+  python-eventlet
+  python-gevent
+  python-gevent-websocket
+  python-installer
+  python-setuptools
+  python-six
+  python-sphinx
+  python-tornado
+  python-urllib3
+  python-wheel
+)
+checkdepends=(
+  python-pytest
+)
 options=('!makeflags')
 source=(https://github.com/miguelgrinberg/python-engineio/archive/v${pkgver}/${pkgname}-${pkgver}.tar.gz)
-sha512sums=('24838cb71ca3beda6a28deaa37208fae0e673bb0a00696594aa638af95e49af479b0088809f093ace9b2a8f5f7a4dcc95bbd2aa5c97938137b6e594ac1a7950d')
-b2sums=('e14bb11f5762c42a77d782b0e1ce20c30f0f5599ba0c4577699d53f085464ce588660805d1b8c18a147b3bf01a2e255980f21e36003127e17351c28bd42f433e')
+sha512sums=('1414d30fa3073124936909e1395e27579eea2b27862a9770b78c8d91b5568aff869e84f9477c7225cbe35462849445ce9ab17b8ca7b6e8aadeafcdebcb26df0b')
+b2sums=('b776a56993f6dafe1778be93dbc507eb5ae96e44f0635b17fb3592fb9fca49c0a338393a128e05089a846b43f41328d788066f0b7a0edad78c88e3b14d6adec9')
 
 build() {
   cd ${pkgname}-${pkgver}

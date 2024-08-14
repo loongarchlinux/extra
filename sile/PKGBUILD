@@ -3,8 +3,8 @@
 
 pkgname=sile
 pkgdesc='a modern typesetting engine inspired by LaTeX, fully customizable in Lua'
-pkgver=0.14.17
-pkgrel=2
+pkgver=0.15.4
+pkgrel=1
 arch=(loong64 x86_64)
 url=https://www.sile-typesetter.org
 _url="https://github.com/sile-typesetter/$pkgname"
@@ -12,8 +12,6 @@ license=(MIT)
 _luadeps=(cassowary
           cldr
           cliargs
-          compat53 # Not needed for Lua 5.3+, LuaJIT is 5.1(ish)
-          cosmo
           expat
           filesystem
           fluent
@@ -31,8 +29,7 @@ _luadeps=(cassowary
 depends=("${_luadeps[@]/#/lua51-}"
          fontconfig libfontconfig.so
          freetype2 libfreetype.so
-         ttf-gentium-plus
-         git
+         gentium-plus-font
          glibc
          harfbuzz libharfbuzz.so libharfbuzz-subset.so
          icu libicudata.so libicui18n.so libicuio.so libicuuc.so
@@ -43,18 +40,31 @@ optdepends=('libertinus-font: default math font'
             'luarocks: manage addon packages'
             'noto-fonts-cjk: default font for tate enabled classes'
             'ttf-hack: default mono font')
+makedepends=(cargo
+             lua51-compat53 # Not needed at runtime for for Lua 5.3+ or LuaJIT, but checked for in build
+             jq)
 checkdepends=(poppler)
 provides=(libtexpdf.so)
 replaces=("$pkgname-luajit")
 _archive="$pkgname-$pkgver"
-source=("$_url/releases/download/v$pkgver/$_archive.tar.xz")
-sha256sums=('7f89bedecedabb5168250ad9dd80c09ed289c8e88c3d0d756d2d1d92ee065e04')
+source=("$_url/releases/download/v$pkgver/$_archive.tar.zst"{,.asc})
+sha256sums=('35d837b382ef4933489baea169264b94143da1538e71cdbc640c2f75c39e2358'
+            'SKIP')
+validpgpkeys=('9F377DDB6D3153A48EB3EB1E63CC496475267693') # Caleb Maclennan <caleb@alerque.com> (@alerque)
+
+export CARGO_FEATURE_FLAGS==--offline
+
+prepare () {
+	cd "$_archive"
+	cargo fetch --locked --target "$(rustc -vV | sed -n 's/host: //p')"
+}
 
 build () {
 	cd "$_archive"
 	./configure \
 		--prefix /usr \
-		--with-luajit \
+		--disable-embeded-resources \
+		--with-system-lua-sources \
 		--with-system-luarocks
 	make all
 }

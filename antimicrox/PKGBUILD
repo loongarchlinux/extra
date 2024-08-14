@@ -1,0 +1,43 @@
+# Maintainer: George Rawlinson <grawlinson@archlinux.org>
+
+pkgname=antimicrox
+pkgver=3.4.0
+pkgrel=1
+pkgdesc='Graphical program used to map keyboard buttons & mouse controls to a gamepad'
+arch=('loong64' 'x86_64')
+url='https://github.com/AntiMicroX/antimicrox'
+license=('GPL-3.0-only')
+depends=(
+  'glibc'
+  'gcc-libs'
+  'hicolor-icon-theme'
+  'libxtst'
+  'libxi'
+  'libx11'
+  'qt5-base'
+  'sdl2'
+)
+makedepends=(
+  'git'
+  'cmake'
+  'extra-cmake-modules'
+  'itstool'
+  'qt5-tools'
+)
+source=("$pkgname::git+$url#tag=$pkgver")
+sha512sums=('30083848fcd27d4991ef485e5ac3b357571b67230bf33f35f91f8561485aea24a5d1b5b7b911e29229a2cd3df0ae2b7487ce55c0aaed1cfd9af09bb40aa5b151')
+b2sums=('e46147a524678e9da9fb91e43f836acf7e9b2744ad0a52e152def0c492212e5994422d64673f1fc4766d4a3959ef40839963542b7816043408d3ac03a8aa2308')
+
+build() {
+  cmake \
+    -B build \
+    -S "$pkgname" \
+    -D CMAKE_BUILD_TYPE=None \
+    -D ANTIMICROX_PKG_VERSION="$pkgver"
+
+  cmake --build build
+}
+
+package() {
+  DESTDIR="$pkgdir" cmake --install build
+}

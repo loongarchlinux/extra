@@ -1,0 +1,36 @@
+# Maintainer: Jelle van der Waa <jelle@archlinux.org>
+
+pkgname=tree-sitter-rust
+pkgver=0.21.2
+pkgrel=2
+pkgdesc='Rust grammar for tree-sitter'
+arch=('loong64' 'x86_64')
+url=https://github.com/tree-sitter/tree-sitter-rust
+license=('MIT')
+groups=('tree-sitter-grammars')
+makedepends=('git' 'tree-sitter-cli')
+optdepends=('tree-sitter: core library')
+provides=("lib$pkgname.so")
+source=("git+$url.git#tag=v$pkgver")
+b2sums=('8d73d39f0b6a1bed36ab777391f66be8552957f107ab0e3cb97b4e1d517d0d2bfa2d373ed384a9470f458823898af5b7f468ad04a47288b79b32390b98ff557d')
+
+prepare() {
+  cd $pkgname
+  tree-sitter generate --no-bindings src/grammar.json
+}
+
+build() {
+  cd $pkgname
+  make PREFIX=/usr PARSER_URL="$url"
+}
+
+package() {
+  install -d "$pkgdir"/usr/lib/tree_sitter
+  ln -s /usr/lib/lib$pkgname.so \
+    "$pkgdir"/usr/lib/tree_sitter/${pkgname#tree-sitter-}.so
+
+  cd $pkgname
+  make DESTDIR="$pkgdir" PREFIX=/usr install
+  install -Dm644 -t "$pkgdir"/usr/share/doc/$pkgname README.md
+  install -Dm644 -t "$pkgdir"/usr/share/licenses/$pkgname LICENSE
+}

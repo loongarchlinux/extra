@@ -3,7 +3,7 @@
 # Contributor:
 
 pkgname=python-versioningit
-pkgver=3.1.1
+pkgver=3.1.2
 pkgrel=1
 pkgdesc='Versioning It with your Version In Git'
 arch=('any')
@@ -12,7 +12,6 @@ license=('MIT')
 depends=(
   'python'
   'python-packaging'
-  'python-tomli'
 )
 makedepends=(
   'python-build'
@@ -29,7 +28,7 @@ checkdepends=(
   'python-pytest-mock'
 )
 source=("${pkgname#*n-}-${pkgver}.tar.gz::${url}/releases/download/v${pkgver}/${pkgname#*n-}-${pkgver}.tar.gz")
-sha256sums=('b0ba586e5af08b87dbe3354082910a1d0502c36202d496e1ae60ef3b41ee29c1')
+sha256sums=('4db83ed99f56b07d83940bee3445ca46ca120d13b6b304cdb5fb44e5aa4edec0')
 
 build() {
   cd ${pkgname#*n-}-${pkgver}

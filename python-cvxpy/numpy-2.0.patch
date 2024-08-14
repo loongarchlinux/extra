@@ -1,0 +1,100 @@
+diff --git a/cvxpy/tests/test_constraints.py b/cvxpy/tests/test_constraints.py
+index 8ec28c608..c46a6642e 100644
+--- a/cvxpy/tests/test_constraints.py
++++ b/cvxpy/tests/test_constraints.py
+@@ -204,7 +204,7 @@ class TestConstraints(BaseTest):
+         self.assertEqual(constr.size, 3)
+ 
+         # Test invalid dimensions.
+-        error_str = ("Argument dimensions (1,) and (1, 4), with axis=0, "
++        error_str = ("Argument dimensions (np.int32(1),) and (np.int32(1), np.int32(4)), with axis=0, "
+                      "are incompatible.")
+         with self.assertRaises(Exception) as cm:
+             SOC(Variable(1), Variable((1, 4)))
+diff --git a/cvxpy/tests/test_expressions.py b/cvxpy/tests/test_expressions.py
+index 4e05d310f..b97ad1879 100644
+--- a/cvxpy/tests/test_expressions.py
++++ b/cvxpy/tests/test_expressions.py
+@@ -68,8 +68,8 @@ class TestExpressions(BaseTest):
+         # self.assertEqual(x.canonical_form[0].shape, (2, 1))
+         # self.assertEqual(x.canonical_form[1], [])
+ 
+-        self.assertEqual(repr(self.x), "Variable((2,), x)")
+-        self.assertEqual(repr(self.A), "Variable((2, 2), A)")
++        self.assertEqual(repr(self.x), "Variable((np.int32(2),), x)")
++        self.assertEqual(repr(self.A), "Variable((np.int32(2), np.int32(2)), A)")
+         self.assertEqual(repr(cp.Variable(name='x', nonneg=True)), "Variable((), x, nonneg=True)")
+         self.assertTrue(repr(cp.Variable()).startswith("Variable((), var"))
+ 
+@@ -227,7 +227,7 @@ class TestExpressions(BaseTest):
+         self.assertEqual(exp.sign, s.UNKNOWN)
+ 
+         # Test repr.
+-        self.assertEqual(repr(c), "Constant(CONSTANT, NONNEGATIVE, (2,))")
++        self.assertEqual(repr(c), "Constant(CONSTANT, NONNEGATIVE, (np.int32(2),))")
+ 
+         # Test name.
+         c = Constant(1, name="test")
+@@ -379,7 +379,7 @@ class TestExpressions(BaseTest):
+ 
+         # Test parameter representation.
+         p = Parameter((4, 3), nonpos=True)
+-        self.assertEqual(repr(p), 'Parameter((4, 3), nonpos=True)')
++        self.assertEqual(repr(p), 'Parameter((np.int32(4), np.int32(3)), nonpos=True)')
+ 
+         # Test valid diagonal parameter.
+         p = Parameter((2, 2), diag=True)
+@@ -496,7 +496,7 @@ class TestExpressions(BaseTest):
+         """
+         with self.assertRaises(Exception) as cm:
+             v = Variable((4, 3), symmetric=True)
+-        self.assertEqual(str(cm.exception), "Invalid dimensions (4, 3). Must be a square matrix.")
++        self.assertEqual(str(cm.exception), "Invalid dimensions (np.int32(4), np.int32(3)). Must be a square matrix.")
+ 
+         v = Variable((2, 2), symmetric=True)
+         assert v.is_symmetric()
+@@ -530,7 +530,7 @@ class TestExpressions(BaseTest):
+         """
+         with self.assertRaises(Exception) as cm:
+             v = Variable((4, 3), hermitian=True)
+-        self.assertEqual(str(cm.exception), "Invalid dimensions (4, 3). Must be a square matrix.")
++        self.assertEqual(str(cm.exception), "Invalid dimensions (np.int32(4), np.int32(3)). Must be a square matrix.")
+ 
+         v = Variable((2, 2), hermitian=True)
+         assert v.is_hermitian()
+@@ -654,7 +654,7 @@ class TestExpressions(BaseTest):
+         self.assertEqual(len(exp.args), 3)
+ 
+         # Test repr.
+-        self.assertEqual(repr(exp), "Expression(AFFINE, UNKNOWN, (2,))")
++        self.assertEqual(repr(exp), "Expression(AFFINE, UNKNOWN, (np.int32(2),))")
+ 
+     # Test the SubExpresion class.
+     def test_sub_expression(self) -> None:
+@@ -685,7 +685,7 @@ class TestExpressions(BaseTest):
+             (self.A - self.C)
+ 
+         # Test repr.
+-        self.assertEqual(repr(self.x - c), "Expression(AFFINE, UNKNOWN, (2,))")
++        self.assertEqual(repr(self.x - c), "Expression(AFFINE, UNKNOWN, (np.int32(2),))")
+ 
+     # Test the MulExpresion class.
+     def test_mul_expression(self) -> None:
+@@ -1318,7 +1318,7 @@ class TestExpressions(BaseTest):
+ 
+         with self.assertRaises(ValueError) as cm:
+             cp.multiply(A, col_scale)
+-        self.assertEqual(str(cm.exception), "Cannot broadcast dimensions  (3, 4) (4,)")
++        self.assertEqual(str(cm.exception), "Cannot broadcast dimensions  (np.int32(3), np.int32(4)) (np.int32(4),)")
+ 
+         col_scale = Variable([1, n])
+         C = cp.multiply(A, col_scale)
+@@ -1350,7 +1350,7 @@ class TestExpressions(BaseTest):
+ 
+         with self.assertRaises(ValueError) as cm:
+             A + col_scale
+-        self.assertEqual(str(cm.exception), "Cannot broadcast dimensions  (3, 4) (4,)")
++        self.assertEqual(str(cm.exception), "Cannot broadcast dimensions  (np.int32(3), np.int32(4)) (np.int32(4),)")
+ 
+         col_scale = Variable([1, n])
+         C = A + col_scale

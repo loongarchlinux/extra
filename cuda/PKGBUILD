@@ -4,9 +4,11 @@
 
 pkgname=(cuda cuda-tools)
 pkgbase=cuda
-pkgver=12.4.1
-_driverver=550.54.15
-pkgrel=4
+pkgver=12.5.1
+# Before upgrading, make sure that we ship at least this version of
+# nvidia-utils as otherwise we'll get stuff such as #7.
+_driverver=555.42.06
+pkgrel=1
 pkgdesc="NVIDIA's GPU programming toolkit"
 arch=('loong64' 'x86_64')
 url="https://developer.nvidia.com/cuda-zone"
@@ -45,8 +47,8 @@ source=(https://developer.download.nvidia.com/compute/cuda/${pkgver}/local_insta
         nvjpeg.pc
         nvrtc.pc
         nvToolsExt.pc)
-sha512sums=('340fab9aad2f3e03fb773c2ec1d4f2c3b1428b350c2072b02263f68f3c521b7ec42086ae7b5e66594a0b91862cc165d8519e4c92e428268bc1e98adcfe106d42'
-            '56a85e8a0b9ae5d4c4132a778af0d8f13589e68e0ac2def05fb5cb99e09da90f104c00debb072f7d689d8abd030b80898c361d902000e59a7b938776c6112cd8'
+sha512sums=('604843e09717c2af0873b2d5a2e242ff1b99122d515b6a7a29e70c55ab605524744359781f5b642059550b4def57877597111914965efe7d3a1a1387c9dbb1a0'
+            '3cac229e13762e09032c60b10c01d1af8da15871ec7ef76606fc69780c5d5e0410bf65c6b94230787fd9bb18c9d92083b3f65da36db97bbc8edb7a027c45a5be'
             '714d973bc79446f73bebe85306b3566fe25b554bcbcba2fcbe76709a3eca71fb5d183ab4da2d3b5e9326cb9cd8d13a93f6d4a005ea5a41f7ef8e6c6e81e06b5e'
             'a4b3b03682801a98a1d8c1d14c084fd35efd384d92d497e230e3a28e0bd97b1fa48a93ccb2150f892f0b4154ca4ea2d66f5484a6a59b5c9b49963de42ecf1736'
             'd69d3ec0e270648f55d8c3e420f89d056b120eca5b25e9e7fc1cca799d1a252909ee31ff399c137223eca57cdf82b856221a251b6ff1daf5d6f75c1a582b1e32'
@@ -101,14 +103,6 @@ build() {
 
   # Delete some unnecessary files
   rm -r "${_prepdir}"/opt/cuda/bin/cuda-uninstaller
-
-  # Define compilers for CUDA to use.
-  # This allows us to use older versions of GCC if we have to.
-  # NOTE: As of cuda 12.3, this appears to be broken on its own.
-  # It worked with cuda 12.2. Due to this bug. we now additionally need an
-  # entry in cuda.sh for this to be recognized.
-  ln -s /usr/bin/gcc-13 "${_prepdir}/opt/cuda/bin/gcc"
-  ln -s /usr/bin/g++-13 "${_prepdir}/opt/cuda/bin/g++"
 
   # Install profile and ld.so.config files
   install -Dm644 "${srcdir}/cuda.sh" "${_prepdir}/etc/profile.d/cuda.sh"

@@ -3,7 +3,7 @@
 
 pkgname=gnome-devel-docs
 pkgver=40.3
-pkgrel=1
+pkgrel=2
 pkgdesc="Developer documentation for GNOME"
 url="https://gitlab.gnome.org/GNOME/gnome-devel-docs"
 arch=(any)

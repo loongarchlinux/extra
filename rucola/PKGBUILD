@@ -1,0 +1,38 @@
+# Maintainer: Orhun Parmaksız <orhun@archlinux.org>
+# Contributor: linus.mussmaecher@gmail.com
+
+pkgname=rucola
+pkgver=0.3.6
+pkgrel=2
+pkgdesc="Terminal-based markdown note manager"
+arch=('loong64' 'x86_64')
+url="https://github.com/Linus-Mussmaecher/rucola"
+license=("GPL-3.0-only")
+depends=('gcc-libs')
+makedepends=('cargo')
+replaces=('rucola-notes')
+source=("$pkgname-$pkgver.tar.gz::$url/archive/v$pkgver.tar.gz")
+sha256sums=('5cd3d1336c053397ad39516f451d002a5cfd21da3dac97dcad764b5f22cb1329')
+
+prepare() {
+  cd "$pkgname-$pkgver"
+  cargo fetch --target "$(rustc -vV | sed -n 's/host: //p')" # --locked
+}
+
+build() {
+  cd "$pkgname-$pkgver"
+  cargo build --release --frozen
+}
+
+check() {
+  cd "$pkgname-$pkgver"
+  cargo test --frozen
+}
+
+package() {
+  cd "$pkgname-$pkgver"
+  install -Dm 755 "target/release/$pkgname" -t "$pkgdir/usr/bin"
+  install -Dm 644 README.md -t "$pkgdir/usr/share/doc/$pkgname"
+}
+
+# vim: ts=2 sw=2 et:

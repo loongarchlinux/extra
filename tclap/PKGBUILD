@@ -3,7 +3,7 @@
 
 pkgname=tclap
 pkgver=1.2.5
-pkgrel=1
+pkgrel=2
 pkgdesc="Small, flexible library that provides a simple interface for defining and accessing command line arguments"
 arch=(any)
 url="http://tclap.sourceforge.net/"

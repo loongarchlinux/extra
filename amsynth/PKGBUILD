@@ -2,23 +2,31 @@
 # Contributor: speps <speps at aur dot archlinux dot org>
 # Contributor: Alessio Biancalana <dottorblaster@gmail.com>
 
-pkgname=amsynth
-pkgver=1.13.2
+pkgbase=amsynth
+pkgname=(amsynth amsynth-{common,dssi,lv2,standalone,vst})
+pkgver=1.13.4
 pkgrel=1
 pkgdesc="Analogue Modeling SYNTHesizer"
 arch=(loong64 x86_64)
 url="https://amsynth.github.io/"
-license=(GPL2)
-groups=(dssi-plugins lv2-plugins pro-audio vst-plugins)
-depends=(cairo gcc-libs glibc)
+license=(GPL-2.0-or-later)
+groups=(
+  dssi-plugins
+  lv2-plugins
+  pro-audio
+  vst-plugins
+)
 makedepends=(
   atk
   autoconf-archive
+  cairo
   dssi
   fontconfig
   freetype2
+  gcc-libs
   gdk-pixbuf2
   glib2
+  glibc
   gtk2
   harfbuzz
   intltool
@@ -29,20 +37,11 @@ makedepends=(
   pandoc
 )
 checkdepends=(lv2lint)
-optdepends=(
-  'alsa-lib: for standalone application'
-  'dssi-host: for DSSI plugin'
-  'jack: for standalone application'
-  'liblo: for standalone application and DSSI plugin'
-  'new-session-manager: for session management with the standalone application'
-  'lv2-host: for LV2 plugin'
-  'vst-host: for VST plugin'
-)
 source=(
   $pkgname-$pkgver.tar.gz::https://github.com/amsynth/amsynth/archive/release-$pkgver.tar.gz
 )
-sha512sums=('522c0ad1e57bbf20fe91eac9ae2a5c3220bb17128b9ab3c50d91b8e554fa2b9f67d6aa36da2572b0ee7c99134f9c1497180064357f1d93596d31f2d631eeaef8')
-b2sums=('d96b9338870bd9e6a3691c4b366dfa5daddc1e2623b663b01d48ca4ce08e116d3fca8d971cbae363a1268ec9fbcb445e8d430a807f72809b706bc5c53dad21b6')
+sha512sums=('fe5ab71de33c41380736f1adf7e9146019e2839f935a5a9090b940e2bcbe99b33695faa556770899be5f5d04fb7d194db3f8d83c193a84c3b97b7b3dffe6baa1')
+b2sums=('459c59d7181f6ce7f55f21c44a1a141f24c265c3768fcfd8c0165938266502f8a72c82b9168558c00053d2f5ebef797a26dac7dd8f0a76632ce3808df827fd5b')
 
 prepare() {
   cd $pkgname-release-$pkgver
@@ -74,14 +73,117 @@ check() {
   lv2lint -Mpack -I data/$pkgname.lv2 "http://code.google.com/p/amsynth/amsynth"
 }
 
-package() {
-  depends+=(
-    atk libatk-1.0.so
-    gdk-pixbuf2 libgdk_pixbuf-2.0.so
-    gtk2 libgdk-x11-2.0.so libgtk-x11-2.0.so
-    glib2 libgio-2.0.so libglib-2.0.so libgobject-2.0.so
+_pick() {
+  local p="$1" f d; shift
+  for f; do
+    d="$srcdir/$p/${f#$pkgdir/}"
+    mkdir -p "$(dirname "$d")"
+    mv "$f" "$d"
+    rmdir -p --ignore-fail-on-non-empty "$(dirname "$f")"
+  done
+}
+
+package_amsynth() {
+  depends=(
+    amsynth-{common,dssi,lv2,standalone,vst}
   )
 
   make DESTDIR="$pkgdir/" install -C $pkgname-release-$pkgver
-  install -vDm 644 $pkgname-release-$pkgver/{AUTHORS,NEWS,README} -t "$pkgdir/usr/share/doc/$pkgname/"
+  (
+    cd "$pkgdir"
+    _pick $pkgname-common usr/share/$pkgname
+    _pick $pkgname-dssi usr/lib/dssi
+    _pick $pkgname-dssi usr/share/appdata/dssi-$pkgname-plugin.metainfo.xml
+    _pick $pkgname-lv2 usr/lib/lv2
+    _pick $pkgname-dssi usr/share/appdata/lv2-$pkgname-plugin.metainfo.xml
+    _pick $pkgname-standalone usr/bin
+    _pick $pkgname-standalone usr/share/appdata/$pkgname.appdata.xml
+    _pick $pkgname-standalone usr/share/applications
+    _pick $pkgname-standalone usr/share/icons
+    _pick $pkgname-standalone usr/share/locale
+    _pick $pkgname-standalone usr/share/man
+    _pick $pkgname-vst usr/lib/vst
+    _pick $pkgname-dssi usr/share/appdata/vst-$pkgname-plugin.metainfo.xml
+  )
+}
+
+package_amsynth-common() {
+  pkgdesc+=" - common data"
+
+  mv -v $pkgname/* "$pkgdir/"
+  install -vDm 644 $pkgbase-release-$pkgver/{AUTHORS,NEWS,README} -t "$pkgdir/usr/share/doc/$pkgname/"
+}
+
+package_amsynth-dssi() {
+  pkgdesc+=" - DSSI plugin"
+  depends=(
+    amsynth-common
+    cairo libcairo.so
+    dssi-host
+    gcc-libs
+    gdk-pixbuf2 libgdk_pixbuf-2.0.so
+    glib2 libgio-2.0.so libglib-2.0.so libgobject-2.0.so
+    glibc
+    gtk2 libgdk-x11-2.0.so libgtk-x11-2.0.so
+    liblo liblo.so
+    libx11
+  )
+
+  mv -v $pkgname/* "$pkgdir/"
+}
+
+package_amsynth-lv2() {
+  pkgdesc+=" - LV2 plugin"
+  depends=(
+    amsynth-common
+    cairo libcairo.so
+    gcc-libs
+    gdk-pixbuf2 libgdk_pixbuf-2.0.so
+    glib2 libgio-2.0.so libglib-2.0.so libgobject-2.0.so
+    glibc
+    gtk2 libgdk-x11-2.0.so libgtk-x11-2.0.so
+    lv2-host
+  )
+
+  mv -v $pkgname/* "$pkgdir/"
+}
+
+package_amsynth-standalone() {
+  pkgdesc+=" - standalone application"
+  depends=(
+    amsynth-common
+    alsa-lib libasound.so
+    atk libatk-1.0.so
+    cairo libcairo.so
+    gcc-libs
+    gdk-pixbuf2 libgdk_pixbuf-2.0.so
+    glib2 libgio-2.0.so libglib-2.0.so libgobject-2.0.so
+    glibc
+    gtk2 libgdk-x11-2.0.so libgtk-x11-2.0.so
+    hicolor-icon-theme
+    jack libjack.so
+    liblo liblo.so
+    libx11
+  )
+  optdepends=(
+    'new-session-manager: for session management with the standalone application'
+  )
+
+  mv -v $pkgname/* "$pkgdir/"
+}
+
+package_amsynth-vst() {
+  pkgdesc+=" - VST plugin"
+  depends=(
+    amsynth-common
+    cairo libcairo.so
+    gcc-libs
+    gdk-pixbuf2 libgdk_pixbuf-2.0.so
+    glib2 libgio-2.0.so libglib-2.0.so libgobject-2.0.so
+    glibc
+    gtk2 libgdk-x11-2.0.so libgtk-x11-2.0.so
+    vst-host
+  )
+
+  mv -v $pkgname/* "$pkgdir/"
 }

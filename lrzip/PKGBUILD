@@ -4,7 +4,7 @@
 
 pkgname=lrzip
 pkgver=0.651
-pkgrel=2
+pkgrel=3
 pkgdesc='Multi-threaded compression with rzip/lzma, lzo, and zpaq'
 url='https://github.com/ckolivas/lrzip'
 license=('GPL')

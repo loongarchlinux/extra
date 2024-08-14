@@ -3,15 +3,16 @@
 # Contributor: Charles Lindsay <charles@chaoslizard.org>
 
 pkgname=libmirage
-pkgver=3.2.7
+pkgver=3.2.8
 pkgrel=1
 pkgdesc="CD-ROM image (B6T/C2D/CCD/CDI/CIF/CUE/ISO/MDS/MDX/NRG/TOC) access library"
 url="https://cdemu.sourceforge.io/"
 arch=(loong64 x86_64)
-license=(GPL)
+license=(GPL-2.0-or-later)
 depends=(
   bzip2
   glib2
+  glibc
   libsamplerate
   libsndfile
   shared-mime-info
@@ -20,17 +21,18 @@ depends=(
 )
 makedepends=(
   cmake
+  git
   gobject-introspection
   gtk-doc
   intltool
   ninja
   vala
 )
-source=(https://downloads.sourceforge.net/cdemu/$pkgname-$pkgver.tar.xz)
-sha256sums=('fa892480d7954bcca8292ad00f2e08b7b3e23e54d288eb14a05c50d454bdb3d3')
+source=("cdemu-code::git+https://git.code.sf.net/p/cdemu/code#tag=$pkgname-$pkgver")
+b2sums=('abbf18c8a03fe09b1896194d1f10ddd7c9a6c75145e390efea2c9b8cdcfd01bf19b4ffaeb0dc618ed597f8fbd33bfc33e50b375bcef12c4c781dc28bcd75df73')
 
 prepare() {
-  cd $pkgname-$pkgver
+  cd cdemu-code/$pkgname
 }
 
 build() {
@@ -41,7 +43,7 @@ build() {
     -D POST_INSTALL_HOOKS=OFF
   )
 
-  cmake -S $pkgname-$pkgver -B build -G Ninja "${cmake_options[@]}"
+  cmake -S cdemu-code/$pkgname -B build -G Ninja "${cmake_options[@]}"
   cmake --build build
 }
 

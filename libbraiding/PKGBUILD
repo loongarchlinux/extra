@@ -2,24 +2,31 @@
 
 pkgname=libbraiding
 pkgver=1.2
-pkgrel=1
-pkgdesc="Library to compute several properties of braids, including centralizer and conjugacy check"
+pkgrel=2
+pkgdesc='Library to compute several properties of braids, including centralizer and conjugacy check'
 arch=(loong64 x86_64)
-url="https://github.com/miguelmarco/libbraiding"
-license=(GPL3)
-depends=(gcc-libs)
-source=("https://github.com/miguelmarco/libbraiding/releases/download/$pkgver/$pkgname-$pkgver.tar.gz")
-sha256sums=('73087d1145ace719eafeda1db1c28b5fe1c981b7e784dc59f2b1d6fc4ff75f80')
+url='https://github.com/miguelmarco/libbraiding'
+license=(GPL-3.0-or-later)
+depends=(gcc-libs
+         glibc)
+makedepends=(git)
+source=(git+https://github.com/miguelmarco/libbraiding#tag=$pkgver)
+sha256sums=('e73a032c9d74b97ab4903f908f225ee665dcd1ba1964751010a406b9f9bd3448')
+
+prepare() {
+  cd $pkgname
+  autoreconf -vi
+}
 
 build() {
-  cd $pkgname-$pkgver
-  ./configure --prefix=/usr
+  cd $pkgname
+  ./configure \
+    --prefix=/usr
   sed -i -e 's/ -shared / -Wl,-O1,--as-needed\0/g' libtool
   make
 }
 
 package() {
-  cd $pkgname-$pkgver
+  cd $pkgname
   make DESTDIR="$pkgdir" install
 }
-

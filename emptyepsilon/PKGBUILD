@@ -2,8 +2,8 @@
 # Contributor: Mewp <aur.archlinux.org@mewp.pl>
 
 pkgname=emptyepsilon
-pkgver=2023.06.17
-pkgrel=2
+pkgver=2024.05.16
+pkgrel=1
 pkgdesc='Open source spaceship bridge simulator'
 url='https://github.com/daid/EmptyEpsilon'
 arch=('loong64' 'x86_64')
@@ -13,8 +13,8 @@ makedepends=('git' 'cmake' 'mesa' 'python')
 source=("git+https://github.com/daid/EmptyEpsilon.git#tag=EE-${pkgver}"
         "git+https://github.com/daid/SeriousProton.git#tag=EE-${pkgver}"
         gcc12.patch)
-sha512sums=('SKIP'
-            'SKIP'
+sha512sums=('4f9ed5a7f74d645737044afd98020bfc84730104cee055fff789163b2d4078de509a42e4429a7a749fe786eb8f8391f8144b9491dfdd2851160a04625a422aae'
+            '34772188fd0df55e1973b12d810df7f94152ed6b51d2e0ec62959bf06500fffb3e0ea4b7bbde82fd76350edcaa7d508a3294515e167f23fdaebea2e4df089b3a'
             '479b76b604b4a4fc8152da11775533b8d56eb4bfd688a28ea6c64a39bfe40e5d365ee035f34cf3fa2cfa16d877cb5324bd2b911270e19f55e77d60386b08ed13')
 
 prepare() {
@@ -29,6 +29,9 @@ prepare() {
 build() {
   mkdir -p EmptyEpsilon/build
   cd EmptyEpsilon/build
+  # this uses malloc_usable_size, which is incompatible with fortification level 3
+  export CFLAGS="${CFLAGS/_FORTIFY_SOURCE=3/_FORTIFY_SOURCE=2}"
+  export CXXFLAGS="${CXXFLAGS/_FORTIFY_SOURCE=3/_FORTIFY_SOURCE=2}"
   # add cppflags to use fortify
   export CXXFLAGS="${CXXFLAGS} ${CPPFLAGS}"
   # release type is important here to get optimisation flags

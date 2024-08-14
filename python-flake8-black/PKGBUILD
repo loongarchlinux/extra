@@ -3,7 +3,7 @@
 
 pkgname=python-flake8-black
 pkgver=0.3.6
-pkgrel=3
+pkgrel=4
 pkgdesc='Flake8 plugin to call black as a code style validator'
 arch=('any')
 url=https://github.com/peterjc/flake8-black
@@ -12,7 +12,6 @@ depends=(
   'python'
   'flake8'
   'python-black'
-  'python-tomli'
 )
 makedepends=(
   'git'
@@ -21,9 +20,8 @@ makedepends=(
   'python-wheel'
   'python-setuptools'
 )
-_commit='868b41554a6b57d74e916d33c37469e0d0b4b9cc'
 source=(
-  "$pkgname::git+$url#commit=$_commit"
+  "$pkgname::git+$url.git#tag=v$pkgver"
   'pyproject-no-pip.patch'
 )
 sha512sums=('d68393ccca42afb7295ed1bcab4d478f9e9f934210ef666990ead0534d8f0ae3e9248828021b0ab1f36277a0c6588220650ac45fc3af28182a36d9fa0b9c6b56'

@@ -2,12 +2,12 @@
 # Contributor: SZanko, szanko at protonmail dot com
 
 pkgname=python-shtab
-pkgver=1.6.5
-pkgrel=2
+pkgver=1.7.1
+pkgrel=1
 pkgdesc='Automagic shell tab completion for Python CLI applications'
 arch=('any')
 url='https://github.com/iterative/shtab'
-license=('Apache')
+license=('Apache-2.0')
 depends=('python')
 makedepends=(
   'git'
@@ -21,15 +21,9 @@ checkdepends=(
   'python-pytest-cov'
   'python-pytest-timeout'
 )
-_commit='f09e930b12081d1afbd06b0376f88040d30a807c'
-source=("$pkgname::git+$url#commit=$_commit")
-b2sums=('SKIP')
-
-pkgver() {
-  cd "$pkgname"
-
-  git describe --tags | sed 's/^v//'
-}
+source=("$pkgname::git+$url#tag=v$pkgver")
+sha512sums=('41cbf9acfc6efaa55971ea4dede60e0361e9bc45d65363a85dd9f6866f1b978ce2e89bd5083097f930e8088661f7111559522b472ee080bb4c99c3225d575932')
+b2sums=('bd2d5680b2a53d15ef896bc511dd884f52f19b426bfb9b12be00eeb39563fb871a2561211365136261f52eb18dc829661a9e9284651b98b17b8b9acac45471cc')
 
 build() {
   cd "$pkgname"

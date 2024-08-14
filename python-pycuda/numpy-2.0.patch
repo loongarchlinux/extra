@@ -1,0 +1,112 @@
+diff -ru pycuda-2024.1.orig/src/wrapper/mempool.cpp pycuda-2024.1/src/wrapper/mempool.cpp
+--- pycuda-2024.1.orig/src/wrapper/mempool.cpp	2024-06-23 23:12:59.029728794 +0200
++++ pycuda-2024.1/src/wrapper/mempool.cpp	2024-06-24 00:11:08.130822020 +0200
+@@ -194,15 +194,15 @@
+ 
+     std::unique_ptr<pooled_host_allocation> alloc(
+         new pooled_host_allocation(
+-          pool, tp_descr->elsize*pycuda::size_from_dims(dims.size(), &dims.front())));
++          pool, PyDataType_ELSIZE(tp_descr)*pycuda::size_from_dims(dims.size(), &dims.front())));
+ 
+-    NPY_ORDER order = PyArray_CORDER;
++    NPY_ORDER order = NPY_CORDER;
+     PyArray_OrderConverter(order_py.ptr(), &order);
+ 
+     int flags = 0;
+-    if (order == PyArray_FORTRANORDER)
++    if (order == NPY_FORTRANORDER)
+       flags |= NPY_FARRAY;
+-    else if (order == PyArray_CORDER)
++    else if (order == NPY_CORDER)
+       flags |= NPY_CARRAY;
+     else
+       throw std::runtime_error("unrecognized order specifier");
+@@ -213,7 +213,7 @@
+         alloc->ptr(), flags, /*obj*/NULL));
+ 
+     py::handle<> alloc_py(handle_from_new_ptr(alloc.release()));
+-    PyArray_BASE(result.get()) = alloc_py.get();
++    ((PyArrayObject_fields *)(result.get()))->base = alloc_py.get();
+     Py_INCREF(alloc_py.get());
+ 
+     return result;
+diff -ru pycuda-2024.1.orig/src/wrapper/_pvt_struct_v3.cpp pycuda-2024.1/src/wrapper/_pvt_struct_v3.cpp
+--- pycuda-2024.1.orig/src/wrapper/_pvt_struct_v3.cpp	2024-06-23 23:12:59.029728794 +0200
++++ pycuda-2024.1/src/wrapper/_pvt_struct_v3.cpp	2024-06-24 00:19:21.265956216 +0200
+@@ -743,7 +743,7 @@
+                 NPY_CFLOAT);
+         if (!v_cast)
+             return -1;
+-        memcpy(p, PyArray_DATA(v_cast), PyArray_NBYTES(v_cast));
++        memcpy(p, PyArray_DATA(reinterpret_cast<PyArrayObject*>(v_cast)), PyArray_NBYTES(reinterpret_cast<PyArrayObject*>(v_cast)));
+         Py_DECREF(v_cast);
+     }
+     else {
+@@ -773,7 +773,7 @@
+                 NPY_CDOUBLE);
+         if (!v_cast)
+             return -1;
+-        memcpy(p, PyArray_DATA(v_cast), PyArray_NBYTES(v_cast));
++        memcpy(p, PyArray_DATA(reinterpret_cast<PyArrayObject*>(v_cast)), PyArray_NBYTES(reinterpret_cast<PyArrayObject*>(v_cast)));
+         Py_DECREF(v_cast);
+     }
+     else {
+diff -ru pycuda-2024.1.orig/src/wrapper/wrap_cudadrv.cpp pycuda-2024.1/src/wrapper/wrap_cudadrv.cpp
+--- pycuda-2024.1.orig/src/wrapper/wrap_cudadrv.cpp	2024-06-23 23:12:59.029728794 +0200
++++ pycuda-2024.1/src/wrapper/wrap_cudadrv.cpp	2024-06-24 00:16:12.374010922 +0200
+@@ -573,17 +573,17 @@
+ 
+     std::unique_ptr<Allocation> alloc(
+         new Allocation(
+-          tp_descr->elsize*pycuda::size_from_dims(dims.size(), &dims.front()),
++          PyDataType_ELSIZE(tp_descr)*pycuda::size_from_dims(dims.size(), &dims.front()),
+           par1)
+         );
+ 
+-    NPY_ORDER order = PyArray_CORDER;
++    NPY_ORDER order = NPY_CORDER;
+     PyArray_OrderConverter(order_py.ptr(), &order);
+ 
+     int ary_flags = 0;
+-    if (order == PyArray_FORTRANORDER)
++    if (order == NPY_FORTRANORDER)
+       ary_flags |= NPY_FARRAY;
+-    else if (order == PyArray_CORDER)
++    else if (order == NPY_CORDER)
+       ary_flags |= NPY_CARRAY;
+     else
+       throw pycuda::error("numpy_empty", CUDA_ERROR_INVALID_VALUE,
+@@ -595,7 +595,7 @@
+         alloc->data(), ary_flags, /*obj*/NULL));
+ 
+     py::handle<> alloc_py(handle_from_new_ptr(alloc.release()));
+-    PyArray_BASE(result.get()) = alloc_py.get();
++    ((PyArrayObject_fields *)(result.get()))->base = alloc_py.get();
+     Py_INCREF(alloc_py.get());
+ 
+     return result;
+@@ -608,13 +608,13 @@
+       throw pycuda::error("register_host_memory", CUDA_ERROR_INVALID_VALUE,
+           "ary argument is not a numpy array");
+ 
+-    if (!PyArray_ISCONTIGUOUS(ary.ptr()))
++    if (!PyArray_ISCONTIGUOUS(reinterpret_cast<PyArrayObject*>(ary.ptr())))
+       throw pycuda::error("register_host_memory", CUDA_ERROR_INVALID_VALUE,
+           "ary argument is not contiguous");
+ 
+     std::unique_ptr<registered_host_memory> regmem(
+         new registered_host_memory(
+-          PyArray_DATA(ary.ptr()), PyArray_NBYTES(ary.ptr()), flags, ary));
++          PyArray_DATA(reinterpret_cast<PyArrayObject*>(ary.ptr())), PyArray_NBYTES(reinterpret_cast<PyArrayObject*>(ary.ptr())), flags, ary));
+ 
+     PyObject *new_array_ptr = PyArray_FromInterface(ary.ptr());
+     if (new_array_ptr == Py_NotImplemented)
+@@ -624,7 +624,7 @@
+     py::handle<> result(new_array_ptr);
+ 
+     py::handle<> regmem_py(handle_from_new_ptr(regmem.release()));
+-    PyArray_BASE(result.get()) = regmem_py.get();
++    ((PyArrayObject_fields *)(result.get()))->base = regmem_py.get();
+     Py_INCREF(regmem_py.get());
+ 
+     return result;

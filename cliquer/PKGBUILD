@@ -2,22 +2,28 @@
 
 pkgname=cliquer
 pkgver=1.22
-pkgrel=1
-pkgdesc="A set of C routines for finding cliques in an arbitrary weighted graph"
+pkgrel=2
+pkgdesc='A set of C routines for finding cliques in an arbitrary weighted graph'
 arch=(loong64 x86_64)
-url="https://users.aalto.fi/~pat/cliquer.html"
-license=(GPL)
+url='https://users.aalto.fi/~pat/cliquer.html'
+license=(GPL-2.0-or-later)
 depends=(glibc)
-source=(https://github.com/dimpase/autocliquer/releases/download/v$pkgver/$pkgname-$pkgver.tar.gz)
-sha256sums=('6ff79e1e9983ebabbca3dd276a8a310cbdeb48c7adf95f37abd83129b566340e')
+makedepends=(git)
+source=(git+https://github.com/dimpase/autocliquer#tag=v$pkgver)
+sha256sums=('a10a36a2cb2e71aaa2b79b04d17118b77710ac0f561177a9285a9e747bf5e1d6')
+
+prepare() {
+  cd autocliquer
+  autoreconf -vi
+}
 
 build() {
-  cd $pkgname-$pkgver
+  cd autocliquer
   ./configure --prefix=/usr
   make
 }
 
 package() {
-  cd $pkgname-$pkgver
+  cd autocliquer
   make DESTDIR="$pkgdir" install
 }

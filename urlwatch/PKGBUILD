@@ -7,30 +7,31 @@
 
 pkgname=urlwatch
 pkgver=2.28
-pkgrel=3
+pkgrel=4
 pkgdesc='Tool for monitoring webpages for updates'
-arch=('any')
+arch=(any)
 url=https://thp.io/2008/urlwatch/
-license=('BSD-3-Clause')
+license=(BSD-3-Clause)
 depends=(
-  'python-appdirs'
-  'python-cssselect'
-  'python-keyring'
-  'python-lxml'
-  'python-minidb'
-  'python-requests'
-  'python-yaml'
+  python-appdirs
+  python-cssselect
+  python-keyring
+  python-lxml
+  python-minidb
+  python-requests
+  python-yaml
 )
 makedepends=(
-  'python-build'
-  'python-installer'
-  'python-setuptools'
-  'python-wheel'
+  git
+  python-build
+  python-installer
+  python-setuptools
+  python-wheel
 )
 checkdepends=(
-  'python-docutils'
-  'python-pytesseract'
-  'python-pytest'
+  python-docutils
+  python-pytesseract
+  python-pytest
 )
 optdepends=(
   'lynx: for one of the html2text filter methods'
@@ -40,36 +41,33 @@ optdepends=(
   'python-jq: for the jq filter'
   'python-jsbeautifier: for the beautify filter'
   'python-pdftotext: for the pdf2text filter'
+  'python-playwright: for the browser job'
   'python-pytesseract: for the ocr filter'
 )
-source=("https://files.pythonhosted.org/packages/source/${pkgname::1}/$pkgname/$pkgname-$pkgver.tar.gz"
-        fix_css_filter.patch)
-sha256sums=('911df3abbd8923e46ec167a9657a812436caf93f7f9917cb7c95ebd73d28cce5'
-            '3624310c7f576f7ca5935ac1088b57c3b7551d414cc147d3c850a819ac835b70')
-b2sums=('73fcff8c153db472c944d0c9406e0e98bf64299d5532486a08cb024339544f17d716a22d6f0807ba55c79af9dc7fef41fa8dc5a7fe79c831f3e9958e3ea8958e'
-        '7dd9137a882879cd0262e7a7b257d57094fe405977a4e4e90ad4050bc596c3d548780ad9c99a3cedd66430533a86470968eba25ca28702e12baba950df850008')
+source=("git+https://github.com/thp/urlwatch.git#tag=$pkgver")
+sha256sums=('f2868ba625c560b801e519d6310c1624f11382d14cd040ef1aa4234e20d5b9b8')
+b2sums=('7703127d0c4e96c31aaaf415ca16e12cac797508651fd28fa7c6eb18c2ca7e1b98a04da362c136eb520ba13a12a1bbaaa732c471e57eccdc799ad54edc1a0d87')
 
 prepare() {
-  cd $pkgname-$pkgver
+  cd $pkgname
 
-  # Temporary patch to fix the CSS selector filter with python-lxml>=5
-  # See https://gitlab.archlinux.org/archlinux/packaging/packages/urlwatch/-/issues/1
-  # Patch taken from upstream at https://github.com/thp/urlwatch/commit/123de66d019aef7fc18fab6d56cc2a54d81fea3f
-  patch -Np1 < $srcdir/fix_css_filter.patch
+  # Fix the CSS selector filter with python-lxml>=5
+  # https://gitlab.archlinux.org/archlinux/packaging/packages/urlwatch/-/issues/1
+  git cherry-pick -n 123de66d019aef7fc18fab6d56cc2a54d81fea3f || true
 }
 
 build() {
-  cd $pkgname-$pkgver
+  cd $pkgname
   python -m build --wheel --skip-dependency-check --no-isolation
 }
 
 check() {
-  cd $pkgname-$pkgver
+  cd $pkgname
   pytest -k 'not test_pep8_conformance'
 }
 
 package() {
-  cd $pkgname-$pkgver
+  cd $pkgname
   python -m installer --destdir="$pkgdir" dist/*.whl
 
   # Symlink license file

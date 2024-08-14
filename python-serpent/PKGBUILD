@@ -3,20 +3,20 @@
 
 pkgname=python-serpent
 pkgver=1.41
-pkgrel=4
+pkgrel=5
 pkgdesc='Serializer for literal Python expressions'
 url='https://github.com/irmen/Serpent'
 arch=(any)
 license=(MIT)
 depends=(python)
-makedepends=(git)
-checkdepends=(python-attrs python-nose python-pytz python-testtools)
+makedepends=(git python-setuptools)
+checkdepends=(python-attrs python-pytz)
 source=("git+$url#commit=83d06d779c05e259bf1e020aca9b850d3c6f010b") # tag: serpent-1.41
 b2sums=(SKIP)
 
 check() {
   cd Serpent
-  nosetests
+  python3 -m unittest discover -vs tests
 }
 
 package() {

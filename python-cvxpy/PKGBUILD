@@ -2,8 +2,8 @@
 
 _pyname=cvxpy
 pkgname=python-$_pyname
-pkgver=1.5.0
-pkgrel=1
+pkgver=1.5.2
+pkgrel=2
 pkgdesc='A Python-embedded modeling language for convex optimization problems'
 url='https://www.cvxpy.org/'
 license=(Apache-2.0)
@@ -30,11 +30,16 @@ checkdepends=(python-ecos
               python-osqp
               python-pytest
               python-scs)
-source=(git+https://github.com/cvxpy/cvxpy#tag=v$pkgver)
-sha256sums=('d310fd3fac686b2b9dc81179f73ce767a5d91c175fc97621b600f915375aff3d')
+source=(git+https://github.com/cvxpy/cvxpy#tag=v$pkgver
+        numpy-2.0.patch)
+sha256sums=('9ca6ec2ff3789e59c0fe1a4e298b1ff96cc077b42ec87c69ce56313e51650d03'
+            '7e0096e41cc58ed9c74133236fd3b76a636cdb939ab7f925fd6f7819ab28ce56')
 
 prepare() {
   sed -e 's|,<1.24||' -e '/oldest-supported-numpy/d' -i $_pyname/pyproject.toml # Drop version constraints
+  cd $_pyname
+  git cherry-pick -n 49b5cbf0852c00686b9ff879a91a243407642964 # Fix build with numpy 2.0
+  patch -p1 -i ../numpy-2.0.patch # Fix tests with numpy 2.0u
 }
 
 build() {

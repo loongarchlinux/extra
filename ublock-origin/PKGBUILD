@@ -1,17 +1,26 @@
 # Maintainer: Daniel M. Capella <polyzen@archlinux.org>
 
-pkgname=('ublock-origin' 'firefox-ublock-origin' 'thunderbird-ublock-origin')
+pkgname=(
+  firefox-ublock-origin
+  thunderbird-ublock-origin
+  ublock-origin
+)
 pkgbase=ublock-origin
-pkgver=1.57.2
+pkgver=1.59.0
 pkgrel=1
 pkgdesc='Efficient blocker add-on for various browsers. Fast, potent, and lean'
-arch=('any')
+arch=(any)
 url=https://github.com/gorhill/uBlock
-license=('GPL-3.0-or-later')
-makedepends=('git' 'python' 'strip-nondeterminism' 'zip')
+license=(GPL-3.0-or-later)
+makedepends=(
+  git
+  python
+  strip-nondeterminism
+  zip
+)
 source=("git+$url.git#commit=$pkgver?signed")
-b2sums=('4d9815c11807e280ee43f255c7f97ac40e2657d7022a4107ff8f9989a2a0896c465d3503470de41a85cc9d05ea2f5cfd2169619beb17b0aca7419395dfd4a062')
-validpgpkeys=('603B28AA5D6CD687A554347425E1490B761470C2') # Raymond Hill <rhill@raymondhill.net>
+b2sums=('8d5f41d53e1287d41730fc8cefbf5833c71fb0b3a9e85ada423bae83fc154a35984f81e4377f90373613f4f6c3be978d0e2cc61d3eeeb1ee1ef4bc6060d12459')
+validpgpkeys=(603B28AA5D6CD687A554347425E1490B761470C2) # Raymond Hill <rhill@raymondhill.net>
 
 prepare() {
   cd uBlock
@@ -33,22 +42,22 @@ build() {
 
 package_ublock-origin() {
   pkgdesc+=' (unpacked webextension)'
-  provides=('chromium-ublock-origin')
-  replaces=('chromium-ublock-origin')
+  provides=(chromium-ublock-origin)
+  replaces=(chromium-ublock-origin)
   cd uBlock/dist/build/uBlock0.chromium
   install -d "$pkgdir"/usr/lib/$pkgbase
   cp -r -- * "$pkgdir"/usr/lib/$pkgbase
 }
 
 package_firefox-ublock-origin() {
-  groups=('firefox-addons')
+  groups=(firefox-addons)
   cd uBlock/dist/build
   install -Dm644 uBlock0.firefox.xpi \
     "$pkgdir"/usr/lib/firefox/browser/extensions/uBlock0@raymondhill.net.xpi
 }
 
 package_thunderbird-ublock-origin() {
-  groups=('thunderbird-addons')
+  groups=(thunderbird-addons)
   cd uBlock/dist/build
   install -Dm644 uBlock0.thunderbird.xpi \
     "$pkgdir"/usr/lib/thunderbird/browser/extensions/uBlock0@raymondhill.net.xpi

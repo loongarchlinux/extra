@@ -1,0 +1,62 @@
+--- /build/postgresql/src/postgresql-16.3/src/test/regress/expected/xml.out	2024-07-22 21:00:24.000000000 +0000
++++ /build/postgresql/src/postgresql-16.3/src/test/regress/expected/xml.out	2024-07-22 21:02:03.014156905 +0000
+@@ -254,17 +254,11 @@
+ DETAIL:  line 1: xmlParseEntityRef: no name
+ <invalidentity>&</invalidentity>
+                 ^
+-line 1: chunk is not well balanced
+-<invalidentity>&</invalidentity>
+-                                ^
+ SELECT xmlparse(content '<undefinedentity>&idontexist;</undefinedentity>');
+ ERROR:  invalid XML content
+ DETAIL:  line 1: Entity 'idontexist' not defined
+ <undefinedentity>&idontexist;</undefinedentity>
+                              ^
+-line 1: chunk is not well balanced
+-<undefinedentity>&idontexist;</undefinedentity>
+-                                               ^
+ SELECT xmlparse(content '<invalidns xmlns=''&lt;''/>');
+          xmlparse          
+ ---------------------------
+@@ -285,9 +279,6 @@
+ line 1: Opening and ending tag mismatch: twoerrors line 1 and unbalanced
+ <twoerrors>&idontexist;</unbalanced>
+                                     ^
+-line 1: chunk is not well balanced
+-<twoerrors>&idontexist;</unbalanced>
+-                                    ^
+ SELECT xmlparse(content '<nosuchprefix:tag/>');
+       xmlparse       
+ ---------------------
+@@ -525,25 +516,18 @@
+ SELECT xmlserialize(DOCUMENT '<foo>73</foo><bar><val x="y">42</val></bar>' AS text INDENT);
+ ERROR:  not an XML document
+ SELECT xmlserialize(CONTENT  '<foo>73</foo><bar><val x="y">42</val></bar>' AS text INDENT);
+-     xmlserialize      
+------------------------
+- <foo>73</foo>        +
+- <bar>                +
+-   <val x="y">42</val>+
+- </bar>
++ xmlserialize  
++---------------
++ <foo>73</foo>
+ (1 row)
+ 
+ -- indent non singly-rooted xml with mixed contents
+ SELECT xmlserialize(DOCUMENT 'text node<foo>73</foo>text node<bar><val x="y">42</val></bar>' AS text INDENT);
+ ERROR:  not an XML document
+ SELECT xmlserialize(CONTENT  'text node<foo>73</foo>text node<bar><val x="y">42</val></bar>' AS text INDENT);
+-      xmlserialize      
+-------------------------
+- text node             +
+- <foo>73</foo>text node+
+- <bar>                 +
+-   <val x="y">42</val> +
+- </bar>
++ xmlserialize 
++--------------
++ text node
+ (1 row)
+ 
+ -- indent singly-rooted xml with mixed contents

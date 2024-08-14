@@ -1,0 +1,68 @@
+diff --unified --recursive --text --new-file procinfo-ng-2.0.304.orig/lib/prettyPrint.cpp procinfo-ng-2.0.304/lib/prettyPrint.cpp
+--- procinfo-ng-2.0.304.orig/lib/prettyPrint.cpp	2024-06-23 16:42:37.812151380 +0200
++++ procinfo-ng-2.0.304/lib/prettyPrint.cpp	2024-06-23 16:42:44.325519895 +0200
+@@ -39,7 +39,7 @@
+ 	va_start(argp, fmt);
+ 
+ 	if(ncursesInit) {
+-		code = vwprintw(stdscr, fmt, argp);
++		code = vw_printw(stdscr, fmt, argp);
+ 	} else {
+ 		code = vprintf(fmt, argp);
+ 	}
+diff --unified --recursive --text --new-file procinfo-ng-2.0.304.orig/lib/routines.cpp procinfo-ng-2.0.304/lib/routines.cpp
+--- procinfo-ng-2.0.304.orig/lib/routines.cpp	2024-06-23 16:42:37.812151380 +0200
++++ procinfo-ng-2.0.304/lib/routines.cpp	2024-06-23 16:42:44.298853084 +0200
+@@ -262,7 +262,7 @@
+ 	return string(output);
+ }
+ const static string humanizeBigNums(const int64_t val, const uint32_t precision) {
+-	const register int64_t absVal = llabs(val);
++	const int64_t absVal = llabs(val);
+ 	if(absVal > (1LL << 60)) {
+ 		return double2StringPrecision(double(val) / (1LL << 60), precision) + "EiB";
+ 	}
+@@ -305,7 +305,7 @@
+ 	return double2StringPrecision(val, precision) + "B";
+ }
+ template <typename T> const static inline string humanizeBigNums(const T val, const uint32_t precision) {
+-	const register T absVal = fabs(val);
++	const T absVal = fabs(val);
+ 	if(absVal > (1LL << 60)) {
+ 		return double2StringPrecision(double(val) / (1ULL << 60), precision) + "EiB";
+ 	}
+diff --unified --recursive --text --new-file procinfo-ng-2.0.304.orig/lib/timeRoutines.cpp procinfo-ng-2.0.304/lib/timeRoutines.cpp
+--- procinfo-ng-2.0.304.orig/lib/timeRoutines.cpp	2024-06-23 16:42:37.812151380 +0200
++++ procinfo-ng-2.0.304/lib/timeRoutines.cpp	2024-06-23 16:42:44.322186543 +0200
+@@ -131,15 +131,15 @@
+ const static inline struct timeDiff __time_rel(const time_t &lesser_time, const time_t &greater_time) {
+ 	const struct timeWDHMS result1 = splitTime(greater_time - lesser_time);
+ 	const struct timeDiff result2 =
+-		{ tm_sec: result1.seconds, tm_min: result1.minutes, tm_hour: result1.hours,
+-		tm_wday: result1.days, tm_week: result1.weeks };
++		{ tm_sec: result1.seconds, tm_min: static_cast<int>(result1.minutes), tm_hour: static_cast<int>(result1.hours),
++		tm_wday: static_cast<int>(result1.days), tm_week: static_cast<int>(result1.weeks) };
+ 	return result2;
+ }
+ const static inline struct timeDiff __time_rel(const double &lesser_time, const double &greater_time) {
+ 	const struct timeWDHMS result1 = splitTime(greater_time - lesser_time);
+ 	const struct timeDiff result2 =
+-		{ tm_sec: result1.seconds, tm_min: result1.minutes, tm_hour: result1.hours,
+-		tm_wday: result1.days, tm_week: result1.weeks };
++		{ tm_sec: result1.seconds, tm_min: static_cast<int>(result1.minutes), tm_hour: static_cast<int>(result1.hours),
++		tm_wday: static_cast<int>(result1.days), tm_week: static_cast<int>(result1.weeks) };
+ 	return result2;
+ }
+ 
+diff --unified --recursive --text --new-file procinfo-ng-2.0.304.orig/procinfo.cpp procinfo-ng-2.0.304/procinfo.cpp
+--- procinfo-ng-2.0.304.orig/procinfo.cpp	2024-06-23 16:42:37.812151380 +0200
++++ procinfo-ng-2.0.304/procinfo.cpp	2024-06-23 16:42:44.332186597 +0200
+@@ -211,7 +211,7 @@
+ 	try {
+ 		rows = getNetStats(perSecond, showTotals, skipIfaces, elapsed);
+ 	} catch (string exceptionMessage) {
+-		print(exceptionMessage.c_str());
++		print("%s", exceptionMessage.c_str());
+ 	}
+ 	print("\n");
+ 	prettyPrint(rows, rowWidth, true);

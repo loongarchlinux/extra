@@ -5,25 +5,40 @@
 
 pkgname=retro-gtk
 pkgver=1.0.2
-pkgrel=3
+pkgrel=4
 pkgdesc='Toolkit to write GTK based Libretro frontends'
-arch=('loong64' 'x86_64')
+arch=(loong64 x86_64)
 url='https://gnome.pages.gitlab.gnome.org/retro-gtk/'
-license=('GPL3')
-depends=('gcc-libs' 'gdk-pixbuf2' 'glib2' 'glibc' 'gtk3' 'libepoxy' 'libpulse' 'libsamplerate')
-makedepends=('gobject-introspection' 'meson' 'vala')
-source=("https://download.gnome.org/sources/$pkgname/${pkgver%.*}/$pkgname-$pkgver.tar.xz"
-        'retro-gtk-remove-unknown-arguments.patch::https://gitlab.gnome.org/GNOME/retro-gtk/-/commit/8016c10e7216394bc66281f2d9be740140b6fad6.patch')
-sha256sums=('7118b0b5f9c1f2f0bc742faf8689eb48b44833efada0f6dbce990ec9783bcbd2'
-            '5a165f0e63fb9f8e10222c60d8c21068b3c2ebf4080dc822ddc65d649dcc39e0')
+license=(GPL-3.0-or-later)
+depends=(
+  gcc-libs
+  gdk-pixbuf2
+  glib2
+  glibc
+  gtk3
+  libepoxy
+  libpulse
+  libsamplerate
+)
+makedepends=(
+  git
+  glib2-devel
+  gobject-introspection
+  meson
+  vala
+)
+source=("git+https://gitlab.gnome.org/GNOME/$pkgname.git#tag=$pkgver")
+b2sums=(e183a3da1d42704f8c76c3c33c0acd3308e8f129bef6ed9f0e831d862a14cb7fb9fa29340f3ad2f113132bbbd61fedff8523f2558b0aa99483d955bb62374f7a)
 
 prepare() {
-  # https://gitlab.gnome.org/GNOME/retro-gtk/-/commit/8016c10e7216394bc66281f2d9be740140b6fad6
-  patch -d $pkgname-$pkgver -Np1 -i ../retro-gtk-remove-unknown-arguments.patch
+  cd $pkgname
+
+  # https://gitlab.gnome.org/GNOME/retro-gtk/-/merge_requests/167
+  git cherry-pick -n 8016c10e7216394bc66281f2d9be740140b6fad6
 }
 
 build() {
-  arch-meson $pkgname-$pkgver build \
+  arch-meson $pkgname build \
     -D build-doc=true \
     -D install-doc=true
   meson compile -C build

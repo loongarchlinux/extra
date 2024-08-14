@@ -3,25 +3,28 @@
 pkgname=nginx-mod-modsecurity
 epoch=1
 pkgver=1.0.3
-pkgrel=5
+pkgrel=7
 
 pkgdesc='ModSecurity v3 Nginx Connector (module for nginx)'
 arch=('loong64' 'x86_64')
-depends=('nginx' 'libmodsecurity')
-makedepends=('nginx-src')
+depends=('libmodsecurity')
+makedepends=('nginx' 'nginx-src')
 url="https://github.com/SpiderLabs/ModSecurity-nginx"
-license=('GPL3')
+license=('Apache-2.0')
 
 source=(
 	https://github.com/SpiderLabs/ModSecurity-nginx/releases/download/v$pkgver/modsecurity-nginx-v$pkgver.tar.gz{,.asc}
+	${pkgname}-add-missing-header-for-conftest.patch::https://github.com/owasp-modsecurity/ModSecurity-nginx/commit/7d37ace7431ea9704faa98f29876bcd72ef4b1ff.patch
 )
 validpgpkeys=('B0F4253373F8F6F510D42178520A9993A1C052F8'  # Maxim Dounin <mdounin@mdounin.ru>
               '190EFACCA1E9FA466A8ECD9CE6DFB08CE8B11277' # Felipe Zimmerle
               'F126692E9BA86B3958E73ED2F2FC4E45883BCBA4') # Martin Vierula
 sha256sums=('ae811c7208ac029cb7a99d6f63e03d3971797607517187f47620df39c1f78add'
-            'SKIP')
+            'SKIP'
+            'cea771735e2d658040018566c2af55429f0a190d7faf7795983d71c4e7acf2fc')
 
 prepare() {
+	patch --directory=modsecurity-nginx-v$pkgver -Np1 < ${pkgname}-add-missing-header-for-conftest.patch
 	mkdir -p build
 	cd build
 	ln -sf /usr/src/nginx/auto
@@ -30,11 +33,18 @@ prepare() {
 
 build() {
 	cd build
-	/usr/src/nginx/configure --with-compat --add-dynamic-module=../modsecurity-nginx-v$pkgver
+	/usr/src/nginx/configure \
+		--with-ld-opt="$LDFLAGS" \
+		--with-compat \
+		--add-dynamic-module=../modsecurity-nginx-v$pkgver
 	make modules
 }
 
 package() {
+	local _nginx_version=$(nginx -v 2>&1)
+	_nginx_version=${_nginx_version/* nginx\/}
+	depends+=("nginx=${_nginx_version}")
+
 	cd build/objs
 	for mod in *.so; do
 		install -Dm755 $mod "$pkgdir/usr/lib/nginx/modules/$mod"

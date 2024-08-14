@@ -2,7 +2,7 @@
 
 pkgname=perl-mail-authenticationresults
 pkgver=2.20230112
-pkgrel=2
+pkgrel=3
 pkgdesc='Object Oriented Authentication-Results Headers'
 arch=(any)
 license=(PerlArtistic GPL)

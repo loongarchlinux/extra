@@ -2,31 +2,53 @@
 # Contributor: Matthew Sloan matthew@sloan.cc
 
 pkgname=python-pint
-pkgver=0.23
-pkgrel=2
+pkgver=0.24.3
+pkgrel=1
 pkgdesc="A unit library for Python"
 arch=('any')
 license=('BSD-3-Clause')
 url="https://pint.readthedocs.org"
-depends=('python')
-makedepends=('python-setuptools-scm' 'python-setuptools' 'python-wheel' 'python-build' 'python-installer')
-checkdepends=(python-pytest-benchmark 'python-pytest-subtests' 'python-numpy' 'python-uncertainties' 'python-pytest7')
-source=("https://pypi.io/packages/source/P/Pint/Pint-$pkgver.tar.gz")
-sha512sums=('80abfedab0c2b959c84958ad731a8e03469991b7a3970d99e344b513237b96c764098cdfe9e11f94c4208667fd965bd1cc043d820450d45cbb6a914ee1742ac6')
+depends=(
+  'python'
+  'python-appdirs'
+  'python-flexcache'
+  'python-flexparser'
+)
+makedepends=(
+  'git'
+  'python-build'
+  'python-installer'
+  'python-setuptools'
+  'python-setuptools-scm'
+  'python-wheel'
+)
+checkdepends=(
+  'python-numpy'
+  'python-pytest'
+  python-pytest-benchmark
+  'python-pytest-subtests'
+  'python-uncertainties'
+)
+source=("git+https://github.com/hgrecco/pint.git#tag=$pkgver")
+sha512sums=('903280809996d256c332a0568fb9a6d9317a1f762c81b7399c72a8535abec1e3ea9f158e919ef4fedb6848341b7c7c7f264657abf447eaff8a31ce20f94ac1ab')
 
 build() {
-  cd Pint-$pkgver
+  cd pint
   python -m build --wheel --no-isolation
 }
 
 check() {
-  cd Pint-$pkgver
-  # https://github.com/hgrecco/pint/issues/1898
-  pytest -k 'not test_load_definitions_stage_2'
+  cd pint
+  pytest
 }
 
 package() {
-  cd Pint-$pkgver
+  cd pint
   python -m installer --destdir="$pkgdir" dist/*.whl
-  install -D -m644 LICENSE "$pkgdir"/usr/share/licenses/$pkgname/LICENSE
+
+  # Symlink license file
+  local site_packages=$(python -c "import site; print(site.getsitepackages()[0])")
+  install -d "$pkgdir"/usr/share/licenses/$pkgname
+  ln -s "$site_packages"/Pint-$pkgver.dist-info/LICENSE \
+    "$pkgdir"/usr/share/licenses/$pkgname/LICENSE
 }

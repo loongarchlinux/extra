@@ -4,39 +4,56 @@
 # Contributor: Charles Lindsay <charles@chaoslizard.org>
 
 pkgname=cdemu-daemon
-pkgver=3.2.6
+pkgver=3.2.7
 pkgrel=1
 pkgdesc="CD/DVD-ROM device emulator daemon"
-arch=(loong64 x86_64)
 url="https://cdemu.sourceforge.io/"
-license=(GPL)
-depends=(dbus VHBA-MODULE libao 'libmirage>=3.2.0')
-makedepends=(cmake intltool)
-optdepends=('alsa-lib: to enable the ALSA audio driver'
-            'pulseaudio: to enable the PA audio driver')
+arch=(loong64 x86_64)
+license=(GPL-2.0-or-later)
+depends=(
+  VHBA-MODULE
+  dbus
+  glib2
+  glibc
+  libao
+  libmirage
+)
+makedepends=(
+  cmake
+  git
+  intltool
+  ninja
+)
+optdepends=(
+  'alsa-lib: to enable the ALSA audio driver'
+  'pulse-native-provider: to enable the PA audio driver'
+)
 install=cdemu-daemon.install
-source=("https://downloads.sourceforge.net/cdemu/$pkgname/$pkgname-$pkgver.tar.xz")
-sha256sums=('a6e404e3ef75c6146e36354f65880dfd63b4b8ef1f54039dc5058e190f857d8f')
+source=("cdemu-code::git+https://git.code.sf.net/p/cdemu/code#tag=$pkgname-$pkgver")
+b2sums=('abbf18c8a03fe09b1896194d1f10ddd7c9a6c75145e390efea2c9b8cdcfd01bf19b4ffaeb0dc618ed597f8fbd33bfc33e50b375bcef12c4c781dc28bcd75df73')
 
 prepare() {
-  cd $pkgname-$pkgver
+  cd cdemu-code/$pkgname
 }
 
 build() {
-  cmake -S $pkgname-$pkgver -B build \
-    -DCMAKE_BUILD_TYPE=Release \
-    -DCMAKE_INSTALL_PREFIX=/usr
+  local cmake_options=(
+    -D CMAKE_BUILD_TYPE=None
+    -D CMAKE_INSTALL_PREFIX=/usr
+  )
+
+  cmake -S cdemu-code/$pkgname -B build -G Ninja "${cmake_options[@]}"
   cmake --build build
 }
 
 package() {
   DESTDIR="$pkgdir" cmake --install build
 
-  install -Dt "$pkgdir/usr/share/doc/$pkgname" -m644 $pkgname-$pkgver/README
+  install -Dt "$pkgdir/usr/share/doc/$pkgname" -m644 cdemu-code/$pkgname/README
   install -Dt "$pkgdir/usr/lib/systemd/user" -m644 \
-    $pkgname-$pkgver/service-example/cdemu-daemon.service
+    cdemu-code/$pkgname/service-example/cdemu-daemon.service
   install -Dt "$pkgdir/usr/share/dbus-1/services" -m644 \
-    $pkgname-$pkgver/service-example/net.sf.cdemu.CDEmuDaemon.service
+    cdemu-code/$pkgname/service-example/net.sf.cdemu.CDEmuDaemon.service
 
   echo vhba | install -Dm644 /dev/stdin "$pkgdir/usr/lib/modules-load.d/cdemu.conf"
   echo 'g cdemu - -' | install -Dm644 /dev/stdin "$pkgdir/usr/lib/sysusers.d/cdemu.conf"
@@ -45,4 +62,4 @@ ACTION=="add", KERNEL=="vhba_ctl", MODE="0660", OWNER="root", GROUP="cdemu", TAG
 END
 }
 
-# vim:set sw=2 et:
+# vim:set sw=2 sts=-1 et:

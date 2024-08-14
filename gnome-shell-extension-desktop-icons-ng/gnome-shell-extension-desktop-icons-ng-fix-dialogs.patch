@@ -1,0 +1,175 @@
+From 56a879eff2ecf5172314802e9fc216d40a5ac7b6 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Ball=C3=B3=20Gy=C3=B6rgy?= <ballogyor@gmail.com>
+Date: Thu, 13 Jun 2024 16:55:25 +0200
+Subject: [PATCH] Various improvements for dialog handling
+
+- Set prgname to 'org.gnome.Shell.Extensions' so dialogs will have proper
+  icon on the taskbar/window switcher.
+
+- Enforce maximize/unminimize only for fixed windows, not for all windows
+  on Wayland.
+
+- Set dialogs as modal with normal window type, and add them to individual
+  window groups. This ensures that dialogs are kept visible on Wayland, but
+  not lock or attached to the desktop.
+
+- Make the preferences window scrollable vertically. This allows to fit the
+  window's height into small screens.
+---
+ app/autoAr.js           |  8 +++++++-
+ app/ding.js             |  2 ++
+ app/fileItemMenu.js     | 12 ++++++++++--
+ app/preferences.js      | 16 ++++++++++++----
+ emulateX11WindowType.js |  8 +++++---
+ 5 files changed, 36 insertions(+), 10 deletions(-)
+
+diff --git a/app/autoAr.js b/app/autoAr.js
+index b4211d9bf..373a3b8ed 100644
+--- a/app/autoAr.js
++++ b/app/autoAr.js
+@@ -17,6 +17,7 @@
+ 'use strict';
+ const GLib = imports.gi.GLib;
+ const Gio = imports.gi.Gio;
++const Gdk = imports.gi.Gdk;
+ const Gtk = imports.gi.Gtk;
+ var GnomeAutoar = null;
+ try {
+@@ -40,10 +41,12 @@ var AutoAr = class {
+             title: 'Archives Operations',
+             resizable: false,
+             deletable: false,
+-            modal: false,
++            modal: true,
+             default_height: 100,
+             window_position: Gtk.WindowPosition.CENTER_ALWAYS,
+         });
++        const windowGroup = new Gtk.WindowGroup();
++        windowGroup.add_window(this._progressWindow);
+         this._progressWindow.connect('delete-event', () => {
+             return true;
+         });
+@@ -558,7 +561,10 @@ const CompressDialog = class {
+             default_width: 500,
+             default_height: 210,
+             window_position: Gtk.WindowPosition.CENTER_ALWAYS,
++            type_hint: Gdk.WindowTypeHint.NORMAL,
+         });
++        const windowGroup = new Gtk.WindowGroup();
++        windowGroup.add_window(this._dialog);
+         const container = this._dialog.get_content_area();
+         container.orientation = Gtk.Orientation.VERTICAL;
+         container.margin_top = 30;
+diff --git a/app/ding.js b/app/ding.js
+index 9a1550ade..3bbcf9417 100755
+--- a/app/ding.js
++++ b/app/ding.js
+@@ -159,6 +159,8 @@ if (Gio.File.new_for_path(localePath).query_exists(null)) {
+     Gettext.bindtextdomain('ding', localePath);
+ }
+ 
++GLib.set_prgname('org.gnome.Shell.Extensions');
++
+ const DesktopManager = imports.desktopManager;
+ 
+ var desktopManager = null;
+diff --git a/app/fileItemMenu.js b/app/fileItemMenu.js
+index 8a383eb71..95fca5028 100644
+--- a/app/fileItemMenu.js
++++ b/app/fileItemMenu.js
+@@ -409,6 +409,9 @@ var FileItemMenu = class {
+             let chooser = Gtk.AppChooserDialog.new_for_content_type(null,
+                 Gtk.DialogFlags.MODAL + Gtk.DialogFlags.USE_HEADER_BAR,
+                 mimetype);
++            chooser.set_type_hint(Gdk.WindowTypeHint.NORMAL);
++            const windowGroup = new Gtk.WindowGroup();
++            windowGroup.add_window(chooser);
+             chooser.show_all();
+             chooser.connect('close', () => {
+                 chooser.response(Gtk.ResponseType.CANCEL);
+@@ -454,13 +457,18 @@ var FileItemMenu = class {
+             return;
+         }
+ 
+-        const dialog = new Gtk.FileChooserDialog({title: _('Select Extract Destination')});
++        const dialog = new Gtk.FileChooserDialog({
++            title: _('Select Extract Destination'),
++            modal: true,
++            type_hint: Gdk.WindowTypeHint.NORMAL,
++        });
++        const windowGroup = new Gtk.WindowGroup();
++        windowGroup.add_window(dialog);
+         dialog.set_action(Gtk.FileChooserAction.SELECT_FOLDER);
+         dialog.set_create_folders(true);
+         dialog.set_current_folder_uri(DesktopIconsUtil.getDesktopDir().get_uri());
+         dialog.add_button(_('Cancel'), Gtk.ResponseType.CANCEL);
+         dialog.add_button(_('Select'), Gtk.ResponseType.ACCEPT);
+-        DesktopIconsUtil.windowHidePagerTaskbarModal(dialog, true);
+         dialog.show_all();
+         dialog.connect('close', () => {
+             dialog.response(Gtk.ResponseType.CANCEL);
+diff --git a/app/preferences.js b/app/preferences.js
+index c6517a336..ffa9051e8 100644
+--- a/app/preferences.js
++++ b/app/preferences.js
+@@ -79,19 +79,27 @@ function init(path) {
+  */
+ function showPreferences() {
+     if (prefsWindow) {
++        prefsWindow.present();
+         return;
+     }
+     prefsWindow = new Gtk.Window({
+-        resizable: false,
++        title: _('Desktop Icons Settings'),
++        modal: true,
+         window_position: Gtk.WindowPosition.CENTER,
+     });
++    const windowGroup = new Gtk.WindowGroup();
++    windowGroup.add_window(prefsWindow);
+     prefsWindow.connect('destroy', () => {
+         prefsWindow = null;
+     });
+-    prefsWindow.set_title(_('Settings'));
+-    DesktopIconsUtil.windowHidePagerTaskbarModal(prefsWindow, true);
++    const scrolledWindow = new Gtk.ScrolledWindow();
++    scrolledWindow.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC);
+     let frame = PrefsWindow.preferencesFrame(Gtk, desktopSettings, nautilusSettings, gtkSettings);
+-    prefsWindow.add(frame);
++    scrolledWindow.add(frame);
++    prefsWindow.add(scrolledWindow);
++    frame.connect('size-allocate', (widget, allocation) => {
++        prefsWindow.set_default_size(-1, allocation.height + 20);
++    });
+     prefsWindow.show_all();
+ }
+ 
+diff --git a/emulateX11WindowType.js b/emulateX11WindowType.js
+index acae59a0c..4ebfa5cca 100644
+--- a/emulateX11WindowType.js
++++ b/emulateX11WindowType.js
+@@ -66,16 +66,18 @@ class ManageWindow {
+             }
+         }));
+         this._signalIDs.push(window.connect('notify::minimized', () => {
+-            this._window.unminimize();
++            if (this._fixed) {
++                this._window.unminimize();
++            }
+         }));
+         this._signalIDs.push(window.connect('notify::maximized-vertically', () => {
+-            if (!window.maximized_vertically) {
++            if (this._fixed && !window.maximized_vertically) {
+                 window.maximize(Meta.MaximizeFlags.VERTICAL);
+             }
+             this._moveIntoPlace();
+         }));
+         this._signalIDs.push(window.connect('notify::maximized-horizontally', () => {
+-            if (!window.maximized_horizontally) {
++            if (this._fixed && !window.maximized_horizontally) {
+                 window.maximize(Meta.MaximizeFlags.HORIZONTAL);
+             }
+             this._moveIntoPlace();
+-- 
+GitLab
+

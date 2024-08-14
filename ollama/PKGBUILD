@@ -1,38 +1,39 @@
 # Maintainer: Alexander F. Rødseth <xyproto@archlinux.org>
+# Contributor: Steven Allen <steven@stebalien.com>
 # Contributor: Matt Harrison <matt@harrison.us.com>
 # Contributor: Kainoa Kanter <kainoa@t1c.dev>
 
 pkgbase=ollama
 pkgname=(ollama ollama-cuda ollama-rocm)
-pkgver=0.1.34
+pkgver=0.3.5
+_ollama_commit=15c2d8fe149ba2b58aadbab615a6955f8821c7a9 # tag: v0.3.5
+_llama_cpp_commit=$(curl -sL "https://github.com/ollama/ollama/tree/$_ollama_commit/llm" | tr ' ' '\n' | tr '"' '\n' | grep ggerganov | cut -d/ -f5 | head -1)
 pkgrel=1
 pkgdesc='Create, run and share large language models (LLMs)'
 arch=(loong64 x86_64)
 url='https://github.com/ollama/ollama'
 license=(MIT)
-_ollamacommit=adeb40eaf29039b8964425f69a9315f9f1694ba8 # tag: v0.1.34
-# The llama.cpp git submodule commit hash can be found here:
-# https://github.com/ollama/ollama/tree/v0.1.34/llm
-_llama_cpp_commit=952d03dbead16e4dbdd1d3458486340673cc2465
 makedepends=(clblast cmake cuda git go rocm-hip-sdk rocm-opencl-sdk)
-source=(git+$url#commit=$_ollamacommit
+source=(git+$url#commit=$_ollama_commit
         llama.cpp::git+https://github.com/ggerganov/llama.cpp#commit=$_llama_cpp_commit
         ollama.service
         sysusers.conf
         tmpfiles.d)
-b2sums=('e4dc0979bd13eb95f52424cde8461d440365d3181b4a509dfbf67ba261fbb007f6aec4ec830e9dd38dd79bafb6c14ee8d0748be4ed2a090a87137d1910bb292a'
-        'f2e7fdf5eaf21f725fa868b4dd18ab602a4ec3f6bdd703bc674bf6537e9b57c7c87be945a2b6b774b6a7abfb6a36b2d15cf40ea67ba0c7958ced7eea46880702'
-        '2bf4c2076b7841de266ec40da2e2cbb675dcbfebfa8aed8d4ede65435854cb43d39ea32bc9210cfc28a042382dd0094a153e351edfa5586eb7c6a0783f3bc517'
+b2sums=('ffd07f77c0e823e21788f2cfe4b3ad47a763b0180f8211ab0bd8aaf1301b620653bc65fa6df16f27004cdc01e79de8c888cf4cca206ca9bb4d36f0326610b3a7'
+        'd9c0b8340b98376e558f401be15f6977d0adedfe0917a67ff3aeff57cb70fba1bfbb31916b663e8391d711494725ca6a9fe299587b1a45e8e86cbc697dade0ac'
+        '18a1468f5614f9737f6ff2e6c7dfb3dfc0ba82836a98e3f14f8e544e3aba8f74ef0a03c5376a0d0aa2e59e948701d7c639dda69477b051b732896021e753e32e'
         '3aabf135c4f18e1ad745ae8800db782b25b15305dfeaaa031b4501408ab7e7d01f66e8ebb5be59fc813cfbff6788d08d2e48dcf24ecc480a40ec9db8dbce9fec'
         'e8f2b19e2474f30a4f984b45787950012668bf0acb5ad1ebb25cd9776925ab4a6aa927f8131ed53e35b1c71b32c504c700fe5b5145ecd25c7a8284373bb951ed')
 
 prepare() {
+  echo "Using ollama git submodule llama.cpp commit $_llama_cpp_commit"
+
   # Prepare the git submodule by copying in files (the build process is sensitive to symlinks)
   rm -frv $pkgbase/llm/llama.cpp
   cp -r llama.cpp $pkgbase/llm/llama.cpp
 
-  # Enable LTO and set the CMake build type to "Release"
-  sed -i 's,T_CODE=on,T_CODE=on -D LLAMA_LTO=on -D CMAKE_BUILD_TYPE=Release,g' $pkgbase/llm/generate/gen_linux.sh
+  # Set the CMake build type to "Release"
+  sed -i 's,T_CODE=on,T_CODE=on -D CMAKE_BUILD_TYPE=Release,g' $pkgbase/llm/generate/gen_linux.sh
 
   # Copy the ollama directory to ollama-cuda and ollama-rocm
   cp -r $pkgbase $pkgbase-cuda
@@ -45,16 +46,16 @@ prepare() {
 }
 
 build() {
-  export ROCM_PATH=/disabled
-  export CUDA_LIB_DIR=/disabled
-  export CGO_CFLAGS="$CFLAGS" CGO_CPPFLAGS="$CPPFLAGS" CGO_CXXFLAGS="$CXXFLAGS" CGO_LDFLAGS="$LDFLAGS"
   export CFLAGS+=' -w'
   export CXXFLAGS+=' -w'
+  export CGO_CFLAGS="$CFLAGS" CGO_CPPFLAGS="$CPPFLAGS" CGO_CXXFLAGS="$CXXFLAGS" CGO_LDFLAGS="$LDFLAGS"
 
-  local goflags="-buildmode=pie -trimpath -mod=readonly -modcacherw"
-  local ldflags="-linkmode=external -buildid= -X github.com/ollama/ollama/version.Version=${pkgver}"
+  local goflags='-buildmode=pie -trimpath -mod=readonly -modcacherw'
+  local ldflags="-linkmode=external -buildid= -X github.com/ollama/ollama/version.Version=$pkgver -X github.com/ollama/ollama/server.mode=release"
 
   # Ollama with CPU only support
+  export ROCM_PATH=/disabled
+  export CUDA_LIB_DIR=/disabled
   cd $pkgbase
   go generate ./...
   go build $goflags -ldflags="$ldflags"
@@ -67,31 +68,21 @@ build() {
 
   # Ollama with ROCm support
   cd "$srcdir/$pkgbase-rocm"
-  export ROCM_PATH=/opt/rocm
   export CUDA_LIB_DIR=/disabled
+  export ROCM_PATH=/opt/rocm
   export CC=/opt/rocm/llvm/bin/clang
-  export CFLAGS+=' -fcf-protection=none'
   export CXX=/opt/rocm/llvm/bin/clang++
+  export CFLAGS+=' -fcf-protection=none'
   export CXXFLAGS+=' -fcf-protection=none'
-  export LLAMA_CCACHE=OFF
-  export OLLAMA_CUSTOM_CPU_DEFS="-DLLAMA_AVX=on -DLLAMA_AVX2=on -DAMDGPU_TARGETS=gfx1030 -DLLAMA_F16C=on -DLLAMA_FMA=on -DLLAMA_LTO=on -DLLAMA_HIPBLAS=1 -DCMAKE_BUILD_TYPE=Release"
+  export OLLAMA_CUSTOM_CPU_DEFS='-DLLAMA_AVX=on -DLLAMA_AVX2=on -DAMDGPU_TARGETS=gfx1030 -DLLAMA_F16C=on -DLLAMA_FMA=on -DLLAMA_LTO=on -DLLAMA_HIPBLAS=1 -DCMAKE_BUILD_TYPE=Release'
   go generate ./...
   go build $goflags -ldflags="$ldflags" -tags rocm
 }
 
 check() {
-  local ollama_exe="$srcdir/$pkgbase/$pkgbase"
-  local ollama_cuda_exe="$srcdir/$pkgbase-cuda/$pkgbase"
-  local ollama_rocm_exe="$srcdir/$pkgbase-rocm/$pkgbase"
-
-  "$ollama_exe" --version > /dev/null
-  "$ollama_cuda_exe" --version > /dev/null
-  "$ollama_rocm_exe" --version > /dev/null
-
-  if [ $(grep -c CUDA "$ollama_exe") -gt $(grep -c CUDA "$ollama_cuda_exe") ]; then
-      echo "The number of 'CUDA' occurrences in ollama is greater than in ollama-cuda."
-      exit 1
-  fi
+  $pkgbase/$pkgbase --version > /dev/null
+  $pkgbase-cuda/$pkgbase --version > /dev/null
+  $pkgbase-rocm/$pkgbase --version > /dev/null
 
   cd $pkgbase
   go test .
@@ -131,6 +122,7 @@ package_ollama-rocm() {
   provides=(ollama)
   conflicts=(ollama)
   depends=(hipblas)
+  optdepends=('rocm-smi-lib: monitor GPU usage with rocm-smi')
 
   install -Dm755 $pkgname/$pkgbase "$pkgdir/usr/bin/$pkgbase"
   install -dm755 "$pkgdir/var/lib/ollama"

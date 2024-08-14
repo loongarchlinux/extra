@@ -1,78 +1,109 @@
 # Maintainer: Tim Meusel <tim@bastelfreak.de>
+# Contributor: Justin Kromlinger <hashworks@archlinux.org>
 # Contributor: arakmar
+
 pkgname=r10k
-pkgver=3.16.0
-pkgrel=1
+pkgver=4.1.0
+pkgrel=2
 pkgdesc='Provides a general purpose toolset for deploying Puppet environments and modules.'
 arch=('any')
 url="https://github.com/puppetlabs/${pkgname}"
-license=('Apache')
-depends=('ruby' 'ruby-colored2' 'ruby-cri' 'ruby-gettext-setup' 'ruby-log4r' 'ruby-multi_json' 'ruby-semantic_puppet' 'ruby-puppet_forge' 'ruby-rugged' 'ruby-fast_gettext' 'ruby-gettext' 'ruby-faraday' 'ruby-faraday-net_http' 'ruby-jwt')
-makedepends=('ruby-minitar' 'ruby-yard')
-checkdepends=('ruby-rspec')
-source=("${url}/archive/${pkgver}/${pkgname}-${pkgver}.tar.gz")
-sha512sums=('399a357cf8617427632516e0f439a40464ba0c8201ee7b6ce15c893ae029bfd9ae1438b76aff3b9601685d14febf8fc71dbdd2954eb3352d6ce713e769cb586d')
+license=('Apache-2.0')
+depends=(
+  ruby
+  ruby-colored2
+  ruby-cri
+  ruby-gettext-setup
+  ruby-jwt
+  ruby-log4r
+  ruby-minitar
+  ruby-multi_json
+  ruby-puppet_forge
+)
+makedepends=(
+  ruby-rdoc
+)
+checkdepends=(
+  git
+  ruby-rspec
+  ruby-rugged
+)
 options=('!emptydirs')
+source=("${url}/archive/${pkgver}/${pkgname}-${pkgver}.tar.gz")
+sha512sums=('c8c78b013fa75a29b205ae9a6ee24f1369b4ffec2d3d7d9e9b3b5482ffa77c19f360dc8fd8444388dd527cbb31fd9c2aa96201d5f60d53f0b23a55d446d43a8c')
+b2sums=('ba154d8500beef70cb6a8761833b05e0b5a3122b6a4a04dafc7c20ccce76e6fd30dbe0ac0bae667fac7d985ddc2921f43657c0bf2cd0c6d877370b7d2e73e799')
 
 prepare() {
-  cd "${srcdir}/${pkgname}-${pkgver}"
+  cd "${pkgname}-${pkgver}"
 
-  # update the gemspec to allow newer versions
-  sed --in-place 's|~>|>=|g' "${pkgname}.gemspec"
-  # don't use git to detect files for the package
-  sed --in-place 's|git ls-files|find|g' "${pkgname}.gemspec"
-  # drop dev/CI dependencies; they only create package dependecy circles
-  sed --in-place '/add_development_dependency/d' "${pkgname}.gemspec"
-  # lockfiles should be removed
-  rm -fv Gemfile.lock
-  # do not rely on Gemfiles (unless the project *really* needs it)
-  rm -fv Gemfile
+  # update gemspec/Gemfile to allow newer version of the dependencies
+  sed --in-place --regexp-extended \
+    --expression 's|~>|>=|g' \
+    --expression "s|dependency 'colored2',   '([0-9])|dependency 'colored2', '>= \1|g" \
+    "${pkgname}.gemspec"
+
+  # we don't build from a git checkout
+  sed --in-place --regexp-extended 's|git ls-files|find . -type f -not -path "*/\.git*"|' "${pkgname}.gemspec"
 }
 
 build() {
   cd "${pkgname}-${pkgver}"
-  gem build "${pkgname}.gemspec"
-}
 
-check() {
-  cd "${srcdir}/${pkgname}-${pkgver}"
-  rspec --color --format documentation spec/unit
-}
-
-package() {
-  cd "${srcdir}/${pkgname}-${pkgver}"
   local _gemdir="$(gem env gemdir)"
+
+  gem build --verbose "${pkgname}.gemspec"
+
   gem install \
     --local \
     --verbose \
     --ignore-dependencies \
     --no-user-install \
-    --install-dir "${pkgdir}/${_gemdir}" \
-    --bindir "${pkgdir}/usr/bin" \
+    --install-dir "tmp_install${_gemdir}" \
+    --bindir "tmp_install/usr/bin" \
     "${pkgname}-${pkgver}.gem"
-  install -Dm 644 LICENSE -t "${pkgdir}/usr/share/licenses/${pkgname}/"
-  install -Dm 644 r10k.yaml.example CHANGELOG.mkd README.mkd CONTRIBUTING.mkd -t "${pkgdir}/usr/share/doc/${pkgname}"
-  mv doc integration "${pkgdir}/usr/share/doc/${pkgname}/"
 
   # remove unrepreducible files
-  rm -frv \
-    "$pkgdir/$_gemdir/cache/" \
-    "$pkgdir/$_gemdir/spec/" \
-    "$pkgdir/$_gemdir/integration/" \
-    "$pkgdir/$_gemdir/gems/$_name-$pkgver/vendor/" \
-    "$pkgdir/$_gemdir/doc/$_name-$pkgver/ri/ext/"
+  rm --force --recursive --verbose \
+    "tmp_install${_gemdir}/cache/" \
+    "tmp_install${_gemdir}/gems/${pkgname}-${pkgver}/vendor/" \
+    "tmp_install${_gemdir}/doc/${pkgname}-${pkgver}/ri/ext/"
 
-  find "$pkgdir/$_gemdir/gems/" \
+  find "tmp_install${_gemdir}/gems/" \
     -type f \
     \( \
-        -iname "*.o" -o \
-        -iname "*.c" -o \
-        -iname "*.so" -o \
-        -iname "*.time" -o \
-        -iname "gem.build_complete" -o \
-        -iname "Makefile" \
+      -iname "*.o" -o \
+      -iname "*.c" -o \
+      -iname "*.so" -o \
+      -iname "*.time" -o \
+      -iname "gem.build_complete" -o \
+      -iname "Makefile" \
+    \) \
+    -delete
+
+  find "tmp_install${_gemdir}/extensions/" \
+    -type f \
+    \( \
+      -iname "mkmf.log" -o \
+      -iname "gem_make.out" \
     \) \
     -delete
 }
 
-# vim: ts=2 sw=2 et:
+check() {
+  cd "${pkgname}-${pkgver}"
+
+  local _gemdir="$(gem env gemdir)"
+
+  GEM_HOME="tmp_install${_gemdir}" rspec
+}
+
+package() {
+  cd "${pkgname}-${pkgver}"
+
+  cp --archive --verbose tmp_install/* "${pkgdir}"
+
+  install --verbose -D --mode=0644 LICENSE --target-directory "${pkgdir}/usr/share/licenses/${pkgname}"
+  install --verbose -D --mode=0644 *.mkd --target-directory "${pkgdir}/usr/share/doc/${pkgname}"
+}
+
+# vim: tabstop=2 shiftwidth=2 expandtab:

@@ -2,19 +2,59 @@
 
 pkgname=gnome-break-timer
 pkgver=3.1.0
-pkgrel=1
-pkgdesc="Keeps track of how much you are using the computer, and it reminds you to take regular breaks"
-arch=('loong64' 'x86_64')
-url="https://wiki.gnome.org/Apps/BreakTimer"
-license=('GPL3')
-depends=('gsound' 'gtk4' 'libnotify' 'libadwaita')
-makedepends=('meson' 'git' 'vala' 'blueprint-compiler')
-source=("git+https://gitlab.gnome.org/GNOME/gnome-break-timer.git#tag=$pkgver")
-sha256sums=('5a2e42d98407db3c8c4e2a6a1182cfb4e95a29e2d0af73b08af328d95e1456a0')
+pkgrel=2
+pkgdesc='Keeps track of how much you are using the computer, and it reminds you to take regular breaks'
+arch=(loong64 x86_64)
+url='https://wiki.gnome.org/Apps/BreakTimer'
+license=(GPL-3.0-or-later)
+depends=(
+  cairo
+  dconf
+  glib2
+  glibc
+  graphene
+  gsound
+  gtk4
+  hicolor-icon-theme
+  json-glib
+  libadwaita
+)
+makedepends=(
+  appstream-glib
+  blueprint-compiler
+  git
+  meson
+  vala
+)
+source=(
+  "git+https://gitlab.gnome.org/GNOME/$pkgname.git?signed#tag=$pkgver"
+  gnome-break-timer-window-icon.patch
+  gnome-break-timer-onlyshowin-gnome.patch
+)
+b2sums=(
+  8a7d6f1ebf0cfa49965d51b9d097eff0bf32e0e8c4f0b7664cc95a5c93221159d93b1c49d11e4351854272725d4d3ea76b82a03479ffc6576c410b8b0a1dd517
+  0fa34dca22c74bc6a6b60b8a4d19610286d3f1f7e85d052ba7cfdb7759976f6f754cacddd18b7c515ea1ec6b8362de06a651e944ec226e2d3cab3be74bbe3914
+  633fee12981a496b0ce48a5afb6f69bbc3117ed851bbaa14ee6e85985687925021f1376d54d24ca712459162c5725b68263c8c5982bbb4b8d63a80864e066b32
+)
+validpgpkeys=(4CD14406B0B5EA1D29015FD1B863B585A397D1AE) # Dylan McCall
+
+prepare() {
+  cd $pkgname
+
+  # https://gitlab.gnome.org/GNOME/gnome-break-timer/-/merge_requests/9
+  git apply -3 ../gnome-break-timer-window-icon.patch
+
+  # https://gitlab.gnome.org/GNOME/gnome-break-timer/-/merge_requests/11
+  git apply -3 ../gnome-break-timer-onlyshowin-gnome.patch
+}
 
 build() {
   arch-meson $pkgname build
   meson compile -C build
+}
+
+check() {
+  meson test -C build --print-errorlogs
 }
 
 package() {

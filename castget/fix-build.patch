@@ -1,0 +1,63 @@
+diff --unified --recursive --text --new-file castget-2.0.1.orig/src/libxmlutil.c castget-2.0.1/src/libxmlutil.c
+--- castget-2.0.1.orig/src/libxmlutil.c	2024-06-23 16:18:09.799011939 +0200
++++ castget-2.0.1/src/libxmlutil.c	2024-06-23 16:55:26.045714169 +0200
+@@ -21,6 +21,7 @@
+ #include "config.h"
+ #endif /* HAVE_CONFIG_H */
+ 
++#include <stdlib.h>
+ #include <string.h>
+ #include "libxmlutil.h"
+ 
+diff --unified --recursive --text --new-file castget-2.0.1.orig/src/progress.c castget-2.0.1/src/progress.c
+--- castget-2.0.1.orig/src/progress.c	2024-06-23 16:18:09.799011939 +0200
++++ castget-2.0.1/src/progress.c	2024-06-23 16:55:37.282427589 +0200
+@@ -21,6 +21,7 @@
+ #include "config.h"
+ #endif /* HAVE_CONFIG_H */
+ 
++#include <curl/curl.h>
+ #include <stdio.h>
+ #include <string.h>
+ #include <stdlib.h>
+@@ -32,7 +33,7 @@
+  * curl (src/tool_cb_prg.c) by Daniel Stenberg, in turn building on an
+  * implementation by Lars Aas. */
+ 
+-int progress_bar_cb(void *clientp, double dltotal, double dlnow, double ultotal, double ulnow)
++int progress_bar_cb(void *clientp, curl_off_t dltotal, curl_off_t dlnow, curl_off_t ultotal, curl_off_t ulnow)
+ {
+   double fraction;
+   int num;
+diff --unified --recursive --text --new-file castget-2.0.1.orig/src/progress.h castget-2.0.1/src/progress.h
+--- castget-2.0.1.orig/src/progress.h	2024-06-23 16:18:09.799011939 +0200
++++ castget-2.0.1/src/progress.h	2024-06-23 16:55:37.702429332 +0200
+@@ -20,6 +20,8 @@
+ #ifndef PROGRESS_H
+ #define PROGRESS_H
+ 
++#include <curl/curl.h>
++
+ typedef struct _progress_bar {
+   FILE *f;
+   long resume_from;
+@@ -30,6 +32,6 @@
+ 
+ progress_bar *progress_bar_new(long resume_from);
+ void progress_bar_free(progress_bar *pb);
+-int progress_bar_cb(void *clientp, double dltotal, double dlnow, double ultotal, double ulnow);
++int progress_bar_cb(void *clientp, curl_off_t dltotal, curl_off_t dlnow, curl_off_t ultotal, curl_off_t ulnow);
+ 
+ #endif /* PROGRESS_H */
+diff --unified --recursive --text --new-file castget-2.0.1.orig/src/urlget.c castget-2.0.1/src/urlget.c
+--- castget-2.0.1.orig/src/urlget.c	2024-06-23 16:18:09.799011939 +0200
++++ castget-2.0.1/src/urlget.c	2024-06-23 16:55:26.045714169 +0200
+@@ -60,7 +60,7 @@
+ 
+     if (pb) {
+       curl_easy_setopt(easyhandle, CURLOPT_NOPROGRESS, 0);
+-      curl_easy_setopt(easyhandle, CURLOPT_PROGRESSFUNCTION, progress_bar_cb);
++      curl_easy_setopt(easyhandle, CURLOPT_XFERINFOFUNCTION, progress_bar_cb);
+       curl_easy_setopt(easyhandle, CURLOPT_PROGRESSDATA, pb);
+     } else
+       curl_easy_setopt(easyhandle, CURLOPT_NOPROGRESS, 1);

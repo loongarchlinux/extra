@@ -1,31 +1,32 @@
 # Maintainer: Felix Yan <felixonmars@archlinux.org>
 
 pkgname=python-plette
-pkgver=1.0.0
-pkgrel=2
+pkgver=2.1.0
+pkgrel=1
 pkgdesc="Structured Pipfile and Pipfile.lock models"
 url="https://github.com/sarugaku/plette"
 license=('ISC')
 arch=('any')
 depends=('python-tomlkit')
-makedepends=('python-build' 'python-installer' 'python-setuptools' 'python-wheel')
+makedepends=('git' 'python-build' 'python-installer' 'python-setuptools' 'python-wheel')
 checkdepends=('python-pytest' 'python-cerberus')
-source=("$pkgname-$pkgver.tar.gz::https://github.com/sarugaku/plette/archive/v$pkgver.tar.gz")
-sha512sums=('72a3f270f76dbf32cb418628f1b24046111a46633603b07fd44fd4ed50d946653afaec070bce8e67a1ecff3ec8607f2476d3b25760c76726218873898bef97ed')
+source=("git+https://github.com/sarugaku/plette.git#tag=v$pkgver")
+sha512sums=('fd1c0663721a402da493f841b0d6ffb8bdcc8b1d4ccb9ebc3cf82965535c98788d33aa637e4aee107192d66d9d1065f865e3e834d3427a908d596022dfb5e2e3')
 
 build() {
-  cd plette-$pkgver
+  cd plette
   python -m build -nw
 }
 
 check() {
-  cd plette-$pkgver
-  PYTHONPATH="$PWD/build/lib" pytest
+  cd plette
+  python -m venv .venv --system-site-packages
+  .venv/bin/python -m installer dist/*.whl
+  .venv/bin/python -m pytest
 }
 
 package() {
-  cd plette-$pkgver
+  cd plette
   python -m installer -d "$pkgdir" dist/*.whl
-
   install -Dm644 LICENSE -t "$pkgdir"/usr/share/licenses/$pkgname/
 }

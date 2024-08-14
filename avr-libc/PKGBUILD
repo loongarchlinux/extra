@@ -4,28 +4,29 @@
 # Build order: avr-binutils -> avr-gcc -> avr-libc
 
 pkgname=avr-libc
-pkgver=2.1.0
-pkgrel=3
+pkgver=2.2.0
+pkgrel=1
 pkgdesc='The C runtime library for the AVR family of microcontrollers'
 arch=(any)
-url='https://savannah.nongnu.org/projects/avr-libc/'
+url='https://github.com/avrdudes/avr-libc'
 license=(BSD)
 depends=(avr-gcc)
+makedepends=(python)
 options=(!strip) # it corrupts avr libraries
-source=(https://download.savannah.gnu.org/releases/$pkgname/$pkgname-$pkgver.tar.bz2{,.sig})
-b2sums=('b17f3c4971221abe78d4f1d749c6f093e6fcf77b3435bc280af6025bf1c263a4d4d71c55c285ab7d7b458b361baa1d8b928f3ff706510c22b8c6d9f594c44abc'
-        'SKIP')
+_tag=avr-libc-${pkgver//./_}-release
+source=(https://github.com/avrdudes/avr-libc/archive/refs/tags/$_tag.tar.gz)
+b2sums=('c4358095c2d43493172e7deff4d5aa942bf1d5c7dcfcc09814f3926d0202fc6ea4f35c7a7a5f67675718c5abbf652b86ccaa48323d3b6aa1763922a05d57ace2')
 validpgpkeys=('56628323218C669FF578705C7E9EADC3030D34EB') # Joerg Wunsch
 
 build() {
-  cd avr-libc-$pkgver
+  cd avr-libc-$_tag
   ./bootstrap
   ./configure --build=$(./config.guess) --host=avr --prefix=/usr
   make
 }
 
 package() {
-  cd avr-libc-$pkgver
+  cd avr-libc-$_tag
   make DESTDIR="$pkgdir" install
 
   install -Dm644 LICENSE "$pkgdir/usr/share/licenses/$pkgname/LICENSE"

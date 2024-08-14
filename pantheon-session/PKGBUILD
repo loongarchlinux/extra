@@ -2,15 +2,14 @@
 # Contributor: Helder Bertoldo <helder.bertoldo@gmail.com>
 
 pkgname=pantheon-session
-pkgver=6.0.0
-pkgrel=4
+pkgver=6.0.0.r14.71b7b44
+pkgrel=1
 pkgdesc='Session settings for Pantheon'
 arch=(any)
 url=https://github.com/elementary/session-settings
-license=(GPL3)
+license=(GPL-3.0-only)
 groups=(pantheon)
 depends=(
-  cerbere
   dconf
   gala
   gnome-keyring
@@ -28,18 +27,19 @@ makedepends=(
   meson
 )
 optdepends=(pantheon-default-settings)
-_tag=48b482e4ad967522391a01391a1bb6ec66aff90d
-source=(pantheon-session-settings::git+https://github.com/elementary/session-settings.git#tag=${_tag})
-b2sums=(SKIP)
+_commit=71b7b445189419c34ef24bfbb47709f714055136
+source=(pantheon-session-settings::git+https://github.com/elementary/session-settings.git#commit=${_commit})
+b2sums=('29fd84df3c5affe7fa299074632e1ab8fc16ffce0fcfe8b5eb7065153025a6cfa5d77844cc99950e51769e8771c3d0139f617f0480a2ff30a5cc4d0f5c1715f6')
 
 pkgver() {
   cd pantheon-session-settings
-  git describe --tags
+  git describe --tags | sed 's/-/.r/; s/-g/./'
 }
 
 build() {
   arch-meson pantheon-session-settings build \
-    -Dfallback-session=gnome
+    -Dfallback-session=gnome \
+    -Dwayland=true
   ninja -C build
 }
 

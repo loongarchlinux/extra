@@ -2,21 +2,16 @@
 
 _hkgname=universe-reverse-instances
 pkgname=haskell-universe-reverse-instances
-pkgver=1.1.1
-pkgrel=150
+pkgver=1.1.2
+pkgrel=1
 pkgdesc="Instances of standard classes that are made possible by enumerations"
 url="https://github.com/dmwit/universe"
 license=("BSD")
 arch=('loong64' 'x86_64')
 depends=('ghc-libs' 'haskell-universe-base')
-makedepends=('ghc' 'uusi')
+makedepends=('ghc')
 source=("https://hackage.haskell.org/packages/archive/$_hkgname/$pkgver/$_hkgname-$pkgver.tar.gz")
-sha512sums=('c7f3d10a7b9be605bdc7e51b236240dce781e7674ded90e40998e71ac1765bc8b2c55271063c0e05ed033ea454a264da7fb1ff828283df504fc86ca52db0fda7')
-
-prepare() {
-  cd $_hkgname-$pkgver
-  uusi -u base -u universe-base $_hkgname.cabal
-}
+sha512sums=('1285c6d8c1af739485c7ab3dafd51830ad76a2e68adecdb6d5323aabfb97f0f16484f9b81e54fafa2a68ca77235020488e118ed964323712f9d706bdc2e41c44')
 
 build() {
   cd $_hkgname-$pkgver    
@@ -32,6 +27,11 @@ build() {
   runhaskell Setup unregister --gen-script
   sed -i -r -e "s|ghc-pkg.*update[^ ]* |&'--force' |" register.sh
   sed -i -r -e "s|ghc-pkg.*unregister[^ ]* |&'--force' |" unregister.sh
+}
+
+check() {
+  cd $_hkgname-$pkgver
+  runhaskell Setup test --show-details=direct
 }
 
 package() {

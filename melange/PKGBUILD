@@ -1,7 +1,7 @@
 # Maintainer: kpcyrd <kpcyrd[at]archlinux[dot]org>
 
 pkgname=melange
-pkgver=0.6.11
+pkgver=0.11.2
 pkgrel=1
 pkgdesc='Build APKs from source code'
 url='https://github.com/chainguard-dev/melange'
@@ -14,18 +14,25 @@ depends=(
   'glibc'
 )
 makedepends=('go')
+options=('!lto')
 source=("${pkgname}-${pkgver}.tar.gz::https://github.com/chainguard-dev/melange/archive/v${pkgver}.tar.gz")
-sha256sums=('df809b028d4495f51e23c1954811d79cc21d19aa87ba6a01b14af85fcb8d0ce4')
-b2sums=('997e3592f43944cccd08a6ed4ab77d46cec12bd4fb86268f1eaf7e38bc25d583ac7e99677b0885e9527ba367bcbbdb6bdca01ad6447d3834ff2d835efab955f6')
+sha256sums=('0f35c60494aad31160e5ff84f8bc228c38284e0d896333d9063dbc43223fdc61')
+b2sums=('30fecd7087895e3c8ce98dca42fed3088c48475082612ae742f05f76310787491747f12990879599e33ac3ef539f2f4f6c524b8ba41558153155c405deb1d732')
 
 build() {
   cd ${pkgname}-${pkgver}
+
+  export CGO_CPPFLAGS="${CPPFLAGS}"
+  export CGO_CFLAGS="${CFLAGS}"
+  export CGO_CXXFLAGS="${CXXFLAGS}"
+  export CGO_LDFLAGS="${LDFLAGS}"
+  export CGO_REQUIRED="1"
+
   go build \
-    -trimpath \
     -buildmode=pie \
     -mod=readonly \
     -modcacherw \
-    -ldflags "-linkmode external -extldflags \"${LDFLAGS}\"" \
+    -ldflags '-compressdwarf=false -linkmode=external' \
     .
 }
 

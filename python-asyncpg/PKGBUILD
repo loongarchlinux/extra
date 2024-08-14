@@ -1,50 +1,70 @@
-# Maintainer: Filipe Laíns (FFY00) <lains@archlinux.org>
+# Maintainer: Carl Smedstad <carsme@archlinux.org>
+# Contributor: Filipe Laíns (FFY00) <lains@archlinux.org>
 
-_name=asyncpg
-pkgname=python-$_name
+pkgname=python-asyncpg
+_pkgname=${pkgname#python-}
 pkgver=0.29.0
-pkgrel=3
-pkgdesc='A fast PostgreSQL Database Client Library for Python/asyncio'
-arch=('loong64' 'x86_64')
-url='https://github.com/MagicStack/asyncpg'
-license=('Apache')
-depends=('python' 'python-async-timeout')
-makedepends=('cython0' 'python-build' 'python-installer' 'python-setuptools'
-'python-wheel')
-checkdepends=('python-pytest' 'python-uvloop' 'postgresql')
-source=(https://files.pythonhosted.org/packages/source/${_name::1}/$_name/$_name-$pkgver.tar.gz)
-sha512sums=('5db979496323fcf4068d5de111b52f2ae1ad9efe68f80c28e6303ad936eb051d1792409f1e31fb86dc35caad5ef9b92c40e4f6dcbcccc3907ab2247f61db5504')
-b2sums=('9bb5606dfb103e066dcfd15c327fe8a8135bf4433c816dc354d84227e40b9f18bb2788ead0dd25b087f97b3113645b6dcfd8991a7bb6e2e71528d122c41105d5')
+pkgrel=5
+pkgdesc="A fast PostgreSQL Database Client Library for Python/asyncio"
+arch=(loong64 x86_64)
+url="https://github.com/MagicStack/asyncpg"
+license=(Apache-2.0)
+depends=(
+  glibc
+  python
+  python-async-timeout
+  python-typing_extensions
+)
+makedepends=(
+  cython
+  git
+  python-build
+  python-installer
+  python-setuptools
+  python-wheel
+)
+checkdepends=(
+  postgresql
+  python-pytest
+  python-uvloop
+)
+source=(
+  "git+$url.git#tag=v$pkgver"
+  "git+https://github.com/MagicStack/py-pgproto"
+)
+sha256sums=(
+  '57ce4ef0a1f6095b484fa608fda82e18b9b01c4257841b1044605cf256706de6'
+  'SKIP'
+)
+
+_archive="$_pkgname"
 
 prepare() {
-  cd $_name-$pkgver
+  cd "$_archive"
 
-  sed -i "s|'Cython==.*'|'Cython'|" setup.py
+  git submodule init
+  git config submodule.asyncpg/pgproto.url "$srcdir/py-pgproto"
+  git -c protocol.file.allow=always submodule update
+
+  sed -e 's|>=0.29.24,<0.30.0|>=0.29.24|' -e 's|>=0.29.24,<3.0.0|>=0.29.24|' -i setup.py -i pyproject.toml # Drop Cython version constraints
 }
 
 build() {
-  cd $_name-$pkgver
+  cd "$_archive"
 
-  python -m build -nw
+  python -m build --wheel --no-isolation
 }
 
 check() {
+  cd "$_archive"
+
+  python -m installer --destdir=tmp_install dist/*.whl
   local site_packages=$(python -c "import site; print(site.getsitepackages()[0])")
-
-  cd $_name-$pkgver
-
-  python -m installer --destdir=test_dir dist/*.whl
-  export PYTHONPATH="test_dir/$site_packages:$PYTHONPATH"
-  mv -v $_name $_name-off
-  pytest -vv tests/
+  PYTHONPATH="$PWD/tmp_install/$site_packages" pytest
 }
 
 package() {
-  cd $_name-$pkgver
+  cd "$_archive"
 
   python -m installer -d "$pkgdir" dist/*.whl
-
-  install -Dm 644 LICENSE -t "$pkgdir"/usr/share/licenses/$pkgname/
 }
-
-# vim:set ts=2 sw=2 et:

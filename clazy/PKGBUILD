@@ -2,8 +2,8 @@
 # Contributor: André Klitzing <aklitzing () gmail () com>
 
 pkgname=clazy
-pkgver=1.11
-pkgrel=5
+pkgver=1.12
+pkgrel=2
 pkgdesc='Qt oriented code checker based on clang framework'
 url='https://www.kdab.com/'
 license=(GPL-2.0-or-later)
@@ -15,21 +15,10 @@ depends=(clang
 makedepends=(cmake
              llvm)
 arch=(loong64 x86_64)
-source=(https://download.kde.org/stable/$pkgname/$pkgver/src/$pkgname-$pkgver.tar.xz{,.sig}
-        https://github.com/KDE/clazy/commit/20fca52da739ebef.patch
-        https://github.com/KDE/clazy/commit/a05ac7eb6f6198c3.patch)
-sha256sums=('66165df33be8785218720c8947aa9099bae6d06c90b1501953d9f95fdfa0120a'
-            'SKIP'
-            '652854327c1bd48f1e7080ce834dba3fb37d8a8b1d21ebaa5c70be816d8164af'
-            'd18281a06a4fd27a90f50aa38afebd6e6d47b281382697947336b120e1013d58')
+source=(https://download.kde.org/stable/$pkgname/$pkgver/src/$pkgname-$pkgver.tar.xz{,.sig})
+sha256sums=('611749141d07ce1e006f8a1253f9b2dbd5b7b44d2d5322d471d62430ec2849ac'
+            'SKIP')
 validpgpkeys=(949014B23D24354DFD548E5457416A0ADCEF0EFE) # Sergio Martins <sergio.martins@kdab.com>
-
-prepare() {
-  patch -d $pkgname-$pkgver -p1 < 20fca52da739ebef.patch # Fix build with LLVM 15
-  patch -d $pkgname-$pkgver -p1 < a05ac7eb6f6198c3.patch # Fix build with LLVM 16
-  sed -e 's|val.countPopulation|val.popcount|' -e 's|initVal.isNullValue|initVal.isZero|' \
-    -i $pkgname-$pkgver/src/checks/manuallevel/unexpected-flag-enumerator-value.cpp # Fix build with LLVM 17
-}
 
 build() {
   cmake -B build $pkgname-$pkgver \

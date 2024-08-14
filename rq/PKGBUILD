@@ -3,12 +3,13 @@
 
 pkgname=rq
 pkgver=1.0.4
-pkgrel=1
+pkgrel=2
 pkgdesc='Record Query, a tool for record analysis and transformation'
 arch=(loong64 x86_64)
 url="https://github.com/dflemstr/$pkgname"
-license=(Apache)
-depends=(gcc-libs)
+license=(Apache-2.0)
+depends=(gcc-libs
+         glibc)
 makedepends=(cargo)
 _archive="$pkgname-$pkgver"
 options=(!lto)
@@ -17,11 +18,13 @@ sha256sums=('4c3fc4427d02271c93a2cf4a784887982e97f9aba4946900aad1a35b142f9a47')
 
 prepare() {
 	cd "$_archive"
-	cargo fetch --locked --target "$CARCH-unknown-linux-gnu"
+	cargo fetch --locked --target "$(rustc -vV | sed -n 's/host: //p')"
+	sed -i -e '/deny(warnings)/d' src/lib.rs
 }
 
 build() {
 	cd "$_archive"
+	RUSTFLAGS+=' -Awarnings'
 	cargo build --frozen --release --all-features
 }
 

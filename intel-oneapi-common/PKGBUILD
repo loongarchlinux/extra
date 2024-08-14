@@ -5,22 +5,23 @@
 
 _pkgname='intel-oneapi'
 pkgname="${_pkgname}-common"
-pkgver=2023.2.0
-_debpkgrel=49462
+_pkgver=2024.1
+pkgver=2024.1.0
+_debpkgrel=579
 pkgrel=1
 pkgdesc="Intel's oneAPI common variables and licensing"
 arch=('any')
 url='https://software.intel.com/content/www/us/en/develop/tools/oneapi.html'
-license=("custom")
+license=("LicenseRef-Intel-EULA-Developer-Tools AND LicenseRef-Intel-Simplified")
 source=("https://apt.repos.intel.com/oneapi/pool/main/${pkgname}-vars-${pkgver}-${_debpkgrel}_all.deb"
-        "https://apt.repos.intel.com/oneapi/pool/main/${pkgname}-licensing-${pkgver}-${pkgver}-${_debpkgrel}_all.deb")
-b2sums=('1f259a77d727f18387966a261c5a13f83f4cb7e732c6787ea615b4aa57bb9807c70040f11606e515d437078e96b73ce745b2c81e5690a972351b5afac7aa66d0'
-        '2a2932e03a48ea019d80a5b7b787af353aed9e8415fef77ea16563fc28705438c65b5bc97fb6e7bded376e0b174a2df244fa2d4e75a2bee32041cb0e0b8b7af8')
+        "https://apt.repos.intel.com/oneapi/pool/main/${pkgname}-licensing-${_pkgver}-${pkgver}-${_debpkgrel}_all.deb")
+b2sums=('0dd9e8f3f13405c2b2ab65b717fd1e0541090615d0315957681570050b182d8c00461ff444409f4792244dd08bc66b28103c1c007ae0e7189a87e3695ef7663b'
+        '90ce44321be4dc5d43a4d8aac3dec5327442d674151865a7c3a52c47e779d646701eda9616b8bee0373e2a412b3f0f7ce375245d3a4c5b5f9ea5a3cf88d60cb7')
 depends=('sh')
 optdepends=("procps-ng: Sourcing /opt/intel/oneapi/setvars.sh")
 noextract=(
     "${pkgname}-vars-${pkgver}-${_debpkgrel}_all.deb"
-    "${pkgname}-licensing-${pkgver}-${pkgver}-${_debpkgrel}_all.deb"
+    "${pkgname}-licensing-${_pkgver}-${pkgver}-${_debpkgrel}_all.deb"
 )
 conflicts=('intel-oneapi-basekit')
 
@@ -35,11 +36,11 @@ package() {
     tar xvf data.tar.xz -C "${pkgdir}"
     rm data.tar.xz
 
-    ar x "${srcdir}/${pkgname}-licensing-${pkgver}-${pkgver}-${_debpkgrel}_all.deb"
+    ar x "${srcdir}/${pkgname}-licensing-${_pkgver}-${pkgver}-${_debpkgrel}_all.deb"
     tar xvf data.tar.xz -C "${pkgdir}"
     rm data.tar.xz
 
-    ln -sfT "${pkgver}" "${pkgdir}"/opt/intel/oneapi/licensing/latest
+    ln -sfT "${_pkgver}" "${pkgdir}"/opt/intel/oneapi/licensing/latest
     install -d "${pkgdir}"/usr/share/licenses/"${pkgname}"
     ln -s /opt/intel/oneapi/licensing/latest "${pkgdir}"/usr/share/licenses/"${pkgname}"/latest
     ln -s "${pkgname}" "${pkgdir}"/usr/share/licenses/"${_pkgname}"

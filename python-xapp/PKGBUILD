@@ -3,8 +3,8 @@
 
 _pkgname=python3-xapp
 pkgname=python-xapp
-pkgver=2.4.1
-pkgrel=2
+pkgver=2.4.2
+pkgrel=1
 pkgdesc="Python Xapp Library"
 arch=('any')
 url="https://github.com/linuxmint/${_pkgname}"
@@ -12,7 +12,7 @@ license=('LGPL')
 depends=('python' 'python-psutil')
 makedepends=('meson')
 source=("${_pkgname}-${pkgver}.tar.gz::${url}/archive/${pkgver}.tar.gz")
-sha512sums=('97045061aa5965adcfe7301774dbd35a226fa9b846e31a7c097229cc417ff4008e518ebd5b600d4ce6a46daa39d51de70d391b6b0a7c78490419d3a96daca6a9')
+sha512sums=('04f995986eabaf613d166ae31bd36eda2b3563ea58aded64b132940430db9d59f9525eb562b0ad8d7649844adbaf28332c4f51fa633610b102feae97bc1bfc9f')
 
 build(){
   meson build ${_pkgname}-${pkgver} \

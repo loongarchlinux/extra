@@ -3,22 +3,29 @@
 # Contributor: Guillaume Brogi <gui-gui@netcourrier.com>
 
 pkgname=python-pywinrm
-pkgver=0.4.3
-pkgrel=3
+pkgver=0.5.0
+pkgrel=1
 pkgdesc="Python library for Windows Remote Management"
 arch=(any)
 url="https://pypi.python.org/pypi/pywinrm"
 license=('MIT')
-depends=('python' 'python-requests' 'python-xmltodict' 'python-requests-ntlm')
+depends=('python-six' 'python-requests' 'python-xmltodict' 'python-requests-ntlm')
 optdepends=('python-requests-kerberos: for kerberos authentication'
             'python-requests-credssp: for CredSSP authenication')
-makedepends=('python-setuptools')
+makedepends=('python-setuptools' 'python-installer' 'python-wheel' 'python-build')
 source=("https://files.pythonhosted.org/packages/source/p/pywinrm/pywinrm-${pkgver}.tar.gz")
-sha512sums=('f6da28fc1c53a4c000539583ef5e6bdc108a2396f161a416cc151a8591478a6c7a577c5733374339fe3612a5a85046fb9cd44ca38f502aecd56b2723aae16943')
+sha512sums=('9a5a3ebe5b2ec3daf4417e0b43143b415d652ebd0f78bd04cfbe6d69aac1c45d012742f0ec754156131869c4695f94e993edefd1e8d4c4d88245bf628a6cdda5')
 
-package() {
-    cd pywinrm-${pkgver}
-    python setup.py install --root="${pkgdir}"/ --optimize=1
+build() {
+  cd pywinrm-${pkgver}
+  python -m build --wheel --no-isolation
 }
 
-# vim:set ts=4 sw=4 et:
+package() {
+  cd pywinrm-${pkgver}
+  python -m installer --destdir "$pkgdir" dist/*.whl
+
+  install -Dm644 LICENSE "$pkgdir"/usr/share/licenses/$pkgname/LICENSE
+}
+
+# vim:set ts=2 sw=2 et:

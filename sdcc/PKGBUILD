@@ -4,7 +4,7 @@
 # Contributor: Jose Negron <josenj.arch@mailnull.net>
 
 pkgname=sdcc
-pkgver=4.3.0
+pkgver=4.4.0
 pkgrel=1
 pkgdesc='Retargettable ANSI C compiler'
 arch=('loong64' 'x86_64')
@@ -13,24 +13,18 @@ license=('GPL')
 depends=('gcc-libs' 'bash')
 makedepends=('gputils' 'boost' 'patchutils')
 optdepends=('python')
-options=('!strip' 'staticlibs')
+options=('!strip' 'staticlibs' '!debug')
 source=(
   "$pkgname-$pkgver.tar.bz2::https://sourceforge.net/projects/sdcc/files/sdcc/$pkgver/$pkgname-src-$pkgver.tar.bz2"
-  'r14312.diff'
   'build-all-mcs51-models.patch'
 )
-sha512sums=('dabe276a0d2872bee2cdc14433f31a1e94153f9dce5a11add916ede2e76bfacf763be8e6d8134dc3aefdae29e38d3a7354626755e81e0f6db0e60c1798476f21'
-            '092c460f5286a104e95e05b1cdc9a0e88058002e1242ae25ad8e5e51e1e9de94329fde3994b2b5a0455b88088d96a53c1b0e5783f796fbeadc49530647347f02'
+sha512sums=('807738f852ab8df64dafa3deda1d9c5154d56fa090f126abe9368e0cb17f37589b7dac50d1e135609f0a14318f0d5d8abd444ed8303c854f2bd34cc783db4b30'
             '265982849af52f5d84069ef9dd43f6d768eb46b2ff07e1652c3036d69e59fd366481a4447b6c376d2c74123cf6cf5f08afe957fa18a8038a4b0602f4593238f9')
-b2sums=('94fc7ade96801ea6c9eb89d32b99554d27ad3d926d2d5889e91334b11d4658ccc160606cd2b1c6f3bb21bd25ea3df1dca274f40553aa8a52a73ac07764b3eaad'
-        '32b264427b685cfd5b3e14ba5a3d9b2d5dcde9a5c2501dbf3f50bf6315e58f85467bf90fee4a8af588dfe22e2d2facce3b1e35f6d170ac1c7fe383209980c647'
+b2sums=('891b2d29f98fedf5fd7ce5a0892c143d8cbeee1351746a633ba507dd71224ac34620530bbc278feff5d70cae20c6b53b3ea3b5efc4876efe974bbec223d8db72'
         '28bca84a8e1c2eda552efb0129941fdf1b17cdc2e888c26bf896295d392fd31f729136e76794913770b052f5171091bddbb944cde7407fd65e0df370654faf29')
 
 prepare() {
   cd "$pkgname-$pkgver"
-
-  # FS#79070: FTBFS
-  filterdiff -p0 -i 'support/cpp/*' ../r14312.diff | patch -Np0
 
   # FS#79070: Build all models for mcs51 by default
   patch -p1 -i "$srcdir/build-all-mcs51-models.patch"
@@ -39,6 +33,7 @@ prepare() {
 build() {
   cd "$pkgname-$pkgver"
 
+  CFLAGS+=" -Wno-incompatible-pointer-types" \
   ./configure \
     --prefix=/usr \
     --includedir=/usr/include/sdcc \

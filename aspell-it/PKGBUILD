@@ -3,7 +3,7 @@
 
 pkgname=aspell-it
 pkgver=2.4_20070901
-pkgrel=1
+pkgrel=2
 pkgdesc="Italian dictionary for aspell"
 arch=('any')
 url="http://aspell.net/"

@@ -3,40 +3,92 @@
 _gemname='scanf'
 pkgname="ruby-${_gemname}"
 pkgver=1.0.0
-pkgrel=1
+pkgrel=3
 pkgdesc='A implementation of the C function scanf(3).'
 arch=('any')
 url="https://github.com/ruby/${_gemname}"
 license=('BSD-2-Clause')
-makedepends=('ruby-rdoc' 'ruby-rake' 'ruby-bundler')
-checkdepends=('ruby-test-unit')
+depends=(
+  ruby
+)
+makedepends=(
+  ruby-rdoc
+)
+checkdepends=(
+  ruby-bundler
+  ruby-rake
+  ruby-test-unit
+)
 options=('!emptydirs')
 source=("${url}/archive/v${pkgver}/${_gemname}-v${pkgver}.tar.gz")
 sha512sums=('608833c45d43f2ef1043bb584c3f8186399f8c03ecc1ab21e23f240203830e9372019a399f39a658199b0938c39fcbcb6f83e4994441488f3646ca75b59537cd')
+b2sums=('a2ef15388b5ae93253b7dd6778b8bb0d1e3f5c617b140f92c72b5568b3b136983832659ef9d8cc4ed2300c405f7f4ab8a86b5b3db497abaa1d82a3d199de9e15')
 
 prepare() {
-  cd "${srcdir}/${_gemname}-${pkgver}"
+  cd "${_gemname}-${pkgver}"
 
+  # update gemspec/Gemfile to allow newer version of the dependencies
+  sed --in-place --regexp-extended 's|~>|>=|g' "${_gemname}.gemspec"
 }
 
 build() {
-  cd "${srcdir}/${_gemname}-${pkgver}"
-  gem build "${_gemname}.gemspec"
+  cd "${_gemname}-${pkgver}"
+
+  local _gemdir="$(gem env gemdir)"
+
+  gem build --verbose "${_gemname}.gemspec"
+
+  gem install \
+    --local \
+    --verbose \
+    --ignore-dependencies \
+    --no-user-install \
+    --install-dir "tmp_install${_gemdir}" \
+    --bindir "tmp_install/usr/bin" \
+    "${_gemname}-${pkgver}.gem"
+
+  # remove unrepreducible files
+  rm --force --recursive --verbose \
+    "tmp_install${_gemdir}/cache/" \
+    "tmp_install${_gemdir}/gems/${_gemname}-${pkgver}/vendor/" \
+    "tmp_install${_gemdir}/doc/${_gemname}-${pkgver}/ri/ext/"
+
+  find "tmp_install${_gemdir}/gems/" \
+    -type f \
+    \( \
+      -iname "*.o" -o \
+      -iname "*.c" -o \
+      -iname "*.so" -o \
+      -iname "*.time" -o \
+      -iname "gem.build_complete" -o \
+      -iname "Makefile" \
+    \) \
+    -delete
+
+  find "tmp_install${_gemdir}/extensions/" \
+    -type f \
+    \( \
+      -iname "mkmf.log" -o \
+      -iname "gem_make.out" \
+    \) \
+    -delete
 }
 
 check() {
-  cd "${srcdir}/${_gemname}-${pkgver}"
-  rake test
+  cd "${_gemname}-${pkgver}"
+
+  local _gemdir="$(gem env gemdir)"
+
+  GEM_HOME="tmp_install${_gemdir}" rake test
 }
 
 package() {
-cd "${srcdir}/${_gemname}-${pkgver}"
-  local _gemdir="$(gem env gemdir)"
-  gem install --verbose --ignore-dependencies --no-user-install --install-dir "${pkgdir}/${_gemdir}" --bindir "${pkgdir}/usr/bin" "${_gemname}-${pkgver}.gem"
+  cd "${_gemname}-${pkgver}"
 
-  install -Dm 644 LICENSE.txt -t "${pkgdir}/usr/share/licenses/${pkgname}/"
+  cp --archive --verbose tmp_install/* "${pkgdir}"
 
-  install -Dm 644 README.md -t "${pkgdir}/usr/share/doc/${pkgname}"
-
-  rm -rf "${pkgdir}/${_gemdir}/cache"
+  install --verbose -D --mode=0644 LICENSE* --target-directory "${pkgdir}/usr/share/licenses/${pkgname}"
+  install --verbose -D --mode=0644 *.md --target-directory "${pkgdir}/usr/share/doc/${pkgname}"
 }
+
+# vim: tabstop=2 shiftwidth=2 expandtab:

@@ -3,7 +3,7 @@
 
 pkgname=python-mediafile
 pkgver=0.12.0
-pkgrel=2
+pkgrel=3
 pkgdesc='Elegant audio file tagging'
 arch=(any)
 url=https://github.com/beetbox/mediafile
@@ -18,7 +18,6 @@ makedepends=(
   python-flit-core
   python-installer
 )
-checkdepends=(python-nose)
 _tag=11c180078d6775f7c72dd182d9b6762061b677c7
 source=(git+https://github.com/beetbox/mediafile.git#tag=${_tag})
 sha256sums=(SKIP)
@@ -35,7 +34,7 @@ build() {
 
 check() {
   cd mediafile
-  python -m nose
+  python -m unittest discover -vs .
 }
 
 package() {

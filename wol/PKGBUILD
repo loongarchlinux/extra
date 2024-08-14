@@ -4,20 +4,34 @@
 
 pkgname=wol
 pkgver=0.7.1
-pkgrel=9
+pkgrel=10
 arch=('loong64' 'x86_64')
 pkgdesc="Wake On LAN functionality in a small program. It wakes up hardware that is Magic Packet compliant"
-license=("GPL")
-depends=()
+license=("GPL-2.0-only")
 url="http://ahh.sourceforge.net/wol/"
 validpgpkeys=('9484D99D2E1E4E025446DAD9FF584E5967A1DA7B')
 source=(https://downloads.sourceforge.net/ahh/wol-$pkgver.tar.gz{,.asc})
 sha256sums=('e0086c9b9811df2bdf763ec9016dfb1bcb7dba9fa6d7858725b0929069a12622'
             'SKIP')
 
+prepare() {
+  cd "$srcdir"/$pkgname-$pkgver
+  sed -i '1ivoid exit();' lib/xmalloc.c
+}
+
+
 build() {
   cd "$srcdir"/$pkgname-$pkgver
-  ./configure --prefix=/usr --mandir=/usr/share/man --infodir=/usr/share/info
+  ./configure \
+    --prefix=/usr \
+    --mandir=/usr/share/man \
+    --infodir=/usr/share/info
+  sed -i \
+    -e 's|HAVE_ETHER_HOSTTON 0|HAVE_ETHER_HOSTTON 1|' \
+    -e 's|HAVE_STRUCT_ETHER_ADDR 0|HAVE_STRUCT_ETHER_ADDR 1|' \
+    -e 's|HAVE_STRUCT_ETHER_ADDR_ETHER_ADDR_OCTET 0|HAVE_STRUCT_ETHER_ADDR_ETHER_ADDR_OCTET 1|' \
+    -e '/rpl_/d' \
+    config.h
   make
 }
 

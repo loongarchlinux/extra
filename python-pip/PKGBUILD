@@ -6,8 +6,8 @@
 
 _name=pip
 pkgname=python-pip
-pkgver=24.0
-pkgrel=2
+pkgver=24.2
+pkgrel=1
 pkgdesc="The PyPA recommended tool for installing Python packages"
 url="https://pip.pypa.io/"
 arch=(any)
@@ -16,6 +16,7 @@ depends=(
   python
   python-attrs  # for vendored rich
   python-cryptography  # for vendored requests and urllib3
+  python-filelock  # for vendored python-cachecontrol
   python-wheel  # for internal misc utils
 )
 makedepends=(
@@ -31,6 +32,7 @@ makedepends=(
 checkdepends=(
   git
   python-freezegun
+  python-proxy.py
   python-pytest
   python-pytest-rerunfailures
   python-pytest-xdist
@@ -41,8 +43,8 @@ checkdepends=(
   subversion
 )
 source=(https://github.com/pypa/$_name/archive/$pkgver/$_name-$pkgver.tar.gz)
-sha512sums=('0c2ecb2ecde4f155c83468d35bc4f52f37efffc16821ae7c706d035e1e8cc3709b41cb10f8140ff09205e8bbdba2c76128ad76d1cbd18401328b619228e834df')
-b2sums=('17a7ed9e15e9b8efa0d3e3c5586dc446958b62cf9ba52155a0d1ad97a3e212ee7a08a0e88a592718fc3d542eb8f434155a75cb98d90c008904bd8f59bd2b40b6')
+sha512sums=('2c44881f62f7b89cedeb0b739409ad67c6144bfdffc347efeb7bcf85aed77bcd7ddd10868d24577fbba0ef84dd752473d6b6dff329b42841939fae2ff2f63d28')
+b2sums=('6bc7bf69cd3e1edc1898a4476d36b749c037ac10a1614ef3a6bacc0c7debd38de94e0cf6d8a2931b1a7afb2f6f853922fcd62b65d17ac805f22741b7ff6423c6')
 
 build() {
   cd $_name-$pkgver
@@ -64,6 +66,7 @@ check() {
     # disable downloading the internet
     --deselect tests/unit/test_req.py::TestRequirementSet::test_download_info_web_archive
     --deselect tests/unit/test_req.py::TestRequirementSet::test_download_info_vcs
+    --deselect tests/unit/test_network_session.py::TestPipSession::test_proxy
   )
 
   cd $_name-$pkgver

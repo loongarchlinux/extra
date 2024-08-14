@@ -1,15 +1,15 @@
 # Maintainer: Laurent Carlier <lordheavym@gmail.com>
 
 pkgname=opencl-clhpp
-pkgver=2023.04.17
+pkgver=2024.05.08
 pkgrel=1
 pkgdesc='OpenCL C++ header files'
 arch=('any')
 url='https://github.com/KhronosGroup/OpenCL-CLHPP'
-license=('custom')
-makedepends=('cmake' 'doxygen' 'graphviz' 'opencl-headers')
+license=('Apache-2.0')
+makedepends=('cmake' 'doxygen' 'graphviz')
 source=("${pkgname}-${pkgver}.tar.gz::https://github.com/KhronosGroup/OpenCL-CLHPP/archive/v${pkgver}.tar.gz")
-sha256sums=('179243843c620ef6f78b52937aaaa0a742c6ff415f9aaefe3c20225ee283b357')
+sha256sums=('22921fd23ca72a21ac5592861d64e7ea53cd8a705fccd73905911f8489519a0b')
 depends=('opencl-headers')
 
 build() {

@@ -1,31 +1,35 @@
-# Maintainer: Jan Alexander Steffens (heftig) <jan.steffens@gmail.com>
+# Maintainer: Jan Alexander Steffens (heftig) <heftig@archlinux.org>
 
 pkgname=atomix
-pkgver=3.34.0
-pkgrel=2
-pkgdesc="Build molecules out of single atoms"
+pkgver=44.0
+pkgrel=1
+pkgdesc="Puzzle game where you move atoms to build a molecule"
 url="https://wiki.gnome.org/Apps/Atomix"
 arch=(loong64 x86_64)
-license=(GPL2)
-depends=(gtk3 libgnome-games-support)
-makedepends=(meson appstream-glib git)
-_commit=8494bab88eaf4325c395cca02379aa468b64b4ff  # tags/3.34.0^0
-source=("git+https://gitlab.gnome.org/GNOME/atomix.git#commit=$_commit")
-sha256sums=('SKIP')
-
-pkgver() {
-  cd $pkgname
-  git describe --tags | sed 's/-/+/g'
-}
+license=(GPL-2.0-or-later)
+depends=(
+  gdk-pixbuf2
+  glib2
+  glibc
+  gtk3
+  hicolor-icon-theme
+  libgnome-games-support
+)
+makedepends=(
+  appstream
+  git
+  meson
+)
+source=("git+https://gitlab.gnome.org/GNOME/atomix.git#tag=${pkgver/[a-z]/.&}")
+b2sums=('c4e0fbc1bece6ce64ff2ab0eebd813a2fb59298744a7cb8f342375fd8dde192fcb5daad6fb47218cbb0d7a28b806e011d740c76d49954ab5af505e0f9f48dcbe')
 
 prepare() {
-  cd $pkgname
+  cd atomix
 }
 
 build() {
-  CFLAGS+=' -fcommon' # https://wiki.gentoo.org/wiki/Gcc_10_porting_notes/fno_common
-  arch-meson $pkgname build
-  ninja -C build
+  arch-meson atomix build
+  meson compile -C build
 }
 
 check() {
@@ -33,5 +37,7 @@ check() {
 }
 
 package() {
-  DESTDIR="$pkgdir" meson install -C build
+  meson install -C build --destdir "$pkgdir"
 }
+
+# vim:set sw=2 sts=-1 et:

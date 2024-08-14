@@ -1,0 +1,39 @@
+# Maintainer: Sergej Pupykin <arch+pub@sergej.pp.ru>
+
+pkgname='perl-graphics-toolkit-color'
+pkgver=1.71
+pkgrel=1
+pkgdesc="A color palette constructor"
+arch=('loong64' 'x86_64')
+license=('Artistic-1.0-Perl' 'GPL-1.0-or-later')
+options=('!emptydirs')
+depends=('perl')
+makedepends=('perl-test-warn')
+url='https://metacpan.org/release/Graphics-Toolkit-Color'
+source=("https://cpan.metacpan.org/authors/id/L/LI/LICHTKIND/Graphics-Toolkit-Color-$pkgver.tar.gz")
+sha256sums=('34e88b6f6858f47d996101f1582f1eb00db7f86e129e5f1d61bf7f9bddb62ef2')
+
+build() {
+  ( export PERL_MM_USE_DEFAULT=1 PERL5LIB=""                 \
+      PERL_AUTOINSTALL=--skipdeps                            \
+      PERL_MM_OPT="INSTALLDIRS=vendor DESTDIR='"$pkgdir"'"     \
+      PERL_MB_OPT="--installdirs vendor --destdir '"$pkgdir"'" \
+      MODULEBUILDRC=/dev/null
+    cd "$srcdir/Graphics-Toolkit-Color-$pkgver"
+    perl Makefile.PL
+    make
+  )
+}
+
+check() {
+  cd "$srcdir/Graphics-Toolkit-Color-$pkgver"
+  ( export PERL_MM_USE_DEFAULT=1 PERL5LIB=""
+    make test
+  )
+}
+
+package() {
+  cd "$srcdir/Graphics-Toolkit-Color-$pkgver"
+  make install
+  find "$pkgdir" -name .packlist -o -name perllocal.pod -delete
+}

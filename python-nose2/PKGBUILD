@@ -2,7 +2,7 @@
 
 _name=nose2
 pkgname=python-nose2
-pkgver=0.14.2
+pkgver=0.15.1
 pkgrel=1
 pkgdesc="The next generation of nicer testing for python"
 arch=(any)
@@ -30,8 +30,8 @@ optdepends=(
   'python-sphinx_rtd_theme: for doc'
 )
 source=($_name-$pkgver.tar.gz::$url/archive/refs/tags/$pkgver.tar.gz)
-sha512sums=('2f6317bc45177194f62b0e664bd6dcba50c8c8f593500edd8b4562a6bc784ceb52d931cc296869673d15142aceaeb1267a4edfdb5e14e3007eac035e6e18a3db')
-b2sums=('ffca99154594c373e36d053429ab09ac705a7a9db172cbd5645e89d96367b37b7a83de774fbda0c6a3eba996a6d39239a79d1e6bd6d5252114cb3bf7ce0a8a06')
+sha512sums=('88a22cafb4516c4c86d81bd68710d49e018614d1512a030fe07bffe57cf364c780050d98a64ea1c69b5bdb1ef8ad69dab5ad1199192ddd2bf6568dca040aee77')
+b2sums=('f388fb354f1c783d57c14abd05958b5087c8201721fd63223aa056fc3fd83571801ec100dd21d4b7341654511620457d31701a6c47f6b38dc4b178c5c1326925')
 
 prepare() {
   sed -n '1,27p' $_name-$pkgver/LICENSE > BSD-2-Clause.txt

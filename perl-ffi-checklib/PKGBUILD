@@ -2,7 +2,7 @@
 
 pkgname=perl-ffi-checklib
 pkgver=0.31
-pkgrel=3
+pkgrel=4
 pkgdesc="Check that a library is available for FFI"
 arch=('any')
 license=('PerlArtistic')

@@ -1,7 +1,7 @@
 # Maintainer: Sven-Hendrik Haase <svenstaro@archlinux.org>
 pkgname=schemacrawler
-pkgver=16.19.11
-pkgrel=1
+pkgver=16.22.1
+pkgrel=2
 pkgdesc="Free database schema discovery and comprehension tool"
 arch=('any')
 url="https://www.schemacrawler.com"
@@ -9,7 +9,7 @@ license=('GPL3')
 depends=('java-runtime' 'graphviz')
 makedepends=('maven' 'java-environment=17' 'unzip')
 source=("$pkgname-$pkgver.tar.gz::https://github.com/schemacrawler/SchemaCrawler/archive/refs/tags/v${pkgver}.tar.gz")
-sha512sums=('caa6cfea0d4846bbdf22d82c94b8a38c09920acf6cddcddefbf663f1c974dde04ea78c1ce54374da8f982d5976f6b7665ac86a0f94cbcac5567bad733efe8159')
+sha512sums=('f8481ae6ed100cb3e9cc43af61a9476c5336e8d5016f89e3cd28e282982f41423b3f86570e9f1f8719fff93feb6a0dc244d0f7e09f27a0b37f76b16086319b81')
 
 build() {
   cd SchemaCrawler-$pkgver
@@ -21,6 +21,13 @@ build() {
 package() {
   cd SchemaCrawler-$pkgver/schemacrawler-distrib/target
   unzip schemacrawler-$pkgver-distribution.zip
+
+  # Delete the cassandra drivers.  For some reason these end up being pulled in
+  # and causes the application to fail due to missing dependencies.  Upstream
+  # is confused said to simply delete them.
+  # https://github.com/schemacrawler/SchemaCrawler/issues/1560
+  find schemacrawler-$pkgver-distribution/_schemacrawler/lib/ -name 'cassandra-*.jar' -delete
+
   mkdir -p "$pkgdir"/{opt,usr/bin}
   cp -r schemacrawler-$pkgver-distribution "$pkgdir"/opt/schemacrawler
   echo -e '#!/bin/bash\ncd /opt/schemacrawler/_schemacrawler/bin\n./schemacrawler.sh $@' > "$pkgdir"/usr/bin/schemacrawler

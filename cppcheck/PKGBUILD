@@ -3,12 +3,12 @@
 # Contributor: Stéphane Gaudreault <stephane@archlinux.org>
 
 pkgname=cppcheck
-pkgver=2.12.0
-pkgrel=3
+pkgver=2.14.2
+pkgrel=1
 pkgdesc='A tool for static C/C++ code analysis'
 arch=('loong64' 'x86_64')
 url='http://cppcheck.sourceforge.net/'
-license=('GPL')
+license=('GPL-3.0-or-later')
 depends=(
   'python-pygments'
   'tinyxml2'
@@ -30,30 +30,20 @@ optdepends=(
   'python-pygments: cppcheck-htmlreport'
   'clang: for cppcheck-gui integration'
 )
-_commit='f2f1fb0bca5f23aac8f02fb9c09e4529a7935749'
 source=(
-  "$pkgname::git+https://github.com/danmar/cppcheck.git#commit=$_commit"
+  "$pkgname::git+https://github.com/danmar/cppcheck.git#tag=$pkgver"
   'translations-location.patch'
 )
-sha512sums=('SKIP'
+sha512sums=('6391d7ab4a2250db0a7b9d67234fa2e212777a3f9754c3f7eeaac3b0c4ca39bf12cda01265f84c704f7fa4a506f525bbea132c4770a5e93be7d70a89e8915a6d'
             'd3528834d719017ec3a0e08005a293089b556622928defa1b37f940e62cb01165dcbd741e6d5e989c0156fb8789f7e63702af8b2390738648b2300a92f4ab0ae')
-b2sums=('SKIP'
+b2sums=('5e5be5c4260b65ca8dd98392118b81bf532c03177acf0a9af6be5225f2652e5b83bcc1f1d60155acedc2fa20c95851ea70160e372279f47de933396199688536'
         '8156920eacc630cb5eceb2387937b747c84c6325bef906717cfbad68c122bdd27965da1e8070a560a0bed3a7b7c59ff5f0e116bb1d035c4c42f430c927a75b1f')
-
-pkgver() {
-  cd "$pkgname"
-
-  git describe --tags
-}
 
 prepare() {
   cd "$pkgname"
 
   # fix location of translations
   patch -p1 -i "$srcdir/translations-location.patch"
-
-  # https://github.com/danmar/cppcheck/pull/5350
-  git revert --no-commit 499f566e9dcdf7d033145c4eb613dd4a4738ab0a
 }
 
 build() {
@@ -65,11 +55,14 @@ build() {
   make DB2MAN=/usr/share/xml/docbook/xsl-stylesheets-${xsversion}-nons/manpages/docbook.xsl man
   pandoc man/manual.md -o man/manual.html -s --number-sections --toc
   pandoc man/reference-cfg-format.md -o man/reference-cfg-format.html -s --number-sections --toc
+  pandoc man/writing-addons.md -o man/writing-addons.html -s --number-sections --toc
   popd
+
+  cd "$pkgname"
 
   cmake \
     -B build \
-    -S "$pkgname" \
+    -S . \
     -D CMAKE_INSTALL_PREFIX=/usr \
     -D CMAKE_BUILD_TYPE=RelWithDebInfo \
     -D USE_MATCHCOMPILER=ON \
@@ -85,17 +78,20 @@ build() {
 }
 
 check() {
-  cd build/bin
+  cd "$pkgname/build/bin"
   ./testrunner -g -q
 }
 
 package() {
-  DESTDIR="$pkgdir" cmake --install build
-
   cd "$pkgname"
+
+  DESTDIR="$pkgdir" cmake --install build
 
   install -vDm644 -t "$pkgdir/usr/share/man/man1" cppcheck.1
   install -vDm755 -t "$pkgdir/usr/bin" htmlreport/cppcheck-htmlreport
+  install -vDm644 -t "$pkgdir/usr/share/doc/" man/manual.html
+  install -vDm644 -t "$pkgdir/usr/share/doc/" man/reference-cfg-format.html
+  install -vDm644 -t "$pkgdir/usr/share/doc/" man/writing-addons.html
 
   # Fix location of language files
   install -d "${pkgdir}"/usr/share/cppcheck/cfg/lang

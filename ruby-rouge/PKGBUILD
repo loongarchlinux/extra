@@ -2,35 +2,112 @@
 
 _gemname=rouge
 pkgname=ruby-rouge
-pkgver=4.2.0
+pkgver=4.3.0
 pkgrel=1
 pkgdesc='Pure-ruby code highlighter that is compatible with pygments'
 url='http://rouge.jneen.net/'
 arch=('any')
 license=('MIT')
-depends=('ruby' 'ruby-rdoc')
+depends=(
+  ruby
+)
+makedepends=(
+  ruby-rdoc
+)
+checkdepends=(
+  ruby-bundler
+  ruby-memory_profiler
+  ruby-minitest
+  ruby-minitest-power_assert
+  ruby-pry
+  ruby-puma
+  ruby-rake
+  ruby-redcarpet
+  ruby-sinatra
+  ruby-yard
+)
 options=('!emptydirs')
-source=(https://github.com/jneen/rouge/archive/v${pkgver}/${pkgname}-${pkgver}.tar.gz)
-sha512sums=('b0dd5fb3ec2ebb1e7cd50460ea589026e70e5ee8b7b55a9a9c48990f22d3845a5a1bb7ce83001f5316852568c8bc7bca3ee2db9deacd60cde2b42ea9ba391d18')
-b2sums=('b6add86c73729ed3df8f24ff2b454c520416f0640e090ca04372f8f00184bbf432119993ea6b809e1aec50899bd05bccebde0ca6d35f420c8d2a1e57c61a84d2')
+source=("https://github.com/jneen/rouge/archive/v${pkgver}/${pkgname}-${pkgver}.tar.gz")
+sha512sums=('6546c3062e38b059936c6af8aa8b872049a416b9c1a28fb4dba144427b567102f0bc6f71275f5b995378e51abad9c5b30186b6722e17a4eed4928c16bebf8e18')
+b2sums=('8ec161f4b94d4a37bf29fc995d80c44ee39fe179a6ea3efb1ff3853b7aeac413efeb2b5ad596314c06e90dc0b42887967a0c350f37812e5c976734ac3d33cdb7')
 
 prepare() {
-  cd ${_gemname}-${pkgver}
-  sed -r 's|~>|>=|g' -i ${_gemname}.gemspec
+  cd "${_gemname}-${pkgver}"
+
+  # update gemspec/Gemfile to allow newer version of the dependencies
+  sed --in-place --regexp-extended 's|~>|>=|g' "${_gemname}.gemspec"
+
+  sed --in-place --regexp-extended \
+    --expression '/changelog/d' \
+    --expression '/git/d' \
+    --expression '/rubocop/d' \
+    --expression '/shotgun/d' \
+    Gemfile \
+    Rakefile
+
+  rm --verbose \
+    tasks/check/style.rake \
+    tasks/update/changelog.rake
 }
 
 build() {
-  cd ${_gemname}-${pkgver}
-  gem build ${_gemname}.gemspec
+  cd "${_gemname}-${pkgver}"
+
+  local _gemdir="$(gem env gemdir)"
+
+  gem build --verbose "${_gemname}.gemspec"
+
+  gem install \
+    --local \
+    --verbose \
+    --ignore-dependencies \
+    --no-user-install \
+    --install-dir "tmp_install${_gemdir}" \
+    --bindir "tmp_install/usr/bin" \
+    "${_gemname}-${pkgver}.gem"
+
+  # remove unrepreducible files
+  rm --force --recursive --verbose \
+    "tmp_install${_gemdir}/cache/" \
+    "tmp_install${_gemdir}/gems/${_gemname}-${pkgver}/vendor/" \
+    "tmp_install${_gemdir}/doc/${_gemname}-${pkgver}/ri/ext/"
+
+  find "tmp_install${_gemdir}/gems/" \
+    -type f \
+    \( \
+      -iname "*.o" -o \
+      -iname "*.c" -o \
+      -iname "*.so" -o \
+      -iname "*.time" -o \
+      -iname "gem.build_complete" -o \
+      -iname "Makefile" \
+    \) \
+    -delete
+
+  find "tmp_install${_gemdir}/extensions/" \
+    -type f \
+    \( \
+      -iname "mkmf.log" -o \
+      -iname "gem_make.out" \
+    \) \
+    -delete
+}
+
+check() {
+  cd "${_gemname}-${pkgver}"
+
+  local _gemdir="$(gem env gemdir)"
+
+  GEM_HOME="tmp_install${_gemdir}" rake check:specs check:warnings
 }
 
 package() {
-  cd ${_gemname}-${pkgver}
-  local _gemdir="$(gem env gemdir)"
-  gem install --ignore-dependencies --no-user-install -i "${pkgdir}${_gemdir}" -n "${pkgdir}/usr/bin" ${_gemname}-${pkgver}.gem
-  install -Dm 644 README.md CHANGELOG.md -t "${pkgdir}/usr/share/doc/${pkgname}"
-  install -Dm 644 LICENSE -t "${pkgdir}/usr/share/licenses/${pkgname}"
-  rm "${pkgdir}/${_gemdir}/cache/${_gemname}-${pkgver}.gem"
+  cd "${_gemname}-${pkgver}"
+
+  cp --archive --verbose tmp_install/* "${pkgdir}"
+
+  install --verbose -D --mode=0644 LICENSE* --target-directory "${pkgdir}/usr/share/licenses/${pkgname}"
+  install --verbose -D --mode=0644 *.md --target-directory "${pkgdir}/usr/share/doc/${pkgname}"
 }
 
-# vim: ts=2 sw=2 et:
+# vim: tabstop=2 shiftwidth=2 expandtab:

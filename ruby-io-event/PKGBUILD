@@ -1,0 +1,101 @@
+# Maintainer: Andreas 'Segaja' Schleifer <segaja at archlinux dot org>
+
+_gemname='io-event'
+pkgname="ruby-${_gemname}"
+pkgver=1.6.5
+pkgrel=3
+pkgdesc='An event loop'
+arch=('loong64' 'x86_64')
+url="https://github.com/socketry/${_gemname}"
+license=('MIT')
+depends=(
+  ruby
+)
+# checkdepends=(
+#   ruby-async
+#   ruby-bake
+#   ruby-bake-test
+#   ruby-bake-test-external
+#   ruby-bundler
+#   ruby-covered
+#   ruby-sus
+# )
+options=('!emptydirs')
+source=("${url}/archive/v${pkgver}/${pkgname}-${pkgver}.tar.gz")
+sha512sums=('fd8a6b9a8a2952a2114a325a630b8cc0455679c4538901573be8dd0d342389872d5ec613c70138155f996c11d550b58003a71bee75cfec599db51812e03ec042')
+b2sums=('72720b03c87afd220c083098114f45dd4a523bfd3145e8988644ad1112c52ba0eafc8082c3ca23f54253921ceb96d544097722c3585390f7793fb2bb58ead20b')
+
+prepare() {
+  cd "${_gemname}-${pkgver}"
+
+  # update gemspec/Gemfile to allow newer version of the dependencies
+  sed --in-place --regexp-extended 's|~>|>=|g' "${_gemname}.gemspec"
+
+  sed --in-place '/release\.pem/d' "${_gemname}.gemspec"
+
+  # Remove maintenance gems
+  sed --in-place --expression '/group :maintenance/,/end/d' gems.rb
+}
+
+build() {
+  cd "${_gemname}-${pkgver}"
+
+  local _gemdir="$(gem env gemdir)"
+
+  gem build --verbose "${_gemname}.gemspec"
+
+  gem install \
+    --local \
+    --verbose \
+    --ignore-dependencies \
+    --no-user-install \
+    --install-dir "tmp_install${_gemdir}" \
+    --bindir "tmp_install/usr/bin" \
+    "${_gemname}-${pkgver}.gem"
+
+  # remove unrepreducible files
+  rm --force --recursive --verbose \
+    "tmp_install${_gemdir}/cache/" \
+    "tmp_install${_gemdir}/gems/${_gemname}-${pkgver}/vendor/" \
+    "tmp_install${_gemdir}/doc/${_gemname}-${pkgver}/ri/ext/"
+
+  find "tmp_install${_gemdir}/gems/" \
+    -type f \
+    \( \
+      -iname "*.o" -o \
+      -iname "*.c" -o \
+      -iname "*.so" -o \
+      -iname "*.time" -o \
+      -iname "gem.build_complete" -o \
+      -iname "Makefile" \
+    \) \
+    -delete
+
+  find "tmp_install${_gemdir}/extensions/" \
+    -type f \
+    \( \
+      -iname "mkmf.log" -o \
+      -iname "gem_make.out" \
+    \) \
+    -delete
+}
+
+# no tests until ruby-sus gets updated
+# check() {
+#   cd "${_gemname}-${pkgver}"
+
+#   local _gemdir="$(gem env gemdir)"
+
+#   GEM_HOME="tmp_install${_gemdir}" bake test
+# }
+
+package() {
+  cd "${_gemname}-${pkgver}"
+
+  cp --archive --verbose tmp_install/* "${pkgdir}"
+
+  install --verbose -D --mode=0644 license* --target-directory "${pkgdir}/usr/share/licenses/${pkgname}"
+  install --verbose -D --mode=0644 *.md --target-directory "${pkgdir}/usr/share/doc/${pkgname}"
+}
+
+# vim: tabstop=2 shiftwidth=2 expandtab:

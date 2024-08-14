@@ -1,0 +1,169 @@
+# Maintainer: Fabian Bornschein <fabiscafe@archlinux.org>
+
+pkgbase=clapper
+pkgname=(
+  clapper
+  clapper-docs
+  libclapper-gtk
+  libclapper
+)
+pkgver=0.6.1
+pkgrel=2
+pkgdesc="Modern and user-friendly media player."
+arch=(loong64 x86_64)
+url="https://rafostar.github.io/clapper"
+license=('LGPL-2.1-or-later AND GPL-3.0-or-later')
+makedepends=(
+  # used as depends split-depends
+  dconf
+  glib2
+  glibc
+  graphene
+  gst-plugins-bad
+  gst-plugins-base
+  gst-plugins-base-libs
+  gst-plugins-good
+  gstreamer
+  gtk4
+  hicolor-icon-theme
+  libadwaita
+  libmicrodns
+  libsoup3
+  pango
+
+  # make-only
+  gi-docgen
+  git
+  glib2-devel
+  gobject-introspection
+  meson
+  vala
+)
+source=("git+https://github.com/Rafostar/clapper.git?signed#tag=$pkgver")
+b2sums=('767e4ee42fb17fc7d90a9e0efd621e6f1bed121c6d72764a5297fd1bc203d5fcd42b4dcf493eabbff8b0561b721a6582f48e2549fbadb55856e686e73eaf0fb0')
+validpgpkeys=(
+  'D3B89B4D49ABFABA6A3EF1B9228FF576F6E2EC17'    # Rafał Dzięgiel <rafostar.github@gmail.com>
+)
+
+build() {
+  local meson_options=(
+    # Build
+    -D clapper=enabled
+    -D clapper-gtk=enabled
+    -D clapper-app=enabled
+    -D gst-plugin=enabled
+    -D introspection=enabled
+    -D vapi=enabled
+    -D doc=true
+    # Features
+    -D discoverer=enabled
+    -D mpris=enabled
+    -D server=enabled
+    # GStreamer plugin options
+    -D glimporter=enabled
+    -D gluploader=enabled
+    -D rawimporter=enabled
+  )
+
+  arch-meson clapper build "${meson_options[@]}"
+  meson compile -C build
+}
+
+check() {
+  meson test -C build
+}
+
+_pick() {
+  local p="$1" f d; shift
+  for f; do
+    d="$srcdir/$p/${f#$pkgdir/}"
+    mkdir -p "$(dirname "$d")"
+    mv "$f" "$d"
+    rmdir -p --ignore-fail-on-non-empty "$(dirname "$f")"
+  done
+}
+
+package_clapper() {
+  license=('GPL-3.0-or-later')
+  depends=(
+    dconf
+    glib2
+    glibc
+    graphene
+    gstreamer
+    gtk4
+    hicolor-icon-theme
+    libadwaita
+    libclapper-0.0.so
+    libclapper-gtk-0.0.so
+    pango
+  )
+
+  meson install -C build --destdir "$pkgdir"
+
+  _pick docs \
+    "$pkgdir"/usr/share/doc/*
+
+  _pick libclapper-gtk \
+    $pkgdir/usr/include/clapper-0.0/clapper-gtk/ \
+    $pkgdir/usr/lib/clapper-0.0/ \
+    $pkgdir/usr/lib/girepository-1.0/ClapperGtk-0.0.typelib \
+    $pkgdir/usr/lib/gstreamer-1.0/ \
+    $pkgdir/usr/lib/libclapper-gtk* \
+    $pkgdir/usr/lib/libgstclapperglcontexthandler.so* \
+    $pkgdir/usr/lib/pkgconfig/clapper-gtk-0.0.pc \
+    $pkgdir/usr/share/gir-1.0/ClapperGtk-0.0.gir \
+    $pkgdir/usr/share/vala/vapi/clapper-gtk-*
+
+  _pick libclapper \
+    $pkgdir/usr/include/clapper-0.0/clapper/ \
+    $pkgdir/usr/lib/ \
+    $pkgdir/usr/share/gir-1.0/Clapper-0.0.gir \
+    $pkgdir/usr/share/vala/vapi/clapper-*
+}
+
+package_clapper-docs() {
+  pkgdesc+=" (documentation)"
+  depends=()
+
+  mv docs/* "$pkgdir"
+}
+
+package_libclapper-gtk() {
+  pkgdesc="Clapper GTK integration library"
+  license=('LGPL-2.1-or-later')
+  depends=(
+    glib2
+    glibc
+    gst-plugins-base-libs
+    graphene
+    gstreamer
+    gtk4
+    libclapper-0.0.so
+    libmicrodns
+    libsoup3
+  )
+  provides=(libclapper-gtk-0.0.so)
+  mv libclapper-gtk/* $pkgdir/
+}
+
+package_libclapper() {
+  pkgdesc="Clapper playback library"
+  license=('LGPL-2.1-or-later')
+  depends=(
+    glib2
+    glibc
+    gst-plugins-base-libs
+    gstreamer
+    libmicrodns
+    libsoup3
+  )
+  optdepends=(
+    "gst-libav: Extra media decoders (via ffmpeg)"
+    "gst-plugins-ugly: Extra nonfree media decoders"
+    "gst-plugin-va: (hardware) video acceleration"
+    "gst-plugins-gtuber: Streaming service support"
+  )
+  provides=(libclapper-0.0.so)
+  mv libclapper/* $pkgdir/
+}

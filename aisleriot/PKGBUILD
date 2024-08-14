@@ -1,22 +1,34 @@
 # Maintainer: Jan Alexander Steffens (heftig) <heftig@archlinux.org>
 
 pkgname=aisleriot
-pkgver=3.22.30
+pkgver=3.22.33
 pkgrel=1
 pkgdesc="A collection of patience games written in guile scheme"
 url="https://wiki.gnome.org/Apps/Aisleriot"
 arch=(loong64 x86_64)
-license=(GPL)
+license=(
+  GFDL-1.1-or-later
+  GFDL-1.3-only
+  GPL-3.0-or-later
+  LGPL-3.0-or-later
+)
 depends=(
+  at-spi2-core
+  cairo
   dconf
+  gdk-pixbuf2
+  glib2
+  glibc
   gtk3
   guile
+  hicolor-icon-theme
   libcanberra
   librsvg
 )
 makedepends=(
   appstream-glib
   git
+  glib2-devel
   meson
   yelp-tools
 )
@@ -25,19 +37,11 @@ optdepends=(
   'pysolfc: PySol card sets'
 )
 options=(
-  debug
-
   # https://gitlab.gnome.org/GNOME/aisleriot/-/commit/ca27295085473111564b6674059351a0b6f170c1
   !lto
 )
-_commit=40c064e3488a131b5f21e36e7657728b639f4d38  # tags/3.22.30^0
-source=("git+https://gitlab.gnome.org/GNOME/aisleriot.git#commit=$_commit")
-b2sums=('SKIP')
-
-pkgver() {
-  cd $pkgname
-  git describe --tags | sed 's/[^-]*-g/r&/;s/-/+/g'
-}
+source=("git+https://gitlab.gnome.org/GNOME/aisleriot.git#tag=$pkgver")
+b2sums=('35cd565cb42e050fd5447470d45b40007f519ca60d76a09d29390ba7c73d5f7f362cf008bdb39a0730319b4ac57a3957456297b3359387ac8112c696cc00dae5')
 
 prepare() {
   cd $pkgname
@@ -45,9 +49,6 @@ prepare() {
 
 build() {
   local meson_options=(
-    # https://gitlab.gnome.org/GNOME/aisleriot/-/commit/ca27295085473111564b6674059351a0b6f170c1
-    -D b_lto=false
-
     -D theme_kde=false
     -D theme_pysol=true
     -D theme_pysol_path=/usr/share/PySolFC

@@ -1,0 +1,84 @@
+diff --git a/tensorflow/api_template.__init__.py b/tensorflow/api_template.__init__.py
+index a0f88926..9c0bb098 100644
+--- a/tensorflow/api_template.__init__.py
++++ b/tensorflow/api_template.__init__.py
+@@ -27,7 +27,6 @@ this file with a file generated from [`api_template.__init__.py`](https://www.gi
+ """
+ # pylint: disable=g-bad-import-order,protected-access,g-import-not-at-top
+ 
+-import distutils as _distutils
+ import importlib
+ import inspect as _inspect
+ import os as _os
+@@ -95,10 +94,10 @@ _site_packages_dirs = []
+ if _site.ENABLE_USER_SITE and _site.USER_SITE is not None:
+   _site_packages_dirs += [_site.USER_SITE]
+ _site_packages_dirs += [p for p in _sys.path if "site-packages" in p]
+-if "getsitepackages" in dir(_site):
++try:
+   _site_packages_dirs += _site.getsitepackages()
+-
+-if "sysconfig" in dir(_distutils):
++except AttributeError:
++  import distutils as _distutils
+   _site_packages_dirs += [_distutils.sysconfig.get_python_lib()]
+ 
+ _site_packages_dirs = list(set(_site_packages_dirs))
+diff --git a/tensorflow/api_template_v1.__init__.py b/tensorflow/api_template_v1.__init__.py
+index 6a4ab4e6..d6f8f2e0 100644
+--- a/tensorflow/api_template_v1.__init__.py
++++ b/tensorflow/api_template_v1.__init__.py
+@@ -14,7 +14,6 @@
+ # ==============================================================================
+ """Bring in all of the public TensorFlow interface into this module."""
+ 
+-import distutils as _distutils
+ import importlib
+ import inspect as _inspect
+ import os as _os
+@@ -144,10 +143,10 @@ from tensorflow.python.lib.io import file_io as _fi
+ _site_packages_dirs = []
+ _site_packages_dirs += [] if _site.USER_SITE is None else [_site.USER_SITE]
+ _site_packages_dirs += [p for p in _sys.path if "site-packages" in p]
+-if "getsitepackages" in dir(_site):
++try:
+   _site_packages_dirs += _site.getsitepackages()
+-
+-if "sysconfig" in dir(_distutils):
++except AttributeError:
++  import distutils as _distutils
+   _site_packages_dirs += [_distutils.sysconfig.get_python_lib()]
+ 
+ _site_packages_dirs = list(set(_site_packages_dirs))
+diff --git a/tensorflow/lite/python/convert.py b/tensorflow/lite/python/convert.py
+index cfaff27a..a4eeb02f 100644
+--- a/tensorflow/lite/python/convert.py
++++ b/tensorflow/lite/python/convert.py
+@@ -14,7 +14,6 @@
+ # ==============================================================================
+ """Converts a frozen graph into a TFLite FlatBuffer."""
+ 
+-import distutils.spawn
+ import enum
+ import hashlib
+ import os as _os
+@@ -45,6 +44,10 @@ from tensorflow.python.platform import resource_loader as _resource_loader
+ from tensorflow.python.util import deprecation
+ from tensorflow.python.util.tf_export import tf_export as _tf_export
+ 
++try:
++  from shutil import which
++except ImportError:
++  from distutils.spawn import find_executable as which
+ 
+ def _is_quantized_input_stats_required(
+     conversion_flags: _conversion_flags_pb2.TocoFlags,
+@@ -399,7 +402,7 @@ def _run_deprecated_conversion_binary(
+     RuntimeError: When conversion fails, an exception is raised with the error
+       message embedded.
+   """
+-  if distutils.spawn.find_executable(_deprecated_conversion_binary) is None:
++  if which(_deprecated_conversion_binary) is None:
+     raise ConverterError("""Could not find `toco_from_protos` binary, make sure
+ your virtualenv bin directory or pip local bin directory is in your path.
+ In particular, if you have installed TensorFlow with --user, make sure you

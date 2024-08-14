@@ -5,13 +5,14 @@ pkgname=(
   'jc303-common'
   'jc303-lv2'
   'jc303-vst3'
+  'jc303-clap'
 )
-pkgver=0.9.1
-pkgrel=2
+pkgver=0.10.1
+pkgrel=1
 pkgdesc='TB-303 clone'
 arch=('loong64' 'x86_64')
 url='https://midilab.co/jc303/'
-license=('GPL3' 'MIT')
+license=('GPL-3.0-only' 'MIT')
 groups=('pro-audio')
 _common_depends=(
   'glibc'
@@ -30,28 +31,49 @@ makedepends=(
   'gtk3'
 )
 options=('!lto')
-_commit='cd26c0a5865b3e2f3e914a444103da11ab1df53e'
 _jucecommit='69795dc8e589a9eb5df251b6dd994859bf7b3fab'
+_clapcommit='0a3e7a6494788ea525e95e12a8b6a51640dcdc3e'
 source=(
-  "$pkgbase::git+https://github.com/midilab/jc303#commit=$_commit"
+  "$pkgbase::git+https://github.com/midilab/jc303#tag=v$pkgver"
   "github.com-juce-framework-JUCE::git+https://github.com/juce-framework/JUCE#commit=$_jucecommit"
+  "github.com-free-audio-clap-juce-extensions::git+https://github.com/free-audio/clap-juce-extensions#commit=$_clapcommit"
+  # clap-juce-extensions
+  'github.com-free-audio-clap::git+https://github.com/free-audio/clap'
+  'github.com-free-audio-clap-helpers::git+https://github.com/free-audio/clap-helpers'
   'disable-vst2.patch'
+  'juce-clap.patch'
 )
-b2sums=('SKIP'
+sha512sums=('6b146ca76c331087e239e67b625938f8b5a192132220f76ea361a4837df3d9bd7c4cefa1435324cca3a918a6cd68f42779446e0526a7c8fa269243f3e74a5bd7'
+            '909b0f62e0afd7ebdeed8f14e89b1f50ad08af3f49ed55d80c02b2f8b9ffb4ce10007594cd5f336875ff3f1f053b485ed288e020e244d323fdc0a02ab82e9c0f'
+            'c44f050246743f87125bd5ed37243a2f062c98b8d2b37626f4741039aff994016755681b594918ef8bf7839bace282688b7424c722a0d6ec8f25e414260bb446'
+            'SKIP'
+            'SKIP'
+            '0c2b8f0abffdfc764a452ee111248331675fcca2bd00ea858116297ec9a75f042b156960278811d0268af8ddd4b71bc73a4d7deb0cf972eb08591d0995bca36c'
+            '0e7137aa4a6358a84bbbf8c595e4a0bd070f2db34d759e38f940370331267531e4afbb55425abf5874e10a10a30d386f06b50c6cb485e30e25075301377f14fb')
+b2sums=('9fa1a5efdc22d5a53091037eddc25f7df9e02f044cfac78220556b2ad90b754e86b7dd9061c85f92a3338899d813cdfd39f0ce34fb07619c22c5d2e5f783fb52'
+        '8925b04084b0023358372dbddb545449dbe1435d570752d723f8db0f46cfbd4b42fe3c5b7193ea74b9f28084518f00945c3b7ff2226107734b0e988a81b59d74'
+        '39b7747fbd4baa4a7b5336e9ca9db8ac9d2d05e9f51cf1d882637688e3d187bb342ca2277d8012f84bca245cfaa50f7003bd64f902502ec721c1466a73dab2c6'
         'SKIP'
-        'e2a6eae17f0cbfe93b1e7fb9a29ac9ce2df6b79f05147a44c66da65739795199bd9170de04e6801b1afe5f928171ee569d8cf8d544013a9ae0fe5a023a409c05')
-
-pkgver() {
-  cd "$pkgbase"
-
-  git describe --tags | sed 's/^v//'
-}
+        'SKIP'
+        '6c9b459503ec9e3bc79cae11ff7ea1ea425ece1e4b684ca219c760e96d20236479fa54cff4a502646e65e0bbefbeed2c765a96932379fdc15efd2d1a355e4dae'
+        'b16bf3181928a44ad4fef69a4e544576b2dbba37139f3f0c040ae693c2f69be347e7ad97b2eedf9d03de74db88aab3633008524bd8e479ecbb009772a291e618')
 
 prepare() {
   cd "$pkgbase"
 
   # disable VST2
   patch -p1 -i "$srcdir/disable-vst2.patch"
+
+  # cmake/juce give me a headache
+  patch -p1 -i "$srcdir/juce-clap.patch"
+
+  # prepare git submodule(s)
+  pushd "$srcdir/github.com-free-audio-clap-juce-extensions"
+  git submodule init
+  git config submodule.clap-libs/clap.url "$srcdir/github.com-free-audio-clap"
+  git config submodule.clap-libs/clap-helpers.url "$srcdir/github.com-free-audio-clap-helpers"
+  git -c protocol.file.allow=always submodule update --init
+  popd
 }
 
 build() {
@@ -59,7 +81,8 @@ build() {
     -B build \
     -S "$pkgbase" \
     -D FETCHCONTENT_FULLY_DISCONNECTED=ON \
-    -D FETCHCONTENT_SOURCE_DIR_JUCE="$srcdir/github.com-juce-framework-JUCE"
+    -D FETCHCONTENT_SOURCE_DIR_JUCE="$srcdir/github.com-juce-framework-JUCE" \
+    -D FETCHCONTENT_SOURCE_DIR_JUCE_CLAP="$srcdir/github.com-free-audio-clap-juce-extensions"
 
   cmake --build build
 }
@@ -101,4 +124,16 @@ package_jc303-vst3() {
 
   install -vd "$pkgdir/usr/lib/vst3"
   cp -vr build/JC303_artefacts/VST3/* "$pkgdir/usr/lib/vst3"
+}
+
+package_jc303-clap() {
+  pkgdesc+=' - CLAP plugin'
+  groups+=('clap-plugins')
+  depends=(
+    "${_common_depends[@]}"
+    "jc303-common=$pkgver"
+    'clap-host'
+  )
+
+  install -vDm755 -t "$pkgdir/usr/lib/clap" build/JC303_artefacts/CLAP/JC303.clap
 }

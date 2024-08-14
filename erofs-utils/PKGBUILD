@@ -1,7 +1,7 @@
 # Maintainer: David Runge <dvzrv@archlinux.org>
 
 pkgname=erofs-utils
-pkgver=1.7.1
+pkgver=1.8.1
 pkgrel=1
 pkgdesc="Userspace utilities for linux-erofs file system"
 arch=(loong64 x86_64)
@@ -19,13 +19,14 @@ makedepends=(
   fuse2
   util-linux
   xz
+  zstd
 )
 optdepends=(
   'fuse2: for erofsfuse'
 )
 source=($url/snapshot/$pkgname-$pkgver.tar.gz)
-sha512sums=('f5fc08d8d70e3e06c06aaa5a36e9b16ca1ff7c722fc88dba1f5c46fa86914be02e45e948c59504bd0fd4a3a4050ad7a27a5da2657ffbf40ec20ef0d1bfb832ff')
-b2sums=('0d7954d57a7755b4efa566ae2cca443ab15178e02d403cadec7b2e867582044ec4191963c54dac6c0637e428649f5898e0ed921f4a3c5461234a455e609ef5a8')
+sha512sums=('b7fe2441e5295680bc683e978ad97ee359785fd842d77fa86ef6bf869b5da87ad613f48782b5f59684995b6cbc5c274938c9ea9067baa537f09c029eabb4cca3')
+b2sums=('0ecf7ad0d42f3941751511f3ab42e7e25b85dc64849867a221272cf4596f6bfff3cb1c22877a485de79b4445f68eea8e77cb3f8c742a23ee5ad7ce0232b85091')
 
 prepare() {
   cd $pkgname-$pkgver
@@ -33,8 +34,14 @@ prepare() {
 }
 
 build() {
+  local configure_options=(
+    --prefix=/usr
+    --enable-fuse
+    --enable-lzma
+  )
+
   cd $pkgname-$pkgver
-  ./configure --prefix=/usr --enable-fuse --enable-lzma
+  ./configure "${configure_options[@]}"
   make
 }
 
@@ -46,6 +53,7 @@ package() {
   depends+=(
     util-linux libuuid.so
     xz liblzma.so
+    zstd libzstd.so
   )
 
   make DESTDIR="$pkgdir/" install -C $pkgname-$pkgver

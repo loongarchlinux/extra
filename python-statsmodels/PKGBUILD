@@ -3,14 +3,14 @@
 # Contributor: Oliver Sherouse <oliver DOT sherouse AT gmail DOT com>
 
 pkgname=python-statsmodels
-pkgver=0.14.1
-pkgrel=2
+pkgver=0.14.2
+pkgrel=1
 pkgdesc="Statistical computations and models for use with SciPy"
 arch=(loong64 x86_64)
 url="https://www.statsmodels.org/"
-license=(BSD)
+license=(BSD-3-Clause)
 depends=(python-numpy python-scipy python-pandas python-patsy)
-makedepends=(python-setuptools-scm cython0 git)
+makedepends=(python-setuptools-scm python-wheel python-build python-installer cython git)
 optdepends=('jupyter-notebook: needed to run the notebooks'
             'python-cvxopt: regularized fitting of some models'
             'python-joblib: accelerate distributed estimation for certain models'
@@ -19,19 +19,23 @@ checkdepends=(python-pytest python-pytest-xdist python-joblib python-matplotlib)
 source=(git+https://github.com/statsmodels/statsmodels#tag=v$pkgver)
 sha256sums=('SKIP')
 
+prepare() {
+  sed -i '/oldest-supported-numpy/d' statsmodels/pyproject.toml
+}
+
 build() {
   cd statsmodels
-  python setup.py build
+  python -m build --wheel --no-isolation
 }
 
 check() {
   local python_version=$(python -c 'import sys; print(".".join(map(str, sys.version_info[:2])))')
   cd statsmodels/build/lib.linux-${CARCH}-cpython-${python_version/./}
-  PYTHONPATH="${PWD}" pytest -vv --color=yes statsmodels || echo "Tests failed"
+  PYTHONPATH="${PWD}" pytest -vv --color=yes statsmodels
 }
 
 package() {
   cd statsmodels
-  python setup.py install --skip-build --root="${pkgdir}" --optimize=1
+  python -m installer --destdir="$pkgdir" dist/*.whl
   install -Dm644 LICENSE.txt -t "${pkgdir}"/usr/share/licenses/${pkgname}
 }

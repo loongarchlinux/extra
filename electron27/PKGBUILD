@@ -10,7 +10,7 @@
 
 pkgver=27.3.11
 _gcc_patches=118-2
-pkgrel=2
+pkgrel=6
 _major_ver=${pkgver%%.*}
 pkgname="electron${_major_ver}"
 pkgdesc='Build cross platform desktop apps with web technologies'
@@ -34,6 +34,7 @@ makedepends=(clang
              http-parser
              java-runtime-headless
              libnotify
+             libva
              lld
              llvm
              ninja
@@ -49,6 +50,7 @@ makedepends=(clang
              python-pyparsing
              python-requests
              python-six
+             python-setuptools
              rust
              qt5-base
              wget
@@ -230,7 +232,7 @@ sha256sums=('efe39ada071f6f7d42bd10aae57ae1b7a136ed5c85e9c329c25b3409588b0c5c'
             '774be6af18350934a89a86ef62d97e3d5dabe89504a708bcb1bbd01134936ac7'
             'b3de01b7df227478687d7517f61a777450dca765756002c80c4915f271e2d961'
             'dd2d248831dd4944d385ebf008426e66efe61d6fdf66f8932c963a12167947b4'
-            'b406bc9adb7fadcfbd26f204f3e0ef8c31a41fa09181edb28626167ac58fe038'
+            '13fcf26193f4417fd5dfbc82a3f24e5c7a1cce82f729f6a73f1b1d3a7b580b34'
             '4484200d90b76830b69eea3a471c103999a3ce86bb2c29e6c14c945bf4102bae'
             'ab1eb107ec1c915065dc59cf4832da27e17d60eb29038e2aec633daeb946cc6a'
             'ff9ebd86b0010e1c604d47303ab209b1d76c3e888c423166779cefbc22de297f'
@@ -395,7 +397,7 @@ sha256sums=('efe39ada071f6f7d42bd10aae57ae1b7a136ed5c85e9c329c25b3409588b0c5c'
 declare -gA _system_libs=(
   # [brotli]=brotli
   [dav1d]="dav1d libdav1d.so"
-  [ffmpeg]="ffmpeg libavcodec.so libavcodec.so libavformat.so libavutil.so"
+  #[ffmpeg]="ffmpeg libavcodec.so libavcodec.so libavformat.so libavutil.so"
   [flac]="flac libFLAC.so"
   [fontconfig]="fontconfig libfontconfig.so"
   [freetype]="freetype2 libfreetype.so"
@@ -434,7 +436,7 @@ prepare() {
 
   cp -r chromium-mirror_third_party_depot_tools depot_tools
   export PATH+=":$PWD/depot_tools" DEPOT_TOOLS_UPDATE=0
-  export VPYTHON_BYPASS='manually managed python not supported by chrome operations'
+# export VPYTHON_BYPASS='manually managed python not supported by chrome operations'
 
   echo "Putting together electron sources"
   # Generate gclient gn args file and prepare-electron-source-tree.sh
@@ -452,15 +454,19 @@ prepare() {
     -s src/third_party/skia --header src/skia/ext/skia_commit_hash.h
   src/build/util/lastchange.py \
     -s src/third_party/dawn --revision src/gpu/webgpu/DAWN_VERSION
-  src/tools/update_pgo_profiles.py --target=linux update \
-    --gs-url-base=chromium-optimization-profiles/pgo_profiles
+# needs newer clang to read the bundled PGO profile
+# src/tools/update_pgo_profiles.py --target=linux update \
+#   --gs-url-base=chromium-optimization-profiles/pgo_profilessrc/tools/update_pgo_profiles.py --target=linux update \
   depot_tools/download_from_google_storage.py --no_resume --extract --no_auth \
     --bucket chromium-nodejs -s src/third_party/node/node_modules.tar.gz.sha1
 
- patch -Np1 -i "${srcdir}/std-vector-non-const.patch" -d src/electron
+  patch -Np1 -i "${srcdir}/std-vector-non-const.patch" -d src/electron
 
   src/electron/script/apply_all_patches.py \
       src/electron/patches/config.json
+
+  # https://github.com/nodejs/node/issues/48444
+  export UV_USE_IO_URING=0
 
   pushd src
   pushd electron
@@ -522,6 +528,13 @@ prepare() {
 
   ./build/linux/unbundle/replace_gn_files.py \
     --system-libraries "${!_system_libs[@]}"
+
+# Port away form imp
+  git cherry-pick -n 9e0c89a3b5638ba2b9b107fea34a01c774aa7805
+
+# Update vendored copy of six
+  pushd third_party/catapult
+  git cherry-pick -n 8cf7c46ad7ea03bf5d5588d0ed63be3df4baaf1f
 }
 
 build() {

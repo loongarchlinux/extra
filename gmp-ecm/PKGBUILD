@@ -3,33 +3,40 @@
 # Contributor: Gaetan Bisson <bisson@archlinux.org>
 
 pkgname=gmp-ecm
-pkgver=7.0.5
+pkgver=7.0.6
 pkgrel=1
 pkgdesc='Elliptic Curve Method for Integer Factorization'
 url='https://github.com/sethtroisi/gmp-ecm'
-license=(GPL LGPL)
-depends=(gmp)
+license=(GPL-3.0-or-later
+         LGPL-3.0-or-later)
+depends=(gcc-libs
+         glibc
+         gmp)
+makedepends=(git)
 arch=(loong64 x86_64)
-source=(https://gitlab.inria.fr/zimmerma/ecm/-/archive/git-$pkgver/ecm-git-$pkgver.tar.gz)
-sha256sums=('778007e9ddd914487fa6a935ba06baabfe0b38078f04ed7e102e9b52e8fa0137')
+source=(git+https://gitlab.inria.fr/zimmerma/ecm#tag=git-$pkgver)
+sha256sums=('cec9bacbc6cfaeae0a094ea91451b5343b87519309855e732566ee5cdb7c14ea')
 
 prepare() {
-  cd ecm-git-$pkgver
+  cd ecm
   autoreconf -vi
 }
 
 build() {
-  cd ecm-git-$pkgver
-  ./configure --prefix=/usr --enable-shared --enable-openmp
+  cd ecm
+  ./configure \
+    --prefix=/usr \
+    --enable-shared \
+    --enable-openmp
   make
 }
 
 check() {
-  cd ecm-git-$pkgver
+  cd ecm
   make check
 }
 
 package() {
-  cd ecm-git-$pkgver
+  cd ecm
   make DESTDIR="$pkgdir" install
 }

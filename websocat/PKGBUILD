@@ -3,26 +3,37 @@
 # Contributor: kpcyrd <git@rxv.cc>
 
 pkgname=websocat
-pkgver=1.12.0
+pkgver=1.13.0
 pkgrel=1
 pkgdesc='Command-line client for web sockets, like netcat/curl/socat for ws://'
 url='https://github.com/vi/websocat/'
-arch=('loong64' 'x86_64')
-license=('MIT')
-depends=('glibc' 'openssl' 'gcc-libs')
-makedepends=('cargo')
+arch=(loong64 x86_64)
+license=(MIT)
+depends=(
+  glibc
+  openssl
+  gcc-libs
+)
+makedepends=(
+  cargo
+)
 source=("${url}/archive/v${pkgver}/${pkgname}-${pkgver}.tar.gz")
-sha512sums=('043e175d557fee92d381ed1f1aa510056e1d59d0bd25c8f1cc9bf78c3ef59e9e76c5ac283f6bf4e8c9563365cd57deaf5e6f3b0040e6d680a9e8dc80ad931610')
-b2sums=('e83675c1bd421add00a3a2409b51e98edacb52c018b3f617cc78808e14d8a2af0a7ce9d6db1a6ebc740a6c620213e70fb3dda91c2f8a9bcd9e93d05c8043b313')
+sha512sums=('119cb6d0c226ed4f1df86a42a26903ba8465db30e5d0908d4a28601a58636e9a906fbb44d2d811ec9b25103a8c48b4ccea8b31f2f61854d062bc436ac6afac78')
+b2sums=('287e869538246d9d5c62080aeb1627b0e8155585553800c0d639e2a8bebf9b4d65e3df35ff424c48076cdccbe79b54a15119793ae22cf68d1ce1774c0e795236')
+
+prepare() {
+  cd "${pkgname}-${pkgver}"
+  cargo fetch --locked --target "$(rustc -vV | sed -n 's/host: //p')"
+}
 
 build() {
   cd "${pkgname}-${pkgver}"
-  cargo build --release --locked --features=ssl
+  cargo build --frozen --release --features=ssl
 }
 
 check() {
   cd "${pkgname}-${pkgver}"
-  cargo test --release --locked --features=ssl
+  cargo test --frozen --features=ssl
 }
 
 package() {

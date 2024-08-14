@@ -2,30 +2,30 @@
 # Contributor: PyroDevil <p dot devil at gmail dot com>
 
 pkgname=python-queuelib
-pkgver=1.6.2
-pkgrel=5
+pkgver=1.7.0
+pkgrel=1
 pkgdesc="Collection of persistent (disk-based) queues."
 arch=('any')
 license=('BSD-3-Clause')
 url="https://scrapy.org"
 depends=('python')
-makedepends=('python-setuptools' 'python-build' 'python-installer' 'python-wheel')
+makedepends=('git' 'python-setuptools' 'python-build' 'python-installer' 'python-wheel')
 checkdepends=('python-pytest')
-source=("$pkgname-$pkgver.tar.gz::https://github.com/scrapy/queuelib/archive/v$pkgver.tar.gz")
-sha512sums=('f474fd5cc24b72e4d6b0ddcb64ef775c06a213abb7a5b11b101671e27db46655f8debd9a3f438a1eaad0c0bb0d223d3151bde9132bdf3b6e9b19bff28b43a091')
+source=("git+https://github.com/scrapy/queuelib.git#tag=v$pkgver")
+sha512sums=('fb980956428f07f014d2e19d1937d3139dcea424a802cf14b26b11fd7b0da81d59476e8b92ef9ee90a65d93e76ad8e6546ca004e1beb280bd1a34e5b1707b9b3')
 
 build() {
-  cd queuelib-$pkgver
+  cd queuelib
   python -m build --wheel --no-isolation
 }
 
 check() {
-  cd queuelib-$pkgver
-  py.test
+  cd queuelib
+  pytest
 }
 
 package() {
-  cd queuelib-$pkgver
+  cd queuelib
   python -m installer --destdir="$pkgdir" dist/*.whl
   install -D -m644 LICENSE -t "$pkgdir"/usr/share/licenses/$pkgname
   install -D -m644 README.rst -t "$pkgdir"/usr/share/doc/$pkgname

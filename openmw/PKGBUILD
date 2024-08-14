@@ -3,20 +3,28 @@
 
 pkgname=openmw
 pkgver=0.48.0
-pkgrel=5
+pkgrel=8
 pkgdesc="Open-source engine reimplementation for the role-playing game Morrowind"
 arch=('loong64' 'x86_64')
 url="http://www.openmw.org"
 license=('GPL3' 'MIT' 'custom')
-depends=('openal' 'openscenegraph' 'mygui' 'qt5-base' 'ffmpeg' 'sdl2' 'unshield'
+depends=('openal' 'openscenegraph' 'mygui' 'qt5-base' 'ffmpeg4.4' 'sdl2' 'unshield'
          'libxt' 'boost-libs' 'bullet-dp' 'yaml-cpp' 'luajit')
 makedepends=('cmake' 'boost' 'doxygen' 'ninja')
-source=("https://github.com/OpenMW/openmw/archive/refs/tags/openmw-${pkgver}.tar.gz")
-sha512sums=('6f2429253b44a232fc69db7f04a873f7328a5e95d810c36768311bdc23064a96c9963caa7d64a906bd67509e3a2f8d142db005ce093fc2764dd672ae6a617414')
+source=("https://github.com/OpenMW/openmw/archive/refs/tags/openmw-${pkgver}.tar.gz"
+         gcc14.patch)
+sha512sums=('6f2429253b44a232fc69db7f04a873f7328a5e95d810c36768311bdc23064a96c9963caa7d64a906bd67509e3a2f8d142db005ce093fc2764dd672ae6a617414'
+            '4039328c3c587db9fba203156eb0dbacfb6b6bc8015ee1f483c79757b52f85da88adc6640947cf5965e91cb7babb2fabcbcf42ce51e1b0a41a8b0ebac31882e1')
+
+prepare() {
+  cd openmw-openmw-$pkgver
+  patch -p1 -i ../gcc14.patch # Fix build with GCC 14
+}
 
 build() {
   cd openmw-openmw-$pkgver
 
+  PKG_CONFIG_LIBDIR='/usr/lib/ffmpeg4.4/pkgconfig' \
   cmake \
     -DCMAKE_INSTALL_PREFIX=/usr \
     -DCMAKE_BUILD_TYPE=Release \

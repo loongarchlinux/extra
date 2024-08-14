@@ -2,21 +2,21 @@
 # Contributor: libertylocked <libertylocked@disroot.org>
 
 pkgname=bitwarden
-pkgver=2024.4.3
+pkgver=2024.6.4
 pkgrel=1
-_electronversion=28
+_electronversion=29
 pkgdesc='A secure and free password manager for all of your devices'
 arch=('loong64' 'x86_64')
 url='https://github.com/bitwarden/clients/tree/master/apps/desktop'
 license=('GPL3')
-depends=("electron$_electronversion" 'libnotify' 'libsecret' 'libxtst' 'libxss' 'libnss_nis')
-makedepends=('git' 'npm' 'python' 'python-setuptools' 'node-gyp' 'nodejs-lts-hydrogen' 'jq' 'rust')
+depends=("electron$_electronversion" 'libnotify' 'libsecret' 'org.freedesktop.secrets' 'libxtst' 'libxss' 'libnss_nis')
+makedepends=('git' 'npm' 'python' 'python-setuptools' 'node-gyp' 'nodejs-lts-iron' 'jq' 'rust')
 source=(bitwarden::git+https://github.com/bitwarden/clients.git#tag=desktop-v$pkgver
         messaging.main.ts.patch
         nativelib.patch
         ${pkgname}.sh
         ${pkgname}.desktop)
-sha512sums=('3698a7d986929b8d3933a0f52959901122580aeb730b243613b739b0228f4a9d71fca673ab63956e6465e6dfd54a474f4d765b8546a3775a72e593d38e06869d'
+sha512sums=('03e855133bce7eabc530b2b3f0ae54b90d73024a3f7c6beef40137c926591f1032155b56a80da089fe8b4a4360168f990521c5ffd3b9b6e0e5d5b625487b67a6'
             'babcae0dba4d036e5d2cd04d8932b63253bc7b27b14d090932066e9d39383f7565c06d72dae9f96e741b494ef7e50a1fe7ec33905aa3124b427a8bf404df5762'
             '88610cba9dea99aefdfea51139f5770f04f1e877d75e86f2eea3470c99880282c5ff91060cb08d92cdf00d0a1b3bd40c5f3ee887cee11946dd31ca06da978272'
             '98d2860bef2283fd09710fbbc5362d7ef2cd8eca26f35805ea258f2dacba78bd6aab14c834388a5089a8150eb0f32a82577aab10f8ad68e1a6371959b2802ad4'
@@ -36,13 +36,13 @@ prepare() {
 	export SYSTEM_ELECTRON_VERSION=$(electron$_electronversion -v | sed 's/v//g')
 	export ELECTRONVERSION=$_electronversion
 	sed -i "s|@electronversion@|${ELECTRONVERSION}|" "$srcdir/bitwarden.sh"
-	# jq < package.json \
-	#    '.build["electronVersion"]=$ENV.SYSTEM_ELECTRON_VERSION | .build["electronDist"]="/usr/lib/electron\(env.ELECTRONVERSION)"' \
-	#    > package.json.patched
-	# mv package.json.patched package.json
 	cd ../../
+	jq < package.json \
+	   '.devDependencies["electron"]=$ENV.SYSTEM_ELECTRON_VERSION' \
+	   > package.json.patched
+	mv package.json.patched package.json
 	patch --strip=1 apps/desktop/desktop_native/index.js "$srcdir/nativelib.patch"
-	npm ci
+	npm install
 }
 
 build() {

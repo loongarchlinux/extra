@@ -1,0 +1,30 @@
+# Maintainer: Felix Yan <felixonmars@archlinux.org>
+# Contributor: justforlxz <justforlxz@gmail.com>
+
+pkgname=wlr-protocols
+pkgver=r106.2b8d433
+_commit=2b8d43325b7012cc3f9b55c08d26e50e42beac7d
+pkgrel=1
+pkgdesc='Wayland protocols designed for use in wlroots (and other compositors).'
+arch=('any')
+url="https://gitlab.freedesktop.org/wlroots/wlr-protocols"
+license=('MIT')
+makedepends=('git')
+checkdepends=('wayland')
+source=("git+https://gitlab.freedesktop.org/wlroots/wlr-protocols.git#commit=$_commit")
+sha512sums=('a895ba5f31fd34d9fb5772a6d25ce422ee229d693d4aaed0fae5328013c98ace1efdb20049a7fd6cd68c991ab386fffa1b17b007e6b7297da1ecfc5bee1888bc')
+
+pkgver() {
+  cd $pkgname
+  printf "r%s.%s" "$(git rev-list --count HEAD)" "$(git rev-parse --short=7 HEAD)"
+}
+
+check() {
+  cd $pkgname
+  make check
+}
+
+package() {
+  cd $pkgname
+  DESTDIR="$pkgdir" make install
+}

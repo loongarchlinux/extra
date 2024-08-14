@@ -4,8 +4,8 @@
 # Contributor: Jon Kristian Nilsen <jokr.nilsen@gmail.com>
 
 pkgname=libffado
-pkgver=2.4.8
-pkgrel=2
+pkgver=2.4.9
+pkgrel=1
 pkgdesc="Driver for FireWire audio devices"
 arch=(loong64 x86_64)
 url="http://www.ffado.org/"
@@ -33,23 +33,9 @@ optdepends=('python-pyqt5: ffado-mixer')
 provides=(libffado.so)
 source=(
   http://www.ffado.org/files/$pkgname-$pkgver.tgz
-  $pkgname-2.4.8-remove_imp_module.patch
 )
-sha512sums=('fbbcd30640c55315f2e65fc6c07afc71a77dd2c9d1b6127ee55cd17e76511ad5f0563135e52397dbf113fb0d5925021a38780f231409bdd920da52e6c1ce3acc'
-            '837efee98902dc4303ccd62dd12fec83f98c6e06c4d183c3e8f42966efac4df7d6a6633e6f720c4babc326cc8e7e7eacec04e49c95e9df08675ebc087e45c9ca')
-b2sums=('14b83d55fc9a7b33c888b893c808f8419292fefaa2c2239b4b51c2b84070a584ea72821c8469bb8d965a9a5e6473b6fcfb5e85f4eecd2d424e3167322f8abb81'
-        '9661f9309fd4feedb32f7a6680af0215ffe295eb63fb8da9c3483f58fa0db57cd953823b472aa259e167b388459c7568ce7dc8413eb271c37fbef709035e9442')
-
-prepare() {
-  # remove use of the imp module
-  patch -Np1 -d $pkgname-$pkgver -i ../$pkgname-2.4.8-remove_imp_module.patch
-
-  cd $pkgname-$pkgver/$pkgname
-  # fix icon name, so it's coherent with XDG desktop file name
-  sed -e 's/hi64-apps-ffado/ffado-mixer/g' -i support/xdg/ffado.org-ffadomixer.desktop
-  # fix id, so it's coherent with XDG desktop file name
-  sed -e 's/ffado.org-ffadomixer.desktop/ffado-mixer.desktop/g' -i support/xdg/ffado-mixer.appdata.xml
-}
+sha512sums=('0a0c61cf9339ab542c85eaefbe017b7613f716ae0ed08d11a37782dd7ef5815b18256c5d1b9240f077c9f59bbf4b4878019cefbd6cab78140477bcad6a9d3e44')
+b2sums=('ec8300066d47d685aa701316efa6831f05d678c509de341d1b74551bf8a3f04b59dcd80d592e2111670212d4056bd1c150cc23dbf43a797a915bf65ae441c85e')
 
 build() {
   local site_packages=$(python -c "import site; print(site.getsitepackages()[0])")
@@ -63,7 +49,7 @@ build() {
     UDEVDIR=/usr/lib/udev/rules.d
   )
 
-  cd $pkgname-$pkgver/$pkgname
+  cd $pkgname-$pkgver
   scons "${scons_options[@]}"
 }
 
@@ -74,11 +60,7 @@ package() {
     libconfig libconfig++.so
   )
 
-  cd $pkgname-$pkgver/$pkgname
-  scons DESTDIR="$pkgdir" WILL_DEAL_WITH_XDG_MYSELF=True install
-  install -vDm 644 support/xdg/ffado.org-ffadomixer.desktop "$pkgdir/usr/share/applications/ffado-mixer.desktop"
-  install -vDm 644 support/xdg/hi64-apps-ffado.png "$pkgdir/usr/share/icons/hicolor/64x64/apps/ffado-mixer.png"
+  cd $pkgname-$pkgver
+  scons DESTDIR="$pkgdir" install
   install -vDm 644 {AUTHORS,README} -t "$pkgdir/usr/share/doc/$pkgname/"
 }
-
-# vim:set ts=2 sw=2 et:

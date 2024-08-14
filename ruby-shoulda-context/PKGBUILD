@@ -3,25 +3,53 @@
 pkgname=ruby-shoulda-context
 pkgver=2.0.0
 _commit=eff9fdde51db7681128336c682311b36867fb288
-pkgrel=4
+pkgrel=5
 pkgdesc='Minitest & Test::Unit context framework'
 arch=(any)
 url='https://github.com/thoughtbot/shoulda-context'
 license=(MIT)
-depends=(ruby)
-makedepends=(git)
-checkdepends=(ruby-byebug ruby-m ruby-minitest ruby-mocha ruby-pry ruby-pry-byebug ruby-rake
-              ruby-snowglobe ruby-test-unit ruby-warnings_logger ruby-rubocop)
+depends=(
+  ruby
+)
+makedepends=(
+  git
+)
+checkdepends=(
+  ruby-bundler
+  ruby-byebug
+  ruby-irb
+  ruby-m
+  ruby-minitest
+  ruby-mocha
+  ruby-pry
+  ruby-pry-byebug
+  ruby-rake
+  ruby-rubocop
+  ruby-snowglobe
+  ruby-test-unit
+  ruby-warnings_logger
+)
 options=(!emptydirs)
-source=(git+https://github.com/thoughtbot/shoulda-context.git#commit=$_commit)
-sha256sums=('SKIP')
+source=(
+  "git+https://github.com/thoughtbot/shoulda-context.git#commit=$_commit"
+  "${pkgname}_exists.patch::${url}/commit/ee3aeb239ea69c9a855d64e8c1cfda87958c833d.patch"
+)
+sha512sums=('SKIP'
+            '25a10a6448ae630a06faa7f2c4a98dce7d6148cc4e2e1761975c1d260cc3231ca3c4adb523c06d35847794efc4978ae042fbfe75aa98f2a3adc79ab38b77c522')
+b2sums=('SKIP'
+        '8b8210c86825dda93f9dd93711c374bd15bd9a9629d0b5d3f31802034beff71f11f3c46fd28455efa3a34e9bf2ab8274eea639710c570eedd5ccb23dd9e6918c')
 
 prepare() {
   cd shoulda-context
+
+  patch --verbose --strip=1 --input="../${pkgname}_exists.patch"
+
   sed -i -e 's|~>|>=|' -e '/appraisal/d' -e 's/, "0.71.0"//' Gemfile
+
   # Multiple hacks to avoid appraisal and rails
   sed -i 's/Tests::CurrentBundle.instance.appraisal_in_use?/true/' Rakefile
   sed -i '/current_bundle/d;/assert_appraisal/d;/rails_application_with_shoulda_context/d' test/test_helper.rb Rakefile
+
   git rm Gemfile.lock
   git rm test/shoulda/test_framework_detection_test.rb test/shoulda/rerun_snippet_test.rb test/shoulda/railtie_test.rb
 }

@@ -5,7 +5,7 @@
 
 pkgname=ttf-opensans
 pkgver=1.101
-pkgrel=2
+pkgrel=3
 pkgdesc='Sans-serif typeface commissioned by Google'
 arch=('any')
 url='https://fonts.google.com/specimen/Open+Sans'

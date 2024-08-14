@@ -5,10 +5,9 @@ pkgbase=pyside6
 pkgname=(pyside6
          pyside6-tools
          shiboken6)
-_qtver=6.7.0
-_clangver=17.0.6
+_qtver=6.7.2
 pkgver=${_qtver/-/}
-pkgrel=5
+pkgrel=3
 arch=(loong64 x86_64)
 url='https://www.qt.io'
 license=(LGPL)
@@ -44,7 +43,7 @@ makedepends=(clang
              qt6-websockets)
 source=(git+https://code.qt.io/pyside/pyside-setup#tag=v$pkgver
         fix-build.patch)
-sha256sums=('63e85c9d7d66182d05d841eff56d9062a11f26970c34afb6dc6630ca27d60306'
+sha256sums=('f2413b5bbcf80f2ed58722f4d4f3b1d2cbac5a6310908c4c55ba1b454fa60803'
             '77b83cb164ea87d826259864f6a81fb33199510e1948d6daaf5c8d5ab55735a7')
 
 prepare() {
@@ -54,6 +53,7 @@ prepare() {
 }
 
 build() {
+  CLANG_INSTALL_DIR="/usr" \
   cmake -B build -S pyside-setup -G Ninja \
     -DCMAKE_INSTALL_PREFIX=/usr \
     -DCMAKE_BUILD_TYPE=None \
@@ -67,7 +67,7 @@ build() {
 
 package_shiboken6() {
   pkgdesc='Generates bindings for C++ libraries using CPython source code'
-  depends=(clang=$_clangver
+  depends=(clang
            gcc-libs
            glibc
            libxml2

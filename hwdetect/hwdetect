@@ -7,9 +7,8 @@
 _ARCH="$(uname -m)"
 _NO_LOG="/dev/null"
 #shellcheck disable=SC2048,SC2086
-echo $* | grep -Eq 'filesystem|hostcontroller|kms' && _SHOW_MODULES=1
+echo $* | rg -q 'filesystem|hostcontroller|kms' && _SHOW_MODULES=1
 # get module modalias from /sys
-_ALIASES="$(find /sys/ -noleaf -name modalias  -exec cat {} + 2>${_NO_LOG})"
 
 usage () {
 cat << EOF
@@ -43,6 +42,7 @@ Module listing options:
     --show-media           show MEDIA modules
     --show-mei             show MEI modules
     --show-mfd             show MFD modules
+    --show-mmc             show MMC modules
     --show-mtd             show MTD modules
     --show-net             show NETWORK modules
     --show-nvme            show NVME modules
@@ -74,7 +74,6 @@ HOOKS array options:
     --systemd              use systemd hooks on early userspace
     --hooks-dir=           use directory for HOOKS check
 EOF
-    exit 1
 }
 
 [[ -z "${1}" ]] && usage
@@ -85,10 +84,10 @@ EOF
 _parameter() {
     while [ -n "${1}" ]; do
         case ${1} in
-            --root_directory=*) _ROOT_DIRECTORY="$(echo "${1}" | cut -d '=' -f 2)" ;;
-            --kernel_version=*) _KERNEL_VERSION="$(echo "${1}" | cut -d '=' -f 2)" ;;
-            --rootdevice=*) _ROOTDEVICE="$(echo "${1}" | cut -d '=' -f 2)" ;;
-            --hooks-dir=*) _HOOKS_DIR="$(echo "${1}" | cut -d '=' -f 2)" ;;
+            --root_directory=*) _ROOT_DIRECTORY="$(echo "${1}" | rg -o '=(.*)' -r '$1')" ;;
+            --kernel_version=*) _KERNEL_VERSION="$(echo "${1}" | rg -o '=(.*)' -r '$1')" ;;
+            --rootdevice=*) _ROOTDEVICE="$(echo "${1}" | rg -o '=(.*)' -r '$1')" ;;
+            --hooks-dir=*) _HOOKS_DIR="$(echo "${1}" | rg -o '=(.*)' -r '$1')" ;;
         esac
         shift
     done
@@ -113,22 +112,24 @@ _show_array() {
 }
 
 _mods() {
-    _INCLUDE=${1} ; shift
-    _EXLUDE=""
-    while [[ "${1}" ]]; do
-        [[ "${_EXCLUDE}" ]] && _EXCLUDE="${_EXCLUDE}|${1}" || _EXCLUDE="${1}"
-        shift
-    done
-    if [[ "${_EXCLUDE}" ]]; then
+    if [[ -n "${2}" ]]; then
         #shellcheck disable=SC2086
-        modprobe -i -a --dirname="${_ROOT_DIRECTORY}" --set-version="${_KERNEL_VERSION}" --show-depends ${_ALIASES} 2>${_NO_LOG} |\
-        grep -v ^builtin | sed "s|^insmod ${_ROOT_DIRECTORY}/lib/modules/${_KERNEL_VERSION}/kernel||g" |\
-        sort -u | grep -E -v "${_EXCLUDE}" | grep "${_INCLUDE}" | sed -ne "s#^/.*/\(.*\)\.ko.*#\1#p"
+        echo "${_MODULES}" | rg -v "${2}" | rg "${1}" | rg -o ".*/(.*).ko.*" -r '$1' | sort -u
     else
         #shellcheck disable=SC2086
-        modprobe -i -a --dirname="${_ROOT_DIRECTORY}" --set-version="${_KERNEL_VERSION}" --show-depends ${_ALIASES} 2>${_NO_LOG} |\
-        grep -v ^builtin | sed "s|^insmod ${_ROOT_DIRECTORY}/lib/modules/${_KERNEL_VERSION}/kernel||g" |\
-        sort -u | grep "${_INCLUDE}" | sed -ne "s#^/.*/\(.*\)\.ko.*#\1#p"
+        echo "${_MODULES}" | rg "${1}" | rg -o ".*/(.*).ko.*" -r '$1' | sort -u
+    fi
+}
+
+_kver() {
+    # x86_64: rg -Noazm 1 'ABCDEF\x00+(.*) \(.*@' -r '$1' ${1}
+    # aarch64 compressed and uncompressed:
+    # rg -Noazm 1 'Linux version (.*) \(.*@' -r '$1' ${1}
+    # riscv64: zcat ${1} | rg -Noazm 1 'Linux version (.*) \(.*@' -r '$1'
+    if [[ -f "${1}" ]]; then
+        rg -Noazm 1 'ABCDEF\x00+(.*) \(.*@' -r '$1' "${1}" ||\
+        rg -Noazm 1 'Linux version (.*) \(.*@' -r '$1' "${1}" ||\
+        zcat "${1}" | rg -Noazm 1 'Linux version (.*) \(.*@' -r '$1'
     fi
 }
 
@@ -139,120 +140,119 @@ if [[ -z "${_KERNEL_VERSION}" ]]; then
     # get kernel version from installed kernel
     [[ "${_ARCH}" == "x86_64" || "${_ARCH}" == "riscv64" ]] && _VMLINUZ=${_ROOT_DIRECTORY}/boot/vmlinuz-linux
     [[ "${_ARCH}" == "aarch64" ]] && _VMLINUZ=${_ROOT_DIRECTORY}/boot/Image
-    if [[ -f "${_VMLINUZ}" && "${_ARCH}" == "x86_64" ]]; then
-        offset="$(od -An -j0x20E -dN2 "${_VMLINUZ}")"
-        read -r _KERNEL_VERSION _ < <(dd if="${_VMLINUZ}" bs=1 count=127 skip=$((offset + 0x200)) 2>${_NO_LOG})
-    fi
-    if [[ -f "${_VMLINUZ}" ]]  &&  [[ "${_ARCH}" == "riscv64" || "${_ARCH}" == "aarch64" ]]; then
-        reader="cat"
-        # try if the image is gzip compressed
-        bytes="$(od -An -t x2 -N2 "${_VMLINUZ}" | tr -dc '[:alnum:]')"
-        [[ $bytes == '8b1f' ]] && reader="zcat"
-        read -r _ _ _KERNEL_VERSION _ < <($reader "${_VMLINUZ}" | grep -m1 -aoE 'Linux version .(\.[-[:alnum:]]+)+')
-    fi
+    _KERNEL_VERSION=$(_kver "${_VMLINUZ}")
     # fallback if no detectable kernel is installed
     [[ -z "${_KERNEL_VERSION}" ]] && _KERNEL_VERSION="$(uname -r)"
 fi
+
+_ALIASES="$(fd 'modalias' /sys/ -X cat)"
+#shellcheck disable=SC2086
+_MODULES="$(modprobe -i -a --dirname="${_ROOT_DIRECTORY}" --set-version="${_KERNEL_VERSION}" \
+            --show-depends ${_ALIASES} 2>${_NO_LOG} | rg -v '^builtin')"
 
 # starting different actions
 while [ -n "$*"  ]; do
     #shellcheck disable=SC2046
     case ${1} in
         --show-modules)
-            _show_list "AGP      " $(_mods agp/)
-            _show_list "ACPI     " $(_mods acpi/)
-            _show_list "BLOCK    " $(_mods ata/pata pata_acpi) $(_mods ata/ata_piix) \
-                                   $(_mods virtio/virtio_pci) $(_mods scsi/) $(_mods message/fusion/) $(_mods drivers/block/ nbd pktcdvd sx8 floppy) \
-                                   $(_mods ata/ pata ata_generic) $(_mods drivers/block/sx8) \
-                                   $(_mods usb/ usb/input) $(_mods firewire/) $(_mods ieee1394/) $(_mods nvme.ko)
-            _show_list "BLUETOOTH" $(_mods bluetooth/)
-            _show_list "CDROM    " $(_mods cdrom/)
-            _show_list "CPUFREQ  " $(_mods cpufreq/)
-            _show_list "CRYPTO   " $(_mods crypto/)
-            _show_list "DCA      " $(_mods dca/)
-            _show_list "DMA      " $(_mods dma/)
-            _show_list "DRM      " $(_mods drm/)
-            _show_list "EDAC     " $(_mods edac/)
-            _show_list "EVENTS   " $(_mods events/)
-            _show_list "HWMON    " $(_mods hwmon/)
-            _show_list "I2C      " $(_mods i2c/)
-            _show_list "INPUT    " $(_mods input/ pcspkr) $(_mods hid/) $(_mods mac_hid)
-            _show_list "IPMI     " $(_mods ipmi/)
-            _show_list "IRDA     " $(_mods irda/)
-            _show_list "KVM      " $(_mods kvm/)
-            _show_list "MEDIA    " $(_mods media/)
-            _show_list "MEI      " $(_mods mei/)
-            _show_list "MFD      " $(_mods mfd/)
-            _show_list "MTD      " $(_mods mtd/)
-            _show_list "NET      " $(_mods net/ irda/)
-            _show_list "NVME     " $(_mods nvme/ nvme.ko)
-            _show_list "PARPORT  " $(_mods parport/)
-            _show_list "PINCTRL  " $(_mods pinctrl/)
-            _show_list "PLATFORM " $(_mods platform/)
-            _show_list "POWERCAP " $(_mods powercap/)
-            _show_list "SERIAL   " $(_mods serial/)
-            _show_list "SOUND    " $(_mods pcspkr) $(_mods sound/)
-            _show_list "SPI      " $(_mods spi/)
-            _show_list "STAGING  " $(_mods staging/)
-            _show_list "THERMAL  " $(_mods thermal/)
-            _show_list "TPM      " $(_mods tpm/)
-            _show_list "VIDEO    " $(_mods video/)
-            _show_list "VIRT     " $(_mods virt/)
-            _show_list "WATCHDOG " $(_mods watchdog/)
-            _show_list "OTHER    " $(_mods .ko agp/ acpi/ scsi/ message/fusion block/sx8 block/cciss block/cpqarray block/DAC960 block/virtio virtio/virtio_pci ata/ \
-                        usb/ ieee1394 bluetooth/ cdrom/ cpufreq/ crypto/ dca/ dma/ edac/ events/ net/ hwmon/ i2c/ input/ ipmi/ irda/ kvm/ mac_hid media/ mei/ \
-                        mfd/ mtd/ nvme/ parport/ pinctrl/ platform/ powercap/ sound/ spi/ thermal/ tpm/ drm/ firewire/ hid/ serial/ staging/ video/ virt/ watchdog/) ;;
-        --show-agp)        _show_list "AGP      " $(_mods agp/) ;;
-        --show-acpi)       _show_list "ACPI     " $(_mods acpi/) ;;
-        --show-block)      _show_list "BLOCK    " $(_mods ata/pata pata_acpi) $(_mods ata/ata_piix) \
-                               $(_mods virtio/virtio_pci) $(_mods scsi/) $(_mods message/fusion/) $(_mods drivers/block/ nbd pktcdvd sx8 floppy) \
-                               $(_mods ata/ pata ata_generic) $(_mods drivers/block/sx8) \
-                               $(_mods usb/ usb/input) $(_mods firewire/) $(_mods ieee1394/) $(_mods nvme.ko) ;;
-        --show-bluetooth) _show_list "BLUETOOTH" $(_mods bluetooth/) ;;
-        --show-cdrom)     _show_list "CDROM    " $(_mods cdrom/) ;;
-        --show-cpufreq)   _show_list "CPUFREQ  " $(_mods cpufreq/) ;;
-        --show-crypto)    _show_list "CRYPTO   " $(_mods crypto/) ;;
-        --show-drm)       _show_list "DRM      " $(_mods drm/) ;;
-        --show-dca)       _show_list "DCA      " $(_mods dca/) ;;
-        --show-dma)       _show_list "DMA      " $(_mods dma/) ;;
-        --show-edac)      _show_list "EDAC     " $(_mods edac/) ;;
-        --show-events)    _show_list "EVENTS   " $(_mods events/) ;;
-        --show-hwmon)     _show_list "HWMON    " $(_mods hwmon/) ;;
-        --show-input)     _show_list "INPUT    " $(_mods input/ pcspkr) $(_mods hid/) ;;
-        --show-ipmi)      _show_list "IPMI     " $(_mods ipmi/) ;;
-        --show-i2c)       _show_list "I2C      " $(_mods i2c/) ;;
-        --show-irda)      _show_list "IRDA     " $(_mods irda/) ;;
-        --show-kvm)       _show_list "KVM      " $(_mods kvm/) ;;
-        --show-media)     _show_list "MEDIA    " $(_mods media/) ;;
-        --show-mei)       _show_list "MEI      " $(_mods mei/) ;;
-        --show-mfd)       _show_list "MFD      " $(_mods mfd/) ;;
-        --show-mtd)       _show_list "MTD      " $(_mods mtd/) ;;
-        --show-net)       _show_list "NET      " $(_mods net/ irda/) ;;
-        --show-nvme)      _show_list "NVME     " $(_mods nvme/ nvme.ko) ;;
-        --show-parport)   _show_list "PARPORT  " $(_mods parport/) ;;
-        --show-platform)  _show_list "PLATFORM " $(_mods platform/) ;;
-        --show-powercap)  _show_list "POWERCAP " $(_mods powercap/) ;;
-        --show-serial)    _show_list "SERIAL   " $(_mods serial/) ;;
-        --show-sound)     _show_list "SOUND    " $(_mods pcspkr) $(_mods sound/) ;;
-        --show-spi)       _show_list "SPI      " $(_mods spi/) ;;
-        --show-staging)   _show_list "STAGING  " $(_mods staging/) ;;
-        --show-thermal)   _show_list "THERMAL  " $(_mods thermal/) ;;
-        --show-tpm)       _show_list "TPM      " $(_mods tpm/) ;;
-        --show-video)     _show_list "VIDEO    " $(_mods video/) ;;
-        --show-virt)      _show_list "VIRT     " $(_mods virt/) ;;
-        --show-watchdog)  _show_list "WATCHDOG " $(_mods watchdog/) ;;
-        --show-other)     _show_list "OTHER    " $(_mods .ko agp/ acpi/ scsi/ message/fusion block/sx8 block/cciss block/cpqarray block/DAC960 block/virtio virtio/virtio_pci ata/ \
-                        usb/ ieee1394 bluetooth/ cdrom/ cpufreq/ crypto/ dca/ dma/ edac/ events/ net/ hwmon/ i2c/ input/ ipmi/ irda/ kvm/ mac_hid media/ mei/ \
-                        mfd/ mtd/ nvme/ parport/ platform/ powercap/ sound/ thermal/ tpm/ drm/ firewire/ hid/ serial/ staging/ video/ virt/ watchdog/) ;;
+            _show_list 'AGP      ' $(_mods 'agp/')
+            _show_list 'ACPI     ' $(_mods 'acpi/')
+            _show_list 'BLOCK    ' $(_mods 'ata/pata' 'pata_acpi') $(_mods 'ata/ata_piix') \
+                                   $(_mods 'virtio/virtio_pci') $(_mods 'scsi/') $(_mods 'message/fusion/') \
+                                   $(_mods 'drivers/block/' 'nbd pktcdvd|sx8|floppy') \
+                                   $(_mods ata/ 'pata|ata_generic') $(_mods 'drivers/block/sx8') \
+                                   $(_mods 'usb/' 'usb/input') $(_mods 'firewire/') $(_mods 'ieee1394/') $(_mods 'nvme.ko')
+            _show_list 'BLUETOOTH' $(_mods 'bluetooth/')
+            _show_list 'CDROM    ' $(_mods 'cdrom/')
+            _show_list 'CPUFREQ  ' $(_mods 'cpufreq/')
+            _show_list 'CRYPTO   ' $(_mods 'crypto/')
+            _show_list 'DCA      ' $(_mods 'dca/')
+            _show_list 'DMA      ' $(_mods 'dma/')
+            _show_list 'DRM      ' $(_mods 'drm/')
+            _show_list 'EDAC     ' $(_mods 'edac/')
+            _show_list 'EVENTS   ' $(_mods 'events/')
+            _show_list 'HWMON    ' $(_mods 'hwmon/')
+            _show_list 'I2C      ' $(_mods 'i2c/')
+            _show_list 'INPUT    ' $(_mods 'input/' 'pcspkr') $(_mods 'hid/') $(_mods 'mac_hid')
+            _show_list 'IPMI     ' $(_mods 'ipmi/')
+            _show_list 'IRDA     ' $(_mods 'irda/')
+            _show_list 'KVM      ' $(_mods 'kvm/')
+            _show_list 'MEDIA    ' $(_mods 'media/')
+            _show_list 'MEI      ' $(_mods 'mei/')
+            _show_list 'MFD      ' $(_mods 'mfd/')
+            _show_list 'MMC      ' $(_mods 'mmc/')
+            _show_list 'MTD      ' $(_mods 'mtd/')
+            _show_list 'NET      ' $(_mods 'net/' 'irda/')
+            _show_list 'NVME     ' $(_mods 'nvme/' 'nvme.ko')
+            _show_list 'PARPORT  ' $(_mods 'parport/')
+            _show_list 'PINCTRL  ' $(_mods 'pinctrl/')
+            _show_list 'PLATFORM ' $(_mods 'platform/')
+            _show_list 'POWERCAP ' $(_mods 'powercap/')
+            _show_list 'SERIAL   ' $(_mods 'serial/')
+            _show_list 'SOUND    ' $(_mods 'pcspkr') $(_mods 'sound/')
+            _show_list 'SPI      ' $(_mods 'spi/')
+            _show_list 'STAGING  ' $(_mods 'staging/')
+            _show_list 'THERMAL  ' $(_mods 'thermal/')
+            _show_list 'TPM      ' $(_mods 'tpm/')
+            _show_list 'VIDEO    ' $(_mods 'video/')
+            _show_list 'VIRT     ' $(_mods 'virt/')
+            _show_list 'WATCHDOG ' $(_mods 'watchdog/')
+            _show_list 'OTHER    ' $(_mods '.ko' 'agp/|acpi/|scsi/|message/fusion|block/sx8|block/cciss|block/cpqarray|block/DAC960|block/virtio|virtio/virtio_pci|ata/|usb/|ieee1394|bluetooth/|cdrom/|cpufreq/|crypto/|dca/|dma/|edac/|events/|net/|hwmon/|i2c/|input/|ipmi/|irda/|kvm/|mac_hid|media/|mei/|mfd/|mmc/|mtd/|nvme/|parport/|pinctrl/|platform/|powercap/|sound/|spi/|thermal/|tpm/|drm/|firewire/|hid/|serial/|staging/|video/|virt/|watchdog/') ;;
+        --show-agp)        _show_list 'AGP      ' $(_mods agp/) ;;
+        --show-acpi)       _show_list 'ACPI     ' $(_mods acpi/) ;;
+        --show-block)      _show_list 'BLOCK    ' $(_mods 'ata/pata' 'pata_acpi') $(_mods 'ata/ata_piix') \
+                               $(_mods 'virtio/virtio_pci') $(_mods 'scsi/') $(_mods 'message/fusion/') \
+                               $(_mods 'drivers/block/' 'nbd|pktcdvd|sx8|floppy') \
+                               $(_mods 'ata/' 'pata|ata_generic') $(_mods 'drivers/block/sx8') \
+                               $(_mods 'usb/' 'usb/input') $(_mods 'firewire/') $(_mods 'ieee1394/') $(_mods 'nvme.ko') ;;
+        --show-bluetooth) _show_list 'BLUETOOTH' $(_mods 'bluetooth/') ;;
+        --show-cdrom)     _show_list 'CDROM    ' $(_mods 'cdrom/') ;;
+        --show-cpufreq)   _show_list 'CPUFREQ  ' $(_mods 'cpufreq/') ;;
+        --show-crypto)    _show_list 'CRYPTO   ' $(_mods 'crypto/') ;;
+        --show-drm)       _show_list 'DRM      ' $(_mods 'drm/') ;;
+        --show-dca)       _show_list 'DCA      ' $(_mods 'dca/') ;;
+        --show-dma)       _show_list 'DMA      ' $(_mods 'dma/') ;;
+        --show-edac)      _show_list 'EDAC     ' $(_mods 'edac/') ;;
+        --show-events)    _show_list 'EVENTS   ' $(_mods 'events/') ;;
+        --show-hwmon)     _show_list 'HWMON    ' $(_mods 'hwmon/') ;;
+        --show-input)     _show_list 'INPUT    ' $(_mods 'input/' 'pcspkr') $(_mods 'hid/') ;;
+        --show-ipmi)      _show_list 'IPMI     ' $(_mods 'ipmi/') ;;
+        --show-i2c)       _show_list 'I2C      ' $(_mods 'i2c/') ;;
+        --show-irda)      _show_list 'IRDA     ' $(_mods 'irda/') ;;
+        --show-kvm)       _show_list 'KVM      ' $(_mods 'kvm/') ;;
+        --show-media)     _show_list 'MEDIA    ' $(_mods 'media/') ;;
+        --show-mei)       _show_list 'MEI      ' $(_mods 'mei/') ;;
+        --show-mfd)       _show_list 'MFD      ' $(_mods 'mfd/') ;;
+        --show-mmc)       _show_list 'MMC      ' $(_mods 'mmc/') ;;
+        --show-mtd)       _show_list 'MTD      ' $(_mods 'mtd/') ;;
+        --show-net)       _show_list 'NET      ' $(_mods 'net/' 'irda/') ;;
+        --show-nvme)      _show_list 'NVME     ' $(_mods 'nvme/' 'nvme.ko') ;;
+        --show-parport)   _show_list 'PARPORT  ' $(_mods 'parport/') ;;
+        --show-platform)  _show_list 'PLATFORM ' $(_mods 'platform/') ;;
+        --show-powercap)  _show_list 'POWERCAP ' $(_mods 'powercap/') ;;
+        --show-serial)    _show_list 'SERIAL   ' $(_mods 'serial/') ;;
+        --show-sound)     _show_list 'SOUND    ' $(_mods 'pcspkr') $(_mods 'sound/') ;;
+        --show-spi)       _show_list 'SPI      ' $(_mods 'spi/') ;;
+        --show-staging)   _show_list 'STAGING  ' $(_mods 'staging/') ;;
+        --show-thermal)   _show_list 'THERMAL  ' $(_mods 'thermal/') ;;
+        --show-tpm)       _show_list 'TPM      ' $(_mods 'tpm/') ;;
+        --show-video)     _show_list 'VIDEO    ' $(_mods 'video/') ;;
+        --show-virt)      _show_list 'VIRT     ' $(_mods 'virt/') ;;
+        --show-watchdog)  _show_list 'WATCHDOG ' $(_mods 'watchdog/') ;;
+        --show-other)     _show_list 'OTHER    ' $(_mods '.ko' 'agp/|acpi/|scsi/|message/fusion|block/sx8|block/cciss|block/cpqarray|block/DAC960|block/virtio|virtio/virtio_pci|ata/|usb/|ieee1394|bluetooth/|cdrom/|cpufreq/|crypto/|dca/|dma/|edac/|events/|net/|hwmon/|i2c/|input/|ipmi/|irda/|kvm/|mac_hid|media/|mei/|mfd/|mmc/|mtd/|nvme/|parport/|platform/|powercap/|sound/|thermal/|tpm/|drm/|firewire/|hid/|serial/|staging/|video/|virt/|watchdog/') ;;
         --filesystem)   _FILESYSTEM="ext2 ext3 ext4 f2fs nilfs2 bcachefs btrfs xfs jfs vfat"
                         for i in ${_FILESYSTEM}; do
-                            lsblk -o FSTYPE | grep -q "${i}" && _FS="${_FS} ${i}"
+                            lsblk -o FSTYPE | rg -q "${i}" && _FS="${_FS} ${i}"
                         done
-                        if echo "${_FS}" | grep -q btrfs || echo "${_FS}" | grep bcachefs; then
+                        if echo "${_FS}" | rg -q "btrfs|bcachefs"; then
                             _FS="${_FS} crc32c"
                         fi
                         _MODULES_INITRAMFS="${_MODULES_INITRAMFS} ${_FS}" ;;
-        --hostcontroller)   _HOSTCONTROLLER="$(_mods virtio/virtio_pci) $(_mods ata/pata pata_acpi) $(_mods scsi/ /sg.ko /st.ko scsi_mod sr_mod sd_mod) $(_mods message/fusion/) $(_mods drivers/block/ virtio_blk nbd pktcdvd sx8 floppy) $(_mods ata/ pata ata_generic) $(_mods drivers/block/sx8) $(_mods xhci-hcd) $(_mods ehci-hcd) $(_mods uhci-hcd) $(_mods ohci-hcd) $(_mods virtio_blk) $(_mods nvme/) $(_mods xhci-pci)"
+        --hostcontroller)   _HOSTCONTROLLER="$(_mods 'virtio/virtio_pci') $(_mods 'ata/pata' 'pata_acpi') \
+        $(_mods 'scsi/' '/sg.ko|/st.ko|scsi_mod|sr_mod|sd_mod') $(_mods 'message/fusion/') \
+        $(_mods 'drivers/block/' 'virtio_blk|nbd|pktcdvd|sx8|floppy') $(_mods 'ata/' 'pata|ata_generic') \
+        $(_mods 'drivers/block/sx8') $(_mods 'xhci-hcd') $(_mods 'ehci-hcd') $(_mods 'uhci-hcd') \
+        $(_mods 'ohci-hcd') $(_mods 'virtio_blk') $(_mods 'nvme/') $(_mods 'xhci-pci')"
                  _MODULES_INITRAMFS="${_MODULES_INITRAMFS} ${_HOSTCONTROLLER}" ;;
         --ati-kms)      _KMS="radeon"
                         _MODULES_INITRAMFS="${_KMS} ${_MODULES_INITRAMFS}" ;;
@@ -262,12 +262,13 @@ while [ -n "$*"  ]; do
                         _MODULES_INITRAMFS="${_KMS} ${_MODULES_INITRAMFS}" ;;
         --nvidia-kms)   _KMS="nouveau"
                         _MODULES_INITRAMFS="${_KMS} ${_MODULES_INITRAMFS}" ;;
-        --systemd)      _SYSTEMD="1"
+        --systemd)      _SYSTEMD="1" ;;
     esac
     shift
 done
 # modules for mkinitcpio.conf
-[[ -n "${_SHOW_MODULES}" ]] && _show_array "MODULES" "${_MODULES_INITRAMFS}" | sed -e 's/\  //g' -e 's/\ \ /\ /g' -e 's/ $/)/g'
+#shellcheck disable=SC2005
+[[ -n "${_SHOW_MODULES}" ]] && echo "$(_show_array "MODULES" "${_MODULES_INITRAMFS}" | sd " +" " " | sd ' $' ')')"
 
 # hooks for mkinitcpio.conf
 if [[ -n "${_ROOTDEVICE}" ]]; then
@@ -280,7 +281,11 @@ if [[ -n "${_ROOTDEVICE}" ]]; then
     else
         _ENCRYPT=encrypt
     fi
-    _ROOTCHECK="$(lsblk -rpsno TYPE "${_ROOTDEVICE}" | grep -vwe "disk" -we "part" | tac | sed -e "s#crypt#${_ENCRYPT}#g" -e 's#raid.*[0-9]#mdadm_udev#g' -e 's#lvm#lvm2#g')"
+    _ROOTCHECK="$(lsblk -rpsno TYPE "${_ROOTDEVICE}" |\
+                  rg -vw "disk|part" | tac |\
+                  sd 'crypt' "${_ENCRYPT}" |\
+                  sd 'raid.*[0-9]' 'mdadm_udev' |\
+                  sd 'lvm' 'lvm2')"
     if [[ -z "${_HOOKS_DIR}" ]]; then
         _HOOKS_DIR="${_ROOT_DIRECTORY}/usr/lib/initcpio/install"
     fi
@@ -297,9 +302,10 @@ if [[ -n "${_ROOTDEVICE}" ]]; then
     for i in ${_START_HOOKS}; do
         if ! [[ -e "${_HOOKS_DIR}/$i" ]]; then
             #shellcheck disable=SC2001
-            _START_HOOKS=$(echo "${_START_HOOKS}" | sed -e "s/${i}\ //g")
+            _START_HOOKS=$(echo "${_START_HOOKS}" | sd "${i} " '')
         fi
     done
-    _show_array "HOOKS" "${_START_HOOKS}" | sed -e 's/\ \ /\ /g' -e 's/\ $/)/g'
+    #shellcheck disable=SC2005
+    echo "$(_show_array "HOOKS" "${_START_HOOKS}" | sd " +" " " | sd ' $' ')')"
 fi
 # vim: set ft=sh ts=4 sw=4 et:

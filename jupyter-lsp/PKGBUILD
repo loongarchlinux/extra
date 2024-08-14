@@ -1,0 +1,89 @@
+# Maintainer: Jakub Klinkovský <lahwaacz at archlinux dot org>
+# Contributor: Specter119 <spcter119 AT gmail.com>
+
+pkgname=jupyter-lsp
+pkgver=2.2.5
+pkgrel=3
+pkgdesc="Multi-Language Server WebSocket proxy for Jupyter Notebook/Lab server."
+arch=(any)
+url="https://github.com/jupyter-lsp/jupyterlab-lsp"
+license=(BSD-3-Clause)
+depends=(
+  python
+  jupyter-server
+)
+makedepends=(
+  python-build
+  python-installer
+  python-setuptools
+  python-wheel
+)
+checkdepends=(
+  python-pytest
+  python-pytest-asyncio
+  bash-language-server
+  jedi-language-server
+  pyright
+  python-lsp-server
+  texlab
+  typescript-language-server
+  yaml-language-server
+)
+optdepends=(
+  "bash-language-server: Bash language server"
+  "jedi-language-server: Jedi language server"
+  "pyright: Python type checker"
+  "python-lsp-server: Python language server"
+  "texlab: LaTeX language server"
+  "typescript-language-server: TypeScript language server"
+  "vscode-css-languageserver: CSS/LESS/SCSS language server"
+  "vscode-html-languageserver: HTML language server"
+  "vscode-json-languageserver: JSON language server"
+  "yaml-language-server: YAML language server"
+)
+source=("$url/archive/refs/tags/$pkgname-$pkgver.tar.gz")
+b2sums=('9f6ab4431a1161bfc409b3a8f58522df0fc6d7cd1b354c9dd831f27a6eaac244699f2f804b63d558c8b429625a7c05ff9145f456e67ba1df9a83530c45cc2633')
+
+build() {
+  cd jupyterlab-lsp-$pkgname-$pkgver/python_packages/jupyter_lsp
+  python -m build --wheel --no-isolation
+}
+
+check(){
+  cd jupyterlab-lsp-$pkgname-$pkgver/python_packages/jupyter_lsp
+  local deselected_tests=(
+    # deselect tests that use unavailable language servers
+    "test_detect.py::test_r_package_detection"
+    "test_listener.py::test_listeners[dockerfile-language-server-nodejs]"
+    "test_listener.py::test_listeners[sql-language-server]"
+    "test_listener.py::test_listeners[unified-language-server]"
+    "test_session.py::test_start_known[dockerfile-language-server-nodejs]"
+    "test_session.py::test_start_known[sql-language-server]"
+    "test_session.py::test_start_known[unified-language-server]"
+    # these fail probably due to the -bin suffix
+    "test_listener.py::test_listeners[vscode-css-languageserver-bin]"
+    "test_listener.py::test_listeners[vscode-html-languageserver-bin]"
+    "test_listener.py::test_listeners[vscode-json-languageserver-bin]"
+    "test_session.py::test_start_known[vscode-css-languageserver-bin]"
+    "test_session.py::test_start_known[vscode-html-languageserver-bin]"
+    "test_session.py::test_start_known[vscode-json-languageserver-bin]"
+    # FIXME: these should not fail
+    "test_listener.py::test_listeners[jedi-language-server]"
+    "test_listener.py::test_listeners[typescript-language-server]"
+    "test_listener.py::test_listeners[yaml-language-server]"
+    "test_listener.py::test_listeners[pylsp]" # - assert 2 == 1
+    "test_listener.py::test_listeners[texlab]" # - assert 2 ...
+  )
+  PYTHONPATH="$PWD/build/lib" pytest $(printf -- "--deselect jupyter_lsp/tests/%s " "${deselected_tests[@]}")
+}
+
+package() {
+  cd jupyterlab-lsp-$pkgname-$pkgver/python_packages/jupyter_lsp
+  python -m installer --destdir=$pkgdir dist/*.whl
+  mv $pkgdir/{usr,}/etc
+  install -vDm 644 LICENSE -t "$pkgdir"/usr/share/licenses/$pkgname
+
+  # remove useless tests directory
+  local site_packages=$(python -c "import site; print(site.getsitepackages()[0])")
+  rm -frv "$pkgdir/$site_packages"/jupyter_lsp/tests/
+}

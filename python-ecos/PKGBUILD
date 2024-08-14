@@ -3,8 +3,8 @@
 
 _pyname=ecos-python
 pkgname=python-ecos
-pkgver=2.0.13
-pkgrel=2
+pkgver=2.0.14
+pkgrel=1
 pkgdesc='Python interface for ECOS'
 url='https://github.com/embotech/ecos-python'
 depends=(ecos
@@ -12,36 +12,37 @@ depends=(ecos
          python
          python-numpy
          python-scipy)
-makedepends=(python-build
+makedepends=(git
+             python-build
              python-installer
              python-setuptools
              python-wheel)
 checkdepends=(python-pytest)
 license=(GPL-3.0-only)
 arch=(loong64 x86_64)
-source=(https://github.com/embotech/ecos-python/archive/v$pkgver/$pkgname-$pkgver.tar.gz
+source=(git+https://github.com/embotech/ecos-python#tag=v$pkgver
         unbundle-ecos.patch)
-sha256sums=('c52d64f0131d43cdc27ca9160dc38fbfb3faa8d4be48f891d88c343057a1b383'
+sha256sums=('df8bd9740261394a2a82b3165967bda87ce2e77bced99c0d335d521ff6d8a500'
             'c929cbe71cf8a109a66cbc681c6c501c42517b44e63f88440c36e5c7ca9e3be9')
 
 prepare() {
-  cd $_pyname-$pkgver
+  cd $_pyname
   patch -p1 -i ../unbundle-ecos.patch
 }
 
 build() {
-  cd $_pyname-$pkgver
+  cd $_pyname
   python -m build --wheel --no-isolation --skip-dependency-check
 }
 
 check() {
-  cd $_pyname-$pkgver
+  cd $_pyname
   python -m venv --system-site-packages test-env
   test-env/bin/python -m installer dist/*.whl
   test-env/bin/python -m pytest -v
 }
 
 package() {
-  cd $_pyname-$pkgver
+  cd $_pyname
   python -m installer --destdir="$pkgdir" dist/*.whl
 }

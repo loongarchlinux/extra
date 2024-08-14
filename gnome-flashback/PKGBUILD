@@ -2,7 +2,7 @@
 
 pkgname=gnome-flashback
 pkgver=3.52.1
-pkgrel=1
+pkgrel=2
 pkgdesc='GNOME Flashback session'
 arch=('loong64' 'x86_64')
 url='https://wiki.gnome.org/Projects/GnomeFlashback'
@@ -12,33 +12,41 @@ depends=('alsa-lib' 'at-spi2-core' 'bash' 'cairo' 'dconf' 'gcc-libs' 'gdk-pixbuf
          'gnome-settings-daemon' 'gsettings-desktop-schemas' 'gtk3' 'libcanberra' 'libgdm'
          'libibus' 'libpulse' 'libx11' 'libxcb' 'libxext' 'libxfixes' 'libxi' 'libxkbfile'
          'libxrandr' 'libxxf86vm' 'metacity' 'nautilus' 'pam' 'pango' 'polkit' 'systemd-libs')
-makedepends=('python')
+makedepends=('autoconf-archive' 'git' 'glib2-devel')
 optdepends=('gnome-backgrounds: Default background'
             'gnome-control-center: System settings'
             'network-manager-applet: Network management')
-source=("https://download.gnome.org/sources/$pkgname/${pkgver%.*}/$pkgname-$pkgver.tar.xz"
+source=("git+https://gitlab.gnome.org/GNOME/$pkgname.git?signed#tag=$pkgver"
+        "git+https://gitlab.gnome.org/GNOME/libgnome-volume-control.git"
         '0001-background-Support-dark-wallpapers.patch'
-        '0001-polkit-Reset-the-idle_id-before-emitting-the-signal.patch'
         '0001-application-honor-color-scheme-setting.patch'
         '0001-theme-improve-screensaver-style.patch'
-        '0001-notifications-Fix-use-after-free-in-timeout_bubble.patch'
+        'gnome-flashback-65.patch'
         'gnome-flashback.pam')
-sha256sums=('ba04613cdadb62bda206437c047299e16025cde1bd8095e094aa77769c78603a'
-            'f02afd29538555ab408085c60d8a7139f34fa639add7cd4c3c08a236dc027dc8'
-            'd5637b43428b84271d0a5658997b6f3aa7b4ccb808651454b685b90e227944fa'
-            '04fffb068a2b6653f041cfa7d22b6a38e40bf255b92300c6eaa5323f62ccc4a0'
-            '095a05c12ca0689149f9c9543ebea2229c62755a85be35b34087437dbbfe31a3'
-            '79a2e9112590968b5cd27de33ea9c5eb661ffda0907089a749d475f9c3605e31'
-            '7148b3b1773fa312d6cd14798338cc70cffb6df7504ff1787687edd0363138d2')
+b2sums=('3292fa67e6ffcad086e49310f222f623cc4af3d8dc9f591aa5b2e90466a6bb0e5544a4916962ccfe6e805216e87e41657023a073b9c9fe5b0b5e1d0e5dba79b0'
+        'SKIP'
+        '06cb62493ea6e5cf17b685fc87f6173462c52a4ac227c08c783f14b995899f7bdcb45648406976fe57e3135ba4eb08b8b3e4abe8a4adf8576cf89483f53db4ea'
+        'c63a2b183ff4404e46a84327f7900c8dc0962bd1b957b45ce030b83c8b3c52729cca650601e6e36143e4f2398af06c4e0f58af38ee7a46729eb2dc3157b7e62d'
+        '17e201a81177742c5226c18ed004b53ff2b86dd134e6101e57f2d20df98bb1860f91f086186dc295d020ad57bfafa4dfa2f37c219bc0a2311d9ce7ccd6ff0d37'
+        '6e59fd668926ec7d4273073d1079c2b5ddbdf813424d5b961130481329ff525f3baf2a51c71db17f2cf690d2dd45aca03b9629913b3ad0eaad26d9631f61e067'
+        '214a01d01d3bee526bf3d856758f56fc51e77dacc8feaefee27221924abacdb3828d4269e5fa6773abec728a563478588d705996da6afbd0693d456631f01eb5')
+validpgpkeys=('7B44FD78E49334EC10B3B288A3D013EC303E1894') # Alberts Muktupāvels <alberts.muktupavels@gmail.com>
 
 prepare() {
-  cd $pkgname-$pkgver
+  cd $pkgname
+
+  git submodule init
+  git submodule set-url gvc/gvc "$srcdir/libgnome-volume-control"
+  git -c protocol.file.allow=always submodule update
+
+  # https://gitlab.gnome.org/GNOME/gnome-flashback/-/merge_requests/63
+  git cherry-pick -n 86a73ccfc534e08e2513fbc95420bbed9f53ce73
+
+  # https://gitlab.gnome.org/GNOME/gnome-flashback/-/merge_requests/52
+  git cherry-pick -n c5ea4f999ec563e2df674d77b5f92daecc28a110
 
   # https://gitlab.gnome.org/GNOME/gnome-flashback/-/merge_requests/51
   patch -Np1 -i ../0001-background-Support-dark-wallpapers.patch
-
-  # https://gitlab.gnome.org/GNOME/gnome-flashback/-/merge_requests/52
-  patch -Np1 -i ../0001-polkit-Reset-the-idle_id-before-emitting-the-signal.patch
 
   # https://gitlab.gnome.org/GNOME/gnome-flashback/-/merge_requests/53
   patch -Np1 -i ../0001-application-honor-color-scheme-setting.patch
@@ -46,25 +54,21 @@ prepare() {
   # https://gitlab.gnome.org/GNOME/gnome-flashback/-/merge_requests/54
   patch -Np1 -i ../0001-theme-improve-screensaver-style.patch
 
-  # https://gitlab.gnome.org/GNOME/gnome-flashback/-/merge_requests/63
-  patch -Np1 -i ../0001-notifications-Fix-use-after-free-in-timeout_bubble.patch
+  # https://gitlab.gnome.org/GNOME/gnome-flashback/-/merge_requests/65
+  patch -Np1 -i ../gnome-flashback-65.patch
 
-  # Regenerate resources file
-  rm gnome-flashback/gf-resources.{c,h}
-
-  # Recreate autotools
   autoreconf -fi
 }
 
 build() {
-  cd $pkgname-$pkgver
-  ./configure --prefix=/usr --sysconfdir=/etc --libexecdir=/usr/lib
+  cd $pkgname
+  ./configure --prefix=/usr --sysconfdir=/etc --libexecdir=/usr/lib --disable-debug --enable-compile-warnings
   sed -i -e 's/ -shared / -Wl,-O1,--as-needed\0/g' libtool
   make
 }
 
 package() {
-  cd $pkgname-$pkgver
+  cd $pkgname
   make DESTDIR="$pkgdir" install
 
   # Install pam file for the screensaver

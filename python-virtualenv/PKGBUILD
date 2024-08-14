@@ -4,8 +4,8 @@
 # Contributor: Daniele Paolella <dp@mcrservice.it>
 
 pkgname=python-virtualenv
-pkgver=20.25.0
-pkgrel=3
+pkgver=20.26.2
+pkgrel=1
 pkgdesc='Virtual Python Environment builder'
 arch=('any')
 url='https://virtualenv.pypa.io'
@@ -44,15 +44,9 @@ checkdepends=(
 replaces=('virtualenv')
 conflicts=('virtualenv')
 options=('!makeflags')
-_commit='1941c1d5abf81814992b68bbc86c0020dc75a3ad'
-source=("$pkgname::git+https://github.com/pypa/virtualenv#commit=$_commit")
-b2sums=('SKIP')
-
-pkgver() {
-  cd "$pkgname"
-
-  git describe --tags | sed 's/^v//'
-}
+source=("$pkgname::git+https://github.com/pypa/virtualenv#tag=$pkgver")
+sha512sums=('a147d315789a05c4fea2f87ae2c4217f4f2c77faaf130471b38921cd747467252fb526aa825e1ddb5e859a20d66d77071a22ae42fcb1e24048fd6d832629c479')
+b2sums=('d61da8fa5d2c1fd1ef0a3cf5555e93cd9ad8b339c8a1a76b6292842bc901d62eb4185d904115cde9cf2be6f187e48601a1c70adf471d174a8d8fcf5e18eeb126')
 
 build() {
   cd "$pkgname"

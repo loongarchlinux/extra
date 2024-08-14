@@ -4,25 +4,50 @@
 # Contributor: Ondrej Kucera <ondrej.kucera@centrum.cz>
 
 pkgname=httping
-pkgver=2.9
+pkgver=3.6
 pkgrel=1
-pkgdesc='A ping-like tool for http-requests'
+pkgdesc='A ping-like tool for HTTP requests'
 url='https://www.vanheusden.com/httping/'
-arch=('loong64' 'x86_64')
-license=('GPL3')
-depends=('openssl' 'ncurses' 'fftw')
-source=("${pkgname}-${pkgver}.tar.gz::https://github.com/folkertvanheusden/HTTPing/archive/refs/tags/v${pkgver}.tar.gz")
-sha512sums=('74d4a98590b6862a2f15fffdf3bc58e3226a94c7aebbe60135695397b20e6cb71fe8c2af75b8525724f2f9ce6530d1f8eecd3193bc50f31d254bbb9903615019')
+arch=(loong64 x86_64)
+license=(GPL-3.0-only)
+depends=(
+  openssl
+  ncurses
+  fftw
+)
+makedepends=(
+  cmake
+)
+source=(
+  "https://github.com/folkertvanheusden/HTTPing/archive/refs/tags/v${pkgver}/${pkgname}-${pkgver}.tar.gz"
+  httping-3.6-cmake-install-1.patch::https://github.com/folkertvanheusden/HTTPing/commit/9524733e67454518ee1075a47f3c21166543e620.patch
+  httping-3.6-cmake-install-2.patch::https://github.com/folkertvanheusden/HTTPing/commit/7f76370729c594180348f94feb4216fd14e12abd.patch
+)
+sha512sums=('8838df9ae54acc3412df03f489403da397beca89da7a6994744b7551bcee7cf93c8bbc8f04a187fdce22d9e257ef9a8dc8dfc9d0c54066e2ef05f85f5da6e2ae'
+            'c0831b998554fd6594021616170e084b86d4837063e7a8d13f9947a9614b9fba9845caef813a748065046cb581e444e10ebeba83cfa997f9770cf38b2b5ccdad'
+            'ff6e157aac6559b785488d49ffc44d963366fae0c58e805b996a05b00c927c8d336ee0f68c4d62ae81a0466118ec47636c3bc2d56ab4c77ab5ec678d8e890b93')
+b2sums=('daa01c125e32e09d641015844cc5ee1889fbb7501be013bf2c1584f0773d109fa49343bc1d6f380a541d78132d43eb59041d9e5f00b6bae651d25ea4f2338cdb'
+        'e0b7f712c1b3a9953b0be0bafdda86a1fa6efa5b7611fa7e07341fe284b0f3a1958649f50a75bd4fcc7869b9ef1b131e94341084b1f6ce4fc4a0e9ffb0c86d3e'
+        'ad9bd6787f0594bdebbe8be6392457e10f2f8583a3a2f6055af932c69ac2f3cd86819ced02aa197dc7810a482715c2faaa31002b5242094e456c1663212691be')
+
+prepare() {
+  cd HTTPing-${pkgver}
+  patch -Np1 < ../httping-3.6-cmake-install-1.patch
+  patch -Np1 < ../httping-3.6-cmake-install-2.patch
+}
 
 build() {
   cd HTTPing-${pkgver}
-  ./configure --with-tfo
-  make
+  cmake -S . -B build \
+    -DCMAKE_BUILD_TYPE=None \
+    -DCMAKE_INSTALL_PREFIX=/usr
+  cmake --build build -v
+  cp --verbose *.mo build
 }
 
 package() {
   cd HTTPing-${pkgver}
-  make DESTDIR="${pkgdir}" install
+  DESTDIR="${pkgdir}" cmake --install build
 }
 
 # vim: ts=2 sw=2 et:

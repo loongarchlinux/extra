@@ -2,9 +2,10 @@
 # Contributor: Timm Preetz <timm@preetz.us>
 # Contributor: Daniel J Griffiths <ghost1227@archlinux.us>
 # Contributor: Ben Wolsieffer <benwolsieffer@gmail.com>
+# Contributor: Alexander F. Rødseth <xyproto@archlinux.org>
 
 pkgname=netbeans
-pkgver=16
+pkgver=22
 pkgrel=1
 pkgdesc='IDE for Java, HTML5, PHP, Groovy, C and C++'
 arch=('any')
@@ -12,23 +13,18 @@ url='https://netbeans.apache.org/'
 license=('Apache')
 # classpath is not needed, see FS#38567 (Oracle JDK does not need atk either)
 depends=('ttf-font' 'which')
-makedepends=('ant' 'java-environment=11' 'php' 'groovy' 'imagemagick')
+makedepends=('ant' 'java-environment>=11' 'php' 'groovy' 'imagemagick' 'git')
 optdepends=('php: for developing programs in php'
             'groovy: for developing programs in groovy'
             'lib32-glibc')
-
-# you can figure out what's the best urlbase in case you want to override it by going to:
-# https://www.apache.org/dyn/closer.cgi/netbeans/netbeans/11.1/netbeans-11.1-source.zip
 options=(!debug)
-urlbase="https://ftp.wayne.edu/apache/"
+urlbase=
 source=("$pkgname.desktop"
-        "${urlbase}/${pkgname}/${pkgname}/${pkgver}/${pkgname}-${pkgver}-source.zip"
-        "https://www.apache.org/dist/${pkgname}/${pkgname}/${pkgver/_/-}/${pkgname}-${pkgver/_/-}-source.zip.asc"
-       "netbeans.clusters")
+        "git+https://github.com/apache/netbeans.git#tag=${pkgver}"
+        "netbeans.clusters")
 
 sha256sums=('2b0e1624f3578e47a4357b038832eafa333139654448d931dbc3febd2730befe'
-            'a0dd4c33aaafb42c1b3740f8527d4856e63a6eab9c8808fc7ae8c4efc9f1c750'
-            'SKIP'
+            'e80353ed62967b5f24526269ef0347f1444920385b2d4c9a1236a7668a03e2b0'
             'a7849ee0f21acef34a7bbd1216e8f822aba38284e3138ea04532224ad6f227c2')
 
 validpgpkeys=("1A83C352499305B6682E3D95CF7BA0AB1CCF4647" # Emilian Marius Bold <emi@apache.org>
@@ -47,6 +43,8 @@ validpgpkeys=("1A83C352499305B6682E3D95CF7BA0AB1CCF4647" # Emilian Marius Bold <
             )
 
 build() {
+  cd netbeans
+
   # full cluster configuration is not available at this time
   export LDFLAGS_EXTRA=$LDFLAGS CFLAGS_EXTRA=$CFLAGS
   ant -quiet -Dcluster.config=full
@@ -54,14 +52,14 @@ build() {
 }
 
 # It appears that they have disabled the CI tests upstream, so I'll disable these for now...
-# see the parms here: https://travis-ci.org/apache/incubator-netbeans/jobs/473379270 
+# see the parms here: https://travis-ci.org/apache/incubator-netbeans/jobs/473379270
 # check() {
 #   cd "${srcdir}"
 #   ant -quiet test -Djavac.compilerargs=-nowarn -Dbuild.compiler.deprecation=false -Dtest.includes=NoTestsJustBuild
 # }
 
 package() {
-  depends+=('java-environment>=11')
+  cd netbeans
 
   # install launcher script
   install -Dm755 "nbbuild/${pkgname}/bin/${pkgname}" "${pkgdir}/usr/bin/${pkgname}"
@@ -77,18 +75,18 @@ package() {
         cp -r "nbbuild/${pkgname}/${plugin}" "${pkgdir}/usr/lib/${pkgname}"
     fi
   done
-  install -Dm644 "${srcdir}/nbbuild/netbeans/etc/netbeans.import" -t "${pkgdir}/usr/lib/${pkgname}/etc/"
+  install -Dm644 "nbbuild/netbeans/etc/netbeans.import" -t "${pkgdir}/usr/lib/${pkgname}/etc/"
 
   # copy cluster configuration
-  install -Dm644 "${srcdir}/nbbuild/netbeans/etc/netbeans."* -t "${pkgdir}/usr/etc/"
-  install -Dm644 "netbeans."* -t "${pkgdir}/usr/etc/"
+  install -Dm644 "nbbuild/netbeans/etc/netbeans."* -t "${pkgdir}/usr/etc/"
+  install -Dm644 "${srcdir}/netbeans."* -t "${pkgdir}/usr/etc/"
 
   # Desktop shortcut and icon
-  install -Dm644 "$pkgname.desktop" "${pkgdir}/usr/share/applications/${pkgname}.desktop"
-  install -Dm644 "${srcdir}/nb/ide.branding/release/netbeans.png" "${pkgdir}/usr/share/pixmaps/${pkgname}.png"
+  install -Dm644 "${srcdir}/$pkgname.desktop" "${pkgdir}/usr/share/applications/${pkgname}.desktop"
+  install -Dm644 "nb/ide.branding/release/netbeans.png" "${pkgdir}/usr/share/pixmaps/${pkgname}.png"
 
   # I'm leaving these as they seem to be necessary for building native
-  # executables (see bug #66706). I'd like to ideally build them with our 
+  # executables (see bug #66706). I'd like to ideally build them with our
   # CFLAGS, but alas...
   # rm -rf "${pkgdir}/usr/lib/${pkgname}/ide/bin/nativeexecution/SunOS"*
   # rm -rf "${pkgdir}/usr/lib/${pkgname}/ide/bin/nativeexecution/MacOSX"*

@@ -1,0 +1,41 @@
+# Contributor: Carlos Aznarán <caznaranl@uni.pe>
+# Contributor: PumpkinCheshire <me at pumpkincheshire dot com>
+# Contributor: alienzj <alienchuj@gmail.com>
+
+pkgname=python-pygraphviz
+_name=${pkgname#python-}
+pkgver=1.13
+pkgrel=2
+pkgdesc='Python interface to Graphviz'
+arch=(loong64 x86_64)
+url=https://pygraphviz.github.io
+license=(BSD-3-Clause)
+depends=(
+  graphviz
+  python
+)
+makedepends=(
+  git
+  python-build
+  python-installer
+  python-setuptools
+  python-wheel
+)
+source=("git+https://github.com/$_name/$_name.git#tag=$_name-$pkgver")
+b2sums=('4df015ae7867465e8d7eb9e58afe119becf3b44b8446adbd74a846a540ac8492e1dc5ab912441579866588ba8f0f9177a5f37d9897afa6b12dbeb8a9026d1f29')
+
+build() {
+  cd "$_name"
+  python -m build --wheel --skip-dependency-check --no-isolation
+}
+
+package() {
+  cd "$_name"
+  python -m installer --destdir="$pkgdir" dist/*.whl
+
+  # Symlink license file
+  local site_packages=$(python -c "import site; print(site.getsitepackages()[0])")
+  install -d "$pkgdir"/usr/share/licenses/$pkgname
+  ln -s "$site_packages"/"$_name"-$pkgver.dist-info/LICENSE \
+    "$pkgdir"/usr/share/licenses/$pkgname/LICENSE
+}

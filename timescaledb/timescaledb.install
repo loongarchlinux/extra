@@ -1,15 +1,27 @@
 post_install() {
-    echo "To use TimescaleDB as PostgreSQL extension,"
-    echo "put in /var/lib/postgres/data/postgresql.conf:"
-    echo "'shared_preload_libraries = \"timescaledb\"'"
-    echo "If multiple libraries are required, separate them with comma."
-    echo "Then restart postgresql:"
-    echo "$ systemctl restart postgresql"
+  cat <<- EOF
+  To use TimescaleDB as PostgreSQL extension,
+  put in /var/lib/postgres/data/postgresql.conf:
+  'shared_preload_libraries = \"timescaledb\"'
+  If multiple libraries are required, separate them with comma.
+  Then restart postgresql:
+  $ systemctl restart postgresql
+
+  Migrating from TimescaleDB 2.14.x and earlier:
+  After you run ALTER EXTENSION, you must run this SQL script[0].
+  For more details, see the following pull request[1].
+  If you are migrating from 2.15.0, no changes are required.
+
+  [0]: https://github.com/timescale/timescaledb-extras/blob/master/utils/2.15.X-fix_hypertable_foreign_keys.sql
+  [1]: https://github.com/timescale/timescaledb/pull/6797
+EOF
 }
 
 post_remove() {
-    echo "Remove 'timescaledb' from 'shared_preload_libraries'"
-    echo "In /var/lib/postgres/data/postgresql.conf"
-    echo "Then restart postgresql:"
-    echo "$ systemctl restart postgresql"
+  cat <<- EOF
+  Remove 'timescaledb' from 'shared_preload_libraries'
+  In /var/lib/postgres/data/postgresql.conf
+  Then restart postgresql:
+  $ systemctl restart postgresql
+EOF
 }

@@ -1,33 +1,52 @@
 # Maintainer: Balló György <ballogyor+arch at gmail dot com>
+# Contributor: Fabian Bornschein <fabiscafe@archlinux.org>
 # Contributor: Felix Bühler <account at buehler dot rocks>
 
 pkgname=newsflash
-_pkgname=news_flash_gtk
-pkgver=2.3.1
-pkgrel=2
-pkgdesc='Desktop application designed to complement an already existing web-based RSS reader account'
+pkgver=3.3.4
+pkgrel=1
+pkgdesc='Keep up with your feeds'
 arch=('loong64' 'x86_64')
 url='https://gitlab.com/news-flash/news_flash_gtk'
-license=('GPL3')
-depends=('libadwaita' 'webkitgtk-6.0')
-makedepends=('appstream-glib' 'meson' 'rust')
-source=("https://gitlab.com/news-flash/$_pkgname/-/archive/v.$pkgver/$_pkgname-v.$pkgver.tar.gz")
-sha256sums=('af7365602726def736d525d105498ed85f6c4d6a3fa51bdffdcfc6941cf99a7d')
-options=(!lto)
+license=('GPL-3.0-only')
+depends=(
+  cairo
+  gcc-libs
+  glib2
+  glibc
+  gtk4
+  hicolor-icon-theme
+  libadwaita
+  libclapper
+  libclapper-gtk
+  libsoup3
+  libxml2
+  openssl
+  pango
+  sqlite
+  webkitgtk-6.0
+)
+makedepends=(
+  appstream-glib
+  blueprint-compiler
+  git
+  glib2-devel
+  meson
+  rust
+)
+source=("git+https://gitlab.com/news-flash/news_flash_gtk.git#tag=v.${pkgver}")
+b2sums=('9bccd80fa27eedb8b70f470207dbb733233f75c2e1a98a333e37e1fec24c003dad98ba6af232ab245389d22da5f3f7c593e5b45acaaff3438f431ba9f90548b6')
 
 build() {
-  export FEEDLY_CLIENT_ID="boutroue"
-  export FEEDLY_CLIENT_SECRET="FE012EGICU4ZOBDRBEOVAJA1JZYH"
+  # Used to encrypt user passwords.
+  # DO NOT CHANGE
   export PASSWORD_CRYPT_KEY="ypsSXCLhJngks9qGUAqShd8JjRaZ824wT3e"
-  export MERCURY_PARSER_USER="newsflash"
-  export MERCURY_PARSER_KEY="R4qcKEHpr9RTq6YuRAPkm9kMhjp4GuxiWG44VDk3Na4ZsN7F"
-  export RUSTC_BOOTSTRAP=1
 
-  arch-meson $_pkgname-v.$pkgver build
+  export RUSTUP_TOOLCHAIN=stable
+  export CARGO_TARGET_DIR=target
+
+  arch-meson news_flash_gtk build
   meson compile -C build
-
-  # "failed to stat '/root/.gitconfig'" from cargo in fakeroot
-  meson install -C build --destdir "$srcdir/fakeinstall"
 }
 
 check() {
@@ -35,6 +54,6 @@ check() {
 }
 
 package() {
-  cp -a fakeinstall/* "$pkgdir"
+  meson install -C build --destdir "$pkgdir" --no-rebuild
   ln -s io.gitlab.news_flash.NewsFlash "$pkgdir/usr/bin/$pkgname"
 }

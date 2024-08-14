@@ -1,0 +1,62 @@
+From fa8a20665593e19c0ce85b730885a27d0bac8e46 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Ball=C3=B3=20Gy=C3=B6rgy?= <ballogyor@gmail.com>
+Date: Wed, 31 Jul 2024 12:48:05 +0200
+Subject: [PATCH] Fix memory handling issues in recipe exporter
+
+- Reference exporter->output when pass to autoar, because it free'ed by them.
+- Reference recipe when append to recipes list, otherwise they lost when the list is free'ed.
+- Initialize attachments list later to avoid problem with g_auto.
+- Set default filename when export to file.
+---
+ src/gr-recipe-exporter.c | 7 ++++---
+ 1 file changed, 4 insertions(+), 3 deletions(-)
+
+diff --git a/src/gr-recipe-exporter.c b/src/gr-recipe-exporter.c
+index 8bda8751..fd320f36 100644
+--- a/src/gr-recipe-exporter.c
++++ b/src/gr-recipe-exporter.c
+@@ -170,6 +170,7 @@ mail_done (GObject      *source,
+                                                                        GTK_FILE_CHOOSER_ACTION_SAVE,
+                                                                        _("Save"),
+                                                                        _("Cancel"));
++                gtk_file_chooser_set_current_name (GTK_FILE_CHOOSER (file_chooser), "recipe.gnome-recipes-export");
+                 gtk_native_dialog_set_modal (GTK_NATIVE_DIALOG (file_chooser), TRUE);
+ 
+                 g_signal_connect (file_chooser, "response", G_CALLBACK (file_chooser_response), exporter);
+@@ -193,7 +194,6 @@ completed_cb (AutoarCompressor *compressor,
+         int i = 1;
+         GList *tmp_pdf_list;
+         int pdf_sources_length = g_list_length (exporter->pdf_sources);
+-        attachments = g_new (char*, pdf_sources_length + 2);
+ 
+         if (exporter->just_export) {
+                 g_signal_emit (exporter, done_signal, 0, exporter->output);
+@@ -237,6 +237,7 @@ completed_cb (AutoarCompressor *compressor,
+ 
+         path = g_file_get_path (exporter->output);
+ 
++        attachments = g_new (char*, pdf_sources_length + 2);
+         attachments[0] = g_strdup (path);
+ 
+         for (tmp_pdf_list = exporter->pdf_sources; i-1 < pdf_sources_length; i++, tmp_pdf_list = tmp_pdf_list->next)
+@@ -536,7 +537,7 @@ start_export (GrRecipeExporter *exporter)
+         }
+ 
+ #ifdef ENABLE_AUTOAR
+-        exporter->compressor = autoar_compressor_new (exporter->sources, exporter->output, AUTOAR_FORMAT_TAR, AUTOAR_FILTER_GZIP, FALSE);
++        exporter->compressor = autoar_compressor_new (exporter->sources, g_object_ref (exporter->output), AUTOAR_FORMAT_TAR, AUTOAR_FILTER_GZIP, FALSE);
+ 
+         autoar_compressor_set_output_is_dest (exporter->compressor, TRUE);
+         g_signal_connect (exporter->compressor, "completed", G_CALLBACK (completed_cb), exporter);
+@@ -828,7 +829,7 @@ collect_all_recipes (GrRecipeExporter *exporter)
+         for (i = 0; keys[i]; i++) {
+                 g_autoptr(GrRecipe) recipe = gr_recipe_store_get_recipe (store, keys[i]);
+                 if (!gr_recipe_is_readonly (recipe))
+-                        exporter->recipes = g_list_append (exporter->recipes, recipe);
++                        exporter->recipes = g_list_append (exporter->recipes, g_object_ref (recipe));
+         }
+ }
+ 
+-- 
+GitLab
+

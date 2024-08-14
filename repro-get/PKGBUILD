@@ -2,23 +2,35 @@
 
 pkgname=repro-get
 pkgver=0.4.1
-pkgrel=1
+pkgrel=2
 pkgdesc="Reproducible apt/dnf/apk/pacman, with content-addressing "
 url='https://github.com/reproducible-containers/repro-get'
 arch=('loong64' 'x86_64')
-license=('Apache')
+license=('Apache-2.0')
+depends=(
+  'glibc'
+)
+makedepends=(
+  'go'
+)
 optdepends=('kubo: for ipfs support')
-makedepends=('go')
+options=('!lto')
 source=(https://github.com/reproducible-containers/${pkgname}/archive/v${pkgver}/${pkgname}-${pkgver}.tar.gz)
 b2sums=('1b071d67e940e43b7adf30e351ccfd58788f547f360f0c81379c53fcbaed0edf4f30dff38a47ee0c05ffa2f26482fb48d66052905ce463ed0cda1d17ef203144')
 
 build() {
   cd ${pkgname}-${pkgver}
+
+  export CGO_CPPFLAGS="${CPPFLAGS}"
+  export CGO_CFLAGS="${CFLAGS}"
+  export CGO_CXXFLAGS="${CXXFLAGS}"
+  export CGO_LDFLAGS="${LDFLAGS}"
+  export CGO_REQUIRED="1"
+
   go build \
-    -trimpath \
     -buildmode=pie \
     -mod=readonly \
-    -ldflags "-linkmode external -extldflags \"${LDFLAGS}\" -X github.com/reproducible-containers/repro-get/pkg/version.Version=${pkgver}" \
+    -ldflags "-compressdwarf=false -linkmode=external -X github.com/reproducible-containers/repro-get/pkg/version.Version=${pkgver}" \
     ./cmd/repro-get
 }
 

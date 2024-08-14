@@ -3,9 +3,8 @@
 # Maintainer: Torsten Keßler <tpkessler@archlinux.org>
 
 pkgname=intel-compute-runtime
-pkgver=24.13.29138.7
+pkgver=24.26.30049.6
 pkgrel=1
-_cl_headers_ver=2023.12.14
 pkgdesc="Intel(R) Graphics Compute Runtime for oneAPI Level Zero and OpenCL(TM) Driver"
 arch=(loong64 x86_64)
 url="https://01.org/compute-runtime"
@@ -18,11 +17,9 @@ provides=(opencl-driver level-zero-driver)
 # https://github.com/intel/compute-runtime/issues/528
 options=(!lto)
 source=(https://github.com/intel/compute-runtime/archive/${pkgver}/${pkgname}-${pkgver}.tar.gz
-        https://github.com/KhronosGroup/OpenCL-Headers/archive/v${_cl_header_ver}/opencl-headers-${_cl_headers_ver}.tar.gz
         010-intel-compute-runtime-disable-werror.patch)
-sha256sums=('96b2331ee98e800e6b6666f9ab0803a9d16430f8781f3cac1b3f2b81235dfd95'
-            '407d5e109a70ec1b6cd3380ce357c21e3d3651a91caae6d0d8e1719c69a1791d'
-            '0a03571882300426c14fa03161ea3ca211831bc3c9676995ac74293fd953af16')
+sha256sums=('b5a292010041b4412fa626070e9ca9dc5dbde7619b29ab6c96606064c81dae9d'
+            '0a65e5ac87294760b7721f8a2e3da8442363d2b5059d38202209e28fcb8923ba')
 
 prepare() {
   patch -d compute-runtime-${pkgver} -Np1 -i "${srcdir}/010-intel-compute-runtime-disable-werror.patch"
@@ -33,6 +30,12 @@ build() {
   # Fix runtime error in blender
   CXXFLAGS+=' -DSANITIZER_BUILD=1'
   CFLAGS+=' -DSANITIZER_BUILD=1'
+  
+  # fix warning: "_FORTIFY_SOURCE" redefined
+  # note: upstream forces _FORTIFY_SOURCE=2
+  export CFLAGS="${CFLAGS/-Wp,-D_FORTIFY_SOURCE=?/}"
+  export CXXFLAGS="${CXXFLAGS/-Wp,-D_FORTIFY_SOURCE=?/}"
+  
   # tests currently disabled because of https://github.com/intel/compute-runtime/issues/599
   cmake -B build -S compute-runtime-${pkgver} \
     -G 'Unix Makefiles' \
@@ -46,7 +49,7 @@ build() {
     -DSUPPORT_DG1=ON \
     -DSUPPORT_DG2=ON \
     -DKHRONOS_GL_HEADERS_DIR=/usr/include \
-    -DKHRONOS_HEADERS_DIR="${srcdir}/OpenCL-Headers-${_cl_headers_ver}" \
+    -DKHRONOS_HEADERS_DIR=/usr/include \
     -DSKIP_UNIT_TESTS=1 \
     -Wno-dev
   cmake --build build
@@ -54,7 +57,6 @@ build() {
 
 package() {
   DESTDIR="${pkgdir}" cmake --install build
-  install -Dm755 build/bin/libocloc.so -t "${pkgdir}"/usr/lib/intel-opencl
   install -Dm644 compute-runtime-${pkgver}/LICENSE.md -t "${pkgdir}"/usr/share/licenses/${pkgname}
   
   ln -s $(find "${pkgdir}"/usr/lib -regex '.*libze_intel_gpu.so.[0-9]*' -exec basename {} \;) "${pkgdir}"/usr/lib/libze_intel_gpu.so

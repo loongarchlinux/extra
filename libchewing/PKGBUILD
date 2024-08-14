@@ -4,7 +4,8 @@
 # Contributor: damir <damir@archlinux.org>
 
 pkgname=libchewing
-pkgver=0.7.0
+_pkgver=0.8.5
+pkgver=${_pkgver/-rc./rc}
 pkgrel=1
 pkgdesc='Intelligent Chinese phonetic input method'
 url='https://chewing.im/'
@@ -12,25 +13,26 @@ arch=('loong64' 'x86_64')
 # See discussions at https://github.com/chewing/libchewing/issues/433
 license=('LGPL-2.1-or-later')
 depends=('sqlite')
-makedepends=('cmake' 'minisign')
+makedepends=('cmake' 'minisign' 'rust' 'corrosion')
 optdepends=(
   'chewing-editor: view and modify libchewing user phrases database'
 )
-source=("https://github.com/chewing/${pkgname}/releases/download/v${pkgver}/${pkgname}-${pkgver}.tar.zst"{,.minisig})
-sha256sums=('87289bc759d04bfebad92d395d4f63e54f584f3e805731588edaa0c9a8bb6cce'
-            '16ed098e7a63da7631d27d2df3a72e095bed057aebe5a98335c766b5bf7b82db')
+source=("https://github.com/chewing/${pkgname}/releases/download/v${_pkgver}/${pkgname}-${_pkgver}.tar.zst"{,.minisig})
+sha256sums=('472881fc7df7f1bc90383937c504589d80d542b5f2c4c5c007017c13a21f534e'
+            'a35fc41b51da3f2924031b6a39b1a346779452f943b61a511d9da96e0d4b7af4')
 # The key is mentioned on https://github.com/chewing/libchewing
 _validminisignkey='RWRzJFnXiLZleAyCIv1talBjyRewelcy9gzYQq9pd3SKSFBPoy57sf5s'
 
-# XXX: move to verify() when pacman 7.0 is out
-# https://gitlab.archlinux.org/pacman/pacman/-/merge_requests/37
+# XXX: move to verify() when devtools supports it
+# https://gitlab.archlinux.org/archlinux/devtools/-/issues/224
 prepare() {
-  minisign -Vm $pkgname-$pkgver.tar.zst -P $_validminisignkey
+  minisign -Vm $pkgname-$_pkgver.tar.zst -P $_validminisignkey
 }
 
 build() {
+  cd $pkgname-$_pkgver
   # Specify the existence of ncurses.h manually as FindCurses.cmake cannot identify it
-  cmake -B build -S $pkgname-$pkgver \
+  cmake -B build \
     -DCMAKE_BUILD_TYPE=None \
     -DCMAKE_INSTALL_PREFIX=/usr \
     -DBUILD_INFO=ON \
@@ -40,9 +42,9 @@ build() {
 
 check() {
   # parallel testing is broken (https://github.com/chewing/libchewing/issues/293)
-  make -C build -j1 check
+  make -C $pkgname-$_pkgver/build -j1 check
 }
 
 package() {
-  make -C build DESTDIR="${pkgdir}" install
+  make -C $pkgname-$_pkgver/build DESTDIR="${pkgdir}" install
 }

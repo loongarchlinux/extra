@@ -4,12 +4,12 @@
 
 pkgbase=greetd
 pkgname=($pkgbase $pkgbase-agreety)
-pkgver=0.10.0
+pkgver=0.10.3
 pkgrel=1
 pkgdesc='Generic greeter daemon'
 arch=(loong64 x86_64)
 url="https://git.sr.ht/~kennylevinsen/$pkgbase"
-license=(GPL3)
+license=(GPL-3.0-only)
 depends=(gcc-libs
          glibc
          systemd)
@@ -24,13 +24,14 @@ _archive="$pkgbase-$pkgver"
 source=("$_archive.tar.gz::$url/archive/$pkgver.tar.gz"
         "$pkgbase.sysusers"
         "$pkgbase.pam")
-sha256sums=('d6151a8683f386c53a010b6dfe37cf4c842bc03313bed7a917be96309372d1df'
+sha256sums=('ee5cb70e0add4ca9c9fe57e47581ab0002d44c07743fb5492469f3b570db640b'
             '896b7c9b5ec9c9c5795842db9b0f0d792b9d0ceda35891c5c169a9150795b8d1'
             '993a3096c2b113e6800f2abbd5d4233ebf1a97eef423990d3187d665d3490b92')
 
 prepare() {
 	cd "$_archive"
-	cargo fetch --locked --target "$CARCH-unknown-linux-gnu"
+	sed -i -e '/feature.doc_cfg/d' greetd_ipc/src/lib.rs
+	cargo fetch --locked --target "$(rustc -vV | sed -n 's/host: //p')"
 }
 
 build() {
@@ -45,8 +46,9 @@ check() {
 }
 
 package_greetd() {
-	# The default config uses agreety, so even though people can substitute othe packages that provide a greeter
-	# we should keep the agreety dependency until installing a different one would work without manual intervention.
+	# The default config uses agreety, so even though people can substitute
+	# other packages that provide a greeter we should keep the agreety dependency
+	# until installing a different one would work without manual intervention.
 	depends+=("$pkgbase-agreety"
 	          "$pkgbase-greeter"
 	          pam)

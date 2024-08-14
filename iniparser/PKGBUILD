@@ -3,7 +3,7 @@
 # Contributor: Roman Kyrylych <Roman.Kyrylych@gmail.com>
 
 pkgname=iniparser
-pkgver=4.2
+pkgver=4.2.4
 pkgrel=1
 pkgdesc='A free stand-alone ini file parsing library written in portable ANSI C'
 arch=('loong64' 'x86_64')
@@ -11,24 +11,24 @@ url='https://github.com/ndevilla/iniparser'
 license=('MIT')
 depends=('glibc')
 provides=('libiniparser.so')
-makedepends=('chrpath')
+makedepends=('cmake' 'doxygen')
 source=("${pkgname}-${pkgver}.tar.gz::https://github.com/ndevilla/iniparser/archive/v${pkgver}.tar.gz")
-md5sums=('f52458ace1466c5798c47aa3e7a9b949')
-sha256sums=('dbcbaf3aedb4f88a9fc0df4b315737ddd10e6c37918e3d89f0ecc475333bde4d')
+md5sums=('2b4b70171712895cb5afdf1247a8889f')
+sha256sums=('c05bb41df87f31a029516943ebb7f38ca1f0e38ff36f3836f1163a9a529857df')
 
 build() {
-  cd "${pkgname}-${pkgver}"
+  mkdir build
 
-  make
+  cmake \
+    "${pkgname}-${pkgver}" \
+    -B build \
+    -DCMAKE_INSTALL_PREFIX=/usr
+  cmake --build build
 }
 
 package() {
-  cd "${pkgname}-${pkgver}"
+  cd build
+  make DESTDIR="${pkgdir}" install
 
-  install -Dm0644 src/iniparser.h "${pkgdir}"/usr/include/iniparser.h
-  install -Dm0644 src/dictionary.h "${pkgdir}"/usr/include/dictionary.h
-  install -Dm0644 libiniparser.so.1 "$pkgdir"/usr/lib/libiniparser.so.1
-  install -Dm0644 LICENSE "${pkgdir}"/usr/share/licenses/iniparser/LICENSE
-  ln -sf libiniparser.so.1 "${pkgdir}"/usr/lib/libiniparser.so
-  chrpath -d "${pkgdir}"/usr/lib/libiniparser.so
+  install -Dm0644 "${srcdir}/${pkgname}-${pkgver}"/LICENSE "${pkgdir}"/usr/share/licenses/iniparser/LICENSE
 }

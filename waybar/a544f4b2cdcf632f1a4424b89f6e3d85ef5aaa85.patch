@@ -1,0 +1,38 @@
+From a544f4b2cdcf632f1a4424b89f6e3d85ef5aaa85 Mon Sep 17 00:00:00 2001
+From: Austin Horstman <khaneliman12@gmail.com>
+Date: Sat, 20 Jul 2024 09:33:13 -0500
+Subject: [PATCH] bar: fix setVisible
+
+Accidentally removed updating the visible variable
+---
+ include/bar.hpp | 2 +-
+ src/bar.cpp     | 3 ++-
+ 2 files changed, 3 insertions(+), 2 deletions(-)
+
+diff --git a/include/bar.hpp b/include/bar.hpp
+index 6900da479..43756bfdc 100644
+--- a/include/bar.hpp
++++ b/include/bar.hpp
+@@ -66,7 +66,7 @@ class Bar {
+   ~Bar();
+ 
+   void setMode(const std::string &mode);
+-  void setVisible(bool visible);
++  void setVisible(bool value);
+   void toggle();
+   void handleSignal(int);
+ 
+diff --git a/src/bar.cpp b/src/bar.cpp
+index 8c75c2c20..8a245ad16 100644
+--- a/src/bar.cpp
++++ b/src/bar.cpp
+@@ -404,7 +404,8 @@ void waybar::Bar::onMap(GdkEventAny* /*unused*/) {
+   setPassThrough(passthrough_);
+ }
+ 
+-void waybar::Bar::setVisible(bool visible) {
++void waybar::Bar::setVisible(bool value) {
++  visible = value;
+   if (auto mode = config.get("mode", {}); mode.isString()) {
+     setMode(visible ? config["mode"].asString() : MODE_INVISIBLE);
+   } else {

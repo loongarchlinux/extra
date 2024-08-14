@@ -5,7 +5,7 @@
 # Contributor: Stefan Husmann <stefan-husmann@t-online.de>
 
 pkgname=lf
-pkgver=31
+pkgver=32
 pkgrel=1
 pkgdesc='A terminal file manager inspired by ranger'
 arch=('loong64' 'x86_64')
@@ -14,15 +14,9 @@ license=('MIT')
 depends=('glibc')
 makedepends=('git' 'go')
 options=('!lto')
-_commit='c8163439f50d2c55453977b3c480fd858c5f3b4d'
-source=("$pkgname::git+$url#commit=$_commit")
-b2sums=('SKIP')
-
-pkgver() {
-  cd "$pkgname"
-
-  git describe --tags | sed 's/^r//'
-}
+source=("$pkgname::git+$url#tag=r$pkgver")
+sha512sums=('6974b55f18040b4849381d4661accf781c2d536faf9676ac4bc4814abeb7815acc792d192b76fccbdff47a047fe5f12ea870ba5c6fefc58c8a40ad4aed377604')
+b2sums=('00c6dbc5b6325ecdab130d990c43aa46728da42fc409d0eafbd493a9b669e553aae642d159fd0af37e13e201f660795afbb85b5bb5e12f1b5308783f14885102')
 
 prepare() {
   cd "$pkgname"
@@ -50,7 +44,7 @@ build() {
     -modcacherw \
     -ldflags "-compressdwarf=false \
     -linkmode external \
-    -extldflags ${LDFLAGS} \
+    -extldflags '${LDFLAGS}' \
     -X main.gVersion=$pkgver" \
     -o build \
     .
@@ -86,7 +80,7 @@ package() {
   install -vDm644 -t "$pkgdir/usr/share/fish/vendor_functions.d" etc/lfcd.fish
 
   # shell completions
-  install -vDm644 etc/lf.bash "$pkgdir/usr/share/bash/bash-completion/completions/lf"
+  install -vDm644 etc/lf.bash "$pkgdir/usr/share/bash-completion/completions/lf"
   install -vDm644 etc/lf.fish "$pkgdir/usr/share/fish/vendor_completions.d/lf.fish"
   install -vDm644 etc/lf.zsh "$pkgdir/usr/share/zsh/site-functions/_lf"
 

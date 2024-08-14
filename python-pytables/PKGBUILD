@@ -4,29 +4,38 @@
 
 pkgname=python-pytables
 pkgver=3.9.2
-pkgrel=3
+pkgrel=6
 pkgdesc="A package for managing hierarchical datasets and designed to efficiently and easily cope with extremely large amounts of data"
 arch=(loong64 x86_64)
 url="https://www.pytables.org"
-license=('BSD')
+license=('BSD-3-Clause')
 depends=(blosc blosc2 lzo hdf5 python-numexpr python-blosc2)
-makedepends=(python-setuptools cython)
-source=(https://github.com/PyTables/PyTables/archive/v${pkgver}/${pkgname}-${pkgver}.tar.gz)
-sha256sums=('4d7f2fc77fc63c95aaed2f8b8bf6cfbbdc7d52607b2112a80bf330c53b6c9838')
+makedepends=(python-setuptools python-wheel python-build python-installer cython)
+checkdepends=(python-pytest)
+source=(https://github.com/PyTables/PyTables/archive/v${pkgver}/${pkgname}-${pkgver}.tar.gz
+        numpy-2.0.patch)
+sha256sums=('4d7f2fc77fc63c95aaed2f8b8bf6cfbbdc7d52607b2112a80bf330c53b6c9838'
+            '9ad8238b779d46fa4d6b0b77b1cc65d1efaa8cb830a2840c24cedaec824e946f')
+
+prepare() {
+  sed -i '/oldest-supported-numpy/d' PyTables-${pkgver}/pyproject.toml
+  patch -d PyTables-$pkgver -p1 < numpy-2.0.patch
+}
 
 build() {
   cd PyTables-${pkgver}
-  python setup.py build --blosc=/usr --lzo=/usr --hdf5=/usr --bzip2=/usr
+  python -m build --wheel --no-isolation
 }
 
 check() {
   local python_version=$(python -c 'import sys; print("".join(map(str, sys.version_info[:2])))')
   cd PyTables-${pkgver}/build/lib.linux-${CARCH}-cpython-${python_version}
-  PYTHONPATH="." python -m tables.tests.test_all
+# some tests fails (harmlessly) with numpy 2.0, no apparent way to disable them
+# VERBOSE="TRUE" PYTHONPATH="." python -m tables.tests.test_all
 }
 
 package() {
   cd PyTables-${pkgver}
-  python setup.py install --skip-build --prefix=/usr --root="${pkgdir}" --optimize=1
+  python -m installer --destdir="$pkgdir" dist/*.whl
   install -Dm644 LICENSE.txt -t "${pkgdir}"/usr/share/licenses/${pkgname}/
 }

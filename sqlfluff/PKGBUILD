@@ -1,12 +1,13 @@
 # Maintainer: George Rawlinson <grawlinson@archlinux.org>
+# Maintainer: Carl Smedstad <carsme@archlinux.org>
 # Contributor: Morteza NourelahiAlamdari <m@0t1.me>
 
 pkgname=sqlfluff
-pkgver=3.0.4
+pkgver=3.1.0
 pkgrel=1
 pkgdesc='A dialect-flexible and configurable SQL linter'
 arch=('any')
-url='https://www.sqlfluff.com'
+url='https://github.com/sqlfluff/sqlfluff'
 license=('MIT')
 depends=(
   'python'
@@ -17,24 +18,23 @@ depends=(
   'python-diff-cover'
   'python-jinja'
   'python-pathspec'
+  'python-pluggy'
   'python-pytest'
-  'python-pyyaml'
+  'python-yaml'
   'python-regex'
   'python-tblib'
   'python-toml'
   'python-tqdm'
-  'python-typing_extensions'
 )
 makedepends=(
-  'git'
   'python-build'
-  'python-wheel'
   'python-installer'
   'python-setuptools'
+  'python-wheel'
 )
 checkdepends=('python-hypothesis')
-source=("$pkgname-$pkgver.tar.gz::https://github.com/sqlfluff/sqlfluff/archive/refs/tags/$pkgver.tar.gz")
-b2sums=('38763f5cf11cf3373cc78e92cfb5161f4f26776b96ee06b699633b0c732a8e37c88e0c0143029671d32801bd12bd31368dbf34072d824fa173f476cd5e1395c2')
+source=("$pkgname-$pkgver.tar.gz::$url/archive/$pkgver.tar.gz")
+b2sums=('f6a378f59c43c6ae634099c8a19b78579c58dbd16e3a9521583e4984d53ff6213ef7fb0cdc075c061a908443401debce68bdc16015aa45a557c038d5617147b0')
 
 build() {
   cd "$pkgname-$pkgver"
@@ -53,13 +53,14 @@ check() {
     -m installer \
     --destdir "$PWD/tmpdir" \
     dist/*.whl
-  local PATH="$PWD/tmpdir/usr/bin:$PATH"
 
-  # skip failing tests for now
-  PYTHONPATH="$PWD/src:$PYTHONPATH" pytest \
-    --ignore test/core/plugin_test.py \
-    --ignore plugins \
-    --deselect test/test_testing.py::test_rules__test_helper_has_variable_introspection
+  local site_packages=$(python -c "import site; print(site.getsitepackages()[0])")
+  export PATH="$PWD/tmpdir/usr/bin:$PATH"
+  export PYTHONPATH="$PWD/tmpdir/$site_packages"
+  pytest \
+    --deselect='test/core/plugin_test.py::test__plugin_default_config_read[Example_L001-forbidden_columns]' \
+    --deselect='test/core/plugin_test.py::test__plugin_example_rules_returned[Rule_Example_L001]' \
+    --deselect='test/core/plugin_test.py::test__plugin_manager_registers_example_plugin'
 }
 
 package() {
@@ -70,9 +71,6 @@ package() {
     --destdir "$pkgdir" \
     dist/*.whl
 
-  # documentation
   install -vDm644 -t "$pkgdir/usr/share/doc/$pkgname" README.md
-
-  # license
   install -vDm644 -t "$pkgdir/usr/share/licenses/$pkgname" LICENSE.md
 }

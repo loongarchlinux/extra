@@ -4,7 +4,7 @@
 
 pkgname=mate-themes
 pkgver=3.22.24
-pkgrel=1
+pkgrel=2
 pkgdesc="Default themes for the MATE desktop"
 url="http://mate-desktop.org"
 arch=('any')

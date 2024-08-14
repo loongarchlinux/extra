@@ -1,0 +1,187 @@
+commit 99cc4e2dad2399082fda551924741eb2d4a09416
+Author: Dustin Lundquist <dustin@null-ptr.net>
+Date:   Wed Mar 20 22:16:04 2024 -0700
+
+    libpcre2 support
+    
+    Use either libpcre2 or libpcre3.
+    
+    (cherry picked from commit 7fdd86c054a21f7ac62343010de20f28645b14d2)
+    
+     Conflicts:
+            README.md
+            configure.ac
+
+diff --git a/.travis.yml b/.travis.yml
+index da07eed..39cff09 100644
+--- a/.travis.yml
++++ b/.travis.yml
+@@ -4,7 +4,7 @@ compiler:
+   - gcc
+ install:
+   - sudo apt-get update
+-  - DEBIAN_FRONTEND=noninteractive sudo apt-get install -y apache2-utils cdbs dh-autoreconf devscripts libev-dev libpcre3-dev libudns-dev lintian rpm valgrind
++  - DEBIAN_FRONTEND=noninteractive sudo apt-get install -y apache2-utils cdbs dh-autoreconf devscripts libev-dev libpcre2-dev libudns-dev lintian rpm valgrind
+   - mkdir -p ~/rpmbuild/{BUILD,BUILDROOT,RPMS,SOURCES,SPECS,SRPMS}
+   - ./autogen.sh
+ script:
+diff --git a/README.md b/README.md
+index 2cf1b12..94bb807 100644
+--- a/README.md
++++ b/README.md
+@@ -35,7 +35,7 @@ For Debian or Fedora based Linux distributions see building packages below.
+ **Prerequisites**
+ 
+ + Autotools (autoconf, automake, gettext and libtool)
+-+ libev4, libpcre and libudns development headers
+++ libev4, libpcre2 (or libpcre) and libudns development headers
+ + Perl and cURL for test suite
+ 
+ **Install**
+@@ -48,7 +48,7 @@ This is the preferred installation method on recent Debian based distributions:
+ 
+ 1. Install required packages
+ 
+-        sudo apt-get install autotools-dev cdbs debhelper dh-autoreconf dpkg-dev gettext libev-dev libpcre3-dev libudns-dev pkg-config fakeroot devscripts
++        sudo apt-get install autotools-dev cdbs debhelper dh-autoreconf dpkg-dev gettext libev-dev libpcre2-dev libudns-dev pkg-config fakeroot devscripts
+ 
+ 2. Build a Debian package
+ 
+diff --git a/configure.ac b/configure.ac
+index cac74f1..9849ff5 100644
+--- a/configure.ac
++++ b/configure.ac
+@@ -27,16 +27,8 @@ PKG_CHECK_MODULES([LIBEV], [libev], HAVE_LIBEV=yes; AC_DEFINE(HAVE_LIBEV, 1),
+  fi
+ ])
+ 
+-PKG_CHECK_MODULES([LIBPCRE], [libpcre], HAVE_LIBPCRE=yes; AC_DEFINE(HAVE_LIBPCRE, 1),
+-[AC_LIB_HAVE_LINKFLAGS(pcre,, [#include <pcre.h>], [pcre_exec(0,0,0,0,0,0,0,0);])
+- if test x$ac_cv_libpcre = xyes; then
+-  AC_SUBST([LIBPCRE_LIBS], [$LIBPCRE])
+- else
+-  AC_MSG_ERROR([[***
+-*** libpcre was not found.
+-***]])
+- fi
+-])
++AC_CHECK_LIB([pcre2-8], [pcre2_compile_8], [],
++	     [AC_CHECK_LIB([pcre], [pcre_exec])])
+ 
+ AC_ARG_ENABLE([dns],
+   [AS_HELP_STRING([--disable-dns], [Disable DNS resolution])],
+diff --git a/debian/control b/debian/control
+index c2d0109..acf3cde 100644
+--- a/debian/control
++++ b/debian/control
+@@ -2,7 +2,7 @@ Source: sniproxy
+ Section: web
+ Priority: optional
+ Maintainer: Dustin Lundquist <dustin@null-ptr.net>
+-Build-Depends: cdbs, debhelper (>= 8.0.0), dh-autoreconf, autotools-dev, gettext, pkg-config, libev-dev (>= 4.0), libpcre3-dev, libudns-dev
++Build-Depends: cdbs, debhelper (>= 8.0.0), dh-autoreconf, autotools-dev, gettext, pkg-config, libev-dev (>= 4.0), libpcre2-dev | libpcre3-dev, libudns-dev
+ Standards-Version: 3.9.5
+ Vcs-Git: https://github.com/dlundquist/sniproxy.git
+ Vcs-Browser: https://github.com/dlundquist/sniproxy
+diff --git a/src/backend.c b/src/backend.c
+index a6320e9..d4c4b65 100644
+--- a/src/backend.c
++++ b/src/backend.c
+@@ -27,7 +27,6 @@
+ #include <stdio.h>
+ #include <string.h>
+ #include <sys/queue.h>
+-#include <pcre.h>
+ #include <assert.h>
+ #include "backend.h"
+ #include "address.h"
+@@ -96,6 +95,19 @@ add_backend(struct Backend_head *backends, struct Backend *backend) {
+ int
+ init_backend(struct Backend *backend) {
+     if (backend->pattern_re == NULL) {
++
++#if defined(HAVE_LIBPCRE2_8)
++        int reerr;
++        size_t reerroffset;
++
++        backend->pattern_re =
++            pcre2_compile((const uint8_t *)backend->pattern, PCRE2_ZERO_TERMINATED, 0, &reerr, &reerroffset, NULL);
++        if (backend->pattern_re == NULL) {
++            err("Regex compilation of \"%s\" failed: %d, offset %zu",
++                    backend->pattern, reerr, reerroffset);
++            return 0;
++        }
++#elif defined(HAVE_LIBPCRE)
+         const char *reerr;
+         int reerroffset;
+ 
+@@ -106,6 +118,7 @@ init_backend(struct Backend *backend) {
+                     backend->pattern, reerr, reerroffset);
+             return 0;
+         }
++#endif
+ 
+         char address[ADDRESS_BUFFER_SIZE];
+         debug("Parsed %s %s",
+@@ -128,9 +141,17 @@ lookup_backend(const struct Backend_head *head, const char *name, size_t name_le
+ 
+     STAILQ_FOREACH(iter, head, entries) {
+         assert(iter->pattern_re != NULL);
++#if defined(HAVE_LIBPCRE2_8)
++	pcre2_match_data *md = pcre2_match_data_create_from_pattern(iter->pattern_re, NULL);
++	int ret = pcre2_match(iter->pattern_re, (const uint8_t *)name, name_len, 0, 0, md, NULL);
++	pcre2_match_data_free(md);
++	if (ret >= 0)
++            return iter;
++#elif defined(HAVE_LIBPCRE)
+         if (pcre_exec(iter->pattern_re, NULL,
+                     name, name_len, 0, 0, NULL, 0) >= 0)
+             return iter;
++#endif
+     }
+ 
+     return NULL;
+@@ -167,7 +188,12 @@ free_backend(struct Backend *backend) {
+ 
+     free(backend->pattern);
+     free(backend->address);
++#if defined(HAVE_LIBPCRE2_8)
++    if (backend->pattern_re != NULL)
++        pcre2_code_free(backend->pattern_re);
++#elif defined(HAVE_LIBPCRE)
+     if (backend->pattern_re != NULL)
+         pcre_free(backend->pattern_re);
++#endif
+     free(backend);
+ }
+diff --git a/src/backend.h b/src/backend.h
+index 9fdffb0..aa135bc 100644
+--- a/src/backend.h
++++ b/src/backend.h
+@@ -28,7 +28,14 @@
+ #define BACKEND_H
+ 
+ #include <sys/queue.h>
++
++#if defined(HAVE_LIBPCRE2_8)
++#define PCRE2_CODE_UNIT_WIDTH 8
++#include <pcre2.h>
++#elif defined(HAVE_LIBPCRE)
+ #include <pcre.h>
++#endif
++
+ #include "address.h"
+ 
+ STAILQ_HEAD(Backend_head, Backend);
+@@ -39,7 +46,11 @@ struct Backend {
+     int use_proxy_header;
+ 
+     /* Runtime fields */
++#if defined(HAVE_LIBPCRE2_8)
++    pcre2_code *pattern_re;
++#elif defined(HAVE_LIBPCRE)
+     pcre *pattern_re;
++#endif
+     STAILQ_ENTRY(Backend) entries;
+ };
+ 

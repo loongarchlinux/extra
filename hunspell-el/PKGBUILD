@@ -3,7 +3,7 @@
 
 pkgname=hunspell-el
 pkgver=0.9
-pkgrel=9
+pkgrel=10
 
 pkgdesc="Greek hunspell dictionary"
 url="https://www.elspell.gr/"

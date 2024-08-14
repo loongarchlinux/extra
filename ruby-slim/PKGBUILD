@@ -2,44 +2,54 @@
 
 _gemname='slim'
 pkgname="ruby-${_gemname}"
-pkgver=4.1.0
-pkgrel=3
+pkgver=5.2.1
+pkgrel=1
 pkgdesc='A template language whose goal is reduce the syntax to the essential parts without becoming cryptic'
 arch=('any')
 url="https://github.com/slim-template/${_gemname}"
 license=('MIT')
-depends=('ruby' 'ruby-temple' 'ruby-tilt')
-checkdepends=('ruby-kramdown' 'ruby-pandoc-ruby' 'ruby-rack-test' 'ruby-sassc' 'ruby-sinatra')
+depends=(
+  ruby
+  ruby-temple
+  ruby-tilt
+)
+makedepends=(
+  git
+  ruby-rdoc
+)
+checkdepends=(
+  ruby-erb
+  ruby-kramdown
+  ruby-minitest
+  ruby-pandoc-ruby
+  ruby-rack-test
+  ruby-sassc
+  ruby-sinatra
+)
 options=('!emptydirs')
-source=("${url}/archive/v${pkgver}/${pkgname}-${pkgver}.tar.gz"
-        "${pkgname}_fix_gemspec.patch"
-        "${pkgname}_fix_openstruct.patch::https://github.com/slim-template/slim/commit/15286536094c84c5cb28cd9a8997346e0f314178.patch"
-        "${pkgname}_fix_tests.patch")
-sha512sums=('0507781497ba5bca0bd6a9bca50d5454b9c0325219eafd760eec57aa2f19d85e42a03d296f52375ef84db8307cb369a461bc1d6d2f4caccaa83e5a351386f333'
-            '8e7f1d8859c6275eafcb061a98e767722b78bcd553a453605a8b2812d66885079d8e92c8823a11b490e38ae39cd594afed7ef7dc16ecb23588ead56ed3ab85c8'
-            '0d18fb9e7ef9677b0755ee407e71199c6902695b22203ca86a88468da095575b3e97572666fd5494d821e5fd886f102c66245f3400fca733e256f1680c18d201'
-            '74c43dfef0de1f3398c29ca6166923762a40c5eb031894cdc7b6b2dff956b2d17eb0f56ad6304a3b6674e1d18144f6f460e8ecfdb321ae78bfb62a4749dbdd5c')
+source=(
+  "${pkgname}::git+${url}.git#tag=v${pkgver}"
+  "${pkgname}_fix_tests.patch"
+)
+sha512sums=('8a9d206ad05883a573f9c9f0fd0f11a6afcaf84f0f467391d225b9594aa36d86c835bcd8f2a2666439c7687f71278603aafd22f97b85ecaf5811e37019f8d7ed'
+            'bda1091383846a7c98f29575c39c0b879d2a54da63d26967b490d0084532f16be3d8b602b02195375c24f6d2ce61418e3c67267c392e48758004e9ba9407a7ac')
+b2sums=('ff8584d93db9eebdc87a0cb3710b486be9583a8b2cbc5594a2fe68ac77e2a853f604748f91fd4444d4aa30d6b55b235750914a208871271be93c8d3f85205e04'
+        '79bc37bd8f073cd0efecf816f7fb9ba47223c88b18014006e1d24ba767e6886d093c21abbe5c1e0320729479c66091241b76af5fba898b53655b569d857ca0b6')
 
 prepare() {
-  cd "${_gemname}-${pkgver}"
+  cd "${pkgname}"
 
-  patch --verbose --strip=1 --input="../${pkgname}_fix_gemspec.patch"
-  patch --verbose --strip=1 --input="../${pkgname}_fix_openstruct.patch"
   patch --verbose --strip=1 --input="../${pkgname}_fix_tests.patch"
 
   # update gemspec/Gemfile to allow newer version of the dependencies
   sed --in-place --regexp-extended 's|~>|>=|g' "${_gemname}.gemspec"
 
-  # replace git based file detection as we don't build from a git source
-  sed --in-place --regexp-extended 's|git ls-files -- bin/\*|find bin -type f|g' "${_gemname}.gemspec"
-  sed --in-place --regexp-extended 's|git ls-files|find . -type f -not -path "\*/\.git/*"|g' "${_gemname}.gemspec"
-
   # remove rails tests
-  sed --in-place '/def test_rails/,+10d' test/core/test_commands.rb
+  sed --in-place '/def test_rails/,+14d' test/core/test_commands.rb
 }
 
 build() {
-  cd "${_gemname}-${pkgver}"
+  cd "${pkgname}"
 
   local _gemdir="$(gem env gemdir)"
 
@@ -82,15 +92,15 @@ build() {
 }
 
 check() {
-  cd "${_gemname}-${pkgver}"
+  cd "${pkgname}"
 
   local _gemdir="$(gem env gemdir)"
 
-  GEM_HOME="tmp_install/${_gemdir}" rake test
+  MT_COMPAT="true" GEM_HOME="tmp_install/${_gemdir}" rake test
 }
 
 package() {
-  cd "${_gemname}-${pkgver}"
+  cd "${pkgname}"
 
   cp --archive --verbose tmp_install/* "${pkgdir}"
 

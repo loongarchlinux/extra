@@ -1,20 +1,24 @@
 # Maintainer: kpcyrd <kpcyrd[at]archlinux[dot]org>
 
 pkgname=updlockfiles
-pkgver=0.1.0
+pkgver=0.1.1
 pkgrel=1
 pkgdesc="Manage lockfiles in PKGBUILDs for upstreams that don't ship them"
 url="https://github.com/kpcyrd/updlockfiles"
 arch=('loong64' 'x86_64')
 license=('GPL-3.0-or-later')
-depends=('pacman-contrib')
+depends=(
+  'gcc-libs'
+  'glibc'
+  'pacman-contrib'
+)
 makedepends=('cargo')
 source=(https://github.com/kpcyrd/${pkgname}/archive/v${pkgver}/${pkgname}-${pkgver}.tar.gz)
-b2sums=('913e92e5b5ce1a1f0d1bca5947b0fe740076f529782cb724a9e8bc1b2288d576c775187e19fd625916009446b3c508979cdac123485c1e6cada066293f771839')
+b2sums=('91bd19071cc5f8f2da4c3f6f7cfb15c0f3b809874980974dc4aa2dac7ceb4f949c8c05326887d12b24025fadd221337be1b611e3ac3215c7a2969d74ab96cdcd')
 
 prepare() {
   cd "${pkgname}-${pkgver}"
-  cargo fetch --locked --target "$CARCH-unknown-linux-gnu"
+  cargo fetch --locked --target "$(rustc -vV | sed -n 's/host: //p')"
 }
 
 build() {

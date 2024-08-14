@@ -4,7 +4,7 @@
 
 _name=fastapi
 pkgname=python-$_name
-pkgver=0.111.0
+pkgver=0.112.0
 pkgrel=1
 pkgdesc='FastAPI framework, high performance, easy to learn, fast to code, ready for production'
 arch=(any)
@@ -31,6 +31,7 @@ checkdepends=(
   # test dependencies
   python-aiosqlite
   python-anyio
+  python-coverage
   python-databases
   python-flask
   python-httpx
@@ -52,7 +53,7 @@ checkdepends=(
   # dev depends
   python-bcrypt
   python-cryptography
-  python-jose
+  python-pyjwt
   python-passlib
 )
 optdepends=(
@@ -68,13 +69,14 @@ optdepends=(
   'uvicorn: for Uvicorn as ASGI server'
 )
 source=($_name-$pkgver.tar.gz::$url/archive/$pkgver.tar.gz)
-sha512sums=('3b613e4b2e7253fa08c09f961e69d384d2f44d07dc7f045b669c3e78f21a161715f3e9a0cb813a1c6e793f4a322160ec3eeb4eef90ba59db64bde9baaa539c13')
-b2sums=('39bd63a5db723e5a79c45e0f4e969c3dc0ba65b43540a2e12be0cb30bd629fa6c293da6645fe29599527f3773544df9f93c18a08d51d6003fb7f501139d3c26d')
+sha512sums=('200ffbef2b5bc806de1ded01f4d44f3c22d6b9aae25ac5ccd3a1c74a585a6986d0d8f802520753a589d011ed5594f8d2b833634b35ae7fddfa1b00d25c333a9f')
+b2sums=('cfaccb51c91d424344860d800627ee1506ec42f6f779af1b2faa0d1f99f5028942b7905ea216e590c257b87b86f88e6cf1fc627b92d76efb2bd51d643d794f34')
 
 prepare() {
   cd $_name-$pkgver
   # do not pin starlette dependency
   sed -i 's|starlette.*"|starlette"|' pyproject.toml
+  sed -i '/"error"/d' pyproject.toml
 }
 
 build() {
@@ -93,6 +95,8 @@ check() {
     --deselect tests/test_tutorial/test_async_tests/test_main.py::test_async_testing[asyncio]
     --deselect tests/test_tutorial/test_async_tests/test_main.py::test_root[trio]
     --deselect tests/test_tutorial/test_async_tests/test_main.py::test_async_testing[trio]
+    # This test wants to run fastapi cli from $PATH
+    --deselect tests/test_fastapi_cli.py::test_fastapi_cli
   )
 
   cd $_name-$pkgver

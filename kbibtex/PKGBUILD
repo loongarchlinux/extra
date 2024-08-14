@@ -5,7 +5,7 @@
 pkgname=kbibtex
 epoch=1
 pkgver=0.10.0
-pkgrel=5
+pkgrel=6
 pkgdesc='A BibTeX editor for KDE'
 arch=(loong64 x86_64)
 url='https://apps.kde.org/kbibtex/'
@@ -42,6 +42,10 @@ source=(https://download.kde.org/stable/KBibTeX/$pkgver/$pkgname-$pkgver.tar.xz{
 sha256sums=('b127b240a7cd77c538619dc882a399b3c6ccd77a04428a497af906f14d09b8c4'
             'SKIP')
 validpgpkeys=('1808CB466328F4380685A3B1A264FD738D861F41') # Thomas Fischer <fischer@unix-ag.uni-kl.de>
+
+prepare() {
+  sed -e 's|CMAKE_CXX_STANDARD 11|CMAKE_CXX_STANDARD 17|' -i $pkgname-$pkgver/CMakeLists.txt # Fix build with ICU 75
+}
 
 build() {
   cmake -B build -S $pkgname-$pkgver \

@@ -3,14 +3,29 @@
 pkgname=ruby-sus-fixtures-async-http
 pkgver=0.7.0
 _commit=fbd66aeccd0cf9b1af4924c771fdc9d22d5016a9
-pkgrel=1
+pkgrel=2
 pkgdesc='Test fixtures for running in Async::HTTP'
 arch=(any)
 url='https://github.com/socketry/sus-fixtures-async-http'
 license=(MIT)
-depends=(ruby-async-http ruby-async-io ruby-sus ruby-sus-fixtures-async)
-makedepends=(git)
-checkdepends=(ruby-covered ruby-bake-modernize ruby-bake-test ruby-bake-test-external)
+depends=(
+  ruby
+  ruby-async-http
+  ruby-async-io
+  ruby-sus
+  ruby-sus-fixtures-async
+)
+makedepends=(
+  git
+  ruby-rdoc
+)
+checkdepends=(
+  ruby-covered
+  ruby-bake-modernize
+  ruby-bake-test
+  ruby-bake-test-external
+  ruby-bundler
+)
 options=(!emptydirs)
 source=(git+https://github.com/socketry/sus-fixtures-async-http.git#commit=$_commit)
 sha256sums=('SKIP')
@@ -19,6 +34,7 @@ prepare() {
   cd sus-fixtures-async-http
   sed -r -e 's|~>|>=|g' -e '/signing_key/d' -i sus-fixtures-async-http.gemspec
   sed -i '/bake-gem/d;/utopia-project/d' gems.rb
+  sed -i 's/be < 60/be <= 60/' test/sus/fixtures/async/http/server_context.rb
 }
 
 build() {

@@ -1,0 +1,37 @@
+From efdb4c4a9e7780cf3067c7bc6dabced601d0eb3f Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Ball=C3=B3=20Gy=C3=B6rgy?= <ballogyor@gmail.com>
+Date: Wed, 24 Jul 2024 10:38:24 +0200
+Subject: [PATCH] Set application name and icon in the startup phase
+
+Setting the application name in constructed() causes that the string remains
+untranslated. Moving it to the startup phase solves the problem.
+---
+ src/ui/application.vala | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
+
+diff --git a/src/ui/application.vala b/src/ui/application.vala
+index d589c690..5effbf5a 100644
+--- a/src/ui/application.vala
++++ b/src/ui/application.vala
+@@ -46,8 +46,6 @@ public class Games.Application : Gtk.Application {
+ 
+ 	construct {
+ 		Environment.set_prgname (Config.APPLICATION_ID);
+-		Environment.set_application_name (_("Games"));
+-		Gtk.Window.set_default_icon_name (Config.APPLICATION_ID);
+ 		Environment.set_variable ("PULSE_PROP_media.role", "game", true);
+ 		Environment.set_variable ("PULSE_PROP_application.icon_name", Config.APPLICATION_ID, true);
+ 
+@@ -233,6 +231,9 @@ public class Games.Application : Gtk.Application {
+ 	protected override void startup () {
+ 		base.startup ();
+ 
++		Environment.set_application_name (_("Games"));
++		Gtk.Window.set_default_icon_name (Config.APPLICATION_ID);
++
+ 		Hdy.init ();
+ 
+ 		var screen = Gdk.Screen.get_default ();
+-- 
+2.45.2
+

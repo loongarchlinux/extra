@@ -3,7 +3,7 @@
 
 pkgname=perl-sub-exporter-progressive
 pkgver=0.001013
-pkgrel=9
+pkgrel=10
 pkgdesc="Only use Sub::Exporter if you need it"
 arch=('any')
 url="https://search.cpan.org/dist/Sub-Exporter-Progressive"

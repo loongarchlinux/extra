@@ -4,8 +4,9 @@
 # Contributor: Biru Ionut <ionut@archlinux.ro>
 
 pkgname=yate
-pkgver=6.4.0
-pkgrel=3
+pkgver=6.4.1
+_commit=f46ba196e1b4e083923f522306ba81d1bf65c688
+pkgrel=1
 pkgdesc="Next-generation telephony engine"
 arch=('loong64' 'x86_64')
 url="http://www.yate.ro/"
@@ -84,14 +85,16 @@ backup=('etc/yate/accfile.conf'
 	'etc/yate/zapcard.conf'
 	'etc/yate/zlibcompress.conf')
 depends=('speex' 'gsm' 'postgresql-libs' 'mariadb-libs' 'alsa-lib' 'openssl' 'sqlite')
+makedepends=('git' 'doxygen')
 options=(!makeflags)
-source=("http://yate.null.ro/tarballs/yate6/yate-${pkgver}-1.tar.gz"
+source=("git+https://github.com/yatevoip/yate.git#commit=${_commit}"
 	"yate.service")
-sha256sums=('8c23dc6bffbf8d478db3a85964b5019771c8f6c9acf5220f3465516a748a03b0'
+sha256sums=('9f018126958a4379da57a690e6d7cd80fd87122e594a13e57eaa9699e318717b'
             '73eab39a0ba884a4c36ca7c8f1faea4000301a0e795544b74cba78d90de5e302')
 
 build() {
   cd "$srcdir/${pkgname}"
+  test -x ./configure || ./autogen.sh
   ./configure --prefix=/usr \
               --sysconfdir=/etc \
               --with-libpq \

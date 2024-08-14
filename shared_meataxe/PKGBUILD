@@ -2,25 +2,34 @@
 
 pkgname=shared_meataxe
 pkgver=1.0.1
-pkgrel=1
-pkgdesc="A set of programs for working with matrix representations over finite fields"
+pkgrel=3
+pkgdesc='A set of programs for working with matrix representations over finite fields'
 arch=(loong64 x86_64)
-url="https://users.minet.uni-jena.de/~king/SharedMeatAxe/"
-license=(GPL)
+url='https://users.minet.uni-jena.de/~king/SharedMeatAxe/'
+license=(GPL-2.0-or-later)
 depends=(glibc)
-conflicts=(meataxe)
-replaces=('meataxe<=2.4.24-6')
-source=(https://github.com/simon-king-jena/SharedMeatAxe/releases/download/v$pkgver/$pkgname-$pkgver.tar.bz2)
-sha256sums=('b8c5ff558712b266eef76a4ebc7a06e98cdef04cc46c542a1a725e318365969d')
+makedepends=(git)
+source=(git+https://github.com/simon-king-jena/SharedMeatAxe#tag=v$pkgver)
+sha256sums=('7dd0a52c35ea518eb28dee8c454a6e0531ddf060ecf1ed407d3cae397ff57991')
+
+prepare() {
+  cd SharedMeatAxe
+  autoreconf -vi
+}
 
 build() {
-  cd $pkgname-$pkgver
+  cd SharedMeatAxe
   ./configure --prefix=/usr
   make
 }
 
+check() {
+  cd SharedMeatAxe
+  make check
+}
+
 package() {
-  cd $pkgname-$pkgver
+  cd SharedMeatAxe
   make DESTDIR="$pkgdir" install
 
   mkdir -p "$pkgdir"/usr/share/meataxe

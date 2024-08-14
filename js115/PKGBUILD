@@ -1,7 +1,7 @@
 # Maintainer: Jan Alexander Steffens (heftig) <heftig@archlinux.org>
 
 pkgname=js115
-pkgver=115.10.0
+pkgver=115.13.0
 pkgrel=1
 pkgdesc="JavaScript interpreter and libraries - Version 115"
 url="https://spidermonkey.dev/"
@@ -15,19 +15,20 @@ depends=(
   zlib
 )
 makedepends=(
-  autoconf2.13
   clang
   lld
   llvm
   python
-  rust
+  rustup
   zip
 )
 checkdepends=(
   git
   mercurial
 )
-options=(!lto)
+options=(
+  !lto
+)
 _relver=${pkgver}esr
 source=(
   https://archive.mozilla.org/pub/firefox/releases/$_relver/source/firefox-$_relver.source.tar.xz{,.asc}
@@ -37,15 +38,19 @@ validpgpkeys=(
   # https://blog.mozilla.org/security/2023/05/11/updated-gpg-key-for-signing-firefox-releases/
   14F26682D0916CDD81E37B6D61B7B526D98F0353
 )
-sha256sums=('0afd3c733d95f7047f258d1a9768d06d856217fe736d85bfb370db9dd926eef2'
+sha256sums=('3fa20d1897100684d2560a193a48d4a413f31e61f2ed134713d607c5f30d5d5c'
             'SKIP')
-b2sums=('342d5cf4d61b3efe3dde6a6e53f064739d4107690f1d101915ba8cf2214f518aa8c7490903e20179f0874a3bd62871723e877e8f789d9816f3e0d9227d751eb6'
+b2sums=('e2b00965a92cd11da6c81daa8b6c652dfccc9f0f7d066bc17ae5fa3ac3aaaa021c4489a9f653127f5516e3d77cd7174de328343e22c4edab438e3fcb9a859178'
         'SKIP')
 
 # Make sure the duplication between bin and lib is found
 COMPRESSZST+=(--long)
 
 prepare() {
+  # packed_simd no longer builds with 1.78.0
+  rustup toolchain update --profile minimal 1.77.2
+  rustup default 1.77.2
+
   mkdir mozbuild
   cd firefox-$pkgver
 
@@ -91,9 +96,9 @@ build() {
   # Do 3-tier PGO
   echo "Building instrumented JS..."
   cat >.mozconfig ../mozconfig - <<END
-ac_add_options --enable-profile-generate=cross
+ac_add_options --enable-profile-generate
 END
-  ./mach build
+  ./mach build --priority normal
 
   echo "Profiling instrumented JS..."
   (
@@ -116,15 +121,15 @@ END
   test -s merged.profdata
 
   echo "Removing instrumented JS..."
-  ./mach clobber
+  ./mach clobber objdir
 
   echo "Building optimized JS..."
   cat >.mozconfig ../mozconfig - <<END
-ac_add_options --enable-lto=cross,full
-ac_add_options --enable-profile-use=cross
+ac_add_options --enable-lto=full
+ac_add_options --enable-profile-use
 ac_add_options --with-pgo-profile-path=${PWD@Q}/merged.profdata
 END
-  ./mach build
+  ./mach build --priority normal
 }
 
 check() {

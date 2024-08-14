@@ -3,7 +3,7 @@
 # Contributor: Jan de Groot <jgc@archlinux.org>
 
 pkgname=gnome-terminal
-pkgver=3.52.1
+pkgver=3.52.2
 pkgrel=1
 pkgdesc="The GNOME Terminal Emulator"
 url="https://wiki.gnome.org/Apps/Terminal"
@@ -21,13 +21,16 @@ license=(
 )
 depends=(
   dconf
+  gcc-libs
   glib2
+  glibc
   gsettings-desktop-schemas
   gtk3
   hicolor-icon-theme
   libhandy
   libx11
   pango
+  util-linux-libs
   vte3
 )
 makedepends=(
@@ -44,7 +47,7 @@ optdepends=(
 )
 groups=(gnome-extra)
 source=("git+https://gitlab.gnome.org/GNOME/gnome-terminal.git#tag=$pkgver")
-b2sums=('4dc5c4e0d7ec113ff22dead846b7d3c81618bd8cbdec9f7ed99e813f9b5c22f3add78fd7088b11d799eb2ea0f976438e368e32ef06f66d214619a992bf2f738f')
+b2sums=('45f4818abffdf1b6a53389f75652453e156341ae50b1416109ba381dc5cfc86d37a153615cf31640dac73a132633597d3005b5de95fbb61b0d19a7398879c79b')
 
 prepare() {
   cd $pkgname

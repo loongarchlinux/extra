@@ -4,23 +4,31 @@
 
 pkgname=speedcrunch
 pkgver=0.12.0
-pkgrel=3
+pkgrel=4
 pkgdesc="Simple but powerful calculator using Qt"
 arch=(loong64 x86_64)
-url="https://speedcrunch.org/"
-license=(GPL2)
-depends=(qt5-tools)
-makedepends=(cmake)
-source=("https://bitbucket.org/heldercorreia/speedcrunch/get/release-$pkgver.tar.bz2")
-md5sums=('f294f00d9ab8153ad4f2bebaaa93176c')
+url='https://speedcrunch.org/'
+license=(GPL-2.0-only)
+depends=(gcc-libs
+         glibc
+         qt5-base
+         qt5-tools)
+makedepends=(cmake
+             git)
+source=(git+https://bitbucket.org/heldercorreia/speedcrunch#tag=release-$pkgver)
+sha256sums=('368356c8614182c3eff16aa396c730e5ebbb0d11d30bb111ac86418e98824ed8')
+
+prepare() {
+  cd $pkgname
+  sed -e 's|/appdata/|/metainfo/|g' -i src/CMakeLists.txt # Update metainfo install dir
+}
 
 build() {
-  cd */src
-  cmake . -DCMAKE_INSTALL_PREFIX=/usr
-  make
+  cmake -B build -S $pkgname/src \
+    -DCMAKE_INSTALL_PREFIX=/usr
+  cmake --build build
 }
 
 package() {
-  cd */src
-  make DESTDIR="$pkgdir" install
+  DESTDIR="$pkgdir" cmake --install build
 }

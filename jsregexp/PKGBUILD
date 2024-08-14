@@ -1,0 +1,94 @@
+# Maintainer: Jelle van der Waa <jelle@archlinux.org>
+
+pkgbase=jsregexp
+pkgname=(lua-jsregexp lua51-jsregexp lua52-jsregexp lua53-jsregexp)
+pkgver=0.0.7
+pkgrel=1
+arch=('loong64' 'x86_64')
+url='https://github.com/kmarius/jsregexp'
+license=('MIT')
+makedepends=('lua' 'lua51' 'lua52' 'lua53')
+source=("${pkgname}-${pkgver}.tar.gz::https://github.com/kmarius/jsregexp/archive/refs/tags/v${pkgver}.tar.gz")
+sha256sums=('ffd57a9df279036b466a70d246befd77ee601367542a7042bc3c3b741d37160e')
+
+prepare() {
+  sed 's/^CFLAGS =/CFLAGS +=/' -i "${pkgbase}-${pkgver}"/Makefile
+  sed 's/^COPT =/# COPT =/' -i "${pkgbase}-${pkgver}"/Makefile
+
+  cp -r "${pkgbase}-${pkgver}" "${pkgbase}-${pkgver}"-51
+  cp -r "${pkgbase}-${pkgver}" "${pkgbase}-${pkgver}"-52
+  cp -r "${pkgbase}-${pkgver}" "${pkgbase}-${pkgver}"-53
+}
+
+build() {
+  cd "${pkgbase}-${pkgver}"
+  make LUADIR=/usr/include INCLUDE_DIR="-I/usr/include/lua"
+
+  cd "${srcdir}/${pkgbase}-${pkgver}-51"
+  make LUADIR=/usr/include/lua5.1
+
+  cd "${srcdir}/${pkgbase}-${pkgver}-52"
+  make LUADIR=/usr/include/lua5.2 INCLUDE_DIR="-I/usr/include/lua5.2"
+  
+  cd "${srcdir}/${pkgbase}-${pkgver}-53"
+  make LUADIR=/usr/include/lua5.3 INCLUDE_DIR="-I/usr/include/lua5.3"
+}
+
+check() {
+  echo "Testing with Lua 5.4"
+  cd "${srcdir}/${pkgbase}-${pkgver}"
+  lua test.lua
+
+  echo "Testing with Lua 5.1"
+  cd "${srcdir}/${pkgbase}-${pkgver}-51"
+  lua5.1 test.lua
+
+  echo "Testing with Lua 5.2"
+  cd "${srcdir}/${pkgbase}-${pkgver}-52"
+  lua5.2 test.lua
+  
+  echo "Testing with Lua 5.3"
+  cd "${srcdir}/${pkgbase}-${pkgver}-53"
+  lua5.3 test.lua
+}
+
+package_lua-jsregexp() {
+  pkgdesc='JavaScript regular expressions for Lua 5.4'
+  depends=('lua')
+
+  cd "${srcdir}/${pkgbase}-${pkgver}"
+  install -Dm0755 ${pkgbase}.so "${pkgdir}"/usr/lib/lua/5.4/${pkgbase}.so
+  install -Dm0644 jsregexp.lua "${pkgdir}"/usr/share/lua/5.4/jsregexp.lua
+  install -Dm0644 LICENSE "${pkgdir}"/usr/share/licenses/${pkgname}/LICENSE
+}
+
+package_lua51-jsregexp() {
+  pkgdesc='JavaScript regular expressions for Lua 5.1'
+  depends=('lua51')
+
+  cd "${srcdir}/${pkgbase}-${pkgver}-51"
+  install -Dm0755 ${pkgbase}.so "${pkgdir}"/usr/lib/lua/5.1/${pkgbase}.so
+  install -Dm0644 jsregexp.lua "${pkgdir}"/usr/share/lua/5.1/jsregexp.lua
+  install -Dm0644 LICENSE "${pkgdir}"/usr/share/licenses/${pkgname}/LICENSE
+}
+
+package_lua52-jsregexp() {
+  pkgdesc='JavaScript regular expressions for Lua 5.2'
+  depends=('lua52')
+
+  cd "${srcdir}/${pkgbase}-${pkgver}-52"
+  install -Dm0755 ${pkgbase}.so "${pkgdir}"/usr/lib/lua/5.2/${pkgbase}.so
+  install -Dm0644 jsregexp.lua "${pkgdir}"/usr/share/lua/5.2/jsregexp.lua
+  install -Dm0644 LICENSE "${pkgdir}"/usr/share/licenses/${pkgname}/LICENSE
+}
+
+package_lua53-jsregexp() {
+  pkgdesc='JavaScript regular expressions for Lua 5.3'
+  depends=('lua53')
+
+  cd "${srcdir}/${pkgbase}-${pkgver}-53"
+  install -Dm0755 ${pkgbase}.so "${pkgdir}"/usr/lib/lua/5.3/${pkgbase}.so
+  install -Dm0644 jsregexp.lua "${pkgdir}"/usr/share/lua/5.3/jsregexp.lua
+  install -Dm0644 LICENSE "${pkgdir}"/usr/share/licenses/${pkgname}/LICENSE
+}
+

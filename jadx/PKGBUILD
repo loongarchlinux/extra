@@ -2,17 +2,22 @@
 # Contributor: Nicolas Hureau <archlinux@kalenz.net>
 
 pkgname=jadx
-pkgver=1.4.7
+pkgver=1.5.0
 pkgrel=1
 pkgdesc='Command line and GUI tools to produce Java source code from Android Dex and APK files'
 url='https://github.com/skylot/jadx'
-arch=('any')
-license=('Apache')
-depends=('java-runtime>=11' 'bash')
-makedepends=('java-environment>=11' 'gradle')
+arch=(any)
+license=(Apache-2.0)
+depends=(
+  bash
+)
+makedepends=(
+  'java-environment=21'
+  gradle
+)
 source=(https://github.com/skylot/${pkgname}/archive/v${pkgver}/${pkgname}-${pkgver}.tar.gz)
-sha512sums=('df97966e2bec5a33afa19208785c01ea64c18a96e43f59769fe1763814c89a0af9dffb16f070b84e378271957024d3436f8e2606fea11b5609245b54ba0a34a2')
-b2sums=('9ffbae25cde905b26ab486936dc06fb1580335b232cd52a3a6836d7f518891efdf60be651a4b2d7d8f27d8502a1f3fb84dd0ae8098b99f91a7b68a36cb9c2f47')
+sha512sums=('fcb62aa255ab8643ed47367e8b1b4224a0a91159bd7b75de54acf37495a0248668db93fa76fe345846aadf91a9ad1735072130d9351434f71d79165e23875ba4')
+b2sums=('6aa1a6cbf324d56fff3eab2dc185babf8c5a0d8aacfa5271704c5a6213589c381c9ac1b3a7f0f17316976745f090d69df89ada64d644afd424158b1bdd7f827f')
 
 build() {
   cd ${pkgname}-${pkgver}
@@ -25,10 +30,13 @@ check() {
 }
 
 package() {
-  cd ${pkgname}-${pkgver}/build/jadx
+  depends+=('java-runtime>=11')
+  cd ${pkgname}-${pkgver}
 
+  pushd build/jadx
   install -Dm 755 bin/{jadx,jadx-gui} -t "${pkgdir}/usr/share/java/${pkgname}/bin"
   install -Dm 644 lib/* -t "${pkgdir}/usr/share/java/${pkgname}/lib"
+  popd
 
   install -d "${pkgdir}/usr/bin"
   ln -s /usr/share/java/${pkgname}/bin/jadx "${pkgdir}/usr/bin/jadx"

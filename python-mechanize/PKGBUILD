@@ -7,8 +7,8 @@
 
 _pkgname=mechanize
 pkgname=python-mechanize
-pkgver=0.4.8
-pkgrel=3
+pkgver=0.4.10
+pkgrel=1
 epoch=1
 pkgdesc='Stateful programmatic web browsing in Python'
 arch=('any')
@@ -19,16 +19,12 @@ makedepends=('python-setuptools' 'git')
 checkdepends=('python-zope-interface' 'python-twisted')
 optdepends=('python-html5-parser: faster parsing of HTML')
 source=("git+$url#tag=v$pkgver?signed")
-sha256sums=('SKIP')
-b2sums=('SKIP')
+sha256sums=('b95bf4c8312e76e4d9a7834d320aad87b172978645d3f52d19b802c6b53d2b7d')
+b2sums=('165387a0acfb73d8ade57996bff0feed8ac8ee16fa479a5dc5d02b4f523e53c780f61598aa435326be9446c7e795d9ff9641661bcb2e5dd32cdfa0b437af76f2')
 validpgpkeys=('3CE1780F78DD88DF45194FD706BC317B515ACE7C') # Kovid Goyal (New longer key) <kovid@kovidgoyal.net>
 
 prepare() {
   cd $_pkgname
-  #  Fix check failure with python 3.11
-  git cherry-pick -n 529d2c4cb8f31284f8026642968ba3adb9de1171 # Use asserts for failing test so we get better feedback on the failure
-  git cherry-pick -n 7ba3d586368c03577c061c35bc27664a907f5435 # DRYer
-  git cherry-pick -n 560839d51e54943890c2d37c0d0854792479cb80 # Change test to not rely on order of cookie iteration
 }
 
 build() {

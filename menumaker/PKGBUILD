@@ -5,7 +5,7 @@
 
 pkgname=menumaker
 pkgver=0.99.14
-pkgrel=2
+pkgrel=3
 pkgdesc="Heuristics-driven menu generator for Deskmenu, FluxBox, IceWM, OpenBox, WindowMaker and XFCE"
 arch=('any')
 url="http://menumaker.sourceforge.net/"

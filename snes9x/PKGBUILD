@@ -1,12 +1,12 @@
-# Maintainer: Eric Bélanger <eric@archlinux.org>
 # Maintainer: Maxime Gauduin <alucryd@archlinux.org>
+# Contributor: Eric Bélanger <eric@archlinux.org>
 
 pkgbase=snes9x
 pkgname=(
   snes9x
   snes9x-gtk
 )
-pkgver=1.62.3
+pkgver=1.63
 pkgrel=1
 pkgdesc='Portable Super Nintendo Entertainment System (TM) emulator'
 arch=(loong64 x86_64)
@@ -40,14 +40,14 @@ makedepends=(
   sdl2
   zlib
 )
-_tag=8b82d487937d9ea39f7229d280c6f6686c415fe7
+_tag=921f9f7b83660eb44ad263022a57a4a029057c37
 source=(
   git+https://github.com/snes9xgit/snes9x.git#tag=${_tag}
   git+https://github.com/KhronosGroup/glslang.git
   git+https://github.com/KhronosGroup/SPIRV-Cross.git
   git+https://github.com/KhronosGroup/Vulkan-Headers.git
 )
-b2sums=('SKIP'
+b2sums=('4537107313fdfd2491c80601df185e0e5779306010f6d2ce370a80cc0faf5cbd74da7b8452a112ee4a89c744715181603de13d3b8f5bd35b06187082e8103f7b'
         'SKIP'
         'SKIP'
         'SKIP')
@@ -74,6 +74,8 @@ pkgver() {
 build() {
   export CC=clang
   export CXX=clang++
+  export CFLAGS+=' -Wno-format-security'
+  export CXXFLAGS+=' -Wno-format-security'
   pushd snes9x/unix
   ./configure \
     --prefix='/usr' \
@@ -128,7 +130,6 @@ package_snes9x-gtk() {
   )
 
   DESTDIR="${pkgdir}" cmake --install build
-  mv "${pkgdir}"/usr/{,share/}locale
   install -Dm 644 snes9x/docs/{control-inputs.txt,controls.txt,snapshots.txt} -t "${pkgdir}"/usr/share/doc/snes9x-gtk
   install -Dm 644 snes9x/LICENSE "${pkgdir}"/usr/share/licenses/snes9x-gtk/LICENSE
 }

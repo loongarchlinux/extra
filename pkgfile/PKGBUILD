@@ -1,30 +1,38 @@
-# Maintainer: Dave Reisner <dreisner@archlinux.org>
+# Contributor: Dave Reisner <d@falconindy.com>
 
 pkgname=pkgfile
-pkgver=21
-pkgrel=2
-pkgdesc="a pacman .files metadata explorer"
-arch=('loong64' 'x86_64')
-url="https://github.com/falconindy/pkgfile"
-license=('MIT')
-depends=('libarchive' 'curl' 'pcre' 'pacman')
-makedepends=('git' 'meson')
-source=("git+https://github.com/falconindy/pkgfile?signed#tag=v$pkgver")
-validpgpkeys=('487EACC08557AD082088DABA1EB2638FF56C0C53')  # Dave Reisner
+pkgver=22
+pkgrel=1
+pkgdesc='alpm .files metadata explorer'
+arch=(loong64 x86_64)
+url=https://github.com/falconindy/pkgfile
+license=(MIT)
+depends=(
+  curl
+  libarchive
+  pacman
+  pcre
+)
+makedepends=(
+  clang
+  git
+  meson
+  systemd
+)
 install=pkgfile.install
-md5sums=('SKIP')
+source=("git+$url.git#tag=v$pkgver?signed")
+b2sums=('2332b2b7f198f4e0021f24b0f2ad44e253dcf711d97d60e14f246993b42fd38079ba1117bebea2441572379847af0526fdf58ed20cb601f37eea3d4d79734ab1')
+validpgpkeys=(487EACC08557AD082088DABA1EB2638FF56C0C53) # Dave Reisner <d@falconindy.com>
 
 build() {
-  cd "$pkgname"
+  cd $pkgname
 
   arch-meson build
   ninja -v -C build
 }
 
 package() {
-  cd "$pkgname"
+  cd $pkgname
 
-  DESTDIR=$pkgdir ninja -C build install
+  DESTDIR="$pkgdir" ninja -C build install
 }
-
-# vim: ft=sh syn=sh

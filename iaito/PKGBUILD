@@ -4,27 +4,44 @@
 
 pkgname=iaito
 _transcommit=e66b3a962a7fc7dfd730764180011ecffbb206bf
-pkgver=5.9.0
-pkgrel=2
+pkgver=5.9.2
+pkgrel=1
 pkgdesc='Qt and C++ GUI for radare2 reverse engineering framework'
 url='https://github.com/radareorg/iaito'
-arch=('loong64' 'x86_64')
-license=('GPL3')
-depends=('radare2' 'capstone' 'qt6-base' 'qt6-svg' 'python'
-         'pyside6' 'graphviz' 'gcc-libs')
-makedepends=('git' 'qt6-tools')
-optdepends=('r2ghidra: ghidra decompiler plugin')
+arch=(loong64 x86_64)
+license=(GPL-3.0-only)
+depends=(
+  capstone
+  gcc-libs
+  glibc
+  graphviz
+  hicolor-icon-theme
+  pyside6
+  python
+  qt6-base
+  qt6-svg
+  radare2
+)
+makedepends=(
+  git
+  qt6-tools
+)
+optdepends=(
+  'r2ghidra: ghidra decompiler plugin'
+)
 replaces=('r2cutter')
 source=("git+https://github.com/radareorg/iaito#tag=${pkgver}"
         "git+https://github.com/radareorg/iaito-translations#commit=${_transcommit}")
-sha512sums=('SKIP'
-            'SKIP')
-b2sums=('SKIP'
-        'SKIP')
+sha512sums=('a62dec1a57718fc8ba3858e7aaa60705b47d92acaaefd999f78abb6d037dbeed3e7543e31af9a967460b3fc338e33a0026063077e9dda5834215cd4651781ecc'
+            'dc121d0212e35c53ec2d3d172710f21c1f4d6e06f55826e8bf30844a847188b2ca172589f36470b68a5c9003de87f8d1021352a591b5bb556175f2f176f13a61')
+b2sums=('a0b113b050dc181aa170f69d0cd895c48236b4fa7408f4433d13251268d45cc82d5ffe1b84c7f21cf925b1024935fb544d2a5120968585afc1be0eb6d4654571'
+        'dd7a92c5c5874137a270cb60286b31ff0d3202b6422d101802e95faaf7cdd8a69a4ddf959e8cfe12e7bd7f792080eaddca5c8f06eda21ff9966b6d2af6057143')
 
 prepare() {
   cp -r iaito-translations iaito/src/translations
   sed -e 's|lrelease|/usr/lib/qt6/bin/lrelease|' -i iaito/src/translations/Makefile # Fix build with Qt6
+  sed -e 's|-Wl,-rpath,/usr/local/lib||g' -i iaito/src/Iaito.pro
+  sed -e 's|/usr/local/lib||g' -i iaito/src/Iaito.pro
 }
 
 build() {

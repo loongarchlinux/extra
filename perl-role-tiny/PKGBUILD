@@ -4,7 +4,7 @@
 
 pkgname='perl-role-tiny'
 pkgver=2.002004
-pkgrel=4
+pkgrel=5
 pkgdesc="Roles. Like a nouvelle cuisine portion size slice of Moose."
 arch=('any')
 license=('PerlArtistic' 'GPL')

@@ -1,0 +1,37 @@
+# Maintainer: Orhun Parmaksız <orhun@archlinux.org>
+
+pkgname=sig
+pkgver=0.1.3
+pkgrel=1
+pkgdesc="Interactive grep for streaming"
+arch=('loong64' 'x86_64')
+url="https://github.com/ynqa/sig"
+license=('MIT')
+depends=('gcc-libs')
+makedepends=('cargo')
+source=("$pkgname-$pkgver.tar.gz::$url/archive/v$pkgver.tar.gz")
+sha512sums=('c147406fdda31e25b3c2d602f7b219ff20bff166667d25c93e667cb77be2632ca471f93e293dcc3d14707d2c854463786fab6d45a9b2f0a875d6a43f0e0cb1f4')
+
+prepare() {
+  cd "$pkgname-$pkgver"
+  cargo fetch --locked --target "$(rustc -vV | sed -n 's/host: //p')"
+}
+
+build() {
+  cd "$pkgname-$pkgver"
+  cargo build --release --frozen
+}
+
+check() {
+  cd "$pkgname-$pkgver"
+  cargo test --frozen
+}
+
+package() {
+  cd "$pkgname-$pkgver"
+  install -Dm 755 "target/release/$pkgname" -t "$pkgdir/usr/bin"
+  install -Dm 644 README.md -t "$pkgdir/usr/share/doc/$pkgname"
+  install -Dm 644 LICENSE -t "$pkgdir/usr/share/licenses/$pkgname"
+}
+
+# vim: ts=2 sw=2 et:

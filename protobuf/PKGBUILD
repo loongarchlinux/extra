@@ -9,8 +9,8 @@
 
 pkgbase='protobuf'
 pkgname=('protobuf' 'python-protobuf')
-pkgver=25.3
-pkgrel=4
+pkgver=27.3
+pkgrel=1
 pkgdesc="Protocol Buffers - Google's data interchange format"
 arch=('loong64' 'x86_64')
 url='https://developers.google.com/protocol-buffers/'
@@ -22,6 +22,7 @@ depends=(
   'abseil-cpp'
 )
 makedepends=(
+  'bazel'
   'cmake'
   'gtest'
   'python-build'
@@ -34,19 +35,12 @@ checkdepends=(
   python-numpy
 )
 source=(https://github.com/protocolbuffers/protobuf/archive/v$pkgver/$pkgname-$pkgver.tar.gz
-        https://github.com/protocolbuffers/protobuf/commit/2e62ef1e.patch
-        soversion.patch
-        $pkgbase-21.12-pep517.patch)  # let's not call setup.py like a script and just build...
-sha512sums=('1f73e237c919082e5423ae9e2ea8813dccf672c059051d1531fe89ffaa45872d3cf3052b8c3af26f674296ec17d7dc861c67b8f0834ed80261ce4a6a14ed7115'
-            'f42d9bd702abe2c7fc4dcb07d050376287ac60b0b7e2fde0d7a9e9df24a620866bee5fd7de2e3b216095376de47e1fe7443cca74c9a9e85c1a0bc42e8973a280'
-            'f0813a415cff5639e4709400f15b0c5565294e7907ae164e620b76258734c643115d8e5170bf0e4aee264c347fb7e01ac4be60d19be2a91c0ce9c561dad8c8e9'
-            'a297e74ee4f807b3fad7da7d0de6dd9647963521be66cd2a2370343f5bd191cbb38759157ac0cdb161a5893a30a10520a5098e88a292c800859af33db5cf7a41')
+        https://github.com/protocolbuffers/protobuf/commit/2e62ef1e.patch)
+sha512sums=('a3a555f17a069dd4aa0d683d3126915077fe4211ae6532a4947fb76a9eeb1ed7d25d29ada8dc372435a08aad1aa14374d88e92ac7c195510f57609efaf9d341d'
+            'f42d9bd702abe2c7fc4dcb07d050376287ac60b0b7e2fde0d7a9e9df24a620866bee5fd7de2e3b216095376de47e1fe7443cca74c9a9e85c1a0bc42e8973a280')
 
 prepare() {
-  patch -d $pkgbase-$pkgver -p1 < $pkgname-21.12-pep517.patch
   patch -d $pkgname-$pkgver -p1 < 2e62ef1e.patch # Fix cmake config compatibility mode
-  patch -d $pkgbase-$pkgver -p1 < soversion.patch # Restore soversion
-  sed -e 's|c++14|c++17|' -i $pkgbase-$pkgver/python/setup.py
 }
 
 build() {
@@ -59,24 +53,19 @@ build() {
     -D protobuf_BUILD_SHARED_LIBS=ON
     -D protobuf_USE_EXTERNAL_GTEST=ON
     -D protobuf_ABSL_PROVIDER=package
-    -S $pkgbase-$pkgver
+    -S "$pkgbase-$pkgver"
     -W no-dev
   )
 
   cmake "${cmake_options[@]}"
   cmake --build build --verbose
 
-  cd $pkgbase-$pkgver/python
-  LDFLAGS+=" -L${srcdir}/build" \
-  PROTOC="$srcdir"/build/protoc \
-  python -m build --wheel --no-isolation
+  cd "$pkgbase-$pkgver"
+  bazel build //python/dist:binary_wheel
 }
 
 check() {
   ctest --test-dir build
-
-  cd $pkgbase-$pkgver/python
-  pytest -vv google/$pkgbase/internal/ || true
 }
 
 package_protobuf() {
@@ -100,6 +89,6 @@ package_python-protobuf() {
     'python'
   )
 
-  python -m installer --destdir="$pkgdir" $pkgbase-$pkgver/python/dist/*.whl
+  python -m installer --destdir="$pkgdir" "$pkgbase-$pkgver"/bazel-bin/python/dist/*.whl
   install -vDm 644 $pkgbase-$pkgver/LICENSE -t "$pkgdir/usr/share/licenses/$pkgname/"
 }

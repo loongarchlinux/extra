@@ -1,0 +1,407 @@
+From f71ee852d32be67ddd9f5a7618aaa73a907e66b3 Mon Sep 17 00:00:00 2001
+From: Lukas Fleischer <lfleischer@archlinux.org>
+Date: Thu, 14 Jan 2016 17:58:07 +0100
+Subject: [PATCH 1/2] Add an option to disable the branch switch form
+
+Introduce a configuration option enable-switch-form that is enabled by
+default and can be used to disable the branch quick switch form in the
+top-right corner of repository pages.
+
+Rationale: For repositories with a huge number of branches, the code
+generated for the switch form might become so large that it dominates
+the size of the HTTP response. For example, at the time of writing this
+commit message, the HTTP body of the Arch Linux community.git cgit index
+at https://projects.archlinux.org/svntogit/community.git/ has a size of
+228KB. Removing the form shrinks the size to only 12KB.
+
+Signed-off-by: Lukas Fleischer <lfleischer@archlinux.org>
+---
+ cgit.c       |  6 ++++++
+ cgit.h       |  2 ++
+ cgitrc.5.txt | 16 ++++++++++++++++
+ shared.c     |  1 +
+ ui-shared.c  |  2 +-
+ 5 files changed, 26 insertions(+), 1 deletion(-)
+
+diff --git a/cgit.c b/cgit.c
+index 2efa962..8cd5d5d 100644
+--- a/cgit.c
++++ b/cgit.c
+@@ -76,6 +76,8 @@ static void repo_config(struct cgit_repo *repo, const char *name, const char *va
+ 		repo->enable_subject_links = atoi(value);
+ 	else if (!strcmp(name, "enable-html-serving"))
+ 		repo->enable_html_serving = atoi(value);
++	else if (!strcmp(name, "enable-switch-form"))
++		repo->enable_switch_form = atoi(value);
+ 	else if (!strcmp(name, "branch-sort")) {
+ 		if (!strcmp(value, "age"))
+ 			repo->branch_sort = 1;
+@@ -195,6 +197,8 @@ static void config_cb(const char *name, const char *value)
+ 		ctx.cfg.enable_subject_links = atoi(value);
+ 	else if (!strcmp(name, "enable-html-serving"))
+ 		ctx.cfg.enable_html_serving = atoi(value);
++	else if (!strcmp(name, "enable-switch-form"))
++		ctx.cfg.enable_switch_form = atoi(value);
+ 	else if (!strcmp(name, "enable-tree-linenumbers"))
+ 		ctx.cfg.enable_tree_linenumbers = atoi(value);
+ 	else if (!strcmp(name, "enable-git-config"))
+@@ -389,6 +393,7 @@ static void prepare_context(void)
+ 	ctx.cfg.enable_index_owner = 1;
+ 	ctx.cfg.enable_tree_linenumbers = 1;
+ 	ctx.cfg.enable_git_config = 0;
++	ctx.cfg.enable_switch_form = 1;
+ 	ctx.cfg.max_repo_count = 50;
+ 	ctx.cfg.max_commit_count = 50;
+ 	ctx.cfg.max_lock_attempts = 5;
+@@ -860,6 +865,7 @@ static void print_repo(FILE *f, struct cgit_repo *repo)
+ 	fprintf(f, "repo.enable-remote-branches=%d\n", repo->enable_remote_branches);
+ 	fprintf(f, "repo.enable-subject-links=%d\n", repo->enable_subject_links);
+ 	fprintf(f, "repo.enable-html-serving=%d\n", repo->enable_html_serving);
++	fprintf(f, "repo.enable-switch-form=%d\n", repo->enable_switch_form);
+ 	if (repo->branch_sort == 1)
+ 		fprintf(f, "repo.branch-sort=age\n");
+ 	if (repo->commit_sort) {
+diff --git a/cgit.h b/cgit.h
+index e0d286d..de2df1b 100644
+--- a/cgit.h
++++ b/cgit.h
+@@ -106,6 +106,7 @@ struct cgit_repo {
+ 	int enable_remote_branches;
+ 	int enable_subject_links;
+ 	int enable_html_serving;
++	int enable_switch_form;
+ 	int max_stats;
+ 	int branch_sort;
+ 	int commit_sort;
+@@ -243,6 +244,7 @@ struct cgit_config {
+ 	int enable_remote_branches;
+ 	int enable_subject_links;
+ 	int enable_html_serving;
++	int enable_switch_form;
+ 	int enable_tree_linenumbers;
+ 	int enable_git_config;
+ 	int local_time;
+diff --git a/cgitrc.5.txt b/cgitrc.5.txt
+index 6f3e952..92a86ed 100644
+--- a/cgitrc.5.txt
++++ b/cgitrc.5.txt
+@@ -213,6 +213,18 @@ enable-subject-links::
+ 	in commit view. Default value: "0". See also:
+ 	"repo.enable-subject-links".
+ 
++enable-html-serving::
++	Flag which, when set to "1", will allow the /plain handler to serve
++	mimetype headers that result in the file being treated as HTML by the
++	browser. When set to "0", such file types are returned instead as
++	text/plain or application/octet-stream. Default value: "0". See also:
++	"repo.enable-html-serving".
++
++enable-switch-form::
++	Flag which, when set to "1", will make cgit add a form to the top right
++	of each repository page that allows for quickly switching branches.
++	Default value: "1". See also: "repo.enable-switch-form".
++
+ enable-tree-linenumbers::
+ 	Flag which, when set to "1", will make cgit generate linenumber links
+ 	for plaintext blobs printed in the tree view. Default value: "1".
+@@ -527,6 +539,10 @@ repo.extra-head-content::
+ 	This value will be added verbatim to the head section of each page
+ 	displayed for this repo. Default value: none.
+ 
++repo.enable-switch-form::
++	A flag which can be used to override the global setting
++	`enable-switch-form'. Default value: none.
++
+ repo.hide::
+ 	Flag which, when set to "1", hides the repository from the repository
+ 	index. The repository can still be accessed by providing a direct path.
+diff --git a/shared.c b/shared.c
+index ae3f6c1..fe700a1 100644
+--- a/shared.c
++++ b/shared.c
+@@ -67,6 +67,7 @@ struct cgit_repo *cgit_add_repo(const char *url)
+ 	ret->enable_remote_branches = ctx.cfg.enable_remote_branches;
+ 	ret->enable_subject_links = ctx.cfg.enable_subject_links;
+ 	ret->enable_html_serving = ctx.cfg.enable_html_serving;
++	ret->enable_switch_form = ctx.cfg.enable_switch_form;
+ 	ret->max_stats = ctx.cfg.max_stats;
+ 	ret->branch_sort = ctx.cfg.branch_sort;
+ 	ret->commit_sort = ctx.cfg.commit_sort;
+diff --git a/ui-shared.c b/ui-shared.c
+index 6fae72d..b58c0f3 100644
+--- a/ui-shared.c
++++ b/ui-shared.c
+@@ -1038,7 +1038,7 @@ static void print_header(void)
+ 		cgit_index_link("index", NULL, NULL, NULL, NULL, 0, 1);
+ 		html(" : ");
+ 		cgit_summary_link(ctx.repo->name, NULL, NULL, NULL);
+-		if (ctx.env.authenticated) {
++		if (ctx.env.authenticated && ctx.repo->enable_switch_form) {
+ 			html("</td><td class='form'>");
+ 			html("<form method='get'>\n");
+ 			cgit_add_hidden_formfields(0, 1, ctx.qry.page);
+-- 
+2.46.0
+
+
+From a449f625d943ff876577a497d6bef961951e70b5 Mon Sep 17 00:00:00 2001
+From: Lukas Fleischer <lfleischer@archlinux.org>
+Date: Thu, 14 Jan 2016 17:57:37 +0100
+Subject: [PATCH 2/2] Customize cgit for the AUR
+
+* Mention "AUR" and the package base in the title.
+* Replace favicon.ico.
+* Link back to the package details page.
+* Remove the branch switch form.
+* Do not show any commit decorations.
+* Do not show branches on the summary page.
+* Disable the repository index.
+* Drop link to the "refs" page.
+* Use proper Git clone URLs.
+* Do not guess default branch.
+* Only allow branches with the h GET parameter.
+* Add branch information to atom entries.
+* Extend the syntax highlighting filter.
+
+Signed-off-by: Lukas Fleischer <lfleischer@archlinux.org>
+---
+ cgit.c                         |   6 +++---
+ cmd.c                          |   2 +-
+ favicon.ico                    | Bin 1078 -> 575 bytes
+ filters/syntax-highlighting.sh |   7 +++++--
+ ui-atom.c                      |  11 ++++++++---
+ ui-commit.c                    |   1 -
+ ui-log.c                       |   1 -
+ ui-shared.c                    |  31 +++++++++++++++----------------
+ ui-summary.c                   |   2 --
+ 9 files changed, 32 insertions(+), 29 deletions(-)
+
+diff --git a/cgit.c b/cgit.c
+index 8cd5d5d..a532aa5 100644
+--- a/cgit.c
++++ b/cgit.c
+@@ -620,7 +620,7 @@ static int prepare_repo_cmd(int nongit)
+ 	if (!ctx.repo->defbranch)
+ 		ctx.repo->defbranch = guess_defbranch();
+ 
+-	if (!ctx.qry.head) {
++	if (!ctx.qry.head && !strcmp(ctx.qry.page, "snapshot")) {
+ 		ctx.qry.nohead = 1;
+ 		ctx.qry.head = find_default_branch(ctx.repo);
+ 	}
+@@ -630,7 +630,7 @@ static int prepare_repo_cmd(int nongit)
+ 		cgit_print_docstart();
+ 		cgit_print_pageheader();
+ 		cgit_print_error("Repository seems to be empty");
+-		if (!strcmp(ctx.qry.page, "summary")) {
++		if (!strcmp(ctx.qry.page, "summary") && ctx.qry.head) {
+ 			html("<table class='list'><tr class='nohover'><td>&nbsp;</td></tr><tr class='nohover'><th class='left'>Clone</th></tr>\n");
+ 			cgit_prepare_repo_env(ctx.repo);
+ 			cgit_add_clone_urls(print_no_repo_clone_urls);
+@@ -642,7 +642,7 @@ static int prepare_repo_cmd(int nongit)
+ 
+ 	if (repo_get_oid(the_repository, ctx.qry.head, &oid)) {
+ 		char *old_head = ctx.qry.head;
+-		ctx.qry.head = xstrdup(ctx.repo->defbranch);
++		ctx.qry.head = NULL;
+ 		cgit_print_error_page(404, "Not found",
+ 				"Invalid branch: %s", old_head);
+ 		free(old_head);
+diff --git a/cmd.c b/cmd.c
+index 0eb75b1..cb9c393 100644
+--- a/cmd.c
++++ b/cmd.c
+@@ -198,7 +198,7 @@ struct cgit_cmd *cgit_get_cmd(void)
+ 		if (ctx.repo)
+ 			ctx.qry.page = "summary";
+ 		else
+-			ctx.qry.page = "repolist";
++			return NULL;
+ 	}
+ 
+ 	for (i = 0; i < sizeof(cmds)/sizeof(*cmds); i++)
+diff --git a/favicon.ico b/favicon.ico
+index 56ff59384f2ce308996d0027bb928c18e2c61785..55497b852fc438a7a63041822a64deac8ad92527 100644
+GIT binary patch
+literal 575
+zcmV-F0>J%=P)<h;3K|Lk000e1NJLTq000mG000mO1^@s6AM^iV00004b3#c}2nYxW
+zd<bNS00009a7bBm000fw000fw0YWI7cmMzZ8FWQhbW?9;ba!ELWdL_~cP?peYja~^
+zaAhuUa%Y?FJQ@H10lY~>K~y-6jgvo!6G0Tle=|GDx_9PaSMatt8xuJ=jueWZ*0zF(
+zjc8@z38oPY2!}RWYjKN}g`kaCi1-H-uCNkOgxf<!F?yUS7Cl4^B$v3eW8nr8FBANl
+zdA#?%kKYW8Fveh07{&W13sN-}=3m%6%DVkm=Nus>0BeA-5$w9Lx<d$>MMtXHz@2@3
+zyz+UJPuh|vi*mtJavK=cNwf1dpEbZ!a<``>o|1IZ?Bv;J>;8WS9J=%2sOyMVt`f_h
+zlJvCko4<OCqr6+*VBf9x#lTYyW0*;e`H>lXZH(|7*(w!f`Tnu;_pt<lr|J_0IpZpU
+zF$7(miQn3=sk2f?n@eK}=5D^5+7q~I8|~Ep+Un8M!*s4AT2ro5Sv@`XZ6v{_&gyTH
+zw%_>K?Jqw7?)K+hZAu%R^ukDjFp75q4Pbjddz93wNAlTi;8fmk1LdSvP5vdgJg^M#
+zaG-vgp9c5>)Q7GRMsXQ9!>~RL)NlL5fD7Ck3IMJGg}hz^t^pqh0-C^eU>&Fc%V89s
+z01(qlD|><0z!Ts~QmejXjKU~B2rL4Jfq5~#v~m%6p46(=A2%lGz#nlao8kSq3cLUS
+N002ovPDHLkV1na%{Dc4i
+
+literal 1078
+zcmZQzU}RuoP*4zH0D%`w3=C>OT0j88*I;B|;A3WB&;W`l0I>rQGcvFMNd|@npjvF;
+z|Ns9C0RhJtR<C{xRJ(?ux%nEyg^M2;v~_keq@|u^5EI|T@aD}Ah8Z*NGwk2@lEKDy
+zAH%~3Ul=S+_A&?pfz*kgE-rJ!7J}FyVCez|*C0GW83@<K6UrBH@!yk{cC^H$5h7sX
+zQUzixckzPoTU-o53>g<^2w%koLc6#^Xc+0@0b{MP-o1OzLl-9~e-YS1Ul?BuYCnv>
+z#KonkqvMJTjNjt&3#2gw%9kpEI8*}4mzx5yR}9J*bMb-L1Lymp@uB{Jhzg3q{6#aq
+z8`OSCc*w!R4H`aDQy}3Y<Khibr{a<bVyt(8y4%FX0~jBsUtAO+@<Ooqf<<TxL;x0_
+zf^tSBE-sV8z^bvOCwhv3(m5#QD*!PpogV<Qu>nvz4-Gxez`(qOVcN923<nOpVo+Au
+z#!ygjf#KHePYkwp2N=XeH!-+-9%AV4y~*(X$3I|BTf^Y&co3M*qu;$!1$tT3PQCgu
+zFy%@<6%>pEhL}vDprG(XphWx5PkxC&dE;ey?|`(_3qip;AboEmP##EM2C5T32%&+h
+j!F(8fQ5MKogs78y2r*au9mF0%&v&mh1O>7AhZHdY^--`s
+
+diff --git a/filters/syntax-highlighting.sh b/filters/syntax-highlighting.sh
+index 840bc34..8f936e7 100755
+--- a/filters/syntax-highlighting.sh
++++ b/filters/syntax-highlighting.sh
+@@ -107,6 +107,9 @@ EXTENSION="${BASENAME##*.}"
+ # map Makefile and Makefile.* to .mk
+ [ "${BASENAME%%.*}" = "Makefile" ] && EXTENSION=mk
+ 
++[ "${BASENAME}" = "PKGBUILD" ] && EXTENSION=sh
++[ "${EXTENSION}" = "install" ] && EXTENSION=sh
++
+ # highlight versions 2 and 3 have different commandline options. Specifically,
+ # the -X option that is used for version 2 is replaced by the -O xhtml option
+ # for version 3.
+@@ -115,7 +118,7 @@ EXTENSION="${BASENAME##*.}"
+ # found (for example) on EPEL 6.
+ #
+ # This is for version 2
+-exec highlight --force -f -I -X -S "$EXTENSION" 2>/dev/null
++#exec highlight --force -f -I -X -S "$EXTENSION" 2>/dev/null
+ 
+ # This is for version 3
+-#exec highlight --force -f -I -O xhtml -S "$EXTENSION" 2>/dev/null
++exec highlight --force -f -I -O xhtml -S "$EXTENSION" 2>/dev/null
+diff --git a/ui-atom.c b/ui-atom.c
+index 0659e96..44c6be0 100644
+--- a/ui-atom.c
++++ b/ui-atom.c
+@@ -15,7 +15,7 @@
+ 
+ static void add_entry(struct commit *commit, const char *host)
+ {
+-	char delim = '&';
++	char *delim = "&amp;";
+ 	char *hex;
+ 	char *mail, *t, *t2;
+ 	struct commitinfo *info;
+@@ -64,8 +64,13 @@ static void add_entry(struct commit *commit, const char *host)
+ 		pageurl = cgit_pageurl(ctx.repo->url, "commit", NULL);
+ 		html_attr(pageurl);
+ 		if (ctx.cfg.virtual_root)
+-			delim = '?';
+-		html_attrf("%cid=%s", delim, hex);
++			delim = "?";
++		html_attrf("%sid=%s", delim, hex);
++		delim = "&amp;";
++		if (ctx.qry.head) {
++			html(delim);
++			htmlf("h=%s", ctx.qry.head);
++		}
+ 		html("'/>\n");
+ 		free(pageurl);
+ 	}
+diff --git a/ui-commit.c b/ui-commit.c
+index 972e9bc..7b479c0 100644
+--- a/ui-commit.c
++++ b/ui-commit.c
+@@ -121,7 +121,6 @@ void cgit_print_commit(char *hex, const char *prefix)
+ 	cgit_open_filter(ctx.repo->commit_filter);
+ 	html_txt(info->subject);
+ 	cgit_close_filter(ctx.repo->commit_filter);
+-	show_commit_decorations(commit);
+ 	html("</div>");
+ 	html("<div class='commit-msg'>");
+ 	cgit_open_filter(ctx.repo->commit_filter);
+diff --git a/ui-log.c b/ui-log.c
+index ee2a607..8fbdce3 100644
+--- a/ui-log.c
++++ b/ui-log.c
+@@ -243,7 +243,6 @@ static void print_commit(struct commit *commit, struct rev_info *revs)
+ 	}
+ 	cgit_commit_link(info->subject, NULL, NULL, ctx.qry.head,
+ 			 oid_to_hex(&commit->object.oid), ctx.qry.vpath);
+-	show_commit_decorations(commit);
+ 	html("</td><td>");
+ 	cgit_open_filter(ctx.repo->email_filter, info->author_email, "log");
+ 	html_txt(info->author);
+diff --git a/ui-shared.c b/ui-shared.c
+index b58c0f3..bfb01b2 100644
+--- a/ui-shared.c
++++ b/ui-shared.c
+@@ -930,10 +930,10 @@ static void add_clone_urls(void (*fn)(const char *), char *txt, char *suffix)
+ 
+ void cgit_add_clone_urls(void (*fn)(const char *))
+ {
+-	if (ctx.repo->clone_url)
+-		add_clone_urls(fn, expand_macros(ctx.repo->clone_url), NULL);
+-	else if (ctx.cfg.clone_prefix)
+-		add_clone_urls(fn, ctx.cfg.clone_prefix, ctx.repo->url);
++	struct strbuf url = STRBUF_INIT;
++
++	strbuf_addf(&url, "%s/%s.git/", ctx.cfg.clone_prefix, ctx.qry.head);
++	add_clone_urls(fn, strbuf_detach(&url, NULL), NULL);
+ }
+ 
+ static int print_branch_option(const char *refname, const struct object_id *oid,
+@@ -1035,9 +1035,12 @@ static void print_header(void)
+ 
+ 	html("<td class='main'>");
+ 	if (ctx.repo) {
+-		cgit_index_link("index", NULL, NULL, NULL, NULL, 0, 1);
+-		html(" : ");
+-		cgit_summary_link(ctx.repo->name, NULL, NULL, NULL);
++		html_txt("AUR");
++		if (ctx.qry.head && strcmp(ctx.qry.head, "")) {
++			html_txt(" : ");
++			html_txt(ctx.qry.head);
++			html_txt(".git");
++		}
+ 		if (ctx.env.authenticated && ctx.repo->enable_switch_form) {
+ 			html("</td><td class='form'>");
+ 			html("<form method='get'>\n");
+@@ -1059,13 +1062,11 @@ static void print_header(void)
+ 	html("<tr><td class='sub'>");
+ 	if (ctx.repo) {
+ 		html_txt(ctx.repo->desc);
+-		html("</td><td class='sub right'>");
+-		if (ctx.repo->owner_filter) {
+-			cgit_open_filter(ctx.repo->owner_filter);
+-			html_txt(ctx.repo->owner);
+-			cgit_close_filter(ctx.repo->owner_filter);
+-		} else {
+-			html_txt(ctx.repo->owner);
++		if (ctx.qry.head && strcmp(ctx.qry.head, "")) {
++			html(" | click <a href='/pkgbase/");
++			html_txt(ctx.qry.head);
++			html("/'>here</a> to return to the package base details page");
++			html("</td><td class='sub right'>");
+ 		}
+ 	} else {
+ 		if (ctx.cfg.root_desc)
+@@ -1088,8 +1089,6 @@ void cgit_print_pageheader(void)
+ 				    NULL);
+ 		cgit_summary_link("summary", NULL, hc("summary"),
+ 				  ctx.qry.head);
+-		cgit_refs_link("refs", NULL, hc("refs"), ctx.qry.head,
+-			       ctx.qry.oid, NULL);
+ 		cgit_log_link("log", NULL, hc("log"), ctx.qry.head,
+ 			      NULL, ctx.qry.vpath, 0, NULL, NULL,
+ 			      ctx.qry.showmsg, ctx.qry.follow);
+diff --git a/ui-summary.c b/ui-summary.c
+index 947812a..9c88d01 100644
+--- a/ui-summary.c
++++ b/ui-summary.c
+@@ -51,8 +51,6 @@ void cgit_print_summary(void)
+ 
+ 	cgit_print_layout_start();
+ 	html("<table summary='repository info' class='list nowrap'>");
+-	cgit_print_branches(ctx.cfg.summary_branches);
+-	htmlf("<tr class='nohover'><td colspan='%d'>&nbsp;</td></tr>", columns);
+ 	cgit_print_tags(ctx.cfg.summary_tags);
+ 	if (ctx.cfg.summary_log > 0) {
+ 		htmlf("<tr class='nohover'><td colspan='%d'>&nbsp;</td></tr>", columns);
+-- 
+2.46.0
+

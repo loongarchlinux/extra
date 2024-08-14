@@ -2,9 +2,8 @@
 # Contributor: Andrea Scarpino <andrea@archlinux.org>
 
 pkgname=plasma-meta
-pkgver=6.0
-_dirver=$(echo $pkgver | cut -d. -f1-3)
-pkgrel=2
+pkgver=6.1
+pkgrel=1
 pkgdesc='Meta package to install KDE Plasma'
 arch=(any)
 license=(None)
@@ -17,6 +16,7 @@ depends=(bluedevil
          kdeplasma-addons
          kgamma
          kinfocenter
+         krdp
          kscreen
          ksshaskpass
          kwallet-pam

@@ -4,7 +4,7 @@
 pkgbase=ibus
 pkgname=(ibus libibus)
 pkgver=1.5.30
-pkgrel=1
+pkgrel=3
 pkgdesc="Intelligent input bus for Linux/Unix"
 arch=('loong64' 'x86_64')
 url="https://github.com/ibus/ibus/wiki"
@@ -28,15 +28,13 @@ depends=(
     'libxi'
     'pango'
     'python'
-    'python-dbus'
     'python-gobject'
     'wayland'
 )
 makedepends=(
-    'gnome-common'
+    'glib2-devel'
     'gobject-introspection'
     'gtk-doc'
-    'intltool'
     'qt5-base'
     'unicode-character-database'
     'unicode-cldr'
@@ -73,17 +71,20 @@ package_ibus() {
     cd ibus-${pkgver}
     make DESTDIR="$pkgdir" install
     make -C src DESTDIR="$pkgdir" uninstall
+    make -C src DESTDIR="$pkgdir" install-dictDATA install-unicodeDATA
     make -C bindings DESTDIR="$pkgdir" uninstall
     make DESTDIR="$pkgdir" uninstall-pkgconfigDATA
 }
 
 package_libibus() {
     pkgdesc="IBus support library"
-    depends=(libg{lib,object,io}-2.0.so python-gobject)
+    depends=(libg{lib,object,io}-2.0.so)
+    optdepends=('python-gobject: for Python integration')
     provides=('libibus-1.0.so')
 
     cd ibus-${pkgver}
     make -C src DESTDIR="$pkgdir" install
+    make -C src DESTDIR="$pkgdir" uninstall-dictDATA uninstall-unicodeDATA
     make -C bindings DESTDIR="$pkgdir" install
     make DESTDIR="$pkgdir" install-pkgconfigDATA
 }

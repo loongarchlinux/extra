@@ -3,7 +3,7 @@
 # Maintainer: Orhun Parmaksız <orhun@archlinux.org>
 
 pkgname=eza
-pkgver=0.18.15
+pkgver=0.19.0
 pkgrel=1
 pkgdesc="A modern replacement for ls (community fork of exa)"
 url="https://github.com/eza-community/eza"
@@ -16,10 +16,11 @@ depends=(gcc-libs # libgcc_s.so
          glibc # libc.so libm.so
          libgit2
          zlib)
-makedepends=("cargo" "pandoc")
+makedepends=(cargo
+             pandoc)
 source=("$url/archive/v$pkgver/$pkgname-$pkgver.tar.gz")
-sha256sums=('53c6ea67804dbaa330918f6ce62a1cff866a145b2395c606903c0d128dd8564f')
-b2sums=('515751316fadc656066609c99796b895773985524974fb25c9e6599d11f7927cfbe19fe3b8113f0b0bc1740da4887cf9991d919eb045649ccad558eb919c2b8b')
+sha256sums=('440fff093c23635d7c1a9955d42489a2f5c5839a0e85a03e39daeca39e9dbf84')
+b2sums=('ddce0469875fb16c299c1c67914ef40fa86bc95ed2ef3895d7a1137e8863e49aaae12b1b5c544abc9eeb5b632b1437612c51dfaffe1fa13ebfd896110caec20e')
 
 prepare() {
   cd "${pkgname}-${pkgver}"
@@ -28,6 +29,9 @@ prepare() {
 
 build() {
   cd "${pkgname}-${pkgver}"
+  # Make sure the build fails if our system libgit2 is out
+  # of range rather than silently starting to vendor it.
+  export LIBGIT2_NO_VENDOR=1
   CFLAGS+=' -ffat-lto-objects'
   cargo build --frozen --release
   mkdir -p target/man

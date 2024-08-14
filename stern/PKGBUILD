@@ -2,18 +2,24 @@
 
 pkgname=stern
 pkgdesc="Multi pod and container log tailing for Kubernetes"
-pkgver=1.29.0
+pkgver=1.30.0
 pkgrel=1
 arch=('loong64' 'x86_64')
 url="https://github.com/stern/stern"
-license=('apache')
-options=(!lto)
+license=('Apache-2.0')
 depends=('glibc')
 makedepends=('go')
 optdepends=('bash-completion: for bash completion support')
-source=("${url}/archive/v${pkgver}/${pkgname}-${pkgver}.tar.gz")
-sha512sums=('6eee8b950b6dc225d2c6ffa7d47803af6e5e810d3dca548658c532c3f62a182ed23022f28f13da7c3747fc1b5242015239ba059f59ef9b74e60b05a1307b08bb')
-b2sums=('e18b397eff8ff71c91dae22d12e50c37a58a2f13ad13a98182e3b15385dd24734605b763f700958992dadb1f8df68ad846a1673ddf15a944d0a18ee894adbcc0')
+options=(!lto)
+source=("${pkgname}-${pkgver}.tar.gz::${url}/archive/v${pkgver}/${pkgver}.tar.gz")
+sha512sums=('721165405e4d87c8b9354e2208895f7f408c43adffc2397f27a1046dabaf5cb2162363ceb3a914802911d7c4c0393bd247bc5a46eff691f6b5044b8fb2e5f823')
+b2sums=('5c81019734188a2b390955a7e0337749525fbdf5d66c1b61350b182891f0a16f7cd9edb4e2db68846c0fe63dc3aab70c9f86decdefe6c3b71420ff9954d5b136')
+
+prepare() {
+  cd "${pkgname}-${pkgver}"
+
+  GOFLAGS="-mod=readonly" go mod vendor -v
+}
 
 build() {
   cd "${pkgname}-${pkgver}"
@@ -22,10 +28,16 @@ build() {
   export CGO_CFLAGS="${CFLAGS}"
   export CGO_CXXFLAGS="${CXXFLAGS}"
   export CGO_LDFLAGS="${LDFLAGS}"
-  export GOFLAGS="-buildmode=pie -trimpath -mod=readonly -modcacherw"
+  export GOFLAGS="-buildmode=pie -mod=vendor -modcacherw"
+  export GOPATH="$srcdir"
 
+  local ld_flags=" \
+    -compressdwarf=false \
+    -linkmode=external \
+    -X github.com/stern/stern/cmd.version=${pkgver} \
+  "
   go build -v -x \
-    -ldflags "-linkmode external -X \"github.com/stern/stern/cmd.version=${pkgver}\"" \
+    -ldflags "${ld_flags}" \
     -o "./out/${pkgname}"
 }
 
@@ -40,9 +52,15 @@ package() {
 
   install --verbose -D --mode=0755 "./out/${pkgname}" "${pkgdir}/usr/bin/${pkgname}"
 
-  "${pkgdir}/usr/bin/${pkgname}" --completion=bash | install --verbose -D --mode=0644 /dev/stdin "${pkgdir}/usr/share/bash-completion/completions/${pkgname}"
-  "${pkgdir}/usr/bin/${pkgname}" --completion=fish | install --verbose -D --mode=0644 /dev/stdin "${pkgdir}/usr/share/fish/vendor_completions.d/${pkgname}.fish"
-  "${pkgdir}/usr/bin/${pkgname}" --completion=zsh | install --verbose -D --mode=0644 /dev/stdin "${pkgdir}/usr/share/zsh/site-functions/_${pkgname}"
+  "${pkgdir}/usr/bin/${pkgname}" --completion=bash \
+    | install --verbose -D --mode=0644 /dev/stdin \
+      "${pkgdir}/usr/share/bash-completion/completions/${pkgname}"
+  "${pkgdir}/usr/bin/${pkgname}" --completion=fish \
+    | install --verbose -D --mode=0644 /dev/stdin \
+      "${pkgdir}/usr/share/fish/vendor_completions.d/${pkgname}.fish"
+  "${pkgdir}/usr/bin/${pkgname}" --completion=zsh \
+    | install --verbose -D --mode=0644 /dev/stdin \
+      "${pkgdir}/usr/share/zsh/site-functions/_${pkgname}"
 
   install --verbose -D --mode=0644 *.md --target-directory "${pkgdir}/usr/share/doc/${pkgname}"
 }

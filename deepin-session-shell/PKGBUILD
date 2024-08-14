@@ -3,7 +3,7 @@
 # Contributor: Xu Fasheng <fasheng.xu[AT]gmail.com>
 
 pkgname=deepin-session-shell
-pkgver=6.0.18
+pkgver=6.0.19
 pkgrel=1
 pkgdesc='Deepin desktop-environment - session-shell module'
 arch=('loong64' 'x86_64')
@@ -17,27 +17,27 @@ depends=('deepin-daemon' 'deepin-network-core' 'deepin-qt5integration' 'deepin-w
          'deepin-pw-check' 'dtkcore' 'dtkgui' 'dtkwidget' 'libx11' 'libxcursor'
          'qt5-svg' 'qt5-base' 'libxi' 'dconf' 'qt5-base' 'libxtst' 'glibc' 'libxfixes' 'pam'
          'gcc-libs' 'libxrandr' 'libxcb' 'qt5-x11extras' 'deepin-session')
-makedepends=('cmake' 'gmock' 'gtest' 'ninja')
+makedepends=('git' 'cmake' 'gmock' 'gtest' 'ninja')
 conflicts=('deepin-session-ui<5')
 provides=('lightdm-deepin-greeter')
 groups=('deepin')
-source=("https://github.com/linuxdeepin/dde-session-shell/archive/$pkgver/$pkgname-$pkgver.tar.gz")
-sha512sums=('7794585ce9f0df403e7ddb5ef48fb4044db8943f29726e77fdc156141fb097b6d7d67b746b156d939bcbf97edf20f74b024b17dfe0e347abaa3ae41cc4ae10ce')
+source=("git+https://github.com/linuxdeepin/dde-session-shell.git#tag=$pkgver")
+sha512sums=('43abc63b533e3c3a3d54bf80c7ad0a1deeada1156f36413eef23be14cf72f72bf91a6d1c6a90e89b9bd63c882af097f2b01eb1b45292af0c340d3d3f4082453b')
 
 prepare() {
-  cd dde-session-shell-$pkgver
+  cd dde-session-shell
   # We don't have common-auth on Arch
   sed -i 's/common-auth/system-login/' files/pam.d/dde-lock
 }
 
 build() {
-  cd dde-session-shell-$pkgver
+  cd dde-session-shell
   cmake . -GNinja -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_INSTALL_SYSCONFDIR=/etc
   ninja
 }
 
 package() {
-  cd dde-session-shell-$pkgver
+  cd dde-session-shell
   DESTDIR="$pkgdir" ninja install
 
   chmod +x "$pkgdir"/usr/bin/deepin-greeter

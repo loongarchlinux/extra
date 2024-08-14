@@ -6,11 +6,11 @@
 _gemname='httpclient'
 pkgname="ruby-${_gemname}"
 pkgver=2.8.3
-pkgrel=9
+pkgrel=10
 pkgdesc='gives something like the functionality of libwww-perl (LWP) in Ruby'
 arch=('any')
 url='https://github.com/nahi/httpclient'
-license=('RUBY')
+license=('Ruby')
 makedepends=('ruby-rdoc' 'ruby-bundler')
 checkdepends=('ruby-rake' 'ruby-http-cookie' 'ruby-test-unit' 'ruby-rack' 'ruby-webrick')
 depends=('ruby')
@@ -50,13 +50,28 @@ build() {
 
 check() {
   cd "${srcdir}/${_gemname}-${pkgver}"
-  # Ignoring a few tests that fail on Ruby 3.0.0 (taken from Fedora)
+  # Ignoring a few tests that fail on Ruby 3 (taken from Fedora)
+  # https://src.fedoraproject.org/rpms/rubygem-httpclient/blob/rawhide/f/rubygem-httpclient.spec
   ruby -Ilib -e 'Dir.glob "./test/test_*.rb", &method(:require)' -- \
-    --ignore-name '/^test_post_content$/' \
-    --ignore-name '/^test_put$/' \
-    --ignore-name '/^test_post_empty$/' \
-    --ignore-name '/^test_post_follow_redirect$/' \
-    --ignore-name '/^test_redirect_see_other$/'
+    --ignore-name /^test_post_async_with_default_internal$/ \
+    --ignore-name /^test_timeout$/ \
+    --ignore-name /^test_tcp_keepalive$/ \
+    --ignore-name /^test_sync$/ \
+    --ignore-name /^test_proxy_ssl$/ \
+    --ignore-name /^test_cert_store$/ \
+    --ignore-name /^test_verification_without_httpclient$/ \
+    --ignore-name /^test_verification$/ \
+    --ignore-name /^test_set_default_paths$/ \
+    --ignore-name /^test_allow_tlsv1$/ \
+    --ignore-name /^test_no_sslv3$/ \
+    --ignore-name /^test_post_connection_check$/ \
+    --ignore-name /^test_debug_dev$/ \
+    --ignore-name /^test_ciphers$/ \
+    --ignore-name /^test_redirect_see_other$/ \
+    --ignore-name /^test_post_follow_redirect$/ \
+    --ignore-name /^test_put$/ \
+    --ignore-name /^test_post_empty$/ \
+    --ignore-name /^test_post_content$/
 }
 
 package() {

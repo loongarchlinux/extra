@@ -1,7 +1,7 @@
 # Maintainer: George Rawlinson <grawlinson@archlinux.org>
 
 pkgname=cppzmq
-pkgver=4.9.0
+pkgver=4.10.0
 pkgrel=1
 pkgdesc='Header-only C++ binding for libzmq'
 arch=('any')
@@ -12,17 +12,11 @@ makedepends=(
   'zeromq'
   'cmake'
 )
-checkdepends=('catch2')
+#checkdepends=('catch2-v2')
 optdepends=('cmake: to build with CMake')
-_commit='d67b6352b87a238775cd17e4376b980d07fa7939'
-source=("$pkgname::git+$url#commit=$_commit")
-b2sums=('SKIP')
-
-pkgver() {
-  cd "$pkgname"
-
-  git describe --tags | sed 's/^v//'
-}
+source=("$pkgname::git+$url#tag=v$pkgver")
+sha512sums=('1b69a03898f1970a9c999bb91115c9183170ba3e39efbf6002379e8fc49f512dbdbd39069e0bc30aec64d783781f8493f8e5bb62fbba8c5f9fe1ed8c34ba5626')
+b2sums=('74fe2d14d3c53089a06ee58be5344d1733e508a6b7190a962abe14fc156819c881f7dbcd5732a7033410cb34035146c5278395104d4354a6982a7bf954a641c5')
 
 build() {
   cmake \
@@ -30,14 +24,16 @@ build() {
     -S "$pkgname" \
     -D CMAKE_BUILD_TYPE='None' \
     -D CMAKE_INSTALL_PREFIX='/usr' \
+    -D CPPZMQ_BUILD_TESTS=OFF \
     -W no-dev
 
   cmake --build build
 }
 
-check() {
-  ctest --test-dir build --output-on-failure
-}
+# https://archlinux.org/todo/catch2-v3-update/
+#check() {
+#  ctest --test-dir build --output-on-failure
+#}
 
 package() {
   DESTDIR="$pkgdir" cmake --install build 

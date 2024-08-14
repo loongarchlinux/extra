@@ -2,8 +2,8 @@
 
 _name=PyMySQL
 pkgname=python-pymysql
-pkgver=1.1.0
-pkgrel=3
+pkgver=1.1.1
+pkgrel=1
 pkgdesc="Pure Python MySQL Client"
 arch=(any)
 url="https://github.com/PyMySQL/PyMySQL/"
@@ -22,8 +22,8 @@ optdepends=(
   'python-pynacl: for ed25519 cryptography'
 )
 source=($pkgname-$pkgver.tar.gz::$url/archive/refs/tags/v$pkgver.tar.gz)
-sha512sums=('c5b2cc1716707013d06146f22ff6e36ae1e54deb8864226a65c5325bafd476d7c53076ceb5cb35815c1baeb8e0ba8d03230366662f4abc0a304e849d8cb40d34')
-b2sums=('b1f5d38edc1ec93ddbf9f841b3db6bddb8db13bd7a6100de2104f08152e2ce7813f6ea2d09c4bc301a6b83fb3eeb3e4ce0c3b4faf42cec25b5c157ea71d719a1')
+sha512sums=('ef46ab189760b2d68bb7582b20a537bc68c2719241a4939bff9a6311ab64cb2df852d437ab4b8dd41a0fb5ff620a78c67aa96ccd037d44899dc2886d16218e2c')
+b2sums=('0621a0cdf014418b7eaa7241146a370f91a3163ea9c0f2b5121f979580ae7f960a47aa13c12597c8d2c2ba3c9264914e40a21a96d6473e8ba2d053478a56cf05')
 
 build() {
   cd $_name-$pkgver

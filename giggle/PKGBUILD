@@ -5,44 +5,77 @@
 
 pkgname=giggle
 pkgver=0.7
-pkgrel=11
+pkgrel=13
 pkgdesc='Git repository viewer'
 arch=(loong64 x86_64)
 url='https://wiki.gnome.org/Apps/giggle'
-license=(GPL)
-depends=(git gtksourceview3 vte3)
-makedepends=(intltool itstool gnome-common yelp-tools)
-source=("https://download.gnome.org/sources/$pkgname/$pkgver/$pkgname-$pkgver.tar.xz"
-        giggle.appdata.xml
-        gtksourceview3.7.patch
-        vte2.91.patch)
-sha256sums=('ae2e2237fa0d0999d99d0a0ee9b7ec147e80bd2472d59a045b2b01eb02261f59'
-            '52bc930fe0e981bc14722b842cf2a57e645509853a642692d73f14462b3522be'
-            'a29cc899d17645d43a39ac94551c4af896f67983c40fab3bfc585881217f30df'
-            'eec654cd3ec31144461cbfc01f4c0b6690e0cdd1b08e057cd5afe99acc17dfed')
+license=(GPL-2.0-or-later)
+depends=(
+  cairo
+  gdk-pixbuf2
+  git
+  glib2
+  glibc
+  gtk3
+  gtksourceview3
+  hicolor-icon-theme
+  pango
+  vte3
+)
+makedepends=(
+  glib2-devel
+  intltool
+  yelp-tools
+)
+source=(
+  "git+https://gitlab.gnome.org/Archive/giggle.git#tag=$pkgver"
+  giggle.appdata.xml
+  giggle-incompatible-pointer.patch
+)
+b2sums=(
+  855d0c15e0a6c432eecd48f589ba6085c5404d54b4c489ba41c2a09e97a654af784e280648d991d7afec670ff8f50725fef4942a8887fd3e596039e229e9b466
+  d23fb9678567646e532f3184b2295782a707eb2d0a46c7353e05a20e3f674be688e22178c26600b0f3fabbe14b6eea958430d9085ceda35b52bc1a968fee554d
+  63d42ba50cd9545ede5c370cff61783e2fbdb4b90e55f6a0504e02f2fd6064b257a2483c26fea20fa007e1cca239f179c1c1e297bdd1f74072cbb7fd1fbd87b5
+)
 
 prepare() {
-  cd $pkgname-$pkgver
-  patch -Np1 -i ../gtksourceview3.7.patch
-  patch -Np1 -i ../vte2.91.patch
-  NOCONFIGURE=1 AUTOPOINT=intltoolize gnome-autogen.sh
+  cd $pkgname
+
+  # Fix displaying diff for files that have spaces in names
+  git cherry-pick -n c4963107ee97b6bf045b805ed3b8f9f824c62ccb
+
+  # Fix build with gtksourceview 3.8
+  git cherry-pick -n 44490f7f78c3281c8fc4f38aa7226fc5955720a9
+
+  # Port to vte-2.91 API
+  git cherry-pick -n b9e260840d03e33ac55142719f3d54129b54cc70
+
+  # Fix build with gcc-10
+  git cherry-pick -n 57fd690279c4f8f0a367ec4f3599ab3a8159be49
+
+  # Fix incompatible pointer
+  git apply -3 ../giggle-incompatible-pointer.patch
+
+  autoreconf -fi
 }
 
 build() {
-  cd $pkgname-$pkgver
-  CFLAGS+=' -fcommon' # https://wiki.gentoo.org/wiki/Gcc_10_porting_notes/fno_common
-  ./configure --prefix=/usr
+  cd $pkgname
+  ./configure \
+    --prefix=/usr \
+    --sysconfdir=/etc \
+    --localstatedir=/var
   sed -i -e 's/ -shared / -Wl,-O1,--as-needed\0/g' libtool
   make
 }
 
 check() {
-  cd $pkgname-$pkgver
+  cd $pkgname
   make -k check
 }
 
 package() {
-  cd $pkgname-$pkgver
+  cd $pkgname
   make DESTDIR="$pkgdir" install
   install -Dm644 ../giggle.appdata.xml "$pkgdir/usr/share/metainfo/giggle.appdata.xml"
 }

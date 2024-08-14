@@ -1,0 +1,97 @@
+# Maintainer: George Rawlinson <grawlinson@archlinux.org>
+
+pkgbase=ot-keys
+pkgname=(
+  'ot-keys-standalone'
+  'ot-keys-vst3'
+  'ot-keys-clap'
+  'ot-keys-docs'
+)
+pkgver=1.0.1
+pkgrel=1
+pkgdesc='A physically modeled piano synth with a chill lo-fi sound'
+arch=('loong64' 'x86_64')
+url='https://punklabs.com/ot-keys'
+license=('GPL-3.0-or-later')
+groups=('pro-audio')
+_common_depends=(
+  'glibc'
+  'gcc-libs'
+  'libx11'
+  'libxcb'
+  'xcb-util-wm'
+  'libglvnd'
+  'libxcursor'
+)
+makedepends=(
+  'rust'
+  'libglvnd'
+  'python'
+  'alsa-lib'
+  'jack'
+  'libx11'
+  'libxcb'
+  'xcb-util-wm'
+  'libxcursor'
+)
+source=(
+  "$pkgbase-$pkgver.zip::https://punklabs.com/content/projects/ot-keys/downloads/OneTrickKEYS-Source-v$pkgver.zip"
+  "$pkgbase-$pkgver-UserGuide.pdf::https://punklabs.com/content/projects/ot-keys/downloads/OneTrick%20KEYS%20User%20Guide.pdf"
+)
+sha512sums=('815452ba0c45b6a82db0d1badea2804ce0d5221de7f08e3a786b4eddb478edf5dee7c215bdeeeb4f4ecfa6f389c331bc962b4d39316ed9e825c69bfe0a9f9830'
+            '01e54fa1a42481f2fc032635740b2abade075d1f8764e32ae9b546e043bb7b6ecaca8d86bf44ceab71f97e2e8945e45e0773c3c76665ea2df903d9b8d4a17b0d')
+b2sums=('705b1da1c587118e11a4554f5abca7105210ad73656d27cc478fee2534830331a429bfddc2374d9521d4fd2a6474813b9016d5ee2bf2e47406b9f1fca1bca42b'
+        'c307e644d2934bcdcfb0ded2257c2a98c648e1e7267b28731a4bb1a148a4abebcdc9eb0fb391175114dcc472991e0010fc44b4895881ad7cb3e0829c58dd3f15')
+
+prepare() {
+  # download dependencies
+  cargo fetch --locked --target "$CARCH-unknown-linux-gnu"
+}
+
+build() {
+  cargo xtask bundle onetrick_keys --release --frozen
+}
+
+package_ot-keys-standalone() {
+  pkgdesc+=' - standalone'
+  depends=("${_common_depends[@]}")
+  optdepends=(
+    'jack: audio backend'
+    'alsa-lib: audio backend'
+    'ot-keys-docs: documentation'
+  )
+
+  # standalone
+  install -vDm755 -t "$pkgdir/usr/bin" "target/bundled/OneTrick KEYS"
+}
+
+package_ot-keys-docs() {
+  pkgdesc+=' - documentation'
+
+  install -vDm644 -t "$pkgdir/usr/share/doc/$pkgbase" ./*.txt
+  install -vDm644 "$pkgbase-$pkgver-UserGuide.pdf" "$pkgdir/usr/share/doc/$pkgbase/UserGuide.pdf"
+}
+
+package_ot-keys-vst3() {
+  pkgdesc+=' - VST3 plugin'
+  groups+=('vst3-plugins')
+  depends=(
+    "${_common_depends[@]}"
+    'vst3-host'
+  )
+  optdepends=('ot-keys-docs: documentation')
+
+  install -vd "$pkgdir/usr/lib/vst3"
+  cp -vr "target/bundled/OneTrick KEYS.vst3" "$pkgdir/usr/lib/vst3"
+}
+package_ot-keys-clap() {
+  pkgdesc+=' - CLAP plugin'
+  groups+=('clap-plugins')
+  depends=(
+    "${_common_depends[@]}"
+    'clap-host'
+  )
+  optdepends=('ot-keys-docs: documentation')
+
+  install -vDm755 -t "$pkgdir/usr/lib/clap" "target/bundled/OneTrick KEYS.clap"
+}

@@ -3,7 +3,7 @@
 
 pkgname=perl-test-exception
 pkgver=0.43
-pkgrel=9
+pkgrel=10
 pkgdesc="Perl/CPAN Module Test::Exception : Functions for testing exceptionbased code"
 arch=("any")
 url="https://search.cpan.org/dist/Test-Exception/"

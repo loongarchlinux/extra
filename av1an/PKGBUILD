@@ -3,7 +3,7 @@
 
 pkgname=av1an
 pkgver=0.4.2
-pkgrel=1
+pkgrel=2
 pkgdesc='Cross-platform command-line encoding framework with per scene quality encoding'
 arch=('loong64' 'x86_64')
 url='https://github.com/master-of-zen/Av1an'
@@ -17,8 +17,15 @@ optdepends=('svt-av1: SVT-AV1 encoder support'
             'mkvtoolnix-cli: mkvmerge support'
             'ffms2: FFMS2 chunk detection support'
             'vapoursynth-plugin-lsmashsource: L-SMASH chunk detection support')
-source=("$pkgname-$pkgver.tar.gz"::https://github.com/master-of-zen/Av1an/archive/refs/tags/$pkgver.tar.gz)
-sha256sums=('8762fc24ca444c7c1a527af436b66724cbb8c8618f549b3305c2d0c847f16e62')
+source=("$pkgname-$pkgver.tar.gz"::https://github.com/master-of-zen/Av1an/archive/refs/tags/$pkgver.tar.gz
+        https://github.com/master-of-zen/Av1an/commit/6db39663.patch)
+sha256sums=('8762fc24ca444c7c1a527af436b66724cbb8c8618f549b3305c2d0c847f16e62'
+            'f76017230ccf067b9391c60ed3cabc4205c779ef89adc1f28953d4558d6f91ea')
+
+prepare() {
+  cd "Av1an-${pkgver}"
+  patch -p1 -i ../6db39663.patch # Fix build with ffmpeg 7
+}
 
 build() {
   cd "Av1an-${pkgver}"

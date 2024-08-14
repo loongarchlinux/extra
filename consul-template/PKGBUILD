@@ -2,47 +2,59 @@
 # Contributor: Tyler Langlois <ty |at| tjll |dot| net>
 # Contributor: Tim Meusel <tim@bastelfreak.de>
 pkgname=consul-template
-pkgver=0.35.0
+pkgver=0.39.1
 pkgrel=1
 pkgdesc='Template rendering, notifier, and supervisor for HashiCorp Consul and Vault data'
 arch=('loong64' 'x86_64')
 url='https://github.com/hashicorp/consul-template'
-license=('MPL')
+license=('MPL-2.0')
 backup=("etc/${pkgname}/${pkgname}.hcl")
 makedepends=('go' 'git')
 depends=('glibc')
 optdepends=('consul: interpolate values from a distributed key/value store'
             'vault: reference secure secrets in template files')
-_consul_template_commit='2d2654ffe96210db43306922aaefbb730a8e07f9'
-source=("git+https://github.com/hashicorp/consul-template#commit=${_consul_template_commit}"
+source=("git+${url}#tag=v${pkgver}"
         "${pkgname}.service"
         "${pkgname}.hcl")
-sha512sums=('SKIP'
-            '8b187ff470fb10b47b815b2faaad836ac369071c8ce7e353ec0cbc98e3b1ac2ffc9c892244ac492be1285caa303c4b5fd0a22df3bdb2a037fca1b06c7b24084b'
-            'b2acfbb4bf389b1d95ca9a5f2dfe9be85444c20efdae63f0e6e34d2f33a16ca1d089e6510b6867f74c3b4390a097952ab235c55e4023245e61cc4318622d5674')
+sha512sums=('7e488d401fffe5eb6e7368e344543e86557303172bf4e2e342d57f774f42cce525d4141fdc5ac89a1681bc919a493a7194afb46f1462f30a1c65a6e84d89fa3a'
+            '227b5ed1afc291c9664666872a993f1325ba42edbaaf8b9c7d81e5d4d352a940ee3bf198d4ff4533e4c942070e175d1eed8e411dd79d52f82a9bf6123fdabdcf'
+            'c9d9f555c3c82c88878b797e54d0de85efd38fafeeb40d87683a715cd1cb2e45ca382a2a89e04be84647c1555e67afebf3ba3035435dcd627c153db96ec9f9e2')
 options=(!lto)
 
 prepare() {
-  export GOPATH="${srcdir}"
-  export PATH="$PATH:$GOPATH/bin"
-  mkdir -p src/github.com/hashicorp/
-  mv "${pkgname}" src/github.com/hashicorp/
-  export GO111MODULE=on
+  cd "${pkgname}"
+
+  go mod download
 }
 
 build() {
-  cd src/github.com/hashicorp/"${pkgname}"
-  export CGO_CPPFLAGS="${CPPFLAGS}"
-  export CGO_CFLAGS="${CFLAGS}"
-  export CGO_CXXFLAGS="${CXXFLAGS}"
-  export CGO_LDFLAGS="${LDFLAGS}"
-  export GOFLAGS="-buildmode=pie -trimpath -mod=readonly -modcacherw"
-  go build -o consul-template-binary
+  cd "${pkgname}"
+
+  _commit="$(git rev-parse --short HEAD)"
+
+  go build -v \
+    -buildmode=pie \
+    -trimpath \
+    -mod=readonly \
+    -modcacherw \
+    -o consul-template-binary \
+    -ldflags "-linkmode external -extldflags \"${LDFLAGS}\" \
+              -X \"github.com/hashicorp/consul-template/version.GitCommit=${_commit}\"" \
+    .
 }
 
 package() {
-  cd src/github.com/hashicorp/"${pkgname}"
+  cd "${pkgname}"
   install -Dm755 consul-template-binary "${pkgdir}/usr/bin/consul-template"
+
+  install -Dm644 LICENSE "${pkgdir}/usr/share/licenses/${pkgname}/LICENSE"
+
+  install -Dm644 "README.md" "${pkgdir}/usr/share/doc/${pkgname}/README.md"
+  for f in {configuration,modes,observability,plugins,templating-language}.md; do
+    install -Dm644 "docs/${f}" "${pkgdir}/usr/share/doc/${pkgname}/${f}"
+  done
+  cp -r examples "${pkgdir}/usr/share/doc/${pkgname}"
+
   install -Dm644 "${srcdir}/${pkgname}.hcl" "${pkgdir}/etc/${pkgname}/${pkgname}.hcl"
   install -Dm644 "${srcdir}/${pkgname}.service" "${pkgdir}/usr/lib/systemd/system/${pkgname}.service"
 }

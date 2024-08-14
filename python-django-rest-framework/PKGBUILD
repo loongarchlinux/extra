@@ -2,8 +2,8 @@
 
 pkgname=python-django-rest-framework
 _name="${pkgname#python-}"
-pkgver=3.15.1
-pkgrel=3
+pkgver=3.15.2
+pkgrel=1
 pkgdesc="A powerful and flexible toolkit for building Web APIs."
 arch=(any)
 url="https://www.django-rest-framework.org/"
@@ -33,8 +33,8 @@ optdepends=(
   'python-yaml: for YAML support'
 )
 source=($_name-$pkgver.tar.gz::$_url/archive/refs/tags/$pkgver.tar.gz)
-sha512sums=('e44c3d861973928194035364fb6b5ddffbcacab959072b2c549971dd6675b5a5f1be13b55856154dbffaefb48dcbd4a63fd9ffbce5456507b52fd5e4648706b9')
-b2sums=('daf672a1fb01494f08dd54af7369bd464d4fc1e22ff3c90c0fe787408d4f327710c5e6394e33546a4df2da752dbd774980f092108f2f4e395795af3aead18f89')
+sha512sums=('a24322fb09398ee1608900ae623d8ba44c3cb066fc7921e38f847a93513d3ca549d933da6cfc045a556edfe50dae3431b6782d0241a9f53ac3dbc0caf48fa520')
+b2sums=('588aebbdd89f749bacd4244707f6b4b0e2a6aef0759973e5451ebcc4acb4d2e1c2d9773ab576e33442f5123ce860cae087622a26d1d208edc70df04057c4d401')
 
 build() {
   cd $_name-$pkgver

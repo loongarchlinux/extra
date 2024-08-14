@@ -1,29 +1,30 @@
-# Maintainer: Maxim Baz <$pkgname at maximbaz dot com>
+# Maintainer: Robin Candau <antiz@archlinux.org>
+# Contributor: Maxim Baz <$pkgname at maximbaz dot com>
 # Contributor: jtheoof <contact@jtheoof.me>
+
 pkgname=swappy
 pkgver=1.5.1
-pkgrel=1
-license=('MIT')
-pkgdesc='A Wayland native snapshot editing tool'
+pkgrel=2
+pkgdesc="A Wayland native snapshot editing tool"
+url="https://github.com/jtheoof/swappy"
 arch=('loong64' 'x86_64')
-url='https://github.com/jtheoof/swappy'
+license=('MIT')
 depends=('cairo' 'gtk3' 'pango')
-optdepends=('wl-clipboard: for persistent clipboard'
-            'otf-font-awesome: to draw paint icons')
-makedepends=('meson' 'scdoc')
-source=("${url}/releases/download/v${pkgver}/${pkgname}-${pkgver}.tar.gz"{,.sig})
-b2sums=('9202d33d8c45adfc9e86dfae6e992dd75048be1b46f015f0e5230b50d01d353fd33acbc5c59dd48838e9dfb280ddde37f495405c1e0b5caa20a27f3ba9c5012a'
-        'SKIP')
+optdepends=('wl-clipboard: copy to clipboard support'
+            'otf-font-awesome: to draw the paint icons properly')
+makedepends=('meson' 'scdoc' 'git')
+source=("git+${url}.git#tag=v${pkgver}?signed")
+b2sums=('c93bb95cde6ed7c3144580f52d52566549c3996115f890bf5f540feef1b1a6442a133c4bbb285fc671bffe6c8e57b7ac7dab1f85c6f79842776b7f25a51d86c0')
 validpgpkeys=('F44D05A50F6C9EB5C81BCF966A6B35DBE9442683')
 
 build() {
-    cd "${pkgname}-${pkgver}"
-    arch-meson build
-    ninja -C build
+	cd "${pkgname}"
+	arch-meson build
+	ninja -C build
 }
 
 package() {
-    cd "${pkgname}-${pkgver}"
-    DESTDIR="$pkgdir" ninja -C build install
-    install -Dm644 -t "$pkgdir/usr/share/licenses/${pkgname}" LICENSE
+	cd "${pkgname}"
+	DESTDIR="${pkgdir}" ninja -C build install
+	install -Dm 644 LICENSE "${pkgdir}/usr/share/licenses/${pkgname}/LICENSE"
 }

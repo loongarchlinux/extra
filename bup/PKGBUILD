@@ -11,13 +11,12 @@
 
 pkgname=bup
 pkgver=0.33.3
-pkgrel=2
+pkgrel=3
 pkgdesc='Efficient backup system based on the git packfile format'
 arch=(loong64 x86_64)
 url='https://bup.github.io/'
-license=(GPL)
+license=(GPL-2.0-only)
 depends=(acl
-         git
          glibc
          par2cmdline
          python
@@ -26,17 +25,24 @@ depends=(acl
          readline
          sh)
 optdepends=('python-tornado: for bup web')
-makedepends=(pandoc)
-source=(https://github.com/bup/bup/archive/$pkgver/$pkgname-$pkgver.tar.gz)
-sha256sums=('0aa6e98352c939180e82bbb0a647afd8d1b3d5eda6771b65e694099f6b956ac5')
+makedepends=(git
+             pandoc)
+source=(git+https://github.com/bup/bup#tag=$pkgver)
+sha256sums=('fe5e98c19574ec755baa23500097b385f950e6d0395d18239ef316d1c2757ec5')
+
+prepare() {
+  cd $pkgname
+  git cherry-pick -n ac289c3536ab3786a82d8f3b708b0d52d5a57be9 # Fix build with GCC 14
+  sed -e 's|-Werror||' -i configure GNUmakefile
+}
 
 build() {
-  cd $pkgname-$pkgver
+  cd $pkgname
   ./configure
   make
 }
 
 package() {
-  cd $pkgname-$pkgver
+  cd $pkgname
   make DESTDIR="$pkgdir" PREFIX=/usr install
 }

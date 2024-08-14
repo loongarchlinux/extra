@@ -1,22 +1,43 @@
 # Maintainer: Felix Yan <felixonmars@archlinux.org>
 
 pkgname=ruby-pandoc-ruby
-pkgver=2.1.7
+pkgver=2.1.10
 pkgrel=1
 pkgdesc='Ruby wrapper for pandoc'
 arch=(any)
 url='https://github.com/xwmx/pandoc-ruby'
 license=(MIT)
-depends=(pandoc ruby)
-checkdepends=(ruby-minitest ruby-mocha ruby-rake)
+depends=(
+  pandoc
+  ruby
+)
+makedepends=(
+  ruby-rdoc
+)
+checkdepends=(
+  ruby-bundler
+  ruby-minitest
+  ruby-mocha
+  ruby-rake
+)
 options=(!emptydirs)
-source=(https://github.com/xwmx/pandoc-ruby/archive/$pkgver/$pkgname-$pkgver.tar.gz)
-sha256sums=('acb6434fb30de4f67be5dfd747188aad468aae55ee9ad6a938c815ba9ffa47e6')
+source=(
+  "https://github.com/xwmx/pandoc-ruby/archive/$pkgver/$pkgname-$pkgver.tar.gz"
+  "${pkgname}_fix_tests.patch"
+)
+sha512sums=('9382af54106273e17c06aa8dc7ebcecfed72d1580337dd0ccf669032753f57abb646d29b645be375325509e5dea9113f5a95a3f75144b3c0f6978392595a26a8'
+            '52dfbfb2e07d1b51b1fc4510ae0ca6007e126a58ae64054efa3ac6d581d4d0d95bdf86776474ca9b4c272c4ac7a63f62d569dc05d3c53a3ea0e6293023ce294e')
+b2sums=('594d9dbe6f1cd934a06b858d4f2191b66432db7a9e12f59c58081a0e4b813a8ddfad78792773e0cea4655fdb50be4668175c61ea9b3e97d56eaebe137df7e436'
+        '4d14bec4bb55439bbff606aa01b83621e894a93c575228c34839d4bcc031dbe6b24f4b5d81878f111d906e9d49799ec0d15cb540adf7e6b6a0b8993dd85db705')
 
 prepare() {
   cd pandoc-ruby-$pkgver
+
+  patch --verbose --strip=1 --input="../${pkgname}_fix_tests.patch"
+
   rm Gemfile.lock
   sed -i '/Gemfile.lock/d' pandoc-ruby.gemspec
+  sed -i '/rubocop/Id' Gemfile
 }
 
 build() {

@@ -1,22 +1,25 @@
 # Maintainer: David Runge <dvzrv@archlinux.org>
 
+# NOTE: when updating major or minor version, make sure to upgrade in tandem with the stability guarantees of kubernetes and cri-o
 pkgbase=cri-tools
 pkgname=(
   crictl
   critest
 )
-pkgver=1.29.0
+pkgver=1.30.1
 pkgrel=1
 pkgdesc="CLI and validation tools for Kubelet Container Runtime Interface (CRI)"
 arch=(loong64 x86_64)
 url="https://github.com/kubernetes-sigs/cri-tools"
-license=(Apache)
+license=(Apache-2.0)
 groups=(kubernetes-tools)
 depends=(glibc)
 makedepends=(go)
-source=(https://github.com/kubernetes-sigs/cri-tools/archive/v$pkgver/$pkgbase-v$pkgver.tar.gz)
-sha512sums=('8e18e21017ea3140baaae7fedc85811738f1793962d5a9494117d5d0dd7f3f01468ca4768066be0bd80760b494c0c69d426603cc0326b9f95070db2547b6b8c2')
-b2sums=('f27cbae0b503953232484a673ca0e8f170001c92431f0e0ffbd2512659ae5fb6d95c05252a73a90e7fc9b7b3a926fbcdf5a5d87bd5c73d1593dac89db523bbde')
+# with LTO the packages are not reproducible (we want full RELRO and PIE)
+options=(!lto)
+source=($url/archive/v$pkgver/$pkgbase-v$pkgver.tar.gz)
+sha512sums=('c3a989ec57016a05a83adbabab7ec49da267f0d6cfc603a4cb8cb4699fe499c16b49e910fb6bfda413a57f45eb3a3d6f0a5c5b8d76895695ed3870343a0c4db9')
+b2sums=('d53dd715825ad6636e6a073f666a062d67e364659c26d9d3289e94cd9bb712268c351d47e20fd19d8d12746b978838ed68700730c5639298e03626e1ddbf2bc2')
 
 build() {
   local common_ldflags=(

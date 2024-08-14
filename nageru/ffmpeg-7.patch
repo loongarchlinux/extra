@@ -1,0 +1,120 @@
+diff --git a/futatabi/video_stream.cpp b/futatabi/video_stream.cpp
+index c12acdf..1162547 100644
+--- a/futatabi/video_stream.cpp
++++ b/futatabi/video_stream.cpp
+@@ -849,10 +849,10 @@ void VideoStream::encode_thread_func()
+ 	}
+ }
+ 
+-int VideoStream::write_packet2_thunk(void *opaque, uint8_t *buf, int buf_size, AVIODataMarkerType type, int64_t time)
++int VideoStream::write_packet2_thunk(void *opaque, const uint8_t *buf, int buf_size, AVIODataMarkerType type, int64_t time)
+ {
+ 	VideoStream *video_stream = (VideoStream *)opaque;
+-	return video_stream->write_packet2(buf, buf_size, type, time);
++	return video_stream->write_packet2((uint8_t*)buf, buf_size, type, time);
+ }
+ 
+ int VideoStream::write_packet2(uint8_t *buf, int buf_size, AVIODataMarkerType type, int64_t time)
+diff --git a/futatabi/video_stream.h b/futatabi/video_stream.h
+index c83a484..afa49ef 100644
+--- a/futatabi/video_stream.h
++++ b/futatabi/video_stream.h
+@@ -76,7 +76,7 @@ private:
+ 	std::thread encode_thread;
+ 	std::atomic<bool> should_quit{ false };
+ 
+-	static int write_packet2_thunk(void *opaque, uint8_t *buf, int buf_size, AVIODataMarkerType type, int64_t time);
++	static int write_packet2_thunk(void *opaque, const uint8_t *buf, int buf_size, AVIODataMarkerType type, int64_t time);
+ 	int write_packet2(uint8_t *buf, int buf_size, AVIODataMarkerType type, int64_t time);
+ 	void add_silence(int64_t pts, int64_t length_pts);
+ 	void add_audio_or_silence(const QueuedFrame &qf);
+diff --git a/nageru/kaeru.cpp b/nageru/kaeru.cpp
+index caa71c6..9250d0c 100644
+--- a/nageru/kaeru.cpp
++++ b/nageru/kaeru.cpp
+@@ -62,7 +62,7 @@ MuxMetrics stream_mux_metrics;
+ 
+ namespace {
+ 
+-int write_packet(void *opaque, uint8_t *buf, int buf_size, AVIODataMarkerType type, int64_t time)
++int write_packet(void *opaque, const uint8_t *buf, int buf_size, AVIODataMarkerType type, int64_t time)
+ {
+ 	static bool seen_sync_markers = false;
+ 	static string stream_mux_header;
+diff --git a/nageru/mjpeg_encoder.cpp b/nageru/mjpeg_encoder.cpp
+index 71af169..bdf5d66 100644
+--- a/nageru/mjpeg_encoder.cpp
++++ b/nageru/mjpeg_encoder.cpp
+@@ -157,10 +157,10 @@ struct VectorDestinationManager {
+ };
+ static_assert(std::is_standard_layout<VectorDestinationManager>::value, "");
+ 
+-int MJPEGEncoder::write_packet2_thunk(void *opaque, uint8_t *buf, int buf_size, AVIODataMarkerType type, int64_t time)
++int MJPEGEncoder::write_packet2_thunk(void *opaque, const uint8_t *buf, int buf_size, AVIODataMarkerType type, int64_t time)
+ {
+ 	WritePacket2Context *ctx = (WritePacket2Context *)opaque;
+-	return ctx->mjpeg_encoder->write_packet2(ctx->stream_id, buf, buf_size, type, time);
++	return ctx->mjpeg_encoder->write_packet2(ctx->stream_id, (uint8_t*)buf, buf_size, type, time);
+ }
+ 
+ int MJPEGEncoder::write_packet2(HTTPD::StreamID stream_id, uint8_t *buf, int buf_size, AVIODataMarkerType type, int64_t time)
+diff --git a/nageru/mjpeg_encoder.h b/nageru/mjpeg_encoder.h
+index 896b63b..183aeaa 100644
+--- a/nageru/mjpeg_encoder.h
++++ b/nageru/mjpeg_encoder.h
+@@ -84,7 +84,7 @@ private:
+ 		HTTPD::StreamID stream_id;
+ 	};
+ 	std::map<HTTPD::StreamID, WritePacket2Context> ffmpeg_contexts;   // Statically set up, so we never need to worry about dangling pointers.
+-	static int write_packet2_thunk(void *opaque, uint8_t *buf, int buf_size, AVIODataMarkerType type, int64_t time);
++	static int write_packet2_thunk(void *opaque, const uint8_t *buf, int buf_size, AVIODataMarkerType type, int64_t time);
+ 	int write_packet2(HTTPD::StreamID stream_id, uint8_t *buf, int buf_size, AVIODataMarkerType type, int64_t time);
+ 
+ 	std::thread encoder_thread, va_receiver_thread;
+diff --git a/nageru/video_encoder.cpp b/nageru/video_encoder.cpp
+index b68086c..c536dcb 100644
+--- a/nageru/video_encoder.cpp
++++ b/nageru/video_encoder.cpp
+@@ -290,10 +290,10 @@ void VideoEncoder::open_output_streams()
+ 	}
+ }
+ 
+-int VideoEncoder::write_packet2_thunk(void *opaque, uint8_t *buf, int buf_size, AVIODataMarkerType type, int64_t time)
++int VideoEncoder::write_packet2_thunk(void *opaque, const uint8_t *buf, int buf_size, AVIODataMarkerType type, int64_t time)
+ {
+ 	VideoEncoder *video_encoder = (VideoEncoder *)opaque;
+-	return video_encoder->write_packet2(buf, buf_size, type, time);
++	return video_encoder->write_packet2((uint8_t*)buf, buf_size, type, time);
+ }
+ 
+ int VideoEncoder::write_packet2(uint8_t *buf, int buf_size, AVIODataMarkerType type, int64_t time)
+@@ -315,10 +315,10 @@ int VideoEncoder::write_packet2(uint8_t *buf, int buf_size, AVIODataMarkerType t
+ 	return buf_size;
+ }
+ 
+-int VideoEncoder::write_srt_packet_thunk(void *opaque, uint8_t *buf, int buf_size)
++int VideoEncoder::write_srt_packet_thunk(void *opaque, const uint8_t *buf, int buf_size)
+ {
+ 	VideoEncoder *video_encoder = (VideoEncoder *)opaque;
+-	return video_encoder->write_srt_packet(buf, buf_size);
++	return video_encoder->write_srt_packet((uint8_t*)buf, buf_size);
+ }
+ 
+ static string print_addrinfo(const addrinfo *ai)
+diff --git a/nageru/video_encoder.h b/nageru/video_encoder.h
+index 6301f50..cab14e2 100644
+--- a/nageru/video_encoder.h
++++ b/nageru/video_encoder.h
+@@ -80,10 +80,10 @@ public:
+ 
+ private:
+ 	void open_output_streams();
+-	static int write_packet2_thunk(void *opaque, uint8_t *buf, int buf_size, AVIODataMarkerType type, int64_t time);
++	static int write_packet2_thunk(void *opaque, const uint8_t *buf, int buf_size, AVIODataMarkerType type, int64_t time);
+ 	int write_packet2(uint8_t *buf, int buf_size, AVIODataMarkerType type, int64_t time);
+ 
+-	static int write_srt_packet_thunk(void *opaque, uint8_t *buf, int buf_size);
++	static int write_srt_packet_thunk(void *opaque, const uint8_t *buf, int buf_size);
+ 	int write_srt_packet(uint8_t *buf, int buf_size);
+ 	int open_srt_socket();  // Returns -1 on error.
+ 	int connect_to_srt();  // Returns -1 on error.

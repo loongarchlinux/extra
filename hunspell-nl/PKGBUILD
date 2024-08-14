@@ -3,7 +3,7 @@
 
 pkgname=hunspell-nl
 pkgver=2.20.19
-pkgrel=3
+pkgrel=4
 pkgdesc="Dutch hunspell dictionaries"
 arch=('any')
 url="https://www.opentaal.org/"

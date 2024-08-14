@@ -4,12 +4,12 @@
 # Maintainer: Daniel M. Capella <polyzen@archlinux.org>
 
 pkgbase=ruff
-pkgname=($pkgbase python-$pkgbase)
-pkgver=0.4.4
+pkgname=("$pkgbase" "python-$pkgbase")
+pkgver=0.5.7
 pkgrel=1
 pkgdesc='An extremely fast Python linter, written in Rust'
 arch=(loong64 x86_64)
-url="https://github.com/astral-sh/$pkgbase"
+url=https://github.com/astral-sh/$pkgbase
 license=(MIT)
 depends=(
   gcc-libs
@@ -17,27 +17,27 @@ depends=(
 )
 makedepends=(
   cargo
+  git
   maturin
   python-installer
 )
 options=(!lto)
-_archive="$pkgbase-$pkgver"
-source=($url/archive/refs/tags/v$pkgver/$_archive.tar.gz)
-sha512sums=('d5b14266d30920e4772cc690e263478abfdfd08865ca7cae64b9184566e172fc5c70d3f9463967cc431bb12bff9c97333835d3773fa70462953aa9fafd47aa0d')
-b2sums=('41fe1a7814bed12260d2eab3ae39f8039a2dde7210715905d41500c235b6def9c6cf4c4feab0bd09964a729f830cdc30dc377e980243791fe388e3faa464e5a9')
+source=("git+$url.git#tag=$pkgver")
+sha512sums=('7306ef85d0cad210fc5cdcdd0cf1c7e2d6e5665fed711da1bdbe961579e367d8bdc61b13cb29274bb82ad1ae8e1177175c05a059e69eef230ac04bd777e4e906')
+b2sums=('e853547a571bc4d0866b1015fccb5da1eba582ddcfe783d9384cbe9b623014bf6abae2eb9b1c0c66428c83996f5c5b81e84091e5a8f66fb3abb2a43814972302')
 
 prepare() {
-  cd "$_archive"
+  cd $pkgbase
   cargo fetch --locked --target "$(rustc -vV | sed -n 's/host: //p')"
 }
 
 build() {
-  cd "$_archive"
+  cd $pkgbase
   maturin build --locked --release --all-features --target "$(rustc -vV | sed -n 's/host: //p')" --strip
 }
 
 check() {
-  cd "$_archive"
+  cd $pkgbase
   cargo test -p ruff --frozen --all-features -- --skip display_default_settings
 }
 
@@ -47,7 +47,7 @@ _package_common() {
 }
 
 package_ruff() {
-  cd "$_archive"
+  cd $pkgbase
   _package_common
   local _target="target/$(rustc -vV | sed -n 's/host: //p')/release/ruff"
   install -Dm0755 -t "$pkgdir/usr/bin/" "$_target"
@@ -58,9 +58,12 @@ package_ruff() {
 }
 
 package_python-ruff() {
-  cd "$_archive"
-  _package_common
   depends=(python "$pkgbase")
+
+  cd $pkgbase
+  _package_common
   python -m installer -d "$pkgdir" target/wheels/*.whl
-  rm -rf "$pkgdir/usr/bin"
+
+  cd "$pkgdir"
+  rm -rf usr/bin
 }

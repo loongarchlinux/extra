@@ -8,14 +8,19 @@ pkgname=(
   freetype2-docs
 )
 pkgver=2.13.2
-pkgrel=1
+pkgrel=2
 epoch=
 pkgdesc="Font rasterization library"
 url="https://www.freetype.org/"
 arch=(
   x86_64
 )
-license=(GPL)
+license=('FTL OR GPL-2.0-or-later'
+         BSD-3-Clause
+         MIT
+         MIT-Modern-Variant
+         LicenseRef-Public-Domain
+         Zlib)
 depends=(
   brotli
   bzip2
@@ -104,6 +109,8 @@ package_freetype2() {
 
   _pick demos "$pkgdir"/usr/bin
   _pick demos "$pkgdir"/usr/share/man/man1
+
+  install -D -m644 freetype-$pkgver/{LICENSE.TXT,docs/FTL.TXT,docs/GPLv2.TXT} -t "${pkgdir}/usr/share/licenses/${pkgname}/"
 }
 
 package_freetype2-demos() {

@@ -2,7 +2,7 @@
 
 pkgname=libprocps
 pkgver=3.3.17
-pkgrel=3
+pkgrel=4
 pkgdesc='procps 3.x libraries for monitoring your system and its processes'
 url='https://gitlab.com/procps-ng/procps'
 license=('GPL' 'LGPL')

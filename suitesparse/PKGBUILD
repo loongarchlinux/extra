@@ -1,9 +1,11 @@
 # Maintainer: Antonio Rojas <arojas@archlinux.org>
 # Contributor: Ronald van Haren <ronald.archlinux.org>
 
-pkgname=suitesparse
+pkgbase=suitesparse
+pkgname=(suitesparse
+         suitesparse-graphblas)
 pkgver=7.7.0
-pkgrel=1
+pkgrel=2
 pkgdesc='A collection of sparse matrix libraries'
 url='http://faculty.cse.tamu.edu/davis/suitesparse.html'
 arch=(loong64 x86_64)
@@ -14,14 +16,15 @@ depends=(blas
          lapack
          mpfr)
 makedepends=(cmake
-             gcc-fortran)
+             gcc-fortran
+             git)
 replaces=('suitesparse64<7.1.0')
 license=(GPL)
-source=(https://github.com/DrTimothyAldenDavis/SuiteSparse/archive/v$pkgver/$pkgname-$pkgver.tar.gz)
-sha256sums=('529b067f5d80981f45ddf6766627b8fc5af619822f068f342aab776e683df4f3')
+source=(git+https://github.com/DrTimothyAldenDavis/SuiteSparse#tag=v$pkgver)
+sha256sums=('4604c5c6d606fe5157cf68f06e1db69282577abe96ce6562058c083ead534a35')
 
 build() {
-  cd SuiteSparse-$pkgver
+  cd SuiteSparse
   CMAKE_OPTIONS="-DBLA_VENDOR=Generic \
                  -DCMAKE_INSTALL_PREFIX=/usr \
                  -DCMAKE_BUILD_TYPE=None \
@@ -29,7 +32,22 @@ build() {
   make
 }
 
-package() {
-  cd SuiteSparse-$pkgver
+package_suitesparse() {
+  cd SuiteSparse
   DESTDIR="$pkgdir" make install
+
+  rm -r "$pkgdir"/usr/lib/lib{graphblas,lagraph,lagraphx}.so* \
+        "$pkgdir"/usr/include/suitesparse/{GraphBLAS,LAGraph,LAGraphX}.h \
+        "$pkgdir"/usr/lib/cmake/{GraphBLAS,LAGraph} \
+        "$pkgdir"/usr/lib/pkgconfig/{GraphBLAS,LAGraph}.pc
+}
+
+package_suitesparse-graphblas() {
+  pkgdesc='Graph algorithms in the language of linear algebra'
+  depends=(gcc-libs
+           glibc)
+
+  cd SuiteSparse
+  DESTDIR="$pkgdir" make install -C GraphBLAS
+  DESTDIR="$pkgdir" make install -C LAGraph
 }

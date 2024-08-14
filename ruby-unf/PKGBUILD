@@ -5,11 +5,11 @@
 _gemname='unf'
 pkgname="ruby-${_gemname}"
 pkgver=0.2.0.beta2
-pkgrel=6
+pkgrel=9
 pkgdesc='Wrapper library to bring Unicode Normalization Form support to Ruby/JRuby.'
 arch=('any')
 url='https://github.com/knu/ruby-unf'
-license=('BSD')
+license=('BSD-2-Clause')
 makedepends=('ruby-rdoc' 'ruby-bundler')
 checkdepends=('ruby-rake')
 depends=('ruby')
@@ -22,6 +22,9 @@ prepare() {
 
   # we build based on a tar ball, so `git` won't work here
   sed --in-place 's|git ls-files|find|' "${_gemname}.gemspec"
+
+  # fix license
+  sed --in-place 's|2-clause BSDL|BSD-2-Clause|' "${_gemname}.gemspec"
 }
 
 build() {
@@ -37,11 +40,21 @@ check() {
 package() {
   cd "${srcdir}/${pkgname}-${pkgver}"
   local _gemdir="$(gem env gemdir)"
-  gem install --verbose --ignore-dependencies --no-user-install --install-dir "${pkgdir}/${_gemdir}" --bindir "${pkgdir}/usr/bin" "${_gemname}-${pkgver}.gem"
+  gem install --local --verbose --ignore-dependencies --no-user-install --install-dir "${pkgdir}/${_gemdir}" --bindir "${pkgdir}/usr/bin" "${_gemname}-${pkgver}.gem"
 
   install -Dm 644 LICENSE -t "${pkgdir}/usr/share/licenses/${pkgname}/"
+  install -Dm 644 README.md CHANGELOG.md -t "${pkgdir}/usr/share/doc/${pkgname}"
 
   rm -rf "${pkgdir}/${_gemdir}/cache"
+  rm -rf "${pkgdir}/${_gemdir}/gems/${_gemname}-${pkgver}/"{Rakefile,Gemfile}
+
+  find "${pkgdir}/${_gemdir}/extensions/" \
+    -type f \
+    \( \
+      -iname "mkmf.log" -o \
+      -iname "gem_make.out" \
+    \) \
+    -delete
 }
 
 # vim: ts=2 sw=2 et:

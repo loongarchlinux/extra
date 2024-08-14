@@ -2,29 +2,35 @@
 # Contributor: Agorgianitis Loukas <agorglouk@gmail.com>
 
 pkgname=tailwindcss-language-server
-pkgver=0.0.16
+pkgver=0.0.22
 pkgrel=1
 pkgdesc='Tailwind CSS Language Server'
-arch=('any')
+arch=(any)
 url=https://github.com/tailwindlabs/tailwindcss-intellisense/tree/master/packages/tailwindcss-language-server
-license=('MIT')
-depends=('nodejs')
-makedepends=('git' 'npm')
+license=(MIT)
+depends=(nodejs)
+makedepends=(
+  git
+  pnpm
+)
 source=("git+https://github.com/tailwindlabs/tailwindcss-intellisense.git#tag=@tailwindcss/language-server@v$pkgver")
-b2sums=('SKIP')
+b2sums=('90fe31e5869244ab276f81dc2c61d80da19744f78e016c98a3d46dc09d5708f66e9236981bb097f4c2c88d948a6797cb91e3495e437c9c8d92465dd09143cfc5')
 
 prepare() {
   cd tailwindcss-intellisense
-  npm ci
+  pnpm install --frozen-lockfile
 }
 
 build() {
   cd tailwindcss-intellisense/packages/$pkgname
-  npm run build
+  pnpm build
 }
 
 package() {
   cd tailwindcss-intellisense/packages/$pkgname
   install -Dt "$pkgdir"/usr/bin bin/$pkgname
-  install -Dm644 -t "$pkgdir"/usr/share/licenses/$pkgname LICENSE
+  install -Dm644 -t "$pkgdir"/usr/lib/node_modules/@tailwindcss/language-server \
+    package.json
+  install -Dm644 -t "$pkgdir"/usr/share/licenses/$pkgname LICENSE \
+    ThirdPartyNotices.txt
 }

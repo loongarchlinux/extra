@@ -2,23 +2,39 @@
 
 pkgname=4ti2
 pkgver=1.6.10
-pkgrel=1
-pkgdesc="A software package for algebraic, geometric and combinatorial problems on linear spaces"
+pkgrel=3
+pkgdesc='A software package for algebraic, geometric and combinatorial problems on linear spaces'
 arch=(loong64 x86_64)
-url="https://4ti2.github.io/"
-license=(GPL)
-depends=(glpk)
-source=("https://github.com/4ti2/4ti2/releases/download/Release_${pkgver//./_}/$pkgname-$pkgver.tar.gz")
-sha256sums=('f7c191beb14246b643e4fd5b18b53d9966693b9e6d3a569441a0e3ca14b1a86b')
+url='https://4ti2.github.io/'
+license=(GPL-2.0-or-later)
+depends=(gcc-libs
+         glibc
+         glpk
+         gmp
+         sh)
+makedepends=(git)
+source=(git+https://github.com/4ti2/4ti2#tag=Release_${pkgver//./_})
+sha256sums=('3e383c365f06ed9247cdae0301ac094b75f27d7b76ad8a143db4b43756e3548c')
+
+prepare() {
+  cd $pkgname
+# Honor system build flags
+  sed -e "s|-O3 -fomit-frame-pointer|$CFLAGS|" -i m4/ax_cc_maxopt.m4
+  sed -e "s|-O3 -fomit-frame-pointer|$CXXFLAGS|" -i m4/ax_cxx_maxopt.m4
+  autoreconf -vi
+}
 
 build() {
-  cd $pkgname-$pkgver
-  ./configure --prefix=/usr --enable-shared --disable-static
+  cd $pkgname
+  ./configure \
+    --prefix=/usr \
+    --enable-shared \
+    --disable-static
+  sed -i -e 's/ -shared / -Wl,-O1,--as-needed\0/g' libtool # Fix overlinking
   make
 }
 
 package() {
-  cd $pkgname-$pkgver
+  cd $pkgname
   make DESTDIR="$pkgdir" install
 }
-

@@ -4,21 +4,44 @@
 # Contributor: Mathieu Wespthal <mathieu.westphal+aur@gmail.com>
 
 pkgname=f3d
-pkgver=2.4.0
+pkgver=2.5.0
 pkgrel=4
 pkgdesc='A fast and minimalist 3D viewer'
 arch=('loong64' 'x86_64')
 url="https://github.com/${pkgname}-app/${pkgname}"
 license=('BSD-3-Clause')
-depends=('vtk' 'glew' 'pugixml' 'netcdf' 'ospray' 'assimp' 'opencascade' 'alembic'
-         'fmt' 'nlohmann-json' 'draco' 'libxcursor' 'verdict' 'boost' 'openexr' 'usd')
-makedepends=('cmake' 'help2man' 'openmp' 'pybind11' 'ninja' 'eigen' 'utf8cpp' 'python'
-             'jdk-openjdk' 'fast_float')
-source=("$pkgname-$pkgver.tar.gz::https://github.com/$pkgname-app/$pkgname/archive/refs/tags/v$pkgver.tar.gz")
-sha256sums=('3286ad1b324b995fd95818679b4ced80ebc3cc3b4bd4c8e6964695c05c934c8f')
+depends=('alembic'
+         'assimp'
+         'boost'
+         'draco'
+         'fmt'
+         'glew'
+         'jsoncpp' # optdepend of vtk for features required by f3d
+         'libxcursor'
+         'netcdf'
+         'nlohmann-json'
+         'opencascade'
+         'openexr'
+         'ospray'
+         'pugixml'
+         'usd'
+         'verdict'
+         'vtk')
+makedepends=('cmake'
+             'eigen'
+             'fast_float'
+             'help2man'
+             'jdk-openjdk'
+             'ninja'
+             'openmp'
+             'pybind11'
+             'python'
+             'utf8cpp')
+source=("https://github.com/$pkgname-app/$pkgname/archive/refs/tags/v$pkgver/$pkgname-$pkgver.tar.gz")
+sha256sums=('d7f6dd7d9e4465c1f44d168c3a38aad24569a25907673180c8791a783e73f02f')
 
 build() {
-  cd "$srcdir/$pkgname-$pkgver"
+  cd "$pkgname-$pkgver"
   export CXXFLAGS+=" -ffat-lto-objects"
   cmake \
     -GNinja \
@@ -41,8 +64,7 @@ build() {
 }
 
 package() {
-  cd "$srcdir/$pkgname-$pkgver"
-
+  cd "$pkgname-$pkgver"
   DESTDIR="$pkgdir" cmake --install build
   DESTDIR="$pkgdir" cmake --install build --component mimetypes
   DESTDIR="$pkgdir" cmake --install build --component sdk

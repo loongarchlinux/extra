@@ -5,8 +5,8 @@
  
 pkgname=psutils
 _pyname=pspdfutils
-pkgver=3.3.2
-pkgrel=2
+pkgver=3.3.4
+pkgrel=1
 pkgdesc='A set of postscript utilities'
 arch=(any)
 url="https://github.com/rrthomas/$pkgname"
@@ -24,11 +24,16 @@ checkdepends=(ghostscript
 # provides=("python-$_pyname=$pkgver")
 _archive="$_pyname-$pkgver"
 source=("$url/releases/download/v$pkgver/$_archive.tar.gz")
-sha256sums=('a20a2a1359811bd0ad72e15349351a26774ddf8e355c2cde4250a70cf77fdf0c')
+sha256sums=('94b331826967d04b9d055c8a8e2a374c5824fd120d49c24b73d16644127d51fe')
 
 prepare() {
 	cd "$_archive"
-    sed -i -e '/pytest-datafiles/d' -e '/Wand/d' pyproject.toml
+	# unpin too-aggressive dependency pinning by just removing them,
+	# we're providing them anyway
+	sed -i \
+		-e '/pytest-datafiles/d' \
+		-e '/Wand/d' \
+		pyproject.toml
 }
 
 build() {

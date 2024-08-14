@@ -2,8 +2,8 @@
 
 _pyname=openapi-core
 pkgname=python-$_pyname
-pkgver=0.19.1
-pkgrel=1
+pkgver=0.19.2
+pkgrel=2
 pkgdesc='Client-side and server-side support for the OpenAPI Specification v3'
 arch=(any)
 url='https://github.com/p1c2u/openapi-core'
@@ -18,7 +18,8 @@ depends=(python
          python-openapi-spec-validator
          python-parse
          python-werkzeug)
-makedepends=(python-build
+makedepends=(git
+             python-build
              python-installer
              python-poetry-core)
 optdepends=(python-aiohttp
@@ -45,26 +46,26 @@ checkdepends=(python-pytest
               python-requests
               python-responses
               python-starlette)
-source=(https://github.com/python-openapi/openapi-core/archive/$pkgver/$pkgname-$pkgver.tar.gz)
-sha256sums=('b6928c597f229426c019e3cd8ae6cfaac11d364152fc11bb108da3af608bbf6c')
+source=(git+https://github.com/python-openapi/openapi-core#tag=$pkgver)
+sha256sums=('93c10d714e240f677745a7b546aff6971f51b732504c7e0ca136aa56b18a0cfe')
 
 prepare() {
-  cd $_pyname-$pkgver
+  cd $_pyname
   sed -i 's/--cov\S*//' pyproject.toml
 }
 
 build() {
-  cd $_pyname-$pkgver
+  cd $_pyname
   python -m build --wheel --no-isolation
 }
 
 check() {
-  cd $_pyname-$pkgver
+  cd $_pyname
   PYTHONPATH="$PWD" pytest -v
 }
 
 package() {
-  cd $_pyname-$pkgver
+  cd $_pyname
   python -m installer --destdir="$pkgdir" dist/*.whl
   install -Dm644 LICENSE -t "$pkgdir"/usr/share/licenses/$pkgname
 }

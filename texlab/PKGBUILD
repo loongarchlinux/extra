@@ -3,21 +3,21 @@
 # Contributor: Patrick Förster <patrick DOT foerster AT outlook DOT de>
 
 pkgname=texlab
-pkgver=5.12.4
+pkgver=5.17.0
 pkgrel=1
 pkgdesc="A cross-platform implementation of the Language Server Protocol for LaTeX."
 arch=('loong64' 'x86_64')
 url="https://texlab.netlify.com"
 license=('MIT')
-depends=('gcc-libs')
+depends=('glibc' 'gcc-libs')
 makedepends=('cargo' 'npm')
 source=("${pkgname}-${pkgver}.tar.gz::https://github.com/latex-lsp/texlab/archive/v${pkgver}.tar.gz")
-b2sums=('8b58fe9806925418e798fe7fcbc5603de09e148bb9a4c6780ac8820f6ce9fc0872a38095ff8ea9659dc2e5b597792e178a10df364521d09b613e9178988b4cec')
+b2sums=('e111966d91839e3d6d7ae1c23b027ce96967e022ea52475a88ddabe1347053c5a5e2b279ee5ccaee75acb753159adf090cf93c27752c2cb4239b261a0b9c1c54')
 options=('!lto')
 
 prepare() {
   cd "${srcdir}/${pkgname}-${pkgver}"
-  cargo fetch --locked --target "$CARCH-unknown-linux-gnu"
+  cargo fetch --locked --target "$(rustc -vV | sed -n 's/host: //p')"
 }
 
 build() {

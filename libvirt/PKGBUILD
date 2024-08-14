@@ -6,7 +6,7 @@
 
 pkgname=(libvirt libvirt-storage-gluster libvirt-storage-iscsi-direct)
 epoch=1
-pkgver=10.3.0
+pkgver=10.6.0
 pkgrel=1
 pkgdesc="API for controlling virtualization engines (openvz,kvm,qemu,virtualbox,xen,etc)"
 arch=('loong64' 'x86_64')
@@ -25,7 +25,8 @@ optdepends=('libvirt-storage-gluster: Gluster storage backend'
             'dnsmasq: required for default NAT/DHCP for guests'
             'radvd: IPv6 RAD support'
             'iptables-nft: required for default NAT networking'
-            'qemu-desktop: QEMU/KVM support'
+            'qemu-base: QEMU/KVM support'
+            'qemu-desktop: QEMU/KVM desktop support'
             'qemu-emulators-full: Support of additional QEMU architectures'
             'lvm2: Logical Volume Manager support'
             'open-iscsi: iSCSI support via iscsiadm'
@@ -36,6 +37,7 @@ backup=(
   'etc/libvirt/libvirt.conf'
   'etc/libvirt/libvirtd.conf'
   'etc/libvirt/lxc.conf'
+  'etc/libvirt/network.conf'
   'etc/libvirt/nwfilter/allow-arp.xml'
   'etc/libvirt/nwfilter/allow-dhcp-server.xml'
   'etc/libvirt/nwfilter/allow-dhcpv6-server.xml'
@@ -60,6 +62,7 @@ backup=(
   'etc/libvirt/nwfilter/no-other-rarp-traffic.xml'
   'etc/libvirt/nwfilter/qemu-announce-self-rarp.xml'
   'etc/libvirt/nwfilter/qemu-announce-self.xml'
+  'etc/libvirt/network.conf'
   'etc/libvirt/qemu.conf'
   'etc/libvirt/qemu-lockd.conf'
   'etc/libvirt/qemu/networks/default.xml'
@@ -85,7 +88,7 @@ backup=(
 source=(
   "https://libvirt.org/sources/$pkgname-$pkgver.tar.xz"{,.asc}
 )
-sha256sums=('2af5a50b6b1027822b6344e35080fa78cc8266f821a3ae6f8f372f18dd049018'
+sha256sums=('a495b2a26faca841ac0073c7dd7f60857ca81adac9047dac5f698fd75f1342cd'
             'SKIP')
 validpgpkeys=('453B65310595562855471199CA68BE8010084C9C') # Jiří Denemark <jdenemar@redhat.com>
 
@@ -94,7 +97,7 @@ prepare() {
 
   sed -i 's|/sysconfig/|/conf.d/|g' \
     src/remote/libvirtd.service.in \
-    tools/{libvirt-guests.service,libvirt-guests.sh,virt-pki-validate}.in \
+    tools/{libvirt-guests.service,libvirt-guests.sh}.in \
     docs/manpages/libvirt-guests.rst \
     src/locking/virtlockd.service.in \
     src/logging/virtlogd.service.in

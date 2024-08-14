@@ -1,9 +1,10 @@
+# Maintainer: Carl Smedstad <carsme@archlinux.org>
 # Contributor: Eli Schwartz <eschwartz@archlinux.org>
 
 pkgname=hotdoc
-pkgver=0.16
-pkgrel=3
-pkgdesc="The Tastiest Documentation Tool"
+pkgver=0.17
+pkgrel=2
+pkgdesc="The tastiest API documentation system"
 url="https://github.com/hotdoc/hotdoc"
 arch=(loong64 x86_64)
 license=(LGPL-2.1-or-later)
@@ -22,7 +23,6 @@ depends=(
   python-networkx
   python-pkgconfig
   python-schema
-  python-setuptools
   python-toposort
   python-wheezy-template
   python-yaml
@@ -33,6 +33,7 @@ makedepends=(
   npm
   python-build
   python-installer
+  python-setuptools
   python-wheel
 )
 optdepends=(
@@ -41,38 +42,42 @@ optdepends=(
 )
 source=(
   "git+https://github.com/hotdoc/hotdoc#tag=$pkgver"
-  "mathieu-cmark::git+https://github.com/MathieuDuponchelle/cmark"
-  "prismjs::git+https://github.com/PrismJS/prism"
+  "git+https://github.com/MathieuDuponchelle/cmark"
+  "git+https://github.com/PrismJS/prism"
   "git+https://github.com/hotdoc/hotdoc_bootstrap_theme"
+  "0001-Simplify-deps-for-Python-3.11.patch"
 )
-b2sums=('4395067a40bb5e2d93d9037a51576c6a68ce69eeffb15871297d9d8eb6f938e1a3383e3ff7466118bc8cde401dcdca861e943784325a19d7be8619301f3ace19'
-        'SKIP'
-        'SKIP'
-        'SKIP')
+sha256sums=('4ffeb856513360ff024b6777711d87f269de47b1a9193e68433e8549a389dc2c'
+            'SKIP'
+            'SKIP'
+            'SKIP'
+            '865812a0c5a66822ece814e898b4b3ca46553ba51190adc944bb4f01c0db6cf0')
 
 prepare() {
-  cd hotdoc
+  cd $pkgname
+
+  patch -Np1 -i "$srcdir/0001-Simplify-deps-for-Python-3.11.patch"
 
   git submodule init
-  git submodule set-url cmark "$srcdir/mathieu-cmark"
-  git submodule set-url hotdoc/extensions/syntax_highlighting/prism "$srcdir/prismjs"
-  git submodule set-url hotdoc/hotdoc_bootstrap_theme "$srcdir/hotdoc_bootstrap_theme"
-  git -c protocol.file.allow=always -c protocol.allow=never submodule update
+  git config submodule.cmark.url "$srcdir/cmark"
+  git config submodule.hotdoc/extensions/syntax_highlighting/prism.url "$srcdir/prism"
+  git config submodule.hotdoc/hotdoc_bootstrap_theme.url "$srcdir/hotdoc_bootstrap_theme"
+  git -c protocol.file.allow=always submodule update
 }
 
 build() {
-  cd hotdoc
+  cd $pkgname
   python -m build --wheel --no-isolation
 }
 
 check() {
-  cd hotdoc/build/lib.linux-$CARCH-cpython-*
-  python -m unittest
+  cd $pkgname
+  python -m installer -d tmp_install dist/*.whl
+  local site_packages=$(python -c "import site; print(site.getsitepackages()[0])")
+  python -m unittest discover "$PWD/tmp_install/$site_packages"
 }
 
 package() {
-  cd hotdoc
+  cd $pkgname
   python -m installer --destdir="$pkgdir" dist/*.whl
 }
-
-# vim:set sw=2 sts=-1 et:

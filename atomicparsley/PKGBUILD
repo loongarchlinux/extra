@@ -1,32 +1,36 @@
 # Maintainer: Johannes Löthberg <johannes@kyriasis.com>
-# Maintainer: Daniel M. Capella <polyzen@archlinux.org>
+# Contributor: Daniel M. Capella <polyzen@archlinux.org>
 
 pkgname=atomicparsley
-pkgver=20221229.172126.d813aa6
+pkgver=20240608.083822.1ed9031
 pkgrel=1
 pkgdesc='Command line program for reading, parsing and setting metadata in MPEG-4 files'
-arch=('loong64' 'x86_64')
+arch=(loong64 x86_64)
 url=https://github.com/wez/atomicparsley
-license=('GPL')
-depends=('gcc-libs' 'zlib')
-makedepends=('cmake')
-source=("$url/archive/$pkgver/$pkgname-$pkgver.tar.gz")
-b2sums=('c5cd76f873f463dfe5361e9f17a1f4b1b4b8b3e51a4fe7de12dc02d334ac31df834dc106cc91129bca984966c9df8f473d69e5a240e556af72e8cb579ec6cee4')
+license=(GPL-2.0-or-later)
+depends=(
+  gcc-libs
+  zlib
+)
+makedepends=(
+  cmake
+  git
+)
+source=("git+$url.git#tag=$pkgver")
+b2sums=('0482d3b6646362e7a4d88cec1f078f0cff33595113aa673f31234bd62e8b1ceb346eeac7d095774c7f0aa63aa48e139985e175c1d8290976688d3337328ad57f')
 
 build() {
-  cd $pkgname-$pkgver
+  cd $pkgname
   cmake -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=None .
   make
 }
 
 check() {
-  cd $pkgname-$pkgver
+  cd $pkgname
   ./tests/test.sh
 }
 
 package() {
-  cd $pkgname-$pkgver
+  cd $pkgname
   install -D AtomicParsley "$pkgdir"/usr/bin/atomicparsley
 }
-
-# vim:set ts=2 sw=2 et:

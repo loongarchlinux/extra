@@ -1,42 +1,67 @@
 # Maintainer: Levente Polyak <anthraxx[at]archlinux[dot]org>
 
 pkgname=sequoia-sqv
-pkgver=1.1.0
+pkgver=1.2.1
 pkgrel=1
 pkgdesc='Simple OpenPGP signature verification program'
 url='https://sequoia-pgp.org/'
-arch=('loong64' 'x86_64')
-license=('GPL2')
-groups=('sequoia')
-depends=('glibc' 'nettle' 'libnettle.so' 'libhogweed.so'
-         'gcc-libs' 'gmp')
-makedepends=('git' 'cargo' 'clang')
+arch=(loong64 x86_64)
+license=(GPL-2.0-or-later)
+groups=(sequoia)
+depends=(
+  gcc-libs
+  glibc
+  gmp
+  nettle
+)
+makedepends=(
+  cargo
+  clang
+  git
+)
 source=("git+https://gitlab.com/sequoia-pgp/sequoia-sqv.git#tag=v${pkgver}?signed")
-sha512sums=('SKIP')
+sha512sums=('6c5d431b7bc8855c73b45f497b59be93c2a31998dc285155aefb33dced2702ba8370639802d4bb33ca6bca3fa851413e31f83dbdf5c47932b3d6d6836f0df52b')
+b2sums=('94fc58b9045d1b1af3aa9b75f42dd95286a9c12375fd7c19368d9125aaf5601d2ef48549bccfe15d1cfe5a8e8f4ef7cfcf34ad7be292160b559815d1dad474d6')
 validpgpkeys=(
   D2F2C5D45BE9FDE6A4EE0AAF31855247603831FD # justus@sequoia-pgp.org
   CBCD8F030588653EEDD7E2659B7DD433F254904A # justus@sequoia-pgp.org
   D2F2C5D45BE9FDE6A4EE0AAF31855247603831FD # justus@sequoia-pgp.org
+  8F17777118A33DDA9BA48E62AACB3243630052D9 # Neal H. Walfield <neal@sequoia-pgp.org>
 )
+
+prepare() {
+  cd sequoia-sqv
+  export RUSTUP_TOOLCHAIN=stable
+  cargo fetch --locked --target "$(rustc -vV | sed -n 's/host: //p')"
+}
 
 build() {
   cd sequoia-sqv
+  export RUSTUP_TOOLCHAIN=stable
   export CARGO_TARGET_DIR=target
-  cargo build --release --locked --features 'crypto-nettle'
+  cargo build --frozen --release --features 'crypto-nettle'
 }
 
 check() {
   cd sequoia-sqv
-  cargo test --release --locked --features 'crypto-nettle'
+  export RUSTUP_TOOLCHAIN=stable
+  cargo test --frozen --features 'crypto-nettle'
 }
 
 package() {
+  depends+=(
+    libnettle.so
+    libhogweed.so
+)
+
   cd sequoia-sqv
   install -Dm 755 target/release/sqv -t "${pkgdir}/usr/bin"
 
-	install -Dm 644 target/sqv.bash "${pkgdir}/usr/share/bash-completion/completions/sqv"
-	install -Dm 644 target/_sqv -t "${pkgdir}/usr/share/zsh/site-functions"
-	install -Dm 644 target/sqv.fish -t "${pkgdir}/usr/share/fish/vendor_completions.d"
+  pushd target/release/build/sequoia-sqv-*/out/shell-completions/
+  install -Dm 644 sqv.bash "${pkgdir}/usr/share/bash-completion/completions/sqv"
+  install -Dm 644 _sqv -t "${pkgdir}/usr/share/zsh/site-functions"
+  install -Dm 644 sqv.fish -t "${pkgdir}/usr/share/fish/vendor_completions.d"
+  popd
 
   install -Dm 644 README.md -t "${pkgdir}/usr/share/doc/${pkgname}"
 }

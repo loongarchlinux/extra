@@ -1,8 +1,8 @@
 # Maintainer: Felix Yan <felixonmars@archlinux.org>
 
 pkgname=python-rtree
-pkgver=1.1.0
-pkgrel=3
+pkgver=1.2.0
+pkgrel=1
 pkgdesc="Rtree: spatial index for Python GIS"
 url="https://rtree.readthedocs.io/en/latest/"
 license=('MIT')
@@ -11,7 +11,7 @@ depends=('python' 'spatialindex')
 makedepends=('python-setuptools' 'python-wheel')
 checkdepends=('python-pytest' 'python-pytest-cov' 'python-numpy')
 source=("https://github.com/Toblerity/rtree/archive/$pkgver/$pkgname-$pkgver.tar.gz")
-sha512sums=('97a87027e49520f12cb86444ee8a9795fabeec6d8f0e3e869f2714df8f7c649ced1374385852af0ce7d7eb91e5a2cb464a4330807be15d538dc0a4d8de7b7ca2')
+sha512sums=('ab0ff77aad2dd7901c0997fd6d3673edda88539257a06564f6cd1d358aa29b19d269c1cb05db99cd06764ff7ea7209989996f87f9cfd43e4d04770e0be40c0eb')
 
 build() {
   cd rtree-$pkgver

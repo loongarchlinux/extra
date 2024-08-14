@@ -3,19 +3,20 @@
 # Contributor: yosh64 <yosh64@gmail.com>
 
 pkgname=mtpaint
-pkgver=3.50.09
-pkgrel=3
+pkgver=3.50.10
+_commit=a0e749d77ae9944974b0a7a98b479052141bd7bb # version: 3.50.10, no git tags are available
+pkgrel=1
 pkgdesc='Paint program for creating icons and pixel art'
 arch=(loong64 x86_64)
 url='https://github.com/wjaguar/mtpaint'
-license=(GPL3)
-depends=(gtk3 openjpeg2)
+license=(GPL-3.0-only)
+depends=(gtk3 libiconv libwebp openjpeg2)
 makedepends=(git)
 optdepends=('gifsicle: export GIF files from mtPaint')
 source=('https://raw.githubusercontent.com/puppylinux-woof-CE/woof-CE/e904dc79b479b3e62c69c65e744a8715fcfed0fa/woof-code/rootfs-petbuilds/mtpaint/wayland.patch'
-  "git+$url#commit=199472ad6a4ecee6c8583fb5a504a2e99712b4fc") # version: 3.50.09, no git tags available
+        "git+$url#commit=$_commit")
 b2sums=('e11a93ba95887abbca866db6687c0a2d410dd657649a17a0c97776977fe6c7bf69dccbf746309d7fdec44a5123c0ee5a47f2c093486b353bfed4c11799d167c0'
-        'SKIP')
+        'e83dc71c4fe3e2a6e7f7122c4f84f887cc94cf90c62f26980f7145a2bbe62e56cec1e191eedda76e8cc90a6b510e713361f2cbc1acc0df11d6102c3c986d12f9')
 
 prepare() {
   cd $pkgname
@@ -24,9 +25,8 @@ prepare() {
 
 build() {
   cd $pkgname
-  export CFLAGS="$(pkg-config openjp2 --cflags) -w $CFLAGS"
-  ./configure --mandir=/usr/share/man --prefix=/usr \
-    cflags gtk3 intl jp2v2 jpeg lcms2 man tiff
+  export CFLAGS+="$(pkg-config openjp2 --cflags) -w"
+  ./configure --mandir=/usr/share/man --prefix=/usr cflags gtk3 jp2v2 jpeg lcms2 man tiff
   make
 }
 

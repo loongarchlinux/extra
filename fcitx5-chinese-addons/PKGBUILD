@@ -2,34 +2,49 @@
 # Contributor: csslayer <wengxt AT gmail com>
 
 pkgname=fcitx5-chinese-addons
-pkgver=5.1.4
-pkgrel=1
+pkgver=5.1.6
+_py_stroke_ver=20121124
+_py_table_ver=20121124
+pkgrel=2
 pkgdesc="Addons related to Chinese, including IME previous bundled inside fcitx4"
 arch=('loong64' 'x86_64')
 url="https://github.com/fcitx/fcitx5-chinese-addons"
 license=('GPL')
 conflicts=('fcitx')
 depends=('curl' 'fcitx5-qt' 'libime' 'opencc' 'qt6-webengine')
-makedepends=('boost' 'extra-cmake-modules' 'fcitx5-lua' 'fmt' 'ninja')
+makedepends=('git' 'boost' 'extra-cmake-modules' 'fcitx5-lua' 'fmt' 'ninja')
 optdepends=('fcitx5-lua: Lua and imeapi support from pinyin')
-source=("https://download.fcitx-im.org/fcitx5/$pkgname/$pkgname-${pkgver}_dict.tar.xz"{,.sig})
-sha512sums=('99f3cc101532879c126e2699d338528a25531b782a5c1f1e93cd363437567c1ba7b0173aca56f887089d4379e86aecf7977139b5b5c44d54e0bd9a416b01e976'
-            'SKIP')
+source=("git+https://github.com/fcitx/fcitx5-chinese-addons.git#tag=$pkgver?signed"
+        "https://download.fcitx-im.org/data/py_stroke-$_py_stroke_ver.tar.gz"
+        "https://download.fcitx-im.org/data/py_table-$_py_table_ver.tar.gz")
+sha512sums=('a5f654bb9b2d1c6e4c8802b9ad7d57e7d6057974ee0e3a22df75b6f2581057624c0f2292504b7b023f4d10ebb98f26f1a38a1e10fac25604cb44aedcaec77f5b'
+            'd80ff9a3549e07c7a6935e686785f9a076c58f1a782a832ae28ee65e2a213d67f089f450ce09bed87ec2a141c32b9c1fcb83c221ddcab436858fa9009f161fb3'
+            '0fa72ce6820a316e9729bc0d7a08af5ca3468134de9ff1bf0c559a398846a7bcf7313a3609d943e6bab637d930cf45ad9acfe25a8d3df078a774b071a7296486')
 validpgpkeys=('2CC8A0609AD2A479C65B6D5C8E8B898CBF2412F9') # Weng Xuetian <wengxt@gmail.com>
+noextract=("py_stroke-$_py_stroke_ver.tar.gz"
+           "py_table-$_py_table_ver.tar.gz")
+
+prepare() {
+  cd $pkgname
+  mv ../py_stroke-$_py_stroke_ver.tar.gz modules/pinyinhelper/
+  mv ../py_table-$_py_table_ver.tar.gz modules/pinyinhelper/
+  # grep to make sure the version is correct
+  grep "PY_STROKE_VER $_py_stroke_ver" modules/pinyinhelper/CMakeLists.txt
+  grep "PY_TABLE_VER $_py_table_ver" modules/pinyinhelper/CMakeLists.txt
+}
 
 build() {
-  cd $pkgname-$pkgver
-
+  cd $pkgname
   cmake -GNinja -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_INSTALL_LIBDIR=/usr/lib -DUSE_WEBKIT=Off .
   ninja
 }
 
 check() {
-  cd $pkgname-$pkgver
+  cd $pkgname
   ninja test
 }
 
 package() {
-  cd $pkgname-$pkgver
+  cd $pkgname
   DESTDIR="$pkgdir" ninja install
 }

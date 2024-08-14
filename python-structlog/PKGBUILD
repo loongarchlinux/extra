@@ -3,16 +3,21 @@
 
 pkgname=python-structlog
 # https://github.com/hynek/structlog/blob/main/CHANGELOG.md
-pkgver=24.1.0
+pkgver=24.4.0
+# XXX: manually update tags before pacman 7.0 is out, where unstable checksums caused by upstream .gitattributes [1] are avoided [2]
+# [1] https://github.com/hynek/structlog/blob/main/.gitattributes
+# [2] https://gitlab.archlinux.org/pacman/pacman/-/merge_requests/176
 # curl https://api.github.com/repos/hynek/structlog/git/ref/tags/$pkgver | jq -r .object.sha
-_tag=3dac758cc28fc063067cfce57e37c67b16daf00d
-pkgrel=2
+_tag=a7d184934bfb419e4d113e968246e66e27f68630
+pkgrel=1
 pkgdesc="Structured Logging for Python"
 url="https://www.structlog.org"
-license=('Apache')
+# https://github.com/hynek/structlog/blob/24.2.0/pyproject.toml#L14
+license=('MIT OR Apache-2.0')
 arch=('any')
 depends=('python')
-makedepends=('git' 'python-build' 'python-installer'
+# openssh needed to verify SSH signatures
+makedepends=('git' 'openssh' 'python-build' 'python-installer'
              'python-hatchling' 'python-hatch-vcs' 'python-hatch-fancy-pypi-readme')
 checkdepends=('python-pytest' 'python-freezegun' 'python-pretend' 'python-simplejson'
               'python-twisted' 'python-rapidjson' 'python-greenlet' 'python-pytest-asyncio'
@@ -23,11 +28,16 @@ optdepends=(
   'python-rich: for structlog.dev'
 )
 # The PyPI tarball is signed, but missing conftest.py
-source=("git+https://github.com/hynek/structlog.git?signed#tag=$_tag")
-sha512sums=('SKIP')
-validpgpkeys=(
-  'C2A04F86ACE28ADCF817DBB7AE2536227F69F181'  # https://keys.openpgp.org/vks/v1/by-fingerprint/C2A04F86ACE28ADCF817DBB7AE2536227F69F181
-)
+source=("git+https://github.com/hynek/structlog.git#tag=$_tag"
+        "ssh_allowed_signers")
+sha512sums=('SKIP'
+            '6ccc3793e6128783b745879785264f66961a6d3aeefd4c39746503490fe0c36c92807f3149ed601fdaaf84be244a6b24882a337025a2dd317a96d75b50f1fabd')
+
+# XXX: move to verify() when devtools supports it
+# https://gitlab.archlinux.org/archlinux/devtools/-/issues/224
+prepare() {
+  git -C structlog -c gpg.ssh.allowedSignersFile="$srcdir/ssh_allowed_signers" verify-tag $pkgver
+}
 
 pkgver() {
   cd structlog
@@ -50,4 +60,5 @@ check() {
 package() {
   cd structlog
   python -m installer --destdir="$pkgdir" dist/*.whl
+  install -Dm644 LICENSE-{APACHE,MIT} -t "$pkgdir"/usr/share/licenses/$pkgname
 }

@@ -4,7 +4,7 @@
 
 pkgname=aspell-sv
 pkgver=0.51
-pkgrel=4
+pkgrel=5
 
 pkgdesc="Swedish dictionary for aspell"
 url="http://aspell.net/"

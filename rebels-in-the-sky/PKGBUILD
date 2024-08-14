@@ -1,0 +1,37 @@
+# Maintainer: Orhun Parmaksız <orhun@archlinux.org>
+
+pkgname=rebels-in-the-sky
+pkgver=1.0.14
+pkgrel=1
+pkgdesc="P2P terminal game about spacepirates playing basketball across the galaxy"
+url="https://github.com/ricott1/rebels-in-the-sky"
+depends=('gcc-libs' 'alsa-lib')
+makedepends=('cargo')
+arch=('loong64' 'x86_64')
+license=('GPL-3.0')
+source=("${pkgname}-${pkgver}.tar.gz::$url/archive/v$pkgver.tar.gz")
+sha512sums=('f3daf6bfe2e30770fd9f3762902c9d94ca25aaf04ae78672f644db05f015fb83ea1ecae5bf9e9bda14838cb86f08229872ca48b68bc79a3df0a5721bacfbc0df')
+options=('!lto')
+
+prepare() {
+  cd "${pkgname}-${pkgver}"
+  cargo fetch --locked --target "$(rustc -vV | sed -n 's/host: //p')"
+}
+
+build() {
+  cd "${pkgname}-${pkgver}"
+  cargo build --release --frozen
+}
+
+# check() {
+#   cd "${pkgname}-${pkgver}"
+#   cargo test --frozen -- --skip "test_game"
+# }
+
+package() {
+  cd "${pkgname}-${pkgver}"
+  install -Dm 755 "target/release/rebels" "${pkgdir}/usr/bin/${pkgname}"
+  install -Dm 644 README.md -t "${pkgdir}/usr/share/doc/${pkgname}"
+}
+
+# vim:set ts=2 sw=2 et:

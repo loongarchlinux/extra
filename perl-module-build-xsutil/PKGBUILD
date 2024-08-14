@@ -4,7 +4,7 @@
 
 pkgname=perl-module-build-xsutil
 pkgver=0.19
-pkgrel=7
+pkgrel=8
 pkgdesc="A Module::Build class for building XS modules"
 arch=('any')
 license=('PerlArtistic' 'GPL')

@@ -1,0 +1,61 @@
+--- test/integration/p11-tool.sh.nosetup.orig	2022-03-21 13:07:16.000000000 +0000
++++ test/integration/p11-tool.sh.nosetup	2024-07-09 08:33:07.084960332 +0100
+@@ -222,7 +222,7 @@
+ 
+ setup_asan
+ 
+-openssl dgst -provider tpm2 -provider base \
++openssl dgst -provider tpm2 -provider default \
+         -sha256 -sigopt rsa_padding_mode:pss -sigopt rsa_pss_saltlen:-1 \
+         -sign "$TPM2_PKCS11_STORE/myrsakey.pem" -out ${tempdir}/sig -passin "pass:$auth_myrsakey" ${tempdir}/data
+ 
+@@ -252,7 +252,7 @@
+ 
+ setup_asan
+ 
+-openssl dgst -provider tpm2 -provider base \
++openssl dgst -provider tpm2 -provider default \
+   -sha1 -sign "$TPM2_PKCS11_STORE/myecckey.pem" -out ${tempdir}/sig -passin "pass:$auth_myecckey" ${tempdir}/data
+ 
+ openssl dgst -sha1 -verify ${tempdir}/eccpubkey.pem -signature ${tempdir}/sig ${tempdir}/data
+
+--- test/integration/scripts/create_pkcs_store.sh.orig	2023-01-23 18:48:06.000000000 +0000
++++ test/integration/scripts/create_pkcs_store.sh	2024-07-08 22:32:54.404590195 +0100
+@@ -181,21 +181,21 @@
+     setup_asan
+ 
+     TPM2OPENSSL_PARENT_AUTH="mypobjpin" openssl \
+-        req -provider tpm2 -provider base -new -x509 -days 365 -subj '/CN=my key/' -sha256 \
++        req -provider tpm2 -provider default -new -x509 -days 365 -subj '/CN=my key/' -sha256 \
+             -key "$TPM2_PKCS11_STORE/14.pem" --passin "pass:$auth_14" -out "$cert.ec1"
+ 
+     TPM2OPENSSL_PARENT_AUTH="mypobjpin" openssl \
+-        req -provider tpm2 -provider base -new -x509 -days 365 -subj '/CN=my key/' -sha256 \
++        req -provider tpm2 -provider default -new -x509 -days 365 -subj '/CN=my key/' -sha256 \
+         -key "$TPM2_PKCS11_STORE/6.pem" --passin "pass:$auth_6" \
+         -config "$TEST_FIXTURES/ossl-req-ca.cnf" -extensions ca_ext -out "$cert.rsa1"
+ 
+ 	# sign a certificate for rsa2 using the rsa1 key
+ 	TPM2OPENSSL_PARENT_AUTH="mypobjpin" openssl \
+-	    req -provider tpm2 -provider base -new -subj '/CN=my sub key/' -sha256 \
++	    req -provider tpm2 -provider default -new -subj '/CN=my sub key/' -sha256 \
+ 	    -key "$TPM2_PKCS11_STORE/8.pem" --passin "pass:$auth_8" -out "$cert.csr.rsa2"
+ 
+ 	TPM2OPENSSL_PARENT_AUTH="mypobjpin" openssl \
+-    	x509 -provider tpm2 -provider base -req -days 365 -sha256 -in "$cert.csr.rsa2" \
++    	x509 -provider tpm2 -provider default -req -days 365 -sha256 -in "$cert.csr.rsa2" \
+     	-CA "$cert.rsa1" -CAkey "$TPM2_PKCS11_STORE/6.pem" --passin "pass:$auth_6"\
+     	-CAcreateserial -extfile "$TEST_FIXTURES/ossl-req-cert.cnf" -extensions cert_ext \
+     	-out "$cert.rsa2"
+
+--- test/integration/scripts/helpers.sh.orig	2022-03-21 13:07:16.000000000 +0000
++++ test/integration/scripts/helpers.sh		2024-07-08 22:27:29.581134010 +0100
+@@ -84,7 +84,7 @@
+ {
+   # do this in an if statement so it can fail and not cause
+   # set -e (execfail) to exit the script
+-  if pkg-config --exists 'libcrypto < 3'; then
++  if pkg-config --max-version 3 --exists 'libcrypto'; then
+     OSSL3_DETECTED=0
+   else
+     OSSL3_DETECTED=1

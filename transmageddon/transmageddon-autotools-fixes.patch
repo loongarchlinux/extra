@@ -1,0 +1,89 @@
+From 0477c02ab8c50a6a8b30ba01ba295a121afe2c28 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Ball=C3=B3=20Gy=C3=B6rgy?= <ballogyor@gmail.com>
+Date: Thu, 8 Aug 2024 17:47:59 +0200
+Subject: [PATCH] Autotools fixes
+
+---
+ Makefile.am  | 15 +--------------
+ configure.ac | 24 +++++++++++++-----------
+ 2 files changed, 14 insertions(+), 25 deletions(-)
+
+diff --git a/Makefile.am b/Makefile.am
+index 929cc57..751bc47 100644
+--- a/Makefile.am
++++ b/Makefile.am
+@@ -1,6 +1,6 @@
+ ACLOCAL_AMFLAGS = -I common/m4 ${ACLOCAL_FLAGS}
+ 
+-SUBDIRS	= bin src common po profiles presets appdata icons
++SUBDIRS	= bin src po profiles presets appdata icons
+ 
+ @INTLTOOL_DESKTOP_RULE@
+ 
+@@ -51,16 +51,3 @@ EXTRA_DIST +=                    \
+ 
+ DISTCHECK_CONFIGURE_FLAGS = \
+        --enable-appdata-check
+-
+-locale-uninstalled:
+-	if test -d po; then \
+-	    $(MAKE) -C po datadir=../$(top_builddir) install; \
+-	fi
+-
+-locale-uninstalled-clean:
+-	@-rm -rf _trial_temp
+-	@-rm -rf $(top_builddir)/locale
+-
+-
+-all-local: locale-uninstalled
+-clean-local: locale-uninstalled-clean
+diff --git a/configure.ac b/configure.ac
+index a6f2561..b2096be 100644
+--- a/configure.ac
++++ b/configure.ac
+@@ -31,20 +31,24 @@ dnl the runtime checks in pitivi/check.py
+ 
+ AC_SUBST(GST_REQ, 1.2.0)
+ 
+-AS_AC_EXPAND(LIBDIR, $libdir)
+-AC_MSG_NOTICE(Storing library files in $LIBDIR)
++AX_RECURSIVE_EVAL([$libdir], [LIBDIR])
++AC_SUBST([LIBDIR])
++AC_MSG_NOTICE([Storing library files in $LIBDIR])
+ 
+-AS_AC_EXPAND(DATADIR, $datadir)
+-AC_MSG_NOTICE(Storing data files in $DATADIR)
++AX_RECURSIVE_EVAL([$datadir], [DATADIR])
++AC_SUBST([DATADIR])
++AC_MSG_NOTICE([Storing data files in $DATADIR])
+ 
+-AS_AC_EXPAND(SYSCONFDIR, $sysconfdir)
+-AC_MSG_NOTICE(Storing configuration files in $SYSCONFDIR)
++AX_RECURSIVE_EVAL([$sysconfdir], [SYSCONFDIR])
++AC_SUBST([SYSCONFDIR])
++AC_MSG_NOTICE([Storing configuration files in $SYSCONFDIR])
+ 
+-AS_AC_EXPAND(LOCALSTATEDIR, $localstatedir)
+-AC_MSG_NOTICE(Using localstatedir $LOCALSTATEDIR)
++AX_RECURSIVE_EVAL([$localstatedir], [LOCALSTATEDIR])
++AC_SUBST([LOCALSTATEDIR])
++AC_MSG_NOTICE([Using localstatedir $LOCALSTATEDIR])
+ 
+ dnl check for python
+-AS_PATH_PYTHON(2.5)
++AM_PATH_PYTHON(2.5)
+ 
+ dnl enable i18n
+ ALL_LINGUAS="pl"
+@@ -65,8 +69,6 @@ AC_CONFIG_FILES([
+ Makefile
+ appdata/Makefile
+ bin/Makefile
+-common/Makefile
+-common/m4/Makefile
+ icons/Makefile
+ icons/16x16/Makefile
+ icons/22x22/Makefile
+-- 
+2.45.2
+

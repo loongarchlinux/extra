@@ -2,7 +2,7 @@
 
 pkgbase=cardinal
 pkgname=(cardinal cardinal-{clap,data,lv2,standalone,vst,vst3})
-pkgver=24.04
+pkgver=24.05
 pkgrel=1
 pkgdesc="Virtual modular synthesizer"
 arch=(loong64 x86_64)
@@ -60,11 +60,14 @@ checkdepends=(
 source=(
   $url/releases/download/$pkgver/$pkgbase-$pkgver.tar.xz
   $pkgbase-$pkgver.svg::https://raw.githubusercontent.com/DISTRHO/Cardinal/eb95b5990cf734c10f2caab1a246eac893f0266d/plugins/Cardinal/orig/distrho.svg
+  $pkgbase-$pkgver-lto-fix.patch::https://github.com/DISTRHO/Cardinal/commit/77b5becf75c8842cd30ee99d326782894fb334d3.patch
 )
-sha512sums=('2da862e99e5989120f80b1c3b08aabfb4395d266a739a8fc182e0f60c5a0041ffcdf0db3fae69eb67c1b663b30bdeec952b5f59bdb1c93bfdac6c4cbe987a200'
-            '31a7d1e548285af0ead1bc844fbb1d35b50f6284159047cb401a829d4068992fa328770e42c377c08d013f6787e55ac12b94eba4d5af4b90373b157971fc8835')
-b2sums=('11f6bc45ebb051d5fb16b557c0160db058d8ae56d01459796f257d6f01e1252ebb9b01c68b2d9a626e0c17e925682bc7016f84aaa0e4d63f24ac8d3af47e0d2c'
-        'd82fefe15234c1ed3a4d487c6082a2e3ac73b60f11041314e99c5a5de5b3ea141efbd5afd18851510bd4f801fd71f7cd89d54d86258d1ba750bbfd762aa37a8d')
+sha512sums=('a84a9d0453a7096314f38e93bf487156dddd0ef76ae39b63887438872ae7c5a67ea7f8aea21a2ef9c9e6559fb2d5c06167c9ccc0f6a84ed5be9773c5289e177d'
+            '31a7d1e548285af0ead1bc844fbb1d35b50f6284159047cb401a829d4068992fa328770e42c377c08d013f6787e55ac12b94eba4d5af4b90373b157971fc8835'
+            '30fdf2fc115837307c20753282014238d9aabf70a95cccfeb65992cca4cc9a3128e596bab8c0fff5b4bf23529c509e2cc914b6d741dc20a1096c4495b8e07032')
+b2sums=('4a185866fe224f5d38f67029ee41c571f9d3494fd31fdadd79149b6ca53fa6bd6dc85cef3e852fb0a0c284e8cefcd3935d5a76d464d330b3b168b8e8f8c09366'
+        'd82fefe15234c1ed3a4d487c6082a2e3ac73b60f11041314e99c5a5de5b3ea141efbd5afd18851510bd4f801fd71f7cd89d54d86258d1ba750bbfd762aa37a8d'
+        '697c2b837ac1853dd49662d03d5f6af042530e2d14e2889640f8d4890631f231ca4cc94ef5c62b669517f9ae1a79ccac6226bfe8f6d8a3702741ecad6a1161ea')
 
 _common_depends=(
   cardinal-data
@@ -108,6 +111,7 @@ _license() {
   install -vDm 644 $pkgbase-$pkgver/plugins/AS/LICENSE.txt "$pkgdir/usr/share/licenses/$pkgname/AS/MIT.txt"
   install -vDm 644 $pkgbase-$pkgver/plugins/AaronStatic/LICENSE.txt "$pkgdir/usr/share/licenses/$pkgname/AaronStatic/MIT.txt"
   install -vDm 644 $pkgbase-$pkgver/plugins/AmalgamatedHarmonics/LICENSE "$pkgdir/usr/share/licenses/$pkgname/AmalgamatedHarmonics/BSD-3-Clause.txt"
+  # NOTE: license for Biset is currently missing: https://github.com/gibbonjoyeux/VCV-Biset/issues/35
   install -vDm 644 $pkgbase-$pkgver/plugins/CatroModulo/LICENSE.txt "$pkgdir/usr/share/licenses/$pkgname/CatroModulo/BSD-3-Clause.txt"
   install -vDm 644 $pkgbase-$pkgver/plugins/Computerscare/LICENSE.txt "$pkgdir/usr/share/licenses/$pkgname/ComputerScare/BSD-3-Clause.txt"
   install -vDm 644 $pkgbase-$pkgver/plugins/CVfunk/LICENSE "$pkgdir/usr/share/licenses/$pkgname/CVfunk/MIT.txt"
@@ -121,6 +125,7 @@ _license() {
   install -vDm 644 $pkgbase-$pkgver/plugins/MockbaModular/LICENSE "$pkgdir/usr/share/licenses/$pkgname/MockbaModular/MIT.txt"
   install -vDm 644 $pkgbase-$pkgver/plugins/mscHack/LICENSE.txt "$pkgdir/usr/share/licenses/$pkgname/mscHack/BSD-3-Clause.txt"
   install -vDm 644 $pkgbase-$pkgver/plugins/MSM/LICENSE.txt "$pkgdir/usr/share/licenses/$pkgname/MSM/MIT.txt"
+  install -vDm 644 $pkgbase-$pkgver/plugins/PdArray/LICENSE.txt "$pkgdir/usr/share/licenses/$pkgname/PdArray/EUPL-1.2.txt"
   install -vDm 644 $pkgbase-$pkgver/plugins/Prism/LICENSE "$pkgdir/usr/share/licenses/$pkgname/Prism/BSD-3-Clause.txt"
   install -vDm 644 $pkgbase-$pkgver/plugins/rackwindows/LICENSE.md "$pkgdir/usr/share/licenses/$pkgname/rackwindows/MIT.txt"
   install -vDm 644 $pkgbase-$pkgver/plugins/StarlingVia/LICENSE "$pkgdir/usr/share/licenses/$pkgname/StarlingVia/MIT.txt"
@@ -135,6 +140,9 @@ prepare() {
           --pkgdesc "$pkgdesc standalone" \
           --icon $pkgbase \
           --genericname "Virtual modular synthesizer"
+
+  # allow building with LTO enabled
+  patch -Np1 -d $pkgbase-$pkgver -i ../$pkgbase-$pkgver-lto-fix.patch
 }
 
 build() {

@@ -1,0 +1,40 @@
+# Maintainer: Daniel M. Capella <polyzen@archlinux.org>
+# Contributor: ObserverOfTime <chronobserver@disroot.org>
+
+pkgname=tree-sitter-vim
+pkgver=0.4.0
+pkgrel=1
+pkgdesc='Vimscript grammar for tree-sitter'
+arch=(loong64 x86_64)
+url=https://github.com/tree-sitter-grammars/tree-sitter-vim
+license=(MIT)
+groups=(tree-sitter-grammars)
+makedepends=(
+  git
+  tree-sitter-cli
+)
+optdepends=('tree-sitter: core library')
+provides=("lib$pkgname.so")
+source=("git+$url.git#tag=v$pkgver")
+b2sums=('af71ca5ac8644f95aaecce8063f24548d9ef925e36aaf532e8a410ac3381c3ac06b3781387da337f9297ae1bbc17f3a47928fbf8e52590ac6fda9e3e54407c76')
+
+prepare() {
+  cd $pkgname
+  tree-sitter generate --no-bindings src/grammar.json
+}
+
+build() {
+  cd $pkgname
+  make PREFIX=/usr PARSER_URL=$url
+}
+
+package() {
+  install -d "$pkgdir"/usr/lib/tree_sitter
+  ln -s /usr/lib/lib$pkgname.so \
+    "$pkgdir"/usr/lib/tree_sitter/${pkgname#tree-sitter-}.so
+
+  cd $pkgname
+  make DESTDIR="$pkgdir" PREFIX=/usr install
+  install -Dm644 -t "$pkgdir"/usr/share/doc/$pkgname README.md
+  install -Dm644 -t "$pkgdir"/usr/share/licenses/$pkgname LICENSE
+}

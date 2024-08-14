@@ -1,8 +1,8 @@
 # Maintainer: Jan Alexander Steffens (heftig) <heftig@archlinux.org>
 
 pkgname=pam_wrapper
-pkgver=1.1.5
-pkgrel=2
+pkgver=1.1.7
+pkgrel=1
 pkgdesc="Tool to test PAM applications and PAM modules"
 url="https://cwrap.org/pam_wrapper.html"
 arch=(loong64 x86_64)
@@ -19,28 +19,19 @@ makedepends=(
   git
   graphviz
   ninja
+  python-setuptools
 )
 provides=(
   libpam_wrapper.so
   libpamtest.so
 )
 source=(
-  "git+https://git.samba.org/pam_wrapper.git#tag=$pkgname-$pkgver"
-  $pkgname-1.1.5-site-packages.patch
+  "git+https://git.samba.org/pam_wrapper.git#tag=pam_wrapper-$pkgver"
 )
-b2sums=('c147d5fc2aa8abc65ed18725e80ecaa2bbe2018fb58cf99ff81ce0ea095c029dd69049bfc06da0ff5f8a4e91dc0ca19976038203ea5580a700fdd75d0cb0dab7'
-        '721fc27dc18ea2ad727486ee08a1acdf9e71c44cd5519d468c14efd5f165ae048aee2ccf352e174e590c50a5b1ccfe2891e601fa20a163f960f968c7f6a54e1a')
-
-pkgver() {
-  cd $pkgname
-  git describe --tags | sed 's/^pam_wrapper-//;s/[^-]*-g/r&/;s/-/+/g'
-}
+b2sums=('4cf21b6021e43c32656376f43551dd19dcd2683f527cf9705af2befcc4d8d9cf8aa18d333bfa6ba3fe7d321853aed5809ba2389ef3cad56cc32cc0f2f72210d7')
 
 prepare() {
   cd $pkgname
-  # do not rely on distutils to get site-packages location (minus prefix)
-  # (this is a bit hacky but works for our use-case)
-  patch -Np1 -i ../$pkgname-1.1.5-site-packages.patch
 }
 
 build() {
@@ -56,8 +47,7 @@ build() {
 }
 
 check() {
-  cd build
-  ctest --output-on-failure --stop-on-failure -j$(nproc)
+  ctest --test-dir build --output-on-failure --stop-on-failure -j$(nproc)
 }
 
 package() {

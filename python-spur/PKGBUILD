@@ -3,14 +3,14 @@
 _pkg=spur
 pkgname=python-${_pkg}
 pkgver=0.3.23
-pkgrel=3
+pkgrel=4
 pkgdesc="Run commands and manipulate files locally or over SSH using the same interface"
 arch=(any)
 url="https://github.com/mwilliamson/spur.py"
 license=(BSD)
 makedepends=(python-setuptools)
 depends=(python python-paramiko)
-checkdepends=(python-nose)
+checkdepends=(python-pytest)
 # No tests in pypi tarballs
 #source=(https://files.pythonhosted.org/packages/source/${_pkg::1}/${_pkg}/${_pkg}-${pkgver}.tar.gz)
 source=(${url}/archive/${pkgver}/${pkgname}-${pkgver}.tar.gz)
@@ -23,8 +23,9 @@ build() {
 
 check() {
   cd ${_pkg}.py-${pkgver}
-  # https://github.com/mwilliamson/spur.py/issues/85
-  nosetests || echo "Tests failed"
+  TEST_SSH_USERNAME=arch TEST_SSH_PASSWORD='' pytest tests/local_tests.py
+  # Other tests require a functioning sshd server
+  # https://github.com/mwilliamson/spur.py/blob/5d25003250dc16cb626cc476d416a8abcd6c112e/CONTRIBUTING.rst
 }
 
 package() {

@@ -1,30 +1,30 @@
 # Maintainer: Felix Yan <felixonmars@archlinux.org>
 
 pkgname=python-whitenoise
-pkgver=6.6.0
-pkgrel=2
+pkgver=6.7.0
+pkgrel=1
 pkgdesc='Radically simplified static file serving for WSGI applications'
 arch=('any')
 license=('MIT')
 url='https://github.com/evansd/whitenoise'
 depends=('python')
-makedepends=('python-build' 'python-installer' 'python-setuptools' 'python-wheel')
+makedepends=('git' 'python-build' 'python-installer' 'python-setuptools' 'python-wheel')
 checkdepends=('python-brotli' 'python-django' 'python-pytest' 'python-requests')
-source=("https://github.com/evansd/whitenoise/archive/$pkgver/$pkgname-$pkgver.tar.gz")
-sha512sums=('523070b760d17ff3b1ae263ea36d6b875acb2d9d05d562b1e24a24be84ebb026b7ebf558c6b6322a028a321c75dc3dfe7b3d84e8b3710754f05553820bc12f51')
+source=("git+https://github.com/evansd/whitenoise.git#tag=$pkgver")
+sha512sums=('546252754ea615cc9711c195e955b83e0d03aa0442f89cc6182e88a4b2d454660ba9221b7573b7ab140ca9fbe08c7bbcda9484956e069316816351363d3d570a')
 
 build() {
-  cd whitenoise-$pkgver
+  cd whitenoise
   python -m build -nw
 }
 
 check() {
-  cd whitenoise-$pkgver
+  cd whitenoise
   DJANGO_SETTINGS_MODULE=tests.django_settings PYTHONPATH="$PWD"/src pytest
 }
 
 package() {
-  cd whitenoise-$pkgver
+  cd whitenoise
   python -m installer --destdir="$pkgdir" dist/*.whl
   install -Dm644 LICENSE -t "$pkgdir"/usr/share/licenses/$pkgname/
 }

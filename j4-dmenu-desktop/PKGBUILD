@@ -5,49 +5,51 @@
 # Contributor: Bill Kolokithas
 
 pkgname=j4-dmenu-desktop
-pkgver=2.18
-pkgrel=5
+pkgver=3.1
+pkgrel=1
 pkgdesc="Find .desktop files and offer you a menu to start an application using dmenu"
 arch=('loong64' 'x86_64')
 url="https://github.com/enkore/j4-dmenu-desktop"
-license=('GPL3')
-optdepends=('dmenu: The default backend'
-            'bemenu: An alternative backend')
+license=('GPL-3.0-only')
+depends=(
+    'fmt'
+    'gcc-libs'
+    'glibc'
+    'spdlog'
+)
 makedepends=(
+    'catch2'
     'cmake'
-    'git'  # For cloning "catch"; upstream doesn't use a system installation
+    'meson'
+)
+optdepends=(
+    'dmenu: The default backend'
+    'bemenu: An alternative backend'
+    'bemenu: An alternative backend'
+    'wmenu: An alternative backend'
 )
 source=("$pkgname-$pkgver.tar.gz::$url/archive/r$pkgver.tar.gz"
-        "$pkgname-$pkgver.tar.gz.sig::$url/releases/download/r$pkgver/r$pkgver.tar.gz.sig"
-        "fix-gcc13-build.patch::https://github.com/enkore/j4-dmenu-desktop/commit/f9ea4ca70164aa2d64c2aa729d0eb9857cff3d43.patch")
-validpgpkeys=('A1774C1B37DC1DCEDB65EE469B8450B91D1362C1')  # Marian Beermann <public@enkore.de>
-sha256sums=('77c5605d0c1291bcf1e13b186ea3b32ddf4753de0d0e39127b4a7d2098393e25'
-            'SKIP'
-            'a85316b3fa4e5826846c73f7ee6fec138cc94a803f141049497bf7e66e447f5b')
-
-prepare() {
-    cd "$pkgname-r$pkgver"
-
-    # fix build with gcc >=13
-    patch -Np1 -i "$srcdir/fix-gcc13-build.patch"
-}
+        "$pkgname-$pkgver.tar.gz.sig::$url/releases/download/r$pkgver/r$pkgver.tar.gz.sig")
+validpgpkeys=('7B0F58A5E0F1A2EA11578A731A14CB3464CBE5BF')  # Meator <meator.dev@gmail.com>
+sha256sums=('0e6cf25663cc220e3e3e2bc013fe957c3e4a44f900b5ee6a7609cd501021652d'
+            'SKIP')
 
 build() {
-    cmake -B build -S "$pkgname-r$pkgver" \
-        -DCMAKE_BUILD_TYPE='None' \
-        -DCMAKE_INSTALL_PREFIX='/usr'
-    cmake --build build
+    arch-meson "$pkgname-r$pkgver" build
+    meson compile -C build
 }
 
 check() {
-    ctest --test-dir build --output-on-failure
+    meson test -C build
 }
 
 package() {
-    DESTDIR="$pkgdir" cmake --install build
+    DESTDIR="$pkgdir" meson install -C build
+
     cd "$pkgname-r$pkgver"
     install -Dm0644 README.md -t "$pkgdir/usr/share/doc/$pkgname/"
+    install -Dm0644 CHANGELOG -t "$pkgdir/usr/share/doc/$pkgname/"
+
     install -dm0755 "$pkgdir/usr/share/man/man1"
     gzip < j4-dmenu-desktop.1 > "$pkgdir/usr/share/man/man1/j4-dmenu-desktop.1.gz"
 }
-

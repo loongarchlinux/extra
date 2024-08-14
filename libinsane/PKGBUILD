@@ -2,20 +2,35 @@
 
 pkgname=libinsane
 pkgver=1.0.10
-pkgrel=1
+pkgrel=2
 pkgdesc='Library to access scanners'
-arch=('loong64' 'x86_64')
+arch=(loong64 x86_64)
 url='https://gitlab.gnome.org/World/OpenPaperwork/libinsane'
-license=('LGPL3')
-depends=('sane')
-makedepends=('gobject-introspection' 'meson' 'vala')
-checkdepends=('cunit')
-source=("https://gitlab.gnome.org/World/OpenPaperwork/$pkgname/-/archive/$pkgver/$pkgname-$pkgver.tar.gz")
-sha256sums=('a9b8daaef03eb3bc4a8e638131e506ff3c2f99f715170da572e7f5ce7ba76467')
+license=(LGPL-3.0-or-later)
+depends=(
+  glib2
+  glibc
+  sane
+)
+makedepends=(
+  doxygen
+  git
+  glib2-devel
+  gobject-introspection
+  meson
+  vala
+)
+checkdepends=(
+  cunit
+  valgrind
+)
+source=("git+https://gitlab.gnome.org/World/OpenPaperwork/$pkgname.git#tag=$pkgver")
+b2sums=(e79489c83ad4f9125dd0c94b31187c37420b884047aba334bd737ccd45f53d77cde882b87e3ddc8f67e311dc54c9120746746358ca59c68ab7e196c2f0e70230)
 
 build() {
-  arch-meson $pkgname-$pkgver build
+  arch-meson $pkgname build
   meson compile -C build
+  meson compile -C build doc
 }
 
 check() {
@@ -24,4 +39,7 @@ check() {
 
 package() {
   meson install -C build --destdir "$pkgdir"
+
+  mkdir -p "$pkgdir/usr/share/doc/$pkgname"
+  cp -r build/doc/html "$pkgdir/usr/share/doc/$pkgname/html"
 }

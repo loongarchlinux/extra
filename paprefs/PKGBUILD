@@ -5,21 +5,34 @@
 
 pkgname=paprefs
 pkgver=1.2
-pkgrel=1
+pkgrel=3
 pkgdesc="Configuration dialog for PulseAudio"
 url="https://freedesktop.org/software/pulseaudio/paprefs/"
-license=(GPL2)
+license=(GPL-2.0-or-later)
 arch=(loong64 x86_64)
-depends=(gtkmm3 libsigc++ pulseaudio)
-makedepends=(meson lynx tidy git)
-_commit=d70f061e1703c53aa327d3e836222e47dde86204  # tags/v1.2^0
-source=("git+https://gitlab.freedesktop.org/pulseaudio/paprefs.git#commit=$_commit")
-sha512sums=('SKIP')
-
-pkgver() {
-  cd paprefs
-  git describe --tags | sed 's/^v//;s/[^-]*-g/r&/;s/-/+/g'
-}
+depends=(
+  atkmm
+  gcc-libs
+  glib2
+  glibc
+  glibmm
+  gtk3
+  gtkmm3
+  libsigc++
+  pulse-native-provider
+)
+makedepends=(
+  git
+  libpulse
+  lynx
+  meson
+  tidy
+)
+source=("git+https://gitlab.freedesktop.org/pulseaudio/paprefs.git?signed#tag=v$pkgver")
+b2sums=('fabb9185280f08246645c105cf1d4c923a6030b536bdc7a72ce5cf290a6a22f6ef9f9ab7d930c8e575e512ab4af360e45ea1069ed2957e3becf054aa1f2081dc')
+validpgpkeys=(
+  B61E1D411D57BD16F11536162477064CE8B9F3BD # Tanu Kaskinen <tanuk@iki.fi>
+)
 
 prepare() {
   cd paprefs
@@ -38,3 +51,5 @@ package() {
   meson install -C build --destdir "$pkgdir"
   install -Dt "$pkgdir/usr/share/doc/$pkgname" -m644 build/doc/README
 }
+
+# vim:set sw=2 sts=-1 et

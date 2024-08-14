@@ -6,8 +6,8 @@
 
 _name=pytest-testinfra
 pkgname=python-pytest-testinfra
-pkgver=10.1.0
-pkgrel=2
+pkgver=10.1.1
+pkgrel=1
 pkgdesc='Testinfra test your infrastructures'
 arch=(any)
 url="https://github.com/pytest-dev/pytest-testinfra"
@@ -43,8 +43,8 @@ optdepends=(
   'salt: for tests using saltstack'
 )
 source=($_name-$pkgver.tar.gz::$url/archive/refs/tags/$pkgver.tar.gz)
-sha512sums=('8d9d0b2031244842f31f349092f3e842608aa677a9ab8b94cea3f8ac1427c4422e96da56d6965e7edd27e72e4b6e5d80f84d239b09a2243b6f727b389321cb71')
-b2sums=('6bc717749c6b50eca276103e590e2ab85cdcf94034a2a7075682939f140f7a024410449ecc7ce2a54cc33028c1359627923e0a0a11c7750693b00ae3a6e4ad37')
+sha512sums=('f20c87c0842871edfe9711b4ffeeca9ca26481cd92d87f238c98c8b865b7a2662ebf2e2fae23affb82a5f130270ec4e68f6470ea993d50882ea171bf2acb2d8e')
+b2sums=('e8e5b2bfe88438e3d56c41c122d6c3f97094bf719cb4951b888976383e0f03619bf46232679cc18002aa45346ec17e5c0ca3f5d749e242a05cee358c619fae38')
 
 build() {
   cd $_name-$pkgver

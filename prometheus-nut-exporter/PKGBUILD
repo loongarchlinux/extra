@@ -1,0 +1,71 @@
+# Maintainer: George Rawlinson <george@rawlinson.net.nz>
+# Maintainer: Jakub Klinkovský <lahwaacz at archlinux dot org>
+
+pkgname=prometheus-nut-exporter
+_pkgname=nut_exporter
+pkgver=3.1.1
+pkgrel=2
+pkgdesc='Prometheus exporter for Network UPS Tools metrics'
+arch=(loong64 x86_64)
+url='https://github.com/DRuggeri/nut_exporter'
+license=(Apache-2.0)
+depends=(glibc)
+makedepends=(go git)
+optdepends=('nut: for monitoring a local NUT server')
+backup=("etc/conf.d/$pkgname")
+# we cannot use LTO as otherwise we do not get reproducible package with full RELRO
+options=('!lto')
+source=(
+  "$pkgname::git+$url.git#tag=v$pkgver"
+  $pkgname.conf
+  $pkgname.service
+  $pkgname.sysusers
+)
+b2sums=('c8d36de2ba155904c5022b6360d2135747c5ca1901bf1fee4a64aaf2b4c43a900cc2a43842ced6eaf2b19d747710f8300de8d1625db507ffe8495eaaf122ae74'
+        '6e13a8ac69c75c63d52013ee011f517060785c20d66c5051a71ac43d6518e80bf6057ebde133bb7eab2976f2c2698c1146b86446b9fe0bbe4ecd9ae7753d2bb9'
+        '8bfbde39334ce3f46e2bac43d9a68c18b17cf31026c163ede7cd4b5664b77531a4b4171839e757130fa2bf3fdf11a30affe1ee0e31e0143fa92974da2463311e'
+        'f14c79da6b3efeb0843853e5772bcc021bd6041b76a39952ad45638ce27f143b41f6a491d528992250db9b2d9fd133b76ad8f6f6da9df4c6fb0865766d49d991')
+
+prepare() {
+  cd "$pkgname"
+
+  # create folder for build output
+  mkdir build
+
+  # download dependencies
+  go mod download
+}
+
+build() {
+  cd "$pkgname"
+
+  # set GOPATH so makepkg puts source files into the debug package
+  export GOPATH="$srcdir"
+
+  # get commit id for build
+  local _commit=$(git rev-parse v$pkgver)
+
+  go build -v \
+    -buildmode=pie \
+    -mod=readonly \
+    -modcacherw \
+    -ldflags "-compressdwarf=false -linkmode external -extldflags \"$LDFLAGS\" \
+    -X main.Version=$pkgver \
+    -X main.Commit=$_commit" \
+    -o build .
+}
+
+check() {
+  cd "$pkgname"
+  go test -v ./...
+}
+
+package() {
+  # systemd integration
+  install -vDm 644 $pkgname.conf "$pkgdir"/etc/conf.d/$pkgname
+  install -vDm 644 $pkgname.service "$pkgdir"/usr/lib/systemd/system/$pkgname.service
+  install -vDm 644 $pkgname.sysusers "$pkgdir"/usr/lib/sysusers.d/$pkgname.conf
+
+  # binary
+  install -vDm 755 "$pkgname/build/$_pkgname" "$pkgdir"/usr/bin/$pkgname
+}

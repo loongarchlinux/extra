@@ -4,8 +4,8 @@
 # Contributor: Parmjot Singh <parmjotsinghrobot at gmail dot com>
 
 pkgname=waybar
-pkgver=0.10.3
-pkgrel=1
+pkgver=0.10.4
+pkgrel=2
 pkgdesc='Highly customizable Wayland bar for Sway and Wlroots based compositors'
 arch=('loong64' 'x86_64')
 url="https://github.com/Alexays/Waybar/"
@@ -44,7 +44,7 @@ makedepends=(
     'catch2'
     'cmake'
     'meson'
-    'python-packaging' # gdbus-codegen
+    'glib2-devel' # gdbus-codegen
     'scdoc' # For generating manpages
     'wayland-protocols'
 )
@@ -57,8 +57,17 @@ optdepends=(
 )
 source=(
     "$pkgname-$pkgver.tar.gz::https://github.com/Alexays/Waybar/archive/$pkgver.tar.gz"
+    "https://github.com/Alexays/Waybar/commit/a544f4b2cdcf632f1a4424b89f6e3d85ef5aaa85.patch"
 )
-b2sums=('0ef1cf82cc9f374c756724c389a045d2d9e26a5403eeb527ab0885d89d6030bea74aa5c299f8f865c244524c485a90ad3fee071968d21ff728c1f46f75f637b4')
+b2sums=('907273e6f1371252aad05212b4c59eabe1662167659d22073ee3bf649d8ee43be852b996dd7b86eecd0384b833cd2d7b9eed69b6b3292cb0b9cdbeb88c9e2391'
+        '4b6da361054ae5d0e3807cc1ef91250561f2e777a6fd0cc2f610145c2666cbd828351bcb27b68c0f121f414a253a7068836b42468f5d78e5ea9e83ade90597ca')
+
+prepare() {
+    cd "Waybar-$pkgver"
+    # Fix regression of broken SIGUSR1 visibility toggle
+    # https://github.com/Alexays/Waybar/issues/3455
+    patch -p1 < ../a544f4b2cdcf632f1a4424b89f6e3d85ef5aaa85.patch
+}
 
 build() {
     cd "Waybar-$pkgver"

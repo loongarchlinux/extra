@@ -1,5 +1,4 @@
 # Maintainer: Giancarlo Razzolini <grazzolini@archlinux.org>
-# Maintainer: T.J. Townsend <blakkheim@archlinux.org>
 # Maintainer: Massimiliano Torromeo <massimiliano.torromeo@gmail.com>
 # Contributor: Bartłomiej Piotrowski <bpiotrowski@archlinux.org>
 # Contributor: Sébastien Luttringer
@@ -8,25 +7,18 @@
 _pkgbase=nginx
 pkgbase=nginx-mainline
 pkgname=(nginx-mainline nginx-mainline-src)
-pkgver=1.25.5
-pkgrel=2
+pkgver=1.27.0
+pkgrel=1
+_tests_commit=2a607a31f583add7adfa1ac434a3f793d327ca6b
 arch=('loong64' 'x86_64')
+pkgdesc='Lightweight HTTP server and IMAP/POP3 proxy server, mainline release'
 url='https://nginx.org'
-license=('custom')
+license=(BSD-2-Clause)
 makedepends=(mercurial pcre2 zlib openssl geoip mailcap libxcrypt)
 checkdepends=(perl perl-gd perl-io-socket-ssl perl-fcgi perl-cache-memcached
-              memcached ffmpeg)
-backup=('etc/nginx/fastcgi.conf'
-        'etc/nginx/fastcgi_params'
-        'etc/nginx/koi-win'
-        'etc/nginx/koi-utf'
-        'etc/nginx/nginx.conf'
-        'etc/nginx/scgi_params'
-        'etc/nginx/uwsgi_params'
-        'etc/nginx/win-utf'
-        'etc/logrotate.d/nginx')
+              perl-cryptx memcached ffmpeg coreutils)
 source=($url/download/nginx-$pkgver.tar.gz{,.asc}
-        hg+https://hg.nginx.org/nginx-tests
+        "hg+https://hg.nginx.org/nginx-tests#revision=${_tests_commit}"
         nginx.service
         logrotate)
 # https://nginx.org/en/pgp_keys.html
@@ -36,15 +28,15 @@ validpgpkeys=(
   '13C82A63B603576156E30A4EA0EA981B66B0D967' # Konstantin Pavlov <thresh@nginx.com>
   '43387825DDB1BB97EC36BA5D007C8D7C15D87369' # Roman Arutyunyan <r.arutyunyan@f5.com>
 )
-sha512sums=('4a069ec08af46e42a72e263291fc84a67605d817ece1ea7092a5da5babced96ef27eb370ad6f7558b2f5973406080240080aaf4b27fc2d8b41f6853601563cb7'
+sha512sums=('251bfe65c717a8027ef05caae2ab2ea73b9b544577f539a1d419fe6adf0bcc846b73b58f54ea3f102df79aaf340e4fa56793ddadea3cd61bcbbe2364ef94bacb'
             'SKIP'
-            'SKIP'
-            'ca7d8666177d31b6c4924e9ab44ddf3d5b596b51da04d38da002830b03bd176d49354bbdd2a496617d57f44111ad59833296af87d03ffe3fca6b99327a7b4c3c'
+            '2c1efc38f4d36c10e7d13bb48e035246215c33213e42d733ef0c1bbbdbce71777b2430247d1c1fe922e03d10ce53c05fe555bd9fea547658e6c6d763af8d8b93'
+            'f469b3b14def666e955abf6f2d3c68a47631cad7bee90c92039ffe5bf629aa7e32bb4250844d52c0f963740fb07bf7fea5f8887cc1d5199403f07be6214fcb8d'
             '2f4dfcfa711b8bcbc5918ba635f5e430ef7132e66276261ade62bb1cba016967432c8dce7f84352cb8b07dc7c6b18f09177aa3eb92c8e358b2a106c8ca142fe9')
-b2sums=('75ff068554d96063d1c7cb18d84df4fe8b820f6065f3464efde055c707e94ff13c45bea261619a453f04abed1fa3f9baccf81c29ca0e956ef0535e9a5c931dc6'
+b2sums=('035ec8d44f7f7df9b0c77e97e353a579642b75f905c1a6be5caf5ff952be9cae7ccc14c0bfce5ab148a11799d308225e9b7155458905b624c12acd09c03dfa44'
         'SKIP'
-        'SKIP'
-        '5aa8dab4d6517fc09a96f2ced5c85a67a44878da4c5cde1031a089609d3d32505d0cb45e6842a1502cc6f09e03eef08ee0ce6826b73bcfdd8087b0b695f0801c'
+        'd496b725f0a4100f3d3f937099c8d23155aee110ed7d5f84fd746e5db6f401606ec90ed808997467676658ebd8c44788462d3761525f766584c5c771a2bbd0bb'
+        '6600d4f603f8f20a5694402df57d1281a81ec469e48fb0d1f2fa555e6aed9976470a4d15b9e9fdcf6aaabef5c76a34695f0ab15d724533dbafddb80ba6e25d97'
         'e1755f61b4eaece83c6c22e48f9e5e316851d1dc35f8d770f837c7d3c8bdc894af1b697c25f1788ac50cd597085c22fb9bf8096a55ecf7659d63185f68ba2d8a')
 
 _common_flags=(
@@ -80,9 +72,6 @@ _common_flags=(
   --with-threads
 )
 
-_mainline_flags=(
-)
-
 prepare() {
   cp -r $_pkgbase-$pkgver{,-src}
 }
@@ -106,20 +95,29 @@ build() {
     --http-uwsgi-temp-path=/var/lib/nginx/uwsgi \
     --with-cc-opt="$CFLAGS $CPPFLAGS" \
     --with-ld-opt="$LDFLAGS" \
-    "${_common_flags[@]}" \
-    "${_mainline_flags[@]}"
+    "${_common_flags[@]}"
 
   make
 }
 
 check() {
   cd nginx-tests
-  TEST_NGINX_BINARY="$srcdir/$_pkgbase-$pkgver/objs/nginx" prove .
+  local _jobs=$(nproc)
+  (( _jobs > 16 )) && _jobs=16
+  TEST_NGINX_BINARY="$srcdir/$_pkgbase-$pkgver/objs/nginx" prove -j "$_jobs" .
 }
 
 package_nginx-mainline() {
-  pkgdesc='Lightweight HTTP server and IMAP/POP3 proxy server, mainline release'
-  depends=('pcre2' 'zlib' 'openssl' 'geoip' 'mailcap' 'libxcrypt')
+  depends=('glibc' 'pcre2' 'zlib' 'openssl' 'geoip' 'mailcap' 'libxcrypt')
+  backup=('etc/nginx/fastcgi.conf'
+          'etc/nginx/fastcgi_params'
+          'etc/nginx/koi-win'
+          'etc/nginx/koi-utf'
+          'etc/nginx/nginx.conf'
+          'etc/nginx/scgi_params'
+          'etc/nginx/uwsgi_params'
+          'etc/nginx/win-utf'
+          'etc/logrotate.d/nginx')
   provides=($_pkgbase)
   conflicts=($_pkgbase)
 
@@ -145,7 +143,7 @@ package_nginx-mainline() {
 
   install -Dm644 ../logrotate "$pkgdir"/etc/logrotate.d/nginx
   install -Dm644 ../nginx.service "$pkgdir"/usr/lib/systemd/system/nginx.service
-  install -Dm644 LICENSE "$pkgdir"/usr/share/licenses/$_pkgbase/LICENSE
+  install -Dm644 LICENSE "$pkgdir"/usr/share/licenses/$pkgname/LICENSE
 
   rmdir "$pkgdir"/run
 
@@ -163,4 +161,5 @@ package_nginx-mainline-src() {
 
   install -d "$pkgdir/usr/src"
   cp -r $_pkgbase-$pkgver-src "$pkgdir/usr/src/nginx"
+  install -Dm644 $_pkgbase-$pkgver/LICENSE "$pkgdir"/usr/share/licenses/$pkgname/LICENSE
 }

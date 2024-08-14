@@ -3,25 +3,19 @@
 # Contributor: Hugo Osvaldo Barrera <hugo@barrera.io>
 
 pkgname=rootlesskit
-pkgver=1.1.1
+pkgver=2.1.0
 pkgrel=1
 pkgdesc='Native "fake root" for implementing rootless containers'
 arch=('loong64' 'x86_64')
 url='https://github.com/rootless-containers/rootlesskit'
-license=('Apache')
+license=('Apache-2.0')
 depends=('glibc' 'shadow')
 makedepends=('git' 'go')
 checkdepends=('openbsd-netcat')
 options=('!lto')
-_commit='a2c596ff9b3fddc0c2becb38f2ef4004f15765b5'
-source=("$pkgname::git+https://github.com/rootless-containers/rootlesskit.git#commit=$_commit")
-b2sums=('SKIP')
-
-pkgver() {
-  cd "$pkgname"
-
-  git describe --tags | sed 's/^v//'
-}
+source=("$pkgname::git+https://github.com/rootless-containers/rootlesskit.git#tag=v$pkgver")
+sha512sums=('c7d2935fbfddf9ec8f4a72eba02d31bc932a1a537c4088d4d692f8b068ce092bc50ff9095a520bb2b4e342b262b4942a2354614d93fd586666191a8f71a4d0e6')
+b2sums=('d30c4c9a831ee912a4ffc494ebe578e2d39071a1087d90980ab795d236601e60e9fe92cc5bae57fbe5c9cc97c946cac6a8b2e87c27bb4dc1621cf0282c48f076')
 
 prepare(){
   cd "$pkgname"
@@ -49,7 +43,7 @@ build() {
     -modcacherw \
     -ldflags "-compressdwarf=false \
     -linkmode external \
-    -extldflags ${LDFLAGS}" \
+    -extldflags '${LDFLAGS}'" \
     -o build \
     ./cmd/...
 }

@@ -1,22 +1,21 @@
 # Maintainer: Tim Meusel <tim@bastelfreak.de>
 # Contributor: Achilleas Pipinellis <axilleas at archlinux.info>
 # Contributor: Hyacinthe Cartiaux <hyacinthe.cartiaux (a) free.fr>
-# Contributor: gem2arch 0.1
 
 _gemname='net-ssh'
 pkgname="ruby-${_gemname}"
-pkgver=7.2.0
-pkgrel=1
+pkgver=7.2.3
+pkgrel=3
 pkgdesc='A pure-Ruby implementation of the SSH2 client protocol.'
 arch=('any')
-url='https://github.com/net-ssh/net-ssh'
+url="https://github.com/${_gemname}/${_gemname}"
 license=('MIT')
 depends=('ruby' 'ruby-ed25519' 'ruby-x25519' 'ruby-bcrypt_pbkdf')
 makedepends=('ruby-rake' 'ruby-bundler' 'ruby-rdoc')
 checkdepends=('ruby-minitest' 'ruby-mocha')
 options=('!emptydirs')
 source=("${pkgname}-${pkgver}.tar.gz::${url}/archive/v${pkgver}.tar.gz")
-sha512sums=('b7dd7dc2543d650ba95627c16cac02294f25cc637fcd607f5cc495d51998df958f42cda021708946c9935e1b0da41af359010906340bf96981ff839f6e3278cb')
+sha512sums=('621eb0c8080347614e924c236646cadaaceefb0894a818dc60cebc7c09c87d6ae6117f33628ed48fa8598fdb74146c9d2f114b178bd119908df8396103ceb4d9')
 
 prepare() {
   cd "${srcdir}/${_gemname}-${pkgver}"
@@ -25,6 +24,9 @@ prepare() {
 
   # purge development dependencies
   sed --in-place '/spec.add_development_dependency/d' "${_gemname}.gemspec"
+
+  # purge useless stuff
+  rm -rf .github
 }
 
 build() {
@@ -44,6 +46,7 @@ package() {
   install -Dm 644 README.md CHANGES.txt THANKS.txt net-ssh-public_cert.pem -t "${pkgdir}/usr/share/doc/${pkgname}"
   install -Dm 644 LICENSE.txt -t "${pkgdir}/usr/share/licenses/${pkgname}"
   rm "${pkgdir}/${_gemdir}/cache/${_gemname}-${pkgver}.gem"
+  rm -rf "${pkgdir}/${_gemdir}/gems/${_gemname}-${pkgver}/"{.travis.yml,test,Rakefile}
 }
 
 # vim: ts=2 sw=2 et:

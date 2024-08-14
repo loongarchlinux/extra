@@ -8,7 +8,7 @@
 # Note: source array can be synced with an Electron release after updating $pkgver with:
 # bash -c 'source PKGBUILD; _update_sources'
 
-pkgver=28.3.1
+pkgver=28.3.3
 _gcc_patches=120
 pkgrel=2
 _major_ver=${pkgver%%.*}
@@ -50,6 +50,7 @@ makedepends=(clang
              python-pyparsing
              python-requests
              python-six
+             python-setuptools
              rust
              qt5-base
              wget
@@ -228,12 +229,12 @@ source=("git+https://github.com/electron/electron.git#tag=v$pkgver"
         chromium-mirror_third_party_vulkan-deps_vulkan-validation-layers_src::git+https://chromium.googlesource.com/external/github.com/KhronosGroup/Vulkan-ValidationLayers.git#commit=281e1c1c6b51bb6b33f88c18ed4da58ac3024311
         # END managed sources
        )
-sha256sums=('2cf56fd333c232cd5981afca682a8c15174a48dfdcb62aba7dd6ead6b52bc2f2'
+sha256sums=('fd9395f4ac1482437612c79c6efccc71abd1f29bc4fbebd027c09eaa94ad5d39'
             'ffee1082fbe3d0c9e79dacb8405d5a0e1aa94d6745089a30b093f647354894d2'
             '3bd35dab1ded5d9e1befa10d5c6c4555fe0a76d909fb724ac57d0bf10cb666c1'
             'b3de01b7df227478687d7517f61a777450dca765756002c80c4915f271e2d961'
             'dd2d248831dd4944d385ebf008426e66efe61d6fdf66f8932c963a12167947b4'
-            'b406bc9adb7fadcfbd26f204f3e0ef8c31a41fa09181edb28626167ac58fe038'
+            '13fcf26193f4417fd5dfbc82a3f24e5c7a1cce82f729f6a73f1b1d3a7b580b34'
             '4484200d90b76830b69eea3a471c103999a3ce86bb2c29e6c14c945bf4102bae'
             'ff9ebd86b0010e1c604d47303ab209b1d76c3e888c423166779cefbc22de297f'
             '55dbe71dbc1f3ab60bf1fa79f7aea7ef1fe76436b1d7df48728a1f8227d2134e'
@@ -430,13 +431,14 @@ _update_sources() {
 }
 
 prepare() {
+
   sed -i "s|@ELECTRON@|${pkgname}|" electron-launcher.sh
   sed -i "s|@ELECTRON@|${pkgname}|" electron.desktop
   sed -i "s|@ELECTRON_NAME@|Electron ${_major_ver}|" electron.desktop
 
   cp -r chromium-mirror_third_party_depot_tools depot_tools
   export PATH+=":$PWD/depot_tools" DEPOT_TOOLS_UPDATE=0
-  export VPYTHON_BYPASS='manually managed python not supported by chrome operations'
+  #export VPYTHON_BYPASS='manually managed python not supported by chrome operations'
 
   echo "Putting together electron sources"
   # Generate gclient gn args file and prepare-electron-source-tree.sh
@@ -454,13 +456,17 @@ prepare() {
     -s src/third_party/skia --header src/skia/ext/skia_commit_hash.h
   src/build/util/lastchange.py \
     -s src/third_party/dawn --revision src/gpu/webgpu/DAWN_VERSION
-  src/tools/update_pgo_profiles.py --target=linux update \
-    --gs-url-base=chromium-optimization-profiles/pgo_profiles
+ # needs newer clang to read the bundled PGO profile
+ # src/tools/update_pgo_profiles.py --target=linux update \
+ #   --gs-url-base=chromium-optimization-profiles/pgo_profiles
   depot_tools/download_from_google_storage.py --no_resume --extract --no_auth \
     --bucket chromium-nodejs -s src/third_party/node/node_modules.tar.gz.sha1
 
   src/electron/script/apply_all_patches.py \
       src/electron/patches/config.json
+
+  # https://github.com/nodejs/node/issues/48444
+  export UV_USE_IO_URING=0
 
   pushd src
   pushd electron
@@ -518,6 +524,10 @@ prepare() {
 
   ./build/linux/unbundle/replace_gn_files.py \
     --system-libraries "${!_system_libs[@]}"
+
+# Update vendored copy of six
+  pushd third_party/catapult
+  git cherry-pick -n 8cf7c46ad7ea03bf5d5588d0ed63be3df4baaf1f
 }
 
 build() {

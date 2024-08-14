@@ -3,7 +3,7 @@
 
 pkgname=gnome-sound-recorder
 pkgver=42.0
-pkgrel=2
+pkgrel=3
 pkgdesc="A utility to make simple audio recording from your GNOME desktop"
 url="https://wiki.gnome.org/Apps/SoundRecorder"
 arch=(any)

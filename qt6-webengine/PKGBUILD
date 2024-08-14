@@ -2,9 +2,8 @@
 # Maintainer: Felix Yan <felixonmars@archlinux.org>
 
 pkgname=qt6-webengine
-_qtver=6.7.0
-pkgver=${_qtver/-/}
-pkgrel=1
+pkgver=6.7.2
+pkgrel=2
 arch=(loong64 x86_64)
 url='https://www.qt.io'
 license=(GPL3 LGPL3 FDL custom)
@@ -55,6 +54,7 @@ depends=(alsa-lib
        # system libvpx disabled since https://codereview.qt-project.org/c/qt/qtwebengine/+/454908
        # libvpx pciutils re2
 makedepends=(cmake
+             git
              gperf
              jsoncpp
              libepoxy
@@ -67,9 +67,27 @@ makedepends=(cmake
              qt6-websockets)
 optdepends=('pipewire: WebRTC desktop sharing under Wayland')
 groups=(qt6)
-_pkgfn=${pkgname/6-/}-everywhere-src-$_qtver
-source=(https://download.qt.io/official_releases/qt/${pkgver%.*}/$_qtver/submodules/$_pkgfn.tar.xz)
-sha256sums=('1a5ba443635dc1f439ab802ac6d761b8def5ebb24e5219bb7289288e72c147de')
+_pkgfn=${pkgname/6-/}
+source=(git+https://code.qt.io/qt/$_pkgfn#tag=v$pkgver
+        git+https://code.qt.io/qt/qtwebengine-chromium
+        qtwebengine-6.7.0-ninja1.12.patch
+        qtwebengine-ffmpeg-7.patch)
+sha256sums=('e4ea371bbe91763e0499b7d12166b43162f29e57ba81705870a0f8c4ba784408'
+            'SKIP'
+            'c037cccc1d43bcd9d67045354ca48b405acec217149cb4b2bd3cfb7b5561cc33'
+            'f108c916ab87a247571255c56f9d04fc9bccdc3fe8972bf5a60d29636c6f5c3e')
+
+prepare() {
+  cd $_pkgfn
+  git submodule init
+  git submodule set-url src/3rdparty "$srcdir"/qtwebengine-chromium
+  git -c protocol.file.allow=always submodule update
+
+# Fix build with ninja 1.12 - Gentoo patch
+  patch -p1 -i ../qtwebengine-6.7.0-ninja1.12.patch
+# Fix build with ffmpeg 7 - Chromium patches
+  patch -d src/3rdparty/chromium -p1 -i "$srcdir"/qtwebengine-ffmpeg-7.patch
+}
 
 build() {
   cmake -B build -S $_pkgfn -G Ninja \

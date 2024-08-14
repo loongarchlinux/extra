@@ -3,7 +3,7 @@
 pkgname=perl-sub-info
 _cpanname=Sub-Info
 pkgver=0.002
-pkgrel=10
+pkgrel=11
 pkgdesc="Tool for inspecting subroutines."
 arch=('any')
 license=('PerlArtistic' 'GPL')

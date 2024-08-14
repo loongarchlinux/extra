@@ -5,8 +5,8 @@
 
 _name=urllib3
 pkgname=python-urllib3
-pkgver=1.26.18
-pkgrel=3
+pkgver=1.26.19
+pkgrel=1
 pkgdesc="HTTP library with thread-safe connection pooling and file post support"
 arch=("any")
 url="https://github.com/urllib3/urllib3"
@@ -43,7 +43,7 @@ optdepends=(
   'python-pysocks: SOCKS support'
 )
 source=("https://github.com/urllib3/urllib3/archive/$pkgver/$pkgname-$pkgver.tar.gz")
-sha512sums=('62c0af4b11e797a85420ef3f0888f2e608334329eddd88b9fe563b5437189cbea8dbbcd53f999557d9828fcf4bf03b8ca9f6e3d401533bc4ae8ff96e3ece1557')
+sha512sums=('6b72012dbd85434b2441229cbdea2a94583693f904dde349780e1290d581c8a5e10fe00a287a032ed1276349d0078b530f16a133e0f164dcea18105fa3dec79a')
 
 prepare() {
   # remove python-mock requirement

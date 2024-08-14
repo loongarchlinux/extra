@@ -2,7 +2,7 @@
 
 pkgname=emby-ffmpeg
 pkgver=2023_06_25
-pkgrel=1
+pkgrel=2
 pkgdesc='Emby fork of ffmpeg'
 arch=(loong64 x86_64)
 url=https://emby.media
@@ -52,6 +52,7 @@ source=(
   https://github.com/FFmpeg/FFmpeg/commit/d2b46c1ef768bc31ba9180f6d469d5b8be677500.patch
   https://github.com/FFmpeg/FFmpeg/commit/43b417d516b0fabbec1f02120d948f636b8a018e.patch
   06c2a2c425f22e7dba5cad909737a631cc676e3f.patch
+  mbedtls-3.6.patch
   license.docx
   Permission_to_distribute.mbox
 )
@@ -63,16 +64,23 @@ b2sums=('5f3577002de8229d4456ac6731c4e3c02f9b235df15b4a62008abfd300afc6db5a59fc8
         '48fd13487aff0ef32d5fbd2e90f90b244b6c2f0abe4cd5c919a6bca60186bc3fe2e7450d07afa89fbe8b1f509692a2cf987d3cbc27a23441e7d9bb9469fd79c5'
         'c8dfbed01442b1173c94ee7f7c7bda59802e86359be7dfcf52e25a05f245deac1ed8f3ca8e43650bef033cbd44c3ac15d32c191d913227da497187fcbbefa954'
         '43a1f6a7dd010d70c59250f047275c55413879b0a98671377edb920194361c4a4fca5d9021a16c80ced4a452f878a00fe7e71ee46f59066c2bfcd00bb009d49a'
+        '4fd4c79cd2db6eaa44397bdce6844ab06eaa2b1698c01053362ed6450c30dcc40ffeb2001d19d52bdd33b22bdf5e94387abdf7675a1c6f042018ff63376c6999'
         'e490c2ec7aff3deb9874a80345273c2aa435624b914a13fe8cba8f07ee44938699a024d0c6784fe68820d3a848cccf5af3f7120c7906356ed17d306fc31b6490'
         '61ca54af95278f498b21b424b4d4bae98660b4b7898bfd9752fe21da20d7c508502014bc1970a60920f3064ca20b31b46ba2a788b3b1371f75b5278add70ffc4')
 
-build() {
+prepare() {
   cd ffmpeg-${pkgver}_public
   patch -Np1 -i ../effadce6c756247ea8bae32dc13bb3e6f464f0eb.patch
   patch -Np1 -i ../03823ac0c6a38bd6ba972539e3203a592579792f.patch
   patch -Np1 -i ../d2b46c1ef768bc31ba9180f6d469d5b8be677500.patch
   patch -Np1 -i ../43b417d516b0fabbec1f02120d948f636b8a018e.patch
   patch -Np1 -i ../06c2a2c425f22e7dba5cad909737a631cc676e3f.patch
+  patch -Np1 -i ../mbedtls-3.6.patch # Fix link with mbedtls 3.6
+}
+
+build() {
+  cd ffmpeg-${pkgver}_public
+  CFLAGS+=" -Wno-incompatible-pointer-types" \
   ./configure \
     --disable-alsa \
     --disable-doc \

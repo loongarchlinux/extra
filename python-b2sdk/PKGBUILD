@@ -1,8 +1,8 @@
 # Maintainer: George Rawlinson <grawlinson@archlinux.org>
 
 pkgname=python-b2sdk
-pkgver=1.26.0
-pkgrel=2
+pkgver=2.4.1
+pkgrel=1
 pkgdesc='Python module to access B2 cloud storage'
 arch=('any')
 url='https://github.com/Backblaze/b2-sdk-python'
@@ -11,16 +11,14 @@ depends=(
   'python'
   'python-logfury'
   'python-requests'
-  'python-tqdm'
   'python-urllib3'
-  'python-setuptools'
   'python-importlib-metadata'
 )
 makedepends=(
   'git'
   'python-build'
   'python-installer'
-  'python-setuptools-scm'
+  'python-pdm-backend'
   'python-wheel'
 )
 checkdepends=(
@@ -28,35 +26,30 @@ checkdepends=(
   'python-pytest-mock'
   'python-pytest-lazy-fixture'
   'python-pyfakefs'
+  'python-tqdm'
+  'python-pydantic'
 )
-_commit='9ca9d0aff203b1f72d0bfd680be35af295eb7da0'
-source=(
-  "$pkgname::git+$url#commit=$_commit"
-  'remove-version-constraint.patch'
+optdepends=(
+  'python-tqdm: for TqdmProgressListener class'
+  'python-pydantic: for improved type hints'
 )
-b2sums=('SKIP'
-        '9829d2efe2a93986c21dcce1ddcf74923a2a78c50e8ea1814714aa73eca3adb904664890326f4b3c8ad0a71a0548194bdd586a6afbe69689732b589ee8c72ae9')
-
-pkgver() {
-  cd "$pkgname"
-
-  git describe --tags | sed 's/^v//'
-}
-
-prepare() {
-  cd "$pkgname"
-
-  patch -p1 -i "$srcdir/remove-version-constraint.patch"
-}
+source=("$pkgname::git+$url#tag=v$pkgver")
+sha512sums=('d91f873561f694bf961ce0bd4cbeb58fa778a448dc0823ad217828b5b7e41d233657960ccc91a779e4994cedee93b36c0efdab26900405b75166c46e1dd1af61')
+b2sums=('9723ee5b8330e7aa9baa1d40f52a7ae9872a6288e4abd9792809eba83e4c17946d303df6fd627924b9624869bc352f59b573f6c7d2718869f418f2a0b7a55c12')
 
 build() {
   cd "$pkgname"
 
-  SETUPTOOLS_SCM_PRETEND_VERSION="$pkgver" python -m build --wheel --no-isolation
+  python -m build --wheel --no-isolation
 }
 
 check() {
   cd "$pkgname"
+
+  # temporary install so pytest can pick up the compiled extension
+  python -m installer --destdir="$(pwd)/tmp" dist/*.whl
+  local site_packages=$(python -c "import site; print(site.getsitepackages()[0])")
+  export PYTHONPATH="$(pwd)/tmp/$site_packages"
 
   pytest -v \
     --ignore=test/integration \
@@ -68,9 +61,6 @@ package() {
 
   python -m installer --destdir="$pkgdir" dist/*.whl
 
-  # symlink license file
-  local site_packages=$(python -c "import site; print(site.getsitepackages()[0])")
-  install -d "$pkgdir/usr/share/licenses/$pkgname"
-  ln -s "$site_packages/${pkgname#python-}-$pkgver.dist-info/LICENSE" \
-    "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
+  # license
+  install -vDm644 -t "$pkgdir/usr/share/licenses/$pkgname" LICENSE
 }

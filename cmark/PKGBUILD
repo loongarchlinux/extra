@@ -2,19 +2,21 @@
 # Contributor: Veeti Paananen <veeti.paananen@rojekti.fi>
 
 pkgname=cmark
-pkgver=0.31.0
-pkgrel=2
+pkgver=0.31.1
+pkgrel=1
 pkgdesc='CommonMark parsing and rendering library and program in C'
 arch=(loong64 x86_64)
 url='https://github.com/commonmark/cmark'
-license=('custom:BSD2')
+license=(BSD-2-Clause)
 depends=(glibc)
-makedepends=(cmake python)
-source=(https://github.com/commonmark/cmark/archive/$pkgver/$pkgname-$pkgver.tar.gz)
-sha512sums=('768d456147cb8f5cf36e8122213ad053098201e118109a316518a6a5e721ac94f62af29abe1e69120c84bdc227a5c320803ea2cf320c6d9a719d62909b6533bd')
+makedepends=(cmake
+             git
+             python)
+source=(git+https://github.com/commonmark/cmark#tag=$pkgver)
+sha512sums=('7869348e7966095b1688691cef8d88ec8c3bc5dee0a44682057f4168c05496d2d9013e3e89cfc3ca7e7a37f67bf7fcb2dd55077649e342d2060944e414d355b9')
 
 build() {
-  cmake -B build -S $pkgname-$pkgver \
+  cmake -B build -S $pkgname \
     -DCMAKE_INSTALL_PREFIX=/usr \
     -DCMARK_STATIC=OFF
   cmake --build build
@@ -27,5 +29,5 @@ check() {
 package() {
   DESTDIR="$pkgdir" cmake --install build
 
-  install -Dm 644 $pkgname-$pkgver/COPYING -t "$pkgdir"/usr/share/licenses/$pkgname
+  install -Dm 644 $pkgname/COPYING -t "$pkgdir"/usr/share/licenses/$pkgname
 }

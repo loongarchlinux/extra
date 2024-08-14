@@ -7,8 +7,8 @@ _pkg=paraview
 _mpi=openmpi
 pkgname=${_pkg}
 #-${_mpi}
-pkgver=5.12.0
-pkgrel=8
+pkgver=5.12.1
+pkgrel=9
 pkgdesc="Parallel Visualization application using VTK (${_mpi} version)"
 arch=(loong64 x86_64)
 url="https://www.paraview.org"
@@ -32,7 +32,7 @@ source=(${url}/files/v${pkgver%.*}/ParaView-v${pkgver/R/-R}.tar.xz
         trunc-5055371e.patch
         ospray-3.patch
         $pkgname-fix-pvx-option.patch::https://gitlab.kitware.com/lahwaacz/paraview/-/commit/7f9f90bcb2512df950a7bfa380e16c7bd21cd25c.patch)
-sha256sums=('d289afe7b48533e2ca4a39a3b48d3874bfe67cf7f37fdd2131271c57e64de20d'
+sha256sums=('927f880c13deb6dde4172f4727d2b66f5576e15237b35778344f5dd1ddec863e'
             'd1cdb4a81db280d6b21bee3d9e5f8fc3a87f00a909d33850a1964c72091ec138'
             '844d44a14817c656ba8d6998298785125a98f03f7b5ece58d966c226db1e0d83'
             'fda145052b10f197cccbc2d02a3bba24b1aa7b512b72f4713f7d9cb0230bf8c9'
@@ -60,6 +60,7 @@ prepare() {
 build() {
   export CFLAGS+=" -ffat-lto-objects"
   export CXXFLAGS+=" -ffat-lto-objects"
+# Docs fail to build with libxml2 2.13
   cmake -B build -S ParaView-v${pkgver/R/-R} -G Ninja \
     -DCMAKE_BUILD_TYPE=Release \
     -DCMAKE_INSTALL_PREFIX=/opt/paraview \
@@ -67,6 +68,7 @@ build() {
     -DCMAKE_CXX_STANDARD=17 \
     -DVTK_IGNORE_CMAKE_CXX11_CHECKS=ON \
     -DCMAKE_SKIP_INSTALL_RPATH=OFF \
+    .DPARAVIEW_ENABLE_EMBEDDED_DOCUMENTATION=OFF \
     -DPARAVIEW_ENABLE_ADIOS2=ON \
     -DPARAVIEW_ENABLE_FFMPEG=ON \
     -DPARAVIEW_ENABLE_FIDES=ON \

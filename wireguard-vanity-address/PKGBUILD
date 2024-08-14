@@ -1,0 +1,44 @@
+# Maintainer: kpcyrd <kpcyrd[at]archlinux[dot]org>
+# Contributor: graysky <therealgraysky AT protonmail DOT com>
+
+pkgname=wireguard-vanity-address
+pkgver=0.4.0
+pkgrel=3
+pkgdesc="Generate Wireguard keypairs with a given prefix string"
+url='https://github.com/warner/wireguard-vanity-address'
+arch=('loong64' 'x86_64')
+license=(MIT)
+depends=(
+  'gcc-libs'
+  'glibc'
+)
+makedepends=(
+  'cargo'
+)
+options=(!lto)
+source=(https://github.com/warner/${pkgname}/archive/v${pkgver}/${pkgname}-${pkgver}.tar.gz)
+sha256sums=('ba7f729a9023022a09a55d092d2ea2f9c84013535def2dcbe9def60c6a958933')
+b2sums=('8bc6fedd3a17b40b4d0018ad8f1fb8c067345480794d16c980cb354b733e130af930fa137d6b02e0c1e7a2bd0716a6a7134416711f9b681b90c212f2529c0794')
+
+prepare() {
+  cd "${pkgname}-${pkgver}"
+  cargo fetch --locked --target "$(rustc -vV | sed -n 's/host: //p')"
+}
+
+build() {
+  cd ${pkgname}-${pkgver}
+  cargo build --frozen --release
+}
+
+check() {
+  cd ${pkgname}-${pkgver}
+  cargo test --frozen
+}
+
+package() {
+  cd ${pkgname}-${pkgver}
+  install -Dm755 target/release/${pkgname} -t "${pkgdir}/usr/bin"
+  install -Dm644 LICENSE -t "${pkgdir}/usr/share/licenses/${pkgname}"
+}
+
+# vim: ts=2 sw=2 et:

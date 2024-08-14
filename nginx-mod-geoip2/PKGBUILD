@@ -2,16 +2,16 @@
 
 pkgname=nginx-mod-geoip2
 pkgver=3.4
-pkgrel=4
+pkgrel=6
 
 _modname="ngx_http_geoip2_module"
 
 pkgdesc="Nginx GeoIP2 module"
 arch=('loong64' 'x86_64')
-depends=('nginx' 'libmaxminddb')
-makedepends=('nginx-src')
+depends=('libmaxminddb')
+makedepends=('nginx' 'nginx-src')
 url="https://github.com/leev/ngx_http_geoip2_module"
-license=('BSD')
+license=('BSD-2-Clause')
 
 source=(
 	https://github.com/leev/ngx_http_geoip2_module/archive/$pkgver/$_modname-$pkgver.tar.gz
@@ -28,11 +28,18 @@ prepare() {
 
 build() {
 	cd build
-	/usr/src/nginx/configure --with-compat --add-dynamic-module=../$_modname-$pkgver
+	/usr/src/nginx/configure \
+		--with-ld-opt="$LDFLAGS" \
+		--with-compat \
+		--add-dynamic-module=../$_modname-$pkgver
 	make modules
 }
 
 package() {
+	local _nginx_version=$(nginx -v 2>&1)
+	_nginx_version=${_nginx_version/* nginx\/}
+	depends+=("nginx=${_nginx_version}")
+
 	install -Dm644 "$srcdir"/$_modname-$pkgver/LICENSE \
 	               "$pkgdir"/usr/share/licenses/$pkgname/LICENSE
 

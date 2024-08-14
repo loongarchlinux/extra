@@ -4,7 +4,7 @@
 _resolutions=( 16 32 48 64 96 128 256 512 1024 )
 _name=pure-data
 pkgname=pd
-pkgver=0.54.1
+pkgver=0.55.0
 _ver=${pkgver%.*}-${pkgver##*.}
 pkgrel=1
 pkgdesc="The Pure Data real-time music and multimedia environment"
@@ -34,24 +34,18 @@ provides=(
 )
 source=(
   $pkgname-$_ver.tar.gz::https://github.com/pure-data/pure-data/archive/refs/tags/$_ver.tar.gz
-  $pkgname-0.52.1-system_portmidi.patch
   $pkgname-$pkgver.svg::https://raw.githubusercontent.com/pure-data/pd-icon/9e4f117ade0bc1da951981128998ad82fff83b0c/masters/icon.svg
   $pkgname-$pkgver-icon-LICENSE.txt::https://raw.githubusercontent.com/pure-data/pd-icon/9e4f117ade0bc1da951981128998ad82fff83b0c/LICENSE.txt
 )
-sha512sums=('f5a7584343ab8651088d9d5ccd2057e77af60aa27e6c0ed216b0001c29d6e6683e0d4a3f561d997ca71a894941accdca6e8219845d168b72325b97e49fefdcf7'
-            'afe4716dc722f6dc1ddd2c1f6262fa488dd9c5237066450be41aa3bae4dabd9d53c66278ad5a07b8c0aba7f0630f788593922a112a67ffe2cdb87d4488ccae2c'
+sha512sums=('e89249e92cb8a2ea2c8e8c5b0e41a7a1cd90c32143476fa22793d756a6bb5211361283dc7719ac8e26415f4c193e247f2ef5a217007caa9cef4d1b8bdcf0a696'
             '8d8b274e159bd4cc6a83d5d9d5019b106a74fa61943b36e2a56336b9c3c2c1b1092ce7f79f5264eb69ca43a9360404b800df338b2ad738ca3c237a8ae3c9c41d'
             'dfc919b56ffc8020ffa4e9b16677a6a710f78a73b22d5bb418414f3196a5cbbe5d6cc9cfbf1389811129f219cb21c0eafdfa6dd90e172d73db2452e5c3fd4f5c')
-b2sums=('61581cb66e704c4d72fdd33ac69ca8171584474cd526c195d79e0a442449e738509f8db083200616a0d56e5fbf127cb3d5ba7f736f3a62ccd09604305611cbd5'
-        '5490b59ddd9ce4dc8af731b95fe09ee5b6be081c82cc6628b28b0b17983e2d6c274bbfe6f7bdbe34b9691fe6a11d6830a5597b06075457e64de6010d3f132a26'
+b2sums=('e076381892e6accc429377ff8d2a69bcd817ad9f7bee2c8e650da7684480f1069a7768bf810ef8bd6bb07c2a4dd3811b9316ab29ada816f6ffd58e4b1a64f09b'
         '04f131540fd7ae9b4547a081df61a5a98265c6c9b283587aeda976834d9bbb4486cd30470d5bfb37b6f760d13705074c71cfeb1a9843613e93f3d1e0ca198af9'
         'c3fabeeb8e5c45716fbf5d3e6338b41d5adc0fbefb385e3b42d94c732522e99a4045c88e8b8e2e16a72fc5795dbc0933f07078d0eba80b76fb274450c7518dc7')
 
 prepare() {
   cd $_name-$_ver
-
-  # ensure the system portmidi libraries are properly linked against
-  patch -Np1 -i ../$pkgname-0.52.1-system_portmidi.patch
 
   autoreconf -fiv
 
@@ -105,7 +99,8 @@ package() {
   )
 
   cd $_name-$_ver
-  make DESTDIR="$pkgdir" install
+  # use one job as install target is flaky otherwise: https://github.com/pure-data/pure-data/issues/2345
+  make DESTDIR="$pkgdir" install -j1
 
   # licenses
   install -vDm 644 LICENSE.txt -t "$pkgdir/usr/share/licenses/$pkgname"

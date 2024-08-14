@@ -1,26 +1,24 @@
 # Maintainer: George Rawlinson <grawlinson@archlinux.org>
+# Maintainer: Carl Smedstad <carsme@archlinux.org>
 # Contributor: "Amhairghin" Oscar Garcia Amor (https://ogarcia.me)
 # Contributor: Franklyn Tackitt <franklyn@tackitt.net>
 # Contributor: Christian Höppner <chris@mkaito.com>
 
 pkgname=drone-cli
-pkgver=1.7.0
+pkgver=1.8.0
 pkgrel=1
 pkgdesc='Command line interface for Drone CI'
 arch=('loong64' 'x86_64')
 url='https://docs.drone.io/cli'
-license=('Apache')
+license=('Apache-2.0')
 depends=('glibc')
-makedepends=('go' 'git')
+makedepends=(
+  'git'
+  'go'
+)
 options=('!lto')
-_commit='c75a1a82d46e687d2d961115c849bf3a137b8e9d'
-source=("$pkgname::git+https://github.com/harness/drone-cli.git#commit=$_commit")
-md5sums=('SKIP')
-
-pkgver() {
-  cd "$pkgname"
-  git describe --tags | sed 's/^[vV]//;s/-/+/g'
-}
+source=("$pkgname::git+https://github.com/harness/drone-cli.git#tag=v$pkgver")
+b2sums=('0decf4e0779027e1235fc4d5e1bdcadaa00d4fa3ee44ce55d7b9c8438535037f732bbf76dd7b746c01d1ec880563da0ea2bcd903a12cb82d4f912076a11117f5')
 
 prepare() {
   cd "$pkgname"
@@ -29,7 +27,7 @@ prepare() {
   mkdir build
 
   # download dependencies
-  go mod download
+  go mod download -x
 }
 
 build() {
@@ -39,18 +37,12 @@ build() {
   export CGO_CPPFLAGS="${CPPFLAGS}"
   export CGO_CFLAGS="${CFLAGS}"
   export CGO_CXXFLAGS="${CXXFLAGS}"
+  export CGO_LDFLAGS="${LDFLAGS}"
+  export GOFLAGS="-buildmode=pie -mod=readonly -modcacherw"
   export GOPATH="${srcdir}"
 
-  go build -v \
-    -buildmode=pie \
-    -mod=readonly \
-    -modcacherw \
-    -ldflags "-compressdwarf=false \
-    -linkmode external \
-    -extldflags ${LDFLAGS} \
-    -X main.version=$pkgver" \
-    -o build \
-    ./...
+  local ld_flags="-compressdwarf=false -linkmode=external -X main.version=$pkgver"
+  go build -v -ldflags "$ld_flags" -o build ./...
 }
 
 check() {
@@ -66,5 +58,5 @@ package() {
   install -vDm755 -t "$pkgdir/usr/bin" build/drone
 
   # documentation
-  install -vDm644 -t "$pkgdir/usr/share/doc/$pkgname" *.md
+  install -vDm644 -t "$pkgdir/usr/share/doc/$pkgname" ./*.md
 }

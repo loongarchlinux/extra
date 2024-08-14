@@ -1,28 +1,30 @@
 # Maintainer: Levente Polyak <anthraxx[at]archlinux[dot]org>
 
 pkgname=libudev0-shim
-pkgver=1
-pkgrel=4
+pkgver=2
+pkgrel=1
 pkgdesc='libudev.so.0 compatibility library for systems with newer udev versions'
 url='https://github.com/archlinux/libudev0-shim'
 arch=('loong64' 'x86_64')
-license=('GPL')
+license=('LGPL-2.1-or-later')
 provides=('libudev0')
 conflicts=('libudev0')
 depends=('systemd-libs')
-source=(${pkgname}.tar.gz::https://github.com/archlinux/libudev0-shim/archive/v${pkgver}.tar.gz)
-sha512sums=('794810b20be6391cb6af53c2c49705f8bd884dd6eb5d1fd5b659481a01490205cc60e0f1904c020fb0e59e984583762ba6775f977a78b95a40ba82eb93965387')
+makedepends=('git')
+validpgpkeys=('8703B6700E7EE06D7A39B8D6EDAE37B02CEB490D') # Emil Velikov <emil.l.velikov@gmail.com>
+source=("git+https://github.com/archlinux/libudev0-shim.git#tag=v${pkgver}?signed")
+sha512sums=('eb77f1af1079a9c2dc0cd34a8a29ccffba012a4cf2f947b0ab2d669e98ee94c3e3c43aba73cfa29feb54422e4f0caa7022a5d15a7012fb57651e5a72a2d39f10')
 
 build() {
-  cd ${pkgname}-${pkgver}
-  unset LDFLAGS
+  cd "${pkgname}"
+
   make
 }
 
 package() {
-  cd ${pkgname}-${pkgver}
-  install -Dm 755 libudev.so.0.0.9999 -t "${pkgdir}/usr/lib"
-  ln -s libudev.so.0.0.9999 "${pkgdir}/usr/lib/libudev.so.0"
+  cd "${pkgname}"
+
+  make DESTDIR="${pkgdir}" install
 }
 
 # vim: ts=2 sw=2 et:

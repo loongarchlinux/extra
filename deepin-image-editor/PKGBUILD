@@ -1,31 +1,31 @@
 # Maintainer: Felix Yan <felixonmars@archlinux.org>
 
 pkgname=deepin-image-editor
-pkgver=1.0.43
-pkgrel=2
+pkgver=1.0.44
+pkgrel=1
 pkgdesc='Public library for deepin-image-viewer and deepin-album'
 arch=('loong64' 'x86_64')
 url="https://github.com/linuxdeepin/image-editor"
 license=('GPL3')
 depends=('dtkcore' 'dtkgui' 'dtkwidget' 'qt5-base' 'qt5-svg' 'libtiff' 'ffmpegthumbnailer'
          'freeimage' 'libmediainfo' 'gcc-libs' 'deepin-util-dfm')
-makedepends=('cmake' 'ninja' 'qt5-tools')
-source=("https://github.com/linuxdeepin/image-editor/archive/$pkgver/$pkgname-$pkgver.tar.gz"
+makedepends=('git' 'cmake' 'ninja' 'qt5-tools')
+source=("git+https://github.com/linuxdeepin/image-editor.git#tag=$pkgver"
         remove-broken-flags.patch)
-sha512sums=('f813a765e6a345f5d3be4cc52656f509b75360095546f67c50304746a0469c9b2d90007ff3486ffd5c88c6149d36ee67589d898886594987b9b7525b27cf89d6'
+sha512sums=('96586f713215c73090061855f79f3767d6e9c57d7fdd60355d13145e26386e7c8c3a7dfdd9c9e9f4a52926948ccb3a630a93a68a0a07d163ec93ba9a3f0dc452'
             'bc72e7732ae045a10129336a770d04827c487fb57938c4711e57aeeccde369fca207913477a695cddffc7d0fb6d77add1f75b9b5ca784d0285b8f4f56c2376ad')
 
 prepare() {
-  patch -d image-editor-$pkgver -p2 < remove-broken-flags.patch
+  patch -d image-editor -p2 < remove-broken-flags.patch
 }
 
 build() {
-  cd image-editor-$pkgver
+  cd image-editor
   cmake . -GNinja -DCMAKE_INSTALL_PREFIX=/usr
   ninja
 }
 
 package() {
-  cd image-editor-$pkgver
+  cd image-editor
   DESTDIR="$pkgdir" ninja install
 }

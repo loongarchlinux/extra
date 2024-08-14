@@ -2,19 +2,18 @@
 # Contributor: Fabian Bornschein <fabiscafe-cat-mailbox-dog-org>
 
 pkgbase=libgda6
-pkgname=(libgda6 libgda6-{postgres,sqlcipher})
-pkgver=6.0.0+r73+g94fa90ca2
+pkgname=(libgda6 libgda6-{mysql,postgres,sqlcipher})
+pkgver=6.0.0+r170+ged6986ed3
 pkgrel=1
 pkgdesc="Database access library"
 arch=(loong64 x86_64)
 url="https://gitlab.gnome.org/GNOME/libgda"
-license=(GPL2)
-makedepends=(postgresql-libs sqlcipher json-glib iso-codes libsecret gtk3 graphviz
-             intltool gobject-introspection valgrind vala meson git)
-options=(debug)
-_commit=94fa90ca28bf68d1f819bd6b226345864a5c2ff4
+license=(LGPL-2.0-or-later)
+depends=(glib2 glibc libsecret libxml2 mariadb-libs postgresql-libs sqlcipher sqlite)
+makedepends=(git gobject-introspection intltool iso-codes json-glib meson vala valgrind)
+_commit=ed6986ed31ac2d24b9f665bbee7a1f9780dd262c
 source=("git+https://gitlab.gnome.org/GNOME/libgda.git#commit=$_commit")
-sha256sums=('SKIP')
+sha256sums=('aba144bca4359e444f7658e5ecf310cd3eb259277956f4af5ac35a3a006399d9')
 
 pkgver() {
   cd libgda
@@ -23,7 +22,7 @@ pkgver() {
 
 prepare() {
   cd libgda
-  sed -i 's/libcryp-config/libgcrypt-config/g;s/libcryp-config/libcrypt-config/' meson.build
+  sed -i 's/mysqlclient/libmariadb/' meson.build
 }
 
 build() {
@@ -44,6 +43,7 @@ build() {
     -D web=false # If enabled, pulls in libsoup, see -D libsoup
     -D flatpak=false
     -D vapi=true
+    -D werror=false
   )
   
   arch-meson libgda build "${meson_options[@]}"
@@ -65,13 +65,18 @@ _pick() {
 }
 
 package_libgda6() {
-  depends=(json-glib iso-codes libsecret gtk3 graphviz)
-  optdepends=('libgda6-postgres: provider for PostgreSQL'
+  depends=(glib2 glibc libsecret libxml2 sqlite)
+  optdepends=('libgda6-mysql: provider for MySQL'
+              'libgda6-postgres: provider for PostgreSQL'
               'libgda6-sqlcipher: provider for SQLCipher')
   meson install -C build --destdir "$pkgdir"
   
   cd "$pkgdir"
   
+  # MySQL
+  _pick libgda-mysql usr/lib/pkgconfig/libgda-mysql-*.pc
+  _pick libgda-mysql usr/lib/libgda-*/providers/libgda-mysql-*.so
+
   # PostgreSQL
   _pick libgda-postgres usr/lib/pkgconfig/libgda-postgres-*.pc
   _pick libgda-postgres usr/lib/libgda-*/providers/libgda-postgres-*.so
@@ -82,16 +87,23 @@ package_libgda6() {
   _pick libgda-sqlcipher usr/include/libgda-*/providers/sqlcipher/gda-sqlcipher-provider.h
 }
 
+package_libgda6-mysql() {
+  pkgdesc="libgda6 provider for MySQL"
+  depends=(glib2 glibc libgda6 mariadb-libs)
+
+  mv libgda-mysql/* "$pkgdir"
+}
+
 package_libgda6-postgres() {
   pkgdesc="libgda6 provider for PostgreSQL"
-  depends=(libgda6 postgresql-libs)
+  depends=(glib2 glibc libgda6 postgresql-libs)
   
   mv libgda-postgres/* "$pkgdir"
 }
 
 package_libgda6-sqlcipher() {
   pkgdesc="libgda6 provider for SQLCipher"
-  depends=(libgda6 sqlcipher)
+  depends=(glib2 libgda6 sqlcipher)
   
   mv libgda-sqlcipher/* "$pkgdir"
 }

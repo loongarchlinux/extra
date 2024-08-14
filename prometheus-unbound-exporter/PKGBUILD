@@ -3,21 +3,25 @@
 # Contributor: George Rawlinson <grawlinson@archlinux.org>
 
 pkgname=prometheus-unbound-exporter
-pkgver=0.4.4
-pkgrel=1
+pkgver=0.4.6
+pkgrel=2
 pkgdesc='Prometheus exporter for Unbound'
 arch=('loong64' 'x86_64')
 url='https://github.com/letsencrypt/unbound_exporter'
-license=('Apache')
+license=('Apache-2.0')
 groups=()
 depends=('glibc')
 makedepends=('git' 'go')
 optdepends=('unbound: for local instance')
 options=('!lto')
-source=("${url}/archive/v${pkgver}/unbound_exporter-v${pkgver}.tar.gz" 'prometheus-unbound-exporter.service')
+backup=('etc/conf.d/prometheus-unbound-exporter')
+source=("${url}/archive/v${pkgver}/unbound_exporter-v${pkgver}.tar.gz"
+        'prometheus-unbound-exporter.conf'
+        'prometheus-unbound-exporter.service')
 
-sha256sums=('78d3a7be3f581eb4c4cfc59c65a15026a3ba8a722e326f33d1bc862c32f8a83e'
-            'ab4bfb97e16db7dd389a29e6b7d32b05748af7bf78c2a3ae18f75f0c5645a5aa')
+sha256sums=('6ab5933f67a87025fb744dec4a3ae328a4c9fada623222aa28df8b85105e5311'
+            'b3e9168cd536abda5d85f05df795ef9baa76f0155295eee18098f3e16e6eb58e'
+            '03922c9ba954f4f7e0661e8a13bdd64c37e610028956d0a1df5a972ea492abf6')
 
 prepare() {
   cd "unbound_exporter-${pkgver}"
@@ -36,13 +40,15 @@ build() {
   export CGO_CPPFLAGS="${CPPFLAGS}"
   export CGO_CFLAGS="${CFLAGS}"
   export CGO_CXXFLAGS="${CXXFLAGS}"
+  export CGO_LDFLAGS="${LDFLAGS}"
+  export GOFLAGS="-buildmode=pie -trimpath -ldflags=-linkmode=external -mod=readonly -modcacherw"
 
-  go build -v\
+  go build -v \
     -trimpath \
     -buildmode=pie \
     -mod=readonly \
     -modcacherw \
-    -ldflags "-linkmode external -extldflags ${LDFLAGS}" \
+    -ldflags "-linkmode external -extldflags \"${LDFLAGS}\"" \
     -o "build/${pkgname}" \
     .
 }
@@ -58,6 +64,9 @@ package() {
 
   # binary
   install -vDm755 -t "${pkgdir}/usr/bin" "build/${pkgname}"
+
+  # configuration
+  install -Dm644 "${srcdir}/prometheus-unbound-exporter.conf" "${pkgdir}/etc/conf.d/prometheus-unbound-exporter"
 
   # service
   install -vDm0644 "${srcdir}/prometheus-unbound-exporter.service" "${pkgdir}/usr/lib/systemd/system/prometheus-unbound-exporter.service"

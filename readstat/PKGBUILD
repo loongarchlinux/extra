@@ -2,26 +2,34 @@
 
 pkgname=readstat
 pkgver=1.1.9
-pkgrel=1
+pkgrel=2
 pkgdesc='Command-line tool (+ C library) for converting SAS, Stata, and SPSS files'
 arch=(loong64 x86_64)
 license=(MIT)
 url='https://github.com/WizardMac/ReadStat'
-depends=(zlib)
-source=(https://github.com/WizardMac/ReadStat/releases/download/v$pkgver/$pkgname-$pkgver.tar.gz
+depends=(glibc
+         zlib)
+makedepends=(git)
+source=(git+https://github.com/WizardMac/ReadStat#tag=v$pkgver
         readstat-LICENSE::https://raw.githubusercontent.com/WizardMac/ReadStat/v$pkgver/LICENSE)
-sha256sums=('3a232b9e852d10173e2f25da9155afe2e129a30d1fc6c9aac142cdc5cbfe527e'
+sha256sums=('fa653339a21ba948fbea8f74c0adf5ea58cf2f264e97699a1b811e24b9325dba'
             '416b611ef9448b3c7c71f584b1ebf78baff8f553b4b5368f2af732255ca19a3e')
 
+prepare() {
+  cd ReadStat
+  git cherry-pick -n 718d49155e327471ed9bf4a8c157f849f285b46c # Fix use-after-free
+  autoreconf -vi
+}
+
 build() {
-  cd $pkgname-$pkgver
+  cd ReadStat
   ./configure \
     --prefix=/usr
   make
 }
 
 package() {
-  cd $pkgname-$pkgver
+  cd ReadStat
   make DESTDIR="$pkgdir" install
   install -Dm644 ../readstat-LICENSE "$pkgdir"/usr/share/licenses/$pkgname/LICENSE
 }

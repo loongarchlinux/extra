@@ -2,22 +2,54 @@
 
 pkgname=goobox
 pkgver=3.6.0
-pkgrel=2
-pkgdesc="CD player and ripper for GNOME"
-arch=('loong64' 'x86_64')
-url="https://people.gnome.org/~paobac/goobox/"
-license=('GPL')
-depends=('gst-plugins-base' 'brasero' 'libmusicbrainz5' 'libdiscid' 'libcoverart' 'libnotify')
-makedepends=('itstool' 'meson')
-optdepends=('gst-plugins-good: rip CDs into flac and wav formats')
-source=(https://download.gnome.org/sources/$pkgname/${pkgver%.*}/$pkgname-$pkgver.tar.xz)
-sha256sums=('5c4cd30463a82dd873f297f27774867ede3e6a8679ee12a12d790508dc46b046')
+pkgrel=3
+pkgdesc='CD player and ripper for GNOME'
+arch=(loong64 x86_64)
+url='https://gitlab.gnome.org/Archive/goobox'
+license=(GPL-2.0-or-later)
+depends=(
+  brasero
+  dconf
+  gdk-pixbuf2
+  glib2
+  glibc
+  gst-plugins-base
+  gstreamer
+  gtk3
+  hicolor-icon-theme
+  libcoverart
+  libdiscid
+  libmusicbrainz5
+  pango
+)
+makedepends=(
+  git
+  glib2-devel
+  itstool
+  meson
+)
+optdepends=('gst-plugins-good: Rip CDs into FLAC, WAV or MP3 formats')
+source=(
+  "git+https://gitlab.gnome.org/Archive/goobox.git#tag=$pkgver"
+  goobox-set-prgname.patch
+)
+b2sums=(
+  65a1934a42ae8526fa82d223aeea0ee5e7ed294af187dfd32aff91e028b71fcd477de519282d3d0c5191ff98e9a87ef2264d5c60b9b9857a1efcadbc497c839a
+  37b44bfda6f3b165a88c7f5042b4f7b04a3d7aa38d7b703d0972b76a7715a8052a5496d4b99290697b3e9393fe88daa5d14f70edb9481f092abc1050245b08b6
+)
+
+prepare() {
+  cd $pkgname
+
+  # Set prgname to application ID
+  patch -Np1 -i ../goobox-set-prgname.patch
+}
 
 build() {
-  arch-meson $pkgname-$pkgver build
-  ninja -C build
+  arch-meson $pkgname build
+  meson compile -C build
 }
 
 package() {
-  DESTDIR="$pkgdir" meson install -C build
+  meson install -C build --destdir "$pkgdir"
 }

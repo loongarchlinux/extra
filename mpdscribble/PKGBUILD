@@ -1,0 +1,43 @@
+# Maintainer: T.J. Townsend <blakkheim@archlinux.org>
+# Contributor: jason ryan <jasonwryan@gmail.com>
+# Contributor: Bartłomiej Piotrowski <nospam@bpiotrowwski.pl>
+# Contributor: Thomas Dziedzic < gostrc at gmail >
+# Contributor: evr <evanroman at gmail>
+# Contributor: Luiz Ribeiro <luizribeiro@gmail.com>
+
+pkgname=mpdscribble
+pkgver=0.25
+pkgrel=2
+pkgdesc='MPD client which submits track info to {Libre,Last}.fm'
+url='https://www.musicpd.org/clients/mpdscribble/'
+arch=('loong64' 'x86_64')
+license=('GPL')
+depends=('curl' 'libmpdclient')
+makedepends=('boost' 'git' 'systemd' 'meson' 'ninja')
+install=mpdscribble.install
+source=(git+https://github.com/MusicPlayerDaemon/mpdscribble.git?signed#tag=v${pkgver})
+sha256sums=('4c8b28ca0250f4ff86c1231bdf6486f7ec06ab91b3d0adefb10e25acac595ed6')
+validpgpkeys=('0392335A78083894A4301C43236E8A58C6DB4512') # Max Kellermann <max@musicpd.org>
+
+build() {
+  cd "${pkgname}"
+  arch-meson build
+  meson compile -C build
+}
+
+package() {
+  cd "${pkgname}"
+  DESTDIR="$pkgdir" ninja -C build install
+
+  install -Dm644 build/systemd/system/"${pkgname}".service \
+    "${pkgdir}"/usr/lib/systemd/system/"${pkgname}"@.service
+  install -Dm644 build/systemd/user/"${pkgname}".service \
+    "${pkgdir}"/usr/lib/systemd/user/"${pkgname}".service
+
+  install -Dm644 doc/"${pkgname}".conf \
+    "${pkgdir}"/usr/share/"${pkgname}"/"${pkgname}".conf.example
+  rm -r "${pkgdir}"/etc
+
+  install -d "${pkgdir}"/var/cache/"${pkgname}"
+    touch "${pkgdir}"/var/cache/"${pkgname}"/"${pkgname}".cache
+}

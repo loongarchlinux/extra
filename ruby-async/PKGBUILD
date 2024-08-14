@@ -3,23 +3,33 @@
 
 _gemname=async
 pkgname=ruby-${_gemname}
-pkgver=1.30.3
+pkgver=2.14.2
 pkgrel=2
 pkgdesc='Composable asynchronous I/O'
 url='https://github.com/socketry/async'
 arch=('any')
 license=('MIT')
-depends=('ruby' 'ruby-console' 'ruby-nio4r' 'ruby-timers')
-makedepends=('ruby-rdoc')
+depends=(
+  ruby
+  ruby-console
+  ruby-io-event
+  ruby-nio4r
+  ruby-timers
+)
+makedepends=(
+  ruby-rdoc
+)
 options=('!emptydirs')
-source=(https://github.com/socketry/async/archive/v${pkgver}/${pkgname}-${pkgver}.tar.gz)
-sha256sums=('f378e8d136c1b58f8df38956a5253b170f87ce815ae8c7d88b50ea964a8e8bb1')
-sha512sums=('337a51ca8fd0e6685528e2eca9b584344ba583f7254f2600110ee62da6e4ccabeb471e7d94f36ab6f8d0eb3eada9e23335a262a50c8d035f67708fce0a590e5e')
+source=("https://github.com/socketry/async/archive/v${pkgver}/${pkgname}-${pkgver}.tar.gz")
+sha512sums=('e92d2b69648f88b5f24703df9c35eb0da0413b8db312f70f1c81f02de9ebd546d88657c32f6e582148ef29af1dbc36d460029e3aeab12a333a0364272a27d20f')
+b2sums=('722c63de889144b4563491f873d618a77ea6fb98ed9132684c62ea6ccfbd040c1ff2b857f42ce66a09c1aca1ef0c648b163d34eccd759f4f4509fe7809ddc776')
 
 prepare() {
   cd ${_gemname}-${pkgver}
-  sed 's|git ls-files|find|' -i ${_gemname}.gemspec
-  sed 's|~>|>=|g' -i ${_gemname}.gemspec # don't give a fuck about rubys bla bla
+
+  sed --in-place 's|git ls-files|find|' "${_gemname}.gemspec"
+  sed --in-place 's|~>|>=|g' "${_gemname}.gemspec"
+  sed --in-place '/release\.pem/d' "${_gemname}.gemspec"
 }
 
 build() {
@@ -33,8 +43,8 @@ package() {
   gem install --ignore-dependencies --no-user-install -i "${pkgdir}/${_gemdir}" \
     -n "${pkgdir}/usr/bin" ${_gemname}-${pkgver}.gem
 
-  install -Dm 644 README.md -t "${pkgdir}/usr/share/doc/${pkgname}"
-  install -Dm 644 README.md -t "${pkgdir}/usr/share/licenses/${pkgname}"
+  install -Dm 644 readme.md -t "${pkgdir}/usr/share/doc/${pkgname}"
+  install -Dm 644 license.md -t "${pkgdir}/usr/share/licenses/${pkgname}"
 
   cd "${pkgdir}/${_gemdir}"
   rm -rf cache gems/${_gemname}-${pkgver}/{ext,lib/*/*.so} \

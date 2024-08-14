@@ -3,8 +3,8 @@
 
 pkgname=hy
 epoch=1
-pkgver=0.28.0
-pkgrel=2
+pkgver=0.29.0
+pkgrel=1
 pkgdesc="A dialect of Lisp that's embedded in Python"
 arch=('any')
 url="http://hylang.org/"
@@ -13,7 +13,7 @@ depends=('python-funcparserlib')
 makedepends=('python-setuptools' 'python-build' 'python-wheel' 'python-installer')
 checkdepends=('python-pytest')
 source=("$pkgname-$pkgver.tar.gz::https://github.com/hylang/hy/archive/$pkgver.tar.gz")
-sha256sums=('f5ef595f1d596c489fc2db2f0f2244d9300ba0c8b7e213669aac01529256450b')
+sha256sums=('ed44b2559973a65acaea9b7ce56cb2367a8a05761b47ef7d7d723341c65ee90d')
 
 prepare() {
     cd "$pkgname-$pkgver"

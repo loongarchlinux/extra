@@ -2,7 +2,7 @@
 
 pkgname=perl-path-class
 pkgver=0.37
-pkgrel=9
+pkgrel=10
 pkgdesc="Cross-platform path specification manipulation"
 arch=(any)
 license=(PerlArtistic GPL)

@@ -2,7 +2,7 @@
 # Contributor: Viktor Schneider <info[at]vjs[dot]io>
 pkgname=tl-expected
 pkgver=1.1.0
-pkgrel=1
+pkgrel=2
 pkgdesc="C++11/14/17 std::expected with functional-style extensions"
 arch=('any')
 url="https://github.com/TartanLlama/expected"

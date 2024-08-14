@@ -1,8 +1,8 @@
 # Maintainer: Caleb Maclennan <caleb@alerque.com>
 
 pkgname=git-warp-time
-pkgver=0.7.6
-pkgrel=4
+pkgver=0.8.4
+pkgrel=1
 pkgdesc='reset timestamps of Git repository files to the time of the last modifying commit'
 arch=(loong64 x86_64)
 url="https://github.com/alerque/$pkgname"
@@ -13,29 +13,30 @@ depends=(gcc-libs # libgcc_s.so
 makedepends=(cargo
              git
              jq)
+options=(!lto)
 _archive="$pkgname-$pkgver"
 source=("$url/releases/download/v$pkgver/$_archive.tar.zst"{,.asc})
-sha256sums=('5d4d1f6abaad6af76fcad356cc5882e5ca3583e916e50dbbff2d2a5acede4b0f'
+sha256sums=('5e1df49c0efb709efe51f2a522c967c83fbddc0b6743ef0fdec085b06d030149'
             'SKIP')
 validpgpkeys=('9F377DDB6D3153A48EB3EB1E63CC496475267693') # Caleb Maclennan <caleb@alerque.com> (@alerque)
 
 prepare() {
 	cd "$_archive"
-	sed Makefile.am -i \
-		-e 's/cargo \(build\|install\|test\)/cargo --offline \1/'
-	autoreconf
 	cargo fetch --locked --target "$(rustc -vV | sed -n 's/host: //p')"
 }
 
 build() {
 	cd "$_archive"
-	CFLAGS+=' -ffat-lto-objects'
-	./configure --prefix /usr --enable-shared
+	export CARGO_FEATURE_FLAGS==--offline
+	export LIBGIT2_NO_VENDOR=1
+	export LIBGIT2_SYS_USE_PKG_CONFIG=1
+	./configure --prefix /usr
 	make
 }
 
 check() {
 	cd "$_archive"
+	export CARGO_FEATURE_FLAGS==--offline
 	make check
 }
 

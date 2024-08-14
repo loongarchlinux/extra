@@ -3,7 +3,7 @@
 
 pkgname=pastebinit
 pkgver=1.5.1
-pkgrel=1
+pkgrel=2
 pkgdesc="Send anything you want directly to a pastebin from the command line"
 arch=('any')
 url="https://launchpad.net/pastebinit"

@@ -7,8 +7,8 @@
 pkgbase=libssh
 pkgname=(libssh
          libssh-docs)
-pkgver=0.10.6
-pkgrel=2
+pkgver=0.11.0
+pkgrel=1
 pkgdesc='Library for accessing ssh client services through C libraries'
 url='https://www.libssh.org/'
 license=(LGPL)
@@ -22,17 +22,11 @@ makedepends=(cmake
              openssh
              python)
 provides=(libssh.so)
-source=(https://www.libssh.org/files/${pkgver%.*}/$pkgname-$pkgver.tar.xz{,.asc}
-        https://gitlab.com/libssh/libssh-mirror/-/commit/1a02364b.patch)
-sha256sums=('1861d498f5b6f1741b6abc73e608478491edcf9c9d4b6630eef6e74596de9dc1'
-            'SKIP'
-            '124612313b78dc89e47e87a17698113b8d2736c213e724c0ae0f84f87136ba48')
-validpgpkeys=('8DFF53E18F2ABC8D8F3C92237EE0FC4DCC014E3D') # Andreas Schneider <asn@cryptomilk.org>
-
-prepare() {
-# Fix regression in IPv6 addresses in hostname parsing
-  patch -d $pkgname-$pkgver -p1 < 1a02364b.patch
-}
+source=(https://www.libssh.org/files/${pkgver%.*}/$pkgname-$pkgver.tar.xz{,.asc})
+sha256sums=('860e814579e7606f3fc3db98c5807bef2ab60f793ec871d81bcd23acdcdd3e91'
+            'SKIP')
+validpgpkeys=('8DFF53E18F2ABC8D8F3C92237EE0FC4DCC014E3D'  # Andreas Schneider <asn@cryptomilk.org>
+              '88A228D89B07C2C77D0C780903D5DF8CFDD3E8E7') # libssh release key (release key) <libssh@libssh.org>
 
 build() {
   cmake -B build -S $pkgname-$pkgver \

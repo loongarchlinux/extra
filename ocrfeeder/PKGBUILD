@@ -2,57 +2,109 @@
 
 pkgname=ocrfeeder
 pkgver=0.8.5
-pkgrel=3
-pkgdesc='GTK document layout analysis and optical character recognition application'
-arch=('any')
+pkgrel=4
+pkgdesc='Document layout analysis and optical character recognition application'
+arch=(any)
 url='https://wiki.gnome.org/Apps/OCRFeeder'
-license=('GPL3')
-depends=('ghostscript' 'goocanvas' 'gtk3' 'gtkspell3' 'iso-codes' 'python-gobject' 'python-odfpy'
-         'python-pillow' 'python-pyenchant' 'python-reportlab' 'python-sane' 'unpaper')
-makedepends=('git' 'gnome-common')
-optdepends=('cuneiform: character recognition'
-            'gocr: character recognition'
-            'ocrad: character recognition'
-            'tesseract: character recognition')
-_commit=edd666ac6f04720f3a8ec1bd9f082308d282491d
-source=("git+https://gitlab.gnome.org/GNOME/ocrfeeder.git#commit=$_commit")
-sha256sums=('SKIP')
-
-pkgver() {
-  cd $pkgname
-  git describe --tags | sed 's/^release_//;s/_/./g;s/-/+/g'
-}
+license=(GPL-3.0-or-later)
+depends=(
+  gdk-pixbuf2
+  ghostscript
+  glib2
+  goocanvas
+  gtk3
+  gtkspell3
+  hicolor-icon-theme
+  iso-codes
+  pango
+  python
+  python-gobject
+  python-odfpy
+  python-pillow
+  python-pyenchant
+  python-reportlab
+  python-sane
+  unpaper
+)
+makedepends=(
+  git
+  intltool
+  yelp-tools
+)
+optdepends=(
+  'cuneiform: character recognition'
+  'gocr: character recognition'
+  'ocrad: character recognition'
+  'tesseract: character recognition'
+)
+source=(
+  "git+https://gitlab.gnome.org/GNOME/ocrfeeder.git#tag=$pkgver"
+  ocrfeeder-11.patch
+  ocrfeeder-12.patch
+  ocrfeeder-16.patch
+  ocrfeeder-17.patch
+  ocrfeeder-18.patch
+  ocrfeeder-19.patch
+  ocrfeeder-20.patch
+  ocrfeeder-22.patch
+)
+b2sums=(
+  a74150bf64cacab33ec11be5d01012f97024f3c8fb3bba57c7f70491fd5065cb1e841b606776e0937186007f8227998094df72cd0fb5a18c2922afde66a84e8c
+  59ce2a2aa2542fc0294bb287468e1b1ac2aac4389c3845247cae86652263ba03b7a88743f70c870264589cfe14bea5972f0abe897fc670021d313ea54fa5f91c
+  b00b25fd19fcb8b78db16e1b75203a91d5dfbde080712161273eef712dadb8e1eddc4e99e025141599c0c4d73cd6552fe1232921d143f96c4b164c6dd6718414
+  0b55bb1b8353cb4008d41972060f2e2093bcec3cbedcdef9e773e3f85b20d2e46c7c5c22d91cb30d50f149ea6cfeb5feaaaef8f7f3a784df5252544e8775df8f
+  c99998efb6000340b7c22a6ccb294ced9bd9d2ea4fc5cf6289dfdfa09acccb48b9c3b187c59416327e6416d4a79988bb7848af24d2dcfa5fbc17cf85ddda875c
+  ce1b975a0c3c830644e989412426a0b434f9ca4f4aa29cbe124303a335164bec0511c495df8b3849cbf38c955856cc6a325b5e8d59876db11b7f06593c61745b
+  01fe27b2b3f2069419de3242a3ed7606a1f2884b428501fd8961116e59fb6874b5b0acfdbde565545e3d3853cf5752f8304d747be7d99786c55f64287d655151
+  f73b46b108c531d7ea6be1fdf880541729819569c030c9747b32ba45defdaf09ed39b6492d8c6f7056c36446c5bd239962cb87656226342328a800580a99d228
+  a969308c8d66d49db90af83123514c094f5ae07de543e1458994d7ddcb06519f914b8f3750acaed70a9b26bd5b7c1757d20c7e2ffafd35e3c4cc9bab792a751c
+)
 
 prepare() {
   cd $pkgname
 
-  # Remove the usage of deprecated 'xml.etree.ElementTree.Element.getchildren' (FS#69470)
-  git cherry-pick -n c0c460893961d5589f300645b32b5584a6c3f463
+  # https://gitlab.gnome.org/GNOME/ocrfeeder/-/merge_requests/11
+  git apply -3 ../ocrfeeder-11.patch
 
-  # Port to GooCanvas 3.0
-  git cherry-pick -n 2a580ed065764c96da34634fc9186f81234f8ca5
+  # https://gitlab.gnome.org/GNOME/ocrfeeder/-/merge_requests/12
+  git apply -3 ../ocrfeeder-12.patch
 
-  # Fix gocr parameters
-  git cherry-pick -n 2e1a634f35c03acffdbbbdd50c0d979578389057
+  # https://gitlab.gnome.org/GNOME/ocrfeeder/-/merge_requests/16
+  git apply -3 ../ocrfeeder-16.patch
 
-  # Fix build with Python 3.12
-  sed -e 's|import imp; imp.find_module|import importlib; importlib.import_module|' -i m4/m4_ax_python_module.m4
+  # https://gitlab.gnome.org/GNOME/ocrfeeder/-/merge_requests/17
+  git apply -3 ../ocrfeeder-17.patch
 
-  NOCONFIGURE=1 ./autogen.sh
+  # https://gitlab.gnome.org/GNOME/ocrfeeder/-/merge_requests/18
+  git apply -3 ../ocrfeeder-18.patch
+
+  # https://gitlab.gnome.org/GNOME/ocrfeeder/-/merge_requests/19
+  git apply -3 ../ocrfeeder-19.patch
+
+  # https://gitlab.gnome.org/GNOME/ocrfeeder/-/merge_requests/20
+  git apply -3 ../ocrfeeder-20.patch
+
+  # https://gitlab.gnome.org/GNOME/ocrfeeder/-/merge_requests/22
+  git apply -3 ../ocrfeeder-22.patch
+
+  autoreconf -fi
 }
 
 build() {
   cd $pkgname
-  ./configure --prefix=/usr
+  ./configure \
+    --prefix=/usr \
+    --sysconfdir=/etc \
+    --localstatedir=/var
   make
 }
 
 check() {
-  make -C $pkgname check
+  cd $pkgname
+  make -k check
 }
 
 package() {
   cd $pkgname
   make DESTDIR="$pkgdir" install
-  install -Dm644 resources/icons/org.gnome.OCRFeeder.svg "$pkgdir/usr/share/icons/hicolor/scalable/apps/org.gnome.OCRFeeder.svg"
 }

@@ -2,20 +2,38 @@
 
 pkgname=ruby-ast
 pkgver=2.4.2
-pkgrel=2
+pkgrel=3
 pkgdesc='A library for working with Abstract Syntax Trees'
 arch=(any)
 url='https://whitequark.github.io/ast/'
 license=(MIT)
-depends=(ruby)
-checkdepends=(ruby-rake ruby-bacon ruby-bacon-colored_output ruby-simplecov ruby-yard ruby-kramdown)
+depends=(
+  ruby
+)
+checkdepends=(
+  ruby-bacon
+  ruby-bacon-colored_output
+  ruby-bundler
+  ruby-kramdown
+  ruby-rake
+  ruby-simplecov
+  ruby-yard
+)
 options=(!emptydirs)
 source=(https://github.com/whitequark/ast/archive/v$pkgver/$pkgname-$pkgver.tar.gz)
 sha256sums=('e3fbf580fb2139b0c0751594ba660ecb222de3786486355d59254b8ff424036f')
 
 prepare() {
   cd ast-$pkgver
-  sed -r -e '/[cC]overalls/d' -e 's|~>|>=|g' -i ast.gemspec test/helper.rb
+
+  sed -e '7,15d' -i test/helper.rb
+  sed -r \
+    -e '/[cC]overalls/d' \
+    -e '/simplecov/d' \
+    -e 's|~>|>=|g' \
+    -i ast.gemspec test/helper.rb
+
+  cat test/helper.rb
 }
 
 build() {

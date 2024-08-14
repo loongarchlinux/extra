@@ -2,21 +2,41 @@
 
 pkgname=ruby-certificate_authority
 pkgver=1.1.0
-pkgrel=2
+pkgrel=3
 pkgdesc='Ruby gem for managing the core functions outlined in RFC-3280 for PKI'
 arch=(any)
 url='https://github.com/cchandler/certificate_authority'
 license=(MIT)
-depends=(ruby)
-makedepends=(ruby-pry ruby-rake ruby-rspec)
+depends=(
+  ruby
+)
+makedepends=(
+  ruby-pry
+  ruby-rake
+  ruby-rspec
+)
+checkdepends=(
+  ruby-bundler
+)
 options=(!emptydirs)
-source=(https://github.com/cchandler/certificate_authority/archive/v$pkgver/$pkgname-$pkgver.tar.gz)
-sha256sums=('b6cc0d136d8f7ebdaa796c62e7eb8e755f2e409616c55990a8bde6f255154890')
+source=(
+  "https://github.com/cchandler/certificate_authority/archive/v$pkgver/$pkgname-$pkgver.tar.gz"
+  # https://github.com/cchandler/certificate_authority/pull/63
+  "${pkgname}_fix_tests.patch::https://patch-diff.githubusercontent.com/raw/cchandler/certificate_authority/pull/63.patch"
+)
+sha512sums=('52c79acaaacf471206912165d2b07464158b61acd8b65ad73614900baa208694f9d29107cc0e275d09baa580ecfbc95458ac7772370b423762d4e80ddf0237ca'
+            '8b1fa3dd2c8aa1823303bad0c0c36fac625c43046ef44787717d55fb28f36b1763b44d02b651191579b964e08b43e7171da1fbdb5045d995162ea09d97cb74f4')
+b2sums=('6714359fd869cce2a0b43aa6321e95229dead04ed761f6239ecb7b988548aabf13c62a3c61e20d539a6003395886e5e4ff2366fabaa395bfd4b4761c55d56555'
+        '440d7ea5186486eaf5dabfe31f226af06b09ac8f64980f47ac0755895452b0ceb70bfaaf26f50ea61693d5b03d274ebd8c42a40decf009a85e5541a86844be7b')
 
 prepare() {
   cd certificate_authority-$pkgver
+
+  patch --verbose --strip=1 --input="../${pkgname}_fix_tests.patch"
+
   sed -e '/[cC]overalls/d' -e '/rubocop/d' -r -e 's|git ls-files -z|find . -type f -not -path "*/\.git/*" -printf "%P\\\\0"|' \
       -i certificate_authority.gemspec Rakefile spec/spec_helper.rb
+
   rm Gemfile.lock
 }
 

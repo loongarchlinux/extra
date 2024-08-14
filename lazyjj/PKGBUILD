@@ -1,0 +1,40 @@
+# Maintainer: Orhun Parmaksız <orhun@archlinux.org>
+
+pkgname=lazyjj
+pkgver=0.2.1
+pkgrel=1
+pkgdesc="TUI for Jujutsu/jj"
+arch=('loong64' 'x86_64')
+url="https://github.com/Cretezy/lazyjj"
+license=('Apache-2.0')
+depends=('gcc-libs')
+makedepends=('cargo-nightly')
+checkdepends=('jujutsu')
+source=("$pkgname-$pkgver.tar.gz::$url/archive/v$pkgver.tar.gz")
+sha512sums=('666b800e8e5123bfad772f814bf480434b8c127501162d1fef076a94b2cbfaf1f532c57b0abaaad6dbac19d4892d87424cd50ca08744b253ca40f4eaa8d1fb04')
+
+prepare() {
+  cd "$pkgname-$pkgver"
+  export RUSTUP_TOOLCHAIN=nightly
+  cargo fetch --target "$(rustc -vV | sed -n 's/host: //p')" # --locked
+}
+
+build() {
+  cd "$pkgname-$pkgver"
+  export RUSTUP_TOOLCHAIN=nightly
+  cargo build --release --frozen
+}
+
+check() {
+  cd "$pkgname-$pkgver"
+  export RUSTUP_TOOLCHAIN=nightly
+  cargo test --frozen
+}
+
+package() {
+  cd "$pkgname-$pkgver"
+  install -Dm 755 "target/release/$pkgname" -t "$pkgdir/usr/bin"
+  install -Dm 644 README.md -t "$pkgdir/usr/share/doc/$pkgname"
+}
+
+# vim: ts=2 sw=2 et:

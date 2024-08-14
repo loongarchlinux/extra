@@ -1,7 +1,7 @@
 # Maintainer: kpcyrd <kpcyrd[at]archlinux[dot]org>
 
 pkgname=workerd
-pkgver=1.20240502.0
+pkgver=1.20240806.0
 pkgrel=1
 pkgdesc="The JavaScript / Wasm runtime that powers Cloudflare Workers"
 url='https://github.com/cloudflare/workerd'
@@ -9,27 +9,33 @@ arch=('loong64' 'x86_64')
 license=('Apache-2.0')
 depends=(
   'glibc'
+  'libc++'
+  'libc++abi'
 )
 makedepends=(
   'bazel'
   'clang'
   'git'
-  'libc++'
   'python'
   'rust'
   'tcl'
 )
 source=(https://github.com/cloudflare/${pkgname}/archive/v${pkgver}/${pkgname}-${pkgver}.tar.gz)
-sha256sums=('0ef304dfa5bb4923336483a5ad1a92f47ace562aecb74e0ac57c823429193b61')
-b2sums=('2ed87284de06c6d70a3706e959fffca134274022d66a7b3902258ce9937e7da18ae9abf116032cfbd2ccd7d52832a018a52d832fb7d366477db3f29d803bd380')
+sha256sums=('9b6b6565f41aad75aec2e2752dc5d0136c1d9b46ffc7c12fa8dbabdd285dec87')
+b2sums=('db5c085721f7bda035879d55c0ed7dd7f034879248c3f24555125122717ca943005f0c926db8166ba48dcfc023f129e638c077c29426336544e3b8a77b47e20f')
 
 build() {
   cd ${pkgname}-${pkgver}
   rm .bazelversion
   bazel build \
     --config=thin-lto \
-    --action_env=BAZEL_LINKLIBS='-l%:libc++.a -l%:libc++abi.a -lm -static-libgcc' \
+    --linkopt='-lc++' --linkopt='-lm' --host_linkopt='-lc++' --host_linkopt='-lm' \
     //src/workerd/server:workerd
+}
+
+check() {
+  cd ${pkgname}-${pkgver}
+  bazel-bin/src/workerd/server/workerd test samples/unit-tests/config.capnp
 }
 
 package() {

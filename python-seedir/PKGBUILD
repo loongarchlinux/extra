@@ -1,9 +1,8 @@
 # Maintainer: Felix Yan <felixonmars@archlinux.org>
 
 pkgname=python-seedir
-pkgver=0.4.2
-_commit=00e34d515fa4590214a2988c129e8fa3ac1e501f
-pkgrel=4
+pkgver=0.5.0
+pkgrel=1
 pkgdesc="A Python package for creating, editing, and reading folder tree diagrams"
 url="https://github.com/earnestt1234/seedir"
 license=('MIT')
@@ -11,9 +10,9 @@ arch=('any')
 depends=('python-natsort')
 makedepends=('git' 'python-build' 'python-installer' 'python-setuptools' 'python-wheel')
 optdepends=('python-emoji: for emoji style')
-checkdepends=('python-emoji')
-source=("git+https://github.com/earnestt1234/seedir.git#commit=$_commit")
-sha512sums=('SKIP')
+checkdepends=('python-emoji' 'python-pytest')
+source=("git+https://github.com/earnestt1234/seedir.git#tag=v$pkgver")
+sha512sums=('481503870a54246670b2889049a274d4d019e0078ea59d2a4862de99df88b66e66cd1e130f3bcaeeb98885698c8a64e0d4ab7da370784bd05d59711e5208cea4')
 
 build() {
   cd seedir
@@ -22,7 +21,7 @@ build() {
 
 check() {
   cd seedir
-  python -m tests.tests
+  pytest
 }
 
 package() {

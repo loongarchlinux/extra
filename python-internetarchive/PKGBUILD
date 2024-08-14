@@ -1,52 +1,60 @@
-# Maintainer: Florian Pritz <bluewind@xinu.at>
+# Maintainer: Carl Smedstad <carsme@archlinux.org>
+# Contributor: Florian Pritz <bluewind@xinu.at>
 # Contributor: David McInnis <dave@dave3.xyz>
-# Contributor:  jyantis <yantis@yantis.net>
+# Contributor: jyantis <yantis@yantis.net>
 
 pkgname=python-internetarchive
-pkgver=3.5.0
-pkgrel=2
-pkgdesc='Wrapper for the various Internet Archive APIs (IA-S3, Metadata API, etc)'
-arch=('any')
-url='https://github.com/jjjake/ia-wrapper'
-license=('AGPL3')
-depends=('python'
-         'python-yaml'
-         'python-requests'
-         'python-jsonpatch'
-         'python-docopt'
-         'python-jsonpointer'
-         'python-tqdm'
-         'python-schema'
-        )
-makedepends=('python-setuptools')
-optdepends=('python-ujson: faster json parsing'
-            'python-gevent: concurrent downloads'
-            'cython: speedups')
-checkdepends=(python-responses
-              python-pytest
-             )
-source=("${pkgname}-${pkgver}.tar.gz::https://github.com/jjjake/internetarchive/archive/v${pkgver}.tar.gz")
-sha256sums=('c437d48f4838081c377f590250b7cf3049deaeabf7fbaf3adc19bef5ae0ca627')
+_pkgname=${pkgname#python-}
+pkgver=4.1.0
+pkgrel=1
+pkgdesc="A Python and Command-Line Interface to Archive.org"
+arch=(any)
+url="https://github.com/jjjake/internetarchive"
+license=(AGPL-3.0-or-later)
+depends=(
+  python
+  python-docopt
+  python-jsonpatch
+  python-requests
+  python-schema
+  python-tqdm
+  python-urllib3
+)
+makedepends=(
+  python-build
+  python-installer
+  python-setuptools
+  python-wheel
+)
+checkdepends=(
+  python-pytest
+  python-responses
+)
+optdepends=(
+  'cython: speedups'
+  'python-gevent: concurrent downloads'
+  'python-ujson: faster json parsing'
+)
+source=("$pkgname-$pkgver.tar.gz::$url/archive/v$pkgver.tar.gz")
+sha256sums=('77f07496fbce591374f6f485c060a251b9b4ba0133ce529407b0a58b4ba74c36')
 
 build() {
-  cd internetarchive-${pkgver}
-  python setup.py build
+  cd "$_pkgname-$pkgver"
+  python -m build --wheel --no-isolation
 }
 
 check() {
-  cd internetarchive-${pkgver}
-
-  # FIXME: tests/cli/test_ia_download.py tries to run `ia`, but the binary is not
-  # installed and installing + changing $PATH does not seem to work. deselect the test for now
-  pytest --deselect 'tests/cli/test_ia_download.py'
+  cd "$_pkgname-$pkgver"
+  python -m installer --destdir=tmp_install dist/*.whl
+  local site_packages=$(python -c "import site; print(site.getsitepackages()[0])")
+  export PATH="$PWD/tmp_install/usr/bin:$PATH"
+  export PYTHONPATH="$PWD/tmp_install/$site_packages"
+  pytest
 }
 
 package() {
-  cd internetarchive-${pkgver}
-  python setup.py install --root="${pkgdir}" --optimize=1
-
-  install -D -m644 LICENSE "${pkgdir}/usr/share/licenses/${pkgname}/LICENSE"
-  install -D -m644 README.rst "${pkgdir}/usr/share/doc/${pkgname}/README.rst"
+  cd "$_pkgname-$pkgver"
+  python -m installer -d "$pkgdir" dist/*.whl
+  install -vDm644 -t "$pkgdir/usr/share/doc/$pkgname" README.rst
+  install -vDm644 -t "$pkgdir/usr/share/licenses/$pkgname" LICENSE
 }
-
-# vim:set ts=2 sw=2 et:

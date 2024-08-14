@@ -2,30 +2,30 @@
 
 pkgname=mcqd
 pkgver=1.0.0
-pkgrel=3
+pkgrel=4
 pkgdesc='Maximum Clique Algorithm for finding a maximum clique in an undirected graph'
 arch=(loong64 x86_64)
 url='http://www.sicmm.org/~konc/maxclique/'
-license=(GPL3)
-depends=(gcc-libs)
-source=(https://gitlab.com/janezkonc/mcqd/-/archive/v$pkgver/$pkgname-v$pkgver.tar.bz2
+license=(GPL-3.0-or-later)
+depends=(gcc-libs
+         glibc)
+makedepends=(git)
+source=(git+https://gitlab.com/janezkonc/mcqd#tag=v$pkgver
         mcqd-silent.patch)
-sha256sums=('e694e62a320f9a0522a0d72b86ec17872f1306f5e989c4f0e93184e519139b93'
+sha256sums=('a78429207f0395952a33294bef43858f7c22d164dd32719c1a571ec74e772f5d'
             '89b186a032d3b2e542c38ab601a9c5b8ed11f0385a3473fece3778409e9c7045')
 
 prepare() {
-  patch -d $pkgname-v$pkgver < mcqd-silent.patch # Silence debug output
+  patch -d $pkgname < mcqd-silent.patch # Silence debug output
 }
 
 build() {
-  cd $pkgname-v$pkgver
-
+  cd $pkgname
   g++ ${CXXFLAGS} ${LDFLAGS} mcqd.cpp -o mcqd
 }
 
 package() {
-  cd $pkgname-v$pkgver
-
+  cd $pkgname
   install -Dm755 mcqd "$pkgdir"/usr/bin/mcqd
   install -Dm644 mcqd.h "$pkgdir"/usr/include/mcqd.h
   install -D COPYING "$pkgdir"/usr/share/licenses/mcqd/COPYING

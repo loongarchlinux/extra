@@ -1,78 +1,105 @@
-# Maintainer: Ivy Foster <iff@archlinux.org>
 # Maintainer: Christian Rebischke <chris.rebischke@archlinux.org>
+# Maintainer: Carl Smedstad <carsme@archlinux.org>
+# Contributor: Ivy Foster <iff@archlinux.org>
 
 pkgbase=bemenu
-pkgname=(bemenu bemenu-ncurses bemenu-x11 bemenu-wayland)
-pkgver=0.6.20
+pkgname=(
+  bemenu
+  bemenu-ncurses
+  bemenu-wayland
+  bemenu-x11
+)
+pkgver=0.6.23
 pkgrel=1
-
-# Wayland without wlroots is not supported.
-# https://github.com/Cloudef/bemenu/issues/79#issuecomment-572867783
-pkgdesc='Dynamic menu library and client program inspired by dmenu'
-url='https://github.com/Cloudef/bemenu'
+pkgdesc="Dynamic menu library and client program inspired by dmenu"
+url="https://github.com/Cloudef/bemenu"
 arch=(loong64 x86_64)
-license=(GPL3 LGPL3)
-
+license=(
+  GPL-3.0-or-later
+  LGPL-3.0-or-later
+)
 makedepends=(
-	git ncurses scdoc
-	libxinerama libxkbcommon pango
-	wayland wayland-protocols wlroots
+  libxinerama
+  libxkbcommon
+  ncurses
+  pango
+  scdoc
+  wayland
+  wayland-protocols
 )
-
 source=(
-	"bemenu-$pkgver.tar.gz::https://github.com/Cloudef/bemenu/releases/download/$pkgver/bemenu-$pkgver.tar.gz"
-	"bemenu-$pkgver.tar.gz.asc::https://github.com/Cloudef/bemenu/releases/download/$pkgver/bemenu-$pkgver.tar.gz.asc"
+  "$url/releases/download/$pkgver/$pkgbase-$pkgver.tar.gz"
+  "$url/releases/download/$pkgver/$pkgbase-$pkgver.tar.gz.asc"
 )
-
-# Checksums provided by packager makepkg -g
-sha256sums=('fc219c8482e8e1cd149ff84c6d5980dd788c5854cde69366d02cc3d63537cc77'
+sha256sums=('7cd336fb827b50a12c398a5daf6d2e6a07e291217116e725e7f1e021d9e0cdd9'
             'SKIP')
-validpgpkeys=(16B6B7CACAF339DECE9F154729317348D687B86B)
+validpgpkeys=(16B6B7CACAF339DECE9F154729317348D687B86B) # Bemenu Upstream
 
-build() {
-	cd "bemenu-$pkgver"
-	make PREFIX=/usr
+prepare() {
+  cd bemenu-$pkgver
+  sed -i 's/-D_FORTIFY_SOURCE=2//' GNUmakefile
 }
 
-# make test seems to have been removed with cmake
-#check() {
-#	cd "bemenu-$pkgver"
-#	make test
-#}
+build() {
+  cd bemenu-$pkgver
+  make PREFIX=/usr
+}
 
 package_bemenu() {
-	depends=(bemenu-renderer)
-	provides=(libbemenu)
+  depends=(
+    bemenu-renderer
+    glibc
+  )
+  provides=(libbemenu.so)
 
-	cd "bemenu-$pkgver"
-	make DESTDIR="$pkgdir" PREFIX=/usr install-base install-docs
+  cd bemenu-$pkgver
+  make DESTDIR="$pkgdir" PREFIX=/usr install-base install-docs
 }
 
 package_bemenu-ncurses() {
-	pkgdesc='ncurses renderer for bemenu'
-	provides=(bemenu-renderer)
-	depends=(libbemenu ncurses)
+  pkgdesc="ncurses renderer for bemenu"
+  provides=(bemenu-renderer)
+  depends=(
+    glibc
+    libbemenu.so
+    ncurses
+  )
 
-	cd "bemenu-$pkgver"
-	make DESTDIR="$pkgdir" PREFIX=/usr install-curses
+  cd bemenu-$pkgver
+  make DESTDIR="$pkgdir" PREFIX=/usr install-curses
 }
 
 package_bemenu-wayland() {
-	pkgdesc='Wayland (wlroots-based compositors) renderer for bemenu'
-	provides=(bemenu-renderer bemenu-wlroots)
-	depends=(libbemenu libxkbcommon pango wayland)
-	replaces=(bemenu-wlroots)
-	install=bemenu-wayland.install
+  pkgdesc="Wayland (wlroots-based compositors) renderer for bemenu"
+  provides=(bemenu-renderer)
+  depends=(
+    glibc
+    cairo
+    glib2
+    libbemenu.so
+    libxkbcommon
+    pango
+    wayland
+  )
+  install=bemenu-wayland.install
 
-	cd "bemenu-$pkgver"
-	make DESTDIR="$pkgdir" PREFIX=/usr install-wayland
+  cd bemenu-$pkgver
+  make DESTDIR="$pkgdir" PREFIX=/usr install-wayland
 }
 
 package_bemenu-x11() {
-	pkgdesc='X11 renderer for bemenu'
-	provides=(bemenu-renderer)
-	depends=(libbemenu libxinerama pango)
+  pkgdesc="X11 renderer for bemenu"
+  provides=(bemenu-renderer)
+  depends=(
+    glibc
+    cairo
+    glib2
+    libbemenu.so
+    libx11
+    libxinerama
+    pango
+  )
 
-	cd "bemenu-$pkgver"
-	make DESTDIR="$pkgdir" PREFIX=/usr install-x11
+  cd bemenu-$pkgver
+  make DESTDIR="$pkgdir" PREFIX=/usr install-x11
 }

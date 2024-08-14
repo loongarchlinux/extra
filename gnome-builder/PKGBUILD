@@ -1,14 +1,9 @@
 # Maintainer: Fabian Bornschein <fabiscafe@archlinux.org>
 # Maintainer: Jan Alexander Steffens (heftig) <heftig@archlinux.org>
 
-pkgbase=gnome-builder
-pkgname=(
-  gnome-builder
-  gnome-builder-clang
-  gnome-builder-flatpak
-)
-pkgver=46.1
-pkgrel=3
+pkgname=gnome-builder
+pkgver=46.3
+pkgrel=2
 pkgdesc="An IDE for writing GNOME-based software"
 url="https://wiki.gnome.org/Apps/Builder"
 arch=(loong64 x86_64)
@@ -16,6 +11,7 @@ license=(GPL-3.0-or-later)
 depends=(
   autoconf-archive
   cairo
+  clang
   cmark
   ctags
   d-spy
@@ -24,6 +20,7 @@ depends=(
   devhelp
   editorconfig-core-c
   enchant
+  flatpak
   gcc-libs
   gdk-pixbuf2
   gjs
@@ -59,9 +56,8 @@ depends=(
 )
 makedepends=(
   appstream-glib
-  clang
-  flatpak
   git
+  glib2-devel
   gobject-introspection
   llvm
   mm-common
@@ -70,11 +66,24 @@ makedepends=(
   yelp-tools
 )
 checkdepends=(weston)
+optdepends=(
+  'bash-language-server: Shell code assistance'
+  'python-lsp-server: Python code assistance'
+)
+conflicts=(
+  gnome-builder-clang
+  gnome-builder-flatpak
+)
+replaces=(
+  'gnome-builder-clang<=46.1-4'
+  'gnome-builder-flatpak<=46.1-4'
+)
+groups=(gnome-extra)
 source=("git+https://gitlab.gnome.org/GNOME/gnome-builder.git#tag=${pkgver/[a-z]/.&}")
-b2sums=('daf402ee078c5be66ea1c589767767af63b11cc5173835a03cf8d090500cb0117472895f4b6bfb0e3344407f996ad64f4b6fe50b54e65c80da2b0bd180ad7db1')
+b2sums=('27497e305aabbc00745446e1d6b173d3b116adc30c370d05b79dac1b0833e14fff47bc4a5134969167ea5f26a9a0bef8f096f35cd505fbb3b577616882338aba')
 
 prepare() {
-  cd $pkgbase
+  cd $pkgname
 }
 
 build() {
@@ -82,7 +91,7 @@ build() {
     -D help=true
   )
 
-  arch-meson $pkgbase build "${meson_options[@]}"
+  arch-meson $pkgname build "${meson_options[@]}"
   meson compile -C build
 }
 
@@ -99,53 +108,10 @@ check() (
   dbus-run-session meson test -C build --print-errorlogs
 )
 
-package_gnome-builder() {
+package() {
   depends+=(libgit2.so)
-  optdepends=(
-    'bash-language-server: Shell code assistance'
-    'gnome-builder-clang: Clang integration'
-    'gnome-builder-flatpak: Flatpak integration'
-    'python-lsp-server: Python code assistance'
-  )
-  groups=(gnome-extra)
 
   meson install -C build --destdir "$pkgdir"
-
-  # Move the external plugins to sub-packages
-  mkdir -p {clang,flatpak}/usr/lib
-  mv {"$pkgdir",clang}/usr/lib/gnome-builder-clang
-  mv {"$pkgdir",flatpak}/usr/lib/gnome-builder-flatpak
-}
-
-package_gnome-builder-clang() {
-  pkgdesc+=" (clang module)"
-  depends=(
-    clang
-    gcc-libs
-    glib2
-    glibc
-    gtk4
-    gtksourceview5
-    jsonrpc-glib
-    libdex
-    libpeas-2
-  )
-  groups=(gnome-extra)
-
-  mv clang/* "$pkgdir"
-}
-
-package_gnome-builder-flatpak() {
-  pkgdesc+=" (flatpak module)"
-  depends=(
-    flatpak
-    gcc-libs
-    glib2
-    glibc
-  )
-  groups=(gnome-extra)
-
-  mv flatpak/* "$pkgdir"
 }
 
 # vim:set sw=2 sts=-1 et:

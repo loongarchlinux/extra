@@ -1,8 +1,8 @@
 # Maintainer: David Runge <dvzrv@archlinux.org>
 
 pkgname=python-xkbcommon
-pkgver=1.0
-pkgrel=2
+pkgver=1.5.1
+pkgrel=1
 pkgdesc="Python bindings for libxkbcommon using cffi"
 arch=(loong64 x86_64)
 url="https://github.com/sde1000/python-xkbcommon"
@@ -19,10 +19,15 @@ makedepends=(
   python-setuptools
   python-wheel
 )
-checkdepends=(python-pytest)
-source=($pkgname-$pkgver.tar.gz::$url/archive/refs/tags/v$pkgver.tar.gz)
-sha512sums=('c7793d6f5517771006ff5a9c01deb9a37717157d7171af49ff459dc96b3b16a1d2d4c0f1272b5a8f683390de1e8e6a6ff92472f18828c7e38e0f2a1ee6f34f07')
-b2sums=('3106877f8e87f50453a358eec4e6431642b00a6a2bc23d3088ef22379984869ec84cd042a1ac53dd72783f3005dad1efddf3f87410204b88bfde4f9da0044c97')
+checkdepends=(
+  libx11  # needed for X11 locales
+  python-pytest
+)
+source=(
+  $pkgname-$pkgver.tar.gz::$url/archive/refs/tags/v$pkgver.tar.gz
+)
+sha512sums=('783706e822fce99c20f8c994a09a1e340aca65482c9ad63d0d0badbb74585811d23fd7ae6429e439b904afb7b45c78a90f6cc2a982992df684ba587b43f7b40d')
+b2sums=('b2a35eac9d3628217c6e664ab0b86c8e409ce663731c5d2f5764d9e450d40ac1eae9ecb23908f2b6beecba4209a8e25028ce045620fe218bb5746f48dc6f5ff8')
 
 build() {
   cd $pkgname-$pkgver
@@ -37,6 +42,7 @@ check() {
   # install to temporary location, as importlib is used
   python -m installer --destdir=test_dir dist/*.whl
   export PYTHONPATH="test_dir/$_site_packages:$PYTHONPATH"
+  export XLOCALEDIR=/usr/share/X11/locale/
   pytest -v
 }
 

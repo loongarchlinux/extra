@@ -5,7 +5,7 @@
 
 pkgname=x11-ssh-askpass
 pkgver=1.2.4.1
-pkgrel=7
+pkgrel=8
 pkgdesc='Lightweight passphrase dialog for SSH'
 url='http://www.jmknoble.net/software/x11-ssh-askpass/'
 license=('custom')

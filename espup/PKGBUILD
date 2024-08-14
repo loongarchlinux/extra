@@ -1,8 +1,8 @@
 # Maintainer: kpcyrd <kpcyrd[at]archlinux[dot]org>
 
 pkgname=espup
-pkgver=0.11.0
-pkgrel=2
+pkgver=0.12.2
+pkgrel=1
 pkgdesc="Tool for installing and maintaining ESP Rust ecosystem"
 url='https://github.com/esp-rs/espup'
 arch=('loong64' 'x86_64')
@@ -23,13 +23,15 @@ depends=(
 )
 makedepends=('cargo')
 options=(!lto)
-source=(https://github.com/esp-rs/${pkgname}/archive/v${pkgver}/${pkgname}-${pkgver}.tar.gz)
-sha256sums=('54103c3e2f9f202ae65b3b5edad5919eb546dbaa927fc1ada7dcea5d4090bc85')
-b2sums=('a19829f996967bbd5df29c2dba3e57373a1bd3f957bca3e0d1cb2bd4adf89c06c4b214c46505b4cf43cf81501825bc68bf1841e6a3f401ca4b8c806541a133ab')
+source=(
+  https://github.com/esp-rs/${pkgname}/archive/v${pkgver}/${pkgname}-${pkgver}.tar.gz
+)
+sha256sums=('78b23bbc9ec0553586b2f640abb73e30d5e2c517d34ae40234714869bbe20115')
+b2sums=('d51bb340ea90c4cfba3c55370992f1736144a5f82baedef17c3728595c856ce867237b885b00cfd4dbf678a194311bac9f207b2a136a598d240a1473c457de4b')
 
 prepare() {
   cd "${pkgname}-${pkgver}"
-  cargo fetch --locked --target "$CARCH-unknown-linux-gnu"
+  cargo fetch --locked --target "$(rustc -vV | sed -n 's/host: //p')"
 }
 
 build() {

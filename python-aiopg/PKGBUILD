@@ -1,45 +1,54 @@
+# Maintainer: Carl Smedstad <carsme@archlinux.org>
 # Maintainer: Filipe Laíns (FFY00) <lains@archlinux.org>
 
-_pkgname=aiopg
-pkgname=python-$_pkgname
+pkgname=python-aiopg
+_pkgname=${pkgname#python-}
 pkgver=1.4.0
-pkgrel=3
-pkgdesc='library for accessing a PostgreSQL database from the asyncio'
-arch=('any')
-url='https://github.com/aio-libs/aiopg'
-license=('BSD')
-depends=('python' 'python-psycopg2' 'python-async-timeout')
-makedepends=('python-build' 'python-installer' 'python-wheel'
-             'python-setuptools' 'python-setuptools-scm')
+pkgrel=4
+pkgdesc="Library for accessing a PostgreSQL database from the asyncio"
+arch=(any)
+url="https://github.com/aio-libs/aiopg"
+license=(BSD-2-Clause)
+depends=(
+  python
+  python-async-timeout
+  python-psycopg2
+)
+makedepends=(
+  python-build
+  python-installer
+  python-setuptools
+  python-wheel
+)
+# checkdepends=(
+#   python-docker
+#   python-pytest
+#   python-sqlalchemy
+# )
 optdepends=('python-sqlalchemy: SQLAlchemy support')
-#checkdepends=('python-pytest-runner' 'python-sqlalchemy' 'python-docker')
 source=("$pkgname-$pkgver.tar.gz::$url/archive/v$pkgver.tar.gz")
-sha512sums=('cbb28b0b15eb89fa3162e59e3e88dac18bddbad3d95458b5c3eb487d15767c26810e941f83c3478cac8a8a085b23723690c8d294bf6aac433a14c3defcef1138')
+sha256sums=('1b1c2ae3449640fa8fbaa95fe893c83df6ee5195b7018ce5c1b4427f95979509')
 
-# TODO: fix tests (need docker)
-
-prepare() {
-  sed -i 's|install_requires = \["psycopg2-binary|install_requires = \["psycopg2|' $_pkgname-$pkgver/setup.py
-}
+_archive=$_pkgname-$pkgver
 
 build() {
-  cd $_pkgname-$pkgver
+  cd "$_archive"
 
-  python -m build
+  python -m build --wheel --no-isolation
 }
 
-#check() {
-#  cd $_pkgname-$pkgver
+# All tests require a running PostgreSQL Docker container
+# check() {
+#   cd "$_archive"
 #
-#  python setup.py pytest
-#}
+#   python -m installer -d tmp_install dist/*.whl
+#   local site_packages=$(python -c "import site; print(site.getsitepackages()[0])")
+#   PYTHONPATH="$PWD/tmp_install/$site_packages" pytest
+# }
 
 package() {
-  cd $_pkgname-$pkgver
+  cd "$_archive"
 
   python -m installer -d "$pkgdir" dist/*.whl
-
-  install -Dm 644 LICENSE "$pkgdir"/usr/share/licenses/$pkgname/LICENSE
+  install -Dm644 -t "$pkgdir/usr/share/licenses/$pkgname" LICENSE
 }
-
-# vim:set ts=2 sw=2 et:

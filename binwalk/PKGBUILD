@@ -5,24 +5,33 @@
 # Contributor: s1gma <s1gma@mindslicer.com>
 
 pkgname=binwalk
-pkgver=2.3.4
-pkgrel=4
+pkgver=2.4.1
+pkgrel=1
 pkgdesc='Tool for searching a given binary image for embedded files'
-url='https://github.com/ReFirmLabs/binwalk'
-arch=('any')
-license=('MIT')
-depends=('python')
+url='https://github.com/OSPG/binwalk'
+arch=(any)
+license=(MIT)
+depends=(
+  python
+  python-setuptools
+)
 makedepends=(
-  'python-build'
-  'python-installer'
-  'python-setuptools'
-  'python-wheel'
+  python-build
+  python-installer
+  python-setuptools
+  python-wheel
+)
+checkdepends=(
+  python-pytest
 )
 optdepends=(
   'python-opengl: binviz module support'
   'python-capstone: disassembly support'
   'python-matplotlib: entropy plotting'
   'python-pyqtgraph: entropy plotting'
+  'python-numpy: entropy module'
+  'python-numba: entropy module'
+  'python-gnupg: pgp plugin'
   'arj: ARJ decompression support'
   'cabextract: CAB archive support'
   'cpio: CPIO archive support'
@@ -39,21 +48,20 @@ optdepends=(
 )
 source=(
   "${url}/archive/v${pkgver}/${pkgname}-${pkgver}.tar.gz"
-  $pkgname-2.3.4-imp_module.patch
 )
-sha512sums=('5a5e16035dfc05b94ae4ee3969a337336c550606b71e20fcb1f150c4b38ef2084b6a823ce2a8050f4b41616b7d7c31cfb04bf43e7f2c977ab1a634aba9d67fec'
-            'f474c437440f41c71bc5454a930e8abbfaa19c5989fd1453660021d777dfaab7ecf0650558a94c83e1502fb26d3e052989c0c7f388c62ad12c19058228fcdacb')
-b2sums=('a5eac4242402c5034c293432131950bed9aff762c5db86b200a1f555bdfeeb1c6fda225393149f7beca2923141f2ae7930738038f2d039513cb06dfae9601b81'
-        '4896dce8db043cd03997014aa4d37f1740bc8266728abc4ab740cd8fc3f9df2f496a2b7c5e27fcc9f068be96993d8f5aaf1682b9469ffedb5a31c84ea2ea4811')
-
-prepare() {
-  # replace use of imp module with importlab: https://github.com/ReFirmLabs/binwalk/issues/667
-  patch -Np1 -d $pkgname-$pkgver -i ../$pkgname-2.3.4-imp_module.patch
-}
+sha512sums=('f83d0ca09a39033944ce16345b7c2c8f3051a20f80315e4c797221df4e6844c7c89c0a49053d739156e2654b482d6ef93f0814fa588daab031dbeaed1423e6f2')
+b2sums=('480f8ff06932c77ca5ab2857cddf7ecebb36b6f2e55e3ccf15a971fa0f4c59d57b652556fd9f0dd20e6fbd887fdef3c6da022f76787b2edf16b0d1714d291e8a')
 
 build() {
   cd ${pkgname}-${pkgver}
   python -m build --wheel --no-isolation
+}
+
+check() {
+  cd ${pkgname}-${pkgver}
+  python -m venv --clear --without-pip --system-site-packages .testenv
+  .testenv/bin/python -m installer dist/*.whl
+  .testenv/bin/python -m pytest
 }
 
 package() {

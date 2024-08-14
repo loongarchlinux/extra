@@ -1,11 +1,13 @@
 # Maintainer: Frederik Schwan <freswa at archlinux dot org>
+# Maintainer: Caleb Maclennan <caleb@alerque.com>
+# Maintainer: Leonidas Spyropoulos <artafinde@archlinux.org>
 # Contributor: tectonic-deploy <sasha+tectonic@hackafe.net>
 # Contributor: Daniel M. Capella <polyzen@archlinux.org>
 # Contributor: Jan Tojnar <jtojnar@gmail.com>
 
 pkgname=tectonic
 pkgver=0.15.0
-pkgrel=1
+pkgrel=2
 pkgdesc='Modernized, complete, self-contained TeX/LaTeX engine, powered by XeTeX and TeXLive'
 arch=('loong64' 'x86_64')
 url='https://tectonic-typesetting.github.io/'
@@ -18,7 +20,8 @@ b2sums=('4049b7a18b79c89c222039ded8d25fbf6249408362d2adc09f0d51c6ba2f1c634581c64
 
 prepare() {
   cd ${pkgname}-${pkgname}-${pkgver}
-  cargo fetch --locked --target "$CARCH-unknown-linux-gnu"
+  cargo fetch --locked --target "$(rustc -vV | sed -n 's/host: //p')"
+  sed -e 's|c++14|c++17|g' -i crates/*/build.rs # Fix build with ICU 75
 }
 
 build() {

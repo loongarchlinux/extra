@@ -1,0 +1,35 @@
+# Maintainer: Caleb Maclennan <caleb@alerque.com>
+
+_pyname=lxml-html-clean
+pkgname=python-$_pyname
+pkgver=0.2.0
+pkgrel=1
+pkgdesc='HTML cleaner from lxml project'
+arch=(any)
+url="https://$_pyname.readthedocs.org/"
+license=(BSD-3-Clause)
+depends=(python
+         python-lxml)
+makedepends=(python-{build,installer,wheel}
+             python-setuptools)
+checkdepends=(python-pytest)
+_archive="${_pyname//-/_}-$pkgver"
+source=("https://files.pythonhosted.org/packages/source/${_pyname::1}/$_pyname/$_archive.tar.gz")
+sha256sums=('47c323f39d95d4cbf4956da62929c89a79313074467efaa4821013c97bf95628')
+
+build() {
+	cd "$_archive"
+	python -m build -wn
+}
+
+check() {
+	cd "$_archive"
+	export PYTHONPATH=.
+	pytest
+}
+
+package() {
+	cd "$_archive"
+	python -m installer -d "$pkgdir" dist/*.whl
+	install -Dm0644 -t "$pkgdir/usr/share/licenses/$pkgname/" LICENSE.txt
+}

@@ -2,7 +2,7 @@
 # Contributor: Eric Bélanger <eric@archlinux.org>
 
 pkgname=xscreensaver
-pkgver=6.08
+pkgver=6.09
 pkgrel=1
 pkgdesc='Screen saver and locker for the X Window System'
 url='https://www.jwz.org/xscreensaver/'
@@ -19,9 +19,9 @@ optdepends=('gdm: for login manager support')
 backup=('etc/pam.d/xscreensaver')
 source=(https://www.jwz.org/xscreensaver/${pkgname}-${pkgver}.tar.gz
         LICENSE)
-sha512sums=('a333d4921ed3a8219f3b672dd68543aea31fcd64ea6766143f1c7f6e5ed3bc7122355635d5afba1632457ad71a11cabdc7b2756431e4f1dc7e0426ae0896e6db'
+sha512sums=('6002c1879e3f9c509b4f6b645146978da82def0ed7b9e9c421b11dadf0116380c63403c30167fa70a289321928abe39795a96f1a796afb920bd0e3ac416d3653'
             '863c699479b2ec2775a0d1cba22e615929194a14af164b3513e46a0c04229da6547255a4da8f7f1bbb40906898c124ed3c9ec2436b76b62affcb62385af9783e')
-b2sums=('1dd13a656471335663738e677dd1b367ab1114ba91e65868ad2a1d8ebe95b16ff0311c2b69a2a5409ebdea68451d5e6cb507a66a5fb641921a469b8e69ec6b2d'
+b2sums=('34e3bf5b3affbfc6ef0aabaf9889c4b76ce27b09974d6c84a9b342b2267a3268fa1558a9bf0e0e487fce84ef218c3152fca4216268e15e40f82fef91021160da'
         'cacb6ba39d6ecb8703ef5f5a7dc74de0ca805cce73b43a8b9b6b4c255c909aa9b5e692de76c2fbd4da26ce6efb5f2a46138c43b1b37f53cee6d20fd6ed41f4a9')
 
 build() {

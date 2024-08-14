@@ -2,8 +2,8 @@
 # Contributor: peeweep <peeweep at 0x0 dot ee>
 
 pkgname=neovide
-pkgver=0.12.2
-pkgrel=1
+pkgver=0.13.3
+pkgrel=2
 pkgdesc='No Nonsense Neovim Client in Rust'
 arch=(loong64 x86_64)
 url="https://github.com/$pkgname/$pkgname"
@@ -17,14 +17,25 @@ depends=(gcc-libs
          libjpeg libjpeg.so
          libxkbcommon
          neovim
-         sndio)
+         sndio
+         libpng libpng16.so
+         harfbuzz libharfbuzz.so
+         icu libicuuc.so
+         expat libexpat.so
+         zlib libz.so)
 makedepends=(cargo
-             cmake)
+             cmake
+             python
+             gn
+             git
+             ninja
+             clang)
 optdepends=('vulkan-intel: vulkan support for intel'
             'libxkbcommon-x11: run on X11 (not needed for wayland)')
+options=(!lto)
 _archive=("$pkgname-$pkgver")
 source=("$url/archive/$pkgver/$_archive.tar.gz")
-sha256sums=('5425c60454388651fd79757bde7c4d7499cdc49b375f7697b48d8366d45d08e4')
+sha256sums=('21c8eaa53cf3290d2b1405c8cb2cde5f39bc14ef597b328e76f1789b0ef3539a')
 
 prepare() {
 	cd "$_archive"
@@ -40,6 +51,9 @@ build() {
 	export CXXFLAGS="${CXXFLAGS/_FORTIFY_SOURCE=3/_FORTIFY_SOURCE=2}"
 	CFLAGS+=' -ffat-lto-objects'
 	export SKIA_USE_SYSTEM_LIBRARIES=true
+	export FORCE_SKIA_BUILD=true
+	export SKIA_GN_COMMAND=gn
+	export SKIA_NINJA_COMMAND=ninja
 	cargo build --frozen --release --features embed-fonts
 }
 

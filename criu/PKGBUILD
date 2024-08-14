@@ -1,95 +1,76 @@
 # Maintainer: George Rawlinson <grawlinson@archlinux.org>
+# Maintainer: Carl Smedstad <carsme@archlinux.org>
 # Contributor: Pavel Borzenkov <pavel@voidptr.ru>
 # Contributor: aksr <aksr at t-com dot me>
 
 pkgname=criu
-pkgver=3.18
-pkgrel=3
+pkgver=3.19
+pkgrel=1
 pkgdesc='Utilities to checkpoint and restore processes in userspace'
 arch=('loong64' 'x86_64')
 url='https://criu.org'
-license=('GPL2' 'LGPL2.1')
+license=(
+  'GPL-2.0-only'
+  'LGPL-2.1-only'
+)
 depends=(
+  'gcc-libs'
+  'glibc'
+  'gnutls'
+  'libbpf'
   'libbsd'
+  'libdrm'
   'libnet'
   'libnl'
-  'protobuf-c'
-  'python-protobuf'
-  'gnutls'
   'nftables'
+  'protobuf-c'
+  'python'
+  'python-protobuf'
 )
 makedepends=(
-  'git'
-  'xmlto'
   'asciidoc'
+  'git'
   'python-build'
   'python-installer'
   'python-setuptools'
   'python-wheel'
+  'xmlto'
 )
-# can't run tests due to privilege escalation
+# Can't run tests (only unit tests) due to privilege escalation required.
 # https://github.com/checkpoint-restore/criu/issues/434
-#checkdepends=('libaio' 'python-yaml')
-options=('!buildflags' '!lto')
-_commit='4c1a2ac41bb80843c927d2fde8f2ff4186f8d278'
-source=(
-  "$pkgname::git+https://github.com/checkpoint-restore/criu#commit=$_commit"
-  'no-python-pip.patch'
-  'no-recompile-on-install.patch'
-  'no-amdgpu-manpage.patch'
+# checkdepends=(
+#   'libaio'
+#   'python-yaml'
+# )
+provides=(
+  'libcompel.so'
+  'libcriu.so'
 )
-b2sums=('SKIP'
-        'd83da0ce0222c1aea1fc0c97bbf8a40f3cd5a6b5d55ee973b64f97bd9769df265b148e89cee8ee6564f065adc00552b511904f322555ac659b735933d42a9a64'
-        'e4b7c4831fa513d602c73e377847705240a6a42ee1986effd10a589784bd0ad818032ff8283c1f9fd17cb7ddf3204e4a932796a1df816afc30a0e594c92b50f6'
-        '9c713724e8f6b062f7a09e34555d31e5aa0315db6308b7527835484eaad8dbf5deac5c66521bf5a819462d5f38c64f6602ba421f7bbb73180a3b05189816c8f6')
-
-pkgver() {
-  cd "$pkgname"
-
-  git describe --tags | sed 's/^v//'
-}
-
-prepare() {
-  cd "$pkgname"
-
-  # do not invoke pip
-  patch -p1 -i "$srcdir/no-python-pip.patch"
-
-  # prevent recompilation with `make install`
-  patch -p1 -i "$srcdir/no-recompile-on-install.patch"
-
-  # do not install amdgpu_plugin manpage
-  patch -p1 -i "$srcdir/no-amdgpu-manpage.patch"
-}
+options=('!lto')
+source=("git+https://github.com/checkpoint-restore/criu#tag=v$pkgver")
+sha512sums=('f38581b5709e4057f35f36ece46be4b122509e466b6daff4a413efd9b23582d7b35daee43bfbd292524683f6c57cd51994caaabf3f53c1e6dacf29c070276cd3')
+b2sums=('da93a2358346490c364cda5e26ea5618ad68bf0984481d2e58d6d08fb42370cc4c38a2c354f1eaf099764a95df59df54b4ee9ffea8c1be5c25d27d8d2d27c250')
 
 build() {
   cd "$pkgname"
 
-  make
-
-
-  # build python wheel
-  cd crit
-
-  export CRIU_VERSION_MAJOR="${pkgver%%.*}"
-  export CRIU_VERSION_MINOR="${pkgver##*.}"
-
-  python -m build --wheel --no-isolation
+  # shellcheck disable=SC2001
+  export CFLAGS=$(echo "$CFLAGS" | sed 's/-Wp,-D_FORTIFY_SOURCE=[0-9]//g')
+  make criu crit amdgpu_plugin docs
+  python -m build --wheel --no-isolation crit
+  python -m build --wheel --no-isolation --skip-dependency-check lib
 }
 
-#check() {
-#  cd "$pkgname"
-#
-#  make test
-#}
+check() {
+  cd "$pkgname"
+
+  make unittest
+  # make test
+}
 
 package() {
   cd "$pkgname"
 
-  # install python wheel
-  python -m installer --destdir="$pkgdir" crit/dist/*.whl
-
-  # rest of the application
   make \
     DESTDIR="$pkgdir" \
     PREFIX=/usr \
@@ -97,9 +78,8 @@ package() {
     LIBDIR=/usr/lib \
     LIBEXECDIR=/usr/lib \
     install
-
-  # remove empty directories
-  rm -rf \
-    "$pkgdir/usr/include/compel/common/asm" \
-    "$pkgdir/var"
+  python -m installer --destdir="$pkgdir" crit/dist/*.whl
+  python -m installer --destdir="$pkgdir" lib/dist/*.whl
+  # Remove empty directory to silence namcap warning.
+  rm -r "$pkgdir/usr/include/compel/common/asm"
 }

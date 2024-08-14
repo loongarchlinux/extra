@@ -2,8 +2,8 @@
 # Contributor: Adrian Sampson <adrian@radbox.org>
 
 pkgname=beets
-pkgver=1.6.0
-pkgrel=9
+pkgver=2.0.0
+pkgrel=1
 pkgdesc='Flexible music library manager and tagger'
 arch=(any)
 url=https://beets.io/
@@ -14,9 +14,7 @@ depends=(
   python-mediafile
   python-munkres
   python-musicbrainzngs
-  python-reflink
-  python-setuptools
-  python-six
+  python-typing_extensions
   python-unidecode
   python-yaml
 )
@@ -35,8 +33,11 @@ checkdepends=(
   python-discogs-client
   python-flask
   python-mpd2
-  python-pytest
+  python-py7zr
   python-pylast
+  python-pytest
+  python-pytest-cov
+  python-reflink
   python-requests-oauthlib
   python-responses
   python-xdg
@@ -62,30 +63,13 @@ optdepends=(
   'python-requests-oauthlib: Beatport plugin'
   'python-xdg: Thumbnails plugin'
 )
-_tag=19371805e70c34e06ddd1ee3bd2e23a23827f845
+_tag=b88c09720c3f0782b90f83df74e65680c050392f
 source=(
   git+https://github.com/beetbox/beets.git#tag=${_tag}
   beet
 )
-b2sums=('SKIP'
+b2sums=('a249a826278ce772248b96a55d5defd81e333c66dab2ff2b481bcc23ea7db3d25947d09c4c8feb05259301eb5195536e8a604be7ff7df6e294ae822c5f1148d0'
         '1b36ba07d85f0fbcae0a3d8253ce2e5d7ecf8a17c6f0bb946579663de546d53cd4fe5da84ee8d880d7f95f48e66ef6010232a995d86d0c52b52218cd991a7782')
-
-prepare() {
-  cd beets
-  # Adapt tests to latest Unidecode version
-  git cherry-pick -n 5ae1e0f3c8d3a450cb39f7933aa49bb78c2bc0d9
-  # tests: fix assertions for empty MediaFile.images
-  git cherry-pick -n d5f998b3120c8027986b55b9288b530fbf165fcc
-  # Add missing placeholders to extlinks captions
-  # Sphinx 6.0.0 changed extlinks to always require placeholders in link captions.
-  git cherry-pick -n 2106f471affd1dab35b4b26187b9c74d034528c5
-  #  web: fix for breaking werkzeug change
-  git cherry-pick -n 4ae1e8278c31fce4538ae978ad1d46b7f980d3b1
-
-  # Define colorspaces for imagemagick comparison
-  # https://github.com/beetbox/beets/commit/a873a191b9d25236774cec82df2ceb6399ed4ce3
-  sed -i "s/'-metric'/'-define', 'phash:colorspaces=sRGB,HCLp', '-metric'/" beets/art.py
-}
 
 pkgver() {
   cd beets
@@ -94,18 +78,15 @@ pkgver() {
 
 build() {
   cd beets
+  sed "s/1.6.1/${pkgver}/" -i setup.py
   # Do not use --wheel so man pages are included
   python -m build --no-isolation
 }
 
 check() {
   cd beets
-  rm test/test_player.py
+  rm test/plugins/test_player.py
   python -m pytest \
-    --deselect test/test_plugins.py::ListenersTest::test_events_called \
-    --deselect test/test_thumbnails.py::ThumbnailsTest::test_invokations \
-    --deselect test/test_thumbnails.py::ThumbnailsTest::test_make_cover_thumbnail \
-    --deselect test/test_thumbnails.py::ThumbnailsTest::test_process_album \
     --deselect test/test_ui.py::CompletionTest::test_completion
 }
 

@@ -1,7 +1,7 @@
 # Maintainer: Anatol Pomozov <anatol.pomozov@gmail.com>
 
 pkgname=shairport-sync
-pkgver=4.3.2
+pkgver=4.3.3
 pkgrel=1
 pkgdesc='Emulates an AirPort Express for the purpose of streaming music from iTunes and compatible iPods and iPhones'
 url='https://github.com/mikebrady/shairport-sync'
@@ -13,7 +13,7 @@ makedepends=(xmltoman vim) # vim for xxd tool
 source=(shairport-sync-$pkgver.zip::https://github.com/mikebrady/shairport-sync/archive/$pkgver.zip
         shairport-sync.sysusers
         remove_useradd.patch)
-sha256sums=('7d11385073d5bc56f1abf704cdd10388f101fc1f04b1a6051a964d7ce14f2aeb'
+sha256sums=('dbef2e8047870318d7af5c996957765e39add7a43a8643228691e0d8fc284f17'
             'bc2d92254910996e837d1c4c7dd81eddfb96a9f5f0cb2faad9fcb0414ea79a1d'
             '3973049b1a92c729efacd3312636a8c7f3d51cd62c7d5af214668c8104378dc6')
 

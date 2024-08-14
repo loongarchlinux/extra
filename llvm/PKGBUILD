@@ -1,28 +1,29 @@
-# Maintainer: Evangelos Foutras <evangelos@foutrelis.com>
+# Maintainer: Evangelos Foutras <foutrelis@archlinux.org>
 # Contributor: Jan "heftig" Steffens <jan.steffens@gmail.com>
 
 pkgname=('llvm' 'llvm-libs')
-pkgver=17.0.6
+pkgver=18.1.8
 pkgrel=4
 arch=('loong64' 'x86_64')
 url="https://llvm.org/"
-license=('custom:Apache 2.0 with LLVM Exception')
-makedepends=('cmake' 'ninja' 'zlib' 'zstd' 'libffi' 'libedit' 'ncurses'
+license=('Apache-2.0 WITH LLVM-exception')
+makedepends=('cmake' 'ninja' 'zlib' 'zstd' 'curl' 'libffi' 'libedit' 'ncurses'
              'libxml2' 'python-setuptools' 'python-psutil' 'python-sphinx'
-             'python-recommonmark')
+             'python-myst-parser')
 options=('staticlibs' '!lto') # tools/llvm-shlib/typeids.test fails with LTO
 _source_base=https://github.com/llvm/llvm-project/releases/download/llvmorg-$pkgver
 source=($_source_base/llvm-$pkgver.src.tar.xz{,.sig}
         $_source_base/cmake-$pkgver.src.tar.xz{,.sig}
-        $_source_base/third-party-$pkgver.src.tar.xz{,.sig})
-sha256sums=('b638167da139126ca11917b6880207cc6e8f9d1cbb1a48d87d017f697ef78188'
+        $_source_base/third-party-$pkgver.src.tar.xz{,.sig}
+        $pkgname-SelectionDAG.patch::https://github.com/llvm/llvm-project/commit/46505b3cbfc5.patch)
+sha256sums=('f68cf90f369bc7d0158ba70d860b0cb34dbc163d6ff0ebc6cfa5e515b9b2e28d'
             'SKIP'
-            '807f069c54dc20cb47b21c1f6acafdd9c649f3ae015609040d6182cab01140f4'
+            '59badef592dd34893cd319d42b323aaa990b452d05c7180ff20f23ab1b41e837'
             'SKIP'
-            '3054d0a9c9375dab1a4539cc2cc45ab340341c5d71475f9599ba7752e222947b'
-            'SKIP')
-validpgpkeys=('474E22316ABF4785A88C6E8EA2C794A986419D8A'  # Tom Stellard <tstellar@redhat.com>
-              'D574BD5D1D0E98895E3BF90044F2485E45D59042') # Tobias Hieta <tobias@hieta.se>
+            'b76b810f3d3dc5d08e83c4236cb6e395aa9bd5e3ea861e8c319b216d093db074'
+            'SKIP'
+            '62cc0a323ebe6a61a1302605d42a28ce812dbeae186e23515b333211e3de008a')
+validpgpkeys=('474E22316ABF4785A88C6E8EA2C794A986419D8A') # Tom Stellard <tstellar@redhat.com>
 
 # Utilizing LLVM_DISTRIBUTION_COMPONENTS to avoid
 # installing static libraries; inspired by Gentoo
@@ -38,6 +39,9 @@ _get_distribution_components() {
         ;;
       # libraries needed for clang-tblgen
       LLVMDemangle|LLVMSupport|LLVMTableGen)
+        ;;
+      # used by lldb
+      LLVMDebuginfod)
         ;;
       # testing libraries
       LLVMTestingAnnotations|LLVMTestingSupport)
@@ -59,6 +63,12 @@ prepare() {
   rename -v -- "-$pkgver.src" '' {cmake,third-party}-$pkgver.src
   cd llvm-$pkgver.src
   mkdir build
+
+  # https://github.com/llvm/llvm-project/issues/82431
+  sed '/^diff.*inline-asm-memop.ll/,$d' ../$pkgname-SelectionDAG.patch | patch -Np2
+
+  # Remove CMake find module for zstd; breaks if out of sync with upstream zstd
+  rm cmake/modules/Findzstd.cmake
 }
 
 build() {
@@ -79,6 +89,7 @@ build() {
     -DLLVM_BUILD_LLVM_DYLIB=ON
     -DLLVM_BUILD_TESTS=ON
     -DLLVM_ENABLE_BINDINGS=OFF
+    -DLLVM_ENABLE_CURL=ON
     -DLLVM_ENABLE_FFI=ON
     -DLLVM_ENABLE_RTTI=ON
     -DLLVM_ENABLE_SPHINX=ON
@@ -130,7 +141,7 @@ package_llvm() {
 
 package_llvm-libs() {
   pkgdesc="LLVM runtime libraries"
-  depends=('gcc-libs' 'zlib' 'zstd' 'libffi' 'libedit' 'ncurses' 'libxml2')
+  depends=('gcc-libs' 'zlib' 'zstd' 'curl' 'libffi' 'libedit' 'ncurses' 'libxml2')
 
   install -d "$pkgdir/usr/lib"
   cp -P \

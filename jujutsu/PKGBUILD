@@ -5,7 +5,7 @@
 
 pkgname=jujutsu
 _pkgname=jj
-pkgver=0.17.1
+pkgver=0.20.0
 pkgrel=1
 pkgdesc='Git-compatible VCS that is both simple and powerful'
 arch=(loong64 x86_64)
@@ -20,38 +20,46 @@ replaces=("$pkgname-bin")
 makedepends=(cargo)
 _archive="$_pkgname-$pkgver"
 source=("$url/archive/refs/tags/v$pkgver/$_archive.tar.gz")
-sha256sums=('653e1190a82a39dae733487a11aa641ba62a36ae1e221c21844f822575961919')
+sha256sums=('b2c898ea224fe45df81c241bf1f0bc8e74c0988b8f549e894b15a38f2f4d6665')
 
 prepare() {
 	cd "$_archive"
 	cargo fetch --locked --target "$(rustc -vV | sed -n 's/host: //p')"
+	mkdir -p completions
 }
 
 build() {
 	cd "$_archive"
 	CFLAGS+=' -ffat-lto-objects'
+	# https://github.com/martinvonz/jj/issues/4234
+	# export LIBGIT2_NO_VENDOR=1
 	cargo build --frozen --release --all-features --package jj-cli
-	target/release/jj util completion bash > jj.bash
-	target/release/jj util completion zsh > _jj
-	target/release/jj util completion fish > jj.fish
-	target/release/jj util completion elvish > jj.elv
+	local jj=target/release/jj
+	$jj util completion bash > completions/jj
+	$jj util completion elvish > completions/jj.elv
+	$jj util completion fish > completions/jj.fish
+	$jj util completion zsh > completions/_jj
 }
 
 check() {
-	depends+=(libgit2.so
-	          libz.so)
 	cd "$_archive"
+	local skipped=(
+		test_diff_command # relies on config of external command
+		test_acls::test_diff # relies on assumptions about tty
+	)
 	cargo test --frozen --all-features --package jj-cli -- \
-		--skip test_diff_command
+		${skipped[@]/#/--skip }
 }
 
 package() {
+	depends+=(libgit2.so
+	          libz.so)
 	cd "$_archive"
 	install -Dm0755 -t "$pkgdir/usr/bin" target/release/jj
-	install -Dm0644 jj.bash "$pkgdir/usr/share/bash-completion/completions/jj"
-	install -Dm0644 -t "$pkgdir/usr/share/zsh/site-functions/" _jj
-	install -Dm0644 -t "$pkgdir/usr/share/fish/completions/" jj.fish
-	install -Dm0644 -t "$pkgdir/usr/share/elvish/lib/" jj.elv
+	install -Dm0644 -t "$pkgdir/usr/share/bash-completion/completions/" completions/jj
+	install -Dm0644 -t "$pkgdir/usr/share/elvish/lib/" completions/jj.elv
+	install -Dm0644 -t "$pkgdir/usr/share/fish/completions/" completions/jj.fish
+	install -Dm0644 -t "$pkgdir/usr/share/zsh/site-functions/" completions/_jj
 	install -Dm0644 -t "$pkgdir/usr/share/doc/$pkgname" ./*.md
 	cp -at "$pkgdir/usr/share/doc/$pkgname" docs
 	# Avoid namcap warning for dead symlink

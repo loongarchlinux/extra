@@ -3,30 +3,60 @@
 
 pkgname=gfeeds
 pkgver=2.2.0
-pkgrel=2
+pkgrel=3
 pkgdesc='RSS/Atom feed reader for GNOME'
-arch=('any')
+arch=(any)
 url='https://gfeeds.gabmus.org/'
-license=('GPL3')
-depends=('gtk4' 'libadwaita' 'python-beautifulsoup4' 'python-dateutil' 'python-gobject' 'python-lxml'
-         'python-pillow' 'python-pygments' 'python-pytz' 'python-readability-lxml' 'python-requests' 'webkitgtk-6.0'
-         'syndication-domination' 'python-magic' 'python-humanize')
-makedepends=('meson' 'gobject-introspection' 'blueprint-compiler')
-source=("https://gitlab.gnome.org/World/$pkgname/-/archive/$pkgver/$pkgname-$pkgver.tar.gz"
-         https://gitlab.gnome.org/World/gfeeds/-/commit/d099fda0.patch
-         https://gitlab.gnome.org/World/gfeeds/-/commit/cfe860f4.patch)
-sha256sums=('13a3e99acbb0ee29389673fc0c9f9de69c29b6574acb848103ef0c5653a78b45'
-            'f3a0d72716f7bf63c74af38fe6917a1e1ede7105d026e9e1018fe0ce9078d2d1'
-            '50a8a599d1e1ccea36dc99a31fc571b63b0a33b7dda97d6c6478b470c5544422')
+license=(GPL-3.0-or-later)
+depends=(
+  dconf
+  glib2
+  gtk4
+  hicolor-icon-theme
+  libadwaita
+  pango
+  python
+  python-beautifulsoup4
+  python-dateutil
+  python-gobject
+  python-humanize
+  python-lxml
+  python-magic
+  python-pillow
+  python-pygments
+  python-pytz
+  python-readability-lxml
+  python-requests
+  syndication-domination
+  webkitgtk-6.0
+)
+makedepends=(
+  blueprint-compiler
+  git
+  meson
+)
+checkdepends=(python-pytest)
+source=("git+https://gitlab.gnome.org/World/$pkgname.git#tag=$pkgver")
+b2sums=(5d6cda735a54fec34fb5d1eb5d88a6fe38e63385afca0466467e1654db90b88130e46aed78f94a28e9342cb206570d30f17ad12da3f5393f37fbdcd88b148457)
 
 prepare() {
-  patch -d $pkgname-$pkgver -p1 < d099fda0.patch # Fix build with new blueprint-compiler
-  patch -d $pkgname-$pkgver -p1 < cfe860f4.patch
+  cd $pkgname
+
+  # Fix tests
+  git cherry-pick -n 2e897978137b7bd278149beda572986acc92129c
+
+  # Fix build with blueprint-compiler 0.8
+  git cherry-pick -n cfe860f44f685be302e2ad9f30b55bab08e078ce
+  git cherry-pick -n d099fda0c62e338080061683a154f711cc487b30
 }
 
 build() {
-  arch-meson $pkgname-$pkgver build
+  arch-meson $pkgname build
   meson compile -C build
+}
+
+check() {
+  meson test -C build --print-errorlogs
 }
 
 package() {

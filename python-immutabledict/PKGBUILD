@@ -1,8 +1,8 @@
 # Maintainer: Alexander Epaneshnikov <alex19ep@archlinux.org>
 
 pkgname=python-immutabledict
-pkgver=4.1.0
-pkgrel=2
+pkgver=4.2.0
+pkgrel=1
 pkgdesc="Immutable wrapper around dictionaries (a fork of frozendict)"
 arch=('any')
 url=https://github.com/corenting/immutabledict
@@ -11,7 +11,7 @@ depends=('python')
 checkdepends=('python-pytest')
 makedepends=('python-build' 'python-installer' 'python-wheel' 'python-poetry-core')
 source=("$pkgname-$pkgver.tar.gz::https://github.com/corenting/immutabledict/archive/refs/tags/v$pkgver.tar.gz")
-sha512sums=('a2a70cda9c837879ece3494f29e304625e25a6593d38dd7caafea6b0eb92c9b2b030ed9c48d7a9716b65ad7ea02cbc40410063df43d3aee12cecefbc8ff58127')
+sha512sums=('d4177281134f73191f019a8cfe61752f6398b1bb36d9fad4c112c598be7664960eae8fdc4cd4bbce912dd93f599cd80761df03b49cf4fc57ac2ec3d3d2301a17')
 
 build() {
     cd "immutabledict-$pkgver"

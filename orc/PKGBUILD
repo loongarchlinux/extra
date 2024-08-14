@@ -3,7 +3,7 @@
 # Contributor: Jan de Groot <jgc@archlinux.org>
 
 pkgname=orc
-pkgver=0.4.38
+pkgver=0.4.39
 pkgrel=1
 pkgdesc="Optimized Inner Loop Runtime Compiler"
 url="https://gstreamer.freedesktop.org/modules/orc.html"
@@ -19,14 +19,11 @@ makedepends=(
   valgrind
 )
 provides=(liborc{,-test}-${pkgver%.*}.so)
-_commit=f071d3a14f28c7c5acff5ff0b5a67ecd3f785ef3  # tags/0.4.38^0
-source=("git+https://gitlab.freedesktop.org/gstreamer/orc.git#commit=$_commit")
-b2sums=('SKIP')
-
-pkgver() {
-  cd orc
-  git describe --tags | sed 's/[^-]*-g/r&/;s/-/+/g'
-}
+source=("git+https://gitlab.freedesktop.org/gstreamer/orc.git?signed#tag=$pkgver")
+b2sums=('cd93b7a29c0240d299752338f7e87569cfb4f5b7e9dfca40005d1e4c6509236ac2a499050db01d94004b7061faed5b78dd8b4f3d358ffe90fbf65964d38e5c4d')
+validpgpkeys=(
+  D637032E45B8C6585B9456565D2EEE6F6F349D7C # Tim-Philipp Müller <tim@centricular.com>
+)
 
 prepare() {
   cd orc

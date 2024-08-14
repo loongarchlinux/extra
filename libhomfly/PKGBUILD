@@ -2,25 +2,31 @@
 
 pkgname=libhomfly
 pkgver=1.02r6
-pkgrel=2
-pkgdesc="Library to compute the homfly polynomial of a link"
+pkgrel=3
+pkgdesc='Library to compute the homfly polynomial of a link'
 arch=(loong64 x86_64)
-url="https://github.com/miguelmarco/libhomfly"
-license=(custom)
-depends=(gc)
-source=($pkgname-$pkgver.tar.gz::"https://github.com/miguelmarco/libhomfly/archive/$pkgver.tar.gz")
-sha256sums=('cf5d5031c905318127c83fdffc891deb097c77ee48cdd0131f839ea6ecb64a84')
+url='https://github.com/miguelmarco/libhomfly'
+license=(LicenseRef-libhomfly)
+depends=(gc
+         glibc)
+makedepends=(git)
+source=(git+https://github.com/miguelmarco/libhomfly#tag=$pkgver)
+sha256sums=('b601ec59b4e832f1306967fdf906e10a7895d1726aa208829c3137c57bebef39')
+
+prepare() {
+  cd $pkgname
+  autoreconf -vi
+}
 
 build() {
-  cd $pkgname-$pkgver
-  autoreconf -vi
-  ./configure --prefix=/usr
+  cd $pkgname
+  ./configure \
+    --prefix=/usr
   make
 }
 
 package() {
-  cd $pkgname-$pkgver
+  cd $pkgname
   make DESTDIR="$pkgdir" install
   install -Dm644 LICENSE -t "$pkgdir"/usr/share/licenses/$pkgname
 }
-

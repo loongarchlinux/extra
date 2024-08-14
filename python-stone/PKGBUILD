@@ -2,14 +2,15 @@
 
 pkgname=python-stone
 _name=${pkgname#python-}
-pkgver=3.3.3
-pkgrel=3
+pkgver=3.3.6
+pkgrel=1
 pkgdesc='The Official API Spec Language for Dropbox API V2'
 arch=(any)
 url='https://github.com/dropbox/stone'
 license=(MIT)
 depends=(python python-ply python-six)
 makedepends=(
+  git
   python-build
   python-installer
   python-setuptools
@@ -19,28 +20,25 @@ checkdepends=(
   python-coverage
   python-pytest
 )
-source=($url/archive/v$pkgver/$pkgname-$pkgver.tar.gz)
-sha256sums=('f39e20a282eebe38ea44438f807d55762fc8dcd704cc56774944646a471f60d6')
+source=(git+$url#tag=v$pkgver)
+sha256sums=('943231843fa7dd6b28beb3a831e1341fc03830b7e28ccefd97f6cb24df0ab045')
 
 prepare() {
-  sed -e '/pytest-runner/d' -i $_name-$pkgver/setup.py # Remove pytest-runner from setup_requires
-
-  # upstream doesn't seem to care about Python 3.11 compat: https://github.com/dropbox/stone/issues/288
-  sed -e 's/getargspec/getfullargspec/' -i $_name-$pkgver/$_name/frontend/ir_generator.py
+  sed -e '/pytest-runner/d' -i $_name/setup.py # Remove pytest-runner from setup_requires
 }
 
 build() {
-  cd $_name-$pkgver
+  cd $_name
   python -m build --wheel --no-isolation
 }
 
 check() {
-  cd $_name-$pkgver
+  cd $_name
   pytest -vv
 }
 
 package() {
-  cd $_name-$pkgver
+  cd $_name
   python -m installer --destdir="$pkgdir" dist/*.whl
 
   install -Dm644 LICENSE -t "$pkgdir/usr/share/licenses/$pkgname"

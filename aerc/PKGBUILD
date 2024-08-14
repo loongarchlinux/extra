@@ -1,36 +1,75 @@
 # Maintainer: Christian Rebischke <chris.rebischke@archlinux.org>
+# Maintainer: Carl Smedstad <carsme@archlinux.org>
 # Contributor: Stefan Tatschner <stefan@rumpelsepp.org>
 # Contributor: Gökberk Yaltıraklı <aur at gkbrk dot com>
 # Contributor: Drew DeVault <sir@cmpwn.com>
 
 pkgname=aerc
-pkgver=0.17.0
+pkgver=0.18.2
 pkgrel=1
 pkgdesc='Email Client for your Terminal'
 arch=('loong64' 'x86_64')
 url='https://git.sr.ht/~rjarry/aerc'
 license=('MIT')
-depends=('notmuch-runtime' 'gawk')
-makedepends=('go' 'scdoc')
-optdepends=('w3m: for showing HTML messages'
-            'dante: for showing HTML messages')
-provides=('aerc')
-conflicts=('aerc')
-source=("$pkgname-$pkgver.tar.gz::https://git.sr.ht/~rjarry/${pkgname}/archive/${pkgver}.tar.gz")
-sha512sums=('6648123c37da36f932825e7caec268765bf285124a4473055b86ac48cfa937a250b03d2404764c2c93a978bb56dc9279550e5bf66aa0ff09f90525c5ead7c062')
+depends=(
+  'gawk'
+  'glibc'
+  'notmuch-runtime'
+)
+makedepends=(
+  'git'
+  'go'
+  'scdoc'
+)
+optdepends=(
+  'dante: for showing HTML messages'
+  'python: for carddav-query script'
+  'w3m: for showing HTML messages'
+)
+options=('!lto')
+source=("git+$url?signed#tag=$pkgver")
+sha512sums=('930dd1795685810bdc0d15786d024e096c4e4ccf7c244b82f6196e1425a9ef1b425d89092f8b23b6251e1a57632518a0285329990c08ebc6b21fabcca681b98c')
+validpgpkeys=('DC0718E322E2C7605EBDC83146957EC08FD0FE90') # Robin Jarry <robin@jarry.cc>
+
+prepare() {
+  cd "$pkgname"
+
+  GOFLAGS="-mod=readonly" go mod vendor -v
+}
 
 build() {
-    cd "$srcdir/$pkgname-$pkgver"
-    export CGO_LDFLAGS="${LDFLAGS}"
-    export CGO_CFLAGS="${CFLAGS}"
-    export CGO_CPPFLAGS="${CPPFLAGS}"
-    export CGO_CXXFLAGS="${CXXFLAGS}"
-    export GOFLAGS="-buildmode=pie -trimpath -modcacherw -tags=notmuch"
-    make PREFIX=/usr LIBEXECDIR=/usr/lib/aerc
+  cd "$pkgname"
+
+  export CGO_CFLAGS="$CFLAGS"
+  export CGO_CPPFLAGS="$CPPFLAGS"
+  export CGO_CXXFLAGS="$CXXFLAGS"
+  export CGO_LDFLAGS="$LDFLAGS"
+  export GOFLAGS="-buildmode=pie -mod=vendor -modcacherw -tags=notmuch"
+  export GOPATH="$srcdir"
+
+  make aerc \
+    DATE=NOTSET \
+    BUILD_OPTS= \
+    GO_EXTRA_LDFLAGS="-compressdwarf=false -linkmode=external" \
+    PREFIX=/usr \
+    LIBEXECDIR=/usr/lib/aerc
+
+  make doc
+}
+
+check() {
+  cd "$pkgname"
+
+  make tests
 }
 
 package() {
-    cd "$srcdir/$pkgname-$pkgver"
-    make PREFIX=/usr LIBEXECDIR=/usr/lib/aerc DESTDIR=$pkgdir install
-    install -Dm644 LICENSE -t "$pkgdir/usr/share/licenses/aerc/"
+  cd "$pkgname"
+
+  make install \
+    PREFIX=/usr \
+    LIBEXECDIR=/usr/lib/aerc \
+    DESTDIR="$pkgdir"
+
+  install -vDm644 -t "$pkgdir/usr/share/licenses/$pkgname" LICENSE
 }

@@ -5,7 +5,7 @@
 pkgname=perl-digest-hmac
 _realname=Digest-HMAC
 pkgver=1.04
-pkgrel=4
+pkgrel=5
 pkgdesc="Perl Module: Keyed-Hashing for Message Authentication."
 arch=('any')
 license=('PerlArtistic')

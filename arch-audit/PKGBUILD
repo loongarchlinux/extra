@@ -3,40 +3,50 @@
 # Contributor: Andrea Scarpino <andrea@archlinux.org>
 
 pkgname=arch-audit
-pkgver=0.1.20
-pkgrel=3
+pkgver=0.2.0
+pkgrel=1
 pkgdesc='A utility like pkg-audit based on Arch Security Team data'
-url='https://gitlab.com/ilpianista/arch-audit'
-depends=('glibc' 'gcc-libs' 'curl' 'libalpm.so')
-makedepends=('cargo' 'pkg-config' 'scdoc')
+url='https://gitlab.archlinux.org/archlinux/arch-audit'
+depends=(
+  'ca-certificates'
+  'gcc-libs'
+  'glibc'
+  'pacman' 'libalpm.so'
+)
+makedepends=(
+  'cargo'
+  'pkg-config'
+  'scdoc'
+)
 arch=('loong64' 'x86_64')
 license=('MIT')
 backup=('etc/arch-audit/settings.toml')
-source=("https://gitlab.com/ilpianista/arch-audit/-/archive/${pkgver}/arch-audit-${pkgver}.tar.gz"
-        "0001-Update-to-alpm-v3.patch")
-sha512sums=('e0bdd5adb3c44677d39c8e618c8c8f666f1e2caaead82fc666468c46b296cb4d15584939715995bc6d3d8f996bd3127478bc6008dbdef677fee80063f2bc059e'
-            'SKIP')
-b2sums=('02ba56f1b4780da7e006ac25736afb6e0474502cc7d645b2eb48650c6d71878b1de349b9a072f2cd1d013254f68d79786d9195c98c520407e256e6fa9b63f2e4'
-        'SKIP')
+source=(https://gitlab.archlinux.org/archlinux/arch-audit/-/archive/v${pkgver}/arch-audit-v${pkgver}.tar.gz
+        hook-depends.patch)
+sha512sums=('353d220ffd553e42d3cfc9533eb5d904979d563871f4d7f24daf883f57f055861ff03b95dc89a0f3d8dc8772f793c929e3844bc03fa4be0522a2825811b4d9a3'
+            'd1a5baefe57adca4e303c8abc2de9c4d146e9783d45e6c662867ccf90ddef6b041df8c5f067aa95e9a4d4f7efa59ea43fdf903d6edcc16b7e95a0bbd33bd596c')
+b2sums=('0ad3ffbc1afdec3455c2d544b3d50d4a8852332141ca2b10601e01352e29ba96132362f793c75b397926c8582c3611661607b0637fb75132d6c181c5782a6f0e'
+        '3b0616eb618dc62696cab13a996086117fe11d21eab0628e7d95972b9f6987ded4a6ba53be20ae0953fdb2abd4dea356563c203b7493416dac85e65154aad6c1')
 options=(!lto)
 
 prepare() {
-  cd "${pkgname}-${pkgver}"
-  patch -Np1 < "../0001-Update-to-alpm-v3.patch"
+  cd "${pkgname}-v${pkgver}"
+  patch -Np1 -i "../hook-depends.patch"
+  cargo fetch --locked --target "$(rustc -vV | sed -n 's/host: //p')"
 }
 
 build() {
-  cd "${pkgname}-${pkgver}"
-  cargo build --release --locked
+  cd "${pkgname}-v${pkgver}"
+  cargo build --frozen --release
 }
 
 check() {
-  cd "${pkgname}-${pkgver}"
-  cargo test --release --locked
+  cd "${pkgname}-v${pkgver}"
+  cargo test --frozen --release
 }
 
 package() {
-  cd "${pkgname}-${pkgver}"
+  cd "${pkgname}-v${pkgver}"
 
   make DESTDIR="${pkgdir}" PREFIX=/usr install
 

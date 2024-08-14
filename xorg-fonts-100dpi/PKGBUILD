@@ -3,7 +3,7 @@
 
 pkgname=xorg-fonts-100dpi
 pkgver=1.0.4
-pkgrel=2
+pkgrel=3
 pkgdesc="X.org 100dpi fonts"
 arch=('any')
 url="https://xorg.freedesktop.org/"

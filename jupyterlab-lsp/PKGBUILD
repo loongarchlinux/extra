@@ -1,0 +1,38 @@
+# Maintainer: Jakub Klinkovský <lahwaacz at archlinux dot org>
+# Contributor: Specter119 <spcter119 AT gmail.com>
+
+pkgname=jupyterlab-lsp
+pkgver=5.1.0
+pkgrel=4
+pkgdesc="Coding assistance for JupyterLab with Language Server Protocol."
+arch=(any)
+url="https://github.com/jupyter-lsp/jupyterlab-lsp"
+license=(BSD-3-Clause)
+depends=(
+  python
+  jupyter-lsp
+  jupyterlab
+)
+makedepends=(
+  python-build
+  python-installer
+  python-setuptools
+  python-wheel
+  npm
+  yarn
+)
+source=("$pkgname-$pkgver.tar.gz::$url/archive/refs/tags/v$pkgver.tar.gz")
+b2sums=('3e4123d61fd4a9526faa597ddebb7b4b5c332a8288b2d0efaa4a28e4a00560f40c6b6e1e4beddafc8e39d4adf1516ae0b583a1b1c5829266f22d02041e9988da')
+
+build() {
+  cd $pkgname-$pkgver/python_packages/jupyterlab_lsp
+  jlpm install
+  jlpm build
+  python -m build --wheel --no-isolation
+}
+
+package() {
+  cd $pkgname-$pkgver/python_packages/jupyterlab_lsp
+  python -m installer --destdir=$pkgdir dist/*.whl
+  install -vDm 644 LICENSE -t "$pkgdir/usr/share/licenses/$pkgname"
+}

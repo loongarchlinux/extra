@@ -2,8 +2,8 @@
 # Contributor: Dale Blount <dale@archlinux.org>
 # Contributor: Manolis Tzanidakis
 pkgname=spamassassin
-pkgver=4.0.0
-pkgrel=2
+pkgver=4.0.1
+pkgrel=1
 pkgdesc="A mail filter to identify spam."
 arch=('loong64' 'x86_64')
 license=('APACHE')
@@ -26,15 +26,18 @@ backup=('etc/mail/spamassassin/local.cf'
         'etc/mail/spamassassin/v341.pre'
         'etc/mail/spamassassin/v342.pre'
         'etc/mail/spamassassin/v343.pre'
-        'etc/mail/spamassassin/v400.pre')
+        'etc/mail/spamassassin/v400.pre'
+        'etc/mail/spamassassin/v401.pre')
 install="${pkgname}.install"
 source=("https://ftp.fau.de/apache/${pkgname}/source/Mail-SpamAssassin-${pkgver}.tar.gz"
         "https://www.apache.org/dist/${pkgname}/source/Mail-SpamAssassin-${pkgver}.tar.gz.asc"
+        fix-tests.patch
         'spamassassin.tmpfiles.d'
         'spamassassin.service')
 validpgpkeys=(D8099BC79E17D7E49BC21E31FDE52F40F7D39814)
-sha512sums=('db8e5d0249d9fabfa89bc4c7309a7eafd103ae07617ed9bd32e6b35473c5efc05b1a913b4a3d4bb0ff19093400e3510ae602bf9e96290c63e7946a1d0df6de47'
+sha512sums=('7ac2d789d8744dfe37f647013871e293de50cfcd792029956eb6cea8e51343aad135398bd91867c3c21a68e5fb6330bd6b38a04b794a24449a59287b46d4ac70'
             'SKIP'
+            '215dd552493f4363fbd314f9b2c5ae11ffcebb6e7c61d3882b90f38fa2cac9f4fe0008903eb1e013bab4fbdf5693335303a9f757a1d527eae6b538ccf56ecb6c'
             '994ebb2b6c127521676f35879017112a33da53ad99431837d06973a9abfc4aa0434ea2c9b19073ff2cc877ebe3a5a7fe8525bc93222fd05956069ce73e5ae389'
             '5ad6aa8d992375b0989413d36ff0485f792ac9211a47e6a2a7fa5c0b9eb353aa6efe6f55da3ff4480bdef24beb4fa456c64c5a5ce72e8ad6c93c171c969fd6ee')
 
@@ -43,6 +46,8 @@ prepare() {
 
   sed -i t/sa_compile.t \
 	  -e 's#^my $temp_binpath = $Config{sitebinexp};#my $temp_binpath = "/bin/site_perl/";#'
+
+  patch -p2 -i ../fix-tests.patch # https://bz.apache.org/SpamAssassin/show_bug.cgi?id=8253
 }
 
 build() {

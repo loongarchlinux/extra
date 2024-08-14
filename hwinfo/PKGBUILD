@@ -8,31 +8,28 @@
 
 pkgname=hwinfo
 pkgver=23.2
-pkgrel=1
+pkgrel=2
 pkgdesc='Hardware detection tool from openSUSE'
 arch=(loong64 x86_64)
 url='https://github.com/openSUSE/hwinfo'
-license=(GPL2)
+license=(GPL-2.0-or-later)
 depends=('libx86emu=3.5' perl-xml-parser perl-xml-writer)
 makedepends=(flex git sysfsutils)
 options=(!emptydirs)
 source=(custom_ioctl.patch
         "git+$url#commit=c87f449f1d4882c71b0a1e6dc80638224a5baeed") # tag: 23.2
 b2sums=('2b1bd3b53bbfc1e545e1a70ffd6cca08f704639a104928b2c02ccca3e82000f07a470fbdf129566ece6dfb2b98fdad0e82f18cc5c2016ebfeed043b4edb295b4'
-        'SKIP')
+        '5b1291ac1e9775541b865b5df46e11100900b06328e2228d6e9335eb2aa9b98aeb00f5a604b086364d68db907ebc36de8049c946a060736f6f91d77fb42b7842')
 
 prepare() {
   cd $pkgname
   patch -p1 -i ../custom_ioctl.patch
-  echo touch changelog > git2log
+  echo 'touch changelog' > git2log
   sed -i '/linux\/fs.h/d' src/hd/hd.c
 }
 
 build() {
-  make -C $pkgname -j1 \
-    CFLAGS+="-fPIC -I$srcdir/$pkgname/src/hd -w" \
-    HWINFO_VERSION="$pkgver" \
-    LIBDIR=/usr/lib
+  make -C $pkgname -j1 CFLAGS+=" -fPIC -I$srcdir/$pkgname/src/hd -w" HWINFO_VERSION="$pkgver" LIBDIR=/usr/lib
 }
 
 package() {

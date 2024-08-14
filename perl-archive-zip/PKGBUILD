@@ -4,7 +4,7 @@
 
 pkgname=perl-archive-zip
 pkgver=1.68
-pkgrel=8
+pkgrel=9
 pkgdesc="Provide a perl interface to ZIP archive files"
 arch=('any')
 license=('GPL' 'PerlArtistic')

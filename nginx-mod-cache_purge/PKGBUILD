@@ -2,16 +2,15 @@
 
 pkgname=nginx-mod-cache_purge
 pkgver=2.5.3
-pkgrel=3
+pkgrel=5
 
 _modname="${pkgname#nginx-mod-}"
 
 pkgdesc='Nginx module with ability to purge content from FastCGI, proxy, SCGI and uWSGI caches'
 arch=('loong64' 'x86_64')
-depends=('nginx')
-makedepends=('nginx-src')
+makedepends=('nginx' 'nginx-src')
 url="https://github.com/nginx-modules/ngx_cache_purge"
-license=('CUSTOM')
+license=('BSD-2-Clause')
 
 source=(
 	https://github.com/nginx-modules/ngx_cache_purge/archive/$pkgver/ngx_cache_purge-$pkgver.tar.gz
@@ -32,11 +31,18 @@ prepare() {
 
 build() {
 	cd build
-	/usr/src/nginx/configure --with-compat --add-dynamic-module=../ngx_cache_purge-$pkgver
+	/usr/src/nginx/configure \
+		--with-ld-opt="$LDFLAGS" \
+		--with-compat \
+		--add-dynamic-module=../ngx_cache_purge-$pkgver
 	make modules
 }
 
 package() {
+	local _nginx_version=$(nginx -v 2>&1)
+	_nginx_version=${_nginx_version/* nginx\/}
+	depends+=("nginx=${_nginx_version}")
+
 	install -Dm644 "$srcdir"/ngx_cache_purge-$pkgver/LICENSE \
 	               "$pkgdir"/usr/share/licenses/$pkgname/LICENSE
 

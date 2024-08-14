@@ -3,32 +3,38 @@
 
 pkgname=python-jaraco.text
 # https://github.com/jaraco/jaraco.text/blob/main/NEWS.rst
-pkgver=3.12.0
-pkgrel=3
+pkgver=4.0.0
+pkgrel=1
 pkgdesc='Module for text manipulation'
 arch=('any')
 url='https://github.com/jaraco/jaraco.text'
 license=('MIT')
-depends=('python' 'python-jaraco.functools' 'python-jaraco.context' 'python-autocommand' 'python-inflect' 'python-more-itertools')
-makedepends=('python-build' 'python-installer' 'python-setuptools-scm' 'python-wheel')
+depends=('python' 'python-jaraco.functools' 'python-jaraco.context' 'python-autocommand' 'python-more-itertools')
+makedepends=('git' 'python-build' 'python-installer' 'python-setuptools-scm' 'python-wheel')
 checkdepends=('python-pytest')
+optdepends=(
+ 'python-inflect: for show-newlines script'
+)
 conflicts=('python-jaraco')
 replaces=('python-jaraco')
-source=("https://files.pythonhosted.org/packages/source/j/jaraco.text/jaraco.text-$pkgver.tar.gz")
-sha512sums=('75068006c96dae3b8d21228f2ae21820939c68b1fb7e5db35bd0c1126a20399eb4d99c6bea15e88076599956c4b41104558cd32d860d8f4fd4e96aeeb22711c9')
+source=("git+https://github.com/jaraco/jaraco.text.git?signed#tag=v$pkgver")
+sha512sums=('a08395ea1fab5aac0bf8fdef8225794b311ca7c8210fccda09a98298501cd695be1834355e31ed7457d1752c59e65da7d29b93ab292f7816d88b04465c561803')
+validpgpkeys=(
+  'CE380CF3044959B8F377DA03708E6CB181B4C47E' # https://github.com/jaraco.gpg
+)
 
 build() {
-  cd "$srcdir/jaraco.text-$pkgver"
+  cd "$srcdir/jaraco.text"
   python -m build --wheel --no-isolation
 }
 
 check() {
-  cd "$srcdir/jaraco.text-$pkgver"
+  cd "$srcdir/jaraco.text"
   PYTHONPATH="$PWD" pytest
 }
 
 package() {
-  cd "$srcdir/jaraco.text-$pkgver"
+  cd "$srcdir/jaraco.text"
   python -m installer --destdir="$pkgdir" dist/*.whl
   install -Dm644 LICENSE "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
 }

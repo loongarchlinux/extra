@@ -3,16 +3,16 @@
 pkgname=nginx-mod-brotli
 epoch=1
 pkgver=1.0.0rc
-pkgrel=8
+pkgrel=10
 
 _modname="ngx_${pkgname#nginx-mod-}"
 
 pkgdesc="Brotli compression filter module for nginx"
 arch=('loong64' 'x86_64')
-depends=("nginx" 'brotli')
-makedepends=("nginx-src")
+depends=('brotli')
+makedepends=("nginx" "nginx-src")
 url="https://github.com/google/ngx_brotli"
-license=('CUSTOM')
+license=('BSD-2-Clause')
 
 source=(
 	https://github.com/google/$_modname/archive/v$pkgver/$_modname-$pkgver.tar.gz
@@ -32,11 +32,18 @@ prepare() {
 
 build() {
 	cd build
-	/usr/src/nginx/configure --with-compat --add-dynamic-module=../$_modname-$pkgver
+	/usr/src/nginx/configure \
+		--with-ld-opt="$LDFLAGS" \
+		--with-compat \
+		--add-dynamic-module=../$_modname-$pkgver
 	make modules
 }
 
 package() {
+	local _nginx_version=$(nginx -v 2>&1)
+	_nginx_version=${_nginx_version/* nginx\/}
+	depends+=("nginx=${_nginx_version}")
+
 	install -Dm644 "$srcdir"/$_modname-$pkgver/LICENSE \
 	               "$pkgdir"/usr/share/licenses/$pkgname/LICENSE
 

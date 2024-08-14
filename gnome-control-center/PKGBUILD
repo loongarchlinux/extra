@@ -2,9 +2,13 @@
 # Maintainer: Jan Alexander Steffens (heftig) <heftig@archlinux.org>
 # Contributor: Jan de Groot <jgc@archlinux.org>
 
-pkgname=gnome-control-center
-pkgver=46.1
-pkgrel=2
+pkgbase=gnome-control-center
+pkgname=(
+  gnome-control-center
+  gnome-keybindings
+)
+pkgver=46.4
+pkgrel=1
 pkgdesc="GNOME's main interface to configure various aspects of the desktop"
 url="https://gitlab.gnome.org/GNOME/gnome-control-center"
 license=(GPL-2.0-or-later)
@@ -27,6 +31,7 @@ depends=(
   gnome-desktop-4
   gnome-online-accounts
   gnome-settings-daemon
+  gnome-shell
   gnutls
   graphene
   gsettings-desktop-schemas
@@ -66,46 +71,27 @@ depends=(
 makedepends=(
   docbook-xsl
   git
+  glib2-devel
   meson
   modemmanager
-  python
-  python-packaging
 )
 checkdepends=(
   python-dbusmock
   python-gobject
   xorg-server-xvfb
 )
-optdepends=(
-  'fwupd: device security panel'
-  'gnome-remote-desktop: screen sharing'
-
-  # Cannot be a depend because when gnome-shell checkdepends on
-  # gnome-control-center depends on gnome-shell depends on libmutter-12.so, it
-  # makes building gnome-shell against libmutter-13.so impossible
-  'gnome-shell: multitasking panel'
-
-  'gnome-user-share: WebDAV file sharing'
-  'malcontent: application permission control'
-  'networkmanager: network settings'
-  'openssh: remote login'
-  'power-profiles-daemon: power profiles'
-  'rygel: media sharing'
-  'system-config-printer: printer settings'
-)
-groups=(gnome)
 source=(
-  "git+https://gitlab.gnome.org/GNOME/gnome-control-center.git?signed#tag=$pkgver"
+  "git+https://gitlab.gnome.org/GNOME/gnome-control-center.git?signed#tag=${pkgver/[a-z]/.&}"
   "git+https://gitlab.gnome.org/GNOME/libgnome-volume-control.git"
 )
-b2sums=('f066316f436f7d58b9341daa346bb173fbeee2a302a7b3f1b0db878aabd2deb20c736b5a08beef7612f4366bbc84a82a2fee12dc1ff39344cc5f493e2b099677'
+b2sums=('448af1942565b38e3e1abeaac577e1a4221f0ec38ab2d29fc4ee08fedaa3e2b1aacbde25c60686902f6c75a72ddc406c23f30d849c182fa6b0f77c70e151f587'
         'SKIP')
 validpgpkeys=(
   9B60FE7947F0A3C58136817F2C2A218742E016BE # Felipe Borges (GNOME) <felipeborges@gnome.org>
 )
 
 prepare() {
-  cd $pkgname
+  cd $pkgbase
 
   git submodule init subprojects/gvc
   git submodule set-url subprojects/gvc "$srcdir/libgnome-volume-control"
@@ -120,7 +106,7 @@ build() {
     -D malcontent=true
   )
 
-  arch-meson $pkgname build "${meson_options[@]}"
+  arch-meson $pkgbase build "${meson_options[@]}"
   meson compile -C build
 }
 
@@ -129,8 +115,44 @@ check() {
     meson test -C build --print-errorlogs
 }
 
-package() {
+_pick() {
+  local p="$1" f d; shift
+  for f; do
+    d="$srcdir/$p/${f#$pkgdir/}"
+    mkdir -p "$(dirname "$d")"
+    mv "$f" "$d"
+    rmdir -p --ignore-fail-on-non-empty "$(dirname "$f")"
+  done
+}
+
+package_gnome-control-center() {
+  depends+=(gnome-keybindings)
+  optdepends=(
+    'fwupd: device security panel'
+    'gnome-remote-desktop: screen sharing'
+    'gnome-user-share: WebDAV file sharing'
+    'malcontent: application permission control'
+    'networkmanager: network settings'
+    'openssh: remote login'
+    'power-profiles-daemon: power profiles'
+    'rygel: media sharing'
+    'system-config-printer: printer settings'
+  )
+  groups=(gnome)
+
   meson install -C build --destdir "$pkgdir"
+
+  cd "$pkgdir"
+  _pick gkb usr/share/gettext/its/gnome-keybindings.*
+  _pick gkb usr/share/gnome-control-center/keybindings
+  _pick gkb usr/share/pkgconfig/gnome-keybindings.pc
+}
+
+package_gnome-keybindings() {
+  pkgdesc="Keybindings configuration for GNOME applications"
+  depends=()
+
+  mv gkb/* "$pkgdir"
 }
 
 # vim:set sw=2 sts=-1 et:

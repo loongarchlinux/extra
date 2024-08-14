@@ -1,17 +1,20 @@
+# Maintainer: Chih-Hsuan Yen <yan12125@archlinux.org>
 # Maintainer: Felix Yan <felixonmars@archlinux.org>
 
 pkgname=python-jsonschema-path
-pkgver=0.3.2
-pkgrel=3
+# https://github.com/p1c2u/jsonschema-path/releases
+pkgver=0.3.3
+pkgrel=1
 pkgdesc="JSONSchema Spec with object-oriented paths"
 url="https://github.com/p1c2u/jsonschema-path"
-license=('Apache')
+# https://github.com/p1c2u/jsonschema-path/blob/0.3.3/pyproject.toml#L25
+license=('Apache-2.0')
 arch=('any')
-depends=('python-pathable' 'python-yaml' 'python-requests' 'python-referencing')
+depends=('python' 'python-pathable' 'python-yaml' 'python-requests' 'python-referencing')
 makedepends=('python-build' 'python-installer' 'python-poetry-core')
 checkdepends=('python-pytest' 'python-responses')
 source=("https://github.com/p1c2u/jsonschema-path/archive/$pkgver/$pkgname-$pkgver.tar.gz")
-sha512sums=('e49b32c4609238d2808938976bd0022f86837e9d7d296a137d42f8e8c80d20d20fdd23a07b898063536290b36bd72df0abef64b65997a66cb3fb9c403cc275d3')
+sha512sums=('846d476285b4c89d0241d18be09eb7c12df855f7b28f0d3ea9942a9d23977f3c051b93a1281f6f5323c2c4bc9c86fe82b5eae1bce647f58d9d2acce65d4f54a8')
 
 prepare() {
   cd jsonschema-path-$pkgver

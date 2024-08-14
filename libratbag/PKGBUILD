@@ -2,7 +2,7 @@
 
 pkgname=libratbag
 pkgver=0.17
-pkgrel=1
+pkgrel=2
 pkgdesc='A DBus daemon to configure gaming mice'
 arch=('loong64' 'x86_64')
 url='https://github.com/libratbag/libratbag'
@@ -15,10 +15,19 @@ validpgpkeys=('3DCE51D60930EBA47858BA4146F633CBB0EB4BF2'  # Filipe Laíns (FFY00
               '3C2C43D9447D5938EF4551EBE23B7E70B467F0BF'  # Peter Hutterer (Who-T) <office@who-t.net>
               '4F60BCD32573AB28D84FD0C4CCF75EB2BBF8F69C') # Yaroslav Chvanov <yaroslav.chvanov@gmail.com>
 # 2F2670AC164DB36F (Benjamin Tissoires <benjamin.tissoires@gmail.com>) should also be trusted  -- ass. FFY00
-source=("git+$url#tag=v$pkgver?signed")
-sha512sums=('SKIP')
+source=("git+$url#tag=v$pkgver?signed"
+        "python_imp_to_importlib.patch")
+sha512sums=('5f2a0f233801f5db6b16cc2bf95232d7655d1d5ec780933b8c07b82e7e621b011885011bdd562d86e2f133ef4db258af99876a40105280cb2f429766afe228fb'
+            '8fd7bdbc85b2a6f8f7383f921c2d822d24f1413d675bb4bc157432039fed478fecb620e9f035684b067913f2d5e216ca7308776f97cf90e9d24aad23741dedfe')
 provides=('ratbagd' 'liblur')
 conflicts=('ratbagd' 'liblur')
+
+prepare() {
+  cd $pkgname
+  # python-imp module removed from Python 3.12:
+  # https://github.com/libratbag/libratbag/commit/27b0d4a2d9cd21fa9f11a0770d94c578db6324d1
+  patch -p1 < ../python_imp_to_importlib.patch
+}
 
 build() {
   mkdir -p $pkgname/build

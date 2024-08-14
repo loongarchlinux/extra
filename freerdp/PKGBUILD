@@ -4,7 +4,7 @@
 
 _name=FreeRDP
 pkgname=freerdp
-pkgver=3.5.1
+pkgver=3.7.0
 _libver=${pkgver/.*/}
 pkgrel=1
 epoch=2
@@ -13,7 +13,6 @@ arch=(loong64 x86_64)
 url="https://www.freerdp.com/"
 license=(Apache-2.0)
 depends=(
-  cjson
   fuse3
   gcc-libs
   glibc
@@ -43,6 +42,7 @@ makedepends=(
   glib2
   gtk3
   icu
+  json-c
   krb5
   libjpeg-turbo
   libp11
@@ -70,21 +70,19 @@ provides=(
 )
 source=(
   https://github.com/$pkgname/$pkgname/archive/$pkgver/$pkgname-$pkgver.tar.gz
-  0001-Use-webkit2gtk-4.1.patch
 )
-sha512sums=('28082ca5a714362c684f2c551b0ac5823c1708d8e929db93f0ab3911601d3b0d724bbdc06eed517542fb4bd957bb61fcdd00e34c0bda017f0019d52d59cb6b07'
-            '0bfdf8825f586a548eaef309f64fb50ea9e2598592f778aa835bbec1a0600d715b8fb28f5950aaeb5ef981a33d5f9f3f39f4fd1800bdf9e5630d9925a9fbab04')
-b2sums=('7f243593c2da1fb8cef483cd423c3e4d1127cac16ab857eaf7d5c222deaeca6657f32010fd40e90f1b47bd925e493848a3ab6b6b1e9db01a5355d0177c42953a'
-        'bbee3975cdcd0ce421ecd8825d1b6dbdbd1565b612a51e7d9423e79226579587031b5ebe7e5251c88015e9047cd35818bad338a7048acfddac137ffe23197b71')
+sha512sums=('61e161e14376161f12ec685d7d9fd798603cb2dfae3ba93d40789826ffcb74bad01df2524bcb43916edf16a3ee0e0f802bde86b86de4a0e06247a3a609ecbe9f')
+b2sums=('1360a2f7d6fa8ec807e88245b1087de04e05d78b25091310d389411bee20d07df6e64df37f7b6bee95ac11e55b95a3bd279a05bf2c897810d136215ffec88097')
 
 prepare() {
   cd $_name-$pkgver
-
-  # Use the newer WebKit
-  patch -Np1 < ../0001-Use-webkit2gtk-4.1.patch
 }
 
 build() {
+  # gcc14 buildfix
+  export CFLAGS+=" -Wno-incompatible-pointer-types"
+  export CXXFLAGS+=" -Wno-incompatible-pointer-types"
+
   local cmake_options=(
     -B build
     -D CHANNEL_URBDRC_CLIENT=ON
@@ -137,10 +135,11 @@ package() {
     glib2 libglib-2.0.so libgobject-2.0.so
     gtk3 libgtk-3.so
     icu libicuuc.so
+    json-c libjson-c.so
     krb5 libk5crypto.so libkrb5.so
-    libpulse libpulse.so
-    libpng libpng16.so
     libjpeg-turbo libjpeg.so
+    libpng libpng16.so
+    libpulse libpulse.so
     libusb libusb-1.0.so
     libwebp libwebp.so
     openssl libcrypto.so libssl.so

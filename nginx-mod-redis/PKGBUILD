@@ -2,16 +2,15 @@
 
 pkgname=nginx-mod-redis
 pkgver=0.3.9
-pkgrel=13
+pkgrel=15
 
 _modname="${pkgname#nginx-mod-}"
 
 pkgdesc='Nginx module for redis caching'
 arch=('loong64' 'x86_64')
-depends=('nginx')
-makedepends=('nginx-src')
+makedepends=('nginx' 'nginx-src')
 url="https://www.nginx.com/resources/wiki/modules/redis/"
-license=('CUSTOM')
+license=('BSD-2-Clause')
 
 source=(
 	https://people.freebsd.org/~osa/ngx_http_redis-$pkgver.tar.gz
@@ -34,12 +33,17 @@ prepare() {
 build() {
 	cd build
 	/usr/src/nginx/configure \
+		--with-ld-opt="$LDFLAGS" \
 		--with-compat \
 		--add-dynamic-module=../ngx_http_redis-$pkgver
 	make modules
 }
 
 package() {
+	local _nginx_version=$(nginx -v 2>&1)
+	_nginx_version=${_nginx_version/* nginx\/}
+	depends+=("nginx=${_nginx_version}")
+
 	install -Dm644 "$srcdir"/ngx_http_redis-$pkgver/LICENSE \
 	               "$pkgdir"/usr/share/licenses/$pkgname/LICENSE
 

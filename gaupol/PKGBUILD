@@ -1,29 +1,43 @@
-# Maintainer: Evangelos Foutras <evangelos@foutrelis.com>
+# Maintainer: Evangelos Foutras <foutrelis@archlinux.org>
 # Contributor: Ionut Biru <ibiru@archlinux.org>
 # Contributor: Allan McRae <allan@archlinux.org>
 # Contributor: FJ <joostef@gmail.com>
 # Contributor: Sebastien Piccand <sebcactus gmail com>
 
 pkgname=gaupol
-pkgver=1.14.1
+pkgver=1.15
 pkgrel=2
 pkgdesc="Editor for text-based subtitles"
 arch=('any')
 url="https://otsaloma.io/gaupol/"
 license=('GPL')
 depends=('python-gobject' 'gtk3' 'gst-plugins-'{base,good,bad,ugly} 'gst-libav'
-         'gst-plugin-gtk' 'gspell' 'iso-codes' 'python-chardet' 'python-cairo'
-         'desktop-file-utils' 'hicolor-icon-theme')
-makedepends=('python-setuptools')
+         'gst-plugin-gtk' 'gspell' 'iso-codes' 'python-charset-normalizer'
+         'python-cairo' 'desktop-file-utils' 'hicolor-icon-theme')
+makedepends=('python-build' 'python-installer' 'python-setuptools' 'python-wheel')
 optdepends=('mpv: subtitle preview'
             'vlc: subtitle preview'
             'mplayer: subtitle preview')
-source=($pkgname-$pkgver.tar.gz::https://github.com/otsaloma/$pkgname/archive/$pkgver.tar.gz)
-sha256sums=('fa88d60620796800c4408dfdf7148b1abd3d97483e536dd020e35234885eb90b')
+source=($pkgname-$pkgver.tar.gz::https://github.com/otsaloma/$pkgname/archive/$pkgver.tar.gz
+  paths.patch)
+sha256sums=('4128aa01f2ed3ecbcf12676e99087351251a9f105c14567786b31e77ba9fbfd7'
+            '5e4402fd683a24c1b8ddcb9226176d259215263a491265548547d787bd28052d')
+
+prepare() {
+  cd $pkgname-$pkgver
+  patch -Np1 -i ../paths.patch
+}
+
+build() {
+  cd $pkgname-$pkgver
+  python -m build --wheel --no-isolation
+}
 
 package() {
-  cd "$srcdir/$pkgname-$pkgver"
-  python3 setup.py --without-iso-codes install --root="$pkgdir" -O1
+  cd $pkgname-$pkgver
+  python -m installer --destdir="$pkgdir" dist/*.whl
+  # remove bundled iso-codes
+  rm -r "$pkgdir/usr/share/gaupol/iso-codes"
 }
 
 # vim:set ts=2 sw=2 et:

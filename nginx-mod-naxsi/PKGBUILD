@@ -1,16 +1,15 @@
 # Maintainer: Massimiliano Torromeo <massimiliano.torromeo@gmail.com>
 
 pkgname=nginx-mod-naxsi
-pkgver=1.4
+pkgver=1.6
 _injectionver=3.10.0
 pkgrel=2
 _modname=naxsi
 pkgdesc='Nginx Anti XSS & SQL Injection'
 arch=('loong64' 'x86_64')
-depends=('nginx')
-makedepends=('nginx-src')
+makedepends=('nginx' 'nginx-src')
 url="https://github.com/wargio/naxsi/"
-license=('GPL3')
+license=('GPL-3.0-or-later')
 backup=(
 	etc/nginx/naxsi/blocking/10000000_scanner.rules
 	etc/nginx/naxsi/blocking/20000000_web_security.rules
@@ -34,7 +33,7 @@ backup=(
 source=(https://github.com/wargio/$_modname/archive/$pkgver/$_modname-$pkgver.tar.gz
         https://github.com/libinjection/libinjection/archive/refs/tags/v3.10.0/libinjection-3.10.0.tar.gz)
 validpgpkeys=(B0F4253373F8F6F510D42178520A9993A1C052F8) # Maxim Dounin <mdounin@mdounin.ru>
-sha256sums=('2ca068fecbd5e12bac13651d51162675060f3a9c29e1bc8bd29aab417f7d2038'
+sha256sums=('e5920fdd09cae155b89eb21a94a21c029ebfdb056c284130221525be54044aae'
             '9dd7ae68a21a3c50f705c383b1b714c77fd4093b0a561a5400f0cb0ad79b1ae7')
 
 prepare() {
@@ -51,12 +50,17 @@ prepare() {
 build() {
 	cd "$srcdir"/build
 	/usr/src/nginx/configure \
+		--with-ld-opt="$LDFLAGS" \
 		--with-compat \
 		--add-dynamic-module=../$_modname-$pkgver/naxsi_src
 	make modules
 }
 
 package() {
+	local _nginx_version=$(nginx -v 2>&1)
+	_nginx_version=${_nginx_version/* nginx\/}
+	depends+=("nginx=${_nginx_version}")
+
 	cd "$srcdir"/build/objs
 	for mod in *.so; do
 		install -Dm755 "$mod" "$pkgdir/usr/lib/nginx/modules/$mod"

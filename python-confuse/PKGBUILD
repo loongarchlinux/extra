@@ -4,7 +4,7 @@
 
 pkgname=python-confuse
 pkgver=2.0.1
-pkgrel=2
+pkgrel=3
 pkgdesc='Painless YAML config files for Python'
 arch=(any)
 url=https://github.com/beetbox/confuse
@@ -16,7 +16,6 @@ makedepends=(
   python-flit-core
   python-installer
 )
-checkdepends=(python-nose)
 _tag=eb041a8012b18f20d333b0da9aa4bc7f5a79f044
 source=(git+https://github.com/beetbox/confuse.git#tag=${_tag})
 sha256sums=(SKIP)
@@ -33,7 +32,7 @@ build() {
 
 check() {
   cd confuse
-  python -m nose
+  python -m unittest discover -vs .
 }
 
 package() {

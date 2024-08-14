@@ -3,25 +3,27 @@
 
 pkgname=python-littleutils
 _name=${pkgname#python-}
-pkgver=0.2.2
-pkgrel=6
+pkgver=0.2.4
+pkgrel=1
 pkgdesc='Small personal collection of python utility functions'
-arch=('any')
+arch=(any)
 url=https://github.com/alexmojaki/littleutils
-license=('MIT')
-depends=('python')
+license=(MIT)
+depends=(python)
 makedepends=(
-  'git'
-  'python-build'
-  'python-installer'
-  'python-setuptools'
-  'python-wheel'
+  git
+  python-build
+  python-installer
+  python-setuptools
+  python-setuptools-scm
+  python-wheel
 )
 source=("git+$url.git#tag=v$pkgver")
-b2sums=('b3df61e0e672f4f0e584aa505a073ae54fc1e0ecd45aed3d957c17d4e163ab315a171cfc6a61a0467fd132c5929c16756601702402fb4bc04f077f67d9ef7d70')
+b2sums=('35379267f3acbce59f8a650b76000d6d9389f37bb39a6bef9ede40b7aff6b8e3b45d831af6f326f2631658ae4457433558433d5b052ca7377391d37cd612b96b')
 
 build() {
   cd "$_name"
+  export SETUPTOOLS_SCM_PRETEND_VERSION=$pkgver
   python -m build --wheel --skip-dependency-check --no-isolation
 }
 

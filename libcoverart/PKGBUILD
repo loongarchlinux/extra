@@ -2,30 +2,54 @@
 
 pkgname=libcoverart
 pkgver=1.0.0
-pkgrel=5
-pkgdesc="C/C++ library for accessing the MusicBrainz Cover Art Archive"
-arch=('loong64' 'x86_64')
-url="https://musicbrainz.org/doc/libcoverart"
-license=('LGPL')
-depends=('neon' 'jansson')
-makedepends=('cmake')
-source=(https://github.com/metabrainz/$pkgname/releases/download/release-$pkgver/$pkgname-$pkgver.tar.gz)
-sha256sums=('5d9d4a4c46f35754e016affab83957961a364d7a4c7d64447f73bff22a300f44')
+pkgrel=7
+pkgdesc='C/C++ library for accessing the MusicBrainz Cover Art Archive'
+arch=(loong64 x86_64)
+url='https://musicbrainz.org/doc/libcoverart'
+license=(LGPL-2.1-or-later)
+depends=(
+  gcc-libs
+  glibc
+  jansson
+  neon
+)
+makedepends=(
+  cmake
+  doxygen
+  git
+  ninja
+)
+source=(
+  "git+https://github.com/metabrainz/$pkgname.git?signed#tag=release-$pkgver"
+  libcoverart-out-of-tree.patch
+)
+b2sums=(
+  c4b70ea71cb10b7a2d223a504b6d7a240647fc09c0e5018951aebc90822f703037893a79379a448b85a7b4835b70c2e0121e82e584c463eb7a570a0fcc9d66f4
+  eb6e9f50f18ffa17d50bf100984ea16c83bce55694bd1143c1d293242372f2937e0d3b7154aae71d46c6028194693bac8819d97a676a092e04e7a4c4cd67d064
+)
+validpgpkeys=(993F7C88ECC03DEA1375413B95514550A6F93B92) # Andrew Hawkins
 
 prepare() {
-  cd $pkgname-$pkgver
+  cd $pkgname
+
+  # Fix out-of-tree build
+  git cherry-pick -n 17a7f2e79cefe74dd028b26e174030b4f6d08fba
+  git cherry-pick -n 7d6019355037b5fc2445ad53c117f41ad703013c
+  patch -Np1 -i ../libcoverart-out-of-tree.patch
+
   sed -i 's/ -Werror//' */CMakeLists.txt
 }
 
 build() {
-  cd $pkgname-$pkgver
-  cmake . \
-    -DCMAKE_INSTALL_PREFIX=/usr \
-    -DCMAKE_BUILD_TYPE=Release
-  CMAKE_CXX_FLAGS="${CMAKE_CXX_FLAGS} -Wno-error" make
+  cmake -S $pkgname -B build -G Ninja \
+    -D CMAKE_INSTALL_PREFIX=/usr
+  cmake --build build
+  cmake --build build --target docs
 }
 
 package() {
-  cd $pkgname-$pkgver
-  make DESTDIR="$pkgdir" install
+  DESTDIR="$pkgdir" cmake --install build
+
+  mkdir -p "$pkgdir"/usr/share/doc/$pkgname
+  cp -r build/docs "$pkgdir/usr/share/doc/$pkgname/html"
 }

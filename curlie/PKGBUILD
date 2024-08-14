@@ -1,33 +1,35 @@
-# Maintainer: Maxim Baz <archlinux at maximbaz dot com>
+# Maintainer: Robin Candau <antiz@archlinux.org>
+# Contributor: Maxim Baz <archlinux at maximbaz dot com>
 # Contributor: Jianfeng Zhang <swordfeng123@gmail.com>
 
 pkgname=curlie
 pkgver=1.7.2
-pkgrel=1
-pkgdesc='The power of curl, the ease of use of httpie.'
-arch=('loong64' 'x86_64')
+pkgrel=2
+pkgdesc="The power of curl, the ease of use of httpie."
 url="https://curlie.io"
+arch=('loong64' 'x86_64')
 license=('MIT')
 depends=('glibc' 'curl')
 makedepends=('go')
 source=("${pkgname}-${pkgver}.tar.gz::https://github.com/rs/${pkgname}/archive/v${pkgver}.tar.gz")
 b2sums=('4e805430632bb0df98ccc57ed6dd9c3efac687bbc381cbee3d3d896baea69df33a11111dc07732ab4535c5ecc74cc8719ab44bc30d5fc207856c3ef79c9f78c1')
-options=(!lto)
+options=('!lto')
 
 build() {
-    cd "${pkgname}-${pkgver}"
-
-    export CGO_CPPFLAGS="${CPPFLAGS}"
-    export CGO_CFLAGS="${CFLAGS}"
-    export CGO_CXXFLAGS="${CXXFLAGS}"
-    export CGO_LDFLAGS="${LDFLAGS}"
-    export GOFLAGS="-buildmode=pie -trimpath -mod=readonly -modcacherw"
-
-    go build -ldflags "-X main.version=$pkgver -X main.date=$(date -u -I -d @$SOURCE_DATE_EPOCH) -linkmode=external -extldflags=$LDFLAGS"
+	cd "${pkgname}-${pkgver}"
+	
+	export CGO_CPPFLAGS="${CPPFLAGS}"
+	export CGO_CFLAGS="${CFLAGS}"
+	export CGO_CXXFLAGS="${CXXFLAGS}"
+	export CGO_LDFLAGS="${LDFLAGS}"
+	export GOPATH="${srcdir}"
+	export GOFLAGS="-buildmode=pie -mod=readonly -modcacherw"
+	
+	go build -ldflags "-X main.version=${pkgver} -X main.date=$(date -u -I -d @$SOURCE_DATE_EPOCH) -compressdwarf=false -linkmode external" .
 }
 
 package() {
-    cd "${pkgname}-${pkgver}"
-    install -Dm755 -t "${pkgdir}/usr/bin/" "${pkgname}"
-    install -Dm644 -t "${pkgdir}/usr/share/licenses/${pkgname}/" LICENSE
+	cd "${pkgname}-${pkgver}"
+	install -Dm 755 "${pkgname}" "${pkgdir}/usr/bin/${pkgname}"
+	install -Dm 644 LICENSE "${pkgdir}/usr/share/licenses/${pkgname}/LICENSE" 
 }

@@ -1,0 +1,51 @@
+# Maintainer: Fabian Bornschein <fabiscafe@archlinux.org>
+# Contributor: Brian Bidulock <bidulock@openss7.org>
+# Contributor: Ionut Biru <ibiru@archlinux.org>
+# Contributor: Bjorn Lindeijer <bjorn lindeijer nl>
+
+pkgname=sofia-sip
+pkgver=1.13.17
+pkgrel=2
+pkgdesc="An open-source SIP User-Agent library"
+arch=(loong64 x86_64)
+url="http://sofia-sip.sourceforge.net"
+license=('LGPL-2.1-only')
+depends=(
+  gawk
+  glib2
+  glibc
+  openssl
+  zlib
+)
+makedepends=(
+  git
+  glib2-devel
+)
+source=(
+  "git+https://github.com/freeswitch/sofia-sip.git#tag=v$pkgver"
+  # Fix incompatible pointer type in sip_basic.c 
+  # https://github.com/freeswitch/sofia-sip/pull/249
+  "0001-fix_incompatible_pointer_type_in_sip_basic_c.patch"
+)
+b2sums=('752fb40bb311ef5a22d814fe15362976681b061e6de3ed904f7770875ac8068fc0dc404e3be0e2860a9376c9f93b7595458dadda2ea454a4d05e64f71757cada'
+        '6f370d2f65a50a68a8bfde2d24d21de9b12099bf4643a8801ce74aef6cf650dc12a7a8d7821619c7f4f023c0544de346270ad5d96962407cc9c17d70119c8d67')
+
+prepare() {
+  cd $pkgname
+  git apply -3 ../0001-fix_incompatible_pointer_type_in_sip_basic_c.patch
+  ./autogen.sh
+}
+
+build() {
+  cd $pkgname
+  ./configure --prefix=/usr --with-openssl
+  # Fight unused direct deps
+  sed -i -e "s/ -shared / $LDFLAGS\0 /g" libtool
+  make
+}
+
+package() {
+  cd $pkgname
+  make DESTDIR="$pkgdir" install
+}
+

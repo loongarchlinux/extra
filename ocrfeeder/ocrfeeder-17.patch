@@ -1,0 +1,48 @@
+From b28190e38eed273555d2ccf8c26cfbb82d0aa26a Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Ball=C3=B3=20Gy=C3=B6rgy?= <ballogyor@gmail.com>
+Date: Wed, 22 May 2024 15:02:45 +0000
+Subject: [PATCH] Don't use deprecated imghdr module
+
+The imghdr module is removed in Python 3.13.
+
+Closes: https://gitlab.gnome.org/GNOME/ocrfeeder/-/issues/95
+---
+ src/ocrfeeder/util/graphics.py | 9 ++++++---
+ 1 file changed, 6 insertions(+), 3 deletions(-)
+
+diff --git a/src/ocrfeeder/util/graphics.py b/src/ocrfeeder/util/graphics.py
+index 851cfe3..2ad2511 100644
+--- a/src/ocrfeeder/util/graphics.py
++++ b/src/ocrfeeder/util/graphics.py
+@@ -22,7 +22,6 @@ from .log import debug
+ from PIL import Image
+ from gi.repository import GdkPixbuf
+ import math
+-import imghdr
+ import os
+ 
+ def getContainerRectangle(points_list):
+@@ -183,14 +182,18 @@ def getImageRotated(image, angle):
+ 
+ def convertMultiImage(image_path, temp_dir):
+     converted_paths = []
+-    if imghdr.what(image_path) != 'tiff':
++    try:
++        image = Image.open(image_path)
++    except Exception:
++        return []
++
++    if image.format != "TIFF":
+         return [image_path]
+ 
+     debug('Checking for multiple images in TIFF')
+     i = 0
+     base_name = os.path.basename(image_path)
+     name, extension = os.path.splitext(base_name)
+-    image = Image.open(image_path)
+     try:
+         while True:
+             image.seek(i)
+-- 
+GitLab
+

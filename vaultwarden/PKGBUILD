@@ -4,45 +4,47 @@
 # Contributor: Timothée Ravier <tim@siosm.fr
 
 pkgname=vaultwarden
-pkgver=1.30.5
-pkgrel=1
+pkgver=1.32.0
+pkgrel=2
 pkgdesc='Unofficial Bitwarden compatible server written in Rust'
-arch=('loong64' 'x86_64')
-url='https://github.com/dani-garcia/vaultwarden'
-license=('AGPL-3.0-only')
+arch=(loong64 x86_64)
+url=https://github.com/dani-garcia/vaultwarden
+license=(AGPL-3.0-only)
 depends=(
-  'glibc'
-  'gcc-libs'
-  'mariadb-libs'
-  'openssl'
-  'postgresql-libs'
-  'sqlite'
+  gcc-libs
+  glibc
+  openssl
+  postgresql-libs
+  sqlite
 )
-makedepends=('git' 'rust')
+depends_x86_64=(mariadb-libs)
+makedepends=(
+  git
+  rust
+)
 optdepends=('vaultwarden-web: for the web app')
-backup=('etc/vaultwarden.env')
-options=('!lto')
+backup=(etc/vaultwarden.env)
+options=(!lto)
 install=$pkgname.install
-_commit='d0c22b9fc90ae52aedbbccdafe9915bd0bdb0d84'
 source=(
-  "$pkgname::git+$url#commit=$_commit"
-  'systemd.service'
-  'sysusers.conf'
-  'tmpfiles.conf'
+  "git+$url.git#tag=$pkgver"
+  systemd.service
+  sysusers.conf
+  tmpfiles.conf
 )
-b2sums=('SKIP'
+b2sums=('b33f3c825f878124d42bb9a81d5f49256ea7275d8c1db0ec23deb07c000169bfe66822ea6426910f90a16dc1cb0f8a68f2454d07ad15efcfe9422e9ee135ee39'
         'ff8e896f820b88f079d3d4f4c2eb394362569c921f53693e25d3badaf9fdca841e4d7665862e09d22421f544802f3a64014696fd92d7f0b923faf41f8d99e472'
         '6580cf4031f262638abf11e529e8dfc489197afd6cd616c6a7810741e03c004706a5f9358f825aac6644c0ab6b251627ff988ed68f8264120b3575a655972390'
         '9cdcd6c997c884eb3c1ad0c9b8cd91e68ec6762a27f9b80a7eb6c0cb1ffa4e500a654da6f17e9f985cc67add154efe737761f74e4e5f72892fc0e9d457314973')
 
 pkgver() {
-  cd "$pkgname"
+  cd $pkgname
 
   git describe --tags | sed 's/^v//'
 }
 
 prepare() {
-  cd "$pkgname"
+  cd $pkgname
 
   # change various defaults
   sed -i "s,# DATA_FOLDER=data,DATA_FOLDER=/var/lib/$pkgname,
@@ -56,19 +58,20 @@ prepare() {
 }
 
 build() {
-  cd "$pkgname"
+  cd $pkgname
 
-  # workaround for 32-bit systems
-  # https://github.com/dani-garcia/vaultwarden/issues/4320
+  export VW_VERSION=$pkgver
   if [[ $(getconf LONG_BIT) -eq 32 ]]; then
-    VW_VERSION="$pkgver" cargo build --profile release-low --frozen --features sqlite,postgresql
+    # workaround for 32-bit systems
+    # https://github.com/dani-garcia/vaultwarden/issues/4320
+    cargo build --profile release-low --frozen --features sqlite,postgresql
   else
-    VW_VERSION="$pkgver" cargo build --release --frozen --features sqlite,mysql,postgresql
+    cargo build --release --frozen --features sqlite,mysql,postgresql
   fi
 }
 
 check() {
-  cd "$pkgname"
+  cd $pkgname
 
   if [[ $(getconf LONG_BIT) -eq 32 ]]; then
     cargo test --frozen --features sqlite,postgresql
@@ -79,11 +82,12 @@ check() {
 
 package() {
   # systemd integration
-  install -vDm644 systemd.service "$pkgdir/usr/lib/systemd/system/$pkgname.service"
-  install -vDm644 sysusers.conf "$pkgdir/usr/lib/sysusers.d/$pkgname.conf"
-  install -vDm644 tmpfiles.conf "$pkgdir/usr/lib/tmpfiles.d/$pkgname.conf"
+  install -vDm644 systemd.service \
+    "$pkgdir"/usr/lib/systemd/system/$pkgname.service
+  install -vDm644 sysusers.conf "$pkgdir"/usr/lib/sysusers.d/$pkgname.conf
+  install -vDm644 tmpfiles.conf "$pkgdir"/usr/lib/tmpfiles.d/$pkgname.conf
 
-  cd "$pkgname"
+  cd $pkgname
 
   # configuration
   install -Dm640 .env.template "$pkgdir"/etc/$pkgname.env
@@ -91,5 +95,3 @@ package() {
   # binary
   install -vDm755 -t "$pkgdir/usr/bin" target/release*/$pkgname
 }
-
-# vim:set ts=2 sw=2 et:

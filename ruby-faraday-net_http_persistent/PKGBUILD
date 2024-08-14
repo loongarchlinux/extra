@@ -2,46 +2,94 @@
 
 _gemname='faraday-net_http_persistent'
 pkgname="ruby-${_gemname}"
-pkgver=1.2.0
+pkgver=2.1.0
 pkgrel=1
 pkgdesc='About Faraday adapter for NetHttpPersistent'
 arch=('any')
 url="https://github.com/lostisland/${_gemname}"
 license=('MIT')
-depends=('ruby')
-makedepends=('ruby-rspec')
-checkdepends=('ruby-faraday' 'ruby-webmock' 'ruby-multipart-parser')
+depends=(
+  ruby
+  ruby-faraday
+  ruby-net-http-persistent
+)
+checkdepends=(
+  ruby-bundler
+  ruby-rake
+  ruby-rspec
+  ruby-simplecov
+  ruby-webmock
+)
 options=('!emptydirs')
 source=("${url}/archive/v${pkgver}/${_gemname}-v${pkgver}.tar.gz")
-sha512sums=('4172b93aa72b5f9dcd9fa526789bc336b777fb6785753f0351410c58b8f3fe7e6f989c0812d71e1aa4f6449877cbed8908412321daefe95997483cf51158fa4c')
+sha512sums=('3ad70814a231dedff56dd2891d834c6cd5f377e30bac4b31e6290097667d18b4eac5b44ad46b14fda873ee80e3b49e018337d60d666f0b32017fe0f4653d905a')
+b2sums=('5b1c43fbd647c36315c24aa0ff12817edef9940de7f42edb59815b41ec5a5b15c137be6d9e10a07192144064e5a32fa8ab0d9fa1ec15c3e3ec064424b5f299a9')
 
 prepare() {
-  cd "${srcdir}/${_gemname}-${pkgver}"
+  cd "${_gemname}-${pkgver}"
 
-  # drop broken/cirular dependencies
-  sed --in-place '/add_development_dependency/d' "${_gemname}.gemspec"
+  # update gemspec/Gemfile to allow newer version of the dependencies
+  sed --in-place --regexp-extended 's|~>|>=|g' "${_gemname}.gemspec"
 }
 
 build() {
-  cd "${srcdir}/${_gemname}-${pkgver}"
-  gem build "${_gemname}.gemspec"
+  cd "${_gemname}-${pkgver}"
+
+  local _gemdir="$(gem env gemdir)"
+
+  gem build --verbose "${_gemname}.gemspec"
+
+  gem install \
+    --local \
+    --verbose \
+    --ignore-dependencies \
+    --no-user-install \
+    --install-dir "tmp_install${_gemdir}" \
+    --bindir "tmp_install/usr/bin" \
+    "${_gemname}-${pkgver}.gem"
+
+  # remove unrepreducible files
+  rm --force --recursive --verbose \
+    "tmp_install${_gemdir}/cache/" \
+    "tmp_install${_gemdir}/gems/${_gemname}-${pkgver}/vendor/" \
+    "tmp_install${_gemdir}/doc/${_gemname}-${pkgver}/ri/ext/"
+
+  find "tmp_install${_gemdir}/gems/" \
+    -type f \
+    \( \
+      -iname "*.o" -o \
+      -iname "*.c" -o \
+      -iname "*.so" -o \
+      -iname "*.time" -o \
+      -iname "gem.build_complete" -o \
+      -iname "Makefile" \
+    \) \
+    -delete
+
+  find "tmp_install${_gemdir}/extensions/" \
+    -type f \
+    \( \
+      -iname "mkmf.log" -o \
+      -iname "gem_make.out" \
+    \) \
+    -delete
 }
 
 check() {
-  cd "${srcdir}/${_gemname}-${pkgver}"
-  # tests currently don't pass because we don't have net-http-persistent in the repos
-  # we run the tests in ruby-faraday
-  #rspec
+  cd "${_gemname}-${pkgver}"
+
+  local _gemdir="$(gem env gemdir)"
+
+  GEM_HOME="tmp_install${_gemdir}" rake spec
 }
 
 package() {
-cd "${srcdir}/${_gemname}-${pkgver}"
-  local _gemdir="$(gem env gemdir)"
-  gem install --verbose --ignore-dependencies --no-user-install --install-dir "${pkgdir}/${_gemdir}" --bindir "${pkgdir}/usr/bin" "${_gemname}-${pkgver}.gem"
+  cd "${_gemname}-${pkgver}"
 
-  install -Dm 644 LICENSE.md -t "${pkgdir}/usr/share/licenses/${pkgname}/"
+  cp --archive --verbose tmp_install/* "${pkgdir}"
 
-  install -Dm 644 README.md -t "${pkgdir}/usr/share/doc/${pkgname}"
-
-  rm -rf "${pkgdir}/${_gemdir}/cache"
+  install --verbose -D --mode=0644 LICENSE* --target-directory "${pkgdir}/usr/share/licenses/${pkgname}"
+  install --verbose -D --mode=0644 *.md --target-directory "${pkgdir}/usr/share/doc/${pkgname}"
 }
+
+# vim: tabstop=2 shiftwidth=2 expandtab:

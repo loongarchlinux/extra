@@ -3,7 +3,7 @@
 
 pkgname=gnome-font-viewer
 pkgver=46.0
-pkgrel=1
+pkgrel=2
 pkgdesc="A font viewer utility for GNOME"
 url="https://gitlab.gnome.org/GNOME/gnome-font-viewer"
 arch=(loong64 x86_64)
@@ -18,13 +18,15 @@ makedepends=(
   meson
 )
 groups=(gnome)
-_commit=5b64402841b2d8b5f4c5a6c5b63c79ce0e3541be  # tags/46.0^0
-source=("git+https://gitlab.gnome.org/GNOME/gnome-font-viewer.git#commit=$_commit")
+source=("git+https://gitlab.gnome.org/GNOME/gnome-font-viewer.git?signed#tag=${pkgver/[a-z]/.&}")
 b2sums=('a730ebfd2a09abade74be298b3fff89be3159174e2e4751acb90e664376678e556065b62a490ee7ede23ee1310c8745d0ff5689c987e5c9b52fbb4a98e3c3800')
+validpgpkeys=('3475CBA8D3483594C889B470D64A8D747F6FE706') # Maximiliano Sandoval <msandova@gnome.org>
 
-pkgver() {
+prepare() {
   cd $pkgname
-  git describe --tags | sed 's/[^-]*-g/r&/;s/-/+/g'
+
+  # Fix function callback definition
+  git cherry-pick -n 565d795731471c27542bb9ee60820a2d0d15534e
 }
 
 build() {

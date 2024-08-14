@@ -1,0 +1,35 @@
+# Maintainer: Robin Candau <antiz@archlinux.org>
+# Contributor: Iyán Méndez Veiga <me (at) iyanmv (dot) com>
+# Contributor: Thomas Wucher <arch (at) thomaswucher (dot) de>
+
+pkgname=stress-ng
+pkgver=0.18.02
+pkgrel=1
+pkgdesc="Software to stress test a computer system in various selectable ways"
+url="https://github.com/ColinIanKing/stress-ng"
+arch=('loong64' 'x86_64')
+license=('GPL-2.0-or-later')
+depends=('apparmor' 'gmp' 'judy' 'kmod' 'libbsd' 'libglvnd' 'libjpeg-turbo' 'lksctp-tools' 'mpfr' 'xxhash')
+optdepends=('intel-ipsec-mb: support for IPsec tests'
+	    'linux-headers: include some headers from the Arch kernel'
+	    'linux-lts-headers: include some headers from the LTS kernel'
+	    'linux-zen-headers: include some headers from the ZEN kernel'
+	    'linux-hardened-headers: include some headers from the HARDENED kernel')
+makedepends=('attr' 'eigen' 'keyutils' 'libaio' 'libcap' 'libgcrypt' 'libglvnd' 'libmd')
+source=("${pkgname}-${pkgver}.tar.gz::${url}/archive/refs/tags/V${pkgver}.tar.gz")
+b2sums=('3a3391080a375e1034f16731ef6dbb54288610403b4d420b729cf96a0ad700daedaff14a71316a9c5bd79eedc9f01b798311e19b15fb4416d2023bfd315c714d')
+
+prepare() {
+	cd "${pkgname}-${pkgver}"
+	make clean
+}
+
+build() {
+	cd "${pkgname}-${pkgver}"
+	make
+}
+
+package() {
+	cd "${pkgname}-${pkgver}"
+	make DESTDIR="${pkgdir}" install
+}

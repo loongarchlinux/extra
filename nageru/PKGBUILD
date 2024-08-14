@@ -2,7 +2,7 @@
 
 pkgname=nageru
 pkgver=2.3.0
-pkgrel=4
+pkgrel=7
 pkgdesc="live video mixer, based around the standard M/E workflow."
 arch=(loong64 x86_64)
 url="https://nageru.sesse.net/"
@@ -11,8 +11,15 @@ depends=('libmicrohttpd' 'ffmpeg' 'libx264' 'protobuf'
          'movit' 'bmusb' 'qcustomplot' 'pciutils' 'zita-resampler'
          'sqlite3' 'luajit' 'cmake')
 makedepends=('meson' 'eigen' 'qt5-tools')
-source=("https://nageru.sesse.net/nageru-${pkgver}.tar.gz")
-sha256sums=('3d8d7f089d93eb9f04543bc4839f3bf8f8cd3db73ebacc79f0a7d43e781ab42a')
+source=("https://nageru.sesse.net/nageru-${pkgver}.tar.gz"
+         ffmpeg-7.patch)
+sha256sums=('3d8d7f089d93eb9f04543bc4839f3bf8f8cd3db73ebacc79f0a7d43e781ab42a'
+            '091452a23e1382ce8bdc78a7745e97539343a15d3ba97f52792a1f6a01d16743')
+
+prepare() {
+  cd $pkgname-$pkgver
+  patch -p1 -i ../ffmpeg-7.patch
+}
 
 build() {
   arch-meson $pkgname-$pkgver build

@@ -4,7 +4,7 @@
 pkgbase=qxlsx
 pkgname=(qxlsx-qt5
          qxlsx-qt6)
-pkgver=1.4.7
+pkgver=1.4.8
 pkgrel=1
 pkgdesc='Excel file reader/writer library using Qt'
 arch=(loong64 x86_64)
@@ -13,19 +13,20 @@ license=(MIT)
 depends=(gcc-libs
          glibc)
 makedepends=(cmake
+             git
              qt5-base
              qt6-base)
-source=(https://github.com/QtExcel/QXlsx/archive/v$pkgver/$pkgbase-$pkgver.tar.gz)
-sha256sums=('6f2de3e3bcfd09b7be0f9ad06c363cfe29a7a4c14280b36a91d8968f54be796a')
+source=(git+https://github.com/QtExcel/QXlsx#tag=v$pkgver)
+sha256sums=('d6efb73ac6c3fbb25a00924beea5be63be673c5ebd210032c9b7336865f56001')
 
 build() {
-  cmake -B build5 -S QXlsx-$pkgver/QXlsx \
+  cmake -B build5 -S QXlsx/QXlsx \
     -DCMAKE_INSTALL_PREFIX=/usr \
     -DQT_VERSION_MAJOR=5 \
     -DBUILD_SHARED_LIBS=ON
   cmake --build build5
 
-  cmake -B build6 -S QXlsx-$pkgver/QXlsx \
+  cmake -B build6 -S QXlsx/QXlsx \
     -DCMAKE_INSTALL_PREFIX=/usr \
     -DQT_VERSION_MAJOR=6 \
     -DBUILD_SHARED_LIBS=ON
@@ -36,12 +37,12 @@ package_qxlsx-qt5() {
   depends+=(qt5-base)
 
   DESTDIR="$pkgdir" cmake --install build5
-  install -Dm644 QXlsx-$pkgver/LICENSE -t "$pkgdir"/usr/share/licenses/$pkgname
+  install -Dm644 QXlsx/LICENSE -t "$pkgdir"/usr/share/licenses/$pkgname
 }
 
 package_qxlsx-qt6() {
   depends+=(qt6-base)
 
   DESTDIR="$pkgdir" cmake --install build6
-  install -Dm644 QXlsx-$pkgver/LICENSE -t "$pkgdir"/usr/share/licenses/$pkgname 
+  install -Dm644 QXlsx/LICENSE -t "$pkgdir"/usr/share/licenses/$pkgname 
 }

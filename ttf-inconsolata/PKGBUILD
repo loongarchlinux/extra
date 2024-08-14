@@ -2,7 +2,7 @@
 
 pkgname=ttf-inconsolata
 pkgver=3.000
-pkgrel=3
+pkgrel=4
 epoch=1
 pkgdesc="Monospace font for pretty code listings and for the terminal"
 arch=('any')

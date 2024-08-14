@@ -2,43 +2,93 @@
 
 _gemname='metadata_json_deps'
 pkgname="ruby-${_gemname}"
-pkgver=1.2.0
+pkgver=1.3.0
 pkgrel=1
 pkgdesc='Verify all your dependencies allow the latest versions on Puppet Forge'
 arch=('any')
 url="https://github.com/ekohl/${_gemname}"
 license=('Apache')
-depends=('ruby' 'ruby-puppet_forge' 'ruby-puppet_metadata')
-checkdepends=('ruby-rspec')
-makedepends=('ruby-rdoc' 'ruby-rake')
+depends=(
+  ruby
+  ruby-puppet_forge
+  ruby-puppet_metadata
+)
+makedepends=(
+  ruby-rdoc
+)
+checkdepends=(
+  ruby-rspec
+)
 options=('!emptydirs')
 source=("${url}/archive/${pkgver}/${_gemname}-${pkgver}.tar.gz")
-sha512sums=('682c176938ea29f0339761d43fc4ab06d6265023b4a5cd605632a1240ca8716f08a48aa65f8fe780d330b9b00e3de041de2bfd4233a576706e7ba6b8d9104f91')
+sha512sums=('3b3466a3719b39719e84a1751cfb1bb3a9a5553d56a667402b11b1bfd20066f255845759089de736d190e2e46033ea5acfe4a1dc216092ec52067790b3fef1b2')
+b2sums=('97914391f10cbba953422bfd7853a49958f71fe08e2c02406e9698613b5afbbd6af3cc42e6998957477c2faad5f36676748291a10eb07300ad48118f89d831d8')
 
 prepare() {
-  cd "${srcdir}/${_gemname}-${pkgver}"
-  # allow latest dependencies
-  sed --in-place 's|~>|>=|g' "${_gemname}.gemspec"
+  cd "${_gemname}-${pkgver}"
+
+  # update gemspec/Gemfile to allow newer version of the dependencies
+  sed --in-place --regexp-extended 's|~>|>=|g' "${_gemname}.gemspec"
 }
 
 build() {
-  cd "${srcdir}/${_gemname}-${pkgver}"
-  gem build "${_gemname}.gemspec"
+  cd "${_gemname}-${pkgver}"
+
+  local _gemdir="$(gem env gemdir)"
+
+  gem build --verbose "${_gemname}.gemspec"
+
+  gem install \
+    --local \
+    --verbose \
+    --ignore-dependencies \
+    --no-user-install \
+    --install-dir "tmp_install${_gemdir}" \
+    --bindir "tmp_install/usr/bin" \
+    "${_gemname}-${pkgver}.gem"
+
+  # remove unrepreducible files
+  rm --force --recursive --verbose \
+    "tmp_install${_gemdir}/cache/" \
+    "tmp_install${_gemdir}/gems/${_gemname}-${pkgver}/vendor/" \
+    "tmp_install${_gemdir}/doc/${_gemname}-${pkgver}/ri/ext/"
+
+  find "tmp_install${_gemdir}/gems/" \
+    -type f \
+    \( \
+      -iname "*.o" -o \
+      -iname "*.c" -o \
+      -iname "*.so" -o \
+      -iname "*.time" -o \
+      -iname "gem.build_complete" -o \
+      -iname "Makefile" \
+    \) \
+    -delete
+
+  find "tmp_install${_gemdir}/extensions/" \
+    -type f \
+    \( \
+      -iname "mkmf.log" -o \
+      -iname "gem_make.out" \
+    \) \
+    -delete
 }
 
 check() {
-  cd "${srcdir}/${_gemname}-${pkgver}"
-  rake spec
+  cd "${_gemname}-${pkgver}"
+
+  local _gemdir="$(gem env gemdir)"
+
+  GEM_HOME="tmp_install${_gemdir}" rspec
 }
 
 package() {
-cd "${srcdir}/${_gemname}-${pkgver}"
-  local _gemdir="$(gem env gemdir)"
-  gem install --verbose --ignore-dependencies --no-user-install --install-dir "${pkgdir}/${_gemdir}" --bindir "${pkgdir}/usr/bin" "${_gemname}-${pkgver}.gem"
+  cd "${_gemname}-${pkgver}"
 
-  install -Dm 644 LICENSE -t "${pkgdir}/usr/share/licenses/${pkgname}/"
+  cp --archive --verbose tmp_install/* "${pkgdir}"
 
-  install -Dm 644 README.md -t "${pkgdir}/usr/share/doc/${pkgname}"
-
-  rm -rf "${pkgdir}/${_gemdir}/cache"
+  install --verbose -D --mode=0644 LICENSE* --target-directory "${pkgdir}/usr/share/licenses/${pkgname}"
+  install --verbose -D --mode=0644 *.md --target-directory "${pkgdir}/usr/share/doc/${pkgname}"
 }
+
+# vim: tabstop=2 shiftwidth=2 expandtab:

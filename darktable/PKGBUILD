@@ -7,46 +7,72 @@
 
 pkgname=darktable
 epoch=2
-pkgver=4.6.1
-pkgrel=2
-pkgdesc="Utility to organize and develop raw images"
+pkgver=4.8.1
+pkgrel=1
+pkgdesc='Utility to organize and develop raw images'
 arch=(loong64 x86_64)
-url="https://darktable.org"
-license=(GPL3)
-depends=(pugixml libjpeg-turbo colord-gtk libgphoto2 openexr lensfun iso-codes zlib
-         exiv2 flickcurl openjpeg2 graphicsmagick lua osm-gps-map libsecret openmp
-         gmic libavif jasper libjxl)
+url='https://darktable.org'
+_url='https://github.com/darktable-org/darktable'
+license=(GPL-3.0-or-later)
+depends=(colord-gtk
+         exiv2
+         flickcurl
+         gmic
+         graphicsmagick
+         iso-codes
+         jasper
+         lensfun
+         libavif
+         libgphoto2
+         libjpeg-turbo
+         libjxl
+         libsecret
+         lua
+         openexr
+         openjpeg2
+         openmp
+         osm-gps-map
+         pugixml
+         zlib)
 optdepends=('dcraw: base curve script'
             'perl-image-exiftool: base curve script'
             'imagemagick: base curve and noise profile scripts'
             'ghostscript: noise profile script'
             'portmidi: game and midi controller input devices'
             'gnuplot: noise profile script')
-makedepends=(cmake intltool desktop-file-utils llvm clang portmidi python-jsonschema libwebp)
-source=("https://github.com/darktable-org/darktable/releases/download/release-${pkgver}/darktable-${pkgver}.tar.xz"{,.asc})
-sha256sums=('16edc0a070293e2d3cda4ea10e49bda9bde932e23f9e62e2fa2e7ac74acf7afd'
+makedepends=(clang
+             cmake
+             desktop-file-utils
+             intltool
+             libwebp
+             llvm
+             portmidi
+             python-jsonschema)
+_archive="$pkgname-$pkgver"
+source=("$_url/releases/download/release-$pkgver/$_archive.tar.xz"{,.asc})
+sha256sums=('901b0e2caed36fb8619fdf4c60edfb8d31134b947d3054b5c66fd55c38af5991'
             'SKIP')
 validpgpkeys=(C4CBC150699956E2A3268EF5BB5CC8295B1779C9  # darktable releases <release@darktable.org>
               F10F9686652B0E949FCD94C318DCA123F949BD3B) # Pascal Obry <pascal@obry.net>
 
 build() {
-    cmake -B build -S ${pkgname}-${pkgver} \
-        -DCMAKE_INSTALL_PREFIX=/usr \
-        -DCMAKE_INSTALL_LIBEXECDIR=/usr/lib \
-        -DCMAKE_BUILD_TYPE=Release \
-        -DBINARY_PACKAGE_BUILD=1 \
-        -DBUILD_USERMANUAL=False \
-        -DUSE_LIBSECRET=ON \
-        -DUSE_LUA=ON \
-        -DUSE_COLORD=ON \
-        -DBUILD_CURVE_TOOLS=ON \
-        -DBUILD_NOISE_TOOLS=ON \
-        -DRAWSPEED_ENABLE_LTO=ON \
-        -DPROJECT_VERSION=${pkgver}
+    cmake -B build -S "$_archive" \
+        -D CMAKE_INSTALL_PREFIX=/usr \
+        -D CMAKE_INSTALL_LIBEXECDIR=/usr/lib \
+        -D CMAKE_BUILD_TYPE=Release \
+        -D BINARY_PACKAGE_BUILD=1 \
+        -D BUILD_USERMANUAL=False \
+        -D USE_LIBSECRET=ON \
+        -D USE_LUA=ON \
+        -D USE_COLORD=ON \
+        -D BUILD_CURVE_TOOLS=ON \
+        -D BUILD_NOISE_TOOLS=ON \
+        -D RAWSPEED_ENABLE_LTO=ON \
+        -D PROJECT_VERSION="$pkgver"
     make -C build
 }
 
 package() {
-    make -C build DESTDIR="${pkgdir}" install
-    ln -s darktable/libdarktable.so "${pkgdir}"/usr/lib/libdarktable.so
+    make -C build DESTDIR="$pkgdir" install
+    ln -s darktable/libdarktable.so "$pkgdir/usr/lib/"
 }

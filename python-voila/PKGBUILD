@@ -1,0 +1,87 @@
+# Maintainer: Jakub Klinkovský <lahwaacz at archlinux dot org>
+# Contributor: Achmad Fathoni <fathoni.id(at)gmail.com>
+
+pkgname=python-voila
+_name=${pkgname#python-}
+pkgver=0.5.7
+pkgrel=1
+pkgdesc="Voilà turns Jupyter notebooks into standalone web applications"
+arch=(any)
+url="https://github.com/voila-dashboards/voila"
+license=(BSD-3-Clause)
+depends=(
+  python
+  jupyter-nbclient
+  jupyter-nbconvert
+  jupyter-server
+  jupyterlab
+  python-jupyter-client
+  python-jupyterlab-server
+  python-traitlets
+  python-websockets
+)
+makedepends=(
+  python-build
+  python-installer
+  python-wheel
+  python-hatchling
+  python-hatch-jupyter-builder
+  python-jupyter-packaging
+  npm
+  # jupyterlab depends on jupyter-lsp according to its pyproject.toml
+  # https://gitlab.archlinux.org/archlinux/packaging/packages/jupyterlab/-/issues/1
+  jupyter-lsp
+  # optdepends for jupyter-server
+  python-jupyter-server-terminals
+  # optdepends for python-ipykernel
+  python-debugpy
+  # jupyter-events depends on jsonschema[format-nongpl] which needs the
+  # following packages that are tracked as optdepends for python-jsonschema
+  python-fqdn
+  python-isoduration
+  python-jsonpointer
+  python-rfc3339-validator
+  python-rfc3986-validator
+  python-uri-template
+  python-webcolors
+  # this will be a dependency of python-arrow
+  # https://gitlab.archlinux.org/archlinux/packaging/packages/python-arrow/-/merge_requests/2
+  python-types-python-dateutil
+)
+checkdepends=(
+  python-ipykernel
+  python-ipywidgets
+  python-matplotlib
+  python-numpy
+  python-pandas
+  python-papermill
+  python-pytest
+  python-pytest-rerunfailures
+  python-pytest-tornasync
+)
+source=("$pkgname-$pkgver.tar.gz::$url/archive/refs/tags/v$pkgver.tar.gz")
+b2sums=('d59f7fc34c2c216f1027b628ceefbefcab3869fb748752906f68aba95945de1ebdf041f34ca50fc9ad0e37872c7e1a518b86ba41a349c7c5e3ab12c5dd9a5e93')
+
+build() {
+  cd $_name-$pkgver
+  python -m build --wheel --no-isolation
+}
+
+check(){
+  cd $_name-$pkgver
+  # install to temporary directory
+  local site_packages=$(python -c "import site; print(site.getsitepackages()[0])")
+  python -m installer --destdir="$PWD/tmp_install" dist/*.whl
+  # based on https://github.com/voila-dashboards/voila/blob/main/.github/workflows/main.yml
+  # TODO: tests/app is very slow and seems to be broken
+  #PYTHONPATH="$PWD/tmp_install$site_packages" pytest -vv tests/app --async-test-timeout=240 --reruns 2 --reruns-delay 1
+  PYTHONPATH="$PWD/tmp_install$site_packages" pytest -vv tests/server --async-test-timeout=240 --reruns 2 --reruns-delay 1 --trace
+  PYTHONPATH="$PWD/tmp_install$site_packages" pytest -vv tests/execute_output_test.py
+}
+
+package() {
+  cd $_name-$pkgver
+  python -m installer --destdir="$pkgdir" dist/*.whl
+  mv $pkgdir/{usr,}/etc
+  install -vDm 644 LICENSE -t "$pkgdir"/usr/share/licenses/$pkgname
+}

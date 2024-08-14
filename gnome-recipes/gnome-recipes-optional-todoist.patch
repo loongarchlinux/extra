@@ -1,0 +1,249 @@
+From c3bde40abbfdb8186ea57c60a010ceec82061a5f Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Ball=C3=B3=20Gy=C3=B6rgy?= <ballogyor@gmail.com>
+Date: Wed, 31 Jul 2024 14:18:22 +0200
+Subject: [PATCH] Make Todoist support optional
+
+Todoist support has been removed from gnome-online-accounts [1], which is needed for this feature.
+
+[1] https://gitlab.gnome.org/GNOME/gnome-online-accounts/-/commit/bf77325d847d2878159e8ba2677768b2fe6386a6
+---
+ meson.build                     | 17 ++++++++++++++---
+ meson_options.txt               |  1 +
+ src/gr-shopping-list-exporter.c | 25 +++++++++++++++++++++----
+ src/gr-window.c                 | 10 +++++++++-
+ 4 files changed, 45 insertions(+), 8 deletions(-)
+
+diff --git a/meson.build b/meson.build
+index a0edaadc..5f4e7f97 100644
+--- a/meson.build
++++ b/meson.build
+@@ -80,18 +80,29 @@ if get_option('canberra') != 'no'
+   endif
+ endif
+ 
++todoist_deps = []
++if get_option('todoist') != 'no'
++  goa_dep = dependency('goa-1.0', required : false)
++  rest_dep = dependency('rest-1.0', required : false)
++  json_glib_dep = dependency('json-glib-1.0', required : false)
++  if goa_dep.found() and rest_dep.found() and json_glib_dep.found()
++    todoist_deps = [goa_dep, rest_dep, json_glib_dep]
++    conf.set('ENABLE_TODOIST', true)
++  elif get_option('todoist') == 'yes'
++    error('Support for Todoist was requested but dependencies were not found')
++  endif
++endif
++
+ deps = [ dependency('gtk+-3.0', version : '>=3.22'),
+          dependency('glib-2.0'),
+          dependency('gio-2.0'),
+          dependency('gio-unix-2.0'),
+          dependency('gmodule-export-2.0'),
+          dependency('libsoup-3.0'),
+-         dependency('goa-1.0'),
+-         dependency('rest-1.0'),
+-         dependency('json-glib-1.0'),
+          autoar_dep,
+          gspell_dep,
+          canberra_dep,
++         todoist_deps,
+          libgd_dep ]
+ 
+ datadir = join_paths([ get_option('prefix'),
+diff --git a/meson_options.txt b/meson_options.txt
+index 1b4982f5..006837c1 100644
+--- a/meson_options.txt
++++ b/meson_options.txt
+@@ -1,3 +1,4 @@
+ option('autoar', type: 'combo', choices: ['auto', 'yes', 'no'], value: 'auto', description: 'Use gnome-autoar')
+ option('gspell', type: 'combo', choices: ['auto', 'yes', 'no'], value: 'auto', description: 'Use gspell')
+ option('canberra', type: 'combo', choices: ['auto', 'yes', 'no'], value: 'auto', description: 'Use libcanberra')
++option('todoist', type: 'combo', choices: ['auto', 'yes', 'no'], value: 'no', description: 'Enable Todoist support')
+diff --git a/src/gr-shopping-list-exporter.c b/src/gr-shopping-list-exporter.c
+index 86757ef2..b8968a41 100644
+--- a/src/gr-shopping-list-exporter.c
++++ b/src/gr-shopping-list-exporter.c
+@@ -24,9 +24,12 @@
+ #include <glib/gi18n.h>
+ #include <glib/gstdio.h>
+ #include <gtk/gtk.h>
++
++#ifdef ENABLE_TODOIST
+ #include <goa/goa.h>
+ #include <rest/rest.h>
+ #include <json-glib/json-glib.h>
++#endif
+ 
+ #include "gr-shopping-list-exporter.h"
+ #include "gr-recipe-store.h"
+@@ -35,16 +38,19 @@
+ #include "gr-mail.h"
+ #include "gr-window.h"
+ 
++#ifdef ENABLE_TODOIST
+ #define TODOIST_URL "https://todoist.com/API/v7/sync"
+ 
+ static gboolean get_todoist_account (GrShoppingListExporter *exporter);
+ static gboolean get_project_id (GrShoppingListExporter *exporter);
++#endif
+ 
+ struct _GrShoppingListExporter
+ {
+         GObject parent_instance;
+         GtkWindow *window;
+ 
++#ifdef ENABLE_TODOIST
+         gchar *access_token;
+         GoaObject *account_object;
+         const gchar *sync_token;
+@@ -66,6 +72,7 @@ struct _GrShoppingListExporter
+         GtkWidget *accounts_list;
+         GtkWidget *account_row_selected;
+         GtkWidget *todoist_provider_row;
++#endif
+ 
+         GList *ingredients;
+ };
+@@ -78,7 +85,9 @@ gr_shopping_list_exporter_finalize (GObject *object)
+ {
+         GrShoppingListExporter *self = GR_SHOPPING_LIST_EXPORTER (object);
+ 
++#ifdef ENABLE_TODOIST
+         g_free (self->access_token);
++#endif
+         g_list_free_full (self->ingredients, g_object_unref);
+         G_OBJECT_CLASS (gr_shopping_list_exporter_parent_class)->finalize (object);
+ }
+@@ -106,6 +115,7 @@ gr_shopping_list_exporter_new (GtkWindow *parent)
+         return exporter;
+ }
+ 
++#ifdef ENABLE_TODOIST
+ static void
+ remove_items_callback (RestProxyCall *call,
+ 		       GError *error,
+@@ -647,6 +657,7 @@ get_project_id (GrShoppingListExporter *exporter)
+ 	  else
+ 		return FALSE;
+ }
++#endif
+ 
+ static void
+ file_chooser_response (GtkNativeDialog  *self,
+@@ -686,13 +697,11 @@ mail_done (GObject      *source,
+ 
+         if (!gr_send_mail_finish (result, &error)) {
+                 GObject *file_chooser;
+-                GtkWidget *window;
+ 
+                 g_info ("Sending mail failed: %s", error->message);
+ 
+-                window = gtk_widget_get_ancestor (GTK_WIDGET (exporter->dialog), GTK_TYPE_APPLICATION_WINDOW);
+                 file_chooser = (GObject *)gtk_file_chooser_native_new (_("Save the shopping list"),
+-                                                                       GTK_WINDOW (window),
++                                                                       GTK_WINDOW (exporter->window),
+                                                                        GTK_FILE_CHOOSER_ACTION_SAVE,
+                                                                        _("Save"),
+                                                                        _("Cancel"));
+@@ -702,10 +711,14 @@ mail_done (GObject      *source,
+ 
+                 g_signal_connect (file_chooser, "response", G_CALLBACK (file_chooser_response), exporter);
+                 gtk_native_dialog_show (GTK_NATIVE_DIALOG (file_chooser));
++#ifdef ENABLE_TODOIST
+                 close_dialog (exporter);
++#endif
+                 return;
+         }
++#ifdef ENABLE_TODOIST
+         close_dialog (exporter);
++#endif
+         g_list_free_full (exporter->ingredients, item_free);
+ }
+ 
+@@ -728,6 +739,7 @@ share_list (GrShoppingListExporter *exporter)
+         g_list_free_full (items, item_free);
+ }
+ 
++#ifdef ENABLE_TODOIST
+ static void
+ initialize_export (GrShoppingListExporter *exporter)
+ {
+@@ -857,10 +869,15 @@ show_export_dialog (GrShoppingListExporter *exporter)
+         gtk_window_set_transient_for (GTK_WINDOW (exporter->dialog), GTK_WINDOW (exporter->window));
+         gtk_widget_show (exporter->dialog);
+ }
++#endif
+ 
+ void
+ gr_shopping_list_exporter_export (GrShoppingListExporter *exporter, GList *items)
+ {
+-        show_export_dialog (exporter);
+         exporter->ingredients = items;
++#ifdef ENABLE_TODOIST
++        show_export_dialog (exporter);
++#else
++        share_list (exporter);
++#endif
+ }
+diff --git a/src/gr-window.c b/src/gr-window.c
+index 031df6a9..d09313ad 100644
+--- a/src/gr-window.c
++++ b/src/gr-window.c
+@@ -799,9 +799,11 @@ back_to_shopping (GrWindow *window)
+ {
+         GrRecipeStore *store;
+         GList *l;
+-        GList *items;
+         int i;
++#ifdef ENABLE_TODOIST
++        GList *items;
+         GrShoppingListExporter *exporter = NULL;
++#endif
+ 
+         store = gr_recipe_store_get ();
+ 
+@@ -809,6 +811,7 @@ back_to_shopping (GrWindow *window)
+                 ShoppingListEntry *entry = l->data;
+                 gr_recipe_store_add_to_shopping (store, entry->recipe, entry->yield);
+         }
++#ifdef ENABLE_TODOIST
+         items = get_ingredients (GR_SHOPPING_PAGE (window->shopping_page));
+         if (!exporter) {
+                 GtkWidget *shopping_window;
+@@ -817,6 +820,7 @@ back_to_shopping (GrWindow *window)
+                 exporter = gr_shopping_list_exporter_new (GTK_WINDOW (shopping_window));
+                 do_undo_in_todoist (exporter, items);
+         }
++#endif
+         for (i = 0; window->removed_ingredients && window->removed_ingredients[i]; i++) {
+                 gr_recipe_store_remove_shopping_ingredient (store, window->removed_ingredients[i]);
+         }
+@@ -842,7 +846,9 @@ done_shopping (GrWindow *window)
+         GList *recipes, *l;
+         GrRecipeStore *store;
+         const char **removed_ingredients;
++#ifdef ENABLE_TODOIST
+         GrShoppingListExporter *exporter = NULL;
++#endif
+ 
+         store = gr_recipe_store_get ();
+ 
+@@ -874,6 +880,7 @@ done_shopping (GrWindow *window)
+         window->removed_ingredients = g_strdupv ((char **)removed_ingredients);
+ 
+         gr_recipe_store_clear_shopping_list (store);
++#ifdef ENABLE_TODOIST
+         if (!exporter) {
+                 GtkWidget *shopping_window;
+ 
+@@ -881,6 +888,7 @@ done_shopping (GrWindow *window)
+                 exporter = gr_shopping_list_exporter_new (GTK_WINDOW (shopping_window));
+                 done_shopping_in_todoist (exporter);
+         }
++#endif
+ }
+ 
+ 
+-- 
+GitLab
+

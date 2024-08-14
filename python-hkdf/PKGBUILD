@@ -4,14 +4,13 @@
 
 pkgname='python-hkdf'
 pkgver=0.0.3
-pkgrel=11
+pkgrel=12
 pkgdesc="HMAC-based Extract-and-Expand Key Derivation Function"
 arch=('any')
 url="https://github.com/casebeer/python-hkdf"
-license=('BSD')
+license=('BSD-2-Clause')
 depends=('python')
 makedepends=('python-setuptools')
-checkdepends=('python-nose')
 _name=${pkgname#python-}
 source=(${pkgname}-${pkgver}.tar.gz::"https://files.pythonhosted.org/packages/source/${_name::1}/$_name/$_name-$pkgver.tar.gz"
         "${pkgname}-tests.py::https://raw.githubusercontent.com/casebeer/python-hkdf/cc3c9dbf0a271b27a7ac5cd04cc1485bbc3b4307/tests.py"
@@ -35,7 +34,7 @@ build() {
 
 check() {
 	cd "${_name}-${pkgver}"
-	nosetests
+	PYTHONPATH=. python tests.py
 }
 
 package() {

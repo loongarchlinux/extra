@@ -4,7 +4,7 @@
 
 pkgname=python-s3transfer
 # https://github.com/boto/s3transfer/blob/develop/CHANGELOG.rst
-pkgver=0.10.1
+pkgver=0.10.2
 pkgrel=1
 pkgdesc='Amazon S3 Transfer Manager for Python'
 arch=('any')
@@ -18,7 +18,7 @@ optdepends=(
   'python-awscrt'
 )
 source=($pkgname-$pkgver.tar.gz::$url/archive/$pkgver.tar.gz)
-sha256sums=('b6d42d2c81791486166a7b5fc4b4159e7b7ca6c6242d01310eebf546e16382eb')
+sha256sums=('72286cce808b1f7f55b38af9657cc8e6ddc31ad0a99f092601ef539f50344060')
 
 build() {
   cd s3transfer-$pkgver

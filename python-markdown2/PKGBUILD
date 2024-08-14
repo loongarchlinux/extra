@@ -1,31 +1,43 @@
-# Maintainer: Filipe Laíns (FFY00) <lains@archlinux.org>
+# Maintainer: George Rawlinson <grawlinson@archlinux.org>
+# Contributor: Filipe Laíns (FFY00) <lains@archlinux.org>
 
 pkgname=python-markdown2
-pkgver=2.4.13
+pkgver=2.5.0
 pkgrel=1
 pkgdesc='A fast and complete implementation of Markdown in Python'
 arch=('any')
 url='https://github.com/trentm/python-markdown2'
 license=('MIT')
 depends=('python' 'python-pygments')
-makedepends=('python-build' 'python-installer' 'python-setuptools' 'python-wheel')
-source=("$pkgname-$pkgver.tar.gz::$url/archive/$pkgver.tar.gz")
-sha512sums=('cd34552d3070ed967578af2df3b23186c1fcfc439ee01c19bfba3d8060ece704100594abac0fc4f3ef7a612a774bb64a1322139c46c277d0bb5840de9d002def')
+makedepends=(
+  'git'
+  'python-build'
+  'python-installer'
+  'python-setuptools'
+  'python-wheel'
+)
+source=("$pkgname::git+$url#tag=$pkgver")
+sha512sums=('d98752e25fbce637b3bc1deab5141d80afee13894a043ebcef7948bd6a47b70f97fc814accef25a6e334616a44311a8dcf8149f5b778a74c1f7243e36b1b2841')
+b2sums=('ce91aa2c96b8fe679cdf9917acd7eb35cf8d4ecbaa237888135faba475544dede19504c967cef5f6261dfc035bb5614adc7a44b7171f484bb081a3cc32139937')
 
 build() {
-  cd $pkgname-$pkgver
+  cd "$pkgname"
+
   python -m build --wheel --no-isolation
 }
 
 check() {
-  cd $pkgname-$pkgver/test
+  cd "$pkgname/test"
+
   python testall.py
 }
 
 package() {
-  cd $pkgname-$pkgver
-  python -m installer --destdir="$pkgdir" dist/*.whl
-  install -Dm 644 LICENSE.txt "$pkgdir"/usr/share/licenses/$pkgname/LICENSE
-}
+  cd "$pkgname"
 
+  python -m installer --destdir="$pkgdir" dist/*.whl
+
+  # license
+  install -vDm644 -t "$pkgdir/usr/share/licenses/$pkgname" LICENSE.txt
+}
 # vim:set ts=2 sw=2 et:

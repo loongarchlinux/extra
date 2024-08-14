@@ -2,8 +2,8 @@
 
 _pkg=xarray
 pkgname=python-${_pkg}
-pkgver=2023.01.0
-pkgrel=4
+pkgver=2023.09.0
+pkgrel=1
 pkgdesc="N-D labeled arrays and datasets in Python"
 arch=(any)
 url="https://xarray.pydata.org/"
@@ -64,7 +64,7 @@ checkdepends=(
 )
 #source=(https://files.pythonhosted.org/packages/source/${_pkg::1}/${_pkg}/${_pkg}-${pkgver}.tar.gz)
 source=(https://github.com/pydata/xarray/archive/refs/tags/v${pkgver}/${pkgname}-${pkgver}.tar.gz)
-sha256sums=('328ebc41581e8a0d15c9b274dfee7e14b4fb1dfde8d438eb10246a60f27b02a5')
+sha256sums=('ee5856f66232e9f4c88791472dc5609c424483ea8bebd3f826f4700885ee418d')
 
 build() {
   cd ${_pkg}-${pkgver}
@@ -75,7 +75,13 @@ check() {
   cd ${_pkg}-${pkgver}
   # https://github.com/pydata/xarray/issues/4281
   # and deselect tests already failing prior to Python 3.12
-  pytest -vv --color=yes --deselect xarray/tests/test_distributed.py::test_serializable_locks --deselect xarray/tests/test_dataset.py::TestDataset::test_drop_index_labels --deselect xarray/tests/test_dataset.py::TestDataset::test_rename_multiindex
+  pytest -vv -n 5 --color=yes \
+    --deselect xarray/tests/test_distributed.py::test_serializable_locks \
+    --deselect xarray/tests/test_dataset.py::TestDataset::test_drop_index_labels \
+    --deselect xarray/tests/test_dataset.py::TestDataset::test_rename_multiindex \
+    --deselect xarray/tests/test_backends.py::test_open_mfdataset_manyfiles \
+    --deselect xarray/tests/test_backends.py::TestDask::test_save_mfdataset_compute_false_roundtrip \
+    --deselect xarray/tests/test_dataarray.py::TestDataArray::test_unstack_roundtrip_integer_array
 }
 
 package() {

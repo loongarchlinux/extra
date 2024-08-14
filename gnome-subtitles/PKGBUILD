@@ -1,33 +1,83 @@
 # Maintainer: Balló György <ballogyor+arch at gmail dot com>
 
 pkgname=gnome-subtitles
-pkgver=1.7.2
-pkgrel=1
+pkgver=1.8
+pkgrel=2
 pkgdesc='Video subtitle editor for GNOME'
-arch=('loong64' 'x86_64')
-url='http://www.gnomesubtitles.org/'
-license=('GPL2')
-depends=('gst-plugin-gtk' 'gst-plugins-base' 'gtk-sharp-3' 'gtkspell3')
-makedepends=('intltool' 'itstool')
-optdepends=('gst-plugins-good: Extra media codecs'
-            'gst-plugins-bad: Extra media codecs'            
-            'gst-plugins-ugly: Extra media codecs'
-            'gst-libav: Extra media codecs')
-source=("https://downloads.sourceforge.net/$pkgname/$pkgname-$pkgver.tar.gz")
-sha256sums=('b6bf327998a7863335d9fb4281d18e0e73f3c4f55f56ba06554df859b31804c7')
+arch=(any)
+url='https://gitlab.gnome.org/GNOME/gnome-subtitles'
+license=(GPL-2.0-or-later)
+depends=(
+  bash
+  dconf
+  enchant
+  glib2
+  glibc
+  gst-plugin-gtk
+  gst-plugins-base
+  gst-plugins-base-libs
+  gst-plugins-good
+  gstreamer
+  gtk-sharp-3
+  gtkspell3
+  hicolor-icon-theme
+  mono
+)
+makedepends=(
+  git
+  gst-editing-services
+  gst-plugins-bad-libs
+  meson
+)
+optdepends=(
+  'gst-libav: Extra media codecs'
+  'gst-plugins-bad: Extra media codecs'
+  'gst-plugins-ugly: Extra media codecs'
+)
+source=(
+  "git+https://gitlab.gnome.org/GNOME/$pkgname.git#tag=$pkgname-$pkgver"
+  git+https://gitlab.freedesktop.org/noup/gstreamer-sharp.git#tag=1.18.0-gnome-subtitles
+  git+https://github.com/GLibSharp/GtkSharp.git#commit=4c85f1479cf2e0dc056c0d288785e5a1d7251cb1
+  git+https://github.com/GLibSharp/bindinator.git
+  gnome-subtitles-12.patch
+)
+b2sums=(
+  04127594215f8540821abdb76bcca68a59a096a2fc437961f3f91ad100d61cd18f737e8850711b177e323d46da351179b6247a2f1875a6780d7fa9a325ad5259
+  0b58c841c6e6a0a5a1a14f8ef2a1f84c1e164cfc3fbab446f80731d8d28b23ddfd0141c7ff2c90620c2f142e31030de52d8dd0a26d64d9648a7573ff8721273d
+  713d60ce8f6b779b7bc9cb5c905c54e8bc6c195dd1437de88b93b1919d7254bf98016d5764c513b8f8643c99e9cc7ac719d93fea5865ce0ed56777ea769131ad
+  SKIP
+  0a7a8e069f821115732174a1817176d941b8a10af97dd1d68c29b6d71dd64c35eec20c9c53a422aa71806abd00f5f5514a29a3d75e05734d7fe675f31012e91d
+)
 
 prepare() {
-  cd $pkgname-$pkgver
-  sed -i 's/libenchant.so.1/libenchant-2.so.2/' src/GnomeSubtitles/Execution/gnome-subtitles.exe.config
+  cd $pkgname
+  mv ../gstreamer-sharp subprojects/gstreamer-sharp
+  mv ../GtkSharp subprojects/gtk-sharp
+  mv ../bindinator subprojects/bindinator
+
+  # https://gitlab.gnome.org/GNOME/gnome-subtitles/-/issues/157
+  git cherry-pick -n 37f7768ba99b0f1e6cc7072906f52a09a9b35e6f
+
+  # https://gitlab.gnome.org/GNOME/gnome-subtitles/-/merge_requests/12
+  git apply -3 ../gnome-subtitles-12.patch
+
+  # https://gitlab.gnome.org/GNOME/gnome-subtitles/-/issues/212
+  cd subprojects/gstreamer-sharp
+  git cherry-pick -n f94b054d0d6540e1bc12e6937bc3dfc17e1216d4..5e7a44cf542ccad9d29d9b6da4d4e32f5770618f
 }
 
 build() {
-  cd $pkgname-$pkgver
-  ./configure --prefix=/usr --disable-schemas-compile
-  make
+  arch-meson $pkgname build \
+    -D b_pie=false \
+    -D install_gtk_sharp=false \
+    -D gstreamer-sharp:tests=disabled
+  meson compile -C build
+}
+
+check() {
+  meson test -C build --print-errorlogs
 }
 
 package() {
-  cd $pkgname-$pkgver
-  make DESTDIR="$pkgdir" install
+  meson install -C build --destdir "$pkgdir"
 }

@@ -5,39 +5,44 @@
 pkgname=gnome-shell-extension-dash-to-panel
 _pkgname=dash-to-panel
 pkgver=62
-pkgrel=1
+pkgrel=2
 pkgdesc='Extension for GNOME Shell to combine the dash and main panel'
 arch=('any')
 url='https://github.com/home-sweet-gnome/dash-to-panel'
 license=('GPL-2.0-or-later')
 depends=('gnome-shell')
-source=("https://github.com/home-sweet-gnome/$_pkgname/archive/v$pkgver/$_pkgname-$pkgver.tar.gz"
+makedepends=('git')
+source=("git+https://github.com/home-sweet-gnome/dash-to-panel.git#tag=v$pkgver"
         'gnome-shell-extension-dash-to-panel-system-install-paths.patch'
         'gnome-shell-extension-dash-to-panel-fix-crash-on-close.patch'
-        'gnome-shell-extension-dash-to-panel-menu-button.patch')
-sha256sums=('b3b23fbcfd37fa6b9bae84820aaa364b1fa2c8acf599d5e3038e242eaac7a74b'
-            'b9c247fc8ab7f1ee18ce2c98f8312f86da0340622d4c5daadd3a4579f4213fc5'
-            'd772d9aa2995602e5b11fa9624586d7a1c485fde9b21f046f2cf52e5fb099735'
-            '3c06765d11e1df3e8b73b96042c1034e7ea153378076293cee8efe2ae7996e43')
+        'gnome-shell-extension-dash-to-panel-fix-crash-on-shutdown.patch')
+b2sums=('6ff7ed4d7a1c4b15458a00b81835f0e901af921be155b8245fad29189ccf6768671d96710e4db1ae5fb72fb55c183f8ad0c17edd2018c1ac6ef60e3f70f36349'
+        '002f42ce10ee78d9feadfed965036600ba4d12904e7ca2d67fda5dbc2c623544fab5c8df644ea371b65dccee1a676d4841ca20e7d0bf04a9ef3e5926feef96f6'
+        'd899985e4a704196463e33808880dccb1227cfb6a5ef0ec3ca1dc8d392299d13842338f7e90ad1f3a89670cacbb7083c7b3b5c429ea245ac6545853c574a6e4d'
+        '4cdf88aa2a67d6ef86d9311fab2f26b52d53fa92c53562c93cb7633b7803b9e9fdff5c5ea2a1958f91390f184ee3501c56ac4576b517149dae5324e54e4e248e')
 
 prepare() {
-  cd $_pkgname-$pkgver
+  cd $_pkgname
+
+  # Various fixes from upstream
+  git cherry-pick -n -m 1 v62..9d0d870b89fbbaba369b59e81ec0e6015f9ce6f2
+
   # https://github.com/home-sweet-gnome/dash-to-panel/pull/1948
   patch -Np1 -i ../gnome-shell-extension-dash-to-panel-system-install-paths.patch
 
   # https://github.com/home-sweet-gnome/dash-to-panel/pull/1969
   patch -Np1 -i ../gnome-shell-extension-dash-to-panel-fix-crash-on-close.patch
 
-  # https://github.com/home-sweet-gnome/dash-to-panel/commit/12675269a860728adea9c962ba67d613376dc397
-  patch -Np1 -i ../gnome-shell-extension-dash-to-panel-menu-button.patch
+  # https://github.com/home-sweet-gnome/dash-to-panel/pull/2134
+  patch -Np1 -i ../gnome-shell-extension-dash-to-panel-fix-crash-on-shutdown.patch
 }
 
 build() {
-  cd $_pkgname-$pkgver
+  cd $_pkgname
   make
 }
 
 package() {
-  cd $_pkgname-$pkgver
+  cd $_pkgname
   make VERSION="$pkgver" DESTDIR="$pkgdir" install
 }

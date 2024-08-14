@@ -5,89 +5,102 @@
 # Contributor: Florian Hahn <flo@fhahn.com>
 
 pkgname=neovim
-pkgver=0.9.5
-pkgrel=6
+pkgver=0.10.1
+pkgrel=3
 pkgdesc='Fork of Vim aiming to improve user experience, plugins, and GUIs'
-arch=('loong64' 'x86_64')
-url='https://neovim.io'
-license=('custom:neovim')
-depends=(
-  'libluv'
-  'libtermkey'
-  'libuv'
-  'libvterm>0.1.4'
-  'luajit'
-  'msgpack-c'
-  'tree-sitter'
-  'unibilium'
+arch=(loong64 x86_64)
+url=https://neovim.io
+license=(
+  Apache-2.0
+  LicenseRef-vim
 )
-makedepends=('cmake' 'git' 'ninja' 'lua51-mpack' 'lua51-lpeg' 'unzip')
+depends=(
+  libluv
+  libutf8proc
+  libuv
+  'libvterm>=0.3.3'
+  lua51-lpeg
+  luajit
+  msgpack-c
+  tree-sitter
+  tree-sitter-c
+  tree-sitter-lua
+  tree-sitter-markdown
+  tree-sitter-query
+  tree-sitter-vim
+  tree-sitter-vimdoc
+  unibilium
+)
+makedepends=(
+  cmake
+  git
+  ninja
+  lua51-mpack
+  lua51-lpeg
+  unzip
+)
 optdepends=(
   'python-pynvim: for Python plugin support (see :help python)'
-  'tree-sitter-bash: for the Bash grammar for tree-sitter'
-  'tree-sitter-c: for the C grammar for tree-sitter'
-  'tree-sitter-lua: for the Lua grammar for tree-sitter'
-  'tree-sitter-markdown: for the Markdown grammar for tree-sitter (requires query files from the nvim-treesitter plugin)'
-  'tree-sitter-python: for the Python grammar for tree-sitter (requires query files from the nvim-treesitter plugin)'
-  'tree-sitter-query: for the TS query grammar for tree-sitter'
-  'tree-sitter-vimdoc: for the Vim help file grammar for tree-sitter'
   'xclip: for clipboard support on X11 (or xsel) (see :help clipboard)'
   'xsel: for clipboard support on X11 (or xclip) (see :help clipboard)'
   'wl-clipboard: for clipboard support on wayland (see :help clipboard)'
 )
-provides=('vim-plugin-runtime')
-backup=('etc/xdg/nvim/sysinit.vim')
+provides=(vim-plugin-runtime)
+backup=(etc/xdg/nvim/sysinit.vim)
+options=(!debug)
 source=(
-  "https://github.com/neovim/neovim/archive/v${pkgver}/${pkgname}-${pkgver}.tar.gz"
+  "git+https://github.com/neovim/neovim.git#tag=v$pkgver"
   nvimdoc{,.hook}
 )
-sha512sums=('6e20d0a1d506dc292dd68dabe4b5635f86c019ca832f9927e907377e6d21fe7765b3010f5bba644bb2d7a76c178d55b290af24856a7e3c4083a1aa60bc496775'
+sha512sums=('8bff189c0a19935e3eff70613c360bb7bb8f213c76452eeb74e3e3b532b738b51444694edb40c17451600d9050334c8aa93a1e5ccfa856a02ec1e3b7c059d671'
             '22662462c823de243599cdd3483e46ade4ab59b219e907468d34c18e584fe7477548e357ee2ce56bb098cf54b770b108a3511703dd486f0774a65c84af78f6aa'
             '3c6ee1e4646d09c164a2212f9e4d2f53158ff32911b0972e060a395a8d4685334574a7ede995a81680dcc0750cd3327a78beb7904a4bb326b2399d79a8b12d5e')
-b2sums=('a982ea5704a8e5810c42475198157c3d2255c033f47cba940f9f6414c649167ecafe08c7fe9aeb3154a15566fdf8f5db8d535fa752e467e36ff5d552a7aa2179'
+b2sums=('13090b0f9f518a52b20f92d226339c1b42e59dfa696f581c4ef7a9a12b79ec07b4aab45753eb6a5e2ae1ab760aeec8d8981ca6f9cf56f54a3338b99b2adbbc6d'
         'd31cf81659e238fada8092755eb9be16f77c00a466107eb5770c6c9c32e043c91e6efada7ddb51663716a0e38ffa6e3d0093b3e6833aa961d845c7451a95491e'
         '26588b9da6459393076723bdfb8d2b16fed882070f2326bf7c35cd272dee9c18df603afb1ae2254cd0a59eff68189caf04828ef165d5de42c7a4222267604101')
 
 build() {
-  cd ${pkgname}-${pkgver}
+  cd ${pkgname}
   cmake \
-    -Bbuild \
-    -DCMAKE_BUILD_TYPE=Release \
-    -DCMAKE_INSTALL_PREFIX=/usr \
-    -DUSE_BUNDLED=OFF \
+    -B build \
+    -G Ninja \
+    -D CMAKE_BUILD_TYPE=Release \
+    -D CMAKE_INSTALL_PREFIX=/usr \
+    -D USE_BUNDLED=OFF \
     -W no-dev
   cmake --build build --verbose
 }
 
 check() {
-  cd ${pkgname}-${pkgver}
+  cd ${pkgname}
   ./build/bin/nvim --version
   ./build/bin/nvim --headless -u NONE -i NONE +q
 }
 
 package() {
-  install -Dm644 -t "$pkgdir/usr/share/libalpm/hooks/" nvimdoc.hook
-  install -Dt "$pkgdir/usr/share/libalpm/scripts/" nvimdoc
+  install -Dm644 -t "${pkgdir}"/usr/share/libalpm/hooks/ nvimdoc.hook
+  install -Dt "${pkgdir}"/usr/share/libalpm/scripts/ nvimdoc
 
-  cd ${pkgname}-${pkgver}
-  DESTDIR="$pkgdir" cmake --install build
+  cd ${pkgname}
+  DESTDIR="${pkgdir}" cmake --install build
+
+  install -Dm644 LICENSE.txt -t "${pkgdir}"/usr/share/licenses/${pkgname}/
+  install -Dm644 runtime/nvim.desktop -t "${pkgdir}"/usr/share/applications/
+  install -Dm644 runtime/nvim.appdata.xml -t "${pkgdir}"/usr/share/metainfo/
+  install -Dm644 runtime/nvim.png -t "${pkgdir}"/usr/share/pixmaps/
 
   # Tree-sitter grammars are packaged separately and installed into
   # /usr/lib/tree_sitter.
-  ln -s /usr/lib/tree_sitter "$pkgdir"/usr/share/nvim/runtime/parser
+  ln -s /usr/lib/tree_sitter "${pkgdir}"/usr/share/nvim/runtime/parser
 
-  install -Dm644 LICENSE.txt -t "${pkgdir}/usr/share/licenses/${pkgname}/"
-  install -Dm644 runtime/nvim.desktop -t "${pkgdir}/usr/share/applications/"
-  install -Dm644 runtime/nvim.appdata.xml -t "${pkgdir}/usr/share/metainfo/"
-  install -Dm644 runtime/nvim.png -t "${pkgdir}/usr/share/pixmaps/"
-
-  # Make Arch Vim packages work
+  # Include system-wide Vim directory in runtimepath
   mkdir -p "${pkgdir}"/etc/xdg/nvim
-  echo "\" This line makes pacman-installed global Arch Linux vim packages work." > "${pkgdir}"/etc/xdg/nvim/sysinit.vim
-  echo "source /usr/share/nvim/archlinux.vim" >> "${pkgdir}"/etc/xdg/nvim/sysinit.vim
+  echo 'source /usr/share/nvim/archlinux.lua' > "${pkgdir}"/etc/xdg/nvim/sysinit.vim
 
   mkdir -p "${pkgdir}"/usr/share/vim
-  echo "set runtimepath+=/usr/share/vim/vimfiles" > "${pkgdir}"/usr/share/nvim/archlinux.vim
+  cat > "${pkgdir}"/usr/share/nvim/archlinux.lua << EOF
+-- Modify runtimepath to also search the system-wide Vim directory
+-- (eg. for Vim runtime files from Arch Linux packages)
+vim.opt.runtimepath:append({ '/usr/share/vim/vimfiles', '/usr/share/vim/vimfiles/after' })
+EOF
 }
-
-# vim:set sw=2 sts=2 et:

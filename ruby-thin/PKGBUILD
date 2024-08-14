@@ -3,22 +3,41 @@
 
 _gemname=thin
 pkgname=ruby-${_gemname}
-pkgver=1.8.1
+pkgver=1.8.2
 pkgrel=1
 pkgdesc='Thin and fast Ruby web server'
 url='https://github.com/macournoyer/thin'
 arch=('loong64' 'x86_64')
 license=('RUBY')
-depends=('glibc' 'ruby' 'ruby-rack' 'ruby-eventmachine' 'ruby-daemons')
-makedepends=('ruby-rake')
-checkdepends=('ruby-rake-compiler' 'ruby-rspec')
+depends=(
+  glibc
+  ruby
+  ruby-daemons
+  ruby-eventmachine
+  ruby-rack
+)
+makedepends=(
+  ruby-rake
+)
+checkdepends=(
+  ruby-rake-compiler
+  ruby-rspec
+)
 options=('!emptydirs')
-source=(${pkgname}-${pkgver}.tar.gz::https://github.com/macournoyer/thin/archive/v${pkgver}.tar.gz)
-sha512sums=('221ef0c0369c449f2ca121c435ffebed318d6179a3b5d52e24d2bd80212df9cac35db39d156275c915c24550f6d8ded9f29616785d0a38e85cd13a1702e31298')
-b2sums=('883a35d60d5845defa1f20a85b90269838a1b1ebeb4d4f32561af061cdac05b545c254fe65cca828ccfed033ad934ad3b72f1795407734d3b377a6022b57397f')
+source=(
+  "${pkgname}-${pkgver}.tar.gz::${url}/archive/v${pkgver}.tar.gz"
+  "${pkgname}_support_rack3.patch::https://patch-diff.githubusercontent.com/raw/macournoyer/${_gemname}/pull/399.patch"
+)
+sha512sums=('5f222b54a86156bc5c4b9623a225cd9a4e189f3d2744f8d11efc74e91167e201a554a191f19abb081a050a206f3b281bb7c627a3e72a5ba2b0a73e0e500dd0ed'
+            'b5105427c79e21d811c54e429df7786eb9fc31ea14a5392213757672f9d650f453305826798b20ba9b4307a9857b3f0944dade5710b5586fa18f061ac6328c4d')
+b2sums=('6c8d3be6dca6f9b9b549b863150de85efdd26700c27b28f1765e4d2212827d31f2aae9f586cfa485b62b3da3742c5205486c9c8fd5bd38ec32a2a896c5e0af93'
+        '6c5737e362b3e777aa4532962901688d08d9ca849207f4f4fc913f1e86b11d809f1e17dd1632b0e0e8d6ae77acfe517a494c6442d60b069cbbb7ed4cd5565d8a')
 
 prepare() {
   cd ${_gemname}-${pkgver}
+
+  patch --verbose --strip=1 --input="../${pkgname}_support_rack3.patch"
+
   sed -r 's|~>|>=|g' -i ${_gemname}.gemspec
 }
 
@@ -37,14 +56,24 @@ check() {
 
 package() {
   cd ${_gemname}-${pkgver}
+
   local _gemdir="$(gem env gemdir)"
-  gem install --ignore-dependencies --no-user-install -i "${pkgdir}${_gemdir}" -n "${pkgdir}/usr/bin" ${_gemname}-${pkgver}.gem
+
+  gem install \
+    --ignore-dependencies \
+    --no-user-install \
+    -i "${pkgdir}${_gemdir}" \
+    -n "${pkgdir}/usr/bin" \
+    ${_gemname}-${pkgver}.gem
+
   install -Dm 644 README.md CHANGELOG -t "${pkgdir}/usr/share/doc/${pkgname}"
+
   cp -a example "${pkgdir}/usr/share/doc/${pkgname}"
+
   rm "${pkgdir}/${_gemdir}/cache/${_gemname}-${pkgver}.gem" \
-    "${pkgdir}/${_gemdir}/gems/${_gemname}-${pkgver}/ext/thin_parser/Makefile" \
-    ${pkgdir}/${_gemdir}/gems/${_gemname}-${pkgver}/ext/thin_parser/*.o
+    "${pkgdir}/${_gemdir}/gems/${_gemname}-${pkgver}/ext/thin_parser/Makefile"
   rm -rf "${pkgdir}/${_gemdir}/doc/${_gemname}-${pkgver}/ri/ext/"
+
   find "${pkgdir}/${_gemdir}" \( -name 'mkmf.log' -or -name 'gem_make.out' \) -delete
 }
 

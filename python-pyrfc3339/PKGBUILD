@@ -3,14 +3,14 @@
 
 pkgname=python-pyrfc3339
 pkgver=1.1
-pkgrel=12
+pkgrel=13
 pkgdesc="Parses and generates RFC 3339-compliant timestamps using Python datetime.datetime objects."
 arch=('any')
 license=('MIT')
 url="https://pypi.python.org/pypi/pyRFC3339"
 depends=('python-pytz')
 makedepends=('python-setuptools' 'python-build' 'python-installer' 'python-wheel')
-checkdepends=('python-nose')
+checkdepends=('python-pytest')
 source=("https://pypi.python.org/packages/source/p/pyRFC3339/pyRFC3339-${pkgver}.tar.gz"
         LICENSE.txt)
 sha512sums=('958b7761fab590aa42bb57a955c5d834441f717796a452b60df21663099dcf2fc046afe60f8157fd0f1edfd95c5e9c9c5349ab10ca4078d210fc63d848496a2f'
@@ -23,7 +23,7 @@ build() {
 
 check() {
   cd "$srcdir/pyRFC3339-$pkgver"
-  nosetests
+  pytest --doctest-modules
 }
 
 package() {

@@ -3,8 +3,8 @@
 
 pkgname=python-awesomeversion
 _name=${pkgname#python-}
-pkgver=24.2.0
-pkgrel=2
+pkgver=24.6.0
+pkgrel=1
 pkgdesc="One version package to rule them all."
 arch=('any')
 url="https://github.com/ludeeus/awesomeversion"
@@ -13,7 +13,7 @@ depends=(python)
 makedepends=(python-build python-installer python-poetry-core)
 checkdepends=('python-pytest' 'python-pytest-snapshot')
 source=("$pkgname-$pkgver.tar.gz::https://github.com/ludeeus/$_name/archive/refs/tags/$pkgver.tar.gz")
-sha512sums=('d4dce1d016219a012184824c47b46aea803a702b6d2198ace2da66a3ad2fcc2efeeca347c7611ff16e2ddb4d2a15fae7fa0623b035247f2632892b07a470ca19')
+sha512sums=('9205f39cc77a4e76b3ed4389d308c096e675ccd4eb5135cc8fe5680bdf0b372d21c5faf3fb538b023f5894b7237051a928d0e284d4c6fd0285d50a51e78105a7')
 
 prepare() {
     cd $_name-$pkgver

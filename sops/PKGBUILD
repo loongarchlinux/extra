@@ -2,30 +2,31 @@
 # Contributor: Michael Beaumont <mjboamail@gmail.com>
 
 pkgname=sops
-pkgver=3.8.1
+pkgver=3.9.0
 pkgrel=1
-pkgdesc='Editor of encrypted files that supports YAML, JSON and BINARY formats'
+pkgdesc='Editor of encrypted files that supports YAML, JSON, ENV, INI and BINARY formats'
 arch=('loong64' 'x86_64')
-url='https://github.com/mozilla/sops'
+url='https://github.com/getsops/sops'
 license=('MPL2')
 depends=('glibc')
-makedepends=('go')
+makedepends=('git' 'go')
 options=('!lto')
-source=("${pkgname}-${pkgver}.tar.gz::${url}/archive/v${pkgver}.tar.gz"
+source=("git+https://github.com/getsops/sops.git?signed#tag=v${pkgver}"
         'bash_autocomplete'
         'zsh_autocomplete')
-sha256sums=('5ca70fb4f96797d09012c705a5bb935835896de7bcd063b98d498912b0e645a0'
+sha256sums=('8197151cdf500cb03218ffb45c04e4f45fc59801d41036205a9af9aab862d429'
             '761c67ffd48431e60ea5dc48e5656b4480eca7534d4b715eb65bd75680f5e975'
             'd98d34aeaa7b0f98220bcb21fc9f2bb58efaed45478a7229eb58e5795b57b5a7')
+validpgpkeys=('1CBD23A64DD703A808AF66E71E60B8598833B166') # Felix Fontein
 
 prepare() {
-  cd "${pkgname}-${pkgver}"
+  cd ${pkgname}
 
   go mod download
 }
 
 build() {
-  cd "${pkgname}-${pkgver}"
+  cd ${pkgname}
 
   export CGO_CPPFLAGS="${CPPFLAGS}"
   export CGO_CFLAGS="${CFLAGS}"
@@ -42,7 +43,7 @@ build() {
 }
 
 check() {
-  cd "${pkgname}-${pkgver}"
+  cd ${pkgname}
 
   go test
 }
@@ -51,7 +52,7 @@ package() {
   install -Dm644 bash_autocomplete "${pkgdir}/usr/share/bash-completion/completions/sops"
   install -Dm644 zsh_autocomplete "$pkgdir/usr/share/zsh/site-functions/_sops"
 
-  cd "${pkgname}-${pkgver}"
+  cd ${pkgname}
 
   install -Dm755 sops "${pkgdir}/usr/bin/sops"
   install -Dm644 README.rst "${pkgdir}/usr/share/doc/${pkgname}/README.rst"

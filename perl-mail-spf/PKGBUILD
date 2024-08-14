@@ -3,8 +3,8 @@
 # Contributor: François Charette <francois.archlinux.org>
 
 pkgname=perl-mail-spf
-pkgver=2.9.0
-pkgrel=11
+pkgver=3.20240617
+pkgrel=1
 pkgdesc="Perl module that provides SPF support"
 arch=('any')
 license=('custom')
@@ -13,27 +13,22 @@ depends=('perl-error' 'perl-netaddr-ip' 'perl-uri' 'perl-net-dns' 'perl')
 makedepends=('perl-module-build' 'perl-net-dns-resolver-programmable')
 conflicts=('perl-mail-spf-query')
 options=('!emptydirs')
-source=("https://search.cpan.org/CPAN/authors/id/J/JM/JMEHNLE/mail-spf/Mail-SPF-v${pkgver}.tar.gz")
-sha256sums=('61cb5915f1c7acc7a931ffc1bfc1291bdfac555e2a46eb2391b995ea9ecb6162')
-
-prepare() {
-  cd Mail-SPF-v${pkgver}
-  sed -i 's|/usr/sbin|/usr/bin|' Build.PL
-}
+source=("https://search.cpan.org/CPAN/authors/id/M/MB/MBRADSHAW/Mail-SPF-${pkgver}.tar.gz")
+sha256sums=('43930a708b8e605f31351120619ed8cfa5d789fe66e7f94518393693f9e10ae9')
 
 build() {
-  cd Mail-SPF-v${pkgver}
+  cd Mail-SPF-${pkgver}
   perl Makefile.PL INSTALLDIRS=vendor
   make
 }
 
 check() {
-  cd Mail-SPF-v${pkgver}
+  cd Mail-SPF-${pkgver}
   make test
 }
 
 package() {
-  cd Mail-SPF-v${pkgver}
+  cd Mail-SPF-${pkgver}
   make DESTDIR="${pkgdir}" install
   install -D -m644 LICENSE "${pkgdir}/usr/share/licenses/${pkgname}/LICENSE"
 }

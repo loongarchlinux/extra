@@ -1,0 +1,40 @@
+# Maintainer: Antonio Rojas <arojas@archlinux.org>
+
+pkgname=kalm
+pkgver=24.05.2
+pkgrel=1
+pkgdesc='Kalm can teach you different breathing techniques'
+url='https://apps.kde.org/kalm/'
+arch=(loong64 x86_64)
+license=(GPL-2.0-or-later
+         LGPL-2.0-or-later)
+depends=(gcc-libs
+         glibc
+         kconfig
+         kcoreaddons
+         kcrash
+         ki18n
+         kirigami
+         kirigami-addons
+         qqc2-desktop-style
+         qt6-base
+         qt6-declarative)
+makedepends=(extra-cmake-modules)
+groups=(kde-applications
+        kde-utilities)
+source=(https://download.kde.org/stable/release-service/$pkgver/src/$pkgname-$pkgver.tar.xz{,.sig})
+sha256sums=('b15c8bd4ad19070c3f33275db85dece5d0364a57504acd066c8b6099b6e2617f'
+            'SKIP')
+validpgpkeys=(CA262C6C83DE4D2FB28A332A3A6A4DB839EAA6D7  # Albert Astals Cid <aacid@kde.org>
+              F23275E4BF10AFC1DF6914A6DBD2CE893E2D1C87  # Christoph Feck <cfeck@kde.org>
+              D81C0CB38EB725EF6691C385BB463350D6EF31EF) # Heiko Becker <heiko.becker@kde.org>
+
+build() {
+  cmake -B build -S $pkgname-$pkgver \
+    -DBUILD_TESTING=OFF
+  cmake --build build
+}
+
+package() {
+  DESTDIR="$pkgdir" cmake --install build
+}

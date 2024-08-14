@@ -2,17 +2,39 @@
 # Contributor: Gordian Edenhofer <gordian.edenhofer@gmail.com>
 
 pkgname=routersploit
-pkgver=3.4.2
-pkgrel=2
+pkgver=3.4.4
+pkgrel=1
 pkgdesc='Open-source exploitation framework dedicated to embedded devices'
 url='https://github.com/threat9/routersploit'
-arch=('any')
-license=('BSD-3-Clause')
-depends=('python' 'python-future' 'python-requests' 'python-paramiko' 'python-pysnmp' 'python-pycryptodome')
-makedepends=('python-setuptools')
-checkdepends=('python-pytest' 'python-pytest-forked' 'python-pytest-xdist' 'flake8' 'python-threat9-test-bed')
-source=(${pkgname}-${pkgver}.tar.gz::https://github.com/threat9/routersploit/archive/v${pkgver}.tar.gz)
-sha512sums=('74186272f84f33e66d3235b849ae9bac496c5b2174d8b441848681a272f0e2c11ed585b87049a82a792429b36b6dfa7e985370a3d2c2bfb6bca189ba96d6dcd1')
+arch=(any)
+license=(BSD-3-Clause)
+depends=(
+  python
+  python-bluepy
+  python-cryptography
+  python-future
+  python-paramiko
+  python-pycryptodome
+  python-pysnmp
+  python-requests
+  python-setuptools
+  python-urllib3
+)
+makedepends=(
+  python-build
+  python-installer
+  python-wheel
+)
+checkdepends=(
+  flake8
+  python-pytest
+  python-pytest-forked
+  python-pytest-xdist
+  python-threat9-test-bed
+)
+source=(https://github.com/threat9/routersploit/archive/v${pkgver}/${pkgname}-${pkgver}.tar.gz)
+sha512sums=('7813881a7f59e043736fc61db3871b69c961f69a75e824025e934d394d114c110c15d5dd98e4ce42e2a5441632c4dd8066646f241ceaa87808a5932708bacf32')
+b2sums=('be47c728c89cf87c0e013e2af8aed63b5e408483b5d670fa632202d35825612f3c41025171c2565613f15e3e0d931ec26a00870450adf4762b12b0cadf3b524a')
 
 prepare() {
   cd $pkgname-$pkgver
@@ -27,15 +49,20 @@ prepare() {
   rm tests/exploits/routers/linksys/test_1500_2500_rce.py
 }
 
+build() {
+  cd ${pkgname}-${pkgver}
+  python -m build --wheel --no-isolation
+}
+
 check() {
   cd ${pkgname}-${pkgver}
-  make tests
+  make test
 }
 
 package() {
   cd ${pkgname}-${pkgver}
 
-  python setup.py install --prefix=/usr --root="${pkgdir}" --optimize=1
+  python -m installer --destdir="${pkgdir}" dist/*.whl
   rm -rf "${pkgdir}"/usr/lib/python*/site-packages/tests
   mv "${pkgdir}/usr/bin/rsf"{.py,}
 

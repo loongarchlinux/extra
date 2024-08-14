@@ -4,18 +4,17 @@
 # Contributor: Rich Lindsley <rich at dranek dot com>
 
 pkgname='python-patsy'
-pkgver=0.5.4
-pkgrel=2
+pkgver=0.5.6
+pkgrel=1
 pkgdesc="A Python package for describing statistical models using symbolic formulas"
 arch=('any')
 url="https://github.com/pydata/patsy"
 license=('BSD')
 depends=('python-numpy')
 makedepends=('python-setuptools')
-optdepends=('python-nose: needed for integrated test suite'
-            'python-scipy: needed for spline-related functions')
+optdepends=('python-scipy: needed for spline-related functions')
 source=("https://github.com/pydata/patsy/archive/v$pkgver/$pkgname-$pkgver.tar.gz")
-sha256sums=('bd0753ba3c8ffb544b45bc7876f847dc69545586433d977fc0050e8702a043a2')
+sha256sums=('9ecfaf3f3255687ab45df084adec2772c9fd17b9b763959b37e8732f3403b748')
 
 build() {
   cd patsy-${pkgver}

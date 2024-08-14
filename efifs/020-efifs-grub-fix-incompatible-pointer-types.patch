@@ -1,0 +1,84 @@
+--- a/grub-core/lib/zstd/entropy_common.c
++++ b/grub-core/lib/zstd/entropy_common.c
+@@ -58,7 +58,7 @@ const char* HUF_getErrorName(size_t code) { return ERR_getErrorName(code); }
+ /*-**************************************************************
+ *  FSE NCount encoding-decoding
+ ****************************************************************/
+-size_t FSE_readNCount (short* normalizedCounter, unsigned* maxSVPtr, unsigned* tableLogPtr,
++size_t FSE_readNCount (short* normalizedCounter, U32* maxSVPtr, U32* tableLogPtr,
+                  const void* headerBuffer, size_t hbSize)
+ {
+     const BYTE* const istart = (const BYTE*) headerBuffer;
+--- a/grub-core/lib/zstd/fse.h
++++ b/grub-core/lib/zstd/fse.h
+@@ -245,7 +245,7 @@ If there is an error, the function will return an ErrorCode (which can be tested
+               or an errorCode, which can be tested using FSE_isError().
+               maxSymbolValuePtr[0] and tableLogPtr[0] will also be updated with their respective values */
+ FSE_PUBLIC_API size_t FSE_readNCount (short* normalizedCounter,
+-                           unsigned* maxSymbolValuePtr, unsigned* tableLogPtr,
++                           U32* maxSymbolValuePtr, U32* tableLogPtr,
+                            const void* rBuffer, size_t rBuffSize);
+ 
+ /*! Constructor and Destructor of FSE_DTable.
+@@ -257,7 +257,7 @@ FSE_PUBLIC_API void        FSE_freeDTable(FSE_DTable* dt);
+ /*! FSE_buildDTable():
+     Builds 'dt', which must be already allocated, using FSE_createDTable().
+     return : 0, or an errorCode, which can be tested using FSE_isError() */
+-FSE_PUBLIC_API size_t FSE_buildDTable (FSE_DTable* dt, const short* normalizedCounter, unsigned maxSymbolValue, unsigned tableLog);
++FSE_PUBLIC_API size_t FSE_buildDTable (FSE_DTable* dt, const short* normalizedCounter, U32 maxSymbolValue, unsigned tableLog);
+ 
+ /*! FSE_decompress_usingDTable():
+     Decompress compressed source `cSrc` of size `cSrcSize` using `dt`
+--- a/grub-core/lib/zstd/fse_decompress.c
++++ b/grub-core/lib/zstd/fse_decompress.c
+@@ -89,7 +89,7 @@ void FSE_freeDTable (FSE_DTable* dt)
+     free(dt);
+ }
+ 
+-size_t FSE_buildDTable(FSE_DTable* dt, const short* normalizedCounter, unsigned maxSymbolValue, unsigned tableLog)
++size_t FSE_buildDTable(FSE_DTable* dt, const short* normalizedCounter, U32 maxSymbolValue, unsigned tableLog)
+ {
+     void* const tdPtr = dt+1;   /* because *dt is unsigned, 32-bits aligned on 32-bits */
+     FSE_DECODE_TYPE* const tableDecode = (FSE_DECODE_TYPE*) (tdPtr);
+@@ -278,8 +278,8 @@ size_t FSE_decompress_wksp(void* dst, size_t dstCapacity, const void* cSrc, size
+     const BYTE* const istart = (const BYTE*)cSrc;
+     const BYTE* ip = istart;
+     short counting[FSE_MAX_SYMBOL_VALUE+1];
+-    unsigned tableLog;
+-    unsigned maxSymbolValue = FSE_MAX_SYMBOL_VALUE;
++    U32 tableLog;
++    U32 maxSymbolValue = FSE_MAX_SYMBOL_VALUE;
+ 
+     /* normal FSE decoding mode */
+     size_t const NCountLength = FSE_readNCount (counting, &maxSymbolValue, &tableLog, istart, cSrcSize);
+--- a/grub-core/lib/zstd/xxhash.h
++++ b/grub-core/lib/zstd/xxhash.h
+@@ -276,7 +276,7 @@ XXH_PUBLIC_API XXH64_hash_t XXH64_hashFromCanonical(const XXH64_canonical_t* src
+        unsigned v2;
+        unsigned v3;
+        unsigned v4;
+-       unsigned mem32[4];   /* buffer defined as U32 for alignment */
++       U32      mem32[4];   /* buffer defined as U32 for alignment */
+        unsigned memsize;
+        unsigned reserved;   /* never read nor write, will be removed in a future version */
+    };   /* typedef'd to XXH32_state_t */
+--- a/grub-core/lib/zstd/zstd_decompress.c
++++ b/grub-core/lib/zstd/zstd_decompress.c
+@@ -2272,7 +2272,7 @@ static size_t ZSTD_loadEntropy(ZSTD_entropyDTables_t* entropy,
+     }
+ 
+     {   short matchlengthNCount[MaxML+1];
+-        unsigned matchlengthMaxValue = MaxML, matchlengthLog;
++        U32 matchlengthMaxValue = MaxML, matchlengthLog;
+         size_t const matchlengthHeaderSize = FSE_readNCount(matchlengthNCount, &matchlengthMaxValue, &matchlengthLog, dictPtr, dictEnd-dictPtr);
+         if (FSE_isError(matchlengthHeaderSize)) return ERROR(dictionary_corrupted);
+         if (matchlengthMaxValue > MaxML) return ERROR(dictionary_corrupted);
+@@ -2285,7 +2285,7 @@ static size_t ZSTD_loadEntropy(ZSTD_entropyDTables_t* entropy,
+     }
+ 
+     {   short litlengthNCount[MaxLL+1];
+-        unsigned litlengthMaxValue = MaxLL, litlengthLog;
++        U32 litlengthMaxValue = MaxLL, litlengthLog;
+         size_t const litlengthHeaderSize = FSE_readNCount(litlengthNCount, &litlengthMaxValue, &litlengthLog, dictPtr, dictEnd-dictPtr);
+         if (FSE_isError(litlengthHeaderSize)) return ERROR(dictionary_corrupted);
+         if (litlengthMaxValue > MaxLL) return ERROR(dictionary_corrupted);

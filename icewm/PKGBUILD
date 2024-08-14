@@ -3,24 +3,30 @@
 # Contributor: Eric Bélanger <eric@archlinux.org>
 
 pkgname=icewm
-pkgver=3.4.7
-pkgrel=2
-pkgdesc='Window Manager designed for speed, usability, and consistency'
-arch=(loong64 x86_64)
-url='https://ice-wm.org/'
+pkgver=3.6.0
+pkgrel=1
+pkgdesc="Window Manager designed for speed, usability, and consistency"
+url="https://ice-wm.org/"
+arch=('loong64' 'x86_64')
 license=('LGPL-2.0-only')
-depends=(alsa-lib imlib2 librsvg libsndfile libxcomposite libxdamage libxinerama libxpm libxrandr)
-makedepends=(asciidoctor xorg-mkfontdir)
+depends=('alsa-lib' 'imlib2' 'librsvg' 'libsndfile' 'libxcomposite' 'libxdamage' 'libxinerama' 'libxpm' 'libxrandr')
+makedepends=('asciidoctor' 'xorg-mkfontdir')
 optdepends=('perl: for icewm-menu-xrandr')
-source=("https://github.com/ice-wm/icewm/releases/download/$pkgver/$pkgname-$pkgver.tar.lz")
-sha256sums=('5aa044743dd69923c722bc9e65385f637253ff971fbb5954a56d26ac384e2c30')
+source=("${pkgname}-${pkgver}.tar.gz::https://github.com/ice-wm/icewm/archive/refs/tags/${pkgver}.tar.gz")
+sha256sums=('0fa15f252983d21b1bc434142c787b16bdfc347a83c3057586d0e0091f26617b')
+
+prepare() {
+	cd "${pkgname}-${pkgver}"
+	./autogen.sh
+}
 
 build() {
-  cd $pkgname-$pkgver
-  ./configure --prefix=/usr --sysconfdir=/etc
-  make
+	cd "${pkgname}-${pkgver}"
+	./configure --prefix=/usr
+	make
 }
 
 package() {
-  make -C $pkgname-$pkgver DESTDIR="$pkgdir" install
+	cd "${pkgname}-${pkgver}"
+	make DESTDIR="${pkgdir}" install
 }

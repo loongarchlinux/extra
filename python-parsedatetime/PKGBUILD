@@ -7,12 +7,12 @@
 
 pkgname=python-parsedatetime
 pkgver=2.6
-pkgrel=8
+pkgrel=9
 pkgdesc="Parse human-readable date/time strings."
 arch=('any')
 license=('Apache-2.0')
 url='https://github.com/bear/parsedatetime'
-depends=('python-future')
+depends=('python')
 makedepends=('python-setuptools' 'python-build' 'python-installer' 'python-wheel')
 checkdepends=('python-pytest')
 source=("$pkgname-$pkgver.tar.gz::https://github.com/bear/parsedatetime/archive/v$pkgver.tar.gz")

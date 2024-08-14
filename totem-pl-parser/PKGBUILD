@@ -2,26 +2,46 @@
 # Contributor: Jan de Groot <jgc@archlinux.org>
 
 pkgname=totem-pl-parser
-pkgver=3.26.6
-pkgrel=2
+pkgver=3.26.6+r30+g51b8439
+pkgrel=1
 pkgdesc="Simple GObject-based library to parse and save a host of playlist formats"
 url="https://gitlab.gnome.org/GNOME/totem-pl-parser"
-license=(LGPL)
+license=(LGPL-2.0-or-later)
 arch=(loong64 x86_64)
-depends=(glib2 libxml2 libarchive libgcrypt)
-makedepends=(gobject-introspection git gtk-doc meson)
-checkdepends=(gvfs)
-provides=("totem-plparser=$pkgver-$pkgrel" libtotem-plparser{,-mini}.so)
+depends=(
+  gcc-libs
+  glib2
+  glibc
+  libarchive
+  libgcrypt
+  libxml2
+  uchardet
+)
+makedepends=(
+  git
+  glib2-devel
+  gobject-introspection
+  gtk-doc
+  meson
+)
+checkdepends=(
+  dbus
+  gvfs
+  shared-mime-info
+)
+provides=(
+  "totem-plparser=$pkgver-$pkgrel"
+  libtotem-plparser{,-mini}.so
+)
 conflicts=(totem-plparser)
 replaces=("totem-plparser<=3.26.3-1")
-options=(debug)
-_commit=1431f520fb82f98873c3870f2bbe8eba4d0e670a  # tags/V_3_26_6^0
+_commit=51b843912dc7bc43f371f1d88901a38ff2090b43  # master
 source=("git+https://gitlab.gnome.org/GNOME/totem-pl-parser.git#commit=$_commit")
-sha256sums=('SKIP')
+b2sums=('2fc81482b159a1dea5dc4b7f7796a4cc251679f9187fa4fd778d00c4307eee241fb66595b679b41beef32922af8337b6bade7775311b4adc957e67c3ab68a529')
 
 pkgver() {
   cd $pkgname
-  git describe --tags | sed 's/^V_//;s/_/./g;s/-/+/g'
+  git describe --tags | sed 's/^V_//;s/_/./g;s/[^-]*-g/r&/;s/-/+/g'
 }
 
 prepare() {
@@ -29,13 +49,21 @@ prepare() {
 }
 
 build() {
-  arch-meson $pkgname build -D enable-gtk-doc=true
+  local meson_options=(
+    -D enable-gtk-doc=true
+    -D enable-libarchive=yes
+    -D enable-libgcrypt=yes
+    -D enable-uchardet=yes
+  )
+
+  arch-meson $pkgname build "${meson_options[@]}"
   meson compile -C build
 }
 
-check() {
-  meson test -C build --print-errorlogs
-}
+check() (
+  export GIO_USE_VOLUME_MONITOR=unix
+  dbus-run-session meson test -C build --print-errorlogs
+)
 
 package() {
   meson install -C build --destdir "$pkgdir"

@@ -1,8 +1,8 @@
 # Maintainer: David Runge <dvzrv@archlinux.org>
 
 pkgname=postorius
-pkgver=1.3.10
-pkgrel=2
+pkgver=1.3.12
+pkgrel=1
 pkgdesc="The New Mailman Web UI"
 arch=(any)
 url="https://gitlab.com/mailman/postorius"
@@ -20,8 +20,7 @@ makedepends=(
   git
   python-build
   python-installer
-  python-setuptools
-  python-wheel
+  python-pdm-backend
 )
 checkdepends=(
   mailman3
@@ -51,12 +50,12 @@ source=(
   $pkgname.tmpfiles
   $pkgname.uwsgi
 )
-sha512sums=('bc19a9b5c1bc348a50f86f117caa544fe934879057f670d10ab6a6fccda965deaf2831e6392bc6fa9a2642d349f6022941be23064e40d1d4c8f1427fd4361150'
+sha512sums=('a342f4a36944551c2a06f8f44c3e421f1dcea2eaf10faaf1cdef4af1d5f13b5330d95c2cd27003747a34c3cecc71181f29df4c64e30a333a1277fc6b0184a61f'
             'e465bb865da62e8aaaed5b16361d696ca41775ace5c9b3ca5fbb8e03b1c6f0a1915670f13ee275608e317f4e1a06f1afcc84847c712395e42d436d68fd8c5350'
             '3884b818da2deb148279e50316f720c95f0aaa529777b1b3662d8ab253cda823a90682a9eb47e941ca5ba80eefcb9a2d4afacd29f0340d7f9828b36ebcee23b3'
             '44925c7ce6d1c13bd5bdd2cb449fa978b8eaadaac7ecff74075c23a13478decc4acd1f2cd0399bf55c312d6a08985a3e80f6e7a6e85be9e3dcb93ffb526ca9fb'
             'c042f00d0d8dc72dadd19023152e55246c4d7a4b9d53bca3a05e7b8cb38cac5116417440d4ae82350820c7cb0cd414dcce45fa6af9be19296c4ebd0862dba896')
-b2sums=('a817faf88a7c2a6d1def3007bcb0be6a59235335039900349e5dd5513e48bb2a6a107b074dc4aa5cc4e33b600ed6abb63daae46a37959fbd9c25443aff1e237b'
+b2sums=('2bebe37faca249bfa2118668d256c921debeb30a39604700903617707db08836c6e64201e7ab9e2f1c146f5c4033cdeebf519c7e1b56ea8618f1716e17e21a09'
         '80533bc0e9208c5b97f952e29fd46158d5133a2cb15f64ae8b61195d6c08c67d069b91b04acb04713ca9739d37fbe7808f8d20e45d7a8af65e16cca210220450'
         '1ef6dc98c6751e6d65e49812d08d813879b791a7f13622ea31ecadae6dd1859a918761d7723732ed2e4872b9cae61b84c8dbfec2dd2522de9f0929a1ee1cec24'
         '502d59cb0009b7cdf108a1611d17470d1a73c2d06bf6d9509799b63d4bbb4bb0a2cb71a39eddb0dc5990ee6489625174de6ce2d7e04e77a601c90a6da6d69c84'
@@ -72,6 +71,9 @@ prepare() {
   # become FHS compliant and disable the use of debug
   patch -d $pkgname -p1 -i ../$pkgname-1.3.10-settings.patch
 
+  # https://gitlab.com/mailman/postorius/-/issues/599
+  sed '/example_project/d' -i $pkgname/pyproject.toml
+
   touch settings_local.py
 }
 
@@ -81,9 +83,12 @@ build() {
 }
 
 check() {
-  cd $pkgname/example_project
-  # disable broken tests: https://gitlab.com/mailman/postorius/-/issues/556
-  pytest -vv ../src/$pkgname/tests -k "not test_change_subscription_from_address_to_primary and not test_access_list_options_multiple_subscriptions"
+  local pytest_options=(
+    -vv
+  )
+
+  cd $pkgname
+  pytest "${pytest_options[@]}"
 }
 
 package() {

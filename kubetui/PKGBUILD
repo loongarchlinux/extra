@@ -1,0 +1,38 @@
+# Maintainer: Orhun Parmaksız <orhun@archlinux.org>
+
+pkgname=kubetui
+pkgver=1.5.3
+pkgrel=1
+pkgdesc="A TUI for real-time monitoring and exploration of Kubernetes resources"
+arch=('loong64' 'x86_64')
+url="https://github.com/sarub0b0/kubetui"
+license=('MIT')
+depends=('gcc-libs')
+makedepends=('cargo')
+source=("$pkgname-$pkgver.tar.gz::$url/archive/v$pkgver.tar.gz")
+sha512sums=('57a5439093cae6cb17640c92ad12ee6f61b63bf72549a6a9f573d8afdef5548fd5f49f1e1c65d5d156216f8c97d1400ad83262bc5d812e16485de75aa1195b7a')
+options=('!lto')
+
+prepare() {
+  cd "$pkgname-$pkgver"
+  cargo fetch --locked --target "$(rustc -vV | sed -n 's/host: //p')"
+}
+
+build() {
+  cd "$pkgname-$pkgver"
+  cargo build --release --frozen
+}
+
+check() {
+  cd "$pkgname-$pkgver"
+  cargo test --frozen
+}
+
+package() {
+  cd "$pkgname-$pkgver"
+  install -Dm 755 "target/release/$pkgname" -t "$pkgdir/usr/bin"
+  install -Dm 644 README.md -t "$pkgdir/usr/share/doc/$pkgname"
+  install -Dm 644 LICENSE -t "$pkgdir/usr/share/licenses/$pkgname"
+}
+
+# vim: ts=2 sw=2 et:

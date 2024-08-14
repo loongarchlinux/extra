@@ -1,0 +1,38 @@
+# Maintainer: Carl Smedstad <carsme@archlinux.org>
+# Contributor: Karol Babioch <karol@babioch.de>
+# Contributor: nullren
+# Contributor: N. Izumi - izmntuk
+
+pkgname=symlinks
+pkgver=1.4.3
+pkgrel=4
+pkgdesc="Symbolic link maintenance utility"
+arch=(loong64 x86_64)
+url="https://github.com/brandt/symlinks"
+license=(MIT)
+depends=(glibc)
+source=(
+  "$pkgname-$pkgver.tar.gz::$url/archive/v$pkgver.tar.gz"
+  "respect-ldflags.patch"
+)
+sha256sums=(
+  '27105b2898f28fd53d52cb6fa77da1c1f3b38e6a0fc2a66bf8a25cd546cb30b2'
+  'fb3f3f73e0bf52086d6c6cc86fb465db1a4a53414d547d87291d7883fe157f64'
+)
+
+prepare() {
+  cd $pkgname-$pkgver
+  patch -Np1 -i "$srcdir/respect-ldflags.patch"
+}
+
+build() {
+  cd $pkgname-$pkgver
+  make
+}
+
+package() {
+  cd $pkgname-$pkgver
+  install -vDm755 -t "$pkgdir/usr/bin" symlinks
+  install -vDm644 -t "$pkgdir/usr/share/licenses/$pkgname" LICENSE
+  install -vDm644 -t "$pkgdir/usr/share/man/man8" symlinks.8
+}

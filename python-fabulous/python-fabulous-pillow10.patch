@@ -1,0 +1,24 @@
+From 347abe8ea7093839b8f8745639e7adfaf2dc72bc Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Ball=C3=B3=20Gy=C3=B6rgy?= <ballogyor@gmail.com>
+Date: Wed, 7 Aug 2024 02:09:39 +0200
+Subject: [PATCH] Fix compatibility with Pillow 10
+
+The FreeTypeFont.getsize() method is removed:
+https://pillow.readthedocs.io/en/stable/releasenotes/10.0.0.html#font-size-and-offset-methods
+---
+ fabulous/text.py | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/fabulous/text.py b/fabulous/text.py
+index 32315d6..dc6cb06 100644
+--- a/fabulous/text.py
++++ b/fabulous/text.py
+@@ -115,7 +115,7 @@ def __init__(self, text, fsize=23, color="#0099ff", shadow=False,
+         self.color = grapefruit.Color.NewFromHtml(color)
+         self.font = ImageFont.truetype(resolve_font(font), fsize)
+         skew = skew or 0
+-        size = tuple([n + 3 + skew for n in self.font.getsize(self.text)])
++        size = tuple([n + 3 + skew for n in self.font.getbbox(self.text)[2:]])
+         self.img = Image.new("RGBA", size, (0, 0, 0, 0))
+         cvs = ImageDraw.Draw(self.img)
+         if shadow:

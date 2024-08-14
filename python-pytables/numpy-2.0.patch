@@ -1,0 +1,170 @@
+From 10bb1ea023c95ad0ab60b0a3f51cbe0412e52282 Mon Sep 17 00:00:00 2001
+From: Antonio Valentino <antonio.valentino@tiscali.it>
+Date: Sun, 12 Nov 2023 20:43:00 +0100
+Subject: [PATCH 1/7] Compatibility with numpy 2.0
+
+---
+ src/utils.c     | 16 ++++++++--------
+ tables/atom.py  | 10 +++++-----
+ tables/index.py |  9 +++++----
+ 3 files changed, 18 insertions(+), 17 deletions(-)
+
+diff --git a/src/utils.c b/src/utils.c
+index 07fa2b44c..2c4465c37 100644
+--- a/src/utils.c
++++ b/src/utils.c
+@@ -714,8 +714,8 @@ hid_t create_ieee_complex64(const char *byteorder) {
+     return float_id;
+   }
+ 
+-  H5Tinsert(complex_id, "r", HOFFSET(npy_complex64, real), float_id);
+-  H5Tinsert(complex_id, "i", HOFFSET(npy_complex64, imag), float_id);
++  H5Tinsert(complex_id, "r", 0, float_id);
++  H5Tinsert(complex_id, "i", 4, float_id);
+   H5Tclose(float_id);
+   return complex_id;
+ }
+@@ -739,8 +739,8 @@ hid_t create_ieee_complex128(const char *byteorder) {
+     return float_id;
+   }
+ 
+-  H5Tinsert(complex_id, "r", HOFFSET(npy_complex128, real), float_id);
+-  H5Tinsert(complex_id, "i", HOFFSET(npy_complex128, imag), float_id);
++  H5Tinsert(complex_id, "r", 0, float_id);
++  H5Tinsert(complex_id, "i", 8, float_id);
+   H5Tclose(float_id);
+   return complex_id;
+ }
+@@ -771,8 +771,8 @@ hid_t create_ieee_complex192(const char *byteorder) {
+     return err;
+   }
+ 
+-  H5Tinsert(complex_id, "r", HOFFSET(npy_complex192, real), float_id);
+-  H5Tinsert(complex_id, "i", HOFFSET(npy_complex192, imag), float_id);
++  H5Tinsert(complex_id, "r", 0, float_id);
++  H5Tinsert(complex_id, "i", 12, float_id);
+   H5Tclose(float_id);
+   return complex_id;
+ }
+@@ -803,8 +803,8 @@ hid_t create_ieee_complex256(const char *byteorder) {
+     return err;
+   }
+ 
+-  H5Tinsert(complex_id, "r", HOFFSET(npy_complex256, real), float_id);
+-  H5Tinsert(complex_id, "i", HOFFSET(npy_complex256, imag), float_id);
++  H5Tinsert(complex_id, "r", 0, float_id);
++  H5Tinsert(complex_id, "i", 16, float_id);
+   H5Tclose(float_id);
+   return complex_id;
+ }
+diff --git a/tables/atom.py b/tables/atom.py
+index 912357cff..51dfc70b2 100644
+--- a/tables/atom.py
++++ b/tables/atom.py
+@@ -264,15 +264,15 @@ class Atom(metaclass=MetaAtom):
+             >>> atom1 = StringAtom(itemsize=10)  # same as ``atom2``
+             >>> atom2 = Atom.from_kind('string', 10)  # same as ``atom1``
+             >>> atom3 = IntAtom()
+-            >>> atom1 == 'foo'
++            >>> bool(atom1 == 'foo')
+             False
+-            >>> atom1 == atom2
++            >>> bool(atom1 == atom2)
+             True
+-            >>> atom2 != atom1
++            >>> bool(atom2 != atom1)
+             False
+-            >>> atom1 == atom3
++            >>> bool(atom1 == atom3)
+             False
+-            >>> atom3 != atom2
++            >>> bool(atom3 != atom2)
+             True
+ 
+     """
+diff --git a/tables/index.py b/tables/index.py
+index 37103b6b4..0ad4319ad 100644
+--- a/tables/index.py
++++ b/tables/index.py
+@@ -596,7 +596,8 @@ def initial_append(self,
+                 # Add a second offset in this case
+                 # First normalize the number of rows
+                 offset2 = (nrow % self.nslicesblock) * slicesize // lbucket
+-                idx += offset2
++                assert offset2 < 2**(indsize*8)
++                idx += np.asarray(offset2).astype(idx.dtype)
+         # Add the last row at the beginning of arr & idx (if needed)
+         if (indsize == 8 and nelementsILR > 0):
+             # It is possible that the values in LR are already sorted.
+@@ -637,11 +638,11 @@ def final_idx32(self, idx: np.ndarray, offset: int) -> np.ndarray:
+             show_stats("Entering final_idx32", tref)
+         # Do an upcast first in order to add the offset.
+         idx = idx.astype('uint64')
+-        idx += offset
++        idx += np.asarray(offset).astype(idx.dtype)
+         # The next partition is valid up to table sizes of
+         # 2**30 * 2**18 = 2**48 bytes, that is, 256 Tera-elements,
+         # which should be a safe figure, at least for a while.
+-        idx //= self.lbucket
++        idx //= np.asarray(self.lbucket).astype(idx.dtype)
+         # After the division, we can downsize the indexes to 'uint32'
+         idx = idx.astype('uint32')
+         if profile:
+@@ -2057,7 +2058,7 @@ def get_chunkmap(self) -> np.ndarray:
+                 else:
+                     self.indicesLR._read_index_slice(start, stop, idx)
+                 if indsize == 8:
+-                    idx //= lbucket
++                    idx //= np.asarray(lbucket).astype(idx.dtype)
+                 elif indsize == 2:
+                     # The chunkmap size cannot be never larger than 'int_'
+                     idx = idx.astype("int_")
+
+diff --git a/setup.py b/setup.py
+index 89662f129..0eaee2c9f 100755
+--- a/setup.py
++++ b/setup.py
+@@ -729,7 +729,10 @@ def find_runtime_path(self, locations=None):
+ 
+     # -----------------------------------------------------------------
+ 
+-    def_macros = [("NDEBUG", 1)]
++    def_macros = [
++        ("NDEBUG", 1),
++        ("NPY_TARGET_VERSION", "NPY_1_20_API_VERSION"),
++    ]
+ 
+     # Define macros for Windows platform
+     if os.name == "nt":
+
+From ce6dd50c2cbc548d9d9f571c205f7e15ba9c12e7 Mon Sep 17 00:00:00 2001
+From: Maximilian Linhoff <maximilian.linhoff@tu-dortmund.de>
+Date: Thu, 18 Apr 2024 13:23:10 +0200
+Subject: [PATCH 7/7] Add compatibility layer for numpy 2.0 copy changes
+
+---
+ tables/utils.py | 19 +++++++++++++++++--
+ 1 file changed, 17 insertions(+), 2 deletions(-)
+
+diff --git a/tables/utils.py b/tables/utils.py
+index 9203c812c..d19529999 100644
+--- a/tables/utils.py
++++ b/tables/utils.py
+@@ -83,7 +98,7 @@ def idx2long(index: Union[int, float, np.ndarray]) -> int:
+ # with atom from a generic python type.  If copy is stated as True, it
+ # is assured that it will return a copy of the object and never the same
+ # object or a new one sharing the same memory.
+-def convert_to_np_atom(arr, atom, copy=False):
++def convert_to_np_atom(arr, atom, copy=None):
+     """Convert a generic object into a NumPy object compliant with atom."""
+ 
+     # First, convert the object into a NumPy array
+@@ -117,7 +132,7 @@ def convert_to_np_atom2(object: npt.ArrayLike, atom: "Atom") -> np.ndarray:
+ 
+     # Check whether the object needs to be copied to make the operation
+     # safe to in-place conversion.
+-    copy = atom.type in ['time64']
++    copy = True if atom.type in ['time64'] else None
+     nparr = convert_to_np_atom(object, atom, copy)
+     # Finally, check the byteorder and change it if needed
+     byteorder = byteorders[nparr.dtype.byteorder]

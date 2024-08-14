@@ -4,7 +4,7 @@
 _name=speakup
 pkgname=speakup-utils
 pkgver=3.1.6
-pkgrel=6
+pkgrel=7
 pkgdesc='Tiny utilities for controlling the Speakup screenreader'
 arch=('any')
 url="http://linux-speakup.org/"

@@ -2,27 +2,33 @@
 # Contributor: Sébastien Luttringer <seblu@aur.archlinux.org>
 
 pkgname=lynis
-pkgver=3.0.9
+pkgver=3.1.1
 pkgrel=1
 pkgdesc='Security and system auditing tool to harden Unix/Linux systems'
 url='https://cisofy.com/lynis/'
-arch=('any')
-license=('GPL3')
+arch=(any)
+license=(GPL-3.0-only)
 backup=('etc/lynis/default.prf')
-depends=('sh' 'awk')
-optdepends=('net-tools: networking tests'
-            'bind-tools: nameserver tests'
-            'iptables: firewall tests')
+depends=(
+  sh
+  awk
+)
+optdepends=(
+  'net-tools: networking tests'
+  'bind-tools: nameserver tests'
+  'iptables: firewall tests'
+)
 source=("https://downloads.cisofy.com/lynis/lynis-$pkgver.tar.gz"{,.asc})
-sha512sums=('7fc0349be9ea9d6e311b834cb7f9089bd0d393381edb5325a0bea88ed83dcd3d816dc213c6a6d17f88ff937af71be72004570894e427e4faf1b0d39448aa3a43'
+sha512sums=('c37366154e03a661a7e995d14c651d5503c7189f50edfd194d8b7034e001b9610bfe79917221156ab3607f7c348625ea956fb0acb46a6c7e64a7d189dbcfd4ee'
             'SKIP')
-b2sums=('dc7912c7d1782c3ffdf369cc7f0f004267bd2a2c408982909e654db14ecfa83ebdbd2f731c3d3ee8864e7de21945b1faa2f9d2845dedf3e742a4c79c62373eda'
+b2sums=('056e689f00ac0fa74bd1a6dc3915cbd70f28cdb5461e0749b68ce2cf84e425c295425f7bb6d5aeb0208693a0e38290cb90925e392928257c79bc5887f6e58498'
         'SKIP')
 validpgpkeys=('84FAA9983B24AEF24D6C87F1FEBB7D1812576482') # CISOfy (Software Signing Key) <software@cisofy.com>
 
 prepare() {
   cd "$pkgname"
   sed -e 's|/path/to/lynis|/usr/bin/lynis|g' -i extras/systemd/lynis.service
+  chmod +r include/consts
 }
 
 package() {

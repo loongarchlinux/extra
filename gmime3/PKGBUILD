@@ -3,7 +3,7 @@
 # Contributor: Ben <ben@benmazer.net>
 
 pkgname=gmime3
-pkgver=3.2.14
+pkgver=3.2.15
 pkgrel=1
 pkgdesc="A C/C++ MIME creation and parser library with support for S/MIME, PGP, and Unix mbox spools"
 url="https://github.com/jstedfast/gmime"
@@ -11,6 +11,7 @@ arch=(loong64 x86_64)
 license=(LGPL-2.1-or-later)
 depends=(
   glib2
+  glibc
   gpgme
   libidn2
   zlib
@@ -18,23 +19,19 @@ depends=(
 makedepends=(
   docbook-utils
   git
+  glib2-devel
   gobject-introspection
   gtk-doc
   vala
 )
 provides=(libgmime-3.0.so)
-_commit=f119d47e9392bf4a642cec20b5c361f99b2f4b42  # tags/3.2.14^0
-source=("git+https://github.com/jstedfast/gmime#commit=$_commit")
-b2sums=('SKIP')
-
-pkgver() {
-  cd gmime
-  git describe --tags | sed 's/[^-]*-g/r&/;s/-/+/g'
-}
+source=("git+https://github.com/jstedfast/gmime#tag=$pkgver")
+b2sums=('e14eea1fde01aef5d26ee3c4e775996555793ed1141ad3f40c83eee91192330f00ccf522f1523102a224494178ca9878f64a97592dd0a144b12446820fad6eb9')
 
 prepare() {
   cd gmime
-  NOCONFIGURE=1 ./autogen.sh
+  sed -i '/AM_INIT_AUTOMAKE/s/]/ foreign]/' configure.ac
+  autoreconf -fvi
 }
 
 build() {

@@ -2,39 +2,31 @@
 # Maintainer: Robin Candau <antiz@archlinux.org>
 
 pkgname=entr
-pkgver=5.5
+pkgver=5.6
 pkgrel=1
-pkgdesc='Run arbitrary commands when files change'
+pkgdesc="Run arbitrary commands when files change"
+url="http://eradman.com/entrproject"
 arch=('loong64' 'x86_64')
-url='http://eradman.com/entrproject'
 license=('MIT')
 depends=('glibc')
 checkdepends=('procps-ng' 'git' 'vim' 'tmux')
-validpgpkeys=('519151D83E83D40A232B4D615C418B8631BC7C26' '5C418B8631BC7C26') # Eric Radman <ericshane@eradman.com>
-source=("$url/code/$pkgname-$pkgver.tar.gz"{,.asc})
-sha512sums=('5150744142cf1639289c2d845cf8cd3cbc0ef57fce8285bc0e2908c430d8344659ff064810e175e69bd8a6f06144734b2efa4d733e0fba7fec83a1f48d053a0d'
-            'SKIP')
+source=("${pkgname}-${pkgver}::https://github.com/eradman/entr/archive/refs/tags/${pkgver}.tar.gz")
+sha512sums=('9c65449b6fd7e172fde23a6d4d776b6fdbcec210ef54234db0af056e481acd11f53f9b25432a278435943bd998be734fcd997b5debdcace58112ac99d103f653')
 
 build() {
-  cd $pkgname-$pkgver
-
-  export PREFIX='/usr'
-
-  ./configure
-
-  make
+	cd "${pkgname}-${pkgver}"
+	export PREFIX='/usr'
+	./configure
+	make
 }
 
 check() {
-  cd $pkgname-$pkgver
-
-  TERM='xterm' make test
+	cd "${pkgname}-${pkgver}"
+	TERM='xterm' make test
 }
 
 package() {
-  cd $pkgname-$pkgver
-
-  make DESTDIR="$pkgdir" install
-
-  install -Dm 644 LICENSE "$pkgdir"/usr/share/licenses/$pkgname/LICENSE
+	cd "${pkgname}-${pkgver}"
+	make DESTDIR="${pkgdir}" install
+	install -Dm 644 LICENSE "${pkgdir}/usr/share/licenses/${pkgname}/LICENSE"
 }

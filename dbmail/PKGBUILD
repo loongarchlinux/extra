@@ -3,7 +3,7 @@
 
 pkgname=dbmail
 pkgver=3.4.1
-pkgrel=1
+pkgrel=3
 pkgdesc="Fast and scalable sql based mail services"
 arch=('loong64' 'x86_64')
 url="https://github.com/dbmail/dbmail"
@@ -37,15 +37,19 @@ optdepends=(
   'libsieve: for dbmail-sieve'
 )
 source=("$pkgname-$pkgver.tar.gz::https://github.com/dbmail/dbmail/archive/refs/tags/v$pkgver.tar.gz"
+  https://github.com/dbmail/dbmail/commit/01d5d422f88c5edd6f1f77787cd6459d756d00b4.patch
   https://raw.githubusercontent.com/dbmail/dbmail/main/man/dbmail-sieved.txt
   noop-fetch-response-fix2.patch)
 sha256sums=('eb11ec7c1a09b206a6b1816f18bb53aa41600a8de6e169ab61effa856a621e4e'
+            '96c2ad95d24a016c900caddcd43dd7e193a2da3b9a5e18a11b117296aae9b25b'
             '0d8d5d27864071823d69cf3ae731a522043d4ce058baf9c00e7c02a1ae98ad64'
             '8d775abeb55f60969641a61b895df22577255f212737f4db01b138dbb40d2064')
 
 prepare() {
   cd $pkgname-$pkgver
   patch -p1 < ../noop-fetch-response-fix2.patch
+  patch -p1 < ../01d5d422f88c5edd6f1f77787cd6459d756d00b4.patch
+  sed -i 's|nogroup|nobody|g' dbmail.conf
   cp ../dbmail-sieved.txt ./man/
   sed -i \
     -e 's|@runstatedir@|/run|g' \
@@ -83,6 +87,7 @@ package() {
   install -dm0755 "$pkgdir"/usr/lib/systemd/system
   install -dm0755 "$pkgdir"/usr/lib/tmpfiles.d
   install -dm0755 "$pkgdir"/usr/share/dbmail
+  install -dm0755 "$pkgdir"/var/log/dbmail
   make DESTDIR="$pkgdir" install
 
   install -Dm644 dbmail.conf "$pkgdir"/etc/dbmail.conf.sample

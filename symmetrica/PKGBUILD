@@ -3,28 +3,30 @@
 
 pkgname=symmetrica
 pkgver=3.0.1
-pkgrel=1
-pkgdesc="Algorithms for symmetric groups and classical groups"
+pkgrel=2
+pkgdesc='Algorithms for symmetric groups and classical groups'
 arch=(loong64 x86_64)
-url="http://www.algorithm.uni-bayreuth.de/en/research/SYMMETRICA/"
+url='http://www.algorithm.uni-bayreuth.de/en/research/SYMMETRICA'
 depends=(glibc)
-license=(custom)
-source=("https://gitlab.com/sagemath/symmetrica/-/archive/$pkgver/$pkgname-$pkgver.tar.gz")
-sha256sums=('6e0fea5708d2deed8369ce4c7c2123a23a1c942d8cdf39c1f81258aec3ac04ec')
+makedepends=(git)
+license=(LicenseRef-symmetrica)
+source=(git+https://gitlab.com/sagemath/symmetrica#tag=$pkgver)
+sha256sums=('e4d5ac782cbcfc1516dfaae6cabb7d2228dc45353553180ccddbc5e3273bd1d9')
 
 prepare() {
-  cd $pkgname-$pkgver
-  autoreconf -fi
+  cd $pkgname
+  autoreconf -vi
 }
 
 build() {
-  cd $pkgname-$pkgver
-  ./configure --prefix=/usr
+  cd $pkgname
+  ./configure \
+    --prefix=/usr
   make
 }
 
 package() {
-  cd $pkgname-$pkgver
+  cd $pkgname
   make DESTDIR="$pkgdir" install
   install -Dm644 LICENSE -t "$pkgdir"/usr/share/licenses/symmetrica
 }

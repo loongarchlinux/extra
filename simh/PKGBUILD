@@ -2,10 +2,10 @@
 # Contributor: waterbear <st92.at.freeshell.org>
 
 pkgname=simh
-pkgver=3.12.3
+pkgver=3.12.4
 _pkgver=${pkgver//./-}
-_pkgver=${_pkgver/-/.}
-pkgrel=2
+_pkgver=${_pkgver/-/}
+pkgrel=1
 pkgdesc="simulator for assorted historical computers, from Altair to VAX"
 arch=('loong64' 'x86_64')
 url="http://simh.trailing-edge.com"
@@ -13,27 +13,28 @@ license=("BSD")
 depends=("libpcap")
 makedepends=("unzip" "linux-api-headers")
 install=simh.install
-source=("$pkgname-$pkgver.tar.gz::https://github.com/open-simh/simh/archive/v${_pkgver}.tar.gz"
-	"LICENSE"
-	build-fix.patch)
-sha512sums=('ee473f30efcf2f63a6bd943d268adb32fa047ee30d97a250621a06db890ba6e96956268555e3f49e9dc758fa25c5c4f4070f2b05db0ab6625c072c7875b207cc'
-            '084faf8a66c95cb337bca19a6116c916aa04fc23ec5d57d5d8c2fc168231272123a705e83f8da2bf38f404da51727a69db68ffd87b36028e0cde52b54b92b2dd'
-            '663a5514333653352ad6134e42eca2a8c780f4d7c140dcc30063893c7470bdafe704703eee23ea89272d04acff2cdae013781b0345c2d9e9d86fcb42c50db530')
+#source=("$pkgname-$pkgver.tar.gz::https://github.com/open-simh/simh/archive/v${_pkgver}.tar.gz"
+source=("http://simh.trailing-edge.com/sources/simhv${_pkgver}.zip"
+	"build-fix.patch"
+	"LICENSE")
+sha512sums=('6e7daf5553db734cc3bf94c72ee60b7981aa903cbf75f0570803d298a23fedc1801b629ea7e5b55592db7041abfad3c8fd850030ef1cd2bf3004d9ac59ee8e8c'
+            '663a5514333653352ad6134e42eca2a8c780f4d7c140dcc30063893c7470bdafe704703eee23ea89272d04acff2cdae013781b0345c2d9e9d86fcb42c50db530'
+            '084faf8a66c95cb337bca19a6116c916aa04fc23ec5d57d5d8c2fc168231272123a705e83f8da2bf38f404da51727a69db68ffd87b36028e0cde52b54b92b2dd')
 
 prepare() {
-  cd "$srcdir/$pkgname-${_pkgver}"
-  patch -p1 <../build-fix.patch
+  cd "$srcdir/sim"
   sed -i '/Retry your build without specifying USE_NETWORK/d' makefile
+  patch -p1 -i "$srcdir"/build-fix.patch
 }
 
 build() {
-  cd "$srcdir/$pkgname-${_pkgver}"
+  cd "$srcdir/sim"
   mkdir -p BIN
   make USE_SHARED=1 USE_NETWORK=1 NETWORK_OPT='-DUSE_NETWORK -DHAVE_TAP_NETWORK'
 }
 
 package() {
-  cd "$srcdir/$pkgname-${_pkgver}/BIN"
+  cd "$srcdir/sim/BIN"
   rmdir buildtools || true
   for i in *; do
     install -D $i "$pkgdir/usr/bin/simh-$i"

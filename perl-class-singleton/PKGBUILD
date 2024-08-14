@@ -4,7 +4,7 @@
 
 pkgname=perl-class-singleton
 pkgver=1.6
-pkgrel=2
+pkgrel=3
 pkgdesc="Implementation of a singleton class"
 arch=('any')
 url="https://search.cpan.org/dist/Class-Singleton"

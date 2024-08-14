@@ -2,30 +2,42 @@
 # Contributor: David Runge <dvzrv@archlinux.org>
 
 pkgname=cage
-pkgver=0.1.5
+pkgver=0.1.5+r36+ge7d8780
+_commit=e7d8780f46277af87881e0be91cb2092541bb1d5 # master # 2024-02-26
 pkgrel=2
 pkgdesc="A kiosk compositor for Wayland"
 arch=(loong64 x86_64)
 url="https://www.hjdskes.nl/projects/cage/"
 license=(MIT)
-depends=(glibc wayland wlroots0.16)
-makedepends=(git libxkbcommon meson pixman scdoc wayland-protocols
-xorg-server-xwayland)
+depends=('glibc' 'wayland' 'wlroots0.17')
+makedepends=(git libxkbcommon meson scdoc wayland-protocols xorg-server-xwayland)
+provides=('wayland-compositor')
 optdepends=(
   'polkit: System privilege control. Required if not using seatd service'
   'xorg-server-xwayland: X11 support'
 )
-source=("${pkgname}::git+https://github.com/Hjdskes/${pkgname}.git#tag=v${pkgver}?signed")
+source=(#"${pkgname}::git+https://github.com/Hjdskes/${pkgname}.git#tag=v${pkgver}?signed"
+        "git+https://github.com/cage-kiosk/cage.git#commit=$_commit"
+)
 install=cage.install
-sha512sums=('SKIP')
+sha512sums=('7244b52b8357c83704bccbe8c1183170526e14a4ec26630d6f4fe73c1e64783f42ce1f626653517b2b814abae1aad79c725ea17a5ff341e4c8323563b72a13c4')
 validpgpkeys=(
     '13B6A35E9FD677D02CD68DBE37C445296EBC43B1' # Jente Hidskes <dev@hjdskes.nl>
     '34FF9526CFEF0E97A340E2E40FDE7BE0E88F5E48' # Simon Ser <contact@emersion.fr>
 )
 
+pkgver() {
+  cd $pkgname
+  git describe --tags | sed 's/^v//;s/-/+r/;s/-/+/'
+}
+
+
 build() {
-  export PKG_CONFIG_PATH='/usr/lib/wlroots0.16/pkgconfig'
-  arch-meson -Dxwayland=true build "$pkgname"
+  export PKG_CONFIG_PATH='/usr/lib/wlroots0.17/pkgconfig'
+  arch-meson "$pkgname"  build \
+    -Dxwayland=enabled
+  # Print config
+  meson configure build
   ninja -C build
 }
 
@@ -34,9 +46,10 @@ check() {
 }
 
 package() {
-  depends+=(libwlroots.so=11 libxkbcommon.so libpixman-1.so)
+  depends+=(libwlroots.so=12 libxkbcommon.so)
 
-  DESTDIR="${pkgdir}" meson install -C build
+  # DESTDIR="${pkgdir}" meson install -C build
+  DESTDIR="${pkgdir}" ninja -C build install
   install -vDm 644 "$pkgname/README.md" -t "${pkgdir}/usr/share/doc/${pkgname}"
   install -vDm 644 "$pkgname/LICENSE" -t "${pkgdir}/usr/share/licenses/${pkgname}"
 }

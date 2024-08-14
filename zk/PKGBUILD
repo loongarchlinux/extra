@@ -2,30 +2,18 @@
 # Contributor: Nogweii <me@nogweii.net>
 
 pkgname=zk
-pkgver=0.14.0
+pkgver=0.14.1
 pkgrel=1
 pkgdesc='A command-line tool helping you to maintain a Zettelkasten or personal wiki'
 arch=('loong64' 'x86_64')
-url='https://github.com/mickael-menu/zk'
-license=('GPL3')
+url='https://github.com/zk-org/zk'
+license=('GPL-3.0-only')
 depends=('glibc')
 makedepends=('git' 'go')
 options=('!lto')
-_commit='b71a74eabcfc97df7b31e51edfb8e1b749061a76'
-source=(
-  "$pkgname::git+$url.git#commit=$_commit"
-  'skip-failing-test.patch'
-)
-sha512sums=('SKIP'
-            '2d05dc79cadc3cb6dee71d09de10ec99690e75aaf7cc6622489d88525808c4f84ddd381b5875901d7b87eac1e24c27df19d7789b7ad0f001032504cff8a48dfd')
-b2sums=('SKIP'
-        'fed9d45b9b81b874f0d2fc7beb59badde7a5495b3aa07562fd572679c40275cbfcfe8cbfb5f2cd24735948c34d3f157b97b50704a87ec46f72b927f211469ada')
-
-pkgver() {
-  cd "$pkgname"
-
-  git describe --tags | sed 's/^v//'
-}
+source=("$pkgname::git+$url.git#tag=v$pkgver")
+sha512sums=('c81c5ed989728c7528d301acdf709d4be0541b942405166bb8e7e0e541804363a3b5a84450ed8422ba74fcd7a73d6acecd296dd1138e168fb1b0edd09f307180')
+b2sums=('133857e8c4e72af74813e353da5e12e765af137e8ca3361a82a915173c8523126ea0f0689e01d8738e980c41c41209af7871d53d9a15611e0578c3715eee8a3d')
 
 prepare() {
   cd "$pkgname"
@@ -36,10 +24,6 @@ prepare() {
   # download dependencies
   export GOPATH="${srcdir}"
   go mod download
-
-  # skip failing test
-  # https://github.com/mickael-menu/zk/issues/323
-  patch -p1 -i "$srcdir/skip-failing-test.patch"
 }
 
 build() {
@@ -56,7 +40,7 @@ build() {
     -modcacherw \
     -ldflags "-compressdwarf=false \
     -linkmode external \
-    -extldflags ${LDFLAGS} \
+    -extldflags '${LDFLAGS}' \
     -X main.Version=$(git describe --tags HEAD) \
     -X main.Build=$(git rev-parse --short HEAD)" \
     -tags "fts5" \

@@ -2,21 +2,26 @@
 
 _pkg=wurlitzer
 pkgname=python-${_pkg}
-pkgver=3.0.3
-pkgrel=3
+pkgver=3.1.1
+pkgrel=1
 pkgdesc="Capture C-level stdout/stderr in Python"
 arch=(any)
 url="https://github.com/minrk/wurlitzer"
 license=(MIT)
 depends=(python)
-makedepends=(python-setuptools)
+makedepends=(
+  python-build
+  python-installer
+  python-setuptools
+  python-wheel
+)
 checkdepends=(python-pytest)
 source=(https://files.pythonhosted.org/packages/source/${_pkg::1}/${_pkg}/${_pkg}-${pkgver}.tar.gz)
-sha256sums=('224f5fe70618be3872c05dfddc8c457191ec1870654596279fcc1edadebe3e5b')
+sha256sums=('bfb9144ab9f02487d802b9ff89dbd3fa382d08f73e12db8adc4c2fb00cd39bd9')
 
 build() {
   cd ${_pkg}-${pkgver}
-  python setup.py build
+  python -m build --wheel --no-isolation
 }
 
 check() {
@@ -26,6 +31,6 @@ check() {
 
 package() {
   cd ${_pkg}-${pkgver}
-  python setup.py install --root "${pkgdir}" --prefix=/usr --optimize=1 --skip-build
+  python -m installer --destdir="$pkgdir" dist/*.whl
   install -Dm644 LICENSE -t "${pkgdir}"/usr/share/licenses/${pkgname}/
 }

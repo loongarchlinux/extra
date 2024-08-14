@@ -5,74 +5,73 @@
 # Contributor: Stefan Cocora <stefan dot cocora at gmail dot com>
 
 pkgname=skaffold
-pkgver=2.10.0
+pkgver=2.13.1
 pkgrel=1
 pkgdesc="A command line tool that facilitates continuous development for Kubernetes applications"
 arch=("loong64" "x86_64")
-url="https://github.com/GoogleContainerTools/${pkgname}"
-license=("Apache")
-depends=("docker" "kompose")
-makedepends=("go" "go-licenses" "python")
+url="https://github.com/GoogleContainerTools/skaffold"
+license=("Apache-2.0")
+depends=(
+  "docker"
+  "kompose"
+)
+makedepends=(
+  "git"
+  "go"
+  "go-licenses"
+  "python"
+)
 optdepends=(
   "minikube: To use Minikube"
   "kubectl: For Kubernetes support"
   "bash-completion: Tab autocompletion"
 )
-source=(
-  "${pkgname}-${pkgver}.tar.gz::https://github.com/GoogleContainerTools/${pkgname}/archive/v${pkgver}.tar.gz"
-)
-sha512sums=('c69bf5ea19407cb400738da6ebf2aa22e2d101f26784e9972de118267f230b5acf45d44ff94e27bc74d0d2c1e86b32968b2d69504d3ea0886d7cd838ca5dc917')
-b2sums=('854f1de5ae144745ad58edbaaecba189daae856b067f5ea834d88640be7c29e216ee475ca2660686d9a9a4fc3937f2bc35b7ddc399ba4df6b92c6d3f858ada19')
-_commit="ba02de8494a2cfe36249087871e9c7aa80fc535e"
+options=(!lto)
+source=("$pkgname::git+$url.git#tag=v$pkgver")
+sha512sums=('b8a89c62ae47ae417289be067e4c79a30634eba78826e994376d9b05e3bb199f87783bab3f9aa025a465db51dda82ffdb7864912e3168718c944674e86688523')
+b2sums=('12d950fa7e692b03e8a88aa782b97e2ef416b9681b053c23ce525fa3cd323accadfddf7077f3141f4374fe9af215113dd94f3e5f2ebd112c06bfb4df43e10a8d')
 
 prepare() {
-  cd "${srcdir}/${pkgname}-${pkgver}"
+  cd "${pkgname}"
 
-  rm -rf "${srcdir}/gopath"
-  mkdir -p "${srcdir}/gopath/bin"
-  mkdir -p "${srcdir}/gopath/src/github.com/GoogleContainerTools"
-  ln -rTsf "${srcdir}/${pkgname}-${pkgver}" "${srcdir}/gopath/src/github.com/GoogleContainerTools/${pkgname}"
+  GOFLAGS="-mod=readonly" go mod vendor -v
 
+  # Remove Go flag -race as it is incompatible with -buildmode=pie.
   sed -i 's/-race//g' Makefile Makefile.diag
-  sed -i '/check-docs/d' hack/checks.sh
-  sed -i '/check-licenses/d' hack/checks.sh
-  sed -i '/check-schema-changes/d' hack/checks.sh
+  # Remove check that requires running Docker.
   sed -i '/test-generated-proto/d' hack/checks.sh
-  rm --verbose pkg/skaffold/tag/git_commit_test.go
 }
 
 build() {
-  cd "${srcdir}/gopath/src/github.com/GoogleContainerTools/${pkgname}"
-  export GOPATH="${srcdir}/gopath"
-  export PATH="${PATH}:${GOPATH}/bin"
-  export VERSION="v${pkgver}"
-  export COMMIT="${_commit}"
-  export TREE_STATE="clean"
+  cd "${pkgname}"
+
   export CGO_CPPFLAGS="${CPPFLAGS}"
   export CGO_CFLAGS="${CFLAGS}"
   export CGO_CXXFLAGS="${CXXFLAGS}"
   export CGO_LDFLAGS="${LDFLAGS}"
-  export GOFLAGS="-buildmode=pie -mod=readonly -modcacherw -x -v -ldflags=-linkmode=external"
-  make install
+  export GOFLAGS='-buildmode=pie -mod=vendor -modcacherw -x -v -ldflags=-linkmode=external'
+  export GOPATH="${srcdir}"
 
-  # To avoid issues deleting directories next time
-  go clean --modcache
-
-  # Create completion files
-  "${srcdir}/gopath/bin/${pkgname}" completion bash > "${srcdir}/${pkgname}-completion.bash"
-  "${srcdir}/gopath/bin/${pkgname}" completion zsh > "${srcdir}/${pkgname}-completion.zsh"
+  VERSION="${pkgver}" make
 }
 
 check() {
-  cd "${srcdir}/${pkgname}-${pkgver}"
+  cd "${pkgname}"
 
-  # don't call the `test` target as it does unnecessary linter tests
-  make unit-tests checks
+  # Don't call the `test` target as it does unnecessary linter tests.
+  make unit-tests
+  make checks
   make -f Makefile.diag test
 }
 
 package() {
-  install -Dm755 "${srcdir}/gopath/bin/${pkgname}" "${pkgdir}/usr/bin/${pkgname}"
-  install -Dm644 "${srcdir}/${pkgname}-completion.bash" "${pkgdir}/usr/share/bash-completion/completions/${pkgname}"
-  install -Dm644 "${srcdir}/${pkgname}-completion.zsh" "${pkgdir}/usr/share/zsh/site-functions/_skaffold"
+  cd "${pkgname}"
+
+  install -Dm755 -t "${pkgdir}/usr/bin" out/skaffold
+  ./out/skaffold completion bash \
+    | install -Dm644 /dev/stdin "${pkgdir}/usr/share/bash-completion/completions/skaffold"
+  ./out/skaffold completion zsh \
+    | install -Dm644 /dev/stdin "${pkgdir}/usr/share/zsh/site-functions/_skaffold"
+  ./out/skaffold completion fish \
+    | install -Dm644 /dev/stdin "${pkgdir}/usr/share/fish/vendor_completions.d/skaffold.fish"
 }

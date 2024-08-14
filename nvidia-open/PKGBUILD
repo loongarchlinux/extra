@@ -1,17 +1,17 @@
 # Maintainer: Sven-Hendrik Haase <svenstaro@archlinux.org>
 pkgbase=nvidia-open
 pkgname=(nvidia-open nvidia-open-dkms)
-pkgver=550.78
-pkgrel=2
+pkgver=555.58.02
+pkgrel=15
 pkgdesc="NVIDIA open kernel modules"
 arch=('loong64' 'x86_64')
 url="https://github.com/NVIDIA/open-gpu-kernel-modules"
 depends=("nvidia-utils=${pkgver}" 'libglvnd')
 makedepends=('linux-headers')
-license=('GPL')
+license=('MIT AND GPL-2.0-only')
 source=("$pkgname-$pkgver.tar.gz::https://github.com/NVIDIA/open-gpu-kernel-modules/archive/refs/tags/${pkgver}.tar.gz"
         nvidia-open-gcc-ibt-sls.patch)
-sha512sums=('2226b29d7606d92fc78bcc7489c88e44f5b675dc108843654c24cd56b075c318c3bc7df24acb0d3d82c57f6d5924701971a7864213fe2d76a1fae209f36b6da8'
+sha512sums=('5cc927d994ba5ec79333b21534dbc60904b5e1ce746d231d29764648d6f6ffd8e7646b69f32b3d28f9ef8c407df5a04e5a94ff26d503201ec8fd17028bf3ccc9'
             '263c4c5e75ef8cb8ca2641c022dfaf8bd9222fadf68ed15120b0ae7dd9cc901a04ce2e55625d513a0995759c9d82dfbdc4c33d4751159124915d7404b1400e34')
 
 prepare() {
@@ -64,11 +64,7 @@ package_nvidia-open() {
   _extradir="/usr/lib/modules/$(</usr/src/linux/version)/extramodules"
   install -Dt "${pkgdir}${_extradir}" -m644 kernel-open/*.ko
   find "${pkgdir}" -name '*.ko' -exec strip --strip-debug {} +
-  find "${pkgdir}" -name '*.ko' -exec xz {} +
-
-  # Force module to load even on unsupported GPUs
-  mkdir -p "$pkgdir"/usr/lib/modprobe.d
-  echo "options nvidia NVreg_OpenRmEnableUnsupportedGpus=1" > "$pkgdir"/usr/lib/modprobe.d/nvidia-open.conf
+  find "${pkgdir}" -name '*.ko' -exec zstd --rm -19 {} +
 
   install -Dm644 COPYING "$pkgdir"/usr/share/licenses/$pkgname
 }
@@ -82,10 +78,6 @@ package_nvidia-open-dkms() {
   # cp -dr --no-preserve='ownership' kernel-open "${pkgdir}/usr/src/nvidia-$pkgver"
   cp -dr --no-preserve='ownership' open-gpu-kernel-modules-dkms "${pkgdir}/usr/src/nvidia-$pkgver"
   mv "${pkgdir}/usr/src/nvidia-$pkgver/kernel-open/dkms.conf" "${pkgdir}/usr/src/nvidia-$pkgver/dkms.conf"
-
-  # Force module to load even on unsupported GPUs
-  mkdir -p "$pkgdir"/usr/lib/modprobe.d
-  echo "options nvidia NVreg_OpenRmEnableUnsupportedGpus=1" > "$pkgdir"/usr/lib/modprobe.d/nvidia-open.conf
 
   install -Dm644 open-gpu-kernel-modules-${pkgver}/COPYING "$pkgdir"/usr/share/licenses/$pkgname
 }

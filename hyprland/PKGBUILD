@@ -4,19 +4,21 @@
 # Contributor: Gabriel Fox <inbox@gabrielfox.dev>
 
 pkgname=hyprland
-pkgver=0.40.0
+pkgver=0.42.0
 pkgrel=1
 pkgdesc='a highly customizable dynamic tiling Wayland compositor'
 arch=(loong64 x86_64 aarch64)
 url="https://github.com/hyprwm/${pkgname^}"
 license=(BSD-3-Clause)
 depends=(cairo # libcairo.so
+         aquamarine libaquamarine.so
          gcc-libs # libgcc_s.so libstdc++.so
          glibc # libc.so libm.so
          glib2 libgobject-2.0.so
          glslang
          hyprcursor libhyprcursor.so
          hyprlang libhyprlang.so
+         hyprutils libhyprutils.so
          libdisplay-info libdisplay-info.so
          libdrm # libdrm.so
          libglvnd libEGL.so libGLESv2.so libOpenGL.so
@@ -25,6 +27,7 @@ depends=(cairo # libcairo.so
          libx11
          libxcb # libxcb-dri3.so libxcb-present.so libxcb-render.so libxcb-res.so libxcb-shm.so libxcb.so libxcb-xfixes.so libxcb-xinput.so
          libxcomposite # libxcb-composite.so
+         libxcursor
          libxfixes
          libxkbcommon libxkbcommon.so
          libxrender
@@ -59,20 +62,13 @@ optdepends=('cmake: to build and install plugins using hyprpm'
             'cpio: to build and install plugins using hyprpm'
             'meson: to build and install plugins using hyprpm')
 _archive="${pkgname^}-$pkgver"
-source=("$_archive.tar.gz::$url/releases/download/v$pkgver/source-v$pkgver.tar.gz"
-        741ed28391f035658e2410934a88ea60e1c5cbe8.patch
-        ec092bd601d9d351ff6ca34bd97f12055b2a4dd9.patch)
-sha256sums=('0995fe7924a60e3d81428b3fa03ab15d8065958d6285443225afbafa31d29038'
-            'd0719d5f1df0ed9b8cd92169aab4819457078c046e4253e752ff7ce5ad9e44d8'
-            'a4ab9aad0aeba3aa1f806f5716b01745ef1ea24bae1349b1d2fe3ab29fee5e1c')
+source=("$_archive.tar.gz::$url/releases/download/v$pkgver/source-v$pkgver.tar.gz")
+sha256sums=('278c137ad28f5e4ef9d65032b18cb230799c982d008654a90b5060dd32eaa54a')
 
 prepare() {
 	ln -sf hyprland-source "$_archive"
 	cd "$_archive"
 	sed -i -e '/^release:/{n;s/-D/-DCMAKE_SKIP_RPATH=ON -D/}' Makefile
-
-	patch -d subprojects/wlroots-hyprland/ -p1 -i "${srcdir}"/741ed28391f035658e2410934a88ea60e1c5cbe8.patch
-	patch -p1 -i "${srcdir}"/ec092bd601d9d351ff6ca34bd97f12055b2a4dd9.patch
 }
 
 build() {
@@ -83,14 +79,6 @@ build() {
 package() {
 	cd "$_archive"
 	find src \( -name '*.h' -o -name '*.hpp' \) -exec install -Dm0644 {} "$pkgdir/usr/include/hyprland/{}" \;
-	pushd subprojects/wlroots-hyprland/include
-	find . -name '*.h' -exec install -Dm0644 {} "$pkgdir/usr/include/hyprland/wlroots-hyprland/{}" \;
-	popd
-	pushd subprojects/wlroots-hyprland/build/include
-	find . -name '*.h' -exec install -Dm0644 {} "$pkgdir/usr/include/hyprland/wlroots-hyprland/{}" \;
-	popd
-	mkdir -p "$pkgdir/usr/include/hyprland/protocols"
-	cp protocols/*-protocol.h "$pkgdir/usr/include/hyprland/protocols"
 	pushd build
 	cmake -DCMAKE_INSTALL_PREFIX=/usr ..
 	popd
@@ -106,6 +94,4 @@ package() {
 	install -Dm0644 -t "$pkgdir/usr/share/wayland-sessions/" "example/$pkgname.desktop"
 	install -Dm0644 -t "$pkgdir/usr/share/$pkgname/" "example/$pkgname.conf"
 	install -Dm0644 -t "$pkgdir/usr/share/licenses/$pkgname/" LICENSE
-        find subprojects/wlroots-hyprland/build -name 'libwlroots.so.*' -type f -execdir \
-                install -Dm0755 -t "$pkgdir/usr/lib/" {} \;
 }

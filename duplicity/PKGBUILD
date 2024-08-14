@@ -4,18 +4,16 @@
 # Contributor: Aaron Schaefer <aaron@elasticdog.com>
 
 pkgname=duplicity
-pkgver=2.1.4
+pkgver=3.0.0
 pkgrel=2
 pkgdesc='A utility for encrypted, bandwidth-efficient backups using the rsync algorithm'
 arch=('loong64' 'x86_64')
 url='https://duplicity.gitlab.io/'
-license=('GPL')
+license=('GPL-2.0-only')
 depends=(
   'gnupg'
   'librsync'
-  'python-paramiko'
   'python-fasteners'
-  'python-future'
 )
 makedepends=(
   'git'
@@ -33,30 +31,34 @@ optdepends=(
   'python-dropbox: Dropbox backend'
   'python-gobject: GIO backend'
   'gvfs: GIO backend'
+  'python-paramiko: SSH paramiko backend'
+  'python-pexpect: SSH pexpect backend'
   'python-pydrive2: Google Drive backend'
   'python-mediafire: Mediafire backend'
   'python-requests-oauthlib: OneDrive backend'
+  'rclone: rclone backend'
   'rsync: rsync backend'
 )
-_commit='f1ab57ac5f3cf2ec2c7178b88154d9451e8283ed'
 source=(
-  "$pkgname::git+https://gitlab.com/duplicity/duplicity#commit=$_commit"
+  "$pkgname::git+https://gitlab.com/duplicity/duplicity#tag=rel.$pkgver"
   'fix-documentation-directory.patch'
+  'no-pip.patch'
 )
-b2sums=('SKIP'
-        '04dad8ce369f4fb78e2b3239e30d63410d8e8c33b5e05717b5b62ba54c624c2e931220b950bad507deab60a07086c434949f0766bc3ae2eb771d62e1919cbecd')
-
-pkgver() {
-  cd "$pkgname"
-
-  git describe --tags | sed 's/^rel\.//'
-}
+sha512sums=('b54fd628fb5331d14a96d8e45c5c27103fd670fb471dc80178e58235a67c79330a65096b7b5751e9de4fdeea455e867e14d91c3be979b9773131a59a0a5deb3f'
+            'fac5f64001f91f65f4b7d8edd5b3dd667ffaf73ceb06102a93f7c4c4bcf898695d62d143ebaf5173fe2a1a797109ecde9cfc8b3779ad1d234d3abb0f1334644e'
+            'a308e5eab6fb7a0b3230b379af21fe13b9b4a90bab12c37b642f8dcdd5b616172dcc3900aa4f3a9f7f867239cb39556074beb0d5148ec38df17b2e1a8f0101d7')
+b2sums=('569a0fd1326869bd72b137f01fa0492f827634fbe5af5c4d6775b36e0dfca45a4aa59b93a0fcdca112f10258792cd6c026034d2c2bddd1fdea7232f6163050e5'
+        '04dad8ce369f4fb78e2b3239e30d63410d8e8c33b5e05717b5b62ba54c624c2e931220b950bad507deab60a07086c434949f0766bc3ae2eb771d62e1919cbecd'
+        '8b8d17e127e28bab9a19a0a76c024b862ac84f00a341e4bd2446701ef659d903ddc68b484c7741a03d20e96808bc01d1aa7f52182e3897848eabd8db2459f5a8')
 
 prepare() {
   cd "$pkgname"
 
   # move documentation to the correct directory
   patch -p1 -i "$srcdir/fix-documentation-directory.patch"
+
+  # do not use pip/pipx
+  patch -p1 -i "$srcdir/no-pip.patch"
 }
 
 build() {

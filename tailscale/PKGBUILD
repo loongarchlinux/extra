@@ -3,7 +3,7 @@
 # Contributor: David Anderson <dave@natulte.net>
 
 pkgname=tailscale
-pkgver=1.66.1
+pkgver=1.70.0
 pkgrel=1
 pkgdesc="A mesh VPN that makes it easy to connect your devices, wherever they are."
 arch=("loong64" "x86_64")
@@ -15,7 +15,7 @@ backup=("etc/default/tailscaled")
 # Important: Check if the version has been published before updating
 # pkgctl version check
 source=("git+https://github.com/tailscale/tailscale.git#tag=v${pkgver}")
-sha256sums=('d65302233290c34af592b086a807b91ff8e59fd9f4ff6c6b9c4cc7cdbd9bb0db')
+sha256sums=('1640adeb93ad846c04ce4e6921a0017e7dd8da9131fc20d7d22b9224cca876b9')
 
 options=(!lto)
 
@@ -54,4 +54,8 @@ package() {
     install -Dm644 cmd/tailscaled/tailscaled.defaults "$pkgdir/etc/default/tailscaled"
     install -Dm644 cmd/tailscaled/tailscaled.service -t "$pkgdir/usr/lib/systemd/system"
     install -Dm644 LICENSE -t "$pkgdir/usr/share/licenses/$pkgname"
+
+  "$pkgdir/usr/bin/tailscale" completion bash | install -Dm644 /dev/stdin "$pkgdir/usr/share/bash-completion/completions/tailscale"
+  "$pkgdir/usr/bin/tailscale" completion zsh | install -Dm644 /dev/stdin "$pkgdir/usr/share/zsh/site-functions/_tailscale"
+  "$pkgdir/usr/bin/tailscale" completion fish | install -Dm644 /dev/stdin "$pkgdir/usr/share/fish/vendor_completions.d/tailscale.fish"
 }

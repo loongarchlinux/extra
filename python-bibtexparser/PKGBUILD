@@ -1,0 +1,36 @@
+# Maintainer: Caleb Maclennan <caleb@alerque.com>
+# Contributor: JP-Ellis <josh@jpellis.me>
+# Contributor: Francois Boulogne <fboulogne at april dot org>
+
+pkgname=python-bibtexparser
+_pyname=${pkgname#python-}
+pkgver=1.4.1
+pkgrel=3
+pkgdesc="Bibtex parser in Python"
+arch=(any)
+url="https://pypi.org/project/bibtexparser/"
+license=(LGPL-3.0-only)
+depends=(python
+         python-pyparsing)
+makedepends=(python-{build,installer,wheel}
+             python-setuptools)
+# checkdepends=(python-pytest)
+_archive="$_pyname-$pkgver"
+source=("https://files.pythonhosted.org/packages/source/${_pyname::1}/$_pyname/$_archive.tar.gz")
+sha256sums=('e00e29e24676c4808e0b4333b37bb55cca9cbb7871a56f63058509281588d789')
+
+build() {
+	cd "$_archive"
+	python -m build -wn
+}
+
+# Upstream has tests for 2.x currently in beta, but not 1.4
+check() {
+	cd "$_archive"
+	# pytest
+}
+
+package() {
+	cd "$_archive"
+	python -m installer -d "$pkgdir/" dist/*.whl
+}

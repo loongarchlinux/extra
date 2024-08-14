@@ -3,13 +3,13 @@
 
 pkgname=ttf-roboto
 pkgver=2.138
-pkgrel=4
+pkgrel=5
 pkgdesc="Google's signature family of fonts"
 url='https://material.google.com/style/typography.html'
 arch=('any')
 license=('Apache')
-source=(https://sources.archlinux.org/other/community/ttf-roboto/ttf-roboto-hinted-$pkgver.zip)
-md5sums=('a7e2d4b06e2137172838f8ef37f89339')
+source=(https://sources.archlinux.org/other/packages/ttf-roboto/ttf-roboto-hinted-$pkgver.zip)
+sha256sums=('07450a24476bced534a8afbd89595302a532e9348ca6c82f4b13c437a309a34c')
 
 package() {
   install -Dm644 *.ttf -t "$pkgdir"/usr/share/fonts/TTF

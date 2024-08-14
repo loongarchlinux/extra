@@ -2,20 +2,26 @@
 
 pkgbase=orbiton
 pkgname=(orbiton orbiton-gtk3 orbiton-nano)
-pkgver=2.65.11
+pkgver=2.65.12
 pkgrel=1
 pkgdesc='Fast and configuration-free text editor and IDE limited by VT100'
 arch=(loong64 x86_64)
-url='https://orbiton.zip'
+url='https://roboticoverlords.org/orbiton/'
 license=(BSD-3-Clause)
 makedepends=(git go vte3)
 options=(!lto)
-source=("git+https://github.com/xyproto/orbiton#commit=df34d2866a5f835b944d64384354450e3404d151") # tag: v2.65.11
-b2sums=('SKIP')
+source=("git+https://github.com/xyproto/orbiton#commit=ebe984d9d8bda1aa806199de3d4f79197ee72b13") # tag: v2.65.12
+b2sums=('57ed2beb07db50dcc7e1d95a6a814aef29d84959270455dfcf7e4fc56b8ddd9c29c26d4b4d6ea12f7639fe8f7aabafe13e56aa550506ee1adf6b495620c7ea15')
+
+prepare() {
+  # Stop the install target from rebuilding executables (will be fixed in the next release)
+  sed -i 's/install: o/install:/' $pkgbase/Makefile
+}
 
 build() {
-  export CXXFLAGS="$CXXFLAGS -Wl,--as-needed,--strip-all,-z,relro,-z,now"
-  export LDFLAGS='-Wl,-O2,--as-needed,-z,relro,-z,now'
+  # Adjust the LDFLAGS to work together with go build
+  export LDFLAGS="$(echo $LDFLAGS | sed 's/ -Wl//g;s/,--sort-common//')"
+
   make -C $pkgbase o gui
 }
 

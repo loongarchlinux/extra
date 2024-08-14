@@ -3,7 +3,7 @@
 pkgname=python-execnet
 pkgver=2.0.2
 _commit=030839490f85dad2a2d58f1fe17bdf16f09c4e8e
-pkgrel=2
+pkgrel=3
 pkgdesc="Rapid multi-Python deployment"
 arch=('any')
 license=('MIT')
@@ -19,7 +19,6 @@ makedepends=(
 checkdepends=(
   'openssh'
   'procps-ng'
-  'python-py'
   'python-pytest'
   'python-pytest-timeout'
 )

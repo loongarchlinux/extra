@@ -2,8 +2,8 @@
 # Contributor: Michael Schubert <mschu.dev at gmail>
 
 pkgname=symengine
-pkgver=0.11.2
-pkgrel=4
+pkgver=0.12.0
+pkgrel=2
 pkgdesc='Fast symbolic manipulation library, written in C++'
 url='http://sympy.org/'
 arch=(loong64 x86_64)
@@ -21,18 +21,19 @@ depends=(flint
 makedepends=(boost
              cereal
              cmake
+             git
              llvm)
-source=(https://github.com/symengine/symengine/releases/download/v$pkgver/$pkgname-$pkgver.tar.gz
+source=(git+https://github.com/symengine/symengine#tag=v$pkgver
         llvm-shared.patch)
-sha256sums=('f6972acd6a65354f6414e69460d2e175729470632bdac05919bc2f7f32e48cbd'
+sha256sums=('f6eee00ac99118cfce8f647a00a199c61a4d9365bfd0b9da0070a37d5b8d8d2d'
             'ef05a806139b35e0336f00cb6960ef6cf483f11b0041e436a99ab1f46bdcb11c')
 
 prepare() {
-  patch -d $pkgname-$pkgver -p1 < llvm-shared.patch # Use shared LLVM (Gentoo)
+  patch -d $pkgname -p1 < llvm-shared.patch # Use shared LLVM (Gentoo)
 }
 
 build() {
-  cmake -B build -S $pkgname-$pkgver \
+  cmake -B build -S $pkgname \
     -DCMAKE_INSTALL_PREFIX=/usr \
     -DBUILD_SHARED_LIBS=ON \
     -DWITH_TCMALLOC=ON \
@@ -56,5 +57,5 @@ check() {
 
 package() {
   DESTDIR="$pkgdir" cmake --install build
-  install -Dm644 $pkgname-$pkgver/LICENSE -t "$pkgdir"/usr/share/licenses/$pkgname
+  install -Dm644 $pkgname/LICENSE -t "$pkgdir"/usr/share/licenses/$pkgname
 }

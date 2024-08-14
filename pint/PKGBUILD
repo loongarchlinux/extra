@@ -1,24 +1,18 @@
 # Maintainer: George Rawlinson <grawlinson@archlinux.org>
 
 pkgname=pint
-pkgver=0.45.0
+pkgver=0.59.0
 pkgrel=1
 pkgdesc='Rule linter/validator for Prometheus'
 arch=('loong64' 'x86_64')
 url='https://github.com/cloudflare/pint'
-license=('Apache')
+license=('Apache-2.0')
 depends=('glibc')
 makedepends=('git' 'go')
 options=('!lto')
-_commit='2b94079b3829a58c4ad59c2e72d219ebc3d915f9'
-source=("$pkgname::git+$url#commit=$_commit")
-b2sums=('SKIP')
-
-pkgver() {
-  cd "$pkgname"
-
-  git describe --tags | sed 's/^v//'
-}
+source=("$pkgname::git+$url#tag=v$pkgver")
+sha512sums=('1a41bcdabd236dc5b4bba4a1462f362f4554e775ada44bf85c51aaeb9868dabd1c6213a49b70ae2018b509ed6cf9b171556e3ca9e8e0825ad8d62ef0689221c6')
+b2sums=('4585e499d20746273ed05a5991acb317f08db66a0a933314765e135904ab759755fe914c457e6ee98dabcfdd13395a63db5a9850cea82f4926a1df233e62e334')
 
 prepare() {
   cd "$pkgname"
@@ -46,7 +40,7 @@ build() {
     -modcacherw \
     -ldflags "-compressdwarf=false \
     -linkmode external \
-    -extldflags ${LDFLAGS} \
+    -extldflags '${LDFLAGS}' \
     -X main.version=${pkgver} \
     -X main.commit=${_commit}" \
     -o build \

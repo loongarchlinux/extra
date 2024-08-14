@@ -6,21 +6,19 @@
 
 pkgname=cairo-dock-plug-ins
 pkgver=3.5.0
-pkgrel=3
+pkgrel=6
 pkgdesc='Plugins for Cairo-Dock'
 arch=('loong64' 'x86_64')
 url='https://glx-dock.org'
 license=('GPL')
 depends=('cairo-dock')
-makedepends=('alsa-lib' 'cmake' 'dbus-sharp-glib' 'fftw' 'gnome-menus'
-             'gtk-sharp-3' 'gvfs' 'libetpan' 'libexif' 'libical' 'libpulse'
+makedepends=('alsa-lib' 'cmake' 'fftw' 'gnome-menus'
+             'gvfs' 'libetpan' 'libexif' 'libical' 'libpulse'
              'libxklavier' 'lm_sensors' 'python' 'ruby' 'upower'
              'vala' 'vte3' 'zeitgeist' 'python-setuptools')
 optdepends=('alsa-lib: Sound Control, Sound Effects applets'
-            'dbus-sharp-glib: Mono API'
             'fftw: Impulse applet'
             'gnome-menus: Applications Menu applet'
-            'gtk-sharp-3: Mono API'
             'gvfs: GVFS integration'
             'libetpan: Mail applet'
             'libexif: Slider applet'
@@ -38,13 +36,9 @@ replaces=('cairo-dock-plugins')
 source=("cairo-dock-plug-ins-${pkgver}.tar.gz::https://github.com/Cairo-Dock/cairo-dock-plug-ins/archive/${pkgver}.tar.gz")
 sha256sums=('cf1ff262ee75ef69caa846a447de1738c8c5f3afa9fdbbdf9c51d623692f5636')
 
-prepare() {
-  cd cairo-dock-plug-ins-${pkgver}
-
-  sed 's/gmcs/mcs/' -i CMakeLists.txt
-}
-
 build() {
+  CXXFLAGS="${CXXFLAGS} -Wno-incompatible-pointer-types"
+  CFLAGS="${CFLAGS} -Wno-incompatible-pointer-types"
   cmake -B build -S cairo-dock-plug-ins-${pkgver} \
     -DCMAKE_INSTALL_PREFIX='/usr' \
     -DWITH_VALA_SRC='yes'

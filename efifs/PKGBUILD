@@ -2,51 +2,72 @@
 # Maintainer: Morten Linderud <foxboron@archlinux.org>
 
 pkgname=efifs
-pkgver=1.9
+pkgver=1.10
 pkgrel=1
-_commit=3ac43bb34bb2fadb10fb71ba21fbe94239640266
+_commit=408787353c3ad06226f54940437101323efec11b
 pkgdesc='Standalone EFI file system drivers'
 arch=('any')
 url='https://efi.akeo.ie/'
-license=('GPL3')
+license=('GPL-3.0-or-later')
 makedepends=('git' 'mingw-w64-gcc' 'arm-none-eabi-gcc' 'arm-none-eabi-newlib'
              'aarch64-linux-gnu-gcc' 'riscv64-linux-gnu-gcc')
-source=("git+https://github.com/pbatard/efifs.git#commit=${_commit}?signed"
+source=("git+https://github.com/pbatard/EfiFs.git#commit=${_commit}?signed"
         'git+https://git.savannah.gnu.org/git/grub.git'
-        'gnu-efi'::'git+https://git.code.sf.net/p/gnu-efi/code')
-sha256sums=('SKIP'
+        'git+https://github.com/ncroxon/gnu-efi.git'
+        '010-efifs-grub-fix-conflicting-parameter-types.patch'
+        '020-efifs-grub-fix-incompatible-pointer-types.patch'
+        '030-efifs-gnu-efi-remove-werror.patch')
+sha256sums=('f6b3b5055e10554b226383c2f23a1736b4d61fce249dd96e1ef230c4987d3f04'
             'SKIP'
-            'SKIP')
+            'SKIP'
+            'f87972064fbde9215ee2c9c9f7085dfc738f79cecd8b5b735cd4ce2916b543f8'
+            '5f207623fd37dfc6be89e600e5d54c118d93537c94fb8ec19f9ae5e1473cca6b'
+            'a9c3fc0aae024e3e2966536e575336858da85232db7888c495bf9444786215bd')
 validpgpkeys=('E7CDF2A016DDDD53F0B7943838E0CF5E69EDD671') # Pete Batard <pete@akeo.ie>
 
 prepare() {
-    git -C efifs submodule init
-    git -C efifs config --local submodule.grub.url "${srcdir}/grub"
-    git -C efifs config --local submodule.gnu-efi.url "${srcdir}/gnu-efi"
-    git -C efifs submodule update
+    git -C EfiFs submodule init
+    git -C EfiFs config --local submodule.grub.url "${srcdir}/grub"
+    git -C EfiFs config --local submodule.gnu-efi.url "${srcdir}/gnu-efi"
+    git -C EfiFs -c protocol.file.allow='always' submodule update
     
-    patch -d efifs/grub -Np1 -i "${srcdir}/efifs/0001-GRUB-fixes.patch"
+    patch -d EfiFs/grub -Np1 -i "${srcdir}/EfiFs/0001-GRUB-fixes.patch"
     
-    cp -af efifs{,-ia32}
-    cp -af efifs{,-arm}
-    cp -af efifs{,-aa64}
-    cp -af efifs{,-riscv64}
+    # https://github.com/pbatard/EfiFs/issues/47
+    patch -d EfiFs/grub -Np1 -i "${srcdir}/010-efifs-grub-fix-conflicting-parameter-types.patch"
+    patch -d EfiFs/grub -Np1 -i "${srcdir}/020-efifs-grub-fix-incompatible-pointer-types.patch"
+    patch -d EfiFs/gnu-efi -Np1 -i "${srcdir}/030-efifs-gnu-efi-remove-werror.patch"
+    
+    cp -af EfiFs{,-ia32}
+    cp -af EfiFs{,-arm}
+    cp -af EfiFs{,-aa64}
+    cp -af EfiFs{,-riscv64}
 }
 
 build() {
     unset -v CFLAGS
     unset -v MAKEFLAGS
-    make -C efifs ARCH='x64'
-    make -C efifs-ia32 ARCH='ia32'
-    make -C efifs-arm ARCH='arm' CROSS_COMPILE='arm-none-eabi-'
-    make -C efifs-aa64 ARCH='aa64' CROSS_COMPILE='aarch64-linux-gnu-'
-    make -C efifs-riscv64 ARCH='riscv64' CROSS_COMPILE='riscv64-linux-gnu-'
+    
+    printf '%s\n' '  -> building for x64...'
+    make -C EfiFs ARCH='x64'
+    
+    printf '%s\n' '  -> building for ia32...'
+    make -C EfiFs-ia32 ARCH='ia32'
+    
+    printf '%s\n' '  -> building for arm...'
+    make -C EfiFs-arm ARCH='arm' CROSS_COMPILE='arm-none-eabi-'
+    
+    printf '%s\n' '  -> building for aa64...'
+    make -C EfiFs-aa64 ARCH='aa64' CROSS_COMPILE='aarch64-linux-gnu-'
+    
+    printf '%s\n' '  -> building for riscv64...'
+    make -C EfiFs-riscv64 ARCH='riscv64' CROSS_COMPILE='riscv64-linux-gnu-'
 }
 
 package() {
-    install -D -m644 efifs/src/*.efi -t "${pkgdir}/usr/lib/efifs-x64"
-    install -D -m644 efifs-ia32/src/*.efi -t "${pkgdir}/usr/lib/efifs-ia32"
-    install -D -m644 efifs-arm/src/*.efi -t "${pkgdir}/usr/lib/efifs-arm"
-    install -D -m644 efifs-aa64/src/*.efi -t "${pkgdir}/usr/lib/efifs-aa64"
-    install -D -m644 efifs-riscv64/src/*.efi -t "${pkgdir}/usr/lib/efifs-riscv64"
+    install -D -m644 EfiFs/src/*.efi -t "${pkgdir}/usr/lib/efifs-x64"
+    install -D -m644 EfiFs-ia32/src/*.efi -t "${pkgdir}/usr/lib/efifs-ia32"
+    install -D -m644 EfiFs-arm/src/*.efi -t "${pkgdir}/usr/lib/efifs-arm"
+    install -D -m644 EfiFs-aa64/src/*.efi -t "${pkgdir}/usr/lib/efifs-aa64"
+    install -D -m644 EfiFs-riscv64/src/*.efi -t "${pkgdir}/usr/lib/efifs-riscv64"
 }

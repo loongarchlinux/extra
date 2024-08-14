@@ -4,47 +4,95 @@
 
 _gemname=rack
 pkgname=ruby-rack
-pkgver=3.0.8
+pkgver=3.0.9.1
 pkgrel=1
 pkgdesc='Minimal, modular, and adaptable interface for developing web applications'
 url='https://rack.github.io/'
 arch=('any')
 license=('MIT')
-depends=('ruby')
-makedepends=('ruby-rdoc' 'ruby-rake' 'ruby-bundler' 'ruby-minitest'
-             'ruby-minitest-global_expectations' 'ruby-minitest-sprint')
-checkdepends=('ruby-webrick')
+depends=(
+  ruby
+  ruby-erb
+)
+makedepends=(
+  ruby-rdoc
+)
+checkdepends=(
+  ruby-bundler
+  ruby-minitest
+  ruby-minitest-global_expectations
+  ruby-rake
+)
 options=('!emptydirs')
-source=(https://github.com/rack/rack/archive/v${pkgver}/${pkgname}-${pkgver}.tar.gz)
-sha256sums=('f4cf32bece433d81682590e953a50ecc97282d83b2c1acaea96a30f53feba8ea')
-sha512sums=('045a1de846e984d2067ce647d0b3652c810a264fa4f84e9791a623ac5c5cfa5ab4b961c4cb0328b51a71f66082190741dbaac3f4dbafad7c5a8e97a71b169448')
+source=("https://github.com/rack/rack/archive/v${pkgver}/${pkgname}-${pkgver}.tar.gz")
+sha512sums=('0aacf814463dc03a95aaa7ec979caf3464d9e19d5ab9c3842978c2c94b81e8b2ed040f3f4028fd046c73e0632ee7754755cd35afc81ca47e22d43d4882086dc0')
+b2sums=('300be59512a1497b832fe553ae9d957e380c5399707c891b67a950db32682ee8e2539dab02e656fdc855a8c821d7a5d8674b9208d4cc701f534eb8f1a8767fcf')
 
 prepare() {
-  cd ${_gemname}-${pkgver}
-  sed -r 's|~>|>=|g' -i ${_gemname}.gemspec Rakefile
+  cd "${_gemname}-${pkgver}"
+
+  # update gemspec/Gemfile to allow newer version of the dependencies
+  sed --in-place --regexp-extended 's|~>|>=|g' "${_gemname}.gemspec"
 }
 
 build() {
-  cd ${_gemname}-${pkgver}
-  rake build
+  cd "${_gemname}-${pkgver}"
+
+  local _gemdir="$(gem env gemdir)"
+
+  gem build --verbose "${_gemname}.gemspec"
+
+  gem install \
+    --local \
+    --verbose \
+    --ignore-dependencies \
+    --no-user-install \
+    --install-dir "tmp_install${_gemdir}" \
+    --bindir "tmp_install/usr/bin" \
+    "${_gemname}-${pkgver}.gem"
+
+  # remove unrepreducible files
+  rm --force --recursive --verbose \
+    "tmp_install${_gemdir}/cache/" \
+    "tmp_install${_gemdir}/gems/${_gemname}-${pkgver}/vendor/" \
+    "tmp_install${_gemdir}/doc/${_gemname}-${pkgver}/ri/ext/"
+
+  find "tmp_install${_gemdir}/gems/" \
+    -type f \
+    \( \
+      -iname "*.o" -o \
+      -iname "*.c" -o \
+      -iname "*.so" -o \
+      -iname "*.time" -o \
+      -iname "gem.build_complete" -o \
+      -iname "Makefile" \
+    \) \
+    -delete
+
+  find "tmp_install${_gemdir}/extensions/" \
+    -type f \
+    \( \
+      -iname "mkmf.log" -o \
+      -iname "gem_make.out" \
+    \) \
+    -delete
 }
 
 check() {
-  cd ${_gemname}-${pkgver}
-  rake test
+  cd "${_gemname}-${pkgver}"
+
+  local _gemdir="$(gem env gemdir)"
+
+  GEM_HOME="tmp_install${_gemdir}" rake test
 }
 
 package() {
-  cd ${_gemname}-${pkgver}
-  local _gemdir="$(gem env gemdir)"
-  gem install --ignore-dependencies --no-user-install -i "${pkgdir}${_gemdir}" \
-    -n "${pkgdir}/usr/bin" pkg/${_gemname}-${pkgver}.gem
-  install -Dm 644 README.md CHANGELOG.md -t "${pkgdir}/usr/share/doc/${pkgname}"
-  install -Dm 644 MIT-LICENSE -t "${pkgdir}/usr/share/licenses/${pkgname}"
-  install -Dm 644 example/* -t "${pkgdir}/usr/share/doc/${pkgname}/example"
+  cd "${_gemname}-${pkgver}"
 
-  cd "${pkgdir}/${_gemdir}"
-  rm -r "${pkgdir}/${_gemdir}/cache"
+  cp --archive --verbose tmp_install/* "${pkgdir}"
+
+  install --verbose -D --mode=0644 MIT-LICENSE --target-directory "${pkgdir}/usr/share/licenses/${pkgname}"
+  install --verbose -D --mode=0644 *.md --target-directory "${pkgdir}/usr/share/doc/${pkgname}"
 }
 
-# vim: ts=2 sw=2 et:
+# vim: tabstop=2 shiftwidth=2 expandtab:

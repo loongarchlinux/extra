@@ -1,26 +1,64 @@
-# Maintainer:
+# Maintainer: Carl Smedstad <carsme@archlinux.org>
 # Contributor: Guillaume Horel <guillaume.horel@gmail.com>
 
-_pyname=fastparquet
-pkgname=python-$_pyname
-pkgver=2024.2.0
+pkgname=python-fastparquet
+_pkgname=${pkgname#python-}
+pkgver=2024.5.0
 pkgrel=2
-pkgdesc='A python implementation of the parquet format'
-url='https://github.com/dask/fastparquet'
-depends=(python python-cramjam python-pandas python-fsspec)
-makedepends=(cython python-build python-installer python-setuptools python-wheel python-numpy git)
-optdepends=(python-s3fs)
-license=(Apache-2.0)
+pkgdesc="A Python implementation of the Parquet columnar file format"
 arch=(loong64 x86_64)
-source=(https://github.com/dask/fastparquet/archive/$pkgver/$pkgname-$pkgver.tar.gz)
-sha256sums=('b747ec949616dfd76b7d3f2fa793a3f4ab6271040aca89d656ee41db056cddc0')
+url="https://github.com/dask/fastparquet"
+license=(Apache-2.0)
+depends=(
+  glibc
+  python
+  python-cramjam
+  python-fsspec
+  python-numpy
+  python-packaging
+  python-pandas
+)
+makedepends=(
+  cython
+  git
+  python-build
+  python-installer
+  python-setuptools
+  python-setuptools-scm
+  python-wheel
+)
+checkdepends=(python-pytest)
+source=("$pkgname-$pkgver.tar.gz::$url/archive/$pkgver.tar.gz")
+sha256sums=('7fb745a78e4a5772e3cc5f3c8aba487374cda1d3007e7878805a8c2a0d40652e')
+
+_archive="$_pkgname-$pkgver"
+
+prepare() {
+  cd "$_archive"
+
+  # Move tests out of the package, will not work with the tmp_install method
+  # in check() otherwise.
+  mv fastparquet/test/ tests/
+}
 
 build() {
-  cd $_pyname-$pkgver
+  cd "$_archive"
+
+  export SETUPTOOLS_SCM_PRETEND_VERSION=$pkgver
   python -m build --wheel --no-isolation --skip-dependency-check
 }
 
+check() {
+  cd "$_archive"
+
+  python -m installer --destdir=tmp_install dist/*.whl
+  local site_packages=$(python -c "import site; print(site.getsitepackages()[0])")
+  export PYTHONPATH="$PWD/tmp_install/$site_packages:."
+  pytest --import-mode=importlib
+}
+
 package() {
-  cd $_pyname-$pkgver
+  cd "$_archive"
+
   python -m installer --destdir="$pkgdir" dist/*.whl
 }

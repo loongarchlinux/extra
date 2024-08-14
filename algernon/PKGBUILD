@@ -1,7 +1,7 @@
 # Maintainer: Alexander F. Rødseth <xyproto@archlinux.org>
 
 pkgname=algernon
-pkgver=1.16.0
+pkgver=1.17.1
 pkgrel=1
 pkgdesc='Web server with Lua, Markdown, QUIC, Redis and PostgreSQL support'
 arch=(loong64 x86_64)
@@ -12,13 +12,12 @@ optdepends=('mariadb: For using the MariaDB/MySQL database backend'
             'ollama: For using Ollama from Lua or .prompt files'
             'postgresql: For using the PostgreSQL database backend'
             'redis: For using the Redis database backend')
-source=("git+https://github.com/xyproto/algernon#commit=41cc40983b7fd3ee1a54c09e16f4b7ab8144c32f") # tag: v1.16.0
-b2sums=('SKIP')
+source=("git+https://github.com/xyproto/algernon#commit=131aa2dbd8900dfe022576113572279ea31e9232") # tag: v1.17.1
+b2sums=('91fda070741d8c3ca3543015a7ae72376a413f502e479fc2d5af41f0322764ed794b2826478f8593c29628e70fc86bc78a4e51177427ea3ca0b65b58ac039587')
 
 prepare() {
   cd $pkgname
-  export LDFLAGS='-Wl,-O2,--as-needed,-z,relro,-z,now'
-  go build -v -mod=vendor -trimpath -buildmode=pie -ldflags "-s -w -linkmode=external -extldflags=$LDFLAGS"
+  go build -buildmode=pie -trimpath -mod=readonly -modcacherw -ldflags="-s -w -linkmode=external -extldflags '$LDFLAGS'"
 }
 
 package() {

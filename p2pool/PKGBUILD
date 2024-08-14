@@ -1,28 +1,122 @@
 # Maintainer: kpcyrd <kpcyrd[at]archlinux[dot]org>
 
 pkgname=p2pool
-pkgver=3.10
-_commit=3797f017e94047a41e5f622e1a299c6f71c37df0
+pkgver=4.1
 pkgrel=1
 pkgdesc='Decentralized pool for Monero mining'
 arch=('loong64' 'x86_64')
 license=('GPL-3.0-or-later')
 url="https://github.com/SChernykh/p2pool"
 depends=(
-  'libcurl.so'
+  'curl' 'libcurl.so'
+  'glibc'
   'libuv'
-  'libzmq.so'
+  'systemd-libs' 'libsystemd.so'
+  'zeromq' 'libzmq.so'
 )
-makedepends=('cmake' 'git')
-source=("${pkgname}"::"git+https://github.com/SChernykh/${pkgname}#commit=${_commit}")
-b2sums=('SKIP')
+makedepends=(
+  'cmake'
+  'cppzmq'
+  'git'
+  'rapidjson'
+)
+source=(
+  "${pkgname}::git+https://github.com/SChernykh/${pkgname}#tag=v${pkgver}"
+  "${pkgname}-RandomX::git+https://github.com/SChernykh/RandomX"
+  "${pkgname}-cppzmq::git+https://github.com/SChernykh/cppzmq"
+  "${pkgname}-curl::git+https://github.com/SChernykh/curl"
+  "${pkgname}-googletest::git+https://github.com/google/googletest"
+  "${pkgname}-grpc::git+https://github.com/SChernykh/grpc"
+  "${pkgname}-libuv::git+https://github.com/SChernykh/libuv"
+  "${pkgname}-libzmq::git+https://github.com/SChernykh/libzmq"
+  "${pkgname}-miniupnp::git+https://github.com/SChernykh/miniupnp"
+  "${pkgname}-rapidjson::git+https://github.com/SChernykh/rapidjson"
+  "${pkgname}-robin-hood-hashing::git+https://github.com/SChernykh/robin-hood-hashing"
+
+  "${pkgname}-abseil-cpp::git+https://github.com/abseil/abseil-cpp.git"
+  "${pkgname}-benchmark::git+https://github.com/google/benchmark"
+  "${pkgname}-bloaty::git+https://github.com/google/bloaty.git"
+  "${pkgname}-boringssl::git+https://github.com/google/boringssl.git"
+  "${pkgname}-c-ares::git+https://github.com/c-ares/c-ares.git"
+  "${pkgname}-data-plane-api::git+https://github.com/envoyproxy/data-plane-api.git"
+  "${pkgname}-googleapis::git+https://github.com/googleapis/googleapis.git"
+  "${pkgname}-googletest::git+https://github.com/google/googletest.git"
+  "${pkgname}-opencensus-proto::git+https://github.com/census-instrumentation/opencensus-proto.git"
+  "${pkgname}-opentelemetry-cpp::git+https://github.com/open-telemetry/opentelemetry-cpp"
+  "${pkgname}-opentelemetry-proto::git+https://github.com/open-telemetry/opentelemetry-proto.git"
+  "${pkgname}-protobuf::git+https://github.com/SChernykh/protobuf.git"
+  "${pkgname}-protoc-gen-validate::git+https://github.com/envoyproxy/protoc-gen-validate.git"
+  "${pkgname}-re2::git+https://github.com/google/re2.git"
+  "${pkgname}-xds::git+https://github.com/cncf/xds.git"
+  "${pkgname}-zlib::git+https://github.com/madler/zlib"
+)
+b2sums=('baa4d07a556c3fcca672c486561601cf3ef74170ec79c84c08460160421ec000fbfe2b68eafbe15e67dceb103730c1fb14fb91f77518b04cfb27d545203a2936'
+        'SKIP'
+        'SKIP'
+        'SKIP'
+        'SKIP'
+        'SKIP'
+        'SKIP'
+        'SKIP'
+        'SKIP'
+        'SKIP'
+        'SKIP'
+        'SKIP'
+        'SKIP'
+        'SKIP'
+        'SKIP'
+        'SKIP'
+        'SKIP'
+        'SKIP'
+        'SKIP'
+        'SKIP'
+        'SKIP'
+        'SKIP'
+        'SKIP'
+        'SKIP'
+        'SKIP'
+        'SKIP'
+        'SKIP')
 options=(!lto)
 
 prepare() {
   cd ${pkgname}
-  git submodule init
-  git submodule update
   mkdir -p build
+
+  git submodule init
+  git config submodule."external/src/RandomX".url "${srcdir}/${pkgname}"-RandomX
+  git config submodule."external/src/cppzmq".url "${srcdir}/${pkgname}"-cppzmq
+  git config submodule."external/src/curl".url "${srcdir}/${pkgname}"-curl
+  git config submodule."external/src/grpc".url "${srcdir}/${pkgname}"-grpc
+  git config submodule."external/src/libuv".url "${srcdir}/${pkgname}"-libuv
+  git config submodule."external/src/libzmq".url "${srcdir}/${pkgname}"-libzmq
+  git config submodule."external/src/miniupnp".url "${srcdir}/${pkgname}"-miniupnp
+  git config submodule."external/src/rapidjson".url "${srcdir}/${pkgname}"-rapidjson
+  git config submodule."external/src/robin-hood-hashing".url "${srcdir}/${pkgname}"-robin-hood-hashing
+  git config submodule."tests/googletest".url "${srcdir}/${pkgname}"-googletest
+
+  git -c protocol.file.allow=always submodule update
+
+  cd external/src/grpc
+
+  git config submodule."third_party/abseil-cpp".url "${srcdir}/${pkgname}"-abseil-cpp
+  git config submodule."third_party/benchmark".url "${srcdir}/${pkgname}"-benchmark
+  git config submodule."third_party/bloaty".url "${srcdir}/${pkgname}"-bloaty
+  git config submodule."third_party/boringssl-with-bazel".url "${srcdir}/${pkgname}"-boringssl
+  git config submodule."third_party/cares/cares".url "${srcdir}/${pkgname}"-c-ares
+  git config submodule."third_party/envoy-api".url "${srcdir}/${pkgname}"-data-plane-api
+  git config submodule."third_party/googleapis".url "${srcdir}/${pkgname}"-googleapis
+  git config submodule."third_party/googletest".url "${srcdir}/${pkgname}"-googletest
+  git config submodule."third_party/opencensus-proto".url "${srcdir}/${pkgname}"-opencensus-proto
+  git config submodule."third_party/opentelemetry".url "${srcdir}/${pkgname}"-opentelemetry-proto
+  git config submodule."third_party/opentelemetry-cpp".url "${srcdir}/${pkgname}"-opentelemetry-cpp
+  git config submodule."third_party/protobuf".url "${srcdir}/${pkgname}"-protobuf
+  git config submodule."third_party/protoc-gen-validate".url "${srcdir}/${pkgname}"-protoc-gen-validate
+  git config submodule."third_party/re2".url "${srcdir}/${pkgname}"-re2
+  git config submodule."third_party/xds".url "${srcdir}/${pkgname}"-xds
+  git config submodule."third_party/zlib".url "${srcdir}/${pkgname}"-zlib
+
+  git -c protocol.file.allow=always submodule update
 }
 
 build() {

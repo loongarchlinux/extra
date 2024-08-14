@@ -1,0 +1,65 @@
+diff --git a/README.md b/README.md
+index 47fd610..8bab7ba 100644
+--- a/README.md
++++ b/README.md
+@@ -83,7 +83,7 @@ source = {
+ }
+ 
+ gherkin_document = Gherkin::Parser.new.parse(source[:data])
+-id_generator = Cucumber::Messages::IdGenerator::UUID.new
++id_generator = Cucumber::Messages::Helpers::IdGenerator::UUID.new
+ 
+ pickles = Gherkin::Pickles::Compiler.new(id_generator).compile(gherkin_document, source)
+ ```
+diff --git a/ruby/bin/gherkin b/ruby/bin/gherkin
+index 84c9e32..f40076a 100755
+--- a/ruby/bin/gherkin
++++ b/ruby/bin/gherkin
+@@ -25,7 +25,7 @@ OptionParser.new do |opts|
+     options[:include_pickles] = v
+   end
+   opts.on("--predictable-ids", "Generate incrementing ids rather than UUIDs") do |v|
+-    options[:id_generator] = Cucumber::Messages::IdGenerator::Incrementing.new if v
++    options[:id_generator] = Cucumber::Messages::Helpers::IdGenerator::Incrementing.new if v
+   end
+ end.parse!
+ 
+diff --git a/ruby/gherkin-ruby.razor b/ruby/gherkin-ruby.razor
+index 54ceab2..d99ba07 100644
+--- a/ruby/gherkin-ruby.razor
++++ b/ruby/gherkin-ruby.razor
+@@ -54,7 +54,7 @@ module Gherkin
+   class @Model.ParserClassName
+     attr_accessor :stop_at_first_error
+ 
+-    def initialize(ast_builder = AstBuilder.new(Cucumber::Messages::IdGenerator::UUID.new))
++    def initialize(ast_builder = AstBuilder.new(Cucumber::Messages::Helpers::IdGenerator::UUID.new))
+       @@ast_builder = ast_builder
+     end
+ 
+diff --git a/ruby/lib/gherkin/parser.rb b/ruby/lib/gherkin/parser.rb
+index a6bf406..67c36b0 100644
+--- a/ruby/lib/gherkin/parser.rb
++++ b/ruby/lib/gherkin/parser.rb
+@@ -56,7 +56,7 @@ module Gherkin
+   class Parser
+     attr_accessor :stop_at_first_error
+ 
+-    def initialize(ast_builder = AstBuilder.new(Cucumber::Messages::IdGenerator::UUID.new))
++    def initialize(ast_builder = AstBuilder.new(Cucumber::Messages::Helpers::IdGenerator::UUID.new))
+       @ast_builder = ast_builder
+     end
+ 
+diff --git a/ruby/lib/gherkin/stream/parser_message_stream.rb b/ruby/lib/gherkin/stream/parser_message_stream.rb
+index c392c05..1d67056 100644
+--- a/ruby/lib/gherkin/stream/parser_message_stream.rb
++++ b/ruby/lib/gherkin/stream/parser_message_stream.rb
+@@ -11,7 +11,7 @@ module Gherkin
+         @sources = sources
+         @options = options
+ 
+-        id_generator = options[:id_generator] || Cucumber::Messages::IdGenerator::UUID.new
++        id_generator = options[:id_generator] || Cucumber::Messages::Helpers::IdGenerator::UUID.new
+         @parser = Parser.new(AstBuilder.new(id_generator))
+         @compiler = Pickles::Compiler.new(id_generator)
+       end

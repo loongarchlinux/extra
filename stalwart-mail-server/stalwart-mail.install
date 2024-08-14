@@ -7,3 +7,33 @@ NOTE: Before starting stalwart-mail.service, create an admin password using
       https://localhost:443/ for further configuration.
 INFO
 }
+
+post_upgrade() {
+  if (( $(vercmp $2 0.9) < 0 )); then
+  cat <<INFO
+NOTE: The log output format has changed.
+
+      Refer to /usr/share/doc/stalwart-mail/CHANGELOG.md for further details.
+INFO
+  fi
+  if (( $(vercmp $2 0.8) < 0 )); then
+  cat <<INFO
+NOTE: The default rocksdb location has changed from /var/lib/stalwart-mail/ to /var/lib/stalwart-mail/data/!
+      When using this database type, stop stalwart-mail.service and consolidate /etc/stalwart-mail/config.toml accordingly.
+      Afterwards run as root:
+      mv /var/lib/stalwart-mail/* /var/lib/stalwart-mail/data/
+INFO
+  cat <<INFO
+NOTE: Upgrading to >= 0.8.0 requires a data migration!
+      Stop stalwart-mail.service and run as root:
+      stalwart-mail-old --config /etc/stalwart-mail/config.toml --export /var/lib/stalwart-mail/export
+
+      Refer to /usr/share/doc/stalwart-mail/UPGRADING.md for required steps on database migration.
+
+      Afterwards run as _stalwart-mail:
+      stalwart-mail -c /etc/stalwart-mail/config.toml -i /var/lib/stalwart-mail/export
+
+      Finally restart stalwart-mail.service.
+INFO
+  fi
+}

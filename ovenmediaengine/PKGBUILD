@@ -2,8 +2,8 @@
 # Contributor: genofire
 
 pkgname=ovenmediaengine
-pkgver=0.16.5
-pkgrel=2
+pkgver=0.16.8
+pkgrel=1
 pkgdesc='Open-source streaming video service with sub-second latency'
 arch=('loong64' 'x86_64')
 url='https://ovenmediaengine.com'
@@ -36,11 +36,15 @@ makedepends=(
 	'libvpx'
 	'fdkaac'
 )
+# https://github.com/AirenSoft/OvenMediaEngine/pull/1626
+# We skip 1ebe64ae0b363ca120bdb193ae34eaa658f4f856 since it will fail on 0.16.5 (`ffmpeg Update: Drop depreacted avcodec_close ...`)
 source=(
 	"${pkgname}-${pkgver}.tar.gz::https://github.com/AirenSoft/OvenMediaEngine/archive/refs/tags/v${pkgver}.tar.gz"
+	"ovenmediaengine-ffmpeg7-1625.patch::https://github.com/AirenSoft/OvenMediaEngine/pull/1626.patch"
 	"ovenmediaengine.service"
 )
-sha512sums=('6892844ccb11cb99db927e55f619cf8a88086d0723e191464d8ec9a86479917f6ee55720c0bd3dcc702bcccd1ae28626c93f45b8e69784776c647ced1bb6404a'
+sha512sums=('a7f657715d944b39d2d5f85b9cdd9519893400eb7d53f101fcb209bb2009f54078b21fa00dfadbb58c14b65db59f114893f1d29ba2910adfeda7b64b6c03ead2'
+            'ce6a949fa5b68e94dc900f7b72825fe39fc2d530fd8c392c131b0a33faaa2992bb53b6f71967eab7dcedb4bf9b1a52f56f5e9688b120de49393911a1352b0018'
             'c5c4615d4c50a55c6fea177a1bc73b13d1365224c4e102067e45ce956741cb95366ec3b16cdec8932083c923910794e9164b0f9a25a6b0e2f186557fac3e42f1')
 
 backup=(
@@ -50,6 +54,8 @@ backup=(
 
 prepare() {
 	cd "OvenMediaEngine-${pkgver}"
+
+	patch -Np1 -i "${srcdir}/ovenmediaengine-ffmpeg7-1625.patch"
 
 	# Assets take up ~13MB of space
 	rm -Rf docs/.gitbook

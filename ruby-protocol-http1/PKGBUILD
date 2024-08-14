@@ -2,14 +2,26 @@
 
 pkgname=ruby-protocol-http1
 pkgver=0.15.0
-pkgrel=1
+pkgrel=3
 pkgdesc='A low level implementation of the HTTP/1 protocol'
 arch=(any)
 url='https://github.com/socketry/protocol-http1'
 license=(MIT)
-depends=(ruby-protocol-http)
-checkdepends=(ruby-bake-modernize ruby-bake-test ruby-bake-test-external ruby-async-io ruby-covered
-              ruby-sus)
+depends=(
+  ruby
+  ruby-protocol-http
+)
+makedepends=(
+  ruby-rdoc
+)
+checkdepends=(
+  ruby-bake-modernize
+  ruby-bake-test
+  ruby-bake-test-external
+  ruby-bundler
+  ruby-covered
+  ruby-sus
+)
 options=(!emptydirs)
 source=(https://github.com/socketry/protocol-http1/archive/v$pkgver/$pkgname-$pkgver.tar.gz
         $pkgname-test-dependencies.patch::https://github.com/socketry/protocol-http1/pull/15.patch)
@@ -52,7 +64,7 @@ build() {
 check() {
   local _gemdir="$(gem env gemdir)"
   cd protocol-http1-$pkgver
-  GEM_HOME="tmp_install/$_gemdir" bake test || echo "Expected test failure because our stringio is too old"
+  GEM_HOME="tmp_install/$_gemdir" bake test
 }
 
 package() {

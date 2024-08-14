@@ -1,31 +1,30 @@
 # Maintainer: Felix Yan <felixonmars@archlinux.org>
 
 pkgname=python-qiniu
-pkgver=7.13.1
-pkgrel=2
+pkgver=7.13.2
+pkgrel=1
 pkgdesc="Qiniu Resource Storage SDK for Python"
 arch=('any')
 url='https://github.com/qiniu/python-sdk'
 license=('MIT')
 depends=('python-requests')
-makedepends=('python-setuptools')
+makedepends=('git' 'python-setuptools')
 checkdepends=('python-pytest' 'python-freezegun')
-source=("$pkgname-$pkgver.tar.gz::https://github.com/qiniu/python-sdk/archive/v$pkgver.tar.gz")
-sha512sums=('86dbff1bd86a983ab6ca567ea3b9d582e277cd80dffd595546a93175530d18e218b8eefa815cf98c667ea464d90c8dbf3df740f262c93d349edd509ae9efeb4a')
+source=("git+https://github.com/qiniu/python-sdk.git#tag=v$pkgver")
+sha512sums=('8effb5cd66ed26a59f49a1c67576127dcc281366960102ec5f30217d456cade43b1a8c8dbbe5882fc602bd2a9036d562f4543ce0692674a6968645dead38810e')
 
 build() {
-  cd python-sdk-$pkgver
+  cd python-sdk
   python setup.py build
 }
 
 check() {
-  cd python-sdk-$pkgver
+  cd python-sdk
   pytest || echo "Tests failed"
 }
 
 package() {
-  cd python-sdk-$pkgver
+  cd python-sdk
   python setup.py install -O1 --root "$pkgdir"
-
   install -Dm644 LICENSE -t "$pkgdir"/usr/share/licenses/$pkgname/
 }

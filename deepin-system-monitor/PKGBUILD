@@ -4,7 +4,7 @@
 
 pkgname=deepin-system-monitor
 pkgver=6.0.16
-pkgrel=1
+pkgrel=3
 pkgdesc='A more user-friendly system monitor'
 arch=('loong64' 'x86_64')
 url="https://github.com/linuxdeepin/deepin-system-monitor"
@@ -18,9 +18,15 @@ install=deepin-system-monitor.install
 source=("https://github.com/linuxdeepin/deepin-system-monitor/archive/$pkgver/$pkgname-$pkgver.tar.gz")
 sha512sums=('802b73068151344d09f67cda14d28b0d0655d31497ce844eff1039ef087359c0c3a4cc3fa8ad188ce0cc752f8398e536b37a76f3aa78bba50b3a8959b65e98bb')
 
+prepare() {
+  cd deepin-system-monitor-$pkgver
+  sed -e 's|CMAKE_CXX_STANDARD 11|CMAKE_CXX_STANDARD 17|' -i */CMakeLists.txt # Fix build with ICU 75
+}
+
 build() {
   cd deepin-system-monitor-$pkgver
-  cmake . -GNinja -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_INSTALL_SYSCONFDIR=/etc
+  cmake . -GNinja -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_INSTALL_SYSCONFDIR=/etc \
+    -DCMAKE_C_FLAGS="$CXXFLAGS -Wno-error=implicit-function-declaration -Wno-error=int-conversion" # Fix build with GCC 14
   ninja
 }
 

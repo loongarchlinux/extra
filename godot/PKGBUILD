@@ -6,7 +6,7 @@
 
 pkgname=godot
 pkgver=4.2.2
-pkgrel=1
+pkgrel=2
 pkgdesc='Advanced cross-platform 2D and 3D game engine'
 url='https://godotengine.org/'
 license=(MIT)
@@ -17,14 +17,18 @@ depends=(embree3 freetype2 graphite harfbuzz harfbuzz-icu libglvnd libspeechd
          libxinerama libxrandr mbedtls2 miniupnpc pcre2)
 optdepends=('pipewire-alsa: for audio support'
             'pipewire-pulse: for audio support')
-source=("$pkgname-$pkgver.tar.gz::https://github.com/godotengine/godot/archive/$pkgver-stable.tar.gz")
-sha256sums=('990b7b716656122364b1672508c516c898497c50216d7c00c60eeaf507685c0e')
-b2sums=('2efa04c34f5908ef37fd6f76176eef3fe6c5eb9714779670fa76ec1d5868615c79ae96155143d921673a6c0f2c9b36b949b4cac7b6a99d8731067dcd4314620b')
+source=("$pkgname-$pkgver.tar.gz::https://github.com/godotengine/godot/archive/$pkgver-stable.tar.gz"
+         miniupnpc-2.2.8.patch)
+sha256sums=('990b7b716656122364b1672508c516c898497c50216d7c00c60eeaf507685c0e'
+            '6c1d8c189ec8b65eb5bfd1bf67fd9b050a06a634b2ca634cffb3878f5313858c')
+b2sums=('2efa04c34f5908ef37fd6f76176eef3fe6c5eb9714779670fa76ec1d5868615c79ae96155143d921673a6c0f2c9b36b949b4cac7b6a99d8731067dcd4314620b'
+        'ad308b3ed7fdd0ee305151c584e1a37c753dc5856b0afc631342c03f386a45723d2193d5a6937598a1b883d847dc3ac9c5f7db3d66ec3f9283f636e301235e50')
 
 prepare() {
   # Update the MIME info, ref FS#77810
   sed -i 's,xmlns="https://specifications.freedesktop.org/shared-mime-info-spec",xmlns="http://www.freedesktop.org/standards/shared-mime-info",g' \
     $pkgname-$pkgver-stable/misc/dist/linux/org.godotengine.Godot.xml
+  patch -d $pkgname-$pkgver-stable -p1 < miniupnpc-2.2.8.patch
 }
 
 build() {

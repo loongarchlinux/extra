@@ -1,0 +1,71 @@
+# Maintainer: Justin Kromlinger <hashworks@archlinux.org>
+
+pkgname=prometheus-varnish-exporter
+_pkgname=prometheus_varnish_exporter
+pkgver=1.6.1
+_commit=88a7ace6e2128d902f8d54f4ca053d48881f0c7c
+pkgrel=1
+pkgdesc="Varnish exporter for Prometheus "
+arch=('loong64' 'x86_64')
+url="https://github.com/jonnenauha/prometheus_varnish_exporter"
+license=('MIT')
+depends=('glibc')
+makedepends=('go' 'git')
+optdepends=('varnish: For execution towards a local varnish')
+options=(!lto)
+backup=('etc/conf.d/prometheus-varnish-exporter')
+source=(
+  "git+$url#commit=${_commit}"
+  'prometheus-varnish-exporter.conf'
+  'systemd.service'
+)
+sha512sums=('9e6bc1a906d7462ec5107aaad29f82dea83c2cda35764fb05ea6c26321586ff3661b05198438cdb19f74a3be67d27cd1e1c3439ff8e5fad77a9efd8b1302e486'
+            '980208eec896b6227dc5242fd68e34163faa42f0eb60c51ff8c3ba9c84ca7bdcc7e8b3502170e4ec72e0bd2f8845b78acc87adbbc0862b2616c75d6737d8aa7d'
+            '1bdeefbf17fd319d6313a503bd7b1e966c3f37071d2ee993664fc23d90077de40cd5ce33d1be6057c64e10107721ce87a66c01935310924ed84719973e4eed4e')
+
+pkgver() {
+  cd "$_pkgname"
+  git describe --tags
+}
+
+prepare() {
+  cd "$_pkgname"
+
+  rm -Rf build
+  mkdir build
+
+  go mod download
+}
+
+build() {
+  cd "$_pkgname"
+  go build -v \
+    -buildmode=pie \
+    -trimpath \
+    -mod=readonly \
+    -modcacherw \
+    -o build \
+    -ldflags "-linkmode external -extldflags \"${LDFLAGS}\" \
+    -X \"main.Version=${pkgver}\" \
+    -X \"main.VersionHash=${_commit}\" \
+    -X \"main.VersionDate=$(date -d@"$SOURCE_DATE_EPOCH" -Is)\"" \
+    .
+}
+
+check() {
+  cd "$_pkgname"
+  go test ./...
+}
+
+package() {
+  install -Dm644 prometheus-varnish-exporter.conf "${pkgdir}/etc/conf.d/prometheus-varnish-exporter"
+  install -Dm644 systemd.service "$pkgdir/usr/lib/systemd/system/$pkgname.service"
+
+  cd "$_pkgname"
+
+  install -Dm644 README.md "$pkgdir/usr/share/doc/$pkgname/README.md"
+  install -Dm644 LICENSE "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
+
+  install -Dm755 "./build/$_pkgname" "$pkgdir/usr/bin/$pkgname"
+}
+

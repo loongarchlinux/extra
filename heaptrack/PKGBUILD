@@ -2,41 +2,57 @@
 
 pkgname=heaptrack
 pkgver=1.5.0
-pkgrel=3
+pkgrel=4
 arch=(loong64 x86_64)
 pkgdesc='A heap memory profiler for Linux'
 url='http://milianw.de/tag/heaptrack'
-license=(GPL)
+license=(LGPL-2.1-or-later)
 depends=(boost-libs
          gcc-libs
          glibc
-         kconfig5
-         kconfigwidgets5
-         kcoreaddons5
-         kdiagram5
-         ki18n5
-         kiconthemes5
-         kio5
-         kwidgetsaddons5
+         kcolorscheme
+         kconfig
+         kconfigwidgets
+         kcoreaddons
+         kdiagram
+         ki18n
+         kiconthemes
+         kio
+         kwidgetsaddons
          libelf
          libunwind
-         qt5-base
-         qt5-svg
-         threadweaver5)
+         qt6-base
+         qt6-svg
+         sh
+         threadweaver)
 makedepends=(boost
              extra-cmake-modules
-             kitemmodels5
+             kitemmodels
              sparsehash)
-source=(https://download.kde.org/stable/$pkgname/$pkgver/$pkgname-$pkgver.tar.xz{,.sig})
+source=(https://download.kde.org/stable/$pkgname/$pkgver/$pkgname-$pkgver.tar.xz{,.sig}
+        https://invent.kde.org/sdk/heaptrack/-/commit/c6c45f3455a652c38aefa402aece5dafa492e8ab.patch
+        https://invent.kde.org/sdk/heaptrack/-/commit/38fd1d7b0ff53a35ed7c4ef241c21c8c06e1efb2.patch
+        https://invent.kde.org/sdk/heaptrack/-/commit/2de688e02fbc5ff96fcf29ad3af962e8035824eb.patch)
 sha256sums=('a278d9d8f91e8bfb8a1c2f5b73eecab47fd45d0693f5dbea637536413cec2ea5'
-            'SKIP')
+            'SKIP'
+            'a077c8aaaa6ce609bc9bef5daa91784647dc4248774a1236a72759af430d972f'
+            '4108dce8193e031b8f90ab6f70e33d0fdc1b9ffd837ccf4871cd9a06392cbb1c'
+            'e472792c6c4966debb0a50ddc1ae564c9dc52a71603cbe98fc5c40266e3b978a')
 validpgpkeys=(3D8568869097C65C98F8D2760C0EB212CD1D1393
               C51B45A532F17FA401D099A0A0C6B72C4F1C5E7C) # Milian Wolff <mail@milianw.de>
+
+prepare() {
+  cd $pkgname-$pkgver
+  patch -p1 -i ../c6c45f3455a652c38aefa402aece5dafa492e8ab.patch # fix unwind since GCC 14
+  patch -p1 -i ../38fd1d7b0ff53a35ed7c4ef241c21c8c06e1efb2.patch # fix build for Qt6
+  patch -p1 -i ../2de688e02fbc5ff96fcf29ad3af962e8035824eb.patch # Support KF6 kdiagram
+}
 
 build() {
   cmake -B build -S $pkgname-$pkgver \
    -DCMAKE_INSTALL_PREFIX=/usr \
-   -DBUILD_TESTING=OFF
+   -DBUILD_TESTING=OFF \
+   -DHEAPTRACK_USE_QT6=ON
   cmake --build build
 }
 

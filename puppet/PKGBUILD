@@ -10,29 +10,55 @@
 # Contributor: Niels Abspoel <aboe76 (at) Gmail (dot) com>
 
 pkgname=puppet
-pkgver=7.27.0
+pkgver=7.32.1
 pkgrel=3
 pkgdesc='Server automation framework and application'
 arch=('any')
 url='https://www.puppet.com/community/open-source'
-license=('Apache')
-depends=(ruby facter ruby-semantic_puppet ruby-augeas ruby-shadow ruby-concurrent ruby-multi_json ruby-puppet-resource_api ruby-deep_merge ruby-fast_gettext hiera ruby-locale ruby-scanf ruby-msgpack)
-makedepends=('git' 'rake' 'ruby-rdoc')
-checkdepends=('ruby-rspec' 'ruby-yard' 'ruby-rspec-its' 'ruby-webmock')
-backup=('etc/puppetlabs/puppet/auth.conf'
-        'etc/puppetlabs/puppet/puppet.conf'
-        'etc/puppetlabs/puppet/hiera.yaml')
+license=('Apache-2.0')
+depends=(
+  facter
+  hiera
+  ruby
+  ruby-concurrent
+  ruby-deep_merge
+  ruby-erb
+  ruby-fast_gettext
+  ruby-locale
+  ruby-multi_json
+  ruby-puppet-resource_api
+  ruby-racc
+  ruby-scanf
+  ruby-semantic_puppet
+)
+makedepends=(
+  git
+  ruby-rdoc
+)
+# checkdepends=(
+#   procps-ng
+#   ruby-ffi
+#   ruby-hocon
+#   ruby-json-schema
+#   ruby-rake
+#   ruby-rspec
+#   ruby-rspec-its
+#   ruby-vcr
+#   ruby-webmock
+#   ruby-yard
+# )
+backup=('etc/puppetlabs/puppet/puppet.conf' 'etc/puppetlabs/puppet/hiera.yaml')
 install="$pkgname.install"
 
-_augeas_commit=76e9ee2238036658286fca8c80b34a947214635d
-_cron_commit=1d605e813f62a45dcf7881e07f25ba05fef816a6
-_host_commit=d6b6393d559f889438fad1570883b0d6d5a381ab
-_mount_commit=404da7fa334c29aa387a14e12bdf4691504498ea
-_selinux_commit=4ad08a07350283766d32266c15617237a2562e1f
-_sshkeys_commit=bf6cf14c4dc27e2b1b4a7b1f32d57ff7ff3aeb8f
-_yumrepo_commit=fdda12d4b9475a6c3ba49d629c290ab6897b481e
-_zfs_commit=0af39efa1d812c926dd3dbd0ca63ef7ee8538583
-_zone_commit=1d227dcccaf34435fe5c8a7abf25c319e7d96e21
+_augeas_commit=245508727cdf301ea1efa5bc9214f55b90fb2b30 # v1.5.0
+_cron_commit=19eb78319c9ea3389b3601fef69faafcc250ab43 # v1.3.0
+_host_commit=d1ab552a1dd84e7c50821878a34f4110f9f67dac # v1.3.0
+_mount_commit=5f82312986e5e026c046d9f7c7f08c553553ae4a # v1.3.0
+_selinux_commit=4bdb318acb4a85521f2e5b2b9ffa9ca238e6885c # v1.4.0
+_sshkeys_commit=c7d5955e4d3cc2437195b2c9888ffe0fa7b6b02d # v2.5.0
+_yumrepo_commit=394ca00538994e4cedb479767527ce50a8d1a4ca # v2.1.0
+_zfs_commit=e86ba8f1161d9b0dc00399bb405f228dac3f3842 # v1.6.1
+_zone_commit=1f0be5d14778af89b1adcdfbecda2be51f5aa01a # v1.2.0
 
 source=("https://github.com/puppetlabs/puppet/archive/${pkgver}/puppet-${pkgver}.tar.gz"
         "augeas_core::git+https://github.com/puppetlabs/puppetlabs-augeas_core#commit=${_augeas_commit}"
@@ -44,17 +70,19 @@ source=("https://github.com/puppetlabs/puppet/archive/${pkgver}/puppet-${pkgver}
         "yumrepo_core::git+https://github.com/puppetlabs/puppetlabs-yumrepo_core#commit=${_yumrepo_commit}"
         "zfs_core::git+https://github.com/puppetlabs/puppetlabs-zfs_core#commit=${_zfs_commit}"
         "zone_core::git+https://github.com/puppetlabs/puppetlabs-zone_core#commit=${_zone_commit}"
+        "https://github.com/bastelfreak/puppet-1/commit/2608b3e803e6c5708e1c56f54618b11261b7531b.patch" # https://github.com/puppetlabs/puppet/pull/9442
         )
-sha512sums=('f28b8ebb61a951a4e6176269e5fcf6066cc853b61a1f8c0dff974ab42914b34197a200800c37b71f5ab4d4b5e70929931d464c7a8abb1682e316d1150312f330'
-            'SKIP'
-            'SKIP'
-            'SKIP'
-            'SKIP'
-            'SKIP'
-            'SKIP'
-            'SKIP'
-            'SKIP'
-            'SKIP')
+sha512sums=('8d39e5a7ad7cd324d64925d3ae1c5b035894392f39f9e8ded342011e1c4fe0e31e0f2f937267c5b70222046ec56a34a58d5be75d0bcb11c1707ff5f50737695a'
+            '6ebc4603db2e702623070f1703d3e82a25c689b8c149c3328660ab43d74bfa49c5853aa14d267b48c9f91d12bd4a96579bcf3184f8881a57748763484892bf90'
+            '584093f64216becfeeb45514c9308c7df6819b39b93489790656f6e206c52abb7ed7077a9630c3f0aa2a6b9a6e57502f84cb1a862c03df325f2d97772773c4ce'
+            '2bcb93ea1d9d6312205aa1975b1e233414d7bd9c713fb2e59a04f2f3ca436b89dde5b3070b3899fc0a3b5259866c6f3039c06517041d56d73dba08926e7afbec'
+            '46e23741f1fcc141fcea45b07da95588eed14762b7f96794447d7f00f8f5e83750f6d23f9d9a80797e711783d30f79375578d91f4ea146d12ca2dee396073593'
+            'f3a2b4f1b40ab78ff8c8772be1b94b4a41465dfdad7e44c4cc4158d5852cca732ea7ca08c8d795c97eabc40c43e8145a509ea3aeced99485e6066b2f64555d68'
+            '9d458354a95206b998a148bf9b459c8a792051ddaf03672f0ea4c161721ac405c00523ecc065e6acfa610cb9b61e7940a1611b08bb2395c8d3d5a620c6c3662a'
+            '6203781a13142747827ee658db3e428ed97732abf356f88224a7f780bfa046ddafcdd69f1e551b3dbe1ad5b00d9a78248a1ba7e97c58fbac636500a95c5e3b7e'
+            'cf73509b4b66f307bfe5027814ec7b26173773f568f3b98286b8d1b8334b3f539f62151ac8fb7036be44b84e9d20c1805cd86177ffe1ab0924ed53407e4538ab'
+            '47fafc95cc9aba258cfd8919707366072a50f8a99b59f540c2531e1a367e8c9230070f8b9e7ae5c9ed4f536e05116234ed02ea431b6e48f61c82ce6dd92ebd9b'
+            '899fd02f17596a25d8bea49b19c3f0551cb8498db4840adcf9a536d0b4cf2bd441d0cc0bbf828de38f1478346114447fecbb119ee8f64d53ad82f1a57be60e71')
 conflicts=('puppet5' 'puppet6')
 provides=('puppet')
 
@@ -63,17 +91,14 @@ prepare() {
 
   # FS#45044: fix file location
   sed -i 's_/opt/puppetlabs/puppet_/usr_' ext/systemd/puppet.service
+  patch --forward --verbose --strip=1 --input='../2608b3e803e6c5708e1c56f54618b11261b7531b.patch'
 }
 
-check() {
-  cd "${pkgname}-${pkgver}"
-  # This breaks right now due to missing dependencies
-  #rake --tasks             # show all tasks
-  #rake commits             # requires a git repo
-  #rake warnings            # requires a git repo
-  #rake spec                # run tests single threaded
-  #rake parallel:spec[8]
-}
+# check() {
+#   cd "${pkgname}-${pkgver}"
+#
+#   rake spec
+# }
 
 package() {
   cd "${pkgname}-${pkgver}"
@@ -82,7 +107,7 @@ package() {
 
   # install the gemspec file
   # this allows other gems to load puppet as a library (for example puppet-strings)
-  install -Dm644 .gemspec "${pkgdir}/${_gemdir}/specifications/puppet-${pkgver}.gemspec"
+  install -Dm644 puppet.gemspec "${pkgdir}/${_gemdir}/specifications/puppet-${pkgver}.gemspec"
 
   # generate manpages | this breaks right now..
   #rake gen_manpages

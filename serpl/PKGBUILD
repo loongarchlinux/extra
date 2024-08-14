@@ -1,0 +1,37 @@
+# Maintainer: Orhun Parmaksız <orhun@archlinux.org>
+
+pkgname=serpl
+pkgver=0.3.3
+pkgrel=1
+pkgdesc="A simple TUI for search and replace, ala VS Code"
+arch=('loong64' 'x86_64')
+url="https://github.com/yassinebridi/serpl"
+license=('MIT')
+depends=('gcc-libs')
+makedepends=('cargo')
+source=("$pkgname-$pkgver.tar.gz::$url/archive/$pkgver.tar.gz")
+sha512sums=('f04e1cd7ff3da9dca858c80fd046bde86c6ab7dde25c8d338782e828dfd0ab821872fd26a1a04a7bb0632ff510e19b140e30a4ef11ca206704cfe82efc778c28')
+
+prepare() {
+  cd "$pkgname-$pkgver"
+  cargo fetch --locked --target "$(rustc -vV | sed -n 's/host: //p')"
+}
+
+build() {
+  cd "$pkgname-$pkgver"
+  VERGEN_GIT_DESCRIBE="Arch Linux" cargo build --release --frozen
+}
+
+check() {
+  cd "$pkgname-$pkgver"
+  cargo test --frozen
+}
+
+package() {
+  cd "$pkgname-$pkgver"
+  install -Dm 755 "target/release/$pkgname" -t "$pkgdir/usr/bin"
+  install -Dm 644 README.md -t "$pkgdir/usr/share/doc/$pkgname"
+  install -Dm 644 LICENSE -t "$pkgdir/usr/share/licenses/$pkgname"
+}
+
+# vim: ts=2 sw=2 et:

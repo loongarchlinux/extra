@@ -1,43 +1,37 @@
 # Maintainer: Felix Yan <felixonmars@archlinux.org>
 
 pkgname=deepin-qt6platform-plugins
-pkgver=6.0.4
-pkgrel=4
+pkgver=6.0.12
+pkgrel=1
 pkgdesc='Qt 6 platform plugins for DDE'
 arch=('loong64' 'x86_64')
 url="https://github.com/linuxdeepin/qt6platform-plugins"
 license=('LGPL3')
 depends=('qt6-base' 'libx11' 'libxi' 'libxcb' 'xcb-util-wm' 'glibc' 'gcc-libs')
-makedepends=('cmake' 'ninja' 'qt6-tools' 'libglvnd' 'gtest' 'qt6-xcb-private-headers'
+makedepends=('git' 'cmake' 'ninja' 'qt6-tools' 'libglvnd' 'gtest' 'qt6-xcb-private-headers'
              'extra-cmake-modules' 'dtkcommon' 'cairo')
 groups=('deepin')
-source=("https://github.com/linuxdeepin/qt6platform-plugins/archive/$pkgver/$pkgname-$pkgver.tar.gz"
-        system-xcb-private-headers.patch
-        qt-6.6.2.patch
+source=("git+https://github.com/linuxdeepin/qt6platform-plugins.git#tag=$pkgver"
         qt-6.7.patch)
-sha512sums=('ec8690afc58f71ef99aa548f6ed3184333f7a33e771249f277c9a8c97a9f4d14caccfcd25155ec25285bd256d4974abda42640f586f981ea9c78eb68e3bd5ca2'
-            '9c51c6158b03ec19089e0248b33d139c12bf4809049342485b9ee002835f9f6254a28b7940787c808e4e167a9fae83c8d18c570419c62bf88cb50c018fae08b7'
-            'c488ec0661f84db9f6932886c865bb76ad49c11fc6cc21b63aa1d402687d26abecf613a816b1da1ca0b123a349891ccaa161b3ea2934d5b4164d177c0babb59d'
+sha512sums=('0643b85b1b7b614a64794ae18907208fe9dbe79c032a3432f57558b93b450360e9695f462fad75d94a64e7c233bcf11d0694aa1066d1e4b01f9d1bc08c7a4eed'
             '410bb56570e14abdb961bcc30505ee7a960a978af948bbdfa7130c228fb42d4c827f9bff10887305c62f96066750927bc2dcbceb511516340e893c73cdb4e45e')
 
 prepare() {
-  cd qt6platform-plugins-$pkgver
-  patch -Np1 -i ../system-xcb-private-headers.patch
-  patch -Np1 -i ../qt-6.6.2.patch
+  cd qt6platform-plugins
   patch -Np1 -i ../qt-6.7.patch
 }
 
 build() {
-  cd qt6platform-plugins-$pkgver
+  cd qt6platform-plugins
   cmake . -GNinja \
-		-DCMAKE_INSTALL_LIBDIR=lib \
-		-DCMAKE_INSTALL_PREFIX=/usr \
+    -DCMAKE_INSTALL_LIBDIR=lib \
+    -DCMAKE_INSTALL_PREFIX=/usr \
     -DQT_XCB_PRIVATE_HEADERS=/usr/include/qt6xcb-private \
     -DDTK_VERSION=$pkgver
   ninja
 }
 
 package() {
-  cd qt6platform-plugins-$pkgver
+  cd qt6platform-plugins
   DESTDIR="$pkgdir" ninja install
 }

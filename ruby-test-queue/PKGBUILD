@@ -3,27 +3,29 @@
 
 _gemname='test-queue'
 pkgname="ruby-${_gemname}"
-pkgver=0.5.0
-pkgrel=2
+pkgver=0.11.1
+pkgrel=1
 pkgdesc='parallel test runner for CI environments'
 arch=('any')
 url="https://github.com/tmm1/${_gemname}"
 license=('MIT')
-depends=('ruby')
-checkdepends=('ruby-rspec')
+depends=(
+  ruby
+  ruby-rspec-core
+)
+checkdepends=(
+  ruby-rspec
+)
 options=('!emptydirs')
 source=("${url}/archive/v${pkgver}/${pkgname}-${pkgver}.tar.gz")
-sha512sums=('6a827498352d1ddd99a98f672071a6d14794aab98e3dcf1be9640f64ae07bea94ba9aad5f1ab29e20b398640b0bdd0b0ec960738aaad9cf44c7c01cf16bddc8c')
-b2sums=('442964808bf63344a696e50ecc18dc01abc0778fffca32b338877315588ed35d30db013e736230e3b294cad7bdb870c1021a24c67de5244c52b1cab8a988fa03')
+sha512sums=('d1a8f91d78e073ebeb8bf75c1b0edba245d396f0e72c881b6da2daa3255c9ab72e3cb3e0f7c3acdc592de91a13bebe111c847a8a3c3831515cc39e65a382acae')
+b2sums=('1be947bc3ce2102cca9f7596c744f39c48a79bfbd7f2d47238b8f68df0cb97d6eb42a3186efd7f481676702107d57eaac097ac720b4d1fe425c6a8972a306662')
 
 prepare() {
   cd "${_gemname}-${pkgver}"
 
   # update gemspec/Gemfile to allow newer version of the dependencies
   sed --in-place --regexp-extended 's|~>|>=|g' "${_gemname}.gemspec"
-
-  # we don't build from a git checkout
-  sed --in-place --regexp-extended 's|git ls-files|find|' "${_gemname}.gemspec"
 }
 
 build() {

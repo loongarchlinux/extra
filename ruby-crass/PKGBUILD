@@ -3,20 +3,36 @@
 _gemname='crass'
 pkgname="ruby-${_gemname}"
 pkgver=1.0.6
-pkgrel=2
+pkgrel=3
 pkgdesc='Crass is a pure Ruby CSS parser based on the CSS Syntax Level 3 spec'
 arch=('any')
 url='https://github.com/rgrove/crass'
 license=('MIT')
 options=(!emptydirs)
-depends=('ruby')
-makedepends=('ruby-bundler' 'ruby-rake')
-checkdepends=('ruby-minitest')
-source=("${url}/archive/v${pkgver}/${pkgname}-${pkgver}.tar.gz")
-sha512sums=('de98dea48d0cff148b3000d7388256552d1bf5a014ecbc074efc909473bc6edf2cf1db36179aaa4284eb810618dafc346757ac61708c9659045e013e6c6d4e36')
+depends=(
+  ruby
+)
+makedepends=(
+  ruby-bundler
+  ruby-rake
+)
+checkdepends=(
+  ruby-minitest
+)
+source=(
+  "${url}/archive/v${pkgver}/${pkgname}-${pkgver}.tar.gz"
+  # https://github.com/rgrove/crass/pull/13
+  "${pkgname}_fix-tests.patch::${url}/commit/7574ec2c7e177e56989c202362cba0a4c217c71c.patch"
+)
+sha512sums=(
+  'de98dea48d0cff148b3000d7388256552d1bf5a014ecbc074efc909473bc6edf2cf1db36179aaa4284eb810618dafc346757ac61708c9659045e013e6c6d4e36'
+  '6ed693fa9c2bd68242bc10bc68845659ade587dbd7697d960b857a845b8793a18eafa1ee08aaed0cefca494b1d5ff8d17378baf65c707ed206cbdd55667c4bd8'
+)
 
 prepare() {
   cd "${_gemname}-${pkgver}"
+
+  patch --verbose --strip=1 --input="../${pkgname}_fix-tests.patch"
 
   # we built based on a tar archive, not a git repo
   sed --in-place 's/git ls-files -z/find -print0/' "${_gemname}.gemspec"

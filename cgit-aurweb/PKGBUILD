@@ -1,3 +1,4 @@
+# Maintainer: Christian Hesse <mail@eworm.de>
 # Maintainer: Lukas Fleischer <lfleischer@archlinux.org>
 # Contributor: Sergej Pupykin <pupykin.s+arch@gmail.com>
 # Contributor: Patrick Palka <patrick@parcs.ath.cx>
@@ -5,50 +6,87 @@
 # Contributor: Andreas Baumann <abaumann at yahoo dot com>
 
 pkgname=cgit-aurweb
-pkgver=1.2.3
-_commit='cc08c9ff936a890206bc2f7560acb44147af9bb8'
-pkgrel=3
+_commit='09d24d7cd0b7e85633f2f43808b12871bb209d69'
+pkgver=1.2.3.r70.g09d24d7
+pkgrel=1
 pkgdesc='A web interface for git written in plain C (aurweb branch)'
 arch=('loong64' 'x86_64')
 url='https://git.zx2c4.com/cgit/'
-license=('GPL2')
+license=('GPL-2.0-only')
 depends=('openssl' 'luajit')
 makedepends=('git' 'zlib' 'curl' 'asciidoc')
 optdepends=('groff: about page using man page syntax'
-	    'python-pygments: syntax highlighting support'
-	    'python-docutils: about page formatted with reStructuredText'
-	    'python-markdown: about page formatted with markdown'
-	    'gzip: gzip compressed snapshots'
-	    'bzip2: bzip2 compressed snapshots'
-	    'lzip: lzip compressed snapshots'
-	    'xz: xz compressed snapshots'
-	    'zstd: zstd compressed snapshots'
-	    'mime-types: serve file with correct content-type header')
+            'python-pygments: syntax highlighting support'
+            'python-docutils: about page formatted with reStructuredText'
+            'python-markdown: about page formatted with markdown'
+            'lua51-luaossl: for lua filters'
+            'gzip: gzip compressed snapshots'
+            'bzip2: bzip2 compressed snapshots'
+            'lzip: lzip compressed snapshots'
+            'xz: xz compressed snapshots'
+            'zstd: zstd compressed snapshots'
+            'mime-types: serve file with correct content-type header')
 install=cgit.install
-source=("$pkgname::git+https://gitlab.archlinux.org/archlinux/cgit.git#commit=${_commit}")
-sha256sums=('SKIP')
+validpgpkeys=('AB9942E6D4A4CFC3412620A749FC7012A5DE03AE')
+source=("git+https://git.zx2c4.com/cgit.git#commit=${_commit}"
+        'git+https://github.com/git/git.git'
+        '1001-aurweb.patch'
+        'tmpfiles.conf'
+        'apache.example.conf')
+sha256sums=('423a95f4fee9bdc5a50e332703d5e5f5289f523f620e275d26b950d92ae5a836'
+            'SKIP'
+            '747587c8f13d8ccf681258c053c0d0027e47ccfb348cb60312552e2834901a91'
+            'c1d03b2abdd4091f10e777644242762d2e34f903b4587e1683a0560bebc45eea'
+            'fde213191b38137c1e29b123eb777004dc84cc6ca9d97d5f78ad717689def5f1')
+
+pkgver() {
+  cd cgit/
+
+  GITTAG="$(git describe --abbrev=0 --tags 2>/dev/null)"
+  printf '%s.r%s.g%s' \
+    "$(sed -e "s/^${pkgname%%-git}//" -e 's/^[-_/a-zA-Z]\+//' -e 's/[-_+]/./g' <<< ${GITTAG})" \
+    "$(git rev-list --count ${GITTAG}..)" \
+    "$(git rev-parse --short HEAD)"
+}
 
 prepare() {
-	cd "$pkgname"
+  cd cgit/
 
-	git submodule init
-	git submodule update
+  # branch 'for-jason' for recent git...
+  # Please do *NOT* merge/cherry-pick, as commit hashes may change before landing in master!
+  #git apply --index < ../0001-for-jason.patch
+
+  # branch 'aurweb' from https://gitlab.archlinux.org/archlinux/cgit.git ...
+  # Please do *NOT* merge/cherry-pick, as commit hashes will change on rebase!
+  git apply --index < ../1001-aurweb.patch
+
+  git config --file=.gitmodules submodule.git.url ../git/
+  git submodule init
+  git -c protocol.file.allow=always submodule update
 }
 
 build() {
-	cd "$pkgname"
+  cd cgit/
 
-	make
-	make doc-man
+  make all doc-man
 }
 
+# The customized output for AUR makes time tests fail, so
+# skip completly. We should be find if cgit package succeeded.
+
 package() {
-	cd "$pkgname"
-	
-	make CGIT_SCRIPT_PATH="/usr/share/webapps/$pkgname" DESTDIR="$pkgdir" prefix=/usr filterdir="/usr/lib/$pkgname/filters" install
-	
-	install -vd "$pkgdir/var/cache/$pkgname"
-	mkdir -p "$pkgdir/usr/lib/$pkgname"
-	mv "$pkgdir/usr/share/webapps/$pkgname/cgit.cgi" "$pkgdir/usr/lib/$pkgname"
-	ln -sf ../../../lib/$pkgname/cgit.cgi "$pkgdir/usr/share/webapps/$pkgname/cgit.cgi"
+  cd cgit/
+
+  make \
+    CGIT_SCRIPT_PATH="/usr/share/webapps/${pkgname}" \
+    DESTDIR="${pkgdir}" \
+    prefix='/usr' \
+    filterdir="/usr/lib/${pkgname}/filters" \
+    install install-man
+
+  install -vDm0644 "${srcdir}/tmpfiles.conf" "${pkgdir}/usr/lib/tmpfiles.d/${pkgname}.conf"
+  install -vDm0644 "${srcdir}/apache.example.conf" "${pkgdir}/etc/webapps/${pkgname}/apache.example.conf"
+  install -d "${pkgdir}/usr/lib/${pkgname}"
+  mv "${pkgdir}/usr/share/webapps/${pkgname}/cgit.cgi" "${pkgdir}/usr/lib/${pkgname}"
+  ln -sf ../../../lib/${pkgname}/cgit.cgi "${pkgdir}/usr/share/webapps/${pkgname}/cgit.cgi"
 }

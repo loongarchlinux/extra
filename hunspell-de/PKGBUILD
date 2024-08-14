@@ -3,11 +3,11 @@
 
 pkgname=hunspell-de
 pkgver=20161207
-pkgrel=8
+pkgrel=9
 pkgdesc="German hunspell dictionaries"
 arch=('any')
 url="https://www.j3e.de/ispell/igerman98/"
-license=('GPL')
+license=('GPL-2.0-only' 'GPL-3.0-only')
 makedepends=('hunspell' 'ispell' 'qt6-webengine')
 optdepends=('hunspell: the spell checking libraries and apps')
 provides=('hunspell-dictionary')

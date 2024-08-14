@@ -2,7 +2,7 @@
 # Contributor: Bruce Zhang <zttt183525594@gmail.com>
 
 pkgname=feeluown
-pkgver=4.1.3
+pkgver=4.1.5
 pkgrel=1
 pkgdesc="FeelUOwn Music Player"
 arch=('any')
@@ -11,8 +11,9 @@ license=('GPL3')
 depends=('python-qasync' 'python-pyqt5' 'mpv' 'python-opengl' 'python-janus' 'python-requests'
          'python-tomlkit' 'python-packaging' 'python-pydantic' 'python-mutagen' 'qt5-svg'
          'xdg-user-dirs')
-makedepends=('python-setuptools')
-checkdepends=('python-pytest' 'python-pycryptodome')
+makedepends=('git' 'python-setuptools')
+checkdepends=('python-pytest' 'python-pytest-asyncio' 'python-pytest-mock' 'python-pytest-qt'
+              'python-pycryptodome' 'xorg-server-xvfb')
 optdepends=('python-secretstorage: browser cookie extraction support'
             'python-pycryptodome: browser cookie extraction support'
             'dbus-python: mpris2 server support'
@@ -24,32 +25,32 @@ conflicts=('feeluown-local')
 provides=('feeluown-local')
 replaces=('feeluown-local')
 groups=('feeluown-full')
-source=("https://pypi.io/packages/source/f/feeluown/feeluown-$pkgver.tar.gz"
+source=("git+https://github.com/feeluown/FeelUOwn.git#tag=v$pkgver"
         "feeluown.desktop"
-	"pytest-skip-benchmark-cov-plugin.patch"
-	"ordereddict-repr-change.patch")
-sha512sums=('0a9d76d92ccb1329b8516d83b01c780314b5fa8b083caa4e23c7fea74469276b6b688c9f43a62f57675e919ea92c47a8f314de36db9b6ebe74bdd0cbc1b64997'
+	"pytest-skip-benchmark-cov-plugin.patch")
+sha512sums=('cc442436626c557cca3c82b4d5151dbb65068021c733ee945bcc714b04f57bc7cc4e6bee74fd4ff73894816c0b91209050b1ef9f66de38afa89106e8e3ec1002'
             '48882f7469c22e5db332663bc1aa8b398b0a10a0c929d4d7e3d7b8b91205d7d3070c5fa295cb9a14f8c352bff57978bfaad167343e0ddc51c92417eda07c8087'
-            '031d4076970a91e135f1eb38abd4e749a38a4f47cb2a9ec6ed3c9b6b6c6cd3769f1914379aefc2dcd9debaad2ccac73d45bf5084b5d5cc64d1d6b77e79bca0be'
-            'caf0ec4c621dd7c9d5eff3ad472dbcb6176c7b49984556df28450aa0e601c8142b8b251a5ad79a43790674c9323e11f745e557990d6e26c56439a18c9f06f3b3')
+            '97e1d3133c921b1071ad1f6966b5175755cde22660bc76d2f107ddea9d3cde6b105636ed39838d4e81bef168b40ade130c09e8f9752bf1ac77d67cff2a42bae1')
 
 prepare() {
-  cd $pkgname-$pkgver
-  patch -Np1 -i ${srcdir}/pytest-skip-benchmark-cov-plugin.patch
+  cd FeelUOwn
+  patch -Np1 -i ../pytest-skip-benchmark-cov-plugin.patch
+  # TODO: figure out how to use virtual audio output
+  sed -i 's/cannot_play_audio = is_travis_env/cannot_play_audio = os.environ.get("CANNOT_PLAY_AUDIO") == "1"/' tests/helpers.py
 }
 
 build() {
-  cd $pkgname-$pkgver
+  cd FeelUOwn
   python setup.py build
 }
 
 check() {
-  cd $pkgname-$pkgver
-  pytest -k 'not parse_lyric_text'
+  cd FeelUOwn
+  CANNOT_PLAY_AUDIO=1 xvfb-run pytest --deselect=tests/test_bench.py
 }
 
 package() {
-  cd $pkgname-$pkgver
+  cd FeelUOwn
   python setup.py install --root="$pkgdir/" --optimize=1 --skip-build
   install -Dm644 feeluown/gui/assets/icons/feeluown.png -t "$pkgdir"/usr/share/icons/hicolor/512x512/apps/
   install -Dm644 "$srcdir"/feeluown.desktop -t "$pkgdir"/usr/share/applications/

@@ -10,8 +10,8 @@ _google_default_client_secret=0ZChLK6AxeA3Isu96MkwqDR4
 
 pkgbase=libreoffice-fresh
 pkgname=('libreoffice-fresh-sdk' 'libreoffice-fresh')
-_LOver=24.2.3.2
-pkgver=24.2.3
+_LOver=24.2.5.2
+pkgver=24.2.5
 pkgrel=2
 arch=('loong64' 'x86_64')
 license=('MPL-2.0' 'LGPL-3.0-or-later')
@@ -88,11 +88,11 @@ noextract=(35c94d2df8893241173de1d16b6034c0-swingExSrc.zip
            f543e6e2d7275557a839a164941c0a86e5f2c3f2a0042bfc434c88c6dde9e140-opens___.ttf
 )
 validpgpkeys=('C2839ECAD9408FBE9531C3E9F434A1EFAFEEAEA3') # LibreOffice Build Team (CODE SIGNING KEY) <build@documentfoundation.org>
-sha256sums=('f6e2059cd85d07793e8d95828b2412906bdba8bf61a5f76b8c51907898481e64'
+sha256sums=('9c16e4f7415521e42dda48d76a614e18e78fc5e5fae689b4bbe8139ed8a70a0e'
             'SKIP'
-            '8e8acf4c09e2a43e8a86a19418bade97f67b837917bd0c2c6af9c8a8b261bb6b'
+            '545fdbcbb00ddff1acda18d33cfceec792d0a2ac0f92f4ecbe3f16691b8a1724'
             'SKIP'
-            'e71053a3b51f79079ef745663e68432c2bf20e49557083ab4de1a40c9fae2b4a'
+            '3cb01f83a3a605082b2054874741c74db69b8bdbd0c009304515fe547c20313b'
             'SKIP'
             '64585ac36a81291a58269ec5347e7e3e2e8596dbacb9221015c208191333c6e1'
             '1fb458d6aab06932693cc8a9b6e4e70944ee1ff052fa63606e3131df34e21753'
@@ -132,15 +132,18 @@ prepare() {
     done
     popd
 
-# should be obsolete - Debian has dropped this long time ago
+    # should be obsolete - Debian has dropped this long time ago
     # fix not upstreamable pyuno paths - FS#54250
-#    patch -Np1 -i "${srcdir}"/make-pyuno-work-with-system-wide-module-install.diff
+    # patch -Np1 -i "${srcdir}"/make-pyuno-work-with-system-wide-module-install.diff
 
     # fix build - https://gerrit.libreoffice.org/c/core/+/145421
     patch -Np1 -i "${srcdir}"/623ea5c.diff
 
     # fix build with icu 74
     patch -Np1 -i "${srcdir}"/libreoffice-7.5.8.2-icu-74-compatibility.patch
+    # fix build with icu 75.1
+    # remove breaking test breaking rule
+    sed -i "109d" i18npool/source/breakiterator/data/sent.txt
 
     #use the CFLAGS but remove the LibO overridden ones
     for i in $CFLAGS; do

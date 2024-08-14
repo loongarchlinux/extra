@@ -3,21 +3,37 @@
 pkgname=ruby-contracts
 pkgver=0.17
 _commit=987ec3593e2f530ce0edb6d60650ff29ea635250
-pkgrel=2
+pkgrel=3
 pkgdesc='Contracts for Ruby'
 arch=(any)
 url='https://github.com/egonSchiele/contracts.ruby'
 license=(BSD)
-depends=(ruby)
-makedepends=(git)
-checkdepends=(ruby-rspec)
+depends=(
+  ruby
+)
+makedepends=(
+  git
+)
+checkdepends=(
+  ruby-rspec
+)
 options=(!emptydirs)
-source=(git+https://github.com/egonSchiele/contracts.ruby.git#commit=$_commit)
-sha256sums=('SKIP')
+source=(
+  "git+https://github.com/egonSchiele/contracts.ruby.git#commit=$_commit"
+  # https://github.com/egonSchiele/contracts.ruby/pull/301
+  "${pkgname}_fix_tests.patch::${url}/pull/301/commits/88fd1d841615e59c873d7da64d050d3a251634dd.patch"
+)
+sha512sums=('SKIP'
+            'd78cef640ebd457a032ebdb00aa27018ef8af84a5f9ae9eae8ce632943b4cf15adff1a58b1a21d44afdc6f4b04e3a91a86ed54457e15881552393f0b7a8e844c')
+b2sums=('SKIP'
+        '3d61603968433dbfbe5cc621aa17339d1ad7690fe0b1463f975c05f64bdd96fe0c002ee547317ed2155f4d89f2c9fe2041dc4d6a1563c51e6cb945f610ed0725')
 
 build() {
   local _gemdir="$(gem env gemdir)"
   cd contracts.ruby
+
+  patch --verbose --strip=1 --input="../${pkgname}_fix_tests.patch"
+
   gem build contracts.gemspec
   gem install \
     --local \

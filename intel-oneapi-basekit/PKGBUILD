@@ -2,19 +2,19 @@
 
 pkgname=intel-oneapi-basekit
 _major_ver=2024
-_minor_ver=0
+_minor_ver=1
 _patch_ver=0
 _pkgver=$_major_ver.$_minor_ver.$_patch_ver
-# https://www.intel.com/content/www/us/en/developer/tools/oneapi/base-toolkit-download.html?operatingsystem=linux&distributions=offline&version=2024.0.0
-pkgver=$_pkgver.49564
-_urlver=20f4e6a1-6b0b-4752-b8c1-e5eacba10e01
+# https://www.intel.com/content/www/us/en/developer/tools/oneapi/base-toolkit-download.html?operatingsystem=linux&distributions=offline&version=2024.1.0
+pkgver=$_pkgver.596
+_urlver=fdc7a2bc-b7a8-47eb-8876-de6201297144
 pkgrel=3
 pkgdesc="Intel oneAPI Base Toolkit for Linux"
 arch=('loong64' 'x86_64')
 url='https://software.intel.com/content/www/us/en/develop/tools/oneapi.html'
-license=('custom:EULA')
+license=('LicenseRef-Intel-EULA-Developer-Tools AND LicenseRef-Intel-Simplified')
 source=("https://registrationcenter-download.intel.com/akdlm/IRC_NAS/${_urlver}/l_BaseKit_p_${pkgver}_offline.sh")
-b2sums=('54c692c49954199a81c2cf2248f59dc003bedb035640a22933b6b2bf37cf0f802af0f8a1f36ec5b2fceac27c59174781ef6bbda1714ac82ce2b2766ac4c5f80f')
+b2sums=('4e90774fc476d7054a0dfef4683b7dc524c8bd62c9c7884245971a2eb4b28e23d4df20d6109b875d7ab31c2c8f0154b9e8031c818e1dd959adf9c35cbef05c35')
 depends=(level-zero-loader)
 options=(!strip staticlibs)
 install="$pkgname.install"
@@ -25,10 +25,11 @@ optdepends=('libnotify: VTune GUI'
             'at-spi2-atk: VTune GUI'
             'libdrm: VTune GUI'
             'libxcb: VTune GUI'
+            'libxcrypt-comapt: VTune GUI'
             'xdg-utils: VTune GUI'
             'nss: Advisor GUI')
 provides=('intel-oneapi-mkl' 'intel-oneapi-dnnl' 'intel-oneapi-tbb' 'intel-oneapi-dpl'
-          'intel-oneapi-ccl' 'intel-oneapi-dpcpp-cpp-compiler' 'intel-oneapi-dal'
+          'intel-oneapi-ccl' 'intel-oneapi-dpcpp-cpp-compiler' 'intel-oneapi-dal' 'intel-oneapi-tcm'
           'intel-oneapi-compiler-shared-runtime-libs' 'intel-oneapi-compiler-shared-opencl-cpu'
           'intel-oneapi-compiler-shared-runtime' 'intel-oneapi-compiler-dpcpp-cpp-runtime-libs'
           'intel-oneapi-compiler-dpcpp-cpp-runtime' 'intel-oneapi-compiler-shared' 'intel-oneapi-openmp'
@@ -60,9 +61,8 @@ package() {
   local _lib_path='/opt/intel/oneapi/compiler'
   local _ldso_conf="${pkgdir}"/etc/ld.so.conf.d
   install -d "${_ldso_conf}"
-  echo "${_lib_path}/latest/linux/lib" >> "${_ldso_conf}/${pkgname}.conf"
-  echo "${_lib_path}/latest/linux/lib/x64" >> "${_ldso_conf}/${pkgname}.conf"
-  echo "${_lib_path}/latest/linux/compiler/lib/intel64" >> "${_ldso_conf}/${pkgname}.conf"
+  echo "${_lib_path}/latest/lib" >> "${_ldso_conf}/${pkgname}.conf"
+  echo "${_lib_path}/latest/opt/compiler/lib" >> "${_ldso_conf}/${pkgname}.conf"
 
   # Collection of licenses used in OneAPI with pointers for all toolkits
   install -Dm644 "${pkgdir}/opt/intel/oneapi/licensing/latest/licensing/${_major_ver}.${_minor_ver}/license.htm" \

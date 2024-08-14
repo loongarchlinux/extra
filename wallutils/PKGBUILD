@@ -1,29 +1,30 @@
 # Maintainer: Alexander F. Rødseth <xyproto@archlinux.org>
 
 pkgname=wallutils
-pkgver=5.12.7
+pkgver=5.12.9
 pkgrel=1
 pkgdesc='Utilities for handling resolutions, wallpapers and timed wallpapers'
 arch=(loong64 x86_64)
 url='https://github.com/xyproto/wallutils'
-license=(BSD)
+license=(BSD-3-Clause)
 options=(!strip !lto)
 depends=(libheif libx11 libxpm wayland)
 makedepends=(git go libxcursor libxmu upx xbitmaps xorgproto)
 optdepends=('feh: for setting the wallpaper for some window managers that runs under X'
-  'imagemagick: for supporting HEIF/HEIC (macOS wallpaper) files'
-  'nvidia-utils: for the vram utility'
-  'procps-ng: for the Labwc window manager'
-  'swaybg: for the Sway and Labwc window managers')
-source=("git+$url#commit=d56072fbf6f53bea79fe1a45f77f939e3af518eb") # tag: 5.12.7
-b2sums=(SKIP)
+            'imagemagick: for supporting HEIF/HEIC (macOS wallpaper) files'
+            'nvidia-utils: for the vram utility'
+            'procps-ng: for the Labwc window manager'
+            'swaybg: for the Sway and Labwc window managers')
+source=("git+$url#commit=8da65d99b7b8e12dd7e4f9df2c278ae3725f7570") # tag: 5.12.9
+b2sums=('8230472933819b2805c943ef8da261bd13f32aebcd6912e8d983af95b6f12bdb3ec64a8bba2fb6b23733c3cdca618e97a26ccc3807f8232d43aa965fa799a714')
 
 build() {
+  export LDFLAGS="$(echo $LDFLAGS | sed 's/ -Wl//g;s/,--sort-common//')"
   make -C $pkgname
 }
 
 package() {
-  DESTDIR="$pkgdir" make -C $pkgname install
+  DESTDIR="$pkgdir" LDFLAGS="$LDFLAGS" make -C $pkgname install
   find "$pkgdir/usr/bin/" -executable -type f -not -name heic-install -exec \
     upx --best --lzma --no-progress --no-time -q {} >/dev/null \;
   install -Dm644 $pkgname/LICENSE "$pkgdir/usr/share/licenses/$pkgname/LICENSE"

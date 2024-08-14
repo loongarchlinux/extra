@@ -4,7 +4,7 @@
 
 pkgname=spring
 pkgver=106.0
-pkgrel=2
+pkgrel=3
 pkgdesc='A free 3D real-time-strategy (RTS) game engine'
 arch=('loong64' 'x86_64')
 url="http://springrts.com/"
@@ -15,14 +15,17 @@ makedepends=('cmake' 'zip' 'xz' 'p7zip' 'python' 'jdk8-openjdk' 'mesa')
 optdepends=('python: python-based bots'
             'java-runtime: java-based bots')
 source=("https://springrts.com/dl/buildbot/default/master/106.0/source/spring_106.0_src.tar.gz"
-         spring-gcc12.patch)
+         spring-gcc12.patch
+         spring-gcc13.patch)
 sha512sums=('d76bec4cc106ed23f09699d702b9d14b76e32f4e34beac2313268c2ef29f6379a970efaee209d4db5dc7c6323d1a47882b10c5c4faa0744087fada227ed91f7b'
-            '68bbffe545fe5200ab7273954a1aad7fdc67ba904a0a3d86f9fb6b02cd2e716ab9623da8b8bf92c1efda269b161ee28432aa7e0f8899ad914491648fae13e34a')
+            '68bbffe545fe5200ab7273954a1aad7fdc67ba904a0a3d86f9fb6b02cd2e716ab9623da8b8bf92c1efda269b161ee28432aa7e0f8899ad914491648fae13e34a'
+            '407209f4cae9ef37ef9251bcc5244ca8b54ec29884f3294aee333e90ae5ea4404e7f63047007630848bc7026f43f5b605c2d294a972aab358ca0adaf7ead3387')
 
 prepare() {
   cd spring_$pkgver
 
   patch -Np1 -i ../spring-gcc12.patch
+  patch -Np1 -i ../spring-gcc13.patch # missing includes
   #remove bundled libraries
   rm -r tools/pr-downloader/src/lib/jsoncpp
   rm -r tools/pr-downloader/src/lib/minizip
@@ -31,7 +34,7 @@ prepare() {
 build() {
   cd spring_$pkgver
 
-  cmake	\
+  cmake \
     -Bbuild \
     -DCMAKE_INSTALL_PREFIX=/usr \
     -DDATADIR=share/spring \

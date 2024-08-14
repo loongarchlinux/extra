@@ -3,7 +3,7 @@
 
 pkgname=perl-data-optlist
 pkgver=0.114
-pkgrel=2
+pkgrel=3
 pkgdesc="Parse and validate simple name/value option pairs"
 arch=('any')
 license=('PerlArtistic' 'GPL')

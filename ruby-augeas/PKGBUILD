@@ -5,29 +5,47 @@
 _gemname=ruby-augeas
 pkgname="$_gemname"
 pkgver=0.5.0
-pkgrel=8
+pkgrel=9
 pkgdesc='Provides Ruby bindings for augeas'
 arch=('loong64' 'x86_64')
 url='https://augeas.net'
-license=('LGPL')
+license=('LGPL-2.1-only')
 depends=('ruby' 'augeas')
-makedepends=('rubygems' 'ruby-rdoc')
-source=("https://rubygems.org/downloads/$_gemname-${pkgver//_/-}.gem")
+makedepends=('rubygems' 'ruby-rdoc' 'ruby-rake' 'zip')
+source=("${pkgname}-${pkgver}.tar.gz::https://github.com/hercules-team/${pkgname}/archive/release-${pkgver}.tar.gz" 'https://src.fedoraproject.org/rpms/ruby-augeas/raw/rawhide/f/remove-unused-sibling-argument-from-augeas_rm.patch')
 noextract=("$_gemname-$pkgver.gem")
-sha512sums=('523742368543c617baa2b393e4682451d7fe20aecbcf9ab50fed0f5575119b3fbc06f79f0894cca728d2fee7d441cdd9f075dbcf81628835ba870930c3d2ac8d')
+sha512sums=('6d1b152214d77bdc32a053627388398dcd01f1d9901f267e50a01edcf6aa64d2480275bdd8f4b13e4de48034af67ed02ba0f5c03cecc155bb528ad96ff1db8f0'
+            '2d26f96950a5101ca1279fc7f0f7c933217f70ea737505197bbd0917034eb75f8f860b01eef85dc0cf552928c737bf9cce19bac8f53caeb4f47483a6cc4c4f27')
 options=(!emptydirs)
 
+prepare() {
+  cd "${pkgname}-release-${pkgver}"
+  sed -i '/s.description/a s.license = "LGPL-2.1-only"' Rakefile # fix license
+  sed -i '/s.autorequire/d' Rakefile # remove deprecated option
+  patch --forward --verbose --strip=1 --input='../remove-unused-sibling-argument-from-augeas_rm.patch'
+
+}
+
+build() {
+  cd "${pkgname}-release-${pkgver}"
+  #gem build --verbose --strict
+  rake package
+}
 package() {
-  cd "$srcdir"
+  cd "${pkgname}-release-${pkgver}"
+  ls
   # _gemdir is defined inside package() because if ruby[gems] is not installed on
   # the system, makepkg will exit with an error when sourcing the PKGBUILD.
   local _gemdir="$(ruby -e'puts Gem.default_dir')"
 
-  gem install --no-user-install --ignore-dependencies --install-dir "${pkgdir}${_gemdir}" --bindir "${pkgdir}/usr/bin" "${_gemname}-${pkgver//_/-}.gem"
+  gem install --no-user-install --ignore-dependencies --install-dir "${pkgdir}${_gemdir}" --bindir "${pkgdir}/usr/bin" "pkg/${pkgname}-${pkgver}.gem"
   rm -rf ${pkgdir}/${_gemdir}/extensions/*/*/${_gemname}-${pkgver}/{mkmf.log,gem_make.out}
   rm -rf "${pkgdir}/${_gemdir}/cache"
   rm -rf "${pkgdir}/${_gemdir}/doc/${_gemname}-${pkgver}/ri/ext"
   rm -rf "${pkgdir}/${_gemdir}/gems/${_gemname}-${pkgver}/ext"
+
+  install -Dm 644 COPYING "${pkgdir}/usr/share/licenses/${pkgname}/LICENSE"
+  install -Dm 644 README.rdoc NEWS AUTHORS -t "${pkgdir}/usr/share/doc/${pkgname}"
 }
 
 # vim:set ts=2 sw=2 et:

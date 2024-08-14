@@ -1,18 +1,23 @@
-# Maintainer: Felix Yan <felixonmars@archlinux.org>
 # Maintainer: Daniel M. Capella <polyzen@archlinux.org>
+# Contributor: Felix Yan <felixonmars@archlinux.org>
 
 pkgname=npm
-pkgver=10.7.0
+pkgver=10.8.2
 pkgrel=1
-pkgdesc='A package manager for JavaScript'
-arch=('any')
-url='https://www.npmjs.com/'
-license=('Artistic-2.0')
-depends=('nodejs' 'node-gyp' 'nodejs-nopt' 'semver')
-makedepends=('git')
+pkgdesc='JavaScript package manager'
+arch=(any)
+url=https://www.npmjs.com
+license=(Artistic-2.0)
+depends=(
+  node-gyp
+  nodejs
+  nodejs-nopt
+  semver
+)
+makedepends=(git)
 optdepends=("git: for dependencies using Git URL's")
 source=("npm-cli::git+https://github.com/npm/cli.git#tag=v$pkgver")
-b2sums=('ab3e2a50da69e0bd979dac8e8a4d1f0fcff144dff21491ed27b7ce15fa2437c949400a11e21d8014212ae874e92139c24254da8d0a0152b5098aecc6ce6fb3f3')
+b2sums=('e1650bfb9f95c411aca6bd26002500bdee3f8f736326c9d4a10298f752ca232ba48a8088069eca99dd0120cf65db1ad53799b2470aef158dfdc360aad86699cb')
 
 build() {
   cd npm-cli
@@ -34,8 +39,10 @@ build() {
 
 check() {
   cd npm-cli
-  # Windows shims and exit handler test failures
-  node . run test --ignore-scripts || true
+  # Windows shims test failure
+  mv test/bin/windows-shims.js{,.bak}
+  node . run test --ignore-scripts -- --no-coverage
+  mv test/bin/windows-shims.js{.bak,}
 }
 
 package() {

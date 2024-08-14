@@ -1,28 +1,44 @@
 # Maintainer: Felix Yan <felixonmars@archlinux.org>
 
 pkgname=ruby-console
-pkgver=1.23.3
+pkgver=1.25.2
 pkgrel=1
 pkgdesc='Beautiful logging for Ruby'
 arch=(any)
 url='https://github.com/socketry/console'
 license=(MIT)
-depends=(ruby-fiber-annotation ruby-fiber-local)
-checkdepends=(ruby-bake ruby-bake-modernize ruby-bake-test ruby-bake-test-external ruby-covered
-              ruby-sus)
+depends=(
+  ruby
+  ruby-fiber-annotation
+  ruby-fiber-local
+)
+makedepends=(
+  git
+  ruby-rdoc
+)
+checkdepends=(
+  ruby-bake
+  ruby-bake-modernize
+  ruby-bake-test
+  ruby-bake-test-external
+  ruby-bundler
+  ruby-covered
+  ruby-sus
+)
 options=(!emptydirs)
-source=(https://github.com/socketry/console/archive/v$pkgver/$pkgname-$pkgver.tar.gz)
-sha256sums=('0951b3c761226fbe92d8e20a1383ec7ab970a9be73adebbc2d88f66b4e55bffa')
+source=(git+https://github.com/socketry/console.git#tag=v$pkgver)
+sha512sums=('61d269613ce47a596a9ea7a9bc0a76cbcd7a2c757bea06a842ee03c8ad9a9188b0f04c9574bb68fb6653964ed685adabe28ad0acb415d8f73326908310a61439')
+b2sums=('24f27688ed306527b9f298b7b64ca2747ef7d9edad10e2b9ba4db15f66ed21b7f8a153e1232d4456f435fccbc2366bc4c641e8c0ec91abbc63c3a6531b5804bf')
 
 prepare() {
-  cd console-$pkgver
+  cd console
   sed -r -e 's|~>|>=|g' -e '/signing_key/d' -i console.gemspec
-  sed -i '/bake-gem/d;/bake-github-pages/d;/utopia-project/d' gems.rb
+  sed -i '/group :maintenance/,/end/d' gems.rb
 }
 
 build() {
   local _gemdir="$(gem env gemdir)"
-  cd console-$pkgver
+  cd console
   gem build console.gemspec
   gem install \
     --local \
@@ -48,11 +64,11 @@ build() {
 
 check() {
   local _gemdir="$(gem env gemdir)"
-  cd console-$pkgver
+  cd console
   GEM_HOME="tmp_install/$_gemdir" bake test
 }
 
 package() {
-  cd console-$pkgver
+  cd console
   cp -a tmp_install/* "$pkgdir"/
 }

@@ -5,8 +5,8 @@
 
 pkgbase=tensorflow
 pkgname=(tensorflow tensorflow-opt tensorflow-cuda tensorflow-opt-cuda python-tensorflow python-tensorflow-opt python-tensorflow-cuda python-tensorflow-opt-cuda)
-pkgver=2.16.1
-_pkgver=2.16.1
+pkgver=2.17.0
+_pkgver=2.17.0
 pkgrel=2
 pkgdesc="Library for computation using data flow graphs for scalable machine learning"
 url="https://www.tensorflow.org/"
@@ -19,9 +19,13 @@ makedepends=('bazel' 'python-numpy' 'cuda' 'nvidia-utils' 'nccl' 'git' 'cudnn' '
              'python-keras-preprocessing' 'cython' 'patchelf' 'python-requests' 'libxcrypt-compat' 'clang')
 optdepends=('tensorboard: Tensorflow visualization toolkit')
 source=("$pkgname-$pkgver.tar.gz::https://github.com/tensorflow/tensorflow/archive/v${_pkgver}.tar.gz"
-        https://github.com/bazelbuild/bazel/releases/download/6.1.0/bazel_nojdk-6.1.0-linux-x86_64)
-sha512sums=('6f02261b3e72b476a3adb8e47efe2bee76b8564315b853e3b16f443193204d363b5fb22ac5c388cebd6a1f326f0daf00586e0ccbf6a305d761a9266534fde13f'
-            'b71aed83ae1c3f610df77f7c148703fd3e7aa5901794a2b31c6044c71b3f030831d59f7f3641992105117a422655160fc9b509326b31586c6bca378cbff08762')
+        tensorflow-2.16.1-python-distutils-removal.patch
+        tensorflow-numpy2.patch
+        https://github.com/bazelbuild/bazel/releases/download/6.5.0/bazel_nojdk-6.5.0-linux-x86_64)
+sha512sums=('45061f075971cf2bc219a34b1cda2ee9851ba586e94046838e6e1fd26adcfb399d90e71e89a0f709d5282ff3be7cc3a82b81d62dce53db5010640ea41487a469'
+            'e4c44d2f5314b83d8ed404e5ec14960ef8b7df0c1a2a3e826f913a02c901f9fd0326f9014a602121e0fdb2f928d1459f8b8180455491a1f937ce84e12f6a7d3e'
+            'c4da1e72c90534a5a1f7625b819dc2529fa5b91c8423550ca4384ec243bddd026b977d5f81660114f054ce8f64cd90057f6482f89df4af443f35da1871202c1d'
+            'd3789f0ecd354468f2e24d98501041430ae99c173320fa9c3eb02f225c08ed298fd1ad259e4ad9bb70b6ae89d84cd87460aaa720de3486d40b30777a8fe45453')
 
 # consolidate common dependencies to prevent mishaps
 _common_py_depends=(python-termcolor python-astor python-gast python-numpy python-protobuf
@@ -57,9 +61,20 @@ check_dir() {
 prepare() {
   # Since Tensorflow is currently imcompatible with our version of Bazel, we're going to use
   # their exact version of Bazel to fix that. Stupid problems call for stupid solutions.
-  install -Dm755 "${srcdir}"/bazel_nojdk-6.1.0-linux-x86_64 bazel/bazel
+  install -Dm755 "${srcdir}"/bazel_nojdk-6.5.0-linux-x86_64 bazel/bazel
   export PATH="${srcdir}/bazel:$PATH"
   bazel --version
+
+  # Python 3.12 removed the distutils module
+  # https://gitlab.archlinux.org/archlinux/packaging/packages/tensorflow/-/issues/7
+  # patch -Np1 -i ../tensorflow-numpy2.patch -d tensorflow-${_pkgver}
+  # cd tensorflow-${_pkgver}/ci/official/requirements_updater
+  # ./updater.sh
+  # cd -
+
+  # Python 3.12 removed the distutils module
+  # https://gitlab.archlinux.org/archlinux/packaging/packages/tensorflow/-/issues/7
+  patch -Np1 -i ../tensorflow-2.16.1-python-distutils-removal.patch -d tensorflow-${_pkgver}
 
   # Get rid of hardcoded versions. Not like we ever cared about what upstream
   # thinks about which versions should be used anyway. ;) (FS#68772)
@@ -92,15 +107,15 @@ prepare() {
   export TF_SYSTEM_LIBS="boringssl,curl,cython,gif,icu,libjpeg_turbo,nasm,png,zlib"
   export TF_SET_ANDROID_WORKSPACE=0
   export TF_DOWNLOAD_CLANG=0
-  # export TF_NCCL_VERSION=$(pkg-config nccl --modversion | grep -Po '\d+\.\d+')
+  export TF_NCCL_VERSION=$(pkg-config nccl --modversion | grep -Po '\d+\.\d+')
   export NCCL_INSTALL_PATH=/usr
   # Does tensorflow really need the compiler overridden in 5 places? Yes.
   # https://github.com/tensorflow/tensorflow/issues/60577
   export CC=gcc
   export CXX=g++
-  export GCC_HOST_COMPILER_PATH=/opt/cuda/bin/gcc
-  export HOST_C_COMPILER=/usr/bin/${CC}
-  export HOST_CXX_COMPILER=/usr/bin/${CXX}
+  export GCC_HOST_COMPILER_PATH="${NVCC_CCBIN/++/cc}"
+  export HOST_C_COMPILER="${NVCC_CCBIN/++/cc}"
+  export HOST_CXX_COMPILER="$NVCC_CCBIN"
   export TF_CUDA_CLANG=0  # Clang currently disabled because it's not compatible at the moment.
   export CLANG_CUDA_COMPILER_PATH=/usr/bin/clang
   export TF_CUDA_PATHS=/opt/cuda,/usr/lib,/usr
@@ -115,68 +130,68 @@ prepare() {
   export PYTHON_BIN_PATH=/usr/bin/python$(get_pyver)
   export USE_DEFAULT_PYTHON_LIB_PATH=1
 
-  export BAZEL_ARGS="-c opt"
+  export BAZEL_ARGS="-c opt --verbose_failures --config=verbose_logs --copt=-Wno-gnu-offsetof-extensions"
 }
 
 build() {
-  echo "Building without cuda and without non-x86-64 optimizations"
-  cd "${srcdir}"/tensorflow-${_pkgver}
-  export CC_OPT_FLAGS="-march=x86-64"
-  export TF_NEED_CUDA=0
-
-  ./configure
-  bazel \
-    build ${BAZEL_ARGS[@]} \
-      //tensorflow:libtensorflow.so \
-      //tensorflow:libtensorflow_cc.so \
-      //tensorflow:install_headers \
-      //tensorflow/tools/pip_package:build_pip_package
-  bazel-bin/tensorflow/tools/pip_package/build_pip_package "${srcdir}"/tmp
-
-
-  echo "Building without cuda and with non-x86-64 optimizations"
-  cd "${srcdir}"/tensorflow-${_pkgver}-opt
-  export CC_OPT_FLAGS="-march=haswell -O3"
-  export TF_NEED_CUDA=0
-  ./configure
-  bazel \
-    build --config=avx_linux \
-      ${BAZEL_ARGS[@]} \
-      //tensorflow:libtensorflow.so \
-      //tensorflow:libtensorflow_cc.so \
-      //tensorflow:install_headers \
-      //tensorflow/tools/pip_package:build_pip_package
-  bazel-bin/tensorflow/tools/pip_package/build_pip_package "${srcdir}"/tmpopt
-
-
   echo "Building with cuda and without non-x86-64 optimizations"
   cd "${srcdir}"/tensorflow-${_pkgver}-cuda
   export CC_OPT_FLAGS="-march=x86-64"
   export TF_NEED_CUDA=1
   ./configure
   bazel \
-    build \
+    build --config=cuda \
       ${BAZEL_ARGS[@]} \
       //tensorflow:libtensorflow.so \
       //tensorflow:libtensorflow_cc.so \
+      //tensorflow:libtensorflow_framework.so \
       //tensorflow:install_headers \
-      //tensorflow/tools/pip_package:build_pip_package
-  bazel-bin/tensorflow/tools/pip_package/build_pip_package --gpu "${srcdir}"/tmpcuda
+      //tensorflow/tools/pip_package:wheel --repo_env=WHEEL_NAME=tensorflow
 
 
   echo "Building with cuda and with non-x86-64 optimizations"
   cd "${srcdir}"/tensorflow-${_pkgver}-opt-cuda
-  export CC_OPT_FLAGS="-march=haswell -O3"
+  export CC_OPT_FLAGS="-march=haswell -O2"
   export TF_NEED_CUDA=1
   ./configure
   bazel \
-    build --config=avx_linux \
+    build --config=opt --config=avx_linux --config=cuda \
       ${BAZEL_ARGS[@]} \
       //tensorflow:libtensorflow.so \
       //tensorflow:libtensorflow_cc.so \
+      //tensorflow:libtensorflow_framework.so \
       //tensorflow:install_headers \
-      //tensorflow/tools/pip_package:build_pip_package
-  bazel-bin/tensorflow/tools/pip_package/build_pip_package --gpu "${srcdir}"/tmpoptcuda
+      //tensorflow/tools/pip_package:wheel --repo_env=WHEEL_NAME=tensorflow
+
+
+  echo "Building without cuda and without non-x86-64 optimizations"
+  cd "${srcdir}"/tensorflow-${_pkgver}
+  export CC_OPT_FLAGS="-march=x86-64"
+  export TF_NEED_CUDA=0
+  ./configure
+  bazel \
+    build \
+      ${BAZEL_ARGS[@]} \
+      //tensorflow:libtensorflow.so \
+      //tensorflow:libtensorflow_cc.so \
+      //tensorflow:libtensorflow_framework.so \
+      //tensorflow:install_headers \
+      //tensorflow/tools/pip_package:wheel --repo_env=WHEEL_NAME=tensorflow_cpu
+
+
+  echo "Building without cuda and with non-x86-64 optimizations"
+  cd "${srcdir}"/tensorflow-${_pkgver}-opt
+  export CC_OPT_FLAGS="-march=haswell -O2"
+  export TF_NEED_CUDA=0
+  ./configure
+  bazel \
+    build --config=opt --config=avx_linux \
+      ${BAZEL_ARGS[@]} \
+      //tensorflow:libtensorflow.so \
+      //tensorflow:libtensorflow_cc.so \
+      //tensorflow:libtensorflow_framework.so \
+      //tensorflow:install_headers \
+      //tensorflow/tools/pip_package:wheel --repo_env=WHEEL_NAME=tensorflow_cpu
 }
 
 _package() {
@@ -185,7 +200,7 @@ _package() {
   cp -r bazel-bin/tensorflow/include/* "${pkgdir}"/usr/include/tensorflow/
 
   # install python-version to get all extra headers
-  WHEEL_PACKAGE=$(find "${srcdir}"/$1 -name "tensor*.whl")
+  WHEEL_PACKAGE=$(find -L bazel-out -name "tensor*.whl")
   python -m installer --destdir="$pkgdir" $WHEEL_PACKAGE
 
   # move extra headers to correct location
@@ -206,26 +221,25 @@ _package() {
     ldd "${_so_file}" &>/dev/null && rm -rf "${_so_file}"
   done
 
-  # install the rest of tensorflow
+  # pkgconfig
   tensorflow/c/generate-pc.sh --prefix=/usr --version=${pkgver}
   sed -e 's@/include$@/include/tensorflow@' -i tensorflow.pc -i tensorflow_cc.pc
   install -Dm644 tensorflow.pc "${pkgdir}"/usr/lib/pkgconfig/tensorflow.pc
   install -Dm644 tensorflow_cc.pc "${pkgdir}"/usr/lib/pkgconfig/tensorflow_cc.pc
-  install -Dm755 bazel-bin/tensorflow/libtensorflow.so "${pkgdir}"/usr/lib/libtensorflow.so.${pkgver}
-  ln -s libtensorflow.so.${pkgver} "${pkgdir}"/usr/lib/libtensorflow.so.${pkgver:0:1}
-  ln -s libtensorflow.so.${pkgver:0:1} "${pkgdir}"/usr/lib/libtensorflow.so
-  install -Dm755 bazel-bin/tensorflow/libtensorflow_cc.so "${pkgdir}"/usr/lib/libtensorflow_cc.so.${pkgver}
-  ln -s libtensorflow_cc.so.${pkgver} "${pkgdir}"/usr/lib/libtensorflow_cc.so.${pkgver:0:1}
-  ln -s libtensorflow_cc.so.${pkgver:0:1} "${pkgdir}"/usr/lib/libtensorflow_cc.so
-  install -Dm755 bazel-bin/tensorflow/libtensorflow_framework.so "${pkgdir}"/usr/lib/libtensorflow_framework.so.${pkgver}
-  ln -s libtensorflow_framework.so.${pkgver} "${pkgdir}"/usr/lib/libtensorflow_framework.so.${pkgver:0:1}
-  ln -s libtensorflow_framework.so.${pkgver:0:1} "${pkgdir}"/usr/lib/libtensorflow_framework.so
+
+  # .so files
+  rm bazel-bin/tensorflow/*.params
+  cp -P bazel-bin/tensorflow/*.so* "${pkgdir}"/usr/lib
+
+  # C API headers
   install -Dm644 tensorflow/c/c_api.h "${pkgdir}"/usr/include/tensorflow/tensorflow/c/c_api.h
+
+  # license
   install -Dm644 LICENSE "${pkgdir}"/usr/share/licenses/${pkgname}/LICENSE
 }
 
 _python_package() {
-  WHEEL_PACKAGE=$(find "${srcdir}"/$1 -name "tensor*.whl")
+  WHEEL_PACKAGE=$(find -L bazel-out -name "tensor*.whl")
   python -m installer --destdir="$pkgdir" $WHEEL_PACKAGE
 
   # create symlinks to headers
@@ -240,14 +254,14 @@ _python_package() {
   # tensorboard has been separated from upstream but they still install it with
   # tensorflow. I don't know what kind of sense that makes but we have to clean
   # it out from this pacakge.
-  rm -rf "${pkgdir}"/usr/bin/tensorboard
+  rm -r "${pkgdir}"/usr/bin/tensorboard
 
   install -Dm644 LICENSE "${pkgdir}"/usr/share/licenses/${pkgname}/LICENSE
 }
 
 package_tensorflow() {
   cd "${srcdir}"/tensorflow-${_pkgver}
-  _package tmp
+  _package
 }
 
 package_tensorflow-opt() {
@@ -256,7 +270,7 @@ package_tensorflow-opt() {
   provides=(tensorflow)
 
   cd "${srcdir}"/tensorflow-${_pkgver}-opt
-  _package tmpopt
+  _package
 }
 
 package_tensorflow-cuda() {
@@ -266,7 +280,7 @@ package_tensorflow-cuda() {
   provides=(tensorflow)
 
   cd "${srcdir}"/tensorflow-${_pkgver}-cuda
-  _package tmpcuda
+  _package
 }
 
 package_tensorflow-opt-cuda() {
@@ -276,14 +290,14 @@ package_tensorflow-opt-cuda() {
   provides=(tensorflow tensorflow-cuda)
 
   cd "${srcdir}"/tensorflow-${_pkgver}-opt-cuda
-  _package tmpoptcuda
+  _package
 }
 
 package_python-tensorflow() {
   depends+=(tensorflow "${_common_py_depends[@]}")
 
   cd "${srcdir}"/tensorflow-${_pkgver}
-  _python_package tmp
+  _python_package
 }
 
 package_python-tensorflow-opt() {
@@ -293,7 +307,7 @@ package_python-tensorflow-opt() {
   provides=(python-tensorflow)
 
   cd "${srcdir}"/tensorflow-${_pkgver}-opt
-  _python_package tmpopt
+  _python_package
 }
 
 package_python-tensorflow-cuda() {
@@ -303,7 +317,7 @@ package_python-tensorflow-cuda() {
   provides=(python-tensorflow)
 
   cd "${srcdir}"/tensorflow-${_pkgver}-cuda
-  _python_package tmpcuda
+  _python_package
 }
 
 package_python-tensorflow-opt-cuda() {
@@ -313,7 +327,7 @@ package_python-tensorflow-opt-cuda() {
   provides=(python-tensorflow python-tensorflow-cuda)
 
   cd "${srcdir}"/tensorflow-${_pkgver}-opt-cuda
-  _python_package tmpoptcuda
+  _python_package
 }
 
 # vim:set ts=2 sw=2 et:

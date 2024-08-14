@@ -3,16 +3,16 @@
 
 _pkgname=typer
 pkgname=python-typer
-pkgver=0.9.0
-pkgrel=3
+pkgver=0.12.3
+pkgrel=2
 pkgdesc="Build great CLIs. Easy to code. Based on Python type hints"
 arch=('any')
 url="https://typer.tiangolo.com/"
 license=('MIT')
 depends=('python-click' 'python-typing_extensions')
-makedepends=('python-setuptools' 'python-build' 'python-installer' 'python-flit-core')
+makedepends=('python-setuptools' 'python-build' 'python-installer' 'python-flit-core' 'python-pdm-backend')
 source=("$pkgname-$pkgver.tar.gz::https://github.com/tiangolo/typer/archive/${pkgver}.tar.gz")
-sha512sums=('76a455b17278c1fcf97a1fef7b3186cb0edda1501f537b1c689fa8fc1cdae233fbf2b0bbbcf8b886e7d35d2f480343427ad3410274218dee8689890321f93b58')
+sha512sums=('a779680b97d971a140f1db11f2d0c53bfeb10dcfa278f8a849da14a9c36a7341ffc51367ef12ecbe9d71fc398f5fdf6e1c6f1ca09f2ed959766d8e3032f5744e')
 
 prepare() {
   cd typer-$pkgver
@@ -27,5 +27,10 @@ build() {
 package() {
   cd "typer-$pkgver"
   python -m installer --destdir="$pkgdir" dist/*.whl
+
+  # Change the binary name away from typer to python-typer
+  # https://gitlab.archlinux.org/archlinux/packaging/packages/python-typer/-/issues/1
+  mv "$pkgdir"/usr/bin/typer "$pkgdir"/usr/bin/python-typer
+
   install -Dm644 LICENSE "$pkgdir"/usr/share/licenses/$pkgname/LICENSE
 }

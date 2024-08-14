@@ -2,8 +2,8 @@
 # Contributor: Thibaut Pérami <thibaut.perami@cl.cam.ac.uk>
 
 pkgname=zydis
-pkgver=4.0.0
-pkgrel=3
+pkgver=4.1.0
+pkgrel=1
 pkgdesc='Fast and lightweight x86/x86-64 disassembler and code generation library'
 arch=('loong64' 'x86_64')
 url='https://zydis.re'
@@ -12,15 +12,9 @@ depends=('gcc-libs' 'zycore-c')
 makedepends=('git' 'cmake' 'ruby-ronn-ng' 'doxygen')
 checkdepends=('python')
 provides=('libZydis.so')
-_commit='1ba75aeefae37094c7be8eba07ff81d4fe0f1f20'
-source=("git+https://github.com/zyantific/zydis.git#commit=$_commit")
-b2sums=('SKIP')
-
-pkgver() {
-  cd "$pkgname"
-
-  git describe --tags | sed -e 's/^v//' -e 's/-/./g'
-}
+source=("git+https://github.com/zyantific/zydis.git#tag=v$pkgver")
+sha512sums=('49fa2280b2673067630631d436cfecc841fe683640c21db9e8942d59bb6661385df26ad0d2e53fdc3f8a8a97c51bc652cdc413eb83aa9bb30a387b3e46c15e1e')
+b2sums=('6c1f646f95951177ab27297398a5bed7e4ada1b1159177bb508ad12871728a63a6bf1e8a5b94df8b17a45cd6e6b7d7154fb84f5c9f7a750dab7081539d943365')
 
 build() {
   # https://archlinux.org/todo/lto-fat-objects/
@@ -35,6 +29,7 @@ build() {
     -D CMAKE_INSTALL_PREFIX=/usr \
     -D CMAKE_POSITION_INDEPENDENT_CODE=ON \
     -D ZYDIS_BUILD_SHARED_LIB=ON \
+    -D ZYDIS_BUILD_TESTS=ON \
     -D ZYAN_SYSTEM_ZYCORE=ON \
     -D ZYDIS_BUILD_MAN=ON
 
@@ -43,16 +38,7 @@ build() {
 
 check() {
   # test suite extracted from .github/workflows/main.yml
-  cd "$pkgname/tests"
-
-  # regression tests (decoder)
-  python regression.py test "$srcdir/build/ZydisInfo"
-
-  # regression tests (encoder)
-  python regression_encoder.py \
-    "$srcdir/build/ZydisFuzzReEncoding" \
-    "$srcdir/build/ZydisFuzzEncoder" \
-    "$srcdir/build/ZydisTestEncoderAbsolute"
+  ctest --test-dir build --output-on-failure
 }
 
 package() {
@@ -63,10 +49,6 @@ package() {
   # documentation
   install -vDm644 -t "$pkgdir/usr/share/doc/Zydis" README.md
   cp -vr examples "$pkgdir/usr/share/doc/Zydis"
-
-  # move man pages to correct directory
-  install -vd "$pkgdir/usr/share/man/man1"
-  mv "$pkgdir/usr/share/man/"*.1 "$pkgdir/usr/share/man/man1"
 
   # license
   install -vDm644 -t "$pkgdir/usr/share/licenses/$pkgname" LICENSE

@@ -2,17 +2,25 @@
 
 pkgname=vorbis-tools
 pkgver=1.4.2
-pkgrel=3
+pkgrel=5
 pkgdesc='Extra tools for Ogg-Vorbis'
 arch=('loong64' 'x86_64')
 url='https://www.xiph.org/vorbis/'
 license=('GPL2')
 depends=('curl' 'flac' 'libao' 'libvorbis' 'opusfile')
-source=("https://downloads.xiph.org/releases/vorbis/${pkgname}-${pkgver}.tar.gz")
-sha256sums=('db7774ec2bf2c939b139452183669be84fda5774d6400fc57fde37f77624f0b0')
+source=("https://downloads.xiph.org/releases/vorbis/${pkgname}-${pkgver}.tar.gz"
+        '0001-include-utf8.h-for-utf8_decode.patch')
+sha256sums=('db7774ec2bf2c939b139452183669be84fda5774d6400fc57fde37f77624f0b0'
+            'cd119e66d6ba91604bb18275f339a2e4467cf2e11756a29584a533b95bb60865')
+
+prepare() {
+  cd "${pkgname}-${pkgver}"
+
+  patch -Np1 < ../0001-include-utf8.h-for-utf8_decode.patch
+}
 
 build() {
-  cd ${pkgname}-${pkgver}
+  cd "${pkgname}-${pkgver}"
 
   ./configure \
     --prefix=/usr \
@@ -22,7 +30,7 @@ build() {
 }
 
 package() {
-  cd ${pkgname}-${pkgver}
+  cd "${pkgname}-${pkgver}"
 
   make DESTDIR="${pkgdir}" install
 }

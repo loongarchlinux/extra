@@ -1,9 +1,10 @@
 # Maintainer: Brett Cornwall <ainola@archlinux.org>
+# Maintainer: Robin Candau <antiz@archlinux.org>
 # Contributor: Maxim Baz <archlinux at maximbaz dot com>
 # Contributor: Omar Pakker
 
 pkgname=wlroots
-pkgver=0.17.3
+pkgver=0.18.0
 pkgrel=1
 license=('MIT')
 pkgdesc='Modular Wayland compositor library'
@@ -13,6 +14,8 @@ depends=(
     'libdisplay-info.so'
     'libglvnd'
     'libinput'
+    'liblcms2.so'
+    'libliftoff.so'
     'libpixman-1.so'
     'libseat.so'
     'libudev.so'
@@ -39,31 +42,19 @@ optdepends=(
     'xorg-xwayland: Xwayland support'
 )
 provides=(
-    'libwlroots.so'
-)
-options=(
-    'debug'
+    "libwlroots-${pkgver%.*}.so"
 )
 source=(
     "$pkgname-$pkgver.tar.gz::https://gitlab.freedesktop.org/wlroots/wlroots/-/releases/$pkgver/downloads/wlroots-$pkgver.tar.gz"
     "https://gitlab.freedesktop.org/wlroots/wlroots/-/releases/$pkgver/downloads/wlroots-$pkgver.tar.gz.sig"
-    "Revert-layer-shell-error-on-0-dimension-without-anch.patch"
 )
-sha256sums=('04d31521bd2b737541b9680098e55ebaaf956e68d692f80479f4ee1236606d98'
-            'SKIP'
-            '1c05f0500a96a3721317d01619aa42d8ad696905a378249e8405968c4e16a065')
+sha256sums=('89e13735d83b02f0fa519268b1fe893f7843499a5ea34d2bbda054a011722e53'
+            'SKIP')
 validpgpkeys=(
     '34FF9526CFEF0E97A340E2E40FDE7BE0E88F5E48' # Simon Ser
     '9DDA3B9FA5D58DD5392C78E652CB6609B22DA89A' # Drew DeVault
     '4100929B33EEB0FD1DB852797BC79407090047CA' # Sway signing key
 )
-
-prepare() {
-    cd "${pkgname}-${pkgver}"
-    # Allow a minor protocol violation until phosh is fixed without this patch
-    # phosh crashes on launch.
-    patch -Np1 -i "${srcdir}/Revert-layer-shell-error-on-0-dimension-without-anch.patch"
-}
 
 build() {
     arch-meson "$pkgname-$pkgver" build

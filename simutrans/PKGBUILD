@@ -5,25 +5,23 @@
 # Contributor: JD Steffen <jd at steffennet dot org>
 
 pkgname=simutrans
-pkgver=123.0.1
+pkgver=124.1
 pkgrel=1
 pkgdesc="Transportation simulation game"
 arch=('loong64' 'x86_64')
 url="https://www.simutrans.com/"
 license=('custom:Artistic')
-depends=('gcc-libs' 'zlib' 'sdl2' 'libpng' 'bzip2' 'simutrans-pak64' 'hicolor-icon-theme')
+depends=('gcc-libs' 'zlib' 'sdl2' 'libpng' 'bzip2' 'freetype2' 'fontconfig' 'simutrans-pak64' 'hicolor-icon-theme')
 makedepends=('dos2unix')
 optdepends=('timidity++: play MIDI music')
 source=(https://downloads.sourceforge.net/$pkgname/$pkgname-src-${pkgver//./-}.zip
         https://raw.githubusercontent.com/aburch/simutrans/8593f5b1248d03f907a149f7abc41ae6512009e1/simutrans.svg
         settings-folder.patch
-        path-for-game-data.patch
         simutrans.desktop
         simutrans.appdata.xml)
-sha256sums=('8deb38c8de41fb5558640cdd4b9b161c38de92c077b3e506f74c34f93214f469'
+sha256sums=('0fc4e071a8b7fe1931b30fc0293aa68967f943c6fa6d89c6df119eb3d84d5437'
             'c0c2dd5da146f64901b00c6ee67e0818a166b983a81cee7897c4843aa9f21c81'
-            '5f009471489583fd48bcce5d4869048d1164423771cfd955840ae995cd6a70ca'
-            '895405df0904e6c245ab5b6e1824a59e0af7a0a0ef5ccb6f69f20b6ab8223092'
+            'bb5edb37fde3be23f9bbdcac2b43d91187868ddfded40f262709144f4b633581'
             '99545152f5e739b7eb028152383fa10d3e3d303c99167e1c6e5a6bd7dcd00fa3'
             'f3d2416de0f725d15b18482c20231228791e65ceeeb7305115a8ea6a2e591dd6')
 
@@ -32,11 +30,10 @@ prepare() {
   find . -type f -exec dos2unix -q '{}' \;
 
   # Adjust paths
-  patch -Np0 -i settings-folder.patch
-  patch -Np1 -i path-for-game-data.patch
+  patch -d src/$pkgname -Np0 -i "$srcdir"/settings-folder.patch
 
   # Configure the build process
-  cp config.template config.default
+  cp "$srcdir"/config.template config.default
 
   sed -e 's|\\#define|#define|' -i Makefile
 }
@@ -61,3 +58,4 @@ package() {
   #license
   install -Dm644 simutrans/license.txt "$pkgdir/usr/share/licenses/simutrans/license.txt"
 }
+

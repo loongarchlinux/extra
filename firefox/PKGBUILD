@@ -3,21 +3,41 @@
 # Contributor: Jakub Schmidtke <sjakub@gmail.com>
 
 pkgname=firefox
-pkgver=125.0.3
+pkgver=129.0.1
 pkgrel=2
-pkgdesc="Standalone web browser from mozilla.org"
+pkgdesc="Fast, Private & Safe Web Browser"
 url="https://www.mozilla.org/firefox/"
 arch=(loong64 x86_64)
 license=(MPL-2.0)
 depends=(
+  alsa-lib
+  at-spi2-core
+  bash
+  cairo
   dbus
   ffmpeg
+  fontconfig
+  freetype2
+  gcc-libs
+  gdk-pixbuf2
+  glib2
+  glibc
   gtk3
+  hicolor-icon-theme
   libpulse
+  libx11
+  libxcb
+  libxcomposite
+  libxdamage
+  libxext
+  libxfixes
+  libxrandr
   libxss
   libxt
   mime-types
+  nspr
   nss
+  pango
   ttf-font
 )
 makedepends=(
@@ -47,7 +67,6 @@ optdepends=(
   'hunspell-en_US: Spell checking, American English'
   'libnotify: Notification integration'
   'networkmanager: Location detection via available WiFi networks'
-  'pulseaudio: Audio support'
   'speech-dispatcher: Text-to-Speech'
   'xdg-desktop-portal: Screensharing with Wayland'
 )
@@ -58,25 +77,37 @@ options=(
 )
 source=(
   https://archive.mozilla.org/pub/firefox/releases/$pkgver/source/firefox-$pkgver.source.tar.xz{,.asc}
+  $pkgname-symbolic.svg
   $pkgname.desktop
-  identity-icons-brand.svg
-  0001-Bug-1882209-Update-encoding_rs-to-0.8.34-to-deal-wit.patch
+  org.mozilla.$pkgname.metainfo.xml
+  0001-Bug-1898476-Wayland-Move-MozContainerSurfaceLock-fro.patch
+  0002-Bug-1898476-Wayland-Provide-surface-lock-by-GtkCompo.patch
+  0003-Bug-1898476-Wayland-Lock-Wayland-surface-before-Swap.patch
+  0004-Bug-1912663-Fix-some-build-issues-with-cbindgen-0.27.patch
 )
 validpgpkeys=(
   # Mozilla Software Releases <release@mozilla.com>
   # https://blog.mozilla.org/security/2023/05/11/updated-gpg-key-for-signing-firefox-releases/
   14F26682D0916CDD81E37B6D61B7B526D98F0353
 )
-sha256sums=('461c66b85e4a0345dcce422d3b66212489f3cca8f22a9a8f43a07a0c98bd5616'
+sha256sums=('9ddfe823e4c22167a77e47f56a8afde0d9621784a9e4e5dba4906e758175c073'
             'SKIP'
-            '1f241fdc619f92a914c75aece7c7c717401d7467c9a306458e106b05f34e5044'
             'a9b8b4a0a1f4a7b4af77d5fc70c2686d624038909263c795ecc81e0aec7711e9'
-            '61243b704cc8340af9991580c744c412d94244f4bedcdcd5f351e63484ab638e')
-b2sums=('a8379eda733981158248134183a11c7fa4a2de7952a43b861e653a0d7c48743442c26312419ad85be2a5e8f242d23dda03ea1aa5041916a3e44d06926a8c1342'
+            '1f241fdc619f92a914c75aece7c7c717401d7467c9a306458e106b05f34e5044'
+            '58d78ce57b3ee936bc966458d6b20ab142d02a897bbe924b3f26717af0c5bee1'
+            'f4e1db05768325bce5f38b67263c47b3aa4038cfadbdbf8a9e0cbec061a58c57'
+            '588b0b94fe188c5f0a133a8bfd88d7d60123315e6f509b119728409ff164419f'
+            'cbe19f6c95d27d50e3b6664907f8d084784162ea35d5d98fadbb91dbb77ef700'
+            'dd2aba1c02c21b89ceed0713a6aa0241365fe79b1e3a4d21cdcd7231db6fab5e')
+b2sums=('e3c1a3db5a481839c862bef6ace6f977e601fc85f308980f7d0073a3ab04b5ac611ed3edf3fc4b71c09008e0f54009f78b64e64c5d0cb63c86798138031bfee1'
         'SKIP'
-        'd07557840097dd48a60c51cc5111950781e1c6ce255557693bd11306c7a9258b2a82548329762148f117b2295145f9e66e0483a18e2fe09c5afcffed2e4b8628'
         '63a8dd9d8910f9efb353bed452d8b4b2a2da435857ccee083fc0c557f8c4c1339ca593b463db320f70387a1b63f1a79e709e9d12c69520993e26d85a3d742e34'
-        'f2028ff4479d781393a5650ed907f30ef3d936c132d1f555d62f7e2d99056ec72cfe98f856069fc9bc34580cffdb157aec7265356cdf5a4d515346c416267e38')
+        'd07557840097dd48a60c51cc5111950781e1c6ce255557693bd11306c7a9258b2a82548329762148f117b2295145f9e66e0483a18e2fe09c5afcffed2e4b8628'
+        '2ce33432f8a73a4f1a412b7a065d3c124e1ca9f6bdf3fad0407e897efc0840f8ef43eeeb1b9bef4a102d9fac0b2c4a2ef205726b817f83fe9c3742d076778b14'
+        '2d4c421aec450c85c25554a8f312df8b74bb184e13fdd631ec7b34abbc3e5b1015fdef8d7ee637638c916f8bdd9cecfcb9c2713055471feb863888fd238e288e'
+        '884183ba979c844a2119dbb28cb1bbe64228b1a1a6b020abea9dfb5bd60487853a1da1012e157b8149f3e89b3d35c76042aa143b28fd55b0120edb03c63f9a81'
+        'b649c5c3edc4a0319d012ff0c12dbc97f3bb244220c9db5334a921864f57e05506943f50ccd7ee832b881ace642ce294892e25eaa555716d2dcc726f4790c605'
+        'eb84ee67ce049351e07cfd02f7bd024fb31e041f839c105e3bc15a904632b6c668bca494aa721f0c092172dc45ad2d576c9f6d45f15877f7189e15ab403a45c5')
 
 # Google API keys (see http://www.chromium.org/developers/how-tos/api-keys)
 # Note: These are for Arch Linux use ONLY. For your own distribution, please
@@ -84,21 +115,22 @@ b2sums=('a8379eda733981158248134183a11c7fa4a2de7952a43b861e653a0d7c48743442c2631
 # more information.
 _google_api_key=AIzaSyDwr302FpOSkGRpLlUpPThNTDPbXcIn_FM
 
-# Mozilla API keys (see https://location.services.mozilla.com/api)
-# Note: These are for Arch Linux use ONLY. For your own distribution, please
-# get your own set of keys. Feel free to contact heftig@archlinux.org for
-# more information.
-_mozilla_api_key=e05d56db0a694edc8b5aaebda3f2db6a
-
 prepare() {
   mkdir mozbuild
   cd firefox-$pkgver
 
-  # Fix build with Rust 1.78.0
-  patch -Np1 -i ../0001-Bug-1882209-Update-encoding_rs-to-0.8.34-to-deal-wit.patch
+  # Backport fixes for NVIDIA crashes
+  # https://gitlab.archlinux.org/archlinux/packaging/packages/firefox/-/issues/7
+  # https://bugzilla.mozilla.org/show_bug.cgi?id=1898476
+  patch -Np1 -i ../0001-Bug-1898476-Wayland-Move-MozContainerSurfaceLock-fro.patch
+  patch -Np1 -i ../0002-Bug-1898476-Wayland-Provide-surface-lock-by-GtkCompo.patch
+  patch -Np1 -i ../0003-Bug-1898476-Wayland-Lock-Wayland-surface-before-Swap.patch
+
+  # Fix build with cinbdgen 0.27.0
+  # https://bugzilla.mozilla.org/show_bug.cgi?id=1912663
+  patch -Np1 -i ../0004-Bug-1912663-Fix-some-build-issues-with-cbindgen-0.27.patch
 
   echo -n "$_google_api_key" >google-api-key
-  echo -n "$_mozilla_api_key" >mozilla-api-key
 
   cat >../mozconfig <<END
 ac_add_options --enable-application=browser
@@ -122,12 +154,11 @@ ac_add_options --with-distribution-id=org.archlinux
 ac_add_options --with-unsigned-addon-scopes=app,system
 ac_add_options --allow-addon-sideload
 export MOZILLA_OFFICIAL=1
-export MOZ_APP_REMOTINGNAME=${pkgname//-/}
+export MOZ_APP_REMOTINGNAME=$pkgname
 
 # Keys
 ac_add_options --with-google-location-service-api-keyfile=${PWD@Q}/google-api-key
 ac_add_options --with-google-safebrowsing-api-keyfile=${PWD@Q}/google-api-key
-ac_add_options --with-mozilla-api-keyfile=${PWD@Q}/mozilla-api-key
 
 # System libraries
 ac_add_options --with-system-nspr
@@ -154,6 +185,10 @@ build() {
   CFLAGS="${CFLAGS/_FORTIFY_SOURCE=3/_FORTIFY_SOURCE=2}"
   CXXFLAGS="${CXXFLAGS/_FORTIFY_SOURCE=3/_FORTIFY_SOURCE=2}"
 
+  # Breaks compilation since https://bugzilla.mozilla.org/show_bug.cgi?id=1896066
+  CFLAGS="${CFLAGS/-fexceptions/}"
+  CXXFLAGS="${CXXFLAGS/-fexceptions/}"
+
   # LTO needs more open files
   ulimit -n 4096
 
@@ -162,7 +197,7 @@ build() {
   cat >.mozconfig ../mozconfig - <<END
 ac_add_options --enable-profile-generate=cross
 END
-  ./mach build
+  ./mach build --priority normal
 
   echo "Profiling instrumented browser..."
   ./mach package
@@ -178,7 +213,7 @@ END
   test -s jarlog
 
   echo "Removing instrumented browser..."
-  ./mach clobber
+  ./mach clobber objdir
 
   echo "Building optimized browser..."
   cat >.mozconfig ../mozconfig - <<END
@@ -187,7 +222,7 @@ ac_add_options --enable-profile-use=cross
 ac_add_options --with-pgo-profile-path=${PWD@Q}/merged.profdata
 ac_add_options --with-pgo-jarlog=${PWD@Q}/jarlog
 END
-  ./mach build
+  ./mach build --priority normal
 }
 
 package() {
@@ -236,11 +271,10 @@ END
     "$pkgdir/usr/share/icons/hicolor/384x384/apps/$pkgname.png"
   install -Dvm644 browser/branding/$theme/content/about-logo.svg \
     "$pkgdir/usr/share/icons/hicolor/scalable/apps/$pkgname.svg"
-  install -Dvm644 ../identity-icons-brand.svg \
-    "$pkgdir/usr/share/icons/hicolor/symbolic/apps/$pkgname-symbolic.svg"
 
-  install -Dvm644 ../$pkgname.desktop \
-    "$pkgdir/usr/share/applications/${pkgname//-/}.desktop"
+  install -Dvm644 ../$pkgname-symbolic.svg -t "$pkgdir/usr/share/icons/hicolor/symbolic/apps"
+  install -Dvm644 ../$pkgname.desktop -t "$pkgdir/usr/share/applications"
+  install -Dvm644 ../org.mozilla.$pkgname.metainfo.xml -t "$pkgdir/usr/share/metainfo"
 
   # Install a wrapper to avoid confusion about binary path
   install -Dvm755 /dev/stdin "$pkgdir/usr/bin/$pkgname" <<END
@@ -261,9 +295,9 @@ END
   local sprovider="$pkgdir/usr/share/gnome-shell/search-providers/$pkgname.search-provider.ini"
   install -Dvm644 /dev/stdin "$sprovider" <<END
 [Shell Search Provider]
-DesktopId=${pkgname//-/}.desktop
-BusName=org.mozilla.${pkgname//-/}.SearchProvider
-ObjectPath=/org/mozilla/${pkgname//-/}/SearchProvider
+DesktopId=$pkgname.desktop
+BusName=org.mozilla.${pkgname//-/_}.SearchProvider
+ObjectPath=/org/mozilla/${pkgname//-/_}/SearchProvider
 Version=2
 END
 }

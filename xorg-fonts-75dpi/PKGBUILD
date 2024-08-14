@@ -3,7 +3,7 @@
 
 pkgname=xorg-fonts-75dpi
 pkgver=1.0.4
-pkgrel=1
+pkgrel=2
 pkgdesc="X.org 75dpi fonts"
 arch=(any)
 url="https://xorg.freedesktop.org/"

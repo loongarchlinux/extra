@@ -2,7 +2,7 @@
 # Contributor: Tarn Burton <twburton at gmail dot com>
 
 pkgname=normaliz
-pkgver=3.10.2
+pkgver=3.10.3
 pkgrel=1
 pkgdesc='A tool for computations in affine monoids, vector configurations, lattice polytopes, and rational cones'
 arch=(loong64 x86_64)
@@ -14,12 +14,18 @@ depends=(flint
          gmp
          e-antic)
 makedepends=(boost
+             git
              nauty)
-source=(https://github.com/Normaliz/Normaliz/releases/download/v$pkgver/Normaliz-$pkgver.tar.gz)
-sha256sums=('0f649a8eae5535c18df15e8d35fc055fd0d7dbcbdd451e8876f4a47061481f07')
+source=(git+https://github.com/Normaliz/Normaliz#tag=v$pkgver)
+sha256sums=('a12ba6bbdfa93d8222d0388be3068f6a7de72396a0a96f4835ff1502dc1e1ad5')
+
+prepare() {
+  cd Normaliz
+  autoreconf -vi
+}
 
 build() {
-  cd $pkgname-$pkgver
+  cd Normaliz
   ./configure --prefix=/usr
   #https://bugzilla.gnome.org/show_bug.cgi?id=655517
   sed -i -e 's/ -shared / -Wl,-O1,--as-needed\0/g' libtool
@@ -28,11 +34,11 @@ build() {
 }
 
 check() {
-  cd $pkgname-$pkgver
+  cd Normaliz
   make check
 }
 
 package() {
-  cd $pkgname-$pkgver
+  cd Normaliz
   make DESTDIR="$pkgdir" install
 }

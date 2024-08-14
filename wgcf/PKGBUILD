@@ -2,35 +2,42 @@
 # Contributor: w0rty <mawo97 at gmail.com>
 
 pkgname=wgcf
-pkgver=2.2.18
+pkgver=2.2.19
 pkgrel=1
 pkgdesc='Generate WireGuard profile from Cloudflare Warp account'
 arch=('loong64' 'x86_64')
 url="https://github.com/ViRb3/wgcf"
 license=('MIT')
-makedepends=('go')
 depends=('glibc')
-source=("${pkgname}-${pkgver}.tar.gz::${url}/archive/v${pkgver}.tar.gz")
-sha256sums=('9b2178407e423a4df176b256cd98b9f9f50577def2406fde556bdc187e41bbe6')
+makedepends=('git' 'go')
+source=("git+https://github.com/ViRb3/wgcf.git#tag=v$pkgver")
+sha256sums=('57318b5c89c92344bcad7eb040be63fea11eca05ca7035b4872fa88677b47e24')
 
 prepare(){
-  cd "$pkgname-$pkgver"
+  cd $pkgname
   mkdir -p build/
 }
 
 build() {
   export GOPATH="$srcdir"/gopath
-  cd "$pkgname-$pkgver"
+  cd $pkgname
   # Buildflags according to https://wiki.archlinux.org/index.php/Go_package_guidelines#Flags_and_build_options
   export CGO_CPPFLAGS="${CPPFLAGS}"
   export CGO_CFLAGS="${CFLAGS}"
   export CGO_CXXFLAGS="${CXXFLAGS}"
   export CGO_LDFLAGS="${LDFLAGS}"
   go build -o build -trimpath -buildmode=pie -ldflags "-linkmode=external -extldflags \"${LDFLAGS}\" -s -w" -modcacherw
+
+  build/$pkgname completion bash > build/$pkgname.bash
+  build/$pkgname completion zsh > build/$pkgname.zsh
+  build/$pkgname completion fish > build/$pkgname.fish
 }
 
 package() {
-  cd "$pkgname-$pkgver"
-  install -Dm755 build/$pkgname "$pkgdir"/usr/bin/$pkgname
-  install -Dm644 $srcdir/$pkgname-$pkgver/LICENSE "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
+  cd $pkgname
+  install -Dm755 build/$pkgname -t "$pkgdir"/usr/bin/
+  install -Dm644 build/$pkgname.bash "$pkgdir"/usr/share/bash-completion/completions/$pkgname
+  install -Dm644 build/$pkgname.zsh "$pkgdir"/usr/share/zsh/site-functions/_$pkgname
+  install -Dm644 build/$pkgname.fish "$pkgdir"/usr/share/fish/vendor_completions.d/$pkgname.fish
+  install -Dm644 LICENSE -t "$pkgdir"/usr/share/licenses/$pkgname/
 }

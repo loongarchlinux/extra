@@ -5,77 +5,48 @@
 
 pkgname=glow
 pkgver=1.5.1
-pkgrel=1
-pkgdesc='Command-line markdown renderer'
+pkgrel=2
+pkgdesc="Command-line markdown renderer"
+url="https://github.com/charmbracelet/glow"
 arch=('loong64' 'x86_64')
-url='https://github.com/charmbracelet/glow'
 license=('MIT')
 depends=('glibc')
 makedepends=('git' 'go')
 options=('!lto')
-_commit='ad21129703d0bd48a9b45227f56d2737623db57b'
-source=("$pkgname::git+$url.git#commit=$_commit")
-b2sums=('SKIP')
-
-pkgver() {
-  cd "$pkgname"
-
-  git describe --tags | sed 's/^v//'
-}
+source=("git+${url}.git#tag=v${pkgver}")
+b2sums=('2ace4853c3541be61aa31dbdefd1aecb14e04c8a162094694f93027638ef65f1e75994b39485a34df66692f5dc6dfa33d8ea02428e6fb11dee0844f2a0f6cdfa')
 
 prepare() {
-  cd "$pkgname"
+	cd "${pkgname}"
 
-  # create directory for build output
-  mkdir build
-
-  # download dependencies
-  go mod download
+	mkdir -p build/
+	go mod download
 }
 
 build() {
-  cd "$pkgname"
+	cd "${pkgname}"
 
-  # set Go flags
-  export CGO_CPPFLAGS="${CPPFLAGS}"
-  export CGO_CFLAGS="${CFLAGS}"
-  export CGO_CXXFLAGS="${CXXFLAGS}"
-  export GOPATH="${srcdir}"
+	export CGO_CPPFLAGS="${CPPFLAGS}"
+	export CGO_CFLAGS="${CFLAGS}"
+	export CGO_CXXFLAGS="${CXXFLAGS}"
+	export CGO_LDFLAGS="${LDFLAGS}"
+	export GOFLAGS="-buildmode=pie -trimpath -ldflags=-linkmode=external -mod=readonly -modcacherw"
+	go build -v -ldflags "-X main.Version=${pkgver}" -o build .
 
-  go build -v \
-    -buildmode=pie \
-    -mod=readonly \
-    -modcacherw \
-    -ldflags "-compressdwarf=false \
-    -linkmode external \
-    -extldflags ${LDFLAGS} \
-    -X main.Version=$pkgver \
-    -X main.CommitSHA=$_commit" \
-    -o build \
-    .
-
-  # generate shell completions
-  build/glow completion bash > completion.bash
-  build/glow completion fish > completion.fish
-  build/glow completion zsh > completion.zsh
+	build/glow completion bash > completion.bash
+	build/glow completion fish > completion.fish
+	build/glow completion zsh > completion.zsh
 }
 
 package() {
-  cd "$pkgname"
+	cd "${pkgname}"
 
-  # binary
-  install -vDm755 -t "$pkgdir/usr/bin" build/glow
+	install -Dm 755 "build/${pkgname}" "${pkgdir}/usr/bin/${pkgname}"
 
-  # documentation
-  install -vDm644 -t "$pkgdir/usr/share/doc/$pkgname" README.md
+	install -Dm 644 completion.bash "${pkgdir}/usr/share/bash-completion/completions/${pkgname}"
+	install -Dm 644 completion.fish "${pkgdir}/usr/share/fish/vendor_completions.d/${pkgname}.fish"
+	install -Dm 644 completion.zsh "${pkgdir}/usr/share/zsh/site-functions/_${pkgname}"
 
-  # license
-  install -vDm644 -t "$pkgdir/usr/share/licenses/$pkgname" LICENSE
-
-  # shell completions
-  install -vDm644 completion.bash "$pkgdir/usr/share/bash-completion/completions/glow"
-  install -vDm644 completion.fish "$pkgdir/usr/share/fish/vendor_completions.d/glow.fish"
-  install -vDm644 completion.zsh "$pkgdir/usr/share/zsh/site-functions/_glow"
+	install -Dm 644 LICENSE "${pkgdir}/usr/share/licenses/${pkgname}/LICENSE"
+	install -Dm 644 README.md "${pkgdir}/usr/share/doc/${pkgname}/README.md"
 }
-
-# vim:set ts=2 sw=2 et:

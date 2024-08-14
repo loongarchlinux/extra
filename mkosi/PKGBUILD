@@ -4,8 +4,8 @@
 # Contributor: Dave Reisner <dreisner@archlinux.org>
 
 pkgname=mkosi
-pkgver=22
-pkgrel=2
+pkgver=24.3
+pkgrel=1
 pkgdesc="Build Legacy-Free OS Images"
 arch=(any)
 url="https://github.com/systemd/mkosi"
@@ -56,9 +56,9 @@ source=(
   $pkgname-$pkgver.tar.gz::$url/archive/v$pkgver.tar.gz
   $pkgname.tmpfiles
 )
-sha512sums=('a2c3b442f00e539cd328571d8f258bb21c9d6953220c36e37f0d71c0430e81cc1246d62d5e42407761ada83888b54d98a84ba7a5f8b1813b64b67e761a51c04f'
+sha512sums=('b74f3614574926338b610d8301b583f81765207ffd2b3bb0598557a72108a8d1fbd8922be5de51c12a5864d040ecf8af9750b4220718cc300d7ab83d034906e6'
             '1e50a3007aa3bf8c11998024823717557e911add5f9a6da923584ef9015dc6f1dc5b9ff0333396986a750a67bd4e6947fed88f12d32a9f987cd47902646d23ee')
-b2sums=('e2a29804fbc34010e15fedb59dd3e10d801594f14c204fc107a2fc1ea4e122a84a469471354f890582d571e27f6a14bc85d187ba73356729e78e45674fe5bffa'
+b2sums=('98685e19b7891f409ccffe4223e588c3777649b817228e0590d6603f96fb779cd1c0d092acd595ed4226f5405fb34f08d767c21b1590be3a5493bded683675af'
         'b6a61967ca888d182c59fbecde7cafdd69598e2146dcb5fbcc5b11c5d90bc7626e452805fa2f68f5a53a9bbe2a0f011f869cfb194ba503474cd9eebbd223a71d')
 
 build() {
@@ -87,4 +87,9 @@ package() {
 
   install -vDm 644 $pkgname/resources/$pkgname.1 -t "$pkgdir/usr/share/man/man1/"
   install -vDm 644 docs/*.md {NEWS,README}.md -t "$pkgdir/usr/share/doc/$pkgname/"
+
+
+  python -m mkosi completion bash | install -vDm 644 /dev/stdin "$pkgdir/usr/share/bash-completion/completions/mkosi"
+  python -m mkosi completion fish | install -vDm 644 /dev/stdin "$pkgdir/usr/share/fish/completions/mkosi.fish"
+  python -m mkosi completion zsh  | install -vDm 644 /dev/stdin "$pkgdir/usr/share/zsh/site-functions/_mkosi"
 }

@@ -3,13 +3,13 @@
 
 pkgname=ttf-droid
 pkgver=20121017
-pkgrel=10
+pkgrel=11
 pkgdesc="General-purpose fonts released by Google as part of Android"
 arch=('any')
 license=('Apache')
 url='https://www.droidfonts.com/'
 provides=('ttf-font')
-source=("https://sources.archlinux.org/other/community/$pkgname/$pkgname-$pkgver.tar.xz"
+source=("https://sources.archlinux.org/other/packages/$pkgname/$pkgname-$pkgver.tar.xz"
         65-droid-{kufi,sans,sans-mono,serif}.conf)
 sha256sums=('f068efec9e8201fe0d1be75b1a4751c98d14dc44267b2237f549403b2a8069e3'
             'fc208932ae52bc678415b66b2fa958d24d6100f2d9609d5564c611b3c53b38c7'

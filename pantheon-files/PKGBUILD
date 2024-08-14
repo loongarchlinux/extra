@@ -1,18 +1,21 @@
 # Maintainer: Maxime Gauduin <alucryd@archlinux.org>
 
 pkgname=pantheon-files
-pkgver=6.5.3
+pkgver=7.0.0
 pkgrel=1
 pkgdesc='The Pantheon File Browser'
 arch=(loong64 x86_64)
 url=https://github.com/elementary/files
-license=(GPL3)
+license=(GPL-3.0-only)
 groups=(pantheon)
 depends=(
   atk
+  bash
   cairo
+  dconf
   gdk-pixbuf2
   glib2
+  glibc
   gtk3
   gvfs
   libcanberra
@@ -22,12 +25,14 @@ depends=(
   libgranite.so
   libhandy-1.so
   libnotify
+  libportal
+  libportal-gtk3
   pango
-  plank
   sqlite
   zeitgeist
 )
 makedepends=(
+  cmake
   flatpak-builder
   git
   gnome-common
@@ -38,17 +43,17 @@ optdepends=(
   'contractor: Various context menu entries'
   'tumbler: Thumbnails generation'
 )
-_tag=b7c98aeff9d1eddecf3db80f2e898ff9a3db7692
+_tag=55d9d11a23191bff120cea0d0650dc9b05bbaf7f
 source=(pantheon-files::git+https://github.com/elementary/files.git#tag=${_tag})
-sha256sums=(SKIP)
+b2sums=('20423973455f2aab86710d4bb9354eb5b068240c2e934bf07c7ca438272d3590d543e5af3259191d01c11b66b4bc0c42fa17f25697c6ba1d21a5af01578422e4')
 
 pkgver() {
   cd pantheon-files
-
   git describe --tags
 }
 
 build() {
+  export CFLAGS+=" -Wno-implicit-function-declaration"
   arch-meson pantheon-files build
   ninja -C build
 }

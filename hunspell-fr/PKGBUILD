@@ -2,7 +2,7 @@
 
 pkgname=hunspell-fr
 pkgver=7.0
-pkgrel=3
+pkgrel=4
 pkgdesc="French (classic/modern) hunspell dictionaries"
 arch=(any)
 url="https://grammalecte.net/download.php?prj=fr"

@@ -1,0 +1,152 @@
+# Maintainer: George Rawlinson <grawlinson@archlinux.org>
+
+pkgbase=vaporizer2
+pkgname=(
+  'vaporizer2-common'
+  'vaporizer2-lv2'
+  'vaporizer2-vst3'
+  'vaporizer2-clap'
+  'vaporizer2-standalone'
+)
+pkgver=3.5.0
+pkgrel=1
+pkgdesc='A hybrid wavetable additive/subtractive synthesizer/sampler workstation'
+arch=('loong64' 'x86_64')
+url='https://github.com/VASTDynamics/Vaporizer2'
+license=('GPL-3.0-only')
+groups=('pro-audio')
+_common_depends=(
+  'glibc'
+  'gcc-libs'
+  'fftw'
+  'libglvnd'
+  'freetype2'
+)
+makedepends=(
+  "${_common_depends[@]}"
+  'git'
+  'cmake'
+  'jack'
+  'libx11'
+  'alsa-lib'
+  'libxrandr'
+  'libxinerama'
+  'libxcursor'
+)
+source=(
+  "$pkgbase::git+$url#tag=v$pkgver"
+  'github.com-juce-framework-JUCE::git+https://github.com/juce-framework/JUCE'
+  'github.com-Themaister-muFFT::git+https://github.com/Themaister/muFFT'
+  'github.com-zardini123-AnaMark-Tuning-Library::git+https://github.com/zardini123/AnaMark-Tuning-Library'
+  'github.com-free-audio-clap-juce-extensions::git+https://github.com/free-audio/clap-juce-extensions'
+  'github.com-free-audio-clap::git+https://github.com/free-audio/clap'
+  'github.com-free-audio-clap-helpers::git+https://github.com/free-audio/clap-helpers'
+)
+sha512sums=('edfd55a118ba91997d7d0c83e3497e9b3a75ea7b9f49ee49ca99b19fd9f600ec3cfcef2510ddc36605b9d742c46fb3d6bb99b5ce1b943ee732fadd7f7683a1dd'
+            'SKIP'
+            'SKIP'
+            'SKIP'
+            'SKIP'
+            'SKIP'
+            'SKIP')
+b2sums=('8a537091521858e430b04c136c2d31482f8f9fae645226739878ba4fc42a8fb7eb7a5559d2df112709d344b78743acc8322b352053d9be0ed35ba52778ff8899'
+        'SKIP'
+        'SKIP'
+        'SKIP'
+        'SKIP'
+        'SKIP'
+        'SKIP')
+
+prepare() {
+  cd "$pkgbase"
+
+  # prepare git submodule(s)
+  git submodule init
+  git config submodule.JUCE.url "$srcdir/github.com-juce-framework-JUCE"
+  git config submodule.VASTvaporizer/Source/muFFT.url "$srcdir/github.com-Themaister-muFFT"
+  git config submodule.VASTvaporizer/Source/AnaMark-Tuning-Library.url "$srcdir/github.com-zardini123-AnaMark-Tuning-Library"
+  git config submodule.clap-juce-extensions.url "$srcdir/github.com-free-audio-clap-juce-extensions"
+  git -c protocol.file.allow=always submodule update --init
+
+  pushd clap-juce-extensions
+  git submodule init
+  git config submodule.clap-libs/clap.url "$srcdir/github.com-free-audio-clap"
+  git config submodule.clap-libs/clap-helpers.url "$srcdir/github.com-free-audio-clap-helpers"
+  git -c protocol.file.allow=always submodule update --init
+  popd
+}
+
+build() {
+  cmake \
+    -B build \
+    -S "$pkgbase" \
+    -D BUILD_AVX=OFF
+
+  cmake --build build 
+}
+
+package_vaporizer2-common() {
+  pkgdesc='Common files for Vaporizer 2'
+
+  cd "$pkgbase"
+
+  # assets
+  pushd VASTvaporizer
+  install -vd "$pkgdir/usr/share/Vaporizer2"
+  cp -vr Noises Presets Tables "$pkgdir/usr/share/Vaporizer2"
+  popd
+
+  # documentation
+  install -vDm644 -t "$pkgdir/usr/share/doc/$pkgname" Documentation/Vaporizer2Manual.pdf
+}
+
+package_vaporizer2-lv2() {
+  pkgdesc+=' - LV2 plugin'
+  groups+=('lv2-plugins')
+  depends=(
+    "${_common_depends[@]}"
+    'vaporizer2-common'
+    'lv2-host'
+  )
+
+  install -vd "$pkgdir/usr/lib/lv2"
+
+  cp -vr build/VASTvaporizer2_artefacts/Release/LV2/*.lv2 "$pkgdir/usr/lib/lv2"
+}
+
+package_vaporizer2-vst3() {
+  pkgdesc+=' - VST3 plugin'
+  groups+=('vst3-plugins')
+  depends=(
+    "${_common_depends[@]}"
+    'vaporizer2-common'
+    'vst3-host'
+  )
+
+  install -vd "$pkgdir/usr/lib/vst3"
+
+  cp -vr build/VASTvaporizer2_artefacts/Release/VST3/*.vst3 "$pkgdir/usr/lib/vst3"
+}
+
+package_vaporizer2-clap() {
+  pkgdesc+=' - CLAP plugin'
+  groups+=('clap-plugins')
+  depends=(
+    "${_common_depends[@]}"
+    'vaporizer2-common'
+    'clap-host'
+  )
+
+  install -vDm755 -t "$pkgdir/usr/lib/clap" build/VASTvaporizer2_artefacts/Release/CLAP/*.clap
+}
+
+package_vaporizer2-standalone() {
+  pkgdesc+=' - standalone'
+  depends=(
+    "${_common_depends[@]}"
+    'vaporizer2-common'
+    'alsa-lib'
+  )
+
+  install -vDm755 -t "$pkgdir/usr/bin" build/VASTvaporizer2_artefacts/Release/Standalone/VASTvaporizer2
+}

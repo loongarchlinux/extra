@@ -3,35 +3,65 @@
 # Contributor: Ionut Biru <ibiru@archlinux.org>
 
 pkgbase=gtksourceviewmm
-pkgname=(gtksourceviewmm gtksourceviewmm-docs)
+pkgname=(
+  gtksourceviewmm
+  gtksourceviewmm-docs
+)
 pkgver=3.18.0
-pkgrel=5
+pkgrel=7
 epoch=1
 pkgdesc='C++ bindings for the gtksourceview library'
-arch=('loong64' 'x86_64')
+arch=(loong64 x86_64)
 url='https://gitlab.gnome.org/GNOME/gtksourceviewmm'
-license=('LGPL')
-depends=('gtkmm3' 'gtksourceview3')
-makedepends=('gtkmm3-docs')
-source=("https://download.gnome.org/sources/$pkgname/${pkgver:0:4}/$pkgname-$pkgver.tar.xz")
-sha256sums=('51081ae3d37975dae33d3f6a40621d85cb68f4b36ae3835eec1513482aacfb39')
+license=(LGPL-2.1-or-later)
+depends=(
+  atkmm
+  cairomm
+  gcc-libs
+  glib2
+  glibc
+  glibmm
+  gtk3
+  gtkmm3
+  gtksourceview3
+  libsigc++
+  pangomm
+)
+makedepends=(
+  git
+  gtkmm3-docs
+  mm-common
+)
+source=("git+https://gitlab.gnome.org/GNOME/$pkgname.git#tag=$pkgver")
+b2sums=(2ba1cd756e27edaba46e7115bcfbf496a62d9a149184151cb0f5fae297412da10ba008ffa2c74d8332de28eefd8a119787156b5b6c9164fe23f2056054185759)
+
+prepare() {
+  cd $pkgbase
+  mm-common-prepare -cf
+  autoreconf -fi
+}
 
 build() {
-  cd $pkgbase-$pkgver
-  ./configure --prefix=/usr
+  cd $pkgbase
+  export M4PATH=/usr/lib/gtkmm-3.0/proc/m4/:/usr/lib/pangomm-1.4/proc/m4/:/usr/lib/atkmm-1.6/proc/m4/
+  ./configure \
+    --prefix=/usr \
+    --sysconfdir=/etc \
+    --localstatedir=/var \
+    --enable-maintainer-mode
   sed -i -e 's/ -shared / -Wl,-O1,--as-needed\0/g' libtool
   make
 }
 
 package_gtksourceviewmm() {
-  cd $pkgbase-$pkgver
+  cd $pkgbase
   make DESTDIR="$pkgdir" install doc_subdirs=
 }
 
 package_gtksourceviewmm-docs() {
-  pkgdesc="Developer documentation for gtksourceviewmm"
+  pkgdesc='Developer documentation for gtksourceviewmm'
   depends=(gtkmm3-docs)
 
-  cd $pkgbase-$pkgver
+  cd $pkgbase
   make -C docs DESTDIR="$pkgdir" install
 }

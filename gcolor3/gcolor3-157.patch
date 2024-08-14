@@ -1,0 +1,38 @@
+From 5eccea163ab7753cba47bee0207a544bca687342 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Ball=C3=B3=20Gy=C3=B6rgy?= <ballogyor@gmail.com>
+Date: Fri, 21 Jun 2024 22:17:43 +0000
+Subject: [PATCH] Don't abort if failed to create XdpPortal instance
+
+xdp_portal_new() aborts the whole program if fails. Use xdp_portal_initable_new() instead.
+---
+ src/gcolor3-color-selection.c | 10 +++++++++-
+ 1 file changed, 9 insertions(+), 1 deletion(-)
+
+diff --git a/src/gcolor3-color-selection.c b/src/gcolor3-color-selection.c
+index 5df9d54..fffa9de 100644
+--- a/src/gcolor3-color-selection.c
++++ b/src/gcolor3-color-selection.c
+@@ -1743,11 +1743,19 @@ get_screen_color (GtkWidget *button)
+   XdpParent *parent;
+   GtkWindow *window;
+   GtkApplication *app;
++  GError *error = NULL;
+ 
+   app = GTK_APPLICATION (g_application_get_default ());
+   window = gtk_application_get_active_window (app);
+ 
+-  portal = xdp_portal_new ();
++  portal = xdp_portal_initable_new (&error);
++  if (error)
++    {
++      g_warning ("Failed to create XdpPortal instance: %s", error->message);
++      g_error_free (error);
++      return;
++    }
++
+   parent = xdp_parent_new_gtk (window);
+ 
+   xdp_portal_pick_color (portal, parent,
+-- 
+GitLab
+

@@ -9,7 +9,7 @@
 # Contributor: loqs <bugs-archlinux@entropy-collector.net>
 
 pkgname=gitlab
-pkgver=16.11.2
+pkgver=17.2.2
 pkgrel=1
 pkgdesc='Project management and code hosting application'
 arch=(loong64 x86_64)
@@ -27,11 +27,14 @@ depends=(git
          re2 libre2.so
          redis
          ruby
+         ruby-erb
+         ruby-rdoc
          ruby-bundler)
 makedepends=(cargo
              clang
              cmake
              go
+             node-gyp
              nodejs
              postgresql
              ruby-rake
@@ -47,9 +50,10 @@ backup=("etc/webapps/$pkgname/database.yml"
         "etc/webapps/$pkgname/cable.yml"
         "etc/webapps/$pkgname/smtp_settings.rb"
         "etc/logrotate.d/$pkgname")
-options=(!buildflags !debug)
+options=(!buildflags !debug !lto)
 source=("git+$url.git#tag=v$pkgver"
         "$pkgname-configs.patch"
+        "${url%-foss}/-/commit/6256fc51dcd67b0fa2ec21ae2b74a21175f185a4.patch"
         "$pkgname-environment"
         "$pkgname-puma.service"
         "$pkgname-sidekiq.service"
@@ -64,8 +68,9 @@ provides=(gitlab-workhorse) # FS78036
 conflicts=(gitlab-workhorse)
 replaces=(gitlab-workhorse)
 install=gitlab.install
-sha256sums=('96b3fe2dc1dd4fbe0b2d5dee59d4bd22fa9651506e3105f9045c71191142e8c3'
-            'e03957f659731f10d6e2a5804f1ba3096f525a4b3d8f3cb0b39ee3a97170766b'
+sha256sums=('9d03be97548d5e8b7b7ad635f9d7a433d389879ff9f67e2f1f5135c272d7e3ea'
+            'dfbafb383942f0e6088f49c49a40c59994e1af57c6197e9443f9839e145154e3'
+            '36f747b2d51484f2c28c78d0800fc0fcb84bf5d4ad3cd72ec2c05187b1583380'
             '8cc4d933743906b4213b8ea8d8c5a62535e27e4073f73581a5dad40078dde000'
             'f99499116f5d7cf59ccb7bfabd2d1ba68fbf83040571c607f7b0b50e6f50cbcf'
             '2e5d83b3ff8166094ca35dfc58d9e591bc3127a66d9515d344753a622a22aa8a'
@@ -89,6 +94,10 @@ prepare() {
 	git rev-parse --short HEAD > REVISION
 
 	patch -p1 -i ../$pkgname-configs.patch
+
+	# Fix migration that uses newer Ruby syntax, fails on 3.0
+	# https://gitlab.com/gitlab-org/gitlab/-/merge_requests/160736
+	patch -p1 -i ../6256fc51dcd67b0fa2ec21ae2b74a21175f185a4.patch
 
 	# '/home/git' path in the config files indicates a default path that need to be adjusted
 	! grep -FqR '/home/git' config
@@ -115,17 +124,28 @@ prepare() {
 build() {
 	cd gitlab-foss
 
+	# https://github.com/nodejs/node/issues/48444
+	export UV_USE_IO_URING=0
+
 	echo "Fetching bundled gems..."
 	# Gems will be installed into vendor/bundle
 	# Remove -Werror=format-security from the CFLAGS used by the C extension of the google-protobuf gem
-	bundle config --local build.google-protobuf "-- --with-cflags='$(ruby -r rbconfig -e 'print RbConfig::CONFIG["CFLAGS"]' | sed -e 's/-Werror=format-security//')'"
+	# Disable LTO which breaks the C extension of the google-protobuf gem https://github.com/protocolbuffers/protobuf/issues/11935
+	bundle config --local build.google-protobuf "-- --with-cflags='$(ruby -r rbconfig -e 'print RbConfig::CONFIG["CFLAGS"]' | sed -e 's/-Werror=format-security//' -e 's/-flto=auto/-fno-lto/')' --with-ldflags='$(ruby -r rbconfig -e 'print RbConfig::CONFIG["LDFLAGS"]' | sed -e 's/-flto=auto/-fno-lto/')'"
+	# Avoid build errors due to -Werror=incompatible-pointer-types enabled by default in GCC 14
+	bundle config --local build.grpc "-- --with-cflags='$(ruby -r rbconfig -e 'print RbConfig::CONFIG["CFLAGS"]') -Wno-incompatible-pointer-types'"
+	# ICU 75 requires C++17
+	bundle config --local build.static_holmes "-- --with-cxxflags='$(ruby -r rbconfig -e 'print RbConfig::CONFIG["CXXFLAGS"]') -std=c++17'"
 	bundle config --local build.gpgme --use-system-libraries # See https://bugs.archlinux.org/task/63654
 	bundle config --local build.re2 --enable-system-libraries # See https://gitlab.archlinux.org/archlinux/packaging/packages/gitlab/-/issues/5
 	bundle config --local force_ruby_platform true # some native gems are not available for newer ruby
 	bundle config --local deployment true
 	bundle config --local without 'development test aws kerberos'
 	# Disable make jobserver due to a race in prometheus-client-mmap
-	MAKEFLAGS= BUNDLER_CHECKSUM_VERIFICATION_OPT_IN=1 bundle install --jobs=$(nproc) --no-cache
+	# Clang because of https://github.com/grpc/grpc/issues/35945
+	env MAKEFLAGS= BUNDLER_CHECKSUM_VERIFICATION_OPT_IN=1 \
+	CC=clang CXX=clang++ \
+	bundle install --jobs=$(nproc) --no-cache
 
 	export CGO_CPPFLAGS="${CPPFLAGS}"
 	export CGO_CFLAGS="${CFLAGS}"
@@ -135,7 +155,7 @@ build() {
 	make -C workhorse
 
 	yarn install --production --pure-lockfile
-	rake gitlab:assets:compile RAILS_ENV=production NODE_ENV=production USE_DB=false SKIP_STORAGE_VALIDATION=true NODE_OPTIONS="--max_old_space_size=3584"
+	rake -r erb -r rdoc gitlab:assets:compile RAILS_ENV=production NODE_ENV=production USE_DB=false SKIP_STORAGE_VALIDATION=true NODE_OPTIONS="--max_old_space_size=8192"
 }
 
 package() {

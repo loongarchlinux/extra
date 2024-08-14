@@ -4,7 +4,7 @@
 
 pkgname=perl-timedate
 pkgver=2.33
-pkgrel=5
+pkgrel=6
 pkgdesc="Date formating subroutines"
 arch=('any')
 license=('PerlArtistic')

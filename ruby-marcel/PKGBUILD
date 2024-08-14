@@ -2,7 +2,7 @@
 
 _gemname='marcel'
 pkgname="ruby-${_gemname}"
-pkgver=1.0.2
+pkgver=1.0.4
 pkgrel=1
 pkgdesc='Simple mime type detection using magic numbers, filenames, and extensions'
 arch=('any')
@@ -12,11 +12,19 @@ options=(!emptydirs)
 depends=('ruby')
 makedepends=('ruby-bundler' 'ruby-rake')
 checkdepends=('ruby-minitest' 'ruby-rack')
-source=("${url}/archive/v${pkgver}/${pkgname}-${pkgver}.tar.gz")
-sha512sums=('cd159545b246dcbd26ca07ac69e36ff13a965ac0e99ebd040c53b6a92f8ec8fd65786783c9a173d669fe6b32340a23d72c83c483011eec2e1097bdea73810ed6')
+source=(
+  "${url}/archive/v${pkgver}/${pkgname}-${pkgver}.tar.gz"
+  "${pkgname}_fix_tests.patch::${url}/commit/ccd4be5043628c4389230b4c012a7115b8e44c81.patch"
+)
+sha512sums=('68811c3116ecafdea322c97637b3566102c21363de05678862fe1d9f1300ff6c0056449440169a69a353d77b568d0401930fbeac1651e0fea8189ae4960ce189'
+            '2d3fa29dca3c1ef01bbee7a8a1f9e67a18c934ac2e7e325f1dce94f85ce83c0668bb6df1bf70174e48fe668c1b4a748a819aad84bea609bba4ebb39c47f5fc4e')
+b2sums=('6f5260408de9997f8515619a661ea5b5293182a73cb45671aa2b5302e99b73b0ecb148acbeca2b8afdab8991fdd7ff789d2d79075fb5d37b0166c6a776802d03'
+        'eb60856fed963588f6a10825e14deace542bbdc67a5a67d2cc71c6d71345ddd72dee344388295e3d336c50370764a02090e848241f9e02143ad91dccad2457f1')
 
 prepare() {
   cd "${_gemname}-${pkgver}"
+
+  patch --verbose --strip=1 --input="../${pkgname}_fix_tests.patch"
 
   # update gemspec/Gemfile to allow newer version of the dependencies
   sed --in-place --regexp-extended 's|~>|>=|g' "${_gemname}.gemspec"

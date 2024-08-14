@@ -3,7 +3,7 @@
 
 pkgname=notcurses
 pkgver=3.0.9
-pkgrel=4
+pkgrel=5
 pkgdesc="Blingful TUI/character graphics library"
 url="https://nick-black.com/dankwiki/index.php/Notcurses"
 license=('Apache')
@@ -33,9 +33,21 @@ makedepends=(
   'zlib'
 )
 provides=(libnotcurses++.so libnotcurses.so libnotcurses-core.so)
-source=("https://github.com/dankamongmen/notcurses/archive/v${pkgver}/${pkgname}-${pkgver}.tar.gz")
-sha256sums=('e5cc02aea82814b843cdf34dedd716e6e1e9ca440cf0f899853ca95e241bd734')
-b2sums=('718a5a36ed17d9118690ffdce3b2233144de0b8421a37429f1a20ae735215a87be9c308876c97d8a5126238fee76e470429837c7f224e8f020c60ad6b88514bd')
+source=("https://github.com/dankamongmen/notcurses/archive/v${pkgver}/${pkgname}-${pkgver}.tar.gz"
+         https://github.com/dankamongmen/notcurses/commit/d3d7a904.patch
+         https://github.com/dankamongmen/notcurses/commit/9d4c9e00.patch)
+sha256sums=('e5cc02aea82814b843cdf34dedd716e6e1e9ca440cf0f899853ca95e241bd734'
+            '3e19fba51bfcce904300a7fdb175242cf6971bb1eda7e24955e081740c2fc9ca'
+            'fba62e23aa6409e0ab9ffc343e966b9116abf22697428cbde0f957b766813206')
+b2sums=('718a5a36ed17d9118690ffdce3b2233144de0b8421a37429f1a20ae735215a87be9c308876c97d8a5126238fee76e470429837c7f224e8f020c60ad6b88514bd'
+        'b8102916cced07ea9bc4b2a6f58567191c3ad7afde3a71dfca5a43fd1ab980fe8f91f75d3b562fa08eb153a9616f3390f12553b5ba64f1f4abec03220b2b8d74'
+        'f7709b0ed8e815575de3585ca6e24f71b468b41b1e37074659bfa134cf85341f4c81f303316572fe13b02337ccb0134706c6b85044802d89f6c0f93609088a54')
+
+prepare() {
+  cd $pkgname-$pkgver
+  patch -p1 -i ../d3d7a904.patch # Fix build with ffmpeg 7
+  patch -p1 -i ../9d4c9e00.patch # Fix build with ffmpeg 7
+}
 
 build() {
   local cmake_options=(

@@ -1,7 +1,7 @@
 # Maintainer: Felix Yan <felixonmars@gmail.com>
 
 pkgname=perl-lwp-protocol-https
-pkgver=6.11
+pkgver=6.14
 pkgrel=1
 pkgdesc="Provide https support for LWP::UserAgent"
 arch=('any')
@@ -11,7 +11,7 @@ depends=('ca-certificates' 'perl-io-socket-ssl' 'perl-net-http' 'perl-libwww')
 checkdepends=('perl-test-requiresinternet' 'perl-test-needs')
 options=('!emptydirs')
 source=("https://search.cpan.org/CPAN/authors/id/O/OA/OALDERS/LWP-Protocol-https-$pkgver.tar.gz")
-sha512sums=('1e74c45898778c58d00eefbdd04a3ed47cf38164296278bec66c9b85f48ad635931873d2bf5423be8562df2c22b4bbf8eff0502bd29ba1c790bbbf76f3616ecf')
+sha512sums=('8f220c307833a803a8539a1c794598097133f24017edda9030eba2ff558d54104040fbae64d7068e99b9e03142e6e96a8b11c478e2a5571e908754a385b59fab')
 
 build() {
   cd LWP-Protocol-https-$pkgver

@@ -4,25 +4,26 @@
 
 pkgbase=sysdig
 pkgname=(sysdig sysdig-dkms)
-pkgver=0.36.1
-pkgrel=1
+pkgver=0.38.1
+pkgrel=2
 
 # from src/sysdig-*/cmake/modules/falcosecurity-libs.cmake
-_falcover=0.15.1
+_falcover=0.17.2
 
 pkgdesc="Open source system-level exploration and troubleshooting tool"
 arch=('loong64' 'x86_64')
 url="https://www.sysdig.com/"
 license=('Apache-2.0')
 makedepends=('cmake' 'pandoc' 'gtest' 'jsoncpp' 'libjsoncpp.so' 'luajit' 'curl' 'libcurl.so'
-             'jq' 'libb64' 'intel-tbb' 'grpc' 'yaml-cpp' 're2' 'uthash')
+             'jq' 'libb64' 'intel-tbb' 'yaml-cpp' 're2' 'uthash' 'bpf' 'libbpf' 'clang'
+             'grpc' 'libgrpc++.so')
 options=('!lto')
 source=("https://github.com/draios/sysdig/archive/$pkgver/$pkgbase-$pkgver.tar.gz"
         "falcosecurity-libs-$_falcover.tar.gz::https://github.com/falcosecurity/libs/archive/$_falcover.tar.gz"
         "bashcomp-location.patch"
         "falcosecurity-libs-nodownload.patch")
-sha256sums=('e0737ce660637d72859822b5bec835d8e0e3337620a366d0e9c5dc5a1300feb4'
-            '8c2596fec3c25e9718a8b357b0504450cd26efbe653b79afcd66a8405f0dc08c'
+sha256sums=('68085ea118a4209dbde8f1b75584f9f84610b5856e507ffb0703d8add6331132'
+            '5c4f0c987272b7d5236f6ab2bbe3906ffdaf76b59817b63cf90cc8c387ab5b15'
             '3b659326176c314eee9115adac39a249dc4b9530511b344ea6a2b23236bb8386'
             '3392204c265ef46c2a1378fc2acbb74b2b440585de4c9127a007f97ce10f0cfa')
 
@@ -72,7 +73,7 @@ build() {
 package_sysdig() {
   optdepends=('sysdig-dkms: kernel module for live inspection')
   depends=('jsoncpp' 'libjsoncpp.so' 'luajit' 'curl' 'libcurl.so' 'jq' 'libb64' 'intel-tbb' 'grpc' 'libgrpc++.so'
-           'uthash' 'yaml-cpp' 'zstd')
+           'uthash' 'yaml-cpp' 'zstd' 'libbpf')
 
   cd "$srcdir"/$pkgbase-$pkgver/build
   make install DESTDIR="$pkgdir"

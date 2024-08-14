@@ -1,8 +1,8 @@
 # Maintainer: George Rawlinson <george@rawlinson.net.nz>
 
 pkgname=prometheus-ipmi-exporter
-pkgver=1.6.1
-pkgrel=2
+pkgver=1.8.0
+pkgrel=1
 pkgdesc='Prometheus exporter for IPMI metrics'
 arch=(loong64 x86_64)
 url='https://github.com/prometheus-community/ipmi_exporter'
@@ -11,30 +11,23 @@ depends=('glibc' 'freeipmi')
 makedepends=('git' 'go')
 backup=('etc/prometheus/ipmi-exporter.yml')
 options=('!lto')
-_commit='344b8b4a565a9ced936aad4d4ac9a29892515cba'
 source=(
-  "$pkgname::git+$url.git#commit=$_commit"
+  "$pkgname::git+$url.git#tag=v$pkgver"
   'systemd.service'
   'sysusers.conf'
   'sudoers.conf'
   'config.yml'
 )
-sha512sums=('SKIP'
+sha512sums=('4726e375d4bf2fdad26d80a3350cf5732af9bfd9bf86c123fd6e411785ac3580c08491625edb475a6cffdac49a7b1c109e29d94aa08b3737fa26495c2b4eced1'
             '13284c7c27454ade3a78cf66475111d78bf5f74a84fc428ad06ae34ea85fc193182011e547850447c8dadb4093e49d505eb8a0a97bf3298022217f7a3770d651'
             '40ef7bc9f21fa514432a8be859297db0adef16d9d6f4980f0b4cdf116131adcf1345ff1575804e84c02777cbf5b99aa3319283c6c7a2c17cf9b4acaae7d9d895'
             '7be2811049c75f572956ceeba3fc68a5ae52643a09e0275c33e1d8d12acf47e61595db1738cee98dd0437a71927ed254ad99ba5d1fc09a5178bcb18473f43b4a'
             'a26a7d379d8577e0f9237218b7d63df25643ae37c9f1a504b4a4ac5421e01cd9ac1a72435bacf16cce25e08a2394367e0d629ac1e877c1831f3c570ffbfafcff')
-b2sums=('SKIP'
+b2sums=('367bab9ac2d81403d1087f2d269808cf09912aa53558766554b0ba87dd8ce985fd37e1fb47b391a73004b54207e2985fb445c8a7b971c458c811067b16da2c86'
         'f3f3ca66821ea0350184f35e088c872d0838b3bf86ad3b2b565308ac4bbc521288393e94aa2f40e26adb47011062425a4b3c045e06e5ea7fdefd674bc34ae0ee'
         '964c27180d0d5513d7af41d9aa1964869d25a674edbd185220a008a2469a8c6800b8503ddeee5d76eaacc750f2971fe382eeddf7c8e054d9f2d8c9b66c437391'
         '7289646126dbdd22c9183fa9831d11b5492116daa0bd175ab2b20180cebdfb601edc086e9d7e689ca496f8992926f807d1c45b06d1ead6b85d8ce15c710caaba'
         'b4390aa6796cfbd2a4595e1aa5ffd250c997def77887cfb48e4e7bba9e044acb51533b5e9c2375aa274eeff27aba31c5df81abdce13228173b9c6da66db4e622')
-
-pkgver() {
-  cd "$pkgname"
-
-  git describe --tags | sed 's/^v//'
-}
 
 prepare() {
   cd "$pkgname"
@@ -65,7 +58,7 @@ build() {
     -modcacherw \
     -ldflags "-compressdwarf=false \
     -linkmode external \
-    -extldflags ${LDFLAGS} \
+    -extldflags '${LDFLAGS}' \
     -X github.com/prometheus/common/version.Version=$pkgver \
     -X github.com/prometheus/common/version.Revision=$(git rev-parse HEAD) \
     -X github.com/prometheus/common/version.Branch=main \

@@ -3,7 +3,7 @@
 
 pkgname=perl-io-multiplex
 pkgver=1.16
-pkgrel=9
+pkgrel=10
 pkgdesc="Perl/CPAN Module IO::Multiplex : Manage Input Output on many file handles"
 arch=(any)
 url="https://search.cpan.org/dist/IO-Multiplex/"

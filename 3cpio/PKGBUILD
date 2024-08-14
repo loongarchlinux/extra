@@ -1,0 +1,39 @@
+# Maintainer: Tobias Powalowski <tpowa@archlinux.org>
+
+pkgname=3cpio
+pkgver=0.3.1
+pkgrel=1
+pkgdesc='Manage Linux kernel initramfs cpio files written in Rust'
+arch=('loong64' 'x86_64')
+url='https://github.com/bdrung/3cpio'
+license=('ISC')
+depends=('glibc' 'gcc-libs')
+makedepends=('git' 'rust' 'bzip2' 'gzip' 'lz4' 'lzop' 'xz' 'zstd')
+optdepends=('bzip2: Support for bzip2 compressed initramfs image'
+            'lz4: Support for lz4 compressed initramfs image'
+            'lzop: Support for lzo compressed initramfs image'
+            'xz: Support for lzma or xz compressed initramfs image'
+            'zstd: Support for zstd compressed initramfs image'
+)
+source=(git+https://github.com/bdrung/3cpio.git#tag=$pkgver?signed)
+validpgpkeys=('A62D2CFBD50B9B5BF360D54B159EB5C4EFC8774C' # Benjamin Drung bdrung@debian.de
+)
+b2sums=('13c1717f4a8c3d3e99ddaed2489d5a09df6a2bfd73ce9a369a929200196a4d2bee6be1de3effbd740bffcdc80171fe8230b70cb4b5e5bb535c5966c1b5fe80ab')
+
+build() {
+  cd $pkgname
+  cargo build --release --locked
+}
+
+check() {
+  cd $pkgname
+  cargo test --release --locked
+}
+
+package() {
+  cd $pkgname
+  install -Dm755 "target/release/3cpio" "$pkgdir/usr/bin/3cpio"
+  install -Dm 644 LICENSE "$pkgdir"/usr/share/licenses/$pkgname/LICENSE
+}
+
+# vim: ts=2 sw=2 et:

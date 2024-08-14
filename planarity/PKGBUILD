@@ -2,26 +2,31 @@
 
 pkgname=planarity
 pkgver=3.0.2.0
-pkgrel=1
+pkgrel=2
 pkgdesc='A library for implementing graph algorithms'
 arch=(loong64 x86_64)
 url='https://github.com/graph-algorithms/edge-addition-planarity-suite'
-license=(BSD)
+license=(BSD-3-Clause)
 depends=(glibc)
-makedepends=()
-source=(https://github.com/graph-algorithms/edge-addition-planarity-suite/archive/Version_$pkgver/$pkgname-$pkgver.tar.gz)
-sha256sums=('40f4ee7bbd5d8535460c60fc0fc1f806b10909a1419618fd9235746a420a04c6')
+makedepends=(git)
+source=(git+https://github.com/graph-algorithms/edge-addition-planarity-suite#tag=Version_$pkgver)
+sha256sums=('a6d2b2bbb365abff6be20825f6b29c5b0e86b654fcbaa2248926fd1ce6f48c59')
+
+prepare() {
+  cd edge-addition-planarity-suite                
+  autoreconf -vi
+}
 
 build() {
-  cd edge-addition-planarity-suite-Version_$pkgver
-  ./autogen.sh
-  ./configure --prefix=/usr
+  cd edge-addition-planarity-suite
+  ./configure \
+    --prefix=/usr
   make
 }
 
 package() {
-  cd edge-addition-planarity-suite-Version_$pkgver
-  make install DESTDIR="$pkgdir"
+  cd edge-addition-planarity-suite
+  make DESTDIR="$pkgdir" install
 
   install -Dm644 LICENSE.TXT "$pkgdir"/usr/share/licenses/$pkgname/LICENSE
 }

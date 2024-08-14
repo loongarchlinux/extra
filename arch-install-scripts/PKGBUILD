@@ -4,7 +4,7 @@
 
 pkgname=arch-install-scripts
 pkgver=28
-pkgrel=1
+pkgrel=2
 pkgdesc="Scripts to aid in installing Arch Linux"
 arch=('any')
 url="https://github.com/archlinux/arch-install-scripts"

@@ -2,28 +2,56 @@
 
 pkgname=ruby-falcon
 pkgver=0.42.3
-pkgrel=2
+pkgrel=4
 pkgdesc='A fast, asynchronous, rack-compatible web server'
 arch=(any)
 url='https://github.com/socketry/falcon'
 license=(MIT)
-depends=(ruby-async ruby-async-container ruby-async-http ruby-async-http ruby-async-http-cache
-         ruby-async-io ruby-build-environment ruby-localhost ruby-process-metrics ruby-protocol-rack
-         ruby-samovar)
-checkdepends=(ruby-async-process ruby-async-rspec ruby-async-websocket ruby-bake ruby-covered
-              ruby-rspec ruby-bake-test ruby-bake-test-external ruby-puma)
+depends=(
+  ruby
+  ruby-async
+  ruby-async-container
+  ruby-async-http
+  ruby-async-http-cache
+  ruby-async-io
+  ruby-build-environment
+  ruby-localhost
+  ruby-process-metrics
+  ruby-protocol-rack
+  ruby-rackup
+  ruby-samovar
+)
+makedepends=(
+  ruby-rdoc
+)
+checkdepends=(
+  ruby-async-process
+  ruby-async-rspec
+  ruby-async-websocket
+  ruby-bake
+  ruby-bake-test
+  ruby-bake-test-external
+  ruby-bundler
+  ruby-covered
+  ruby-puma
+  ruby-rspec
+)
 options=(!emptydirs)
 source=(https://github.com/socketry/falcon/archive/v$pkgver/$pkgname-$pkgver.tar.gz
-        https://github.com/socketry/falcon/commit/e93d153d53faf42710d7a2890425b6b77e188914.patch)
-sha256sums=('d43ce8a64d0c95e5d783738142374b11586e51cbe6aea0da3cb6d4be47e2c7d5'
-            '3238b59daf1c7c62a59c0f86188e73745252be962098d7cb67655ca083577113')
+        ruby-falcon-0.42.3-ruby-rack-3.patch)
+sha512sums=('2086beb1ffe5f776d6b9a322a1648e4e55a5b5615c1f8c58418e84ff84cf581e8ab8cc76d4461c5c924ef4291b486cb274f0fa4bb7f4eeff3b73f7f5cc752a9d'
+            'a07e7756e0a71c314504339f7c2fbfe9d69e6b52168059beb86861c9682cc0a97f904c389b96c0a073525ffc1068879b6fced087dd0fb98c061f90ecb3742adc')
+b2sums=('63b0b1cd28346140ddaf32e1ff2535760f85f603f24138bdd5c69e878a9226f49d03b1a11219eda4d03fe14b420636f7eaa24612eb29b42e6adc1aa05bccbfdb'
+        '425b9395a799942c0df40570e966163bc3aa88ac3dec587ccf48c2e48d06571cbef7e81a5c288b728361cde00b88962ea25f28ecdfe53923c4e846a7ecfb6da0')
 
 prepare() {
   cd falcon-$pkgver
-  # Revert for openssl < 3.0 support
-  patch -Rp1 -i ../e93d153d53faf42710d7a2890425b6b77e188914.patch
+  patch -Np1 -i ../ruby-falcon-0.42.3-ruby-rack-3.patch
   sed -r -e 's|~>|>=|g' -e '/signing_key/d' -i falcon.gemspec
-  sed -i '/bake-gem/d;/bake-modernize/d;/bake-github-pages/d;/utopia-project/d;/ruby-prof/d' gems.rb
+  sed -i \
+    -e '/group :maintenance/,/end/d' \
+    -e '/group :development/,/end/d' \
+    gems.rb
 }
 
 build() {

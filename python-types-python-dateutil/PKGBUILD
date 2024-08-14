@@ -1,0 +1,31 @@
+# Maintainer: Jakub Klinkovský <lahwaacz at archlinux dot org>
+# Contributor: Achmad Fathoni <fathoni.id(at)gmail.com>
+# Contributor: Mark Wagie <mark dot wagie at proton dot me>
+
+pkgname=python-types-python-dateutil
+_name=${pkgname#python-}
+pkgver=2.9.0.20240316
+pkgrel=2
+pkgdesc="Typing stubs for python-dateutil"
+arch=(any)
+url="https://pypi.org/project/types-python-dateutil/"
+license=(Apache-2.0)
+depends=(python)
+makedepends=(
+  python-build
+  python-installer
+  python-setuptools
+  python-wheel
+)
+source=("https://files.pythonhosted.org/packages/source/${_name::1}/$_name/$_name-$pkgver.tar.gz")
+b2sums=('c0f146bd1e5f3883ee7b7c37a9bfebe4b14657a28a94adf36d836351a3fc709b7f8e5638b8a479711c12d052751f09e4cafa82ee996f663ce3a99da5f45bd0e1')
+
+build() {
+  cd $_name-$pkgver
+  python -m build --wheel --no-isolation
+}
+
+package() {
+  cd $_name-$pkgver
+  python -m installer --destdir="$pkgdir" dist/*.whl
+}

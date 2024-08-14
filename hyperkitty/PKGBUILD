@@ -2,8 +2,8 @@
 
 _name=HyperKitty
 pkgname=hyperkitty
-pkgver=1.3.9
-pkgrel=3
+pkgver=1.3.11
+pkgrel=1
 pkgdesc="A web interface to access GNU Mailman v3 archives"
 arch=(any)
 url="https://gitlab.com/mailman/hyperkitty"
@@ -18,15 +18,13 @@ depends=(
   python-django-gravatar
   python-django-haystack
   python-django-mailman3
-  python-django-q
+  python-django-q2
   python-django-rest-framework
   python-flufl-lock
   python-mailmanclient
   python-mistune
   python-networkx
-  python-pytz
   python-robot-detection
-  python-whoosh
   sassc
 )
 makedepends=(
@@ -41,12 +39,15 @@ checkdepends=(
   python-django-debug-toolbar
   python-elasticsearch
   python-lxml
+  python-html5lib  # via python-lxml
   python-pytest
+  python-pytest-django
   python-whoosh
 )
 optdepends=(
   'python-django-debug-toolbar: for debugging'
   'python-elasticsearch: for using elasticsearch as search backend'
+  'python-whoosh: for using whoosh as search backend'
   'python-xapian-haystack: for using xapian as search backend'
   'uwsgi-plugin-python: for running inside uwsgi'
   'ruby-sassc: alternative to sassc'
@@ -65,13 +66,13 @@ source=(
   $pkgname.tmpfiles
   $pkgname.uwsgi
 )
-sha512sums=('a058f7e5d6f66a079e2e61887b28037767de74edbee36c40097447cbc770321304224da1b2e5d4b53e994b39637363b4cfd21694291d3ed77a2e5b8469242be0'
+sha512sums=('1202137fe1aa0b0918d4f72a8255105faac824fd2ae7f0d1ed29fcf44c1cec4767b7989cb13c19da299eaf2f31340fb5c051abc50f01ae296b02fecb457d2964'
             'd33a2ec2fb4547da56795c450882bbedbcce962ed2e96e26817fdaa8045859c444f215107fabcf71d62f2b76f41212f5fb49b7e2ed432ccd970eb13988f2f67d'
             'a41c938082ceee555143ddb21c3a95835f9832b9aff423142d78d3e52f12500561f80e0ce43c67a4f190065c9d045945741ac71ab3307db1419c4dc0686db09a'
             '3267427109b08b8c9336b187381ed14357a07370bdcdfc24da94555020ad0424c5bbebc09e131e981e0540c51db443ffe558209e1bca7c2a1b7b1f602ed0805b'
             'c943d82b8640a513728e3f07fa44c0ddb5a3bb8ec84a3a70990e51287ca01977887f895b901688fc4643d8fcb106d524259a86a51bccaafd77c69b241f1b23ba'
             '351f40a6bc1fd1735c883408f9941808e081206927a7c02467e03228243dd156378cac21f851b498702bd4f96fde8e4c80536dbcc6f3c384bf708bed4e988971')
-b2sums=('1a31b94770d071a648b6257bc4930348a5fe9816808bbe3de04b70cb249b2454b82d912f2e2a2a4df74b56b7a5282e8b07b57ce0e94f4514d1fa1c59f4f2c244'
+b2sums=('ae680501e4fbc1aa44dd48ad6f6beec7a04d986cba2d4268223a387e95d060c7b28678a940e4192853c2c56b5ea7203eb1952f23c87a8965e31cff31bf49b9cd'
         '62793fe38541dd570163ab0cd740fd6aeae9eb652164fbb066c1b958dcdba845c5ee3d5ca05770a8179ef292c584c9fbd293ad88956c58ad306ab8b352ea679c'
         'e8ae1d123e74b0c6984df3e5fff720e03dcbc3f007123718fe845024b42e5c13b7eac4da6bde04a9e1372d446bfa50ac12479730a9092e8396b73434e59663d3'
         'f4e912e75c5127897837d67626ba94a418ec408f0f3a9bcd1767633347e107600cc43825caa5737a84362273a353bf03097879ff5b9065663150f6db4b96238a'
@@ -97,9 +98,14 @@ build() {
 }
 
 check() {
+  local pytest_options=(
+    -vv
+    # https://gitlab.com/mailman/hyperkitty/-/issues/514
+    --deselect hyperkitty/tests/commands/test_import.py::CommandTestCase::test_cant_write_error
+  )
+
   cd $pkgname
-  export PYTHONPATH="build:$PYTHONPATH"
-  python example_project/manage.py test --settings=hyperkitty.tests.settings_test hyperkitty
+  pytest "${pytest_options[@]}"
 }
 
 package() {

@@ -4,24 +4,48 @@
 
 pkgname=moserial
 pkgver=3.0.21
-pkgrel=1
-pkgdesc="Clean, friendly GTK+-based serial terminal for the GNOME desktop"
-arch=('loong64' 'x86_64')
-url="https://wiki.gnome.org/moserial"
-license=('GPL3')
-depends=('gsettings-desktop-schemas' 'gtk3')
-makedepends=('intltool' 'itstool')
-optdepends=('lrzsz: for xmodem, ymodem and zmodem file transfer protocols')
-source=("https://download.gnome.org/sources/$pkgname/${pkgver%.*}/$pkgname-$pkgver.tar.xz")
-sha256sums=('788b29f256502b83536116c90795383961b26338a04d32c8ed35e53da4284aad')
+pkgrel=2
+pkgdesc='Clean, friendly GTK-based serial terminal'
+arch=(loong64 x86_64)
+url='https://wiki.gnome.org/Apps/Moserial'
+license=(GPL-3.0-or-later)
+depends=(
+  glib2
+  glibc
+  gsettings-desktop-schemas
+  gtk3
+  hicolor-icon-theme
+  pango
+)
+makedepends=(
+  git
+  intltool
+  vala
+  yelp-tools
+)
+optdepends=('lrzsz: Support for xmodem, ymodem and zmodem file transfer protocols')
+source=("git+https://gitlab.gnome.org/GNOME/$pkgname.git#tag=${pkgname}_${pkgver//./_}")
+b2sums=(d672f848799e1e979a29b856e75b50f452d8770b0095f0e372ec5959fed742dd62d32e969772ddcbc6ab38cd81a6b9176be87f4dae39e1b0ae1c210eb842c856)
+
+prepare() {
+  cd $pkgname
+
+  sed -i 's/"rz"/"lrzsz-rz"/' src/Rzwrapper.vala
+  sed -i 's/"sz"/"lrzsz-sz"/' src/Szwrapper.vala
+
+  autoreconf -fi
+}
 
 build() {
-  cd $pkgname-$pkgver
-  ./configure --prefix=/usr
+  cd $pkgname
+  ./configure \
+    --prefix=/usr \
+    --sysconfdir=/etc \
+    --localstatedir=/var
   make
 }
 
 package() {
-  cd $pkgname-$pkgver
+  cd $pkgname
   make DESTDIR="$pkgdir" install
 }

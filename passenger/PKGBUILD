@@ -2,20 +2,20 @@
 
 pkgbase=passenger
 pkgname=(passenger mod_passenger nginx-mod-passenger)
-pkgver=6.0.20
-pkgrel=2
+pkgver=6.0.23
+pkgrel=3
 pkgdesc="Fast and robust web server and application server for Ruby, Python and Node.js"
 arch=('loong64' 'x86_64')
 url="https://www.phusionpassenger.com"
 _watch="https://github.com/phusion/passenger/releases"
 license=('MIT')
-makedepends=('ruby-rake' 'ruby-rack' 'curl' 'apache' 'nginx-src')
+makedepends=('ruby-erb' 'ruby-rake' 'ruby-rack' 'curl' 'apache' 'nginx' 'nginx-src')
 options=('!emptydirs' 'staticlibs')
 validpgpkeys=('D5F0851426939232F437AB722AC745A50A212A8C'
               '16378A33A6EF16762922526E561F9B9CAC40B2F7'  # auto-software-signing@phusion.nl
               'B0F4253373F8F6F510D42178520A9993A1C052F8') # Maxim Dounin <mdounin@mdounin.ru>
 source=(https://s3.amazonaws.com/phusion-passenger/releases/passenger-$pkgver.tar.gz{,.asc})
-sha256sums=('fa8d9a37edb92f4a8f064b3005b57bccf10392ce4eb067838883206060e27107'
+sha256sums=('897555224fb11340677780d929b5099da62303b1ae15f2e7c65cd3f6d3e7920c'
             'SKIP')
 
 prepare() {
@@ -27,7 +27,10 @@ prepare() {
 
 build() {
   cd build
-  /usr/src/nginx/configure --with-compat --add-dynamic-module=../$pkgbase-$pkgver/src/nginx_module
+  /usr/src/nginx/configure \
+    --with-ld-opt="$LDFLAGS" \
+    --with-compat \
+    --add-dynamic-module=../$pkgbase-$pkgver/src/nginx_module
   make modules
 
   CFLAGS+=" -ffat-lto-objects"
@@ -38,7 +41,7 @@ build() {
 
 package_passenger() {
   cd "$srcdir"/passenger-$pkgver
-  depends=('ruby' 'ruby-rack' 'curl' 'libnsl')
+  depends=('ruby' 'ruby-erb' 'ruby-rack' 'curl' 'libnsl')
 
   mkdir -p "$pkgdir"/usr/lib/passenger/
   cp -R * "$pkgdir"/usr/lib/passenger/
@@ -63,7 +66,10 @@ package_mod_passenger() {
 
 package_nginx-mod-passenger() {
   pkgdesc="Passenger nginx module"
-  depends=('passenger' "nginx")
+  depends=('passenger')
+  local _nginx_version=$(nginx -v 2>&1)
+  _nginx_version=${_nginx_version/* nginx\/}
+  depends+=("nginx=${_nginx_version}")
 
   install -Dm644 "$srcdir"/$pkgbase-$pkgver/LICENSE \
                  "$pkgdir"/usr/share/licenses/$pkgname/LICENSE

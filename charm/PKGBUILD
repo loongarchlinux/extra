@@ -3,7 +3,7 @@
 
 pkgname=charm
 pkgver=0.12.6
-pkgrel=1
+pkgrel=2
 pkgdesc='The backend for the Charm cloud'
 arch=('loong64' 'x86_64')
 url='https://charm.sh/cloud/'
@@ -14,25 +14,24 @@ conflicts=('charm-tool')
 replaces=('charm-tool')
 backup=('etc/charm.conf')
 options=('!lto')
-_commit='f0b0b9512820de64996aecc019933431584cc92d'
 source=(
-  "git+https://github.com/charmbracelet/charm.git#commit=$_commit"
+  "git+https://github.com/charmbracelet/charm.git#tag=v$pkgver"
   'charm.conf'
   'systemd.service'
   'sysusers.conf'
   'tmpfiles.conf'
 )
-b2sums=('SKIP'
+sha512sums=('887c6117f1b32b9d7c59a8911533ff3cdff5e878bc826801363b626ca3a539be7e1309cbf32ed31f77ab75a38b15a5800e70b6d7482daa6aeafc1bf6527c4686'
+            '9a8b7f0695ed69186cc57593600a38f77377b760d31201b6369b27ee3b6a427cd6c42b5cf4532c69451e25c46b5a2ad1c5ea98dfb0d6f5daf03770839e6f7e4d'
+            '8a623d2f7111c933f50f3564d18955ba41492e735f85be838a01634bb996fb3ecf80f51787a3ac6a70afad1d9f5e574658165f706870725819079681d210fc0c'
+            '5441e7f7ff740bb21ff2f7856a68836534a4d64eebdb9f1907d1a8439c38d22a5b361b9004d0724c72ba976ae9ed32c732aa1338e8ae096bda8318a525198fd8'
+            'bc1feb750d910da8f3c0339f87b9e957a7a5aa276554ffc71e0ea2c4664b5b77483dadcd6fa8c629ad33e56ee640b3de7d23232faad4f627b9cf22d14b89f69c')
+b2sums=('d1152bdf8802f80b5253eebe49503dce1e8fbc36fd342f31ebafc5c3f20bc3de08d82def59d5ae633cc6d59466c429f68ff885f7f7ec7a50a2123c35e0a7a7bc'
         'c6414097223dde827dfcbaf500d29c45843b3b0a08600a3a69c7d4ec9781675f7b677cc9bc59f88c6c3734a8ee349ee589e5d2070a3aa6afa35f4825766270e6'
         'ad16df43405a2969abfaf3e6f4cd6edcb2a29661a8a27bbaa13b34d3febb979356538340940383d5c737b9bd4fa434920395ea4e960951660073f8d31d225dac'
         'b6b509de048f1d63d3d08dda04f3e5743fc212ec44f4a7a83a98a429f9a8fdf01194b83aba7588d02b5712f9bef3efcface1197d3ca458aee5d1be955f6782cd'
         '2eee2c889e4efe83a534249c7048340b67819d81096a0fd7a23522d2eda46b833709eab1a0359538fdfbe27dbe4154c9d235535374e27c441dc7c030277f7218')
 
-pkgver() {
-  cd charm
-
-  git describe --tags | sed 's/^v//'
-}
 prepare() {
   cd charm
 
@@ -59,9 +58,9 @@ build() {
     -modcacherw \
     -ldflags "-compressdwarf=false \
     -linkmode external \
-    -extldflags ${LDFLAGS} \
+    -extldflags '${LDFLAGS}' \
     -X main.Version=$pkgver \
-    -X main.CommitSHA=$_commit" \
+    -X main.CommitSHA=$(git rev-parse HEAD)" \
     -o build \
     .
 

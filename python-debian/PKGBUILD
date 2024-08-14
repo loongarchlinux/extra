@@ -5,7 +5,7 @@
 
 pkgname=python-debian
 pkgver=0.1.49
-pkgrel=3
+pkgrel=5
 pkgdesc='Python module to work with Debian-related data formats'
 arch=('any')
 url='https://salsa.debian.org/python-debian-team/python-debian'
@@ -13,32 +13,40 @@ license=('GPL-2.0-or-later')
 depends=(
   'python'
   'python-chardet'
-  'python-six'
 )
 makedepends=(
+  'git'
   'python-build'
   'python-installer'
   'python-wheel'
   'python-setuptools'
 )
 checkdepends=('python-pytest')
-source=("$url/-/archive/$pkgver/$pkgname-$pkgver.tar.gz")
-b2sums=('2536651e743ad5102e70f27f0a2358ab1ea0b43c70a729c5122fd81973787898ef7518ac3c6c75adaf3ca422b3db1385f1bc10bc545139f9d74cd242079ea45a')
+source=("$pkgname::git+$url#tag=$pkgver")
+sha512sums=('cb7ce3b3d67c2aed758c3e810ed786a635cb312c7e5b2fff88198d496f589e640dbafe5702b0b8a0b4d1e536f991694dbcfcc9d8878eafb40a4be3f7eccab158')
+b2sums=('0d62ed2ab58db6f566fc19d041984fbd2d4efb4b7147ddee8a341a2ccf422e99ba1a199f80c47dbb79e4bd6b65034ce017f16c2282cbf7ddd9139018b654254f')
+
+prepare() {
+  cd "$pkgname/lib/debian"
+
+  # taken from debian/rules
+  sed -e "s/__CHANGELOG_VERSION__/$pkgver/" _version.py.in > _version.py
+}
 
 build() {
-  cd "$pkgname-$pkgver"
+  cd "$pkgname"
 
   python -m build --wheel --no-isolation
 }
 
 check() {
-  cd "$pkgname-$pkgver"
+  cd "$pkgname"
 
   pytest -v
 }
 
 package() {
-  cd "$pkgname-$pkgver"
+  cd "$pkgname"
 
   python -m installer --destdir="$pkgdir" dist/*.whl
 }

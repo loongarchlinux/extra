@@ -3,29 +3,53 @@
 # Contributor: Arch3y <arch3y[at]archstrike[dot]org>
 
 pkgname=zmap
-pkgver=3.0.0
+pkgver=4.1.1
 pkgrel=1
 pkgdesc='Fast network scanner designed for Internet-wide network surveys'
 url='https://zmap.io/'
-arch=('loong64' 'x86_64')
-license=('Apache')
-depends=('gmp' 'hiredis' 'json-c' 'libpcap' 'libmongoc')
-makedepends=('byacc' 'cmake' 'gengetopt' 'pkg-config')
-backup=('etc/zmap/blocklist.conf' 'etc/zmap/zmap.conf')
-source=(${pkgname}-${pkgver}.tar.gz::https://github.com/zmap/zmap/archive/v${pkgver}.tar.gz)
-sha512sums=('3ea4d0e4052c2e4ab303f1ac8c35339bd3e282993b7bbd6b75d2a039df934e57f4d93883b5034c5d25e3f8b2e81f3a036cf1bf1fb2ad6620afa6f7fd3366b0f1')
+arch=(loong64 x86_64)
+license=(Apache-2.0)
+depends=(
+  glibc
+  gmp
+  json-c
+  judy
+  libpcap
+  libunistring
+)
+makedepends=(
+  byacc
+  cmake
+  gengetopt
+  ninja
+  pkg-config
+)
+backup=(
+  etc/zmap/blocklist.conf
+  etc/zmap/zmap.conf
+)
+source=(https://github.com/zmap/zmap/archive/v${pkgver}/${pkgname}-${pkgver}.tar.gz)
+sha512sums=('eff32c9bda7b28a48fce85e3acb598c6adc8dc952ffec21cd4d581462e481a3cf61a6285a71c16741d8e9deedf7c8e3b71d4f375a931244b96acc8779c225929')
+b2sums=('35bc21e4d4c4c452deb2e34ac837ee4ae728b3adf97aefb5b88f55dde719bd78787b8a2826a89eaff92170b3eb2e5003194e3dc636616a845efef82bea663114')
+
+prepare () {
+  cd ${pkgname}-${pkgver}
+  sed 's|RUNTIME DESTINATION sbin|RUNTIME DESTINATION bin|' -i src/CMakeLists.txt
+}
 
 build() {
   cd ${pkgname}-${pkgver}
-  cmake -DWITH_JSON=ON -DWITH_REDIS=ON -DWITH_MONGO=ON
-  make
+  cmake -B build \
+    -DCMAKE_INSTALL_PREFIX=/usr \
+    -DCMAKE_BUILD_TYPE=None \
+    -Wno-dev \
+    -G Ninja
+  ninja -C build
 }
 
 package() {
   cd ${pkgname}-${pkgver}
-  install -Dm 755 src/{zmap,ztee,zblocklist} -t "${pkgdir}/usr/bin"
-  install -Dm 644 src/*.1 -t "${pkgdir}/usr/share/man/man1"
-  install -Dm 644 conf/* -t "${pkgdir}/etc/zmap"
+  DESTDIR="${pkgdir}" ninja -C build install
   install -Dm 644 AUTHORS CHANGELOG.md INSTALL.md README.md \
     -t "${pkgdir}/usr/share/doc/zmap"
   cp -a examples "${pkgdir}/usr/share/doc/zmap"

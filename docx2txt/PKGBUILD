@@ -1,14 +1,14 @@
 # Maintainer: Kyle Keen <keenerd@gmail.com>
 pkgname=docx2txt
 pkgver=1.4
-pkgrel=5
+pkgrel=6
 pkgdesc="Recovers text from DOCX files, with good formatting."
 arch=('any')
 url="http://docx2txt.sourceforge.net"
 license=('GPL')
 depends=('perl' 'unzip')
 source=(https://downloads.sourceforge.net/$pkgname/$pkgname-$pkgver.tgz)
-md5sums=('780f468c16d547b02723b98aadc52c63')
+sha256sums=('b297752910a404c1435e703d5aedb4571222bd759fa316c86ad8c8bbe58c6d1b')
 
 package() {
   cd "$srcdir/$pkgname-$pkgver"

@@ -2,19 +2,19 @@
 
 pkgname=python-zope-testing
 pkgver=5.0.1
-pkgrel=3
+pkgrel=4
 pkgdesc="Zope testing helpers"
 arch=('any')
 url="https://github.com/zopefoundation/zope.testing"
-license=('ZPL')
+license=('ZPL-2.1')
 depends=('python-setuptools' 'python-zope-interface' 'python-zope-exceptions')
-checkdepends=('python-nose')
+makedepends=('python-build' 'python-installer' 'python-wheel')
 source=("$pkgname-$pkgver.tar.gz::https://github.com/zopefoundation/zope.testing/archive/$pkgver.tar.gz")
 sha512sums=('169ddd82d67f54988cac6cea719095ea7b1a0e59a1b51f63ab6bf15e785877fa060bac5c0786c26244a7630ec1b97011d0bb336c9177a8e6a911ccdb673eebba')
 
 build() {
   cd zope.testing-$pkgver
-  python setup.py build
+  python -m build --wheel --skip-dependency-check --no-isolation
 }
 
 check() {
@@ -24,7 +24,7 @@ check() {
 
 package() {
   cd zope.testing-$pkgver
-  python setup.py install --root="$pkgdir" --optimize=1
+  python -m installer --destdir="$pkgdir" dist/*.whl
 }
 
 # vim:set ts=2 sw=2 et:

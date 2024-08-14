@@ -1,21 +1,41 @@
 # Maintainer: Felix Yan <felixonmars@archlinux.org>
 
 pkgname=ruby-cucumber-gherkin
-pkgver=27.0.0
-pkgrel=1
+pkgver=28.0.0
+pkgrel=2
 pkgdesc="Gherkin for Ruby"
 arch=(any)
 url='https://github.com/cucumber/gherkin/blob/main/ruby'
 license=(MIT)
-depends=(ruby-cucumber-messages)
-makedepends=(ruby-rake ruby-rspec)
+depends=(
+  ruby
+  ruby-cucumber-messages
+)
+makedepends=(
+  ruby-rake
+  ruby-rspec
+)
+checkdepends=(
+  ruby-bundler
+)
 options=(!emptydirs)
-source=(https://github.com/cucumber/gherkin/archive/v$pkgver/cucumber-gherkin-$pkgver.tar.gz)
-sha256sums=('f0c2278ec1b2fd4a4e9555e2023194ab0e89711eb46c86e6997311ebe59f6b9f')
+source=(
+  "https://github.com/cucumber/gherkin/archive/v$pkgver/cucumber-gherkin-$pkgver.tar.gz"
+  "${pkgname}_fix_tests.patch"
+)
+sha512sums=('97e107ec1b8bb37e1e72db840481423f9726ab0220e72a1132cba51d24ceb7405ad04cc6ac0a7d7595467606b5af3b35d080efa3114e11989fb4524663d29f30'
+            '457d34a5e48698089be8be4edc59d399d164785fee2e496d514b101693da47df2f2a42caa98c5e1027e07b72b92c078e0540e698dca7882a93b76a63c645b632')
+b2sums=('1362d2b3ccae0ccb725dcad104d1950e37317edf6b3356d903feb7212ec83b494b3190762bd56272d2b835d72c323b32226eb3ea8d5729477a72965ce8346995'
+        '8be83b1fcc70013e291790fbb54c2f1d3aeb553f90d305dd575b5622bd45e86be8e7f3229e45f533c47e09d3c6bc0be93fb9d3fb53600ee8e78aa5dd0c5eea53')
 
 prepare() {
-  cd gherkin-$pkgver/ruby
-  sed -r -e 's|~>|>=|g' -e "s/, '< 22.1'//" -i cucumber-gherkin.gemspec
+  cd gherkin-$pkgver
+
+  patch --verbose --strip=1 --input="../${pkgname}_fix_tests.patch"
+
+  cd ruby
+
+  sed -r -e 's|~>|>=|g' -e "s/, '< 24'//" -i cucumber-gherkin.gemspec
 }
 
 build() {

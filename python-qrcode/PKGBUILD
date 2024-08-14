@@ -7,14 +7,17 @@
 pkgname=python-qrcode
 _pkgname=${pkgname#python-}
 pkgver=7.4.2
-pkgrel=4
+pkgrel=5
 pkgdesc='Python library to generate QR codes'
 arch=('any')
 url='https://github.com/lincolnloop/python-qrcode'
 license=('BSD')
-depends=('python' 'python-typing_extensions' 'python-pypng')
+depends=('python'
+         'python-setuptools' # runtime dependency on pkg_resources
+         'python-typing_extensions'
+         'python-pypng')
 optdepends=('python-pillow: faster but not python native backend')
-makedepends=('python-'{build,installer,wheel} 'python-setuptools')
+makedepends=('python-'{build,installer,wheel})
 checkdepends=('python-pytest')
 _archive="$_pkgname-$pkgver"
 source=("https://files.pythonhosted.org/packages/source/${_pkgname::1}/$_pkgname/$_archive.tar.gz"

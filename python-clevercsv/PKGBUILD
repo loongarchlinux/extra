@@ -1,24 +1,23 @@
 # Maintainer: Felix Yan <felixonmars@archlinux.org>
 
 pkgname=python-clevercsv
-pkgver=0.8.0
-_commit=25d696a0adb94e875bad7887ad34ac4be4bd6d3f
-pkgrel=3
+pkgver=0.8.2
+pkgrel=1
 pkgdesc="A Python package for handling messy CSV files"
 url="https://github.com/alan-turing-institute/CleverCSV"
 license=('MIT')
 arch=('loong64' 'x86_64')
 depends=('python-chardet' 'python-regex' 'python-packaging')
-makedepends=('git' 'python-setuptools')
+makedepends=('git' 'python-setuptools' 'python-build' 'python-installer' 'python-wheel')
 optdepends=('python-pandas' 'python-tabview' 'python-wilderness' 'python-cchardet')
 checkdepends=('python-pytest' 'python-pandas' 'python-tabview' 'python-wilderness'
               'python-faust-cchardet' 'python-termcolor')
-source=("git+https://github.com/alan-turing-institute/CleverCSV.git#commit=$_commit")
-sha512sums=('SKIP')
+source=("git+https://github.com/alan-turing-institute/CleverCSV.git#tag=v$pkgver")
+sha512sums=('15c16e65eafd426cfb1993ddaeca4433938e6020df1be7766a97a157c262c76142e0d6e0bf6c08ee5efc1f35d1cc7988589069b5cf38def42cacf5dc4c7e6672')
 
 build() {
   cd CleverCSV
-  python setup.py build
+  python -m build --wheel --no-isolation
 }
 
 check() {
@@ -29,7 +28,7 @@ check() {
 
 package() {
   cd CleverCSV
-  python setup.py install --root="$pkgdir" --optimize=1
+  python -m installer --destdir="$pkgdir" dist/*.whl
   mkdir "$pkgdir"/usr/share
   mv "$pkgdir"/usr/man "$pkgdir"/usr/share/man 
 

@@ -2,7 +2,7 @@
 
 pkgname=perl-crypt-random-seed
 pkgver=0.03
-pkgrel=8
+pkgrel=9
 pkgdesc='Provide strong randomness for seeding'
 arch=(any)
 license=(PerlArtistic GPL)

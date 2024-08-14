@@ -3,8 +3,8 @@
 
 _hkgname=Agda
 pkgname=agda
-pkgver=2.6.4
-pkgrel=26
+pkgver=2.6.4.1
+pkgrel=2
 pkgdesc="A dependently typed functional programming language and proof assistant"
 url="https://wiki.portal.chalmers.se/agda/"
 license=("custom")
@@ -18,14 +18,13 @@ depends=('ghc-libs' 'ghc' 'haskell-stmonadtrans' 'haskell-aeson' 'haskell-ansi-t
          'haskell-uri-encode' 'haskell-vector' 'haskell-vector-hashtables' 'haskell-zlib'
          'haskell-text-icu')
 optdepends=('agda-stdlib: for standard library')
-makedepends=('uusi' 'alex' 'happy' 'ghc')
+makedepends=('alex' 'happy' 'ghc')
 source=("https://hackage.haskell.org/packages/archive/$_hkgname/$pkgver/$_hkgname-$pkgver.tar.gz")
-sha512sums=('09b278dfb299779b02358e68a91f9d10e25083447810363ef0dbefdcdfc16070207c8c7272d2cb842ee77e67f1bd5d13007e3121c3f021107b4f6b6c4a82313a')
+sha512sums=('b26819c0f08e9db10bc50cec3bffb322cb6b106f4661c57132948ae2f8b8378520ab475173ae56c5e6876ef08ca4e3806960bc7dc69ddf99bca041f44c653f1e')
 
 prepare() {
     cd $_hkgname-$pkgver
     sed -i '/fno-warn-overlapping-patterns/a \        , "-dynamic"' src/full/Agda/Compiler/MAlonzo/Compiler.hs
-    uusi -u split $_hkgname.cabal
 }
 
 build() {
@@ -34,7 +33,7 @@ build() {
     # -fllvm is disabled because ghc+llc hangs since LLVM 13
     # https://gitlab.haskell.org/ghc/ghc/-/issues/20559
     runhaskell Setup configure -O --enable-shared --enable-executable-dynamic --disable-library-vanilla \
-        --prefix=/usr --docdir=/usr/share/doc/$pkgname --datasubdir=$pkgname \
+        --prefix=/usr --docdir=/usr/share/doc/$pkgname --datasubdir=$pkgname --enable-tests \
         --dynlibdir=/usr/lib --libsubdir=\$compiler/site-local/\$pkgid --ghc-option=-fasm \
             -f-debug -fenable-cluster-counting -foptimise-heavily
     LC_CTYPE=en_US.UTF-8 runhaskell Setup build $MAKEFLAGS
@@ -42,6 +41,11 @@ build() {
     runhaskell Setup unregister --gen-script
     sed -i -r -e "s|ghc-pkg.*update[^ ]* |&'--force' |" register.sh
     sed -i -r -e "s|ghc-pkg.*unregister[^ ]* |&'--force' |" unregister.sh
+}
+
+check() {
+    cd $_hkgname-$pkgver
+    runhaskell Setup test --show-details=direct
 }
 
 package() {

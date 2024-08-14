@@ -2,8 +2,8 @@
 # Contributor: kxxt <rsworktech at outlook dot com>
 
 pkgname=tracexec
-pkgver=0.1.0
-pkgrel=2
+pkgver=0.5.2
+pkgrel=1
 pkgdesc="A small utility for tracing execve{,at} and pre-exec behavior"
 arch=('loong64' 'x86_64')
 url="https://github.com/kxxt/tracexec"
@@ -11,11 +11,12 @@ license=('GPL-2.0-or-later')
 depends=('gcc-libs')
 makedepends=('cargo' 'cargo-about' 'git')
 source=("$pkgname-$pkgver::git+https://github.com/kxxt/tracexec.git#tag=v$pkgver")
-b2sums=('8625c4ebaaf346585342bbab8c99917112b3f2de1caf884730efc552c3e3af77774b119b687e5ceef136ad0890bec2e1b4657c7c97c596438b17355826f08215')
+b2sums=('187ec9afe391aad6e6ef4d29effa5cef348305ea721cc61392b30fd15518b37996da0d7ec524ef0da6eeb35e6c347960a5fe689e17792c6ffe96a5dccc49f377')
 
 prepare() {
   cd "$pkgname-$pkgver"
   cargo fetch --locked --target "$(rustc -vV | sed -n 's/host: //p')"
+  mkdir completions/
 }
 
 build() {
@@ -23,6 +24,11 @@ build() {
   # --bins: needed for test
   cargo build --bins --frozen --release --all-features
   cargo about generate -o THIRD_PARTY_LICENSES.HTML about.hbs
+  local compgen="target/release/$pkgname generate-completions"
+  $compgen bash >"completions/$pkgbase"
+  $compgen elvish >"completions/$pkgbase.elv"
+  $compgen fish >"completions/$pkgbase.fish"
+  $compgen zsh >"completions/_$pkgbase"
 }
 
 check() {
@@ -36,6 +42,10 @@ package() {
   install -Dm644 README.md "$pkgdir/usr/share/doc/$pkgname/README.md"
   install -Dm644 LICENSE "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
   install -Dm644 THIRD_PARTY_LICENSES.HTML "$pkgdir/usr/share/licenses/$pkgname/THIRD_PARTY_LICENSES.HTML"
+  install -Dm644 "completions/$pkgbase" -t "$pkgdir/usr/share/bash-completion/completions/"
+  install -Dm644 "completions/$pkgbase.elv" -t "$pkgdir/usr/share/elvish/lib/"
+  install -Dm644 "completions/$pkgbase.fish" -t "$pkgdir/usr/share/fish/vendor_completions.d/"
+  install -Dm644 "completions/_$pkgbase" -t "$pkgdir/usr/share/zsh/site-functions/"
 }
 
 # vim:set ts=2 sw=2 et:

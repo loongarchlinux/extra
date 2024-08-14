@@ -3,24 +3,28 @@
 # Contributor: Markus Richter <mqus at disroot dot org>
 
 pkgname=vaultwarden-web
-_pkgver=2024.3.1
-pkgver=2024.3.1
+_pkgver=2024.6.2b
+pkgver=2024.6.2.b
 _upstreamver=${_pkgver%[[:lower:]]}
 _patchver=$_upstreamver
 pkgrel=1
 pkgdesc='Bitwarden web vault with the patches to make it work with Vaultwarden'
-arch=('any')
-url='https://github.com/dani-garcia/bw_web_builds'
-license=('GPL3')
-depends=('vaultwarden')
-makedepends=('git' 'nodejs' 'npm')
+arch=(any)
+url=https://github.com/dani-garcia/bw_web_builds
+license=(GPL-3.0-only)
+depends=(vaultwarden)
+makedepends=(
+  git
+  nodejs
+  npm
+)
 install=$pkgname.install
 source=(
   "bitwarden-clients::git+https://github.com/bitwarden/clients.git#tag=web-v$_upstreamver"
   "git+https://github.com/dani-garcia/bw_web_builds#tag=v$_pkgver"
 )
-b2sums=('279659ba15498d013027b5cdd1682cd284b2a8b9a6e565e5b92a6eaeca6ea4397a3b870e2ee0951f3cc3a6e16402bee6e249f5f3760a15c8f1b1800104dfc2ca'
-        '17a1aa44b3dac20ceb2aded072319baa456bfd9a79942128690394c1b4de583c0d9e039d2d7cd273e47294c16c0fde7cbc8238c0974ea0667c3424509239b701')
+b2sums=('7fd09ee856e82fb1eaf8022b6ed6846819bc3f11b7bcdd684bb8e6cd53b2e98b4cc2e46f45fcb5b6e75dae3b68a05ae887a7e49fad7a91a1f2558a88d9aa7c1a'
+        '4490f5dda526cd9f71923dd9fdd7e6f3976ca10676dc776ab240b2f2e815cffdf9bdbcbb3b5306c811eaa1ab4915bd3a3dfc05a8468967f20ef8f04b3124e43a')
 
 # Appease vercmp by prepending trailing letter with a period
 # shellcheck disable=SC2001
@@ -31,11 +35,12 @@ pkgver() {
 prepare() {
   cd bitwarden-clients
 
-  # copy Vaultwarden images
-  cp -vr "$srcdir/bw_web_builds/resources/src/images/"{logo-{dark,white}@2x,icon-white}.png apps/web/src/images
+  # Copy Vaultwarden images
+  cp -vr ../bw_web_builds/resources/src/images/{logo-{dark,white}@2x,icon-white}.png \
+    apps/web/src/images
 
-  # apply Vaultwarden patch
-  patch --forward --strip=1 --input="$srcdir/bw_web_builds/patches/v$_patchver.patch"
+  # Apply Vaultwarden patch
+  patch --forward --strip=1 --input=../bw_web_builds/patches/v$_patchver.patch
 
   npm ci
 }
@@ -52,9 +57,7 @@ build() {
 }
 
 package() {
-  install -d "$pkgdir/usr/share/webapps/$pkgname"
+  install -d "$pkgdir"/usr/share/webapps/$pkgname
 
-  cp -R bitwarden-clients/apps/web/build/* "$pkgdir/usr/share/webapps/$pkgname"
+  cp -R bitwarden-clients/apps/web/build/* "$pkgdir"/usr/share/webapps/$pkgname
 }
-
-# vim:set ts=2 sw=2 et:

@@ -2,16 +2,15 @@
 
 pkgname=nginx-mod-redis2
 pkgver=0.15
-pkgrel=13
+pkgrel=14
 
 _modname="${pkgname#nginx-mod-}"
 
 pkgdesc='Nginx upstream module for the Redis 2.0 protocol'
 arch=('loong64' 'x86_64')
-depends=('nginx')
-makedepends=('nginx-src')
+makedepends=('nginx' 'nginx-src')
 url="https://github.com/openresty/redis2-nginx-module"
-license=('BSD')
+license=('BSD-2-Clause')
 
 source=(
 	https://github.com/openresty/$_modname-nginx-module/archive/v$pkgver/$_modname-$pkgver.tar.gz
@@ -28,6 +27,10 @@ build() {
 }
 
 package() {
+	local _nginx_version=$(nginx -v 2>&1)
+	_nginx_version=${_nginx_version/* nginx\/}
+	depends+=("nginx=${_nginx_version}")
+
 	cd "$srcdir"/nginx/objs
 	for mod in *.so; do
 		install -Dm755 $mod "$pkgdir"/usr/lib/nginx/modules/$mod

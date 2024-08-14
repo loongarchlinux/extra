@@ -3,22 +3,29 @@
 
 pkgname=e3
 pkgver=2.82
-pkgrel=6
-pkgdesc='Tiny editor without dependencies, written in assembly'
+pkgrel=7
+pkgdesc='Tiny text editor written in Assembly'
 arch=(loong64 x86_64)
-url='https://sites.google.com/site/e3editor/'
-license=(GPL2)
-makedepends=(yasm)
+url='https://packages.debian.org/sid/e3'
+license=(GPL-2.0-only)
+makedepends=(setconf yasm)
 options=(!strip)
-source=("$pkgname-$pkgver.tar.gz::https://drive.google.com/uc?export=download&id=1ZNWI-Fl7Zc69H0hX1WpLpwG9mxUcZf30")
-b2sums=('09edea9063657373cf6d7d9d8290dddf17b8fb516538d89b83462176127b8b43832bd81f326eec5504116f05ab780023832b8b5d41d72e3ab8e726d89e364a36')
+source=("$pkgname-$pkgver.tar.gz::http://deb.debian.org/debian/pool/main/e/e3/${pkgname}_$pkgver+dfsg.orig.tar.gz")
+b2sums=('22e78f7f1c11e003567719b111133de9f573523f26f5c8030e4c1a0212fb7652456956a54ecaa851ba2be6e26e8aae8f73b7777a66618979dd4809fc05d07aa1')
+
+prepare() {
+  cd "$pkgname-$pkgver+dfsg"
+  setconf Makefile PREFIX /usr
+}
 
 build() {
-  make -C $pkgname-$pkgver NASM_OR_YASM=yasm clean 64
+  cd "$pkgname-$pkgver+dfsg"
+  make clean
+  make NASM_OR_YASM=yasm 64
 }
 
 package() {
-  cd "$pkgname-$pkgver"
+  cd "$pkgname-$pkgver+dfsg"
   install -Dm755 e3 "$pkgdir/usr/bin/e3"
   for f in e3ws e3em e3pi e3vi e3ne; do
     ln -sf /usr/bin/e3 "$pkgdir/usr/bin/$f"

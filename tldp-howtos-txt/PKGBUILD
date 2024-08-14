@@ -3,7 +3,7 @@
 
 pkgname=tldp-howtos-txt
 pkgver=20161114
-pkgrel=3
+pkgrel=4
 pkgdesc="HOWTO's from tldp.org (one text file per howto)"
 arch=('any')
 url="http://tldp.org/"

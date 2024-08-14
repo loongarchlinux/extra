@@ -2,19 +2,30 @@
 
 pkgname=soplex
 pkgver=6.0.4
-pkgrel=1
+pkgrel=2
 pkgdesc='Sequential object-oriented simPlex'
 arch=(loong64 x86_64)
 url='https://www.scipopt.org/'
-license=(Apache)
-depends=(zlib mpfr)
-makedepends=(cmake boost)
+license=(Apache-2.0)
+depends=(gcc-libs
+         glibc
+         gmp
+         mpfr
+         zlib)
+makedepends=(boost
+             cmake
+             git)
 options=(!lto)
-source=(https://github.com/scipopt/$pkgname/archive/release-${pkgver//./}/$pkgname-$pkgver.tar.gz)
-sha256sums=('691f5b593cb85c2586522d5de5a5a7692958d22ff1ddffb4fc395f4696590b6f')
+source=(git+https://github.com/scipopt/soplex#tag=release-${pkgver//./})
+sha256sums=('0c3a2fff3506ee39ef5f653c87421af5183ebc58eacb0508037f9a096119d98f')
+
+prepare() {
+  cd soplex
+  git cherry-pick -n 08cc39c1ac64095e1fda91729590101477091bf4 # Fix build with GCC 14
+}
 
 build() {
-  cmake -B build -S $pkgname-release-${pkgver//./} \
+  cmake -B build -S soplex \
     -DCMAKE_INSTALL_PREFIX=/usr \
     -DCMAKE_BUILD_TYPE=None \
     -DMPFR=ON

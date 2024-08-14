@@ -3,7 +3,7 @@
 
 pkgname=libopensmtpd
 pkgver=0.7
-pkgrel=2
+pkgrel=3
 pkgdesc="Library for creating OpenSMTPD filters"
 license=(BSD)
 url="https://imperialat.at/dev/libopensmtpd/"

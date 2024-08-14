@@ -2,8 +2,8 @@
 
 _pkg=textdistance
 pkgname=python-${_pkg}
-pkgver=4.6.1
-pkgrel=2
+pkgver=4.6.3
+pkgrel=1
 pkgdesc="Compute distance between sequences"
 arch=(any)
 url="https://github.com/life4/textdistance"
@@ -15,7 +15,12 @@ depends=(
     python-levenshtein
     python-pyxdameraulevenshtein
 )
-makedepends=(python-setuptools)
+makedepends=(
+    python-build
+    python-installer
+    python-setuptools
+    python-wheel
+)
 checkdepends=(
     python-pytest
     python-hypothesis
@@ -27,11 +32,11 @@ checkdepends=(
 # PyPi tarballs do not have the tests
 #source=(https://files.pythonhosted.org/packages/source/${_pkg::1}/${_pkg}/${_pkg}-${pkgver}.tar.gz)
 source=(${url}/archive/${pkgver}/${_pkg}-${pkgver}.tar.gz)
-sha256sums=('80de4a8b9a4dec554ec3f3611124ca7decf317f038a5483d8c00c93d3b919924')
+sha256sums=('1efec1ec903d62969413c552e07cde8ecdad7259e6a5c4c1e516007ed7ad5f47')
 
 build() {
   cd ${_pkg}-${pkgver}
-  python setup.py build
+  python -m build --wheel --no-isolation
 }
 
 check() {
@@ -42,6 +47,6 @@ check() {
 
 package() {
   cd ${_pkg}-${pkgver}
-  python setup.py install --prefix=/usr --root="${pkgdir}" --skip-build --optimize=1
+  python -m installer --destdir="$pkgdir" dist/*.whl
   install -Dm644 LICENSE -t "${pkgdir}"/usr/share/licenses/${pkgname}
 }

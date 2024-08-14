@@ -1,0 +1,537 @@
+From 5dbd8ea4a5579fa864e20b32204f07f30584c1b7 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Ball=C3=B3=20Gy=C3=B6rgy?= <ballogyor@gmail.com>
+Date: Thu, 27 Jun 2024 17:04:28 +0200
+Subject: [PATCH] Add keyboard manager module
+
+This is a stripped-down version of the gsd-keyboard-manager module, which is used to set num-lock state on login.
+
+This feature was removed from gnome-settings-daemon:
+https://gitlab.gnome.org/GNOME/gnome-settings-daemon/-/commit/710a4c4e7828828cb35ea14333882354ae73264f
+
+Closes: https://gitlab.gnome.org/GNOME/gnome-flashback/-/issues/93
+---
+ configure.ac                                  |   7 +
+ .../org.gnome.gnome-flashback.gschema.xml     |   6 +
+ gnome-flashback/Makefile.am                   |   2 +
+ gnome-flashback/gf-application.c              |   4 +
+ .../libkeyboard-manager/Makefile.am           |  33 ++
+ .../gsd-keyboard-manager.c                    | 324 ++++++++++++++++++
+ .../gsd-keyboard-manager.h                    |  37 ++
+ 7 files changed, 413 insertions(+)
+ create mode 100644 gnome-flashback/libkeyboard-manager/Makefile.am
+ create mode 100644 gnome-flashback/libkeyboard-manager/gsd-keyboard-manager.c
+ create mode 100644 gnome-flashback/libkeyboard-manager/gsd-keyboard-manager.h
+
+diff --git a/configure.ac b/configure.ac
+index 844d6f0..59e8e69 100644
+--- a/configure.ac
++++ b/configure.ac
+@@ -191,6 +191,12 @@ PKG_CHECK_MODULES([INPUT_SOURCES], [
+   xkeyboard-config
+ ])
+ 
++PKG_CHECK_MODULES([KEYBOARD_MANAGER], [
++  glib-2.0 >= $GLIB_REQUIRED
++  gtk+-3.0 >= $GTK_REQUIRED
++  gsettings-desktop-schemas >= $GSETTINGS_DESKTOP_SCHEMAS_REQUIRED
++])
++
+ PKG_CHECK_MODULES([MEDIA_KEYS], [
+   glib-2.0 >= $GLIB_REQUIRED
+   gtk+-3.0 >= $GTK_REQUIRED
+@@ -434,6 +440,7 @@ AC_CONFIG_FILES([
+   gnome-flashback/libend-session-dialog/Makefile
+   gnome-flashback/libinput-settings/Makefile
+   gnome-flashback/libinput-sources/Makefile
++  gnome-flashback/libkeyboard-manager/Makefile
+   gnome-flashback/libnotifications/Makefile
+   gnome-flashback/libroot-background/Makefile
+   gnome-flashback/libscreencast/Makefile
+diff --git a/data/schemas/org.gnome.gnome-flashback.gschema.xml b/data/schemas/org.gnome.gnome-flashback.gschema.xml
+index a48b0fc..af8761c 100644
+--- a/data/schemas/org.gnome.gnome-flashback.gschema.xml
++++ b/data/schemas/org.gnome.gnome-flashback.gschema.xml
+@@ -50,6 +50,12 @@
+       <description>If set to true, then GNOME Flashback application will be used to manage keyboard layouts and input methods.</description>
+     </key>
+ 
++    <key name="keyboard-manager" type="b">
++      <default>true</default>
++      <summary>Keyboard manager</summary>
++      <description>If set to true, then GNOME Flashback application will be used to set num-lock state on login.</description>
++    </key>
++
+     <key name="notifications" type="b">
+       <default>true</default>
+       <summary>Notification daemon</summary>
+diff --git a/gnome-flashback/Makefile.am b/gnome-flashback/Makefile.am
+index e3b1100..2427e81 100644
+--- a/gnome-flashback/Makefile.am
++++ b/gnome-flashback/Makefile.am
+@@ -9,6 +9,7 @@ SUBDIRS = \
+ 	libend-session-dialog \
+ 	libinput-settings \
+ 	libinput-sources \
++	libkeyboard-manager \
+ 	libnotifications \
+ 	libroot-background \
+ 	libscreencast \
+@@ -65,6 +66,7 @@ gnome_flashback_LDADD = \
+ 	$(top_builddir)/gnome-flashback/libend-session-dialog/libend-session-dialog.la \
+ 	$(top_builddir)/gnome-flashback/libinput-settings/libinput-settings.la \
+ 	$(top_builddir)/gnome-flashback/libinput-sources/libinput-sources.la \
++	$(top_builddir)/gnome-flashback/libkeyboard-manager/libkeyboard-manager.la \
+ 	$(top_builddir)/gnome-flashback/libnotifications/libnotifications.la \
+ 	$(top_builddir)/gnome-flashback/libroot-background/libroot-background.la \
+ 	$(top_builddir)/gnome-flashback/libscreencast/libscreencast.la \
+diff --git a/gnome-flashback/gf-application.c b/gnome-flashback/gf-application.c
+index 36d57ae..da91890 100644
+--- a/gnome-flashback/gf-application.c
++++ b/gnome-flashback/gf-application.c
+@@ -31,6 +31,7 @@
+ #include "libend-session-dialog/gf-end-session-dialog.h"
+ #include "libinput-settings/gf-input-settings.h"
+ #include "libinput-sources/gf-input-sources.h"
++#include "libkeyboard-manager/gsd-keyboard-manager.h"
+ #include "libnotifications/gf-notifications.h"
+ #include "libroot-background/gf-root-background.h"
+ #include "libscreencast/gf-screencast.h"
+@@ -61,6 +62,7 @@ struct _GfApplication
+   GfEndSessionDialog      *dialog;
+   GfInputSettings         *input_settings;
+   GfInputSources          *input_sources;
++  GsdKeyboardManager      *keyboard;
+   GfNotifications         *notifications;
+   GfRootBackground        *root_background;
+   GfScreencast            *screencast;
+@@ -216,6 +218,7 @@ settings_changed (GSettings   *settings,
+   SETTING_CHANGED (dialog, "end-session-dialog", gf_end_session_dialog_new)
+   SETTING_CHANGED (input_settings, "input-settings", gf_input_settings_new)
+   SETTING_CHANGED (input_sources, "input-sources", gf_input_sources_new)
++  SETTING_CHANGED (keyboard, "keyboard-manager", gsd_keyboard_manager_new)
+   SETTING_CHANGED (notifications, "notifications", gf_notifications_new)
+   SETTING_CHANGED (root_background, "root-background", gf_root_background_new)
+   SETTING_CHANGED (screencast, "screencast", gf_screencast_new)
+@@ -270,6 +273,7 @@ gf_application_dispose (GObject *object)
+   g_clear_object (&application->dialog);
+   g_clear_object (&application->input_settings);
+   g_clear_object (&application->input_sources);
++  g_clear_object (&application->keyboard);
+   g_clear_object (&application->notifications);
+   g_clear_object (&application->root_background);
+   g_clear_object (&application->screencast);
+diff --git a/gnome-flashback/libkeyboard-manager/Makefile.am b/gnome-flashback/libkeyboard-manager/Makefile.am
+new file mode 100644
+index 0000000..f2db526
+--- /dev/null
++++ b/gnome-flashback/libkeyboard-manager/Makefile.am
+@@ -0,0 +1,33 @@
++NULL =
++
++noinst_LTLIBRARIES = \
++	libkeyboard-manager.la \
++	$(NULL)
++
++libkeyboard_manager_la_CPPFLAGS = \
++	-DG_LOG_DOMAIN=\"keyboard-manager\" \
++	-DG_LOG_USE_STRUCTURED=1 \
++	$(NULL)
++
++libkeyboard_manager_la_CFLAGS = \
++	$(KEYBOARD_MANAGER_CFLAGS) \
++	$(WARN_CFLAGS) \
++	$(AM_CFLAGS) \
++	-I$(top_builddir)/gnome-flashback/libkeyboard-manager \
++	$(NULL)
++
++libkeyboard_manager_la_SOURCES = \
++	gsd-keyboard-manager.c \
++	gsd-keyboard-manager.h \
++	$(NULL)
++
++libkeyboard_manager_la_LDFLAGS = \
++	$(WARN_LDFLAGS) \
++	$(AM_LDFLAGS) \
++	$(NULL)
++
++libkeyboard_manager_la_LIBADD =	\
++	$(KEYBOARD_MANAGER_LIBS) \
++	$(NULL)
++
++-include $(top_srcdir)/git.mk
+diff --git a/gnome-flashback/libkeyboard-manager/gsd-keyboard-manager.c b/gnome-flashback/libkeyboard-manager/gsd-keyboard-manager.c
+new file mode 100644
+index 0000000..ce1f2d6
+--- /dev/null
++++ b/gnome-flashback/libkeyboard-manager/gsd-keyboard-manager.c
+@@ -0,0 +1,324 @@
++/* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 8 -*-
++ *
++ * Copyright © 2001 Ximian, Inc.
++ * Copyright (C) 2007 William Jon McCann <mccann@jhu.edu>
++ * Written by Sergey V. Oudaltsov <svu@users.sourceforge.net>
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License as published by
++ * the Free Software Foundation; either version 2 of the License, or
++ * (at your option) any later version.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, see <http://www.gnu.org/licenses/>.
++ *
++ */
++
++#include "config.h"
++
++#include <sys/types.h>
++#include <sys/wait.h>
++#include <stdlib.h>
++#include <stdio.h>
++#include <unistd.h>
++#include <string.h>
++#include <errno.h>
++
++#include <locale.h>
++
++#include <glib.h>
++#include <glib/gi18n.h>
++#include <gdk/gdk.h>
++#include <gdk/gdkx.h>
++#include <gtk/gtk.h>
++
++#include <X11/XKBlib.h>
++#include <X11/keysym.h>
++
++#include "gsd-keyboard-manager.h"
++
++#define GSD_KEYBOARD_DIR "org.gnome.desktop.peripherals.keyboard"
++
++#define KEY_REMEMBER_NUMLOCK_STATE "remember-numlock-state"
++#define KEY_NUMLOCK_STATE  "numlock-state"
++
++struct _GsdKeyboardManager
++{
++        GObject    parent;
++
++        guint      start_idle_id;
++        GSettings *settings;
++
++        gint       xkb_event_base;
++        gboolean   old_state;
++        GdkSeat *user_seat;
++        guint device_added_id;
++};
++
++G_DEFINE_TYPE (GsdKeyboardManager, gsd_keyboard_manager, G_TYPE_OBJECT)
++
++static gpointer manager_object = NULL;
++
++static gboolean
++check_xkb_extension (GsdKeyboardManager *manager)
++{
++        Display *dpy = GDK_DISPLAY_XDISPLAY (gdk_display_get_default ());
++        int opcode, error_base, major, minor;
++        gboolean have_xkb;
++
++        have_xkb = XkbQueryExtension (dpy,
++                                      &opcode,
++                                      &manager->xkb_event_base,
++                                      &error_base,
++                                      &major,
++                                      &minor);
++        return have_xkb;
++}
++
++static void
++xkb_init (GsdKeyboardManager *manager)
++{
++        Display *dpy;
++
++        dpy = GDK_DISPLAY_XDISPLAY (gdk_display_get_default ());
++        XkbSelectEventDetails (dpy,
++                               XkbUseCoreKbd,
++                               XkbStateNotify,
++                               XkbModifierLockMask,
++                               XkbModifierLockMask);
++}
++
++static unsigned
++numlock_NumLock_modifier_mask (void)
++{
++        Display *dpy = GDK_DISPLAY_XDISPLAY (gdk_display_get_default ());
++        return XkbKeysymToModifiers (dpy, XK_Num_Lock);
++}
++
++static void
++numlock_set_xkb_state (gboolean new_state)
++{
++        unsigned int num_mask;
++        Display *dpy = GDK_DISPLAY_XDISPLAY (gdk_display_get_default ());
++        num_mask = numlock_NumLock_modifier_mask ();
++        XkbLockModifiers (dpy, XkbUseCoreKbd, num_mask, new_state ? num_mask : 0);
++}
++
++static GdkFilterReturn
++xkb_events_filter (GdkXEvent *xev_,
++		   GdkEvent  *gdkev_,
++		   gpointer   user_data)
++{
++        XEvent *xev = (XEvent *) xev_;
++	XkbEvent *xkbev = (XkbEvent *) xev;
++        GsdKeyboardManager *manager = (GsdKeyboardManager *) user_data;
++
++        if (xev->type != manager->xkb_event_base ||
++            xkbev->any.xkb_type != XkbStateNotify)
++		return GDK_FILTER_CONTINUE;
++
++	if (xkbev->state.changed & XkbModifierLockMask) {
++		unsigned num_mask = numlock_NumLock_modifier_mask ();
++		unsigned locked_mods = xkbev->state.locked_mods;
++		gboolean numlock_state;
++
++		numlock_state = (num_mask & locked_mods);
++
++		if (numlock_state != manager->old_state) {
++			g_debug ("New num-lock state '%s' != Old num-lock state '%s'",
++				 numlock_state ? "ON" : "OFF",
++				 manager->old_state ? "ON" : "OFF");
++			g_settings_set_boolean (manager->settings,
++					        KEY_NUMLOCK_STATE,
++					        numlock_state);
++			manager->old_state = numlock_state;
++		}
++	}
++
++        return GDK_FILTER_CONTINUE;
++}
++
++static void
++install_xkb_filter (GsdKeyboardManager *manager)
++{
++        gdk_window_add_filter (NULL,
++                               xkb_events_filter,
++                               manager);
++}
++
++static void
++remove_xkb_filter (GsdKeyboardManager *manager)
++{
++        gdk_window_remove_filter (NULL,
++                                  xkb_events_filter,
++                                  manager);
++}
++
++static void
++apply_numlock (GsdKeyboardManager *manager)
++{
++        GdkDisplay *gdisplay;
++        GSettings *settings;
++        gboolean rnumlock;
++
++        gdisplay = gdk_display_get_default ();
++
++        g_debug ("Applying the num-lock settings");
++        settings = manager->settings;
++        rnumlock = g_settings_get_boolean (settings, KEY_REMEMBER_NUMLOCK_STATE);
++        manager->old_state = g_settings_get_boolean (manager->settings, KEY_NUMLOCK_STATE);
++
++        gdk_x11_display_error_trap_push (gdisplay);
++        if (rnumlock) {
++                g_debug ("Remember num-lock is set, so applying setting '%s'",
++                         manager->old_state ? "ON" : "OFF");
++                numlock_set_xkb_state (manager->old_state);
++        }
++
++        XSync (GDK_DISPLAY_XDISPLAY (gdk_display_get_default ()), FALSE);
++        gdk_x11_display_error_trap_pop_ignored (gdisplay);
++}
++
++static void
++settings_changed (GSettings          *settings,
++                  const char         *key,
++                  GsdKeyboardManager *manager)
++{
++	if (g_strcmp0 (key, KEY_REMEMBER_NUMLOCK_STATE) == 0) {
++		g_debug ("Remember Num-Lock state '%s' changed, applying num-lock settings", key);
++		apply_numlock (manager);
++	} else if (g_strcmp0 (key, KEY_NUMLOCK_STATE) == 0) {
++		g_debug ("Num-Lock state '%s' changed, will apply at next startup", key);
++	}
++
++}
++
++static void
++device_added_cb (GdkSeat            *user_seat,
++                 GdkDevice          *device,
++                 GsdKeyboardManager *manager)
++{
++        GdkInputSource source;
++
++        source = gdk_device_get_source (device);
++        if (source == GDK_SOURCE_KEYBOARD) {
++                g_debug ("New keyboard plugged in, applying num-lock settings");
++                apply_numlock (manager);
++        }
++}
++
++static void
++set_devicepresence_handler (GsdKeyboardManager *manager)
++{
++        GdkSeat *user_seat;
++
++        user_seat = gdk_display_get_default_seat (gdk_display_get_default ());
++
++        manager->device_added_id = g_signal_connect (G_OBJECT (user_seat), "device-added",
++                                                     G_CALLBACK (device_added_cb), manager);
++        manager->user_seat = user_seat;
++}
++
++static gboolean
++start_keyboard_idle_cb (GsdKeyboardManager *manager)
++{
++        g_debug ("Starting keyboard manager");
++
++        manager->settings = g_settings_new (GSD_KEYBOARD_DIR);
++
++	xkb_init (manager);
++
++	set_devicepresence_handler (manager);
++
++        /* apply current settings before we install the callback */
++	apply_numlock (manager);
++
++        g_signal_connect (G_OBJECT (manager->settings), "changed",
++                          G_CALLBACK (settings_changed), manager);
++
++	install_xkb_filter (manager);
++
++        manager->start_idle_id = 0;
++
++        return FALSE;
++}
++
++void
++gsd_keyboard_manager_start (GsdKeyboardManager *manager)
++{
++	if (check_xkb_extension (manager) == FALSE) {
++		g_debug ("XKB is not supported, not applying any settings");
++		return;
++	}
++
++        manager->start_idle_id = g_idle_add ((GSourceFunc) start_keyboard_idle_cb, manager);
++        g_source_set_name_by_id (manager->start_idle_id, "[gnome-flashback] start_keyboard_idle_cb");
++}
++
++void
++gsd_keyboard_manager_stop (GsdKeyboardManager *manager)
++{
++        g_debug ("Stopping keyboard manager");
++
++        g_clear_object (&manager->settings);
++
++        if (manager->user_seat != NULL) {
++                g_signal_handler_disconnect (manager->user_seat, manager->device_added_id);
++                manager->user_seat = NULL;
++        }
++
++	remove_xkb_filter (manager);
++}
++
++static void
++gsd_keyboard_manager_finalize (GObject *object)
++{
++        GsdKeyboardManager *keyboard_manager;
++
++        g_return_if_fail (object != NULL);
++        g_return_if_fail (GSD_IS_KEYBOARD_MANAGER (object));
++
++        keyboard_manager = GSD_KEYBOARD_MANAGER (object);
++
++        g_return_if_fail (keyboard_manager != NULL);
++
++        gsd_keyboard_manager_stop (keyboard_manager);
++
++        if (keyboard_manager->start_idle_id != 0)
++                g_source_remove (keyboard_manager->start_idle_id);
++
++        G_OBJECT_CLASS (gsd_keyboard_manager_parent_class)->finalize (object);
++}
++
++static void
++gsd_keyboard_manager_init (GsdKeyboardManager *manager)
++{
++        gsd_keyboard_manager_start (manager);
++}
++
++static void
++gsd_keyboard_manager_class_init (GsdKeyboardManagerClass *klass)
++{
++        GObjectClass   *object_class = G_OBJECT_CLASS (klass);
++
++        object_class->finalize = gsd_keyboard_manager_finalize;
++}
++
++GsdKeyboardManager *
++gsd_keyboard_manager_new (void)
++{
++        if (manager_object != NULL) {
++                g_object_ref (manager_object);
++        } else {
++                manager_object = g_object_new (GSD_TYPE_KEYBOARD_MANAGER, NULL);
++                g_object_add_weak_pointer (manager_object,
++                                           (gpointer *) &manager_object);
++        }
++
++        return GSD_KEYBOARD_MANAGER (manager_object);
++}
+diff --git a/gnome-flashback/libkeyboard-manager/gsd-keyboard-manager.h b/gnome-flashback/libkeyboard-manager/gsd-keyboard-manager.h
+new file mode 100644
+index 0000000..9df0b9a
+--- /dev/null
++++ b/gnome-flashback/libkeyboard-manager/gsd-keyboard-manager.h
+@@ -0,0 +1,37 @@
++/* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 8 -*-
++ *
++ * Copyright (C) 2007 William Jon McCann <mccann@jhu.edu>
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License as published by
++ * the Free Software Foundation; either version 2 of the License, or
++ * (at your option) any later version.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, see <http://www.gnu.org/licenses/>.
++ *
++ */
++
++#ifndef __GSD_KEYBOARD_MANAGER_H
++#define __GSD_KEYBOARD_MANAGER_H
++
++#include <glib-object.h>
++
++G_BEGIN_DECLS
++
++#define GSD_TYPE_KEYBOARD_MANAGER         (gsd_keyboard_manager_get_type ())
++
++G_DECLARE_FINAL_TYPE (GsdKeyboardManager, gsd_keyboard_manager, GSD, KEYBOARD_MANAGER, GObject)
++
++GsdKeyboardManager *       gsd_keyboard_manager_new                 (void);
++void                    gsd_keyboard_manager_start               (GsdKeyboardManager *manager);
++void                    gsd_keyboard_manager_stop                (GsdKeyboardManager *manager);
++
++G_END_DECLS
++
++#endif /* __GSD_KEYBOARD_MANAGER_H */
+-- 
+GitLab
+

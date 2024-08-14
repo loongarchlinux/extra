@@ -8,7 +8,7 @@
 
 pkgname=ttf-liberation
 pkgver=2.1.5
-pkgrel=1
+pkgrel=2
 pkgdesc='Font family which aims at metric compatibility with Arial, Times New Roman, and Courier New'
 arch=('any')
 url=https://github.com/liberationfonts/liberation-fonts

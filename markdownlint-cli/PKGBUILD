@@ -1,0 +1,39 @@
+# Maintainer: Carl Smedstad <carsme@archlinux.org>
+# Contributor: Achilleas Pipinellis <axilleas at archlinux dot gr>
+
+pkgname=markdownlint-cli
+pkgver=0.41.0
+pkgrel=2
+pkgdesc="Command-line interface for MarkdownLint"
+arch=(any)
+url="https://github.com/igorshubovych/markdownlint-cli"
+license=(MIT)
+depends=(nodejs)
+makedepends=(npm)
+source=("$pkgname-$pkgver.tar.gz::$url/archive/v$pkgver.tar.gz")
+sha256sums=('788c7ed9f2009621d317053b567b90e533ee9adf0a2ec17174f519db2fd1481b')
+
+prepare() {
+  cd $pkgname-$pkgver
+  npm clean-install
+}
+
+check() {
+  cd $pkgname-$pkgver
+  npm test
+}
+
+package() {
+  cd $pkgname-$pkgver
+  npm install \
+    --global \
+    --install-links \
+    --prefix "$pkgdir/usr"
+
+  # npm gives ownership of ALL FILES to build user
+  # https://bugs.archlinux.org/task/63396
+  chown -R root:root "$pkgdir"
+
+  install -vDm644 -t "$pkgdir/usr/share/doc/$pkgname" README.md
+  install -vDm644 -t "$pkgdir/usr/share/licenses/$pkgname" LICENSE
+}

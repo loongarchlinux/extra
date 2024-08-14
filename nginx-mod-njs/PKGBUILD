@@ -1,20 +1,20 @@
 # Maintainer: Massimiliano Torromeo <massimiliano.torromeo@gmail.com>
 
 pkgname=nginx-mod-njs
-pkgver=0.8.4
-pkgrel=2
+pkgver=0.8.5
+pkgrel=1
 
 _modname="${pkgname#nginx-mod-}"
 
 pkgdesc='nginScript module for nginx'
 arch=('loong64' 'x86_64')
-depends=('nginx' 'libxslt')
-makedepends=('nginx-src')
+depends=('glibc' 'libxslt' 'openssl' 'zlib' 'pcre2' 'libxml2')
+makedepends=('nginx' 'nginx-src')
 url="https://nginx.org/en/docs/njs_about.html"
-license=('CUSTOM')
+license=('BSD-2-Clause')
 
-source=(njs-$pkgver.tar.gz::https://hg.nginx.org/njs/archive/$pkgver.tar.gz)
-sha256sums=('8191bff8491af9169a92e30e383ef8614717b0c6d40913d83b95051031e92321')
+source=(https://github.com/nginx/njs/archive/refs/tags/${pkgver}/${pkgname}-${pkgver}.tar.gz)
+sha256sums=('b5e38e1424d84e48c6ca1592a336bf1d110b8f27ff1d5ef492c6d312ea003491')
 
 prepare() {
   mkdir -p build
@@ -33,6 +33,7 @@ build() {
 
   cd "$srcdir/build"
   /usr/src/nginx/configure \
+    --with-ld-opt="$LDFLAGS" \
     --with-compat \
     --with-stream \
     --with-http_ssl_module \
@@ -42,6 +43,10 @@ build() {
 }
 
 package() {
+  local _nginx_version=$(nginx -v 2>&1)
+  _nginx_version=${_nginx_version/* nginx\/}
+  depends+=("nginx=${_nginx_version}")
+
   install -Dm644 "$srcdir"/njs-$pkgver/LICENSE \
               "$pkgdir"/usr/share/licenses/$pkgname/LICENSE
 

@@ -4,13 +4,13 @@
 
 pkgname=python-lsp-server
 pkgver=1.11.0
-pkgrel=2
+pkgrel=3
 pkgdesc="Fork of the python-language-server project, maintained by the Spyder IDE team and the community"
 arch=(any)
 url="https://github.com/python-lsp/python-lsp-server"
 license=(MIT)
-depends=(python-jedi python-lsp-jsonrpc python-pluggy python-ujson python-setuptools python-websockets python-docstring-to-markdown)
-makedepends=(python-build python-installer python-setuptools-scm python-wheel)
+depends=(python-jedi python-lsp-jsonrpc python-pluggy python-ujson python-websockets python-docstring-to-markdown)
+makedepends=(python-build python-installer python-setuptools python-setuptools-scm python-wheel)
 optdepends=(
     'python-mccabe: complexity checking'
     'python-pycodestyle: linter - style checking'

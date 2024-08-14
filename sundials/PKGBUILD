@@ -2,22 +2,27 @@
 # Contributor: Elmar Klausmeier <Elmar.Klausmeier@gmail.com>
 
 pkgname=sundials
-pkgver=7.0.0
-pkgrel=2
+pkgver=7.1.1
+pkgrel=1
 pkgdesc='Suite of nonlinear differential/algebraic equation solvers'
 arch=(loong64 x86_64)
 url='https://computing.llnl.gov/projects/sundials'
-license=(BSD)
-depends=(openmpi
+license=(BSD-3-Clause)
+depends=(gcc-libs
+         glibc
+         openmpi
          suitesparse)
 makedepends=(cmake
              gcc-fortran
+             git
              python)
-source=(https://github.com/LLNL/sundials/archive/v$pkgver/$pkgname-$pkgver.tar.gz)
-sha256sums=('63d1f76207161612f36f5017d8333e00e5297b0cd8cbc4628f5dd54102c763a6')
+optdepends=('python-matplotlib: for some examples'
+            'python-numpy: for some examples')
+source=(git+https://github.com/LLNL/sundials#tag=v$pkgver)
+sha256sums=('1c8f85c49ab36a43b77032dc1aa596b932a3f64ce811cd96b344345099ccd2da')
 
 build() {
-  cmake -B build -S $pkgname-$pkgver \
+  cmake -B build -S $pkgname \
     -DCMAKE_INSTALL_PREFIX=/usr \
     -DBUILD_STATIC_LIBS=OFF \
     -DENABLE_MPI=ON \
@@ -33,5 +38,5 @@ build() {
 package() {
   DESTDIR="$pkgdir" cmake --install build
 
-  install -Dm644 $pkgname-$pkgver/LICENSE -t "$pkgdir"/usr/share/licenses/$pkgname
+  install -Dm644 $pkgname/LICENSE -t "$pkgdir"/usr/share/licenses/$pkgname
 }

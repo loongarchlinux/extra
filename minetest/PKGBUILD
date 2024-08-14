@@ -3,7 +3,7 @@
 
 pkgname=('minetest' 'minetest-server' 'minetest-common')
 pkgver=5.8.0
-pkgrel=2
+pkgrel=3
 arch=('loong64' 'x86_64')
 url='https://www.minetest.net/'
 license=('LGPL')
@@ -12,11 +12,13 @@ makedepends=('sqlite' 'freetype2' 'leveldb' 'postgresql' 'spatialindex' 'openal'
 makedepends+=('libjpeg' 'libgl' 'libxi' 'git') # irrlichtmt
 source=(${pkgname}-${pkgver}.tar.gz::https://github.com/minetest/minetest/archive/${pkgver}.tar.gz
         ${pkgname}-data-${pkgver}.tar.gz::https://github.com/minetest/minetest_game/archive/${pkgver}.tar.gz
+        https://github.com/minetest/minetest/commit/c9ab61aa.patch
         minetest.service
         sysusers.d
         tmpfiles.d)
 sha256sums=('610c85a24d77acdc3043a69d777bed9e6c00169406ca09df22ad490fe0d68c0c'
             '33a3bb43b08497a0bdb2f49f140a2829e582d5c16c0ad52be1595c803f706912'
+            '689468855fcae450f416dcd7702f5f6e19a2733fe116378cd404790698bf91f5'
             '2d80b4ff925770bdf3d857debb2ad11227cc9b022eb01a358b18f8d5f2641a5c'
             'e4166d639b35efda2cd72269208184ab1e72c54541344cd202ff2005c90b9433'
             'd9405cf7cd0a657ef06082570783383a1f527fbc0bd122ea506d4fbe26950d4a')
@@ -27,6 +29,9 @@ prepare() {
   git clone https://github.com/minetest/irrlicht.git ${pkgname}-${pkgver}/lib/irrlichtmt
   cd ${pkgname}-${pkgver}/lib/irrlichtmt
   git checkout tags/1.9.0mt13
+
+  cd ../..
+  patch -p1 -i ../c9ab61aa.patch # Fix build with GCC 14
 }
 
 build() {

@@ -5,12 +5,19 @@
 
 pkgname=libotr
 pkgver=4.1.1
-pkgrel=4
+pkgrel=5
 pkgdesc='Off-the-Record Messaging Library and Toolkit'
 url='https://otr.cypherpunks.ca/'
-license=('GPL' 'LGPL')
+license=(
+  'GPL-2.0-only'
+  'LGPL-2.1-only'
+)
 arch=('loong64' 'x86_64')
-depends=('libgcrypt')
+depends=(
+  'glibc'
+  'libgcrypt'
+  'libgpg-error'
+)
 validpgpkeys=('22DF3305DF56667CE15784FCF24DE08F42C2ABAD') # OTR Dev Team
 source=(https://otr.cypherpunks.ca/${pkgname}-${pkgver}.tar.gz{,.asc}
         "$pkgname-4.1.1-include-socket.h.patch")
@@ -25,7 +32,9 @@ prepare() {
 
 build() {
   cd "${srcdir}/${pkgname}-${pkgver}"
-  ./configure --prefix=/usr --mandir=/usr/share/man
+  # --disable-gcc-hardening: Arch Linux already passes more strict CFLAGS to all builds,
+  # libotr tries to pass _FORTIFY_SOURCE=2, but Arch Linux has _FORTIFY_SOURCE=3
+  ./configure --prefix=/usr --mandir=/usr/share/man --disable-gcc-hardening
   make
 }
 

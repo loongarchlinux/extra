@@ -1,13 +1,14 @@
 # Maintainer: Daniel M. Capella <polyzen@archlinux.org>
+# Maintainer: Robin Candau <antiz@archlinux.org>
 
 pkgname=yamllint
-pkgver=1.33.0
-pkgrel=2
+pkgver=1.35.1
+pkgrel=1
 pkgdesc='Linter for YAML files'
 arch=('any')
-url=https://github.com/adrienverge/yamllint
-license=('GPL3')
-depends=('python-pathspec' 'python-yaml')
+url='https://github.com/adrienverge/yamllint'
+license=('GPL-3.0-or-later')
+depends=('python' 'python-pathspec' 'python-yaml')
 makedepends=(
   'git'
   'python-build'
@@ -16,7 +17,7 @@ makedepends=(
   'python-wheel'
 )
 source=("git+$url.git#tag=v$pkgver")
-b2sums=('022d0b92202767d774bb7b9895c6dca72442aad7bad1152845d94000ec0299c7335bee1467835dc76c964fd19d0ef8b966b6a28489747a7246618cf2b527601b')
+b2sums=('1add06304482fd0e4e8e8d4318f5a96ff5e3a7ceaa18961ce0bb4f7199681938c14feeeabf8ad38c470deaa8da1919dca9194f1c68027fa43ea3de2a9ae1b136')
 
 build() {
   cd $pkgname

@@ -1,17 +1,24 @@
 # Maintainer: kpcyrd <kpcyrd[at]archlinux[dot]org>
 
 pkgname=gitoxide
-pkgver=0.33.0
-pkgrel=1
+pkgver=0.37.0
+pkgrel=2
 pkgdesc="An idiomatic, lean, fast & safe pure Rust implementation of Git"
 url='https://github.com/Byron/gitoxide'
 arch=('loong64' 'x86_64')
 license=('MIT' 'Apache-2.0')
-makedepends=('cargo' 'cmake')
+depends=(
+  'gcc-libs'
+  'glibc'
+)
+makedepends=(
+  'cargo'
+  'cmake'
+)
 options=(!lto)
 source=(https://github.com/Byron/${pkgname}/archive/v${pkgver}/${pkgname}-${pkgver}.tar.gz)
-sha256sums=('0fc1e0f9e36d2622f6a11925607090abf619c73551d2a8f5ea710e97ef1a9eb4')
-b2sums=('319b4838b1555b308cac1f945ff648f29f485df387a10aac48d78d1b1bccb7585a328e32948822cb4c0cdc01e12b64c1896318b043bd849c8b6f02d819498d2d')
+sha256sums=('1bdc30bafdd3605d6e278aa5562f772a9732bb07ced9321ea31893b28f950c0a')
+b2sums=('af82d3a3a71da7b786f6e939eeedaa483bb13b65fd7a08ecdf8190e44fdcbac9f6a1195d81668c65346a8a8ea636e983cbd6459c59f803367c00d31f22a06a3b')
 
 prepare() {
   cd "${pkgname}-${pkgver}"
@@ -25,9 +32,23 @@ build() {
 
 package() {
   cd ${pkgname}-${pkgver}
-  install -Dm 755 -t "${pkgdir}/usr/bin" \
-    target/release/gix \
-    target/release/ein
+
+  for bin in gix ein; do
+    install -Dm 755 -t "${pkgdir}/usr/bin" "target/release/${bin}"
+
+    # install completions
+    install -d "${pkgdir}/usr/share/bash-completion/completions" \
+               "${pkgdir}/usr/share/zsh/site-functions" \
+               "${pkgdir}/usr/share/fish/vendor_completions.d" \
+               "${pkgdir}/usr/share/elvish/lib"
+
+    "${pkgdir}/usr/bin/${bin}" completions -s bash > "${pkgdir}/usr/share/bash-completion/completions/${bin}"
+    "${pkgdir}/usr/bin/${bin}" completions -s zsh > "${pkgdir}/usr/share/zsh/site-functions/_${bin}"
+    "${pkgdir}/usr/bin/${bin}" completions -s fish > "${pkgdir}/usr/share/fish/vendor_completions.d/${bin}.fish"
+    "${pkgdir}/usr/bin/${bin}" completions -s elvish > "${pkgdir}/usr/share/elvish/lib/${bin}.elv"
+  done
+
+  install -Dm644 LICENSE-* -t "${pkgdir}/usr/share/licenses/${pkgname}"
 }
 
 # vim: ts=2 sw=2 et:

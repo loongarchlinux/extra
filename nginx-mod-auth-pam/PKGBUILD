@@ -2,16 +2,16 @@
 
 pkgname=nginx-mod-auth-pam
 pkgver=1.5.5
-pkgrel=2
+pkgrel=3
 
 _modname=ngx_http_auth_pam_module
 
 pkgdesc='Nginx module to use PAM for simple http authentication'
 arch=('loong64' 'x86_64')
-depends=("nginx" 'pam')
-makedepends=("nginx-src")
+depends=('pam')
+makedepends=("nginx" "nginx-src")
 url="https://github.com/sto/ngx_http_auth_pam_module"
-license=('BSD')
+license=('BSD-2-Clause')
 
 source=(https://github.com/sto/$_modname/archive/v$pkgver/$_modname-$pkgver.tar.gz)
 validpgpkeys=(B0F4253373F8F6F510D42178520A9993A1C052F8) # Maxim Dounin <mdounin@mdounin.ru>
@@ -28,6 +28,10 @@ build() {
 }
 
 package() {
+	local _nginx_version=$(nginx -v 2>&1)
+	_nginx_version=${_nginx_version/* nginx\/}
+	depends+=("nginx=${_nginx_version}")
+
 	install -Dm644 "$srcdir"/$_modname-$pkgver/LICENSE \
 	               "$pkgdir"/usr/share/licenses/$pkgname/LICENSE
 

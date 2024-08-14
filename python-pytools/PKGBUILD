@@ -2,29 +2,30 @@
 # Contributor: Stéphane Gaudreault <stephane@archlinux.org>
 
 pkgname=python-pytools
-pkgver=2023.1.1
-pkgrel=2
+pkgver=2024.1.5
+pkgrel=1
 pkgdesc="A collection of tools for Python"
 arch=('any')
-url="https://mathema.tician.de/software/pytools"
+url="https://github.com/inducer/pytools"
 license=('MIT')
 depends=('python-numpy' 'python-platformdirs' 'python-typing_extensions')
-makedepends=('python-setuptools')
+makedepends=('git' 'python-setuptools')
 checkdepends=('python-pytest')
-source=("https://pypi.io/packages/source/p/pytools/pytools-$pkgver.tar.gz")
-sha512sums=('0b8d4ec7145a42d9a679b7e08a05aa126c7d4514faa77e207fb154c84e56233b80dd49f388f261ba29e70e2cff836f6c850ea05af81360da8120756a0db35e6a')
+source=("git+https://github.com/inducer/pytools.git#tag=v$pkgver")
+sha512sums=('cb00e508c9c64545fd3d0395721e3bd1794b8c547490316c1b11e4df338ef37714e723f59519b026193d92514fc41e5af6f6fc405c6227803635527a485cf54f')
 
 build() {
-  cd pytools-$pkgver
+  cd pytools
   python setup.py build
 }
 
 check() {
-  cd pytools-$pkgver
+  cd pytools
   python -m pytest
 }
 
 package(){
-  cd pytools-$pkgver
+  cd pytools
   python setup.py install --prefix=/usr --root="$pkgdir" --skip-build --optimize=1
+  install -Dm644 LICENSE -t "$pkgdir"/usr/share/licenses/$pkgname/
 }

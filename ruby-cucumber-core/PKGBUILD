@@ -1,23 +1,45 @@
 # Maintainer: Felix Yan <felixonmars@archlinux.org>
 
 pkgname=ruby-cucumber-core
-pkgver=11.1.0
+pkgver=13.0.3
 pkgrel=1
 pkgdesc="Core library for the Cucumber BDD app"
 arch=(any)
 url='https://github.com/cucumber/cucumber-ruby-core'
 license=(MIT)
-depends=(ruby-cucumber-gherkin ruby-cucumber-messages ruby-cucumber-tag-expressions)
-makedepends=(ruby-rake ruby-rspec ruby-unindent)
-checkdepends=(ruby-simplecov)
+depends=(
+  ruby
+  ruby-cucumber-gherkin
+  ruby-cucumber-messages
+  ruby-cucumber-tag-expressions
+)
+makedepends=(
+  ruby-rake
+  ruby-rdoc
+  ruby-rspec
+  ruby-unindent
+)
+checkdepends=(
+  ruby-bundler
+  ruby-simplecov
+)
 options=(!emptydirs)
-source=(https://github.com/cucumber/cucumber-ruby-core/archive/v$pkgver/$pkgname-$pkgver.tar.gz)
-sha256sums=('253fbfa67e755c9c6d85e7624a1926283c1b40376a2531bb0448ba016a711ed1')
+source=("https://github.com/cucumber/cucumber-ruby-core/archive/v$pkgver/$pkgname-$pkgver.tar.gz")
+sha512sums=('32c09e0a60c05babc0c463a7cc86ca2ee5f6992aaf0c8add5e4cb2c7a88b9b5163d9ca1c635a241203c02aaeaeba7cc87a91f931633221eaf34ab9d36018ffa8')
+b2sums=('c2f11440a083225b409814de7248dd908b8763ae7b632a75699297627c97b6e4f8300eb4a49ac78084b30db764936e7b096517dfe1009a883a59e2947067c56b')
 
 prepare() {
   cd cucumber-ruby-core-$pkgver
-  sed -i -r -e '/rubocop/d' -e 's|~>|>=|g' cucumber-core.gemspec
-  sed -i '/[rR]ubo[cC]op/d' Rakefile
+
+  sed -i -r -e 's|~>|>=|g' cucumber-core.gemspec
+  sed -i -e "s/, '< 28'//" -e "s/, '< 23'//" -e "s/, '< 7'//" cucumber-core.gemspec
+  sed -i '/[rR]ubo[cC]op/d' cucumber-core.gemspec Rakefile
+  sed -i \
+    -e "s/require 'cucumber\/messages\/time_conversion'/require 'cucumber\/messages\/helpers\/time_conversion'/" \
+    -e "s/Cucumber::Messages::TimeConversion/Cucumber::Messages::Helpers::TimeConversion/" \
+    -e "s/Cucumber::Messages::IdGenerator::UUID/Cucumber::Messages::Helpers::IdGenerator::UUID/" \
+    lib/cucumber/core/compiler.rb \
+    lib/cucumber/core/test/result.rb
 }
 
 build() {

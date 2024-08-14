@@ -1,0 +1,29 @@
+# Maintainer: Jelle van der Waa <jelle@archlinux.org>
+
+pkgname=distribution-gpg-keys
+pkgver=1.104
+_rpmrel=1
+_pkgtag=$pkgname-$pkgver-$_rpmrel
+pkgrel=$_rpmrel.1
+pkgdesc="GPG keys used by various Linux distributions to sign packages"
+arch=('any')
+url="https://github.com/rpm-software-management/$pkgname"
+license=('CC0-1.0')
+source=("$url/archive/$_pkgtag.tar.gz")
+sha256sums=('60ec27522ba960719f6b7d578106a65dc2dca235e9ebf2399a6a98571afffd5a')
+
+package() {
+	cd "$pkgname-$_pkgtag"
+
+	# Filter out copr keys, they are around ~ 400M
+	rm -r keys/copr
+
+	mkdir -p "$pkgdir/usr/share/$pkgname"
+	cp -Rp keys/* "$pkgdir/usr/share/$pkgname"
+
+	install -Dp -m644 LICENSE    "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
+	install -Dp -m644 README.md  "$pkgdir/usr/share/doc/$pkgname/README.md"
+	install -Dp -m644 SOURCES.md "$pkgdir/usr/share/doc/$pkgname/SOURCES.md"
+}
+
+# vim: set ft=sh ts=4 sw=4 noet:

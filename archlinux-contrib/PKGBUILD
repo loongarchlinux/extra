@@ -1,24 +1,38 @@
 # Maintainer: Morten Linderud <foxboron@archlinux.org>
+# Maintainer: Robin Candau <antiz@archlinux.org>
 
 pkgname=archlinux-contrib
-pkgver=20221211
+pkgver=20240720
 pkgrel=2
 pkgdesc='Collection of contrib scripts used in Arch Linux'
 arch=('any')
-license=('GPL')
+license=('GPL-2.0-or-later')
 url='https://github.com/archlinux/contrib'
-depends=('python')
+depends=('python' 'bash' 'pyalpm')
 optdepends=('python-requests: for security tracker'
             'jq: for rebuild-todo'
             'pacman-contrib: to enable pacdiff usage in the checkservices script')
-source=("https://github.com/archlinux/contrib/releases/download/${pkgver}/contrib-${pkgver}.tar.gz"{,.sig})
+source=("https://github.com/archlinux/contrib/releases/download/${pkgver}/contrib-${pkgver}.tar.gz"{,.sig}
+        checkservices_honor_mM_flags.patch::https://github.com/archlinux/contrib/commit/d56a229f2ab2f4e7aa18d4abd6440df2a99df553.patch)
 validpgpkeys=('C100346676634E80C940FB9E9C02FF419FECBE16'  # Morten Linderud
-              '86CFFCA918CF3AF47147588051E8B148A9999C34') # Evangelos Foutras
-sha256sums=('4a4339133ca80011e76919416823a08f799c78579ecefa929726ffa659620166'
-            'SKIP')
+              '86CFFCA918CF3AF47147588051E8B148A9999C34'  # Evangelos Foutras
+              'F00B96D15228013FFC9C9D0393B11DAA4C197E3D'  # Christian Heusel
+              'E499C79F53C96A54E572FEE1C06086337C50773E'  # Jelle van der Waa
+              '262A58EC6C51F7EA395B2E2DFDC3040B92ACA748') # Robin Candau
+sha256sums=('6d6b22c77200e409dc1149d36dfa7dfa9e6c7e92fea68849cbc4bf76c59b562a'
+            'SKIP'
+            'f46a68536bbb18642beb09b45b8877663363339b628cd2561691a53062963361')
+
+prepare() {
+  # Temporary patch to honor the (forgotten) -m/-M flags in checkservices
+  # See https://github.com/archlinux/contrib/pull/81
+  # Can be removed at next upstream release
+  cd "contrib-${pkgver}"
+  patch -Np1 < "${srcdir}/checkservices_honor_mM_flags.patch"
+}
 
 package() {
-  cd contrib-${pkgver}
+  cd "contrib-${pkgver}"
   make PREFIX=/usr DESTDIR="${pkgdir}" install
 }
 

@@ -3,7 +3,7 @@
 
 pkgname=performous
 pkgver=1.3.1
-pkgrel=1
+pkgrel=4
 pkgdesc='A free game like "Singstar", "Rockband" or "Stepmania"'
 arch=('loong64' 'x86_64')
 url="https://performous.org/"
@@ -42,14 +42,22 @@ makedepends=(
 )
 optdepends=('performous-freesongs: free songs for performous')
 options=('!lto')
-source=($pkgname-$pkgver.tar.gz::https://github.com/performous/performous/archive/refs/tags/${pkgver}.tar.gz)
-sha512sums=('0c8ffe9eb9d6b6f177917b56f084399f104c57041ad2c23bee211e0fa1380a1875ccc258a07c269997b15f802a3c5d24b2c4d83a132da4cd5033a2c8bb25e1b4')
+source=($pkgname-$pkgver.tar.gz::https://github.com/performous/performous/archive/refs/tags/${pkgver}.tar.gz
+        ffmpeg-7.patch)
+sha512sums=('0c8ffe9eb9d6b6f177917b56f084399f104c57041ad2c23bee211e0fa1380a1875ccc258a07c269997b15f802a3c5d24b2c4d83a132da4cd5033a2c8bb25e1b4'
+            '6ec94f7c0ac2142fdbdeb7ebc94ad499e7f4b4a30c8d8303d46627472b89dd252822813b9fec6249695a8be018b6f6a426d28c30aa806b4756e6964d09501735')
+
+prepare() {
+  cd $pkgname-$pkgver
+  patch -p1 -i ../ffmpeg-7.patch # Fix build with ffmpeg 7
+}
 
 build() {
   local cmake_options=(
     -B build
     -D CMAKE_INSTALL_PREFIX=/usr
     -D CMAKE_BUILD_TYPE=None
+    -D CMAKE_CXX_FLAGS="$CXXFLAGS -Wno-error=unused-result" # Fix build with GCC 14
     -S $pkgname-$pkgver
     -W no-dev
   )

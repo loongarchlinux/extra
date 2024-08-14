@@ -6,39 +6,50 @@
 # Contributor: Zephyr
 
 pkgname=mupen64plus
-pkgver=2.5
-pkgrel=26
+pkgver=2.6.0
+pkgrel=1
 pkgdesc='Nintendo64 Emulator'
 arch=('loong64' 'x86_64')
 url='https://github.com/mupen64plus/mupen64plus-core'
-license=('GPL')
-depends=('boost-libs' 'freetype2' 'glu' 'libgl' 'libpng' 'libsamplerate' 'sdl2'
-         'zlib' 'hicolor-icon-theme')
-makedepends=('boost' 'mesa')
-source=("https://github.com/mupen64plus/mupen64plus-core/releases/download/${pkgver}/mupen64plus-bundle-src-${pkgver}.tar.gz"
-        '010-mupen64plus-ui-console-pie.patch'
-        '020-mupen64plus-core-gcc10-fix.patch')
-sha256sums=('9c75b9d826f2d24666175f723a97369b3a6ee159b307f7cc876bbb4facdbba66'
-            '0b674779949ca90db9f156b56dd9d7be9847354f5b07ec73aa3a89dde79d6b6d'
-            'f84f262bcf2b748ccded4443735caba92926241f9238f545a621009f6ae64ef7')
+license=('GPL-2.0-or-later')
+depends=('freetype2' 'glu' 'hicolor-icon-theme' 'libgl' 'libpng' 'libsamplerate'
+         'minizip' 'sdl2' 'sdl2_net' 'speexdsp' 'vulkan-icd-loader' 'zlib')
+makedepends=('git' 'nasm' 'vulkan-headers')
+source=("git+https://github.com/mupen64plus/mupen64plus-core.git#tag=${pkgver}"
+        "git+https://github.com/mupen64plus/mupen64plus-rsp-hle.git#tag=${pkgver}"
+        "git+https://github.com/mupen64plus/mupen64plus-video-rice.git#tag=${pkgver}"
+        "git+https://github.com/mupen64plus/mupen64plus-video-glide64mk2.git#tag=${pkgver}"
+        "git+https://github.com/mupen64plus/mupen64plus-audio-sdl.git#tag=${pkgver}"
+        "git+https://github.com/mupen64plus/mupen64plus-input-sdl.git#tag=${pkgver}"
+        "git+https://github.com/mupen64plus/mupen64plus-ui-console.git#tag=${pkgver}"
+        '010-mupen64plus-install-fix.patch')
+sha256sums=('1f8097d061e95142305674ff3fc88159e6b5d71554cb78bd8b58d8953dbea40d'
+            'fca2b6250246f357d16869da7d1742b94895cf5983aa1d603fcf7ed1e651731c'
+            '126078b0234de6203e5d176f5da8eb30fed71a14740682bac2721f2f7212c4a4'
+            '60b95f4cb8d6e87d0a337199b7565fb69fce0a41b77b5b52eddc4c88f91858a1'
+            '8ed4fe4904cc09509a5003569192fa528a4d0955d411c7c56aee062dac2cf1a8'
+            '58c79bf34fb5d98decbdb267b6850fd7e50ea944019454bef81d885ca760e8e5'
+            '3e68d1659e3cf8be343be803674a91895216f5079a0e912d0179192f07fef63f'
+            '57d44edf46bafc6dbdf82e6db204c50bac1c2ea5c07aef7d3f84818f87e671a5')
 
 prepare() {
-    patch -d "mupen64plus-bundle-src-${pkgver}" -Np1 -i "${srcdir}/010-mupen64plus-ui-console-pie.patch"
-    patch -d "mupen64plus-bundle-src-${pkgver}" -Np1 -i "${srcdir}/020-mupen64plus-core-gcc10-fix.patch"
+    bsdtar -xf "${srcdir}/mupen64plus-core/tools/m64p_helper_scripts.tar.gz" m64p_install.sh
+    patch -Np1 -i 010-mupen64plus-install-fix.patch
 }
 
 build() {
-    cd "mupen64plus-bundle-src-${pkgver}"
-    ./m64p_build.sh
+    local _component
+    for _component in core rsp-hle video-rice video-glide64mk2 audio-sdl input-sdl ui-console
+    do
+        printf '%s\n' "  -> Building component '${_component}'..."
+        make -C "mupen64plus-${_component}/projects/unix" clean
+        make -C "mupen64plus-${_component}/projects/unix" PREFIX='/usr' NETPLAY='1' all
+    done
 }
 
 package() {
-    cd "mupen64plus-bundle-src-${pkgver}"
-    
     # set LDCONFIG since we are using fakeroot and scripts run root commands by checking the uid
     ./m64p_install.sh DESTDIR="$pkgdir" PREFIX='/usr' LDCONFIG='true'
     
-    local _sover
-    _sover="$(find "${pkgdir}/usr/lib" -type f -name 'libmupen64plus.so.*.*.*' | sed 's/^.*\.so\.//')"
-    ln -s "libmupen64plus.so.${_sover}" "${pkgdir}/usr/lib/libmupen64plus.so"
+    ln -s "$(find "${pkgdir}/usr/lib" -regex '.*libmupen64plus.so.[0-9]*' -exec basename {} +)" "${pkgdir}/usr/lib/libmupen64plus.so"
 }

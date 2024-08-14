@@ -1,43 +1,54 @@
 # Maintainer: Florian Pritz <bluewind@xinu.at>
+# Maintainer: Caleb Maclennan <caleb@alerque.com>
 # Contributor: Kevin Piche <kevin@archlinux.org>
 # Contributor: Daniel J Griffiths <ghost1227@archlinux.us>
 
 pkgname=zim
 pkgver=0.75.2
-pkgrel=3
-pkgdesc="A WYSIWYG text editor that aims at bringing the concept of a wiki to the desktop."
+pkgrel=5
+pkgdesc='A WYSIWYG text editor that aims at bringing the concept of a wiki to the desktop'
 arch=(any)
-license=('GPL' 'PerlArtistic')
-url="https://zim-wiki.org/"
-depends=('python' 'python-gobject' 'ttf-font' 'gtk3' 'python-xdg')
-checkdepends=('xorg-server-xvfb' 'python-setuptools')
+license=(GPL-2.0-or-later)
+url=https://zim-wiki.org/
+depends=(gtk3
+         python
+         python-gobject
+         python-xdg
+         ttf-font)
+makedepends=(python-{build,installer,wheel}
+             python-setuptools)
+checkdepends=(xorg-server-xvfb)
 optdepends=('breezy: Version Control plugin'
-            'git: Version Control plugin'
-            'mercurial: Version Control plugin'
-            'gnuplot: Insert Gnuplot plugin'
             'ditaa: Insert Ditaa plugin'
+            'git: Version Control plugin'
+            'gnuplot: Insert Gnuplot plugin'
             'graphviz: Insert Diagram plugin'
-            'xdot: Link Map plugin'
+            'gtksourceview3: Source View plugin'
             'gtkspell3: Spell Checker plugin'
+            'libappindicator-gtk3: StatusNotifierItem support'
+            'lilypond: Insert Score plugin'
+            'mercurial: Version Control plugin'
             'r: Insert GNU R Plot plugin'
             'scrot: Insert Screenshot plugin'
-            'lilypond: Insert Score plugin'
-            'gtksourceview3: Source View plugin'
-            'texlive-bin: Insert Equation plugin')
-source=("https://www.zim-wiki.org/downloads/${pkgname}-${pkgver}.tar.gz")
+            'texlive-bin: Insert Equation plugin'
+            'xdot: Link Map plugin')
+_archive="$pkgname-$pkgver"
+source=("$url/downloads/$_archive.tar.gz")
 sha256sums=('40890db05b1678d1c47178461c767224330c5b694dbddc0c24b1b178265a2dd2')
 
-check() {
-	cd "${srcdir}/${pkgname}-${pkgver}"
+build() {
+	cd "$_archive"
+	python -m build -wn
+}
 
+check() {
+	cd "$_archive"
 	xvfb-run -w0 ./test.py
 }
 
 package() {
-	cd "${srcdir}/${pkgname}-${pkgver}"
-
-	python setup.py install --root="${pkgdir}" --optimize=1
-
+	cd "$_archive"
+	python -m installer -d "$pkgdir" dist/*.whl
 	install -dm755 "$pkgdir/usr/share/icons/"
 	cp -r xdg/hicolor/ "$pkgdir/usr/share/icons/"
 }

@@ -2,18 +2,26 @@
 
 pkgname=python-mitmproxy-rs
 _pyname=mitmproxy_rs
-pkgver=0.5.1
-pkgrel=2
+pkgver=0.6.3
+pkgrel=1
 pkgdesc="Python bindings for mitmproxy's Rust code"
 arch=('loong64' 'x86_64')
 url='https://github.com/mitmproxy/mitmproxy_rs'
 license=('MIT')
-depends=('python')
-makedepends=('maturin' 'python-installer' 'cargo')
+depends=(
+  'gcc-libs'
+  'glibc'
+  'python'
+)
+makedepends=(
+  'cargo'
+  'maturin'
+  'python-installer'
+)
 options=(!lto)
-source=("https://github.com/mitmproxy/mitmproxy_rs/archive/$pkgver/$pkgname-$pkgver.tar.gz")
-sha256sums=('06ef6871e24602f683f6dfa5facf88666427eef8993c8a602aa23659b0299749')
-b2sums=('2e47fe123d00a66baababe31e103db8cfeacb12d5bf037d18aa87471b9df3ae7debef07042087ec9f2505f3340df878d7c8ecce8e5b2c040f4c506309927a65a')
+source=("https://github.com/mitmproxy/mitmproxy_rs/archive/${pkgver}/${pkgname}-${pkgver}.tar.gz")
+sha256sums=('ee6c65c85c29859ad9aa528074ae85edbde8980afc8cff2e2eb424ab1e0c6017')
+b2sums=('e276ab9f2bd1bc13a6401d5ba09addd75417b9c1b29a782195fbcdcade56ad266a34494a0b9275bfb1ea22381acfccca0f1526bc4d77032f5643c1911354ac9b')
 
 build() {
   cd ${_pyname}-${pkgver}/mitmproxy-rs
@@ -25,13 +33,13 @@ check() {
 
   cd ${_pyname}-${pkgver}
   python -m installer --destdir=test_dir target/wheels/*.whl
-  export PYTHONPATH="test_dir/$_site_packages:$PYTHONPATH"
+  export PYTHONPATH="test_dir/${_site_packages}:${PYTHONPATH}"
   python -c 'import mitmproxy_rs'
 }
 
 package() {
   cd ${_pyname}-${pkgver}
-  python -m installer --destdir="$pkgdir" target/wheels/*.whl
+  python -m installer --destdir="${pkgdir}" target/wheels/*.whl
   install -Dm0644 LICENSE "${pkgdir}/usr/share/licenses/${pkgname}/LICENSE"
 }
 

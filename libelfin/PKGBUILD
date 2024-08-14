@@ -1,34 +1,37 @@
 # Maintainer: Anatol Pomozov <anatol.pomozov at gmail>
 
 pkgname=libelfin
-pkgver=0.3
-pkgrel=2
+pkgver=0.3.r7.ge017276
+pkgrel=1
+_commit=e0172767b79b76373044118ef0272b49b02a0894
 pkgdesc='C++11 ELF/DWARF parser'
 arch=(loong64 x86_64)
 url='https://github.com/aclements/libelfin'
 license=(MIT)
 depends=(gcc-libs)
-makedepends=(python)
-source=(libelfin-$pkgver.zip::https://github.com/aclements/libelfin/archive/v$pkgver.zip
-	make_prefix.patch::https://github.com/aclements/libelfin/commit/6e26e3bb6feeb851d87c74c9cd39a2374b9bab0a.patch
+makedepends=(python git)
+source=(git+https://github.com/aclements/libelfin#commit=$_commit
         reproducible.patch)
-sha256sums=('e85c9edd583a59a08b97c34e5f385162fb32135cd09977aaefbc1bbcac9d51e7'
-            '9f6ed990971de640c9e1dd2c1b79b973915d53e5b330a367aee3f93d2cf18ed4'
+sha256sums=('47e9f778b93f5ed22f753fc47cc5adfd7c1dfb462ade641ee33223c49a44b115'
             '152a7eab55b4de3cefa0020066ff82bdbc307a695bfe8362d4d8055cbbf654d8')
 
-prepare() {
-  cd libelfin-$pkgver
-  patch -p1 < ../reproducible.patch
+pkgver() {
+  cd $pkgname
+  git describe --tag --long --abbrev=7 | sed 's/^v//;s/-/.r/;s/-/./'
+}
 
-  patch -p1 < ../make_prefix.patch # https://github.com/aclements/libelfin/pull/42
+
+prepare() {
+  cd libelfin
+  patch -p1 < ../reproducible.patch
 }
 
 build() {
-  cd libelfin-$pkgver
+  cd libelfin
   VER=$pkgver make
 }
 
 package() {
-  cd libelfin-$pkgver
+  cd libelfin
   VER=$pkgver PREFIX=/usr DESTDIR="$pkgdir" make install
 }

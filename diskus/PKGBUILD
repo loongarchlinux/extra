@@ -2,36 +2,37 @@
 
 pkgname=diskus
 pkgver=0.7.0
-pkgrel=2
+pkgrel=4
 pkgdesc="Minimal, fast alternative to 'du -sh'"
-arch=('loong64' 'x86_64')
+arch=(loong64 x86_64)
 url=https://github.com/sharkdp/diskus
-license=('Apache' 'MIT')
-depends=('gcc-libs')
-makedepends=('rust')
-source=("diskus-$pkgver.tar.gz::https://static.crates.io/crates/diskus/diskus-$pkgver.crate")
-b2sums=('870a68e2fef66377ef6fdd3b5e5344c006ff029bd18a82413e2fc9e748766b17dcde451b48cb7122b6226e3a57dc85f87105066391c881b4310332d7a1f6c179')
+license=('Apache-2.0 OR MIT')
+depends=(gcc-libs)
+makedepends=(
+  git
+  rust
+)
+source=("git+$url.git#tag=v$pkgver")
+b2sums=('706a2a58b58c2051142a984de31cfce46b25d4bf3c2152a5644d65a3130506eff3d6f471a1765b60b6c64f0db89240c249f6a323992dd281c0301ae22eaca743')
 
 prepare() {
-  cd diskus-$pkgver
-  cargo fetch --locked --target "$CARCH-unknown-linux-gnu"
+  cd $pkgname
+  cargo fetch --locked --target "$(rustc -vV | sed -n 's/host: //p')"
 }
 
 build() {
-  cd diskus-$pkgver
+  cd $pkgname
   cargo build --release --locked --offline
 }
 
 check() {
-  cd diskus-$pkgver
+  cd $pkgname
   cargo test --locked --offline
 }
 
 package() {
-  cd diskus-$pkgver
-  install -Dt "$pkgdir"/usr/bin target/release/diskus
-  install -Dm644 -t "$pkgdir"/usr/share/man/man1 doc/diskus.1
-  install -Dm644 -t "$pkgdir"/usr/share/licenses/diskus LICENSE-MIT
+  cd $pkgname
+  install -Dt "$pkgdir"/usr/bin target/release/$pkgname
+  install -Dm644 -t "$pkgdir"/usr/share/man/man1 doc/$pkgname.1
+  install -Dm644 -t "$pkgdir"/usr/share/licenses/$pkgname LICENSE-MIT
 }
-
-# vim:set ts=2 sw=2 et:

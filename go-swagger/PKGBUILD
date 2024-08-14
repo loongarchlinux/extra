@@ -1,24 +1,18 @@
 # Maintainer: George Rawlinson <grawlinson@archlinux.org>
 
 pkgname=go-swagger
-pkgver=0.30.5
-pkgrel=1
+pkgver=0.31.0
+pkgrel=2
 pkgdesc='Swagger 2.0 implementation in Go'
 arch=('loong64' 'x86_64')
 url='https://goswagger.io'
-license=('Apache')
+license=('Apache-2.0')
 depends=('glibc')
 makedepends=('git' 'go')
 options=('!lto')
-_commit='ab6a7885723430004f1d7db6395369b6e7f3370b'
-source=("$pkgname::git+https://github.com/go-swagger/go-swagger#commit=$_commit")
-b2sums=('SKIP')
-
-pkgver() {
-  cd "$pkgname"
-
-  git describe --tags | sed 's/^v//'
-}
+source=("$pkgname::git+https://github.com/go-swagger/go-swagger#tag=v$pkgver")
+sha512sums=('a59a71f4aaafe33e7777527a6905a8731fb70785ab600a4ce90ab1b76e940e920f2a3049cc255b006b5590c4e2cede4e22268f6f8449d9e92542225c7b204137')
+b2sums=('d57ad40d47a37cdc82dc7acdee9f27b709245195b00264ab5c534faf633e6a57448d606d1017839af41a31ae186a6b59523eefa16e50d018d9c2a3deec0b3b60')
 
 prepare() {
   cd "$pkgname"
@@ -46,8 +40,8 @@ build() {
     -modcacherw \
     -ldflags "-compressdwarf=false \
     -linkmode external \
-    -extldflags ${LDFLAGS} \
-    -X github.com/go-swagger/go-swagger/cmd/swagger/commands.Commit=$_commit \
+    -extldflags '${LDFLAGS}' \
+    -X github.com/go-swagger/go-swagger/cmd/swagger/commands.Commit=$(git rev-parse HEAD) \
     -X github.com/go-swagger/go-swagger/cmd/swagger/commands.Version=$pkgver" \
     -o build \
     ./cmd/...

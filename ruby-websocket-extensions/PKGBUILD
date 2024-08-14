@@ -3,19 +3,31 @@
 _gemname='websocket-extensions'
 pkgname="ruby-${_gemname}"
 pkgver=0.1.5
-pkgrel=2
+pkgrel=3
 pkgdesc='Generic extension manager for WebSocket connections'
 arch=('any')
 url='https://github.com/faye/websocket-extensions-ruby'
 license=('Apache')
 options=(!emptydirs)
-depends=('ruby')
-checkdepends=('ruby-bundler' 'ruby-rspec')
-source=("${url}/archive/${pkgver}/${pkgname}-${pkgver}.tar.gz")
-sha512sums=('a80154d0c83743ffa4dd3eee1adcc93bb38907fbae4260602a91c922e5a022806413a8aa84dc10bc14b5ed2ca928765ef4c39e04ff0a0c5f9b423aff2b2514fd')
+depends=(
+  ruby
+)
+checkdepends=(
+  ruby-rspec
+)
+source=(
+  "${url}/archive/${pkgver}/${pkgname}-${pkgver}.tar.gz"
+  "${pkgname}_fix_tests.patch::${url}/commit/5891358639fcfa7a2e2004855275bd7da0c85c64.patch"
+)
+sha512sums=('a80154d0c83743ffa4dd3eee1adcc93bb38907fbae4260602a91c922e5a022806413a8aa84dc10bc14b5ed2ca928765ef4c39e04ff0a0c5f9b423aff2b2514fd'
+            '20b63d2244639beefd661dbf05c1828bfe4e513ebef202ec4c9ea2763d9daa55fe0ff02f334431993e708ea096b44da1a20494accec2a1206c9fdcfc569c94be')
+b2sums=('ea387b9bd56d02372740a8f42e0c8259cd2013876f86a13c8203e1e1c5ae9e0e6a8d0c2cf11f653c3517c2bff0c283370ec7a5760c29df39493c4b41d8e55450'
+        'afcb11336ae72a2a81b1be7a6715d5f86275baff851afb724a74b4560ef620d676e1b55d4fc0a517350edc626d542c393aeb7332e89cbe448d946cc3bcf35b04')
 
 prepare() {
   cd "${_gemname}-ruby-${pkgver}"
+
+  patch --verbose --strip=1 --input="../${pkgname}_fix_tests.patch"
 
   # update gemspec/Gemfile to allow newer version of the dependencies
   sed --in-place --regexp-extended 's|~>|>=|g' "${_gemname}.gemspec"
@@ -30,7 +42,7 @@ build() {
 check() {
   cd "${_gemname}-ruby-${pkgver}"
 
-  bundle exec rspec
+  rspec
 }
 
 package() {
@@ -44,3 +56,5 @@ package() {
 
   install -Dm 644 CHANGELOG.md CODE_OF_CONDUCT.md README.md --target-directory "${pkgdir}/usr/share/doc/${pkgname}"
 }
+
+# vim: tabstop=2 shiftwidth=2 expandtab:

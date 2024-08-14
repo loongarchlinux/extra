@@ -2,23 +2,33 @@
 
 pkgname=qsopt-ex
 pkgver=2.5.10.3
-pkgrel=1
+pkgrel=2
 pkgdesc='Exact linear programming solver'
 arch=(loong64 x86_64)
 url='https://github.com/jonls/qsopt-ex'
-license=(GPL3)
-depends=(gmp zlib bzip2)
-makedepends=()
-source=(https://github.com/jonls/qsopt-ex/releases/download/v$pkgver/qsopt_ex-$pkgver.tar.xz)
-sha256sums=('04fb63042c84023f7f7ff8a53b2dfdbaf5a056845a0d72797066db32bb5111bf')
+license=(GPL-3.0-or-later)
+depends=(bzip2
+         glibc
+         gmp
+         zlib)
+makedepends=(git)
+source=(git+https://github.com/jonls/qsopt-ex#tag=v$pkgver)
+sha256sums=('b963557f0a15efd843eff155b1b8962f60339834a2d90d1439fb2d3a6c25e0b9')
+
+prepare() {
+  cd qsopt-ex
+  autoreconf -vi
+}
 
 build() {
-  cd qsopt_ex-$pkgver
-  ./configure --prefix=/usr --disable-static
+  cd qsopt-ex
+  ./configure \
+    --prefix=/usr \
+    --disable-static
   make
 }
 
 package() {
-  cd qsopt_ex-$pkgver
+  cd qsopt-ex
   make DESTDIR="$pkgdir" install
 }

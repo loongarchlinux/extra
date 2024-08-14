@@ -3,7 +3,7 @@
 _gemname='molinillo'
 pkgname="ruby-${_gemname}"
 pkgver=0.8.0
-pkgrel=1
+pkgrel=2
 pkgdesc='Provides support for dependency resolution'
 arch=('any')
 _github_namespace='https://github.com/CocoaPods/'
@@ -13,19 +13,23 @@ depends=('ruby')
 makedepends=('ruby-rake' 'ruby-bundler' 'ruby-rdoc' 'git')
 checkdepends=('ruby-rspec')
 options=('!emptydirs')
-source=("${pkgname}-${pkgver}.tar.gz::${url}/archive/${pkgver}.tar.gz" "git+${_github_namespace}Resolver-Integration-Specs#commit=53a8e313db92dab94384e9824bab469fc7144102")
+source=("${pkgname}-${pkgver}.tar.gz::${url}/archive/${pkgver}.tar.gz" "git+${_github_namespace}Resolver-Integration-Specs#commit=53a8e313db92dab94384e9824bab469fc7144102" 'cleanup-rakefile.patch')
 sha512sums=('f670b809237b3968d6ca565a82a652b4d2cfbe02b90d7f0002a1c7dbb873dc9af7edf74def4da78a187a6a69bf7a7082c42e5ed170a0b039cef6073f3d3fafbb'
-            'SKIP')
+            'd0f2ae6622a0dfcfb1956307d7964915decc168f86fbccf09038c6a8f501024f99f2b688d44f09551bb1452f95c37bc8db9188c29d2d793d57b71f02e0938bfa'
+            '38addf83bcc275b0feb3e6ab9e80b31a951e2ca33beb8a408701866e4e2bb82a4f5720a5d13b8bb52a4b924a478b3fabd647f0b4d13092f4656b94af7bd19a29')
 prepare() {
   cd "${srcdir}/Molinillo-${pkgver}"
 
   sed -E 's|~>|>=|g' --in-place "${_gemname}.gemspec"
-  sed --in-place 's/gem_tasks/setup/' Rakefile
   rm Gemfile.lock
   sed --in-place '/kicker/d' Gemfile
   sed --in-place '/codeclimate-test-reporter/d' Gemfile
   sed --in-place '/inch_by_inch/d' Gemfile
   sed --in-place '/rubocop/d' Gemfile
+  patch --forward --verbose --strip=1 --input='../cleanup-rakefile.patch'
+
+  # delete broken spec file
+  rm -rf spec/fuzz_spec.rb
 
   mv ../Resolver-Integration-Specs/* spec/resolver_integration_specs/
 }

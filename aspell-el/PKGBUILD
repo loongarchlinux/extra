@@ -4,7 +4,7 @@
 
 pkgname=aspell-el
 pkgver=0.08
-pkgrel=5
+pkgrel=6
 pkgdesc="Greek dictionary for aspell"
 url="https://www.elspell.gr/"
 arch=('any')

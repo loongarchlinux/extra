@@ -1,8 +1,8 @@
 # Maintainer: George Rawlinson <grawlinson@archlinux.org>
 
 pkgname=go-task
-pkgver=3.31.0
-pkgrel=3
+pkgver=3.38.0
+pkgrel=1
 pkgdesc='A task runner written in Go'
 arch=('loong64' 'x86_64')
 url='https://taskfile.dev'
@@ -11,19 +11,14 @@ depends=('glibc')
 makedepends=('git' 'go')
 options=('!lto')
 install=go-task.install
-_commit='6177376e5045696bc12dcc083873b27f7c0da5f1'
 source=(
-  "$pkgname::git+https://github.com/go-task/task#commit=$_commit"
+  "$pkgname::git+https://github.com/go-task/task#tag=v$pkgver"
   'rename-completions.patch'
 )
-b2sums=('SKIP'
-        '1e1c959f39955dbe7d4bab3db5694551f43968446292ee499d47130d85be6ea20283f4162023cf34f6cc7c1e2382896613c38c540cc92141e5c3d85cbc07d09d')
-
-pkgver() {
-  cd "$pkgname"
-
-  git describe --tags | sed 's/^v//'
-}
+sha512sums=('9e3ddabbe0608c60aa1538a63978098687f87e0d36171fbcc853f9c3d62704f874d848ca61e053082e44b14cdc544752d9aba53cea713b9924eb767ba4e71d18'
+            '2b64a294b3b6b91c3d3e44c5aa776bd84b8ca32c88195e696be1c784ca5f83394eb7520b0a13b517b99dbdcd9833d2936707c8efdb79223b642dbdc3ffc7ac8c')
+b2sums=('89933286e1cf1879fd3a831000a7610909f82486a0d4d9498d32fe6e63b5ed5fcbac7aa2aec5aca96e4cb9dd49e0a8ba52c939698c922a45b42685e22992badc'
+        'b68ac73a03c94946169fd92f41b746b15fdb1f86c3fbebf8ab45b28272147d189646d407decadc482f3e89aa64b2f4a0ae14aedec4f5f5eb640f4b934f3b85bd')
 
 prepare() {
   cd "$pkgname"
@@ -51,7 +46,7 @@ build() {
     -modcacherw \
     -ldflags "-compressdwarf=false \
     -linkmode external \
-    -extldflags ${LDFLAGS} \
+    -extldflags '${LDFLAGS}' \
     -X github.com/go-task/task/v3/internal/version.version=${pkgver}" \
     -o go-task \
     ./cmd/task

@@ -2,29 +2,36 @@
 
 pkgname=tty-solitaire
 pkgver=1.3.1
-pkgrel=1
+pkgrel=2
 pkgdesc='ncurses-based klondike solitaire game'
-arch=('loong64' 'x86_64')
+arch=(loong64 x86_64)
 url=https://github.com/mpereira/tty-solitaire
-license=('MIT')
-depends=('ncurses')
-source=("$url/archive/v$pkgver/tty-solitaire-$pkgver.tar.gz")
-b2sums=('03cddc9420a3072ee2ea7e03a5fdf413255eb7687c76e7bf2f824d9a0d4bcf43d683cf0c4b3798c7116d99d53f8e5b0239f4a84b38bcd00f637507c9327304d0')
+license=(MIT)
+depends=(
+  git
+  ncurses
+)
+source=("git+$url.git#tag=v$pkgver")
+b2sums=('bb8d4d394615c69acc0398b127b893a38625e3831f40268e912d6d907b9ca515a1b09def0174909936b3299f05a39494d558f105c4a2facc6eaf6f7a313abb46')
+
+# https://github.com/mpereira/tty-solitaire/pull/61
+prepare() {
+  cd $pkgname
+  git cherry-pick -n 4d066c564d086ce272b78cb8f80717a7fb83c261
+}
 
 build() {
-  cd tty-solitaire-$pkgver
+  cd $pkgname
   make
 }
 
 check() {
-  cd tty-solitaire-$pkgver
+  cd $pkgname
   make test
 }
 
 package() {
-  cd tty-solitaire-$pkgver
+  cd $pkgname
   make PREFIX=/usr DESTDIR="$pkgdir" install
   install -Dm644 -t "$pkgdir"/usr/share/licenses/$pkgname LICENSE
 }
-
-# vim:set ts=2 sw=2 et:

@@ -5,23 +5,30 @@
 
 pkgname=spike
 pkgver=1.1.0
-pkgrel=4
+pkgrel=5
 pkgdesc='Spike, a RISC-V ISA Simulator'
 arch=(loong64 x86_64)
 url='https://github.com/riscv/riscv-isa-sim'
-license=(BSD)
+license=(BSD-3-Clause)
 groups=(risc-v)
 depends=(dtc)
 replaces=(fesvr)
 conflicts=(fesvr)
 makedepends=(git)
-source=("git+https://github.com/riscv/riscv-isa-sim#commit=530af85d83781a3dae31a4ace84a573ec255fefa") # tag: v1.1.0
-b2sums=(SKIP)
+source=("git+$url#commit=530af85d83781a3dae31a4ace84a573ec255fefa") # tag: v1.1.0
+b2sums=('196531f27dc6ee60d16676888aa4c4ca32bc6e34d4c8d4fcd8bb0619b1ba6d968b0ff3c3e1eade9a344f6424c3d53cee0150e2ca029ac09f090c0f8a43481186')
+
+prepare() {
+  sed -i '/#include <cstring>/a #include <cstdint>' riscv-isa-sim/fesvr/device.h
+}
 
 build() {
   cd riscv-isa-sim
   ./configure --prefix=/usr
-  make LDFLAGS="$LDFLAGS -s -w" CFLAGS="$CFLAGS -ffat-lto-objects" CXXFLAGS="$CXXFLAGS -ffat-lto-objects"
+  make \
+    CFLAGS="$CFLAGS -ffat-lto-objects -Wfatal-errors -w" \
+    CXXFLAGS="$CXXFLAGS -ffat-lto-objects -Wfatal-errors -w" \
+    LDFLAGS="$LDFLAGS -s -w"
 }
 
 package() {

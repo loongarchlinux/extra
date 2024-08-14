@@ -3,7 +3,7 @@
 
 pkgname=perl-dist-checkconflicts
 pkgver=0.11
-pkgrel=9
+pkgrel=10
 pkgdesc="Declare version conflicts for your dist"
 arch=('any')
 license=('PerlArtistic' 'GPL')

@@ -3,7 +3,7 @@
 # Contributor: Mirco Tischler <mt-ml at gmx dot de>
 
 pkgname=ostree
-pkgver=2024.5
+pkgver=2024.7
 pkgrel=1
 pkgdesc="Operating system and container binary deployment and upgrades"
 url="https://ostreedev.github.io/ostree/"
@@ -11,6 +11,7 @@ arch=(loong64 x86_64)
 license=(LGPL-2.0-or-later)
 depends=(
   bash
+  composefs
   fuse3
   gcc-libs
   glibc
@@ -27,6 +28,7 @@ makedepends=(
   e2fsprogs
   git
   glib2
+  glib2-devel
   gobject-introspection
   gpgme
   gtk-doc
@@ -50,19 +52,14 @@ checkdepends=(
 provides=(libostree-1.so)
 source=(
   git+https://github.com/ostreedev/ostree#tag=v$pkgver
-  git+https://github.com/containers/composefs.git
   git+https://github.com/mendsley/bsdiff
   git+https://gitlab.gnome.org/GNOME/libglnx.git
   $pkgname-2023.1-use_fuse3.patch
 )
-b2sums=('25dd16ad1356ec22807242a210f60482d28893250f9c23f861887406e5ba947fc2f41dfba2082dce7cbb3ea675f3b799a58dfda141c5ae8b537bd1393d942f47'
-        'SKIP'
+b2sums=('1d5c7453029d568d294c4e4b9d0f39f40de9e2951d9f35e8cc5051b5ccbbd1ef9f1943f110e5bf72b8a85020062b79accf7fccf939f0631a3cb94d0b90686135'
         'SKIP'
         'SKIP'
         'cfff162120f70995e18ec56454711501391b97456e2a0f34643c9d2a9c2b50b4d76afc2e2fc50ea28e8a773c618215d6cb855b96663f69dc5cc93bc5766f3f28')
-# upstream ticket about chain of trust:
-# https://github.com/ostreedev/ostree/issues/2349
-validpgpkeys=('1CEC7A9DF7DA85ABEF843DC0A866D7CCAE087291') # Colin Walters <walters@redhat.com>
 
 pkgver() {
   cd $pkgname
@@ -76,7 +73,6 @@ prepare() {
   git apply -3 ../$pkgname-2023.1-use_fuse3.patch
 
   git submodule init
-  git submodule set-url composefs "$srcdir/composefs"
   git submodule set-url bsdiff "$srcdir/bsdiff"
   git submodule set-url libglnx "$srcdir/libglnx"
   git -c protocol.file.allow=always submodule update

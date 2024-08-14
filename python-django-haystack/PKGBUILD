@@ -2,8 +2,8 @@
 
 pkgname=python-django-haystack
 _name="${pkgname#python-}"
-pkgver=3.2.1
-pkgrel=4
+pkgver=3.3.0
+pkgrel=1
 pkgdesc="Modular search for Django"
 arch=(any)
 url="https://github.com/django-haystack/django-haystack"
@@ -11,6 +11,7 @@ license=(BSD-3-Clause)
 depends=(
   python
   python-django
+  python-packaging
 )
 makedepends=(
   python-build
@@ -19,11 +20,9 @@ makedepends=(
   python-wheel
 )
 checkdepends=(
-  gdal
   python-dateutil
   python-elasticsearch
   python-geopy
-  python-nose
   python-pysolr
   python-requests
   python-whoosh
@@ -35,13 +34,8 @@ optdepends=(
   'python-xapian-haystack: use python-xapian as search backend'
 )
 source=($pkgname-$pkgver.tar.gz::$url/archive/refs/tags/v$pkgver.tar.gz)
-sha512sums=('3d7dc23bf9a65062626f2860da009fdffb7cdd81cbed4f521ff00047f4d96f25702ffab032bf5d8605502b1825f1c82f867ea796583b7bf0c94ef96699a00135')
-b2sums=('cfdeec43014955c7b2e9ac988691c3102a752c75f3b87a57d20360c0e57db92afaff20413510f8405f0a3c8b246532aa54c3e9b1953ea32e10bc252dc3793f0f')
-
-prepare() {
-  # remove useless version pinning
-  sed -e 's/==/>=/g' -i $_name-$pkgver/setup.py
-}
+sha512sums=('f8fb6fe11957391d4dc48f279c07e29b2063c7268a4585c4d2d0462f9b17d3563997a29bed4da5577b4125e70668aa79ce86a553cda71cb94c1af19b9bd808fe')
+b2sums=('d6193172f5baae90792a636f925f5d9eb6f886f362fcb36f4551dcf0e097fbb2ef58bd7a7bb8dc8401846df3eea4601566e58495f6ab8ce99b4498b8d9b55196')
 
 build() {
   cd $_name-$pkgver
@@ -49,23 +43,8 @@ build() {
 }
 
 check() {
-  local nose_options=(
-    --exclude=test_more_like_this
-    --exclude=test_pagination
-    --exclude=test_search_query
-    # broken with pytest 8
-    --exclude=test_values
-    --exclude=test_valueslist
-    --exclude=test_repr
-    --exclude=test_values_sqs
-    --exclude=test_valueslist_sqs
-    --cover-package=haystack
-    --cover-erase
-    --verbose
-  )
-
-  cd $_name-$pkgver/test_haystack/
-  nosetests "${nose_options[@]}"
+  cd $_name-$pkgver/
+  python test_haystack/run_tests.py
 }
 
 package() {

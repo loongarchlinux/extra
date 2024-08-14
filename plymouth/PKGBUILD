@@ -6,7 +6,7 @@
 
 pkgname=plymouth
 pkgver=24.004.60
-pkgrel=7
+pkgrel=8
 pkgdesc='Graphical boot splash screen'
 arch=('loong64' 'x86_64')
 url='https://www.freedesktop.org/wiki/Software/Plymouth/'
@@ -14,37 +14,26 @@ license=('GPL-2.0-or-later')
 depends=('bash' 'cairo' 'cantarell-fonts' 'filesystem' 'fontconfig' 'freetype2' 'glib2' 'glibc'
          'libdrm' 'libevdev' 'libpng' 'libx11' 'libxkbcommon' 'pango' 'systemd-libs'
          'xkeyboard-config')
-makedepends=('gtk3' 'docbook-xsl' 'meson')
+makedepends=('git' 'gtk3' 'docbook-xsl' 'meson')
 optdepends=('gtk3: x11 renderer')
 backup=('etc/plymouth/plymouthd.conf')
 install='plymouth.install'
-source=("https://www.freedesktop.org/software/$pkgname/releases/$pkgname-$pkgver.tar.xz"
-        '0001-label-freetype-fix-fallback-not-working-when-fc-matc.patch'
-        '0001-renderers-Do-not-assume-all-keyboards-have-LEDs.patch'
-        '0001-ply-boot-splash-Set-unbuffered-input-when-creating-a.patch'
+source=("git+https://gitlab.freedesktop.org/plymouth/$pkgname.git#tag=$pkgver"
         'plymouth.initcpio_hook'
         'plymouth.initcpio_install'
         'plymouth-shutdown.initcpio_install'
         'mkinitcpio-generate-shutdown-ramfs-plymouth.conf')
-sha256sums=('f3f7841358c98f5e7b06a9eedbdd5e6882fd9f38bbd14a767fb083e3b55b1c34'
-            '9d5feec6980fb878b827bf8b4df236783afacf9e0d1d47daaad915b8f9702441'
-            '0c99366046ac68377ee0348263a535bb06a935cbe0457f254a9f8e2a422edf0c'
-            'a261cf07ec57d7cb230b589e7f85a3080125b89248b1fb6191bc38aefc24076e'
-            'de852646e615e06d4125eb2e646d0528d1e349bd9e9877c08c5d32c43d288b6f'
-            'ecd979b70a613b6aea05443da735e95a8c7341fbc9f099da807bd82394f5d3cf'
-            'd75b67c7c28698c1e27864a63f3f405897aea053c346c2478ee97d0caec241d5'
-            '91df753b37fa33493a3fa4b966f5535e9694022a4ba083dcc504404ab25715b1')
+b2sums=('a3d55f4f7be81bdf2ddd5c2b74a3fdb4e368c31fc41e12ab100ce2a7986cb418151b3df0d0316011710dd0e1ae99631166eecf80bc1dd5cc9054a4685266afed'
+        'afb2449b542aa3e971eab6b953c907347fdf4e499b4140a5e6736a7c99557c0d8d2fed28dbee56d84c8c619335c59bd382457d85e51145884ad0616e9095f232'
+        '91f9e2864a73fa3884cd0074cbb7c9535ab83308466fe8994691cc8aab9b6001b0339c9eb9766c6084758112d87723c11f22f1e55f420f34ce2ddcc68ae35b38'
+        '063448411de837ed38ece935719f07fd17b18830680c9fa95b7bd39a097778186c40373590504c9b44144125986304311f528c73592c29d19043b8395e6f99c2'
+        '7bb910b7402ad4372f1918be763421308534044c46d42e77af0aadcb7cbe13a99633805b36fa841f8ea1006ddb204ecea3031b96b05ec4e8d16150b2c7864629')
 
 prepare() {
-  cd $pkgname-$pkgver
-  # https://gitlab.freedesktop.org/plymouth/plymouth/-/merge_requests/302
-  patch -Np1 -i ../0001-label-freetype-fix-fallback-not-working-when-fc-matc.patch
+  cd $pkgname
 
-  # https://gitlab.freedesktop.org/plymouth/plymouth/-/merge_requests/304
-  patch -Np1 -i ../0001-renderers-Do-not-assume-all-keyboards-have-LEDs.patch
-
-  # https://gitlab.freedesktop.org/plymouth/plymouth/-/merge_requests/303
-  patch -Np1 -i ../0001-ply-boot-splash-Set-unbuffered-input-when-creating-a.patch
+  # Various fixes from upstream
+  git cherry-pick -n -m 1 24.004.60..3ce6441aa066545f44624025b3d27d691bbda2a9
 
   # Use mkinitcpio to update initrd
   sed -i 's/^dracut -f$/mkinitcpio -P/' scripts/plymouth-update-initrd
@@ -54,7 +43,7 @@ prepare() {
 }
 
 build() {
-  arch-meson build $pkgname-$pkgver \
+  arch-meson build $pkgname \
     -D logo=/usr/share/pixmaps/archlinux-logo.png
   meson compile -C build
 

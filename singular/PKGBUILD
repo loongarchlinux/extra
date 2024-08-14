@@ -2,8 +2,8 @@
 # Contributor: Rémy Oudompheng <oudomphe@clipper.ens.fr>
 
 pkgname=singular
-_majver=4-3-2
-_patchver=p16
+_majver=4-4-0
+_patchver=p3
 _pkgver=${_majver}${_patchver}
 pkgver=${_majver//-/.}${_patchver/p/.p}
 pkgrel=1
@@ -17,26 +17,31 @@ depends=(bash
          gcc-libs
          glibc
          gmp
-         normaliz
          ntl
          readline)
-makedepends=(latex2html
+makedepends=(4ti2
+             git
+             latex2html
+             lrcalc
+             normaliz
              sharutils
              texlive-basic
              texlive-bin
              texlive-latex)
 provides=(singular-factory)
-source=(ftp://jim.mathematik.uni-kl.de/pub/Math/Singular/SOURCES/$_majver/singular-${_pkgver//-/.}.tar.gz)
-#source=(https://github.com/Singular/Singular/archive/$_pkgver/$pkgname-$_pkgver.tar.gz)
-sha256sums=('675733ba13a6ec67c564e753139f7c0c4b0d3e29bdb995de5341b616f1472a16')
+source=(https://www.singular.uni-kl.de/ftp/pub/Math/Singular/SOURCES/$_majver/singular-${_pkgver//-/.}.tar.gz)
+#source=(git+https://github.com/Singular/Singular#tag=$_pkgver)
+sha256sums=('4798dddcc4cb51f1cba5114a5cb4783708b9ab4b7d5e9136cb264eb62190c706')
 options=(!zipman)
+_srcdir=singular-${_majver//-/.}
+
+prepare() {
+  cd $_srcdir
+  ./autogen.sh
+}
 
 build() {
-  cd singular-${_majver//-/.}
-
-  # this uses malloc_usable_size, which is incompatible with fortification level 3
-  export CFLAGS="${CFLAGS/_FORTIFY_SOURCE=3/_FORTIFY_SOURCE=2}"
-  export CXXFLAGS="${CXXFLAGS/_FORTIFY_SOURCE=3/_FORTIFY_SOURCE=2}"
+  cd $_srcdir
 
   ./configure \
     --prefix=/usr \
@@ -46,25 +51,20 @@ build() {
     --enable-Order-module \
     --enable-python-module \
     --enable-gfanlib-module \
-    --enable-polymake-module
-#   --enable-doc-build
+    --enable-polymake-module \
+    --enable-doc-build
 # https://bugzilla.gnome.org/show_bug.cgi?id=655517
   sed -e 's/ -shared / -Wl,-O1,--as-needed\0/g' -i libtool -i */libtool
   make
-# make -C doc doc.tbz2
+  make -C doc doc.tbz2
 }
 
 check() {
-  cd singular-${_majver//-/.}
-
-  # this uses malloc_usable_size, which is incompatible with fortification level 3
-  export CFLAGS="${CFLAGS/_FORTIFY_SOURCE=3/_FORTIFY_SOURCE=2}"
-  export CXXFLAGS="${CXXFLAGS/_FORTIFY_SOURCE=3/_FORTIFY_SOURCE=2}"
-
+  cd $_srcdir
   make check
 }
   
 package() {
-  cd singular-${_majver//-/.}
+  cd $_srcdir
   make DESTDIR="$pkgdir" install
 }

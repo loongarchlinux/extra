@@ -1,12 +1,12 @@
 # Maintainer: Maxime Gauduin <alucryd@archlinux.org>
 
 pkgname=python-aiodiscover
-pkgver=2.0.0
-pkgrel=2
+pkgver=2.2.0
+pkgrel=1
 pkgdesc='Discover Hosts via ARP and PTR lookup'
 arch=(any)
 url=https://github.com/bdraco/aiodiscover
-license=(APACHE)
+license=(Apache-2.0)
 depends=(
   python
   python-dnspython
@@ -16,16 +16,14 @@ depends=(
 )
 makedepends=(
   git
-  python-setuptools
+  python-build
+  python-installer
+  python-poetry-core
   python-wheel
 )
-_tag=a4fc87fa3249ae73b08fde1b02ab6d63658d6edf
+_tag=a8bed3b3eab0ba63ffb2c76af2733f47b05ed93a
 source=(git+https://github.com/bdraco/aiodiscover.git#tag=${_tag})
-b2sums=(SKIP)
-
-prepare() {
-  sed '/pytest-runner/d' -i aiodiscover/setup.py
-}
+b2sums=('f9d7c56bc892653783834f9eefe4beccef7cd9dca1a9c6b514bb6452c1521a26df839b74425a9d8c1c45e140eb135de569d0f905a8d508d5439120e5d0efd992')
 
 pkgver() {
   cd aiodiscover
@@ -34,12 +32,11 @@ pkgver() {
 
 build() {
   cd aiodiscover
-  python setup.py build
+  python -m build --wheel --no-isolation
 }
 
 package() {
-  cd aiodiscover
-  python setup.py install --root="${pkgdir}" --optimize=1
+  python -m installer --destdir="${pkgdir}" aiodiscover/dist/*.whl
 }
 
 # vim: ts=2 sw=2 et:

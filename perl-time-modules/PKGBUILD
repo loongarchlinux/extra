@@ -4,7 +4,7 @@
 
 pkgname=perl-time-modules
 pkgver=2013.0912
-pkgrel=9
+pkgrel=10
 pkgdesc='Perl time related modules'
 url='https://search.cpan.org/~muir/Time-modules/'
 license=('GPL' 'PerlArtistic')

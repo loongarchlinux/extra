@@ -5,14 +5,17 @@
 _pkgname=pyqtgraph
 pkgname=python-$_pkgname
 pkgver=0.13.6
-pkgrel=1
+pkgrel=2
 pkgdesc='Scientific Graphics and GUI Library for Python'
 arch=('any')
 url='http://www.pyqtgraph.org'
 license=('MIT')
 makedepends=('python-build' 'python-installer' 'python-setuptools' 'python-wheel')
-depends=('python' 'qt5-python-bindings' 'python-numpy')
-optdepends=('python-opengl: 3d graphics')
+depends=('python' 'python-numpy')
+optdepends=('python-opengl: 3d graphics'
+            'qt5-python-bindings: Qt5 backend'
+            'qt6-python-bindings: Qt6 backend')
+checkdepends=('python-pyqt5' 'python-pyqt6' 'python-pytest' 'python-opengl' 'qt5-svg' 'qt6-svg')
 source=("$_pkgname-$pkgver.tar.gz::https://github.com/pyqtgraph/pyqtgraph/archive/pyqtgraph-$pkgver.tar.gz")
 sha512sums=('e77a054494a01ce848685547811ad398e0c77f747c26f9f4be798465f874bfeb23f6c2e507ad1175bb747e3c9c2f0d22747eefda476c4e8c72fa892fa0bb4730')
 
@@ -20,6 +23,13 @@ build() {
   cd $_pkgname-$_pkgname-$pkgver
 
   python -m build -nw
+}
+
+check() {
+  cd $_pkgname-$_pkgname-$pkgver
+
+  export QT_QPA_PLATFORM=offscreen
+  pytest -v
 }
 
 package() {

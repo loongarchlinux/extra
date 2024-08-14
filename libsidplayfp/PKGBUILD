@@ -1,29 +1,53 @@
-# Maintainer:
+# Maintainer: George Rawlinson <grawlinson@archlinux.org>
 # Contributor: Alexander F. Rødseth <xyproto@archlinux.org>
 # Contributor: Gaetan Bisson <bisson@archlinux.org>
 # Contributor: Simon Perry <aur [at] sanxion [dot] net>
 # Contributor: Jonas Nyrén <jonas.nyren*mindkiller.com>
 
 pkgname=libsidplayfp
-pkgver=2.6.0
+pkgver=2.8.0
 pkgrel=1
-pkgdesc='Library to play Commodore 64 music, derived from libsidplay2'
+pkgdesc='Library to play Commodore 64 music'
+arch=('loong64' 'x86_64')
 url='https://github.com/libsidplayfp/libsidplayfp'
-arch=(loong64 x86_64)
-license=(GPL)
-depends=(libgcrypt)
-makedepends=(vice xa)
+license=('GPL-2.0-only')
+depends=('glibc' 'gcc-libs' 'libgcrypt')
+makedepends=('git' 'vice' 'xa')
 optdepends=('vice: better SID support')
-source=("https://downloads.sourceforge.net/project/sidplay-residfp/${pkgname}/${pkgver%.*}/${pkgname}-${pkgver}.tar.gz")
-sha256sums=('cc6bb9418ad3f64772c54c011552b113f8ef82f9820d74d4c2fed5976d4905e9')
+source=(
+  "$pkgname::git+$url#tag=v$pkgver"
+  'github.com-libsidplayfp-exsid-driver::git+https://github.com/libsidplayfp/exsid-driver'
+  'github.com-libsidplayfp-resid::git+https://github.com/libsidplayfp/resid'
+)
+sha512sums=('87a0c2ff4d8bd8e803f00bc3aa08ee99487bb0c131fba9db0954d87d44c05c5d5375f4ac4a6d8d9856c31ef9b54ffa22c1c25b1bf303916b7da054e6511fb369'
+            'SKIP'
+            'SKIP')
+b2sums=('4a1eb5393eb73e6e4aca2d548c2638f732ddc666c81c516ad5c7940ae1f22e15fd3ad214c524509641ec386cdcd960d4804c5ca718053531889a5c527f856960'
+        'SKIP'
+        'SKIP')
+
+prepare() {
+  cd "$pkgname"
+
+  # prepare git submodule(s)
+  git submodule init
+  git config submodule.src/builders/exsid-builder/driver.url "$srcdir/github.com-libsidplayfp-exsid-driver"
+  git config submodule.src/builders/resid-builder/resid.url "$srcdir/github.com-libsidplayfp-resid"
+  git -c protocol.file.allow=always submodule update
+}
 
 build() {
-  cd $pkgname-$pkgver
+  cd "$pkgname"
+
+  autoreconf -vfi
+
   ./configure --prefix=/usr
+
   sed -i -e 's/ -shared / -Wl,-O1,--as-needed\0/g' libtool
+
   make
 }
 
 package() {
-  DESTDIR="$pkgdir" make -C $pkgname-$pkgver install
+  DESTDIR="$pkgdir" make -C "$pkgname" install
 }

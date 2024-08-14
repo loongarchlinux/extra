@@ -5,23 +5,23 @@
 _pkg=arrow
 _pkgname=pyarrow
 pkgname=python-${_pkgname}
-pkgver=16.0.0
+pkgver=17.0.0
 pkgrel=1
 pkgdesc="Columnar in-memory analytics layer for big data — Python module."
 arch=(loong64 x86_64)
 url="https://arrow.apache.org"
-license=(Apache)
+license=(Apache-2.0)
 depends=(arrow gcc-libs glibc python python-numpy python-setuptools-scm)
 optdepends=('python-cffi: interact with C code'
             'python-pandas: Pandas integration'
             'python-fsspec: Filesystem Spec support')
-makedepends=(git cmake cython0 python-build python-installer python-wheel python-cffi python-pandas)
+makedepends=(git cmake cython python-build python-installer python-wheel python-cffi python-pandas)
 checkdepends=(python-brotli python-hypothesis python-pandas python-pytest python-pytz)
 source=(
   https://archive.apache.org/dist/${_pkg}/${_pkg}-${pkgver}/apache-${_pkg}-${pkgver}.tar.gz{,.asc}
   git+https://github.com/apache/arrow-testing.git
 )
-sha512sums=('773f4f3eef603032c8ba0cfdc023bfd2a24bb5e41c82da354a22d7854ab153294ede1f4782cc32b27451cf1b58303f105bac61ceeb3568faea747b93e21d79e4'
+sha512sums=('4e2a617b8deeb9f94ee085653a721904a75696f0827bcba82b535cc7f4f723066a09914c7fa83c593e51a8a4031e8bf99e563cac1ebb1d89604cb406975d4864'
             'SKIP'
             'SKIP')
 validpgpkeys=(265F80AB84FE03127E14F01125BCCA5220D84079  # Krisztian Szucs (apache) <szucs.krisztian@gmail.com>
@@ -37,49 +37,37 @@ prepare() {
 
 build() {
   cd apache-${_pkg}-${pkgver}/python
-  ARROW_HOME=/usr \
-  PARQUET_HOME=/usr \
-  PYARROW_BUNDLE_ARROW_CPP_HEADERS=0 \
-  PYARROW_BUNDLE_PLASMA_EXECUTABLE=0 \
-  PYARROW_WITH_HDFS=1 \
-  PYARROW_WITH_FLIGHT=1 \
+  # https://github.com/apache/arrow/blob/main/docs/source/developers/python.rst#relevant-components-and-environment-variables
+  PYARROW_CMAKE_OPTIONS="-DARROW_SIMD_LEVEL=NONE -DARROW_RUNTIME_SIMD_LEVEL=MAX" \
   PYARROW_WITH_DATASET=1 \
-  PYARROW_WITH_PARQUET=1 \
-  PYARROW_WITH_PLASMA=1 \
-  PYARROW_WITH_TENSORFLOW=1 \
+  PYARROW_WITH_FLIGHT=1 \
+  PYARROW_WITH_HDFS=1 \
   PYARROW_WITH_ORC=1 \
+  PYARROW_WITH_PARQUET=1 \
+  PYARROW_WITH_PARQUET_ENCRYPTION=1 \
+  PYARROW_WITH_SUBSTRAIT=1 \
+  PYARROW_WITH_TENSORFLOW=1 \
   python -m build --wheel --no-isolation
 }
 
 check() {
-  cd apache-${_pkg}-${pkgver}/python
-  local python_version=$(python -c 'import sys; print("".join(map(str, sys.version_info[:2])))')
-  # rename source to avoid name clash
-  mv pyarrow _nopyarrow
-  PYTHONPATH="${PWD}/build/lib.linux-${CARCH}-cpython-${python_version/./}" \
+  python -m venv --system-site-packages local-env
+  local-env/bin/python -m installer apache-${_pkg}-${pkgver}/python/dist/*.whl
   ARROW_TEST_DATA="${srcdir}"/arrow-testing/data \
-  ARROW_HOME=/usr \
-  PARQUET_HOME=/usr \
-  pytest -vv --color=yes -k 'not test_cython_api and not test_visit_strings and not test_env_var and not test_get_include and not test_pyarrow_include'
-  mv _nopyarrow pyarrow
+  local-env/bin/python -m pytest -vv --color=yes --pyargs pyarrow
 }
 
 package(){
   cd apache-${_pkg}-${pkgver}/python
-  ARROW_HOME=/usr \
-  PARQUET_HOME=/usr \
-  PYARROW_BUNDLE_ARROW_CPP_HEADERS=0 \
-  PYARROW_BUNDLE_PLASMA_EXECUTABLE=0 \
-  PYARROW_WITH_HDFS=1 \
-  PYARROW_WITH_FLIGHT=1 \
-  PYARROW_WITH_DATASET=1 \
-  PYARROW_WITH_PARQUET=1 \
-  PYARROW_WITH_PLASMA=1 \
-  PYARROW_WITH_TENSORFLOW=1 \
-  PYARROW_WITH_ORC=1 \
   python -m installer --destdir="${pkgdir}" dist/*.whl
 
   # drop tests from install
   local site_packages=$(python -c "import site; print(site.getsitepackages()[0])")
   rm -rf "${pkgdir}${site_packages}"/${_pkgname}/{conftest.py,tests}
+
+  # move python include files
+  install -d "${pkgdir}"/usr/include/arrow/
+  mv "${pkgdir}${site_packages}"/${_pkgname}/include/arrow/python/ "${pkgdir}"/usr/include/arrow/
+  rm -rf "${pkgdir}${site_packages}"/${_pkgname}/include/
+  ln -sT /usr/include/arrow/ "${pkgdir}${site_packages}"/${_pkgname}/include
 }

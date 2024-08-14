@@ -1,31 +1,32 @@
 # Maintainer: Felix Yan <felixonmars@archlinux.org>
 
 pkgname=python-uncertainties
-pkgver=3.1.7
-pkgrel=3
+pkgver=3.2.2
+pkgrel=1
 pkgdesc="Transparent calculations with uncertainties on the quantities involved (aka error propagation); fast calculation of derivatives."
 arch=('any')
 license=('BSD')
-url="https://github.com/lebigot/uncertainties"
-depends=('python-future')
+url="https://github.com/lmfit/uncertainties"
+depends=('python')
 optdepends=('python-numpy: additional support for NumPy arrays and matrices')
-makedepends=('python-setuptools')
-checkdepends=('python-nose' 'python-numpy' 'python-tests')
-source=("$pkgname-$pkgver.tar.gz::https://github.com/lebigot/uncertainties/archive/$pkgver.tar.gz")
-sha512sums=('debfa1bcad4d6785f8a26c92f9de1032e40c7672a61763a65f0c1eaed2f4b572394c7db4e45a411ea43239e3a311a2defa7d6a7f4b0cb4368cfcfbc4f050886e')
+makedepends=('git' 'python-build' 'python-installer' 'python-setuptools' 'python-setuptools-scm' 'python-wheel')
+checkdepends=('python-pytest' 'python-numpy')
+source=("git+https://github.com/lmfit/uncertainties.git#tag=$pkgver")
+sha512sums=('048200d7b7a1f2b78e3c5cdbb8e607f4e6f5c434a9218877edb62dc0cff108010f84b9c29bcc4ec575eade44838690854214374eb070fe5aae869deee9a90de8')
 
 build() {
-  cd uncertainties-$pkgver
-  python setup.py build
+  cd uncertainties
+  export SETUPTOOLS_SCM_PRETEND_VERSION=$pkgver
+  python -m build -nw
 }
 
 check() {
-  cd uncertainties-$pkgver
-  nosetests
+  cd uncertainties
+  python -m pytest
 }
 
 package() {
-  cd uncertainties-$pkgver
-  python setup.py install --root="$pkgdir" --optimize=1
-  install -D -m644 LICENSE.txt "$pkgdir"/usr/share/licenses/$pkgname/LICENSE.txt
+  cd uncertainties
+  python -m installer -d "$pkgdir" dist/*.whl
+  install -Dm644 LICENSE.txt -t "$pkgdir"/usr/share/licenses/$pkgname/
 }

@@ -4,18 +4,18 @@
 
 pkgbase='grpc'
 pkgname=('grpc' 'python-grpcio' 'python-grpcio-tools' 'php-grpc' 'php-legacy-grpc' 'grpc-cli')
-pkgver=1.62.1
+pkgver=1.65.3
 _gtestver=0e402173c97aea7a00749e825b194bfede4f2e45
-pkgrel=5
+pkgrel=3
 pkgdesc="High performance, open source, general RPC framework that puts mobile and HTTP/2 first."
 arch=('loong64' 'x86_64')
 url='https://grpc.io'
 license=('Apache-2.0')
-makedepends=('re2' 're2c' 'protobuf' 'php' 'php-legacy' 'c-ares' 'openssl' 'chrpath' 'cython0'
+makedepends=('re2' 're2c' 'protobuf' 'php' 'php-legacy' 'c-ares' 'openssl' 'chrpath' 'cython'
              'cmake' 'benchmark' 'abseil-cpp' 'ninja' 'python-setuptools' 'python-build' 'python-installer' 'python-wheel')
 source=("https://github.com/grpc/grpc/archive/v$pkgver/$pkgbase-$pkgver.tar.gz"
         "https://github.com/google/googletest/archive/$_gtestver/googletest-$_gtestver.tar.gz")
-sha256sums=('c9f9ae6e4d6f40464ee9958be4068087881ed6aa37e30d0e64d40ed7be39dd01'
+sha256sums=('6af9928520800691fa353603d5e810fb1d8394ae744d6ade2c15110d2d19b20b'
             'c8de6c60e12ad014a28225c5247ee735861d85cf906df617f6a29954ca05f547')
 
 prepare() {
@@ -56,6 +56,7 @@ build() {
     -DgRPC_BENCHMARK_PROVIDER:STRING='package' \
     -DgRPC_ABSL_PROVIDER:STRING='package' \
     -DgRPC_USE_PROTO_LITE=OFF \
+    -DgRPC_USE_SYSTEMD=ON \
     -DgRPC_BUILD_GRPC_CPP_PLUGIN=ON \
     -DgRPC_BUILD_GRPC_CSHARP_PLUGIN=ON \
     -DgRPC_BUILD_GRPC_NODE_PLUGIN=ON \
@@ -89,6 +90,7 @@ build() {
   export GRPC_PYTHON_BUILD_SYSTEM_CARES=1
   export GRPC_PYTHON_BUILD_SYSTEM_RE2=1
   export GRPC_PYTHON_BUILD_SYSTEM_ABSL=1
+  export GRPC_PYTHON_BUILD_WITH_SYSTEMD=1
   export GRPC_BUILD_WITH_BORING_SSL_ASM=0
 
   cd "$srcdir/$pkgbase-$pkgver"

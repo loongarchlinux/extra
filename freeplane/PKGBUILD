@@ -2,19 +2,19 @@
 # Contributor: scrawler@gmail.com
 
 pkgname=freeplane
-pkgver=1.11.13
-pkgrel=1
+pkgver=1.11.14
+pkgrel=2
 pkgdesc="A Java mindmapping tool"
 arch=('any')
 url="http://freeplane.sourceforge.net"
-license=('GPL2')
+license=('GPL-2.0-only')
 _jrever=11
-_jdkver=17
+_jdkver=21
 makedepends=('gradle' "java-environment-openjdk=${_jdkver}" 'gnu-free-fonts' 'fontconfig' 'unzip')
 depends=("java-runtime>=${_jrever}" "java-runtime<=${_jdkver}")
 source=("https://downloads.sourceforge.net/sourceforge/${pkgname}/${pkgname}_src-${pkgver}.tar.gz"
         "freeplane.desktop" "freeplane.run")
-b2sums=('66059bf71e80a957201f188c2f60e55a2895301c02f10a37acd82db739b9162763f68d84b2c35e22005480b9ec4c71b8948e46a3b71bcbd09e3bb288818a29f7'
+b2sums=('580f6ef832cca0d7f01f3d27d84b9d16942eb4a7ce510647830f3a44aa9b5b1a691b754f50540d4be313e9cb4da43583daa3cf46cb1574ee751ec82d2d0d2a64'
         '87c25331e01823e38668e4b394a51a279c05b24b088f4ffc1482d3783e24018da8f9e51b3ad1a62c5a863f85a6ccb30bbe8999cb861dc1b93d5483019644cfa5'
         '24ca56b7c7894b9bb38600b4d37973769243e1bdb221f33125b60bf4f878a3b630775710fab9dee97fa45a69319455037e294860ba7fbd608529982c6b0b1538')
 
@@ -25,14 +25,24 @@ build() {
   /usr/bin/gradle \
     -Dorg.gradle.java.home="/usr/lib/jvm/java-${_jdkver}-openjdk" \
     -Dorg.gradle.daemon=false \
-    build binZip
+    binZip
+}
 
-  install -dm755 "$srcdir/$pkgname-${pkgver}/dist"
-  unzip -d "$srcdir/$pkgname-${pkgver}/dist" \
-    "${srcdir}/${pkgname}-${pkgver}/DIST/${pkgname}_bin-${pkgver}.zip"
+check() {
+  cd "$pkgname-${pkgver}"
+  export JAVA_HOME="/usr/lib/jvm/java-${_jdkver}-openjdk"
+  export PATH="/usr/lib/jvm/java-${_jdkver}-openjdk/bin:$PATH"
+  /usr/bin/gradle \
+    -Dorg.gradle.java.home="/usr/lib/jvm/java-${_jdkver}-openjdk" \
+    -Dorg.gradle.daemon=false \
+    check
 }
 
 package() {
+  install -dm755 "$srcdir/$pkgname-${pkgver}/dist"
+  unzip -d "$srcdir/$pkgname-${pkgver}/dist" \
+    "${srcdir}/${pkgname}-${pkgver}/DIST/${pkgname}_bin-${pkgver}.zip"
+
   install -dm755 "${pkgdir}/usr/share/freeplane/"
   cd "$srcdir/${pkgname}-${pkgver}/dist/${pkgname}-${pkgver}"
   cp -dr --no-preserve='ownership' core doc plugins resources scripts framework.jar freeplane.l4j.ini \

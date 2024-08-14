@@ -2,13 +2,26 @@
 
 pkgname=ruby-pry-byebug
 pkgver=3.10.1
-pkgrel=2
+pkgrel=3
 pkgdesc="Combine 'pry' with 'byebug'. Adds 'step', 'next', 'finish', 'continue' and 'break' commands to control execution."
 arch=(any)
 url='https://github.com/deivid-rodriguez/pry-byebug'
 license=(MIT)
-depends=(ruby-byebug ruby-pry)
-checkdepends=(ruby-rake markdownlint ruby-minitest)
+depends=(
+  ruby
+  ruby-byebug
+  ruby-pry
+)
+makedepends=(
+  ruby-rdoc
+)
+checkdepends=(
+  markdownlint
+  ruby-bundler
+  ruby-irb
+  ruby-minitest
+  ruby-rake
+)
 options=(!emptydirs)
 source=(https://github.com/deivid-rodriguez/pry-byebug/archive/v$pkgver/$pkgname-$pkgver.tar.gz)
 sha256sums=('ae27542b6ee43425462d4f48aa04ae54e81ea462af0dbdc1d27403720d61dee4')
@@ -47,7 +60,7 @@ build() {
 check() {
   local _gemdir="$(gem env gemdir)"
   cd pry-byebug-$pkgver
-  GEM_HOME="tmp_install/$_gemdir" rake test
+  MT_COMPAT="true" GEM_HOME="tmp_install/$_gemdir" rake test
 }
 
 package() {
