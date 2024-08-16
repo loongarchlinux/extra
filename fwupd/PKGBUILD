@@ -6,7 +6,7 @@
 pkgbase=fwupd
 pkgname=(
   fwupd
-  fwupd-docs
+#  fwupd-docs
 )
 pkgver=1.9.19
 pkgrel=1
@@ -66,21 +66,14 @@ checkdepends=(umockdev)
 source=(
   "https://github.com/fwupd/fwupd/releases/download/${pkgver}/${pkgname}-${pkgver}.tar.xz"{,.asc}
   fwupd.sysusers
-  fwupd-1.9.5-loong64.patch
 )
 sha512sums=('e20f16aa2cf528ecc6262a5c343287aef64fb37667f8d3972daa70f96364041daa0b23149acbd20cbeff059f6428c6c2a317973bc1dd40a39e239350b0eb011e'
             'SKIP'
             '637203080b55eda74a659f58c853a9a723a2dad5da70915b2b0e036c6145a649468ebec700cc83975d9cb5378b9dced8b3a3b26bdbcc75ddc774837355e75deb')
 b2sums=('7e092c0ba2b094fb2041121b7b04b5a5914e85f05213cca4eafeb1826a8291bf733d1b7f8738d35b4a336a0d2d1c0d42582d21831873fae8c7884dbf5d592ee4'
         'SKIP'
-        'e65ca7da22a20a40882cfc1fe4479643f9a38c90a4f2c3e71e6e5e3de1d6db212a0f17d600097619fe3cdb0a9b860422f8b0b9a9d45441518e51a7eb12a918bb'
-        'c1da6c2cee029024cb94a2a94559499f635a7c36db8b03324c8f506a4390c6171017d8e7c1095ed972d7dd404b53b236f8950cdbf92e308fb9585bd2d48994ac')
+        'e65ca7da22a20a40882cfc1fe4479643f9a38c90a4f2c3e71e6e5e3de1d6db212a0f17d600097619fe3cdb0a9b860422f8b0b9a9d45441518e51a7eb12a918bb')
 validpgpkeys=(163EB50119225DB3DF8F49EA17ACBA8DFA970E17) # Richard Hughes <richard@hughsie.com>
-
-prepare() {
-    cd ${pkgname}-${pkgver}
-    patch -p1 -i "$srcdir/fwupd-1.9.5-loong64.patch"
-}
 
 build() {
   local meson_options=(
@@ -88,6 +81,7 @@ build() {
     -D efi_binary=false
     -D launchd=disabled
     -D supported_build=enabled
+    -D plugin_msr=disabled
     -D systemd_unit_user=fwupd
   )
 
