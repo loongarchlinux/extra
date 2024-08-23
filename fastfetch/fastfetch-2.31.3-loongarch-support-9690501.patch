@@ -1,0 +1,110 @@
+From 3047fdc15b2e3d5441f0e3e186b300b8cb5856b5 Mon Sep 17 00:00:00 2001
+From: Yingjie Wang <phywyj@gmail.com>
+Date: Thu, 22 Aug 2024 21:47:14 -0400
+Subject: [PATCH] fastfetch: backport LoongArch CPU support from commit
+ 96905012a4
+
+Backported the logic from upstream dev branch commit 96905012a413f4ded49c33a182105f1d6a98b8cf ("Fix #1204 CPU (Linux): support loongarch") to fastfetch 2.31.3.
+
+This patch enables fastfetch to correctly parse LoongArch CPU information on Loong Arch Linux. The patch should be removed once a new upstream release that includes the fix is available.
+---
+ src/detection/cpu/cpu_linux.c   | 36 +++++++++++++++++++--------------
+ src/detection/version/version.c |  2 ++
+ 2 files changed, 23 insertions(+), 15 deletions(-)
+
+diff --git a/src/detection/cpu/cpu_linux.c b/src/detection/cpu/cpu_linux.c
+index 5b948150..fe30070c 100644
+--- a/src/detection/cpu/cpu_linux.c
++++ b/src/detection/cpu/cpu_linux.c
+@@ -137,7 +137,7 @@ static void detectArmName(FILE* cpuinfo, FFCPUResult* cpu, uint32_t implId)
+ }
+ #endif
+ 
+-static const char* parseCpuInfo(FILE* cpuinfo, FFCPUResult* cpu, FFstrbuf* physicalCoresBuffer, FFstrbuf* cpuMHz, FFstrbuf* cpuIsa, FFstrbuf* cpuUarch, FFstrbuf* cpuImplementer)
++static const char* parseCpuInfo(FF_MAYBE_UNUSED FILE* cpuinfo, FF_MAYBE_UNUSED FFCPUResult* cpu, FF_MAYBE_UNUSED FFstrbuf* physicalCoresBuffer, FF_MAYBE_UNUSED FFstrbuf* cpuMHz, FF_MAYBE_UNUSED FFstrbuf* cpuIsa, FF_MAYBE_UNUSED FFstrbuf* cpuUarch, FF_MAYBE_UNUSED FFstrbuf* cpuImplementer)
+ {
+     FF_AUTO_FREE char* line = NULL;
+     size_t len = 0;
+@@ -145,17 +145,24 @@ static const char* parseCpuInfo(FILE* cpuinfo, FFCPUResult* cpu, FFstrbuf* physi
+     while(getline(&line, &len, cpuinfo) != -1)
+     {
+         //Stop after the first CPU
+-        if(*line == '\0' || *line == '\n')
++        if((*line == '\0' || *line == '\n')
++	    #if __arm__ || __loongarch__
++	    && cpu->name.length > 0
++	    #endif
++        )
+             break;
+ 
+         (void)(
+-            ffParsePropLine(line, "model name :", &cpu->name) ||
+-            ffParsePropLine(line, "vendor_id :", &cpu->vendor) ||
+-            ffParsePropLine(line, "cpu cores :", physicalCoresBuffer) ||
+-            ffParsePropLine(line, "cpu MHz :", cpuMHz) ||
+-            ffParsePropLine(line, "isa :", cpuIsa) ||
+-            ffParsePropLine(line, "uarch :", cpuUarch) ||
+-
++            // arm64 doesn't have "model name"; arm32 does have "model name" but its value is not useful.
++            // "Hardware" should always be used in this case
++            #if !(__arm__ || __aarch64__)
++            (cpu->name.length == 0 && ffParsePropLine(line, "model name :", &cpu->name)) ||
++            (cpu->vendor.length == 0 && ffParsePropLine(line, "vendor_id :", &cpu->vendor)) ||
++            (physicalCoresBuffer->length == 0 && ffParsePropLine(line, "cpu cores :", physicalCoresBuffer)) ||
++            (cpuMHz->length == 0 && ffParsePropLine(line, "cpu MHz :", cpuMHz)) ||
++            #endif
++            (cpuIsa->length == 0 && ffParsePropLine(line, "isa :", cpuIsa)) ||
++            (cpuUarch->length == 0 && ffParsePropLine(line, "uarch :", cpuUarch)) ||
+             #if __arm__ || __aarch64__
+             (cpu->vendor.length == 0 && ffParsePropLine(line, "CPU implementer :", cpuImplementer)) ||
+             #endif
+@@ -163,10 +170,10 @@ static const char* parseCpuInfo(FILE* cpuinfo, FFCPUResult* cpu, FFstrbuf* physi
+             (cpu->name.length == 0 && ffParsePropLine(line, "Hardware :", &cpu->name)) || //For Android devices
+             #endif
+             #if __powerpc__ || __powerpc
+-            (cpu->name.length == 0 && ffParsePropLine(line, "cpu     :", &cpu->name)) || //For POWER
++            (cpu->name.length == 0 && ffParsePropLine(line, "cpu :", &cpu->name)) || //For POWER
+             #endif
+             #if __mips__
+-            (cpu->name.length == 0 && ffParsePropLine(line, "cpu model               :", &cpu->name)) || //For MIPS
++            (cpu->name.length == 0 && ffParsePropLine(line, "cpu model :", &cpu->name)) || //For MIPS
+             #endif
+             false
+         );
+@@ -275,6 +282,9 @@ static double detectCPUTemp(void)
+ 
+ static void parseIsa(FFstrbuf* cpuIsa)
+ {
++    // Always use the last part of the ISA string. Ref: #590 #1204
++    ffStrbufSubstrAfterLastC(cpuIsa, ' ');
++
+     if(ffStrbufStartsWithS(cpuIsa, "rv"))
+     {
+         // RISC-V ISA string example: "rv64imafdch_zicsr_zifencei".
+@@ -290,10 +300,6 @@ static void parseIsa(FFstrbuf* cpuIsa)
+         }
+         // The final ISA output of the above example is "rv64gch".
+     }
+-    if(ffStrbufStartsWithS(cpuIsa, "mips"))
+-    {
+-        ffStrbufSubstrAfterLastC(cpuIsa, ' ');
+-    }
+ }
+ 
+ void detectAsahi(FFCPUResult* cpu)
+diff --git a/src/detection/version/version.c b/src/detection/version/version.c
+index 5c1fb0ae..bd62386d 100644
+--- a/src/detection/version/version.c
++++ b/src/detection/version/version.c
+@@ -16,6 +16,8 @@
+     #define FF_ARCHITECTURE "riscv"
+ #elif defined(__s390x__)
+     #define FF_ARCHITECTURE "s390x"
++#elif defined(__loongarch__)
++    #define FF_ARCHITECTURE "loongarch"
+ #else
+     #define FF_ARCHITECTURE "unknown"
+ #endif
+-- 
+2.43.0
+

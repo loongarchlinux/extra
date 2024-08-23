@@ -48,8 +48,19 @@ optdepends=(
   'zlib: Faster image output when using kitty graphics protocol'
   'libdrm: Displays detection'
 )
-source=("${pkgname}-${pkgver}.tar.gz::${url}/archive/refs/tags/${pkgver}.tar.gz")
-sha256sums=('cec1f126ade7a5ef971901b1cdbe79f5864523d7a0a92732991619485d13e2e7')
+source=(
+	"${pkgname}-${pkgver}.tar.gz::${url}/archive/refs/tags/${pkgver}.tar.gz"
+        "fastfetch-2.31.3-loongarch-support-9690501.patch"
+)
+sha256sums=(
+	'cec1f126ade7a5ef971901b1cdbe79f5864523d7a0a92732991619485d13e2e7'
+	'f97904d5627386dba17dffba4e73044f14e0373a60031b8e45fbefe6f8913f51'
+)
+
+prepare() {
+	cd "$pkgname-${pkgver}"
+	patch -Np1 -i ../fastfetch-2.31.3-loongarch-support-9690501.patch
+}
 
 build() {
 	cmake -B build -S "${pkgname}-${pkgver}" \
