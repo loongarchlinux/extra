@@ -1,0 +1,130 @@
++++ FreeRDP-2.11.5/winpr/libwinpr/crt/unicode.c	2024-08-27 11:19:40.873299347 +0000
+--- FreeRDP-2.11.5/winpr/libwinpr/crt/unicode.c	2024-08-27 11:17:47.565014732 +0000
+@@ -215,7 +215,7 @@
+ 		else
+ 		{
+ 			targetLength =
+-			    ucnv_convert("UTF-16LE", "UTF-8", targetStart, targetCapacity * sizeof(WCHAR),
++			    ucnv_convert("UTF-16LE", "UTF-8", (char *)targetStart, targetCapacity * sizeof(WCHAR),
+ 			                 lpMultiByteStr, cbMultiByte, &error);
+ 			if (targetLength > 0)
+ 				targetLength /= sizeof(WCHAR);
+@@ -353,14 +353,14 @@
+ #if defined(UCNV_CONVERT)
+ 		if (cbMultiByte == 0)
+ 		{
+-			targetLength = ucnv_convert("UTF-8", "UTF-16LE", NULL, 0, lpWideCharStr,
++			targetLength = ucnv_convert("UTF-8", "UTF-16LE", NULL, 0, (const char *)lpWideCharStr,
+ 			                            cchWideChar * sizeof(WCHAR), &error);
+ 			cbMultiByte = targetLength;
+ 		}
+ 		else
+ 		{
+ 			targetLength = ucnv_convert("UTF-8", "UTF-16LE", targetStart, targetCapacity,
+-			                            lpWideCharStr, cchWideChar * sizeof(WCHAR), &error);
++			                            (const char *)lpWideCharStr, cchWideChar * sizeof(WCHAR), &error);
+ 			cbMultiByte = U_SUCCESS(error) ? targetLength : 0;
+ 		}
+ 
++++ FreeRDP-2.11.5/libfreerdp/codec/dsp_ffmpeg.c	2024-08-27 11:24:30.522012057 +0000
+--- FreeRDP-2.11.5/libfreerdp/codec/dsp_ffmpeg.c	2024-08-27 11:20:38.677443096 +0000
+@@ -423,7 +423,7 @@
+ 		uint8_t** pp = in->extended_data;
+ 		for (int y = 0; y < in->channels; y++)
+ 		{
+-			float* data = pp[y];
++			float* data = (float *)pp[y];
+ 			for (int x = 0; x < in->nb_samples; x++)
+ 			{
+ 				const float val1 = data[x];
++++ FreeRDP-2.11.5/libfreerdp/core/redirection.c	2024-08-27 11:25:39.686179925 +0000
+--- FreeRDP-2.11.5/libfreerdp/core/redirection.c	2024-08-27 11:24:53.718068436 +0000
+@@ -88,7 +88,7 @@ static void redirection_free_data(BYTE**
+ 
+ static BOOL redirection_copy_data(char** dst, UINT32* plen, const char* str, UINT32 len)
+ {
+-	redirection_free_data(dst, plen);
++	redirection_free_data((BYTE **)dst, plen);
+ 
+ 	if (!str || (len == 0))
+ 		return TRUE;
+@@ -109,7 +109,7 @@
+ 	switch (id)
+ 	{
+ 		case FreeRDP_TargetNetAddress:
+-			pdata = &settings->TargetNetAddress;
++			pdata = (BYTE **)&settings->TargetNetAddress;
+ 			plen = &settings->TargetNetAddressCount;
+ 			break;
+ 		case FreeRDP_LoadBalanceInfo:
+@@ -136,7 +136,7 @@
+ 			return FALSE;
+ 	}
+ 
+-	return redirection_copy_data(pdata, plen, data, length);
++	return redirection_copy_data((char **)pdata, plen, data, length);
+ }
+ 
+ static void rdp_print_redirection_flags(UINT32 flags)
++++ FreeRDP-2.11.5/libfreerdp/core/info.c	2024-08-27 11:26:15.562266730 +0000
+--- FreeRDP-2.11.5/libfreerdp/core/info.c	2024-08-27 11:25:56.398220382 +0000
+@@ -85,7 +85,7 @@
+ 
+ 	if (cbLen > 0)
+ 	{
+-		const WCHAR* domain = Stream_Pointer(s);
++		const WCHAR* domain = (const WCHAR *)Stream_Pointer(s);
+ 
+ 		if (isNullTerminated && (max > 0))
+ 			max -= nullSize;
++++ FreeRDP-2.11.5/channels/ainput/server/ainput_main.c	2024-08-27 11:29:15.294699303 +0000
+--- FreeRDP-2.11.5/channels/ainput/server/ainput_main.c	2024-08-27 11:28:51.526642294 +0000
+@@ -222,7 +222,7 @@ static HANDLE ainput_server_get_channel_
+ 
+ 	WINPR_ASSERT(ainput);
+ 
+-	if (WTSVirtualChannelQuery(ainput->ainput_channel, WTSVirtualEventHandle, &buffer,
++	if (WTSVirtualChannelQuery(ainput->ainput_channel, WTSVirtualEventHandle, (void **)&buffer,
+ 	                           &BytesReturned) == TRUE)
+ 	{
+ 		if (BytesReturned == sizeof(HANDLE))
+@@ -416,7 +416,7 @@ ainput_server_context* ainput_server_con
+ 		goto fail;
+ 	return &ainput->context;
+ fail:
+-	ainput_server_context_free(ainput);
++	ainput_server_context_free((ainput_server_context *)ainput);
+ 	return NULL;
+ }
+ 
+@@ -539,7 +539,7 @@
+ 			BYTE* buffer = NULL;
+ 			DWORD BytesReturned = 0;
+ 
+-			if (WTSVirtualChannelQuery(ainput->ainput_channel, WTSVirtualChannelReady, &buffer,
++			if (WTSVirtualChannelQuery(ainput->ainput_channel, WTSVirtualChannelReady, (void **)&buffer,
+ 			                           &BytesReturned) != TRUE)
+ 			{
+ 				WLog_ERR(TAG, "WTSVirtualChannelReady failed,");
++++ FreeRDP-2.11.5/client/Wayland/wlfreerdp.c	2024-08-27 11:31:39.215043483 +0000
+--- FreeRDP-2.11.5/client/Wayland/wlfreerdp.c	2024-08-27 11:31:21.387000935 +0000
+@@ -634,7 +634,7 @@
+ 		return FALSE;
+ 
+ 	obj = ArrayList_Object(wfl->events);
+-	obj->fnObjectNew = uwac_event_clone;
++	obj->fnObjectNew = (OBJECT_NEW_FN)uwac_event_clone;
+ 	obj->fnObjectFree = free;
+ 
+ 	InitializeCriticalSection(&wfl->critical);
++++ FreeRDP-2.11.5/client/X11/xf_graphics.c	2024-08-27 11:33:07.779254539 +0000
+--- FreeRDP-2.11.5/client/X11/xf_graphics.c	2024-08-27 11:31:58.059088433 +0000
+@@ -438,7 +438,7 @@
+ 
+ #endif
+ fail:
+-	WLog_DBG(TAG, "%s: %ld", __func__, rc ? pointer : -1);
++	//WLog_DBG(TAG, "%s: %ld", __func__, rc ? pointer : -1);
+ 	return rc;
+ }
+ 
