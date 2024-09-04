@@ -22,16 +22,26 @@ makedepends=('ghc-static' 'perl' 'libxslt' 'docbook-xsl' 'python-sphinx' 'haskel
              'ttf-dejavu' 'alex' 'happy' 'time' 'numactl' 'python-sphinx_rtd_theme')
 source=("https://downloads.haskell.org/~ghc/$pkgver/$pkgbase-${pkgver}-src.tar.xz"
         ghc-sphinx-6.patch::https://gitlab.haskell.org/ghc/ghc/-/commit/00dc51060881df81258ba3b3bdf447294618a4de.patch
-        ghc-rebuild-doc-index.hook ghc-register.hook ghc-unregister.hook)
+        ghc-rebuild-doc-index.hook ghc-register.hook ghc-unregister.hook
+	0001-Add-initial-support-for-LoongArch-Architecture.patch
+	0002-Enable-tables-next-to-code-for-LoongArch64.patch
+	0003-fix-build-error.patch)
+
 sha512sums=('c1159741725deaa00be7c230b38d43aed0fd456621fb4bc434434f13b03b74da1f91c09ce5dad553cf535f14038d8568fce7f21ea068680211b8bd35eafacf49'
             '7a79a5e9591b1ddd78fa349526a85cf9fee64db80639dcf1f3d6edef422fd4454222aedf5581e21489a20d748656265a40e7645004e4d5220280f6214c568e64'
             '940e58508a34bd5ec6a58dba2e60dd28be78138b2e820fc45b115879335d4a160dafcac5c68bf5d19300d6d403f80a0a8c783a6dd187fb690c6608888c21effe'
             '5f659651d8e562a4dcaae0f821d272d6e9c648b645b1d6ab1af61e4dd690dc5a4b9c6846753b7f935963f001bb1ae1f40cd77731b71ef5a8dbc079a360aa3f8f'
-            '3bdbd05c4a2c4fce4adf6802ff99b1088bdfad63da9ebfc470af9e271c3dd796f86fba1cf319d8f4078054d85c6d9e6a01f79994559f24cc77ee1a25724af2e6')
+            '3bdbd05c4a2c4fce4adf6802ff99b1088bdfad63da9ebfc470af9e271c3dd796f86fba1cf319d8f4078054d85c6d9e6a01f79994559f24cc77ee1a25724af2e6'
+            '44181fefc9d9a9483c71494922b179cb2398c19283d1f3fda3ff5ee97137ada0cfebb7ed83cee8ce6214f17bbdde0539dd0493248f6acc0d1e4c9572ab42a31c'
+            'ed51a6eea8d4f9204a733a68f35d12c2b12c79071feb86b243b10fc410ec6b35aa12737466f17be65c5f406c195ffeda611f614b223c4984746c410d7ca6ae0f'
+            '156610c6fd8e259c390633c2caf30a24d80019163bd8a110fd026daef9b85bd8f8d793434dc2c0fa3a2466f2a7d24a373032c27f01f4052b5b9b03fd3bd720ea')
 
 prepare() {
   cd ghc-$pkgver
-  #patch -p1 -i ../ghc-sphinx-6.patch
+  patch -p1 -i ../ghc-sphinx-6.patch
+  patch -p1 -i ../0001-Add-initial-support-for-LoongArch-Architecture.patch
+  patch -p1 -i ../0002-Enable-tables-next-to-code-for-LoongArch64.patch
+  patch -p1 -i ../0003-fix-build-error.patch
 
   # devendor rtd-theme for sphinx compatibility
   rm -r docs/users_guide/rtd-theme
@@ -43,7 +53,7 @@ prepare() {
   cp mk/build.mk{.sample,}
   sed -i '1iBuildFlavour = perf' mk/build.mk
 
-  ./boot.source
+  ./boot
 }
 
 build() {
