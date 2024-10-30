@@ -7,7 +7,7 @@
 pkgname=(libvirt libvirt-storage-gluster libvirt-storage-iscsi-direct)
 epoch=1
 pkgver=10.6.0
-pkgrel=1
+pkgrel=2
 pkgdesc="API for controlling virtualization engines (openvz,kvm,qemu,virtualbox,xen,etc)"
 arch=('loong64' 'x86_64')
 url="https://libvirt.org/"
@@ -16,7 +16,8 @@ license=('LGPL-2.1-or-later'
 depends=('libpciaccess' 'yajl' 'fuse3' 'gnutls' 'parted' 'libssh' 'libxml2'
 'numactl' 'polkit' 'libnbd' 'libnl')
 makedepends=('meson' 'libxslt' 'python-docutils' 'lvm2' 'open-iscsi' 'libiscsi' 'glusterfs'
-             'bash-completion' 'dnsmasq' 'iproute2' 'qemu-base')
+             'bash-completion' 'dnsmasq' 'iproute2' 'qemu-base' 'glib2-devel'
+	     'systemd')
 optdepends=('libvirt-storage-gluster: Gluster storage backend'
             'libvirt-storage-iscsi-direct: iSCSI-direct storage backend'
             'gettext: required for libvirt-guests.service'
@@ -87,15 +88,16 @@ backup=(
 )
 source=(
   "https://libvirt.org/sources/$pkgname-$pkgver.tar.xz"{,.asc}
-  libvirt-loongarch.patch
+  libvirt-latx-sys.patch
 )
 sha256sums=('a495b2a26faca841ac0073c7dd7f60857ca81adac9047dac5f698fd75f1342cd'
-            'SKIP')
+            'SKIP'
+            '57dae222e23ec2668a51036a825f3fa65d45da108d45e1005c7e92c146436f19')
 validpgpkeys=('453B65310595562855471199CA68BE8010084C9C') # Jiří Denemark <jdenemar@redhat.com>
 
 prepare() {
   cd "$pkgname-$pkgver"
-  patch -Np1 -i ../libvirt-loongarch.patch
+  patch -Np1 -i ../libvirt-latx-sys.patch
 
   sed -i 's|/sysconfig/|/conf.d/|g' \
     src/remote/libvirtd.service.in \

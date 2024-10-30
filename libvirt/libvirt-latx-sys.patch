@@ -1,0 +1,17 @@
+diff --git a/src/qemu/qemu_capabilities.c b/src/qemu/qemu_capabilities.c
+index e84c64bed3..169e5a55cd 100644
+--- a/src/qemu/qemu_capabilities.c
++++ b/src/qemu/qemu_capabilities.c
+@@ -935,6 +935,12 @@ virQEMUCapsGetDefaultEmulator(virArch hostarch,
+             return binary;
+     }
+ 
++    if (hostarch == VIR_ARCH_LOONGARCH64 && (guestarch == VIR_ARCH_I686 ||
++					     guestarch == VIR_ARCH_X86_64)) {
++	binary = virFindFileInPath("latx-sys");
++	return binary;
++    }
++
+     /* First attempt: try the guest architecture as it is */
+     archstr = virQEMUCapsArchToString(guestarch);
+     if ((binary = virQEMUCapsFindBinary("qemu-system-%s", archstr)))
