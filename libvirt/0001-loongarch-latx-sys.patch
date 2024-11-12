@@ -1,17 +1,26 @@
+commit fa2ebabc1ff7d4204e198ac71911feb00025ffa2
+Author: Xiaotian Wu <wuxiaotian@loongson.cn>
+Date:   Wed Oct 30 15:52:41 2024 +0800
+
+    loongarch latx-sys
+
 diff --git a/src/qemu/qemu_capabilities.c b/src/qemu/qemu_capabilities.c
-index e84c64bed3..169e5a55cd 100644
+index 29dfe8d35a..3eb4d2fad9 100644
 --- a/src/qemu/qemu_capabilities.c
 +++ b/src/qemu/qemu_capabilities.c
-@@ -935,6 +935,12 @@ virQEMUCapsGetDefaultEmulator(virArch hostarch,
+@@ -976,6 +976,15 @@ virQEMUCapsGetDefaultEmulator(virArch hostarch,
              return binary;
      }
  
 +    if (hostarch == VIR_ARCH_LOONGARCH64 && (guestarch == VIR_ARCH_I686 ||
 +					     guestarch == VIR_ARCH_X86_64)) {
 +	binary = virFindFileInPath("latx-sys");
++	if(binary == NULL) {
++	    goto next;
++	}
 +	return binary;
 +    }
-+
++next:
      /* First attempt: try the guest architecture as it is */
      archstr = virQEMUCapsArchToString(guestarch);
      if ((binary = virQEMUCapsFindBinary("qemu-system-%s", archstr)))
