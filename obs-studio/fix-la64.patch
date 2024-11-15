@@ -1,0 +1,32 @@
+Index: obs-studio-30.2.1-sources/plugins/obs-qsv11/common_utils_linux.cpp
+===================================================================
+--- obs-studio-30.2.1-sources.orig/plugins/obs-qsv11/common_utils_linux.cpp
++++ obs-studio-30.2.1-sources/plugins/obs-qsv11/common_utils_linux.cpp
+@@ -1,7 +1,9 @@
+ #include "common_utils.h"
+ 
+ #include <time.h>
++#ifndef __loongarch_lp64
+ #include <cpuid.h>
++#endif
+ 
+ #include <va/va_drm.h>
+ #include <va/va_drmcommon.h>
+@@ -412,9 +414,17 @@ double TimeDiffMsec(mfxTime tfinish, mfx
+ 
+ extern "C" void util_cpuid(int cpuinfo[4], int level)
+ {
++#ifndef __loongarch_lp64
+ 	__get_cpuid(level, (unsigned int *)&cpuinfo[0],
+ 		    (unsigned int *)&cpuinfo[1], (unsigned int *)&cpuinfo[2],
+ 		    (unsigned int *)&cpuinfo[3]);
++#else
++	cpuinfo[0] = 0x4C6F6F6E; //Loon
++	cpuinfo[1] = 0x67736f6E; //gson
++	cpuinfo[2] = 0x3368616F; //3hao
++	cpuinfo[3] = 0x00000000;
++	level = 1;
++#endif
+ }
+ 
+ struct vaapi_device {
