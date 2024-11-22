@@ -17,22 +17,25 @@ pkgrel=1
 arch=('loong64' 'x86_64')
 url='https://openjdk.java.net/'
 license=('LicenseRef-Java')
-makedepends=('java-environment=21' 'cpio' 'unzip' 'zip' 'libelf' 'libcups' 'libx11'
+makedepends=('java-environment' 'cpio' 'unzip' 'zip' 'libelf' 'libcups' 'libx11'
              'libxrender' 'libxtst' 'libxt' 'libxext' 'libxrandr' 'alsa-lib'
              'graphviz' 'freetype2' 'libjpeg-turbo' 'giflib' 'libpng' 'lcms2'
              'libnet' 'bash' 'harfbuzz' 'gcc-libs' 'glibc')
 source=(https://github.com/openjdk/jdk${_majorver}u/archive/${_git_tag}.tar.gz
         freedesktop-java.desktop
         freedesktop-jconsole.desktop
-        freedesktop-jshell.desktop)
+        freedesktop-jshell.desktop
+        jdk-21-loong64.patch)
 sha256sums=('b8b37fa6fcc284d91e7458c703ca4c893a1dd5a6e0f6b9e198e7d13cd8efd24d'
             '72111743ab6ab36854b0c85a504172983715d0798fce10bc4e35689b7d15fd93'
             '8ecdf5c1605bafa58b3f7da615e6d8d3d943e3a2d3831930d6efa7815aacce07'
-            '50fc0d677489b73d549df2f08d759d5f057f200adbbab83ea5e87456152ee03e')
+            '50fc0d677489b73d549df2f08d759d5f057f200adbbab83ea5e87456152ee03e'
+            '7b602d1513e3aa0c5eb15dff32b8d7e90204fc3f92993fc0510b52eb92a4633f')
 
 case "${CARCH}" in
   x86_64) _JARCH='x86_64';;
   i686)   _JARCH='x86';;
+  loong64) _JARCH='loongarch64';;
 esac
 
 _jvmdir=/usr/lib/jvm/java-${_majorver}-openjdk
@@ -47,6 +50,12 @@ _nonheadless=(lib/libawt_xawt.so
 _commondeps=('java-runtime-common>=3' 'ca-certificates-utils' 'nss' 'libjpeg-turbo' 'libjpeg.so'
            'lcms2' 'liblcms2.so' 'libnet' 'freetype2' 'libfreetype.so' 'harfbuzz' 'libharfbuzz.so'
            'glibc' 'gcc-libs')
+
+prepare() {
+  cd ${_jdkdir}
+
+  patch -Np1 -i "${srcdir}"/jdk-21-loong64.patch
+}
 
 build() {
   cd ${_jdkdir}
