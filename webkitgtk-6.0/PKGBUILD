@@ -80,9 +80,6 @@ makedepends=(
 )
 source=(
   $url/releases/webkitgtk-$pkgver.tar.xz{,.asc}
-  GTK-MiniBrowser-should-hide-the-toolbar-when-using-full-screen.patch
-  GTK-Disable-DMABuf-renderer-for-NVIDIA-proprietary-drivers.patch
-  webkit2gtk-fix-cmake-build.patch
 )
 sha256sums=('dc82d042ecaca981a4852357c06e5235743319cf10a94cd36ad41b97883a0b54'
             'SKIP')
@@ -96,15 +93,6 @@ validpgpkeys=(
 
 prepare() {
   cd webkitgtk-$pkgver
-
-  # Requested by eworm
-  # https://github.com/WebKit/WebKit/pull/17909
-  patch -Np1 -i ../GTK-MiniBrowser-should-hide-the-toolbar-when-using-full-screen.patch
-
-  # https://bugs.archlinux.org/task/79783
-  # https://github.com/WebKit/WebKit/pull/18614
-  patch -Np1 -i ../GTK-Disable-DMABuf-renderer-for-NVIDIA-proprietary-drivers.patch
-  patch -p1 -i $srcdir/webkit2gtk-fix-cmake-build.patch
 }
 
 build() {
@@ -129,10 +117,6 @@ build() {
   #     <artificial>:(.text+0x4a019): undefined reference to `ipint_extern_table_fill'
   #     collect2: error: ld returned 1 exit status
   export CC=clang CXX=clang++
-#  LDFLAGS+=" -fuse-ld=lld"
-# clang didn't support -mlsx
-  CFLAGS=${CFLAGS/-mlsx /}
-  CXXFLAGS=${CXXFLAGS/-mlsx /}
   CFLAGS=${CFLAGS/-fstack-clash-protection/}
   CXXFLAGS=${CXXFLAGS/-fstack-clash-protection/}
 
