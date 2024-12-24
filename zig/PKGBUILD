@@ -14,10 +14,12 @@ makedepends=('cmake' 'llvm')
 checkdepends=('lib32-glibc')
 source=("https://ziglang.org/download/$pkgver/zig-$pkgver.tar.xz"
         "fix-pie-support-detection.patch"
-        "skip-localhost-test.patch")
+        "skip-localhost-test.patch"
+	"std-add-loongarch64-support.patch")
 sha256sums=('06c73596beeccb71cc073805bdb9c0e05764128f16478fa53bf17dfabc1d4318'
             '3d10f6b14ee87dbca65a00b6c9470cdeb6f05d6844cc55fde402bcc2a439aba5'
-            'eeb5f0f72035c52bf558ffc77a171a3ddf93eac7d663ef0c82826007763717a8')
+            'eeb5f0f72035c52bf558ffc77a171a3ddf93eac7d663ef0c82826007763717a8'
+            '05b0018e8ae9519d3d641fe28305111b8322b8155815b3ec69ba08d747f7bb7a')
 
 prepare() {
     cd "$pkgname-$pkgver"
@@ -26,6 +28,7 @@ prepare() {
     patch -Np1 -i ../fix-pie-support-detection.patch
 
     patch -p1 -i ../skip-localhost-test.patch
+    patch -p1 -i ../std-add-loongarch64-support.patch
 }
 
 build() {
@@ -45,6 +48,8 @@ build() {
         ZIG_TARGET_TRIPLE=native-linux.6.1-gnu.2.38
         ZIG_TARGET_MCPU=baseline
     )
+    CFLAGS+=" -mcmodel=extreme"
+    CXXFLAGS+=" -mcmodel=extreme"
     cmake -B build "${cmake_vars[@]/#/-D}" .
     cmake --build build
 }

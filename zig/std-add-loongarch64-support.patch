@@ -1,0 +1,1437 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 22051f1902..85d610f718 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -68,7 +68,7 @@ if("${ZIG_VERSION}" STREQUAL "")
+                 set(GIT_COMMITS_AFTER_TAG ${CMAKE_MATCH_2})
+                 set(GIT_COMMIT ${CMAKE_MATCH_3})
+                 if(NOT RESOLVED_ZIG_VERSION VERSION_GREATER GIT_TAG)
+-                    message(SEND_ERROR "Zig version (${RESOLVED_ZIG_VERSION}) must be greater than tagged ancestor (${GIT_TAG}).")
++		  message(WARNING "Zig version (${RESOLVED_ZIG_VERSION}) must be greater than tagged ancestor (${GIT_TAG}).")
+                 endif()
+                 set(RESOLVED_ZIG_VERSION "${RESOLVED_ZIG_VERSION}-dev.${GIT_COMMITS_AFTER_TAG}+${GIT_COMMIT}")
+             else()
+@@ -381,6 +381,7 @@ set(ZIG_STAGE2_SOURCES
+     lib/std/Target/avr.zig
+     lib/std/Target/bpf.zig
+     lib/std/Target/hexagon.zig
++    lib/std/Target/loongarch.zig
+     lib/std/Target/mips.zig
+     lib/std/Target/msp430.zig
+     lib/std/Target/nvptx.zig
+diff --git a/build.zig b/build.zig
+index a9e9884717..18b5e4792b 100644
+--- a/build.zig
++++ b/build.zig
+@@ -624,6 +624,24 @@ fn addCompilerStep(b: *std.Build, options: AddCompilerStepOptions) *std.Build.St
+         .strip = options.strip,
+         .sanitize_thread = options.sanitize_thread,
+         .single_threaded = options.single_threaded,
++        .code_model = switch (options.target.result.cpu.arch) {
++            // NB:
++            // For loongarch, LLVM supports only small, medium and large
++            // code model. If we don't explicitly specify the code model,
++            // the default value `small' will be used.
++            //
++            // Since zig binary itself is relatively large, using a `small'
++            // code model will cause
++            //
++            // relocation R_LARCH_B26 out of range
++            //
++            // error when linking a loongarch64 zig binary.
++            //
++            // Here we explicitly set code model to `medium' to avoid this
++            // error.
++            .loongarch64 => .medium,
++            else => .default,
++        },
+     });
+     exe.stack_size = stack_size;
+ 
+diff --git a/lib/compiler_rt/clear_cache.zig b/lib/compiler_rt/clear_cache.zig
+index a2ea8f7c8e..dd4f965ad8 100644
+--- a/lib/compiler_rt/clear_cache.zig
++++ b/lib/compiler_rt/clear_cache.zig
+@@ -28,6 +28,10 @@ fn clear_cache(start: usize, end: usize) callconv(.C) void {
+         .aarch64, .aarch64_be, .aarch64_32 => true,
+         else => false,
+     };
++    const loongarch64 = switch (arch) {
++        .loongarch64 => true,
++        else => false,
++    };
+     const mips = switch (arch) {
+         .mips, .mipsel, .mips64, .mips64el => true,
+         else => false,
+@@ -159,6 +163,12 @@ fn clear_cache(start: usize, end: usize) callconv(.C) void {
+         // On Darwin, sys_icache_invalidate() provides this functionality
+         sys_icache_invalidate(start, end - start);
+         exportIt();
++    } else if (os == .linux and loongarch64) {
++        // See: https://github.com/llvm/llvm-project/blob/cf54cae26b65fc3201eff7200ffb9b0c9e8f9a13/compiler-rt/lib/builtins/clear_cache.c#L94-L95
++        asm volatile (
++            \\ ibar 0
++        );
++        exportIt();
+     }
+ }
+ 
+diff --git a/lib/libc/glibc/sysdeps/loongarch/bits/endianness.h b/lib/libc/glibc/sysdeps/loongarch/bits/endianness.h
+new file mode 100644
+index 0000000000..7290be7b18
+--- /dev/null
++++ b/lib/libc/glibc/sysdeps/loongarch/bits/endianness.h
+@@ -0,0 +1,11 @@
++#ifndef _BITS_ENDIANNESS_H
++#define _BITS_ENDIANNESS_H 1
++
++#ifndef _BITS_ENDIAN_H
++#error "Never use <bits/endianness.h> directly; include <endian.h> instead."
++#endif
++
++/* LoongArch is little-endian.  */
++#define __BYTE_ORDER __LITTLE_ENDIAN
++
++#endif /* bits/endianness.h */
+diff --git a/lib/libc/glibc/sysdeps/loongarch/start.S b/lib/libc/glibc/sysdeps/loongarch/start.S
+new file mode 100644
+index 0000000000..de7f9645cf
+--- /dev/null
++++ b/lib/libc/glibc/sysdeps/loongarch/start.S
+@@ -0,0 +1,79 @@
++/* Startup code compliant to the ELF LoongArch ABI.
++   Copyright (C) 2022-2024 Free Software Foundation, Inc.
++   This file is part of the GNU C Library.
++
++   The GNU C Library is free software; you can redistribute it and/or
++   modify it under the terms of the GNU Lesser General Public
++   License as published by the Free Software Foundation; either
++   version 2.1 of the License, or (at your option) any later version.
++
++   In addition to the permissions in the GNU Lesser General Public
++   License, the Free Software Foundation gives you unlimited
++   permission to link the compiled version of this file with other
++   programs, and to distribute those programs without any restriction
++   coming from the use of this file. (The GNU Lesser General Public
++   License restrictions do apply in other respects; for example, they
++   cover modification of the file, and distribution when not linked
++   into another program.)
++
++   Note that people who make modified versions of this file are not
++   obligated to grant this special exception for their modified
++   versions; it is their choice whether to do so. The GNU Lesser
++   General Public License gives permission to release a modified
++   version without this exception; this exception also makes it
++   possible to release a modified version which carries forward this
++   exception.
++
++   The GNU C Library is distributed in the hope that it will be useful,
++   but WITHOUT ANY WARRANTY; without even the implied warranty of
++   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++   Lesser General Public License for more details.
++
++   You should have received a copy of the GNU Lesser General Public
++   License along with the GNU C Library; if not, see
++   <https://www.gnu.org/licenses/>.  */
++
++#define __ASSEMBLY__ 1
++#include <entry.h>
++#include <sys/asm.h>
++
++/* The entry point's job is to call __libc_start_main.  Per the ABI,
++   a0 contains the address of a function to be passed to atexit.
++   __libc_start_main wants this in a5.  */
++
++/*
++int
++__libc_start_main (int (*main) (int, char **, char **),
++		   int argc,
++		   char **argv,
++		   __typeof (main) init,
++		   void (*fini) (void),
++		   void (*rtld_fini) (void),
++		   void *stack_end);
++ */
++
++ENTRY (ENTRY_POINT)
++
++/* Terminate call stack by noting ra is undefined.  Use a dummy
++   .cfi_label to force starting the FDE.  */
++	.cfi_label .Ldummy
++	cfi_undefined (1)
++	or		a5, a0, zero /* rtld_fini */
++
++	la.pcrel	a0, t0, main
++	REG_L		a1, sp, 0
++	ADDI		a2, sp, SZREG
++
++	/* Adjust $sp for 16-aligned */
++	BSTRINS		sp, zero, 3, 0
++
++	move		a3, zero /* used to be init */
++	move		a4, zero /* used to be fini */
++	or		a6, sp, zero /* stack_end */
++
++	la.pcrel	ra, t0, __libc_start_main
++	jirl		ra, ra, 0
++
++	la.pcrel	ra, t0, abort
++	jirl		ra, ra, 0
++END (ENTRY_POINT)
+diff --git a/lib/libc/glibc/sysdeps/loongarch/sys/regdef.h b/lib/libc/glibc/sysdeps/loongarch/sys/regdef.h
+new file mode 100644
+index 0000000000..80ce3e9c00
+--- /dev/null
++++ b/lib/libc/glibc/sysdeps/loongarch/sys/regdef.h
+@@ -0,0 +1,169 @@
++/* Register Macro definitions
++   Copyright (C) 2022-2024 Free Software Foundation, Inc.
++   This file is part of the GNU C Library.
++
++
++   The GNU C Library is free software; you can redistribute it and/or
++   modify it under the terms of the GNU Lesser General Public
++   License as published by the Free Software Foundation; either
++   version 2.1 of the License, or (at your option) any later version.
++
++   The GNU C Library is distributed in the hope that it will be useful,
++   but WITHOUT ANY WARRANTY; without even the implied warranty of
++   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++   Lesser General Public License for more details.
++
++   You should have received a copy of the GNU Lesser General Public
++   License along with the GNU C Library.  If not, see
++   <https://www.gnu.org/licenses/>.  */
++
++#ifndef _SYS_REGDEF_H
++#define _SYS_REGDEF_H
++
++#define zero $r0
++#define ra $r1
++#define tp $r2
++#define sp $r3
++#define a0 $r4
++#define a1 $r5
++#define a2 $r6
++#define a3 $r7
++#define a4 $r8
++#define a5 $r9
++#define a6 $r10
++#define a7 $r11
++#define v0 $r4
++#define v1 $r5
++#define t0 $r12
++#define t1 $r13
++#define t2 $r14
++#define t3 $r15
++#define t4 $r16
++#define t5 $r17
++#define t6 $r18
++#define t7 $r19
++#define t8 $r20
++#define x $r21
++#define fp $r22
++#define s0 $r23
++#define s1 $r24
++#define s2 $r25
++#define s3 $r26
++#define s4 $r27
++#define s5 $r28
++#define s6 $r29
++#define s7 $r30
++#define s8 $r31
++
++#define fa0 $f0
++#define fa1 $f1
++#define fa2 $f2
++#define fa3 $f3
++#define fa4 $f4
++#define fa5 $f5
++#define fa6 $f6
++#define fa7 $f7
++#define fv0 $f0
++#define fv1 $f1
++#define ft0 $f8
++#define ft1 $f9
++#define ft2 $f10
++#define ft3 $f11
++#define ft4 $f12
++#define ft5 $f13
++#define ft6 $f14
++#define ft7 $f15
++#define ft8 $f16
++#define ft9 $f17
++#define ft10 $f18
++#define ft11 $f19
++#define ft12 $f20
++#define ft13 $f21
++#define ft14 $f22
++#define ft15 $f23
++#define fs0 $f24
++#define fs1 $f25
++#define fs2 $f26
++#define fs3 $f27
++#define fs4 $f28
++#define fs5 $f29
++#define fs6 $f30
++#define fs7 $f31
++#define fcc0 $fcc0
++#define fcc1 $fcc1
++#define fcc2 $fcc2
++#define fcc3 $fcc3
++#define fcc4 $fcc4
++#define fcc5 $fcc5
++#define fcc6 $fcc6
++#define fcc7 $fcc7
++#define fcsr0 $fcsr0
++
++#define vr0 $vr0
++#define vr1 $vr1
++#define vr2 $vr2
++#define vr3 $vr3
++#define vr4 $vr4
++#define vr5 $vr5
++#define vr6 $vr6
++#define vr7 $vr7
++#define vr8 $vr8
++#define vr9 $vr9
++#define vr10 $vr10
++#define vr11 $vr11
++#define vr12 $vr12
++#define vr13 $vr13
++#define vr14 $vr14
++#define vr15 $vr15
++#define vr16 $vr16
++#define vr17 $vr17
++#define vr18 $vr18
++#define vr19 $vr19
++#define vr20 $vr20
++#define vr21 $vr21
++#define vr22 $vr22
++#define vr23 $vr23
++#define vr24 $vr24
++#define vr25 $vr25
++#define vr26 $vr26
++#define vr27 $vr27
++#define vr28 $vr28
++#define vr29 $vr29
++#define vr30 $vr30
++#define vr31 $vr31
++
++#define xr0 $xr0
++#define xr1 $xr1
++#define xr2 $xr2
++#define xr3 $xr3
++#define xr4 $xr4
++#define xr5 $xr5
++#define xr6 $xr6
++#define xr7 $xr7
++#define xr7 $xr7
++#define xr8 $xr8
++#define xr9 $xr9
++#define xr10 $xr10
++#define xr11 $xr11
++#define xr12 $xr12
++#define xr13 $xr13
++#define xr14 $xr14
++#define xr15 $xr15
++#define xr16 $xr16
++#define xr17 $xr17
++#define xr18 $xr18
++#define xr19 $xr19
++#define xr20 $xr20
++#define xr21 $xr21
++#define xr22 $xr22
++#define xr23 $xr23
++#define xr24 $xr24
++#define xr25 $xr25
++#define xr26 $xr26
++#define xr27 $xr27
++#define xr28 $xr28
++#define xr29 $xr29
++#define xr30 $xr30
++#define xr31 $xr31
++
++#endif /* _SYS_REGDEF_H */
+diff --git a/lib/libc/glibc/sysdeps/unix/sysv/linux/loongarch/sysdep.h b/lib/libc/glibc/sysdeps/unix/sysv/linux/loongarch/sysdep.h
+new file mode 100644
+index 0000000000..eb0ba790da
+--- /dev/null
++++ b/lib/libc/glibc/sysdeps/unix/sysv/linux/loongarch/sysdep.h
+@@ -0,0 +1,318 @@
++/* Assembly macros for LoongArch.
++   Copyright (C) 2022-2024 Free Software Foundation, Inc.
++   This file is part of the GNU C Library.
++
++   The GNU C Library is free software; you can redistribute it and/or
++   modify it under the terms of the GNU Lesser General Public
++   License as published by the Free Software Foundation; either
++   version 2.1 of the License, or (at your option) any later version.
++
++   The GNU C Library is distributed in the hope that it will be useful,
++   but WITHOUT ANY WARRANTY; without even the implied warranty of
++   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++   Lesser General Public License for more details.
++
++   You should have received a copy of the GNU Lesser General Public
++   License along with the GNU C Library.  If not, see
++   <https://www.gnu.org/licenses/>.  */
++
++#ifndef _LINUX_LOONGARCH_SYSDEP_H
++#define _LINUX_LOONGARCH_SYSDEP_H 1
++
++#include <sysdeps/unix/sysv/linux/sysdep.h>
++#include <sysdeps/unix/sysdep.h>
++#include <tls.h>
++
++#ifdef __ASSEMBLER__
++
++#include <sys/asm.h>
++#define ret jirl zero, ra, 0
++#define L(label) .L##label
++
++/* Performs a system call, handling errors by setting errno.  Linux indicates
++   errors by setting a0 to a value between -1 and -4095.  */
++#undef PSEUDO
++#define PSEUDO(name, syscall_name, args) \
++  ENTRY (name); \
++  li.d a7, SYS_ify (syscall_name); \
++  syscall 0; \
++  li.d a7, -4096; \
++  bltu a7, a0, .Lsyscall_error##name;
++
++#undef PSEUDO_END
++#define PSEUDO_END(sym) \
++  SYSCALL_ERROR_HANDLER (sym); \
++  ret; \
++  END (sym);
++
++#if !IS_IN(libc)
++#if RTLD_PRIVATE_ERRNO
++
++#define SYSCALL_ERROR_HANDLER(name) \
++  .Lsyscall_error##name : la t0, rtld_errno; \
++  sub.w a0, zero, a0; \
++  st.w a0, t0, 0; \
++  li.d a0, -1;
++
++#else
++
++#define SYSCALL_ERROR_HANDLER(name) \
++  .Lsyscall_error##name : la.tls.ie t0, errno; \
++  add.d t0, tp, t0; \
++  sub.w a0, zero, a0; \
++  st.w a0, t0, 0; \
++  li.d a0, -1;
++
++#endif
++#else
++
++#define SYSCALL_ERROR_HANDLER(name) .Lsyscall_error##name : b __syscall_error;
++
++#endif
++
++/* Performs a system call, not setting errno.  */
++#undef PSEUDO_NEORRNO
++#define PSEUDO_NOERRNO(name, syscall_name, args) \
++  ENTRY (name); \
++  li.d a7, SYS_ify (syscall_name); \
++  syscall 0;
++
++#undef PSEUDO_END_NOERRNO
++#define PSEUDO_END_NOERRNO(name) END (name);
++
++#undef ret_NOERRNO
++#define ret_NOERRNO ret
++
++/* Performs a system call, returning the error code.  */
++#undef PSEUDO_ERRVAL
++#define PSEUDO_ERRVAL(name, syscall_name, args) \
++  PSEUDO_NOERRNO (name, syscall_name, args); \
++  slli.d a0, a0, 32; \
++  srai.d a0, a0, 32; /* sign_ext */ \
++  sub.d a0, zero, a0;
++
++#undef PSEUDO_END_ERRVAL
++#define PSEUDO_END_ERRVAL(name) END (name);
++
++#undef ret_ERRVAL
++#define ret_ERRVAL ret
++
++#endif /* __ASSEMBLER__ */
++
++/* In order to get __set_errno() definition in INLINE_SYSCALL.  */
++#ifndef __ASSEMBLER__
++#include <errno.h>
++#endif
++
++#include <sysdeps/unix/sysdep.h>
++
++#undef SYS_ify
++#define SYS_ify(syscall_name) __NR_##syscall_name
++
++#ifndef __ASSEMBLER__
++
++#define VDSO_NAME "LINUX_5.10"
++#define VDSO_HASH 182947696
++
++/* List of system calls which are supported as vsyscalls.  */
++#define HAVE_CLOCK_GETRES64_VSYSCALL "__vdso_clock_getres"
++#define HAVE_CLOCK_GETTIME64_VSYSCALL "__vdso_clock_gettime"
++#define HAVE_GETTIMEOFDAY_VSYSCALL "__vdso_gettimeofday"
++#define HAVE_GETCPU_VSYSCALL "__vdso_getcpu"
++
++#define HAVE_CLONE3_WRAPPER 1
++
++#define INTERNAL_SYSCALL(name, nr, args...) \
++  internal_syscall##nr (SYS_ify (name), args)
++
++#define INTERNAL_SYSCALL_NCS(number, nr, args...) \
++  internal_syscall##nr (number, args)
++
++#define internal_syscall0(number, dummy...) \
++  ({ \
++    long int _sys_result; \
++\
++    { \
++      register long int __a7 asm ("$a7") = number; \
++      register long int __a0 asm ("$a0"); \
++      __asm__ volatile ("syscall 0\n\t" \
++		       : "=r"(__a0) \
++		       : "r"(__a7) \
++		       : __SYSCALL_CLOBBERS); \
++      _sys_result = __a0; \
++    } \
++    _sys_result; \
++  })
++
++#define internal_syscall1(number, arg0) \
++  ({ \
++    long int _sys_result; \
++\
++    { \
++      long int _arg0 = (long int) (arg0); \
++      register long int __a7 asm ("$a7") = number; \
++      register long int __a0 asm ("$a0") = _arg0; \
++      __asm__ volatile ("syscall 0\n\t" \
++		       : "+r"(__a0) \
++		       : "r"(__a7) \
++		       : __SYSCALL_CLOBBERS); \
++      _sys_result = __a0; \
++    } \
++    _sys_result; \
++  })
++
++#define internal_syscall2(number, arg0, arg1) \
++  ({ \
++    long int _sys_result; \
++\
++    { \
++      long int _arg0 = (long int) (arg0); \
++      long int _arg1 = (long int) (arg1); \
++      register long int __a7 asm ("$a7") = number; \
++      register long int __a0 asm ("$a0") = _arg0; \
++      register long int __a1 asm ("$a1") = _arg1; \
++      __asm__ volatile ("syscall 0\n\t" \
++		       : "+r"(__a0) \
++		       : "r"(__a7), "r"(__a1) \
++		       : __SYSCALL_CLOBBERS); \
++      _sys_result = __a0; \
++    } \
++    _sys_result; \
++  })
++
++#define internal_syscall3(number, arg0, arg1, arg2) \
++  ({ \
++    long int _sys_result; \
++\
++    { \
++      long int _arg0 = (long int) (arg0); \
++      long int _arg1 = (long int) (arg1); \
++      long int _arg2 = (long int) (arg2); \
++      register long int __a7 asm ("$a7") = number; \
++      register long int __a0 asm ("$a0") = _arg0; \
++      register long int __a1 asm ("$a1") = _arg1; \
++      register long int __a2 asm ("$a2") = _arg2; \
++      __asm__ volatile ("syscall 0\n\t" \
++		       : "+r"(__a0) \
++		       : "r"(__a7), "r"(__a1), "r"(__a2) \
++		       : __SYSCALL_CLOBBERS); \
++      _sys_result = __a0; \
++    } \
++    _sys_result; \
++  })
++
++#define internal_syscall4(number, arg0, arg1, arg2, arg3) \
++  ({ \
++    long int _sys_result; \
++\
++    { \
++      long int _arg0 = (long int) (arg0); \
++      long int _arg1 = (long int) (arg1); \
++      long int _arg2 = (long int) (arg2); \
++      long int _arg3 = (long int) (arg3); \
++      register long int __a7 asm ("$a7") = number; \
++      register long int __a0 asm ("$a0") = _arg0; \
++      register long int __a1 asm ("$a1") = _arg1; \
++      register long int __a2 asm ("$a2") = _arg2; \
++      register long int __a3 asm ("$a3") = _arg3; \
++      __asm__ volatile ("syscall 0\n\t" \
++		       : "+r"(__a0) \
++		       : "r"(__a7), "r"(__a1), "r"(__a2), "r"(__a3) \
++		       : __SYSCALL_CLOBBERS); \
++      _sys_result = __a0; \
++    } \
++    _sys_result; \
++  })
++
++#define internal_syscall5(number, arg0, arg1, arg2, arg3, arg4) \
++  ({ \
++    long int _sys_result; \
++\
++    { \
++      long int _arg0 = (long int) (arg0); \
++      long int _arg1 = (long int) (arg1); \
++      long int _arg2 = (long int) (arg2); \
++      long int _arg3 = (long int) (arg3); \
++      long int _arg4 = (long int) (arg4); \
++      register long int __a7 asm ("$a7") = number; \
++      register long int __a0 asm ("$a0") = _arg0; \
++      register long int __a1 asm ("$a1") = _arg1; \
++      register long int __a2 asm ("$a2") = _arg2; \
++      register long int __a3 asm ("$a3") = _arg3; \
++      register long int __a4 asm ("$a4") = _arg4; \
++      __asm__ volatile ("syscall 0\n\t" \
++		       : "+r"(__a0) \
++		       : "r"(__a7), "r"(__a1), "r"(__a2), \
++			 "r"(__a3), "r"(__a4) \
++		       : __SYSCALL_CLOBBERS); \
++      _sys_result = __a0; \
++    } \
++    _sys_result; \
++  })
++
++#define internal_syscall6(number, arg0, arg1, arg2, arg3, arg4, arg5) \
++  ({ \
++    long int _sys_result; \
++\
++    { \
++      long int _arg0 = (long int) (arg0); \
++      long int _arg1 = (long int) (arg1); \
++      long int _arg2 = (long int) (arg2); \
++      long int _arg3 = (long int) (arg3); \
++      long int _arg4 = (long int) (arg4); \
++      long int _arg5 = (long int) (arg5); \
++      register long int __a7 asm ("$a7") = number; \
++      register long int __a0 asm ("$a0") = _arg0; \
++      register long int __a1 asm ("$a1") = _arg1; \
++      register long int __a2 asm ("$a2") = _arg2; \
++      register long int __a3 asm ("$a3") = _arg3; \
++      register long int __a4 asm ("$a4") = _arg4; \
++      register long int __a5 asm ("$a5") = _arg5; \
++      __asm__ volatile ("syscall 0\n\t" \
++		       : "+r"(__a0) \
++		       : "r"(__a7), "r"(__a1), "r"(__a2), "r"(__a3), \
++			 "r"(__a4), "r"(__a5) \
++		       : __SYSCALL_CLOBBERS); \
++      _sys_result = __a0; \
++    } \
++    _sys_result; \
++  })
++
++#define internal_syscall7(number, arg0, arg1, arg2, arg3, arg4, arg5, arg6) \
++  ({ \
++    long int _sys_result; \
++\
++    { \
++      long int _arg0 = (long int) (arg0); \
++      long int _arg1 = (long int) (arg1); \
++      long int _arg2 = (long int) (arg2); \
++      long int _arg3 = (long int) (arg3); \
++      long int _arg4 = (long int) (arg4); \
++      long int _arg5 = (long int) (arg5); \
++      long int _arg6 = (long int) (arg6); \
++      register long int __a7 asm ("$a7") = number; \
++      register long int __a0 asm ("$a0") = _arg0; \
++      register long int __a1 asm ("$a1") = _arg1; \
++      register long int __a2 asm ("$a2") = _arg2; \
++      register long int __a3 asm ("$a3") = _arg3; \
++      register long int __a4 asm ("$a4") = _arg4; \
++      register long int __a5 asm ("$a5") = _arg5; \
++      register long int __a6 asm ("$a6") = _arg6; \
++      __asm__ volatile ("syscall 0\n\t" \
++		       : "+r"(__a0) \
++		       : "r"(__a7), "r"(__a1), "r"(__a2), "r"(__a3), \
++			 "r"(__a4), "r"(__a5), "r"(__a6) \
++		       : __SYSCALL_CLOBBERS); \
++      _sys_result = __a0; \
++    } \
++    _sys_result; \
++  })
++
++#define __SYSCALL_CLOBBERS \
++  "$t0", "$t1", "$t2", "$t3", "$t4", "$t5", "$t6", "$t7", "$t8", "memory"
++
++extern long int __syscall_error (long int neg_errno);
++
++#endif /* ! __ASSEMBLER__ */
++
++#endif /* linux/loongarch/sysdep.h */
+diff --git a/lib/std/Target.zig b/lib/std/Target.zig
+index da64f9b723..881a9c6ec6 100644
+--- a/lib/std/Target.zig
++++ b/lib/std/Target.zig
+@@ -197,6 +197,7 @@ pub const Os = struct {
+                 .linux => switch (arch) {
+                     .arm, .armeb, .thumb, .thumbeb => "arm",
+                     .aarch64, .aarch64_be, .aarch64_32 => "aarch64",
++                    .loongarch32, .loongarch64 => "loongarch",
+                     .mips, .mipsel, .mips64, .mips64el => "mips",
+                     .powerpc, .powerpcle, .powerpc64, .powerpc64le => "powerpc",
+                     .riscv32, .riscv64 => "riscv",
+@@ -1072,6 +1073,13 @@ pub const Cpu = struct {
+             };
+         }
+ 
++        pub inline fn isLoongArch(arch: Arch) bool {
++            return switch (arch) {
++                .loongarch32, .loongarch64 => true,
++                else => false,
++            };
++        }
++
+         pub inline fn isRISCV(arch: Arch) bool {
+             return switch (arch) {
+                 .riscv32, .riscv64 => true,
+@@ -1198,8 +1206,8 @@ pub const Cpu = struct {
+                 .spirv => .NONE,
+                 .spirv32 => .NONE,
+                 .spirv64 => .NONE,
+-                .loongarch32 => .NONE,
+-                .loongarch64 => .NONE,
++                .loongarch32 => .LOONGARCH,
++                .loongarch64 => .LOONGARCH,
+             };
+         }
+ 
+@@ -1264,8 +1272,8 @@ pub const Cpu = struct {
+                 .spirv => .Unknown,
+                 .spirv32 => .Unknown,
+                 .spirv64 => .Unknown,
+-                .loongarch32 => .Unknown,
+-                .loongarch64 => .Unknown,
++                .loongarch32 => .LOONGARCH32,
++                .loongarch64 => .LOONGARCH64,
+             };
+         }
+ 
+@@ -1737,6 +1745,8 @@ pub const DynamicLinker = struct {
+                     else => "",
+                 }}) catch unreachable,
+ 
++                .loongarch64 => init("/lib64/ld-linux-loongarch-lp64d.so.1"),
++
+                 .mips,
+                 .mipsel,
+                 .mips64,
+@@ -1808,7 +1818,6 @@ pub const DynamicLinker = struct {
+                 .ve,
+                 .dxil,
+                 .loongarch32,
+-                .loongarch64,
+                 .xtensa,
+                 => none,
+             },
+@@ -2143,6 +2152,8 @@ pub fn c_type_bit_size(target: Target, c_type: CType) u16 {
+                     .sparcel,
+                     .wasm32,
+                     .wasm64,
++                    .loongarch32,
++                    .loongarch64,
+                     => return 128,
+ 
+                     else => return 64,
+@@ -2255,6 +2266,8 @@ pub fn c_type_bit_size(target: Target, c_type: CType) u16 {
+                     .sparcel,
+                     .wasm32,
+                     .wasm64,
++                    .loongarch32,
++                    .loongarch64,
+                     => return 128,
+ 
+                     else => return 64,
+@@ -2454,7 +2467,6 @@ pub fn c_type_alignment(target: Target, c_type: CType) u16 {
+             .bpfeb,
+             .hexagon,
+             .hsail64,
+-            .loongarch64,
+             .m68k,
+             .mips,
+             .mipsel,
+@@ -2474,6 +2486,7 @@ pub fn c_type_alignment(target: Target, c_type: CType) u16 {
+ 
+             .aarch64,
+             .aarch64_be,
++            .loongarch64,
+             .mips64,
+             .mips64el,
+             .powerpc,
+@@ -2582,7 +2595,6 @@ pub fn c_type_preferred_alignment(target: Target, c_type: CType) u16 {
+             .hexagon,
+             .hsail64,
+             .x86,
+-            .loongarch64,
+             .m68k,
+             .mips,
+             .mipsel,
+@@ -2602,6 +2614,7 @@ pub fn c_type_preferred_alignment(target: Target, c_type: CType) u16 {
+ 
+             .aarch64,
+             .aarch64_be,
++            .loongarch64,
+             .mips64,
+             .mips64el,
+             .powerpc,
+diff --git a/lib/std/Thread.zig b/lib/std/Thread.zig
+index c126792336..e1214b5814 100644
+--- a/lib/std/Thread.zig
++++ b/lib/std/Thread.zig
+@@ -1203,6 +1203,19 @@ const LinuxThreadImpl = struct {
+                       [len] "r" (self.mapped.len),
+                     : "memory"
+                 ),
++                .loongarch64 => asm volatile (
++                    \\ or      $a0, $zero, %[ptr]
++                    \\ or      $a1, $zero, %[len]
++                    \\ ori     $a7, $zero, 215     # SYS_munmap
++                    \\ syscall 0                   # call munmap
++                    \\ ori     $a0, $zero, 0
++                    \\ ori     $a7, $zero, 93      # SYS_exit
++                    \\ syscall 0                   # call exit
++                    :
++                    : [ptr] "r" (@intFromPtr(self.mapped.ptr)),
++                      [len] "r" (self.mapped.len),
++                    : "memory"
++                ),
+                 else => |cpu_arch| @compileError("Unsupported linux arch: " ++ @tagName(cpu_arch)),
+             }
+             unreachable;
+diff --git a/lib/std/coff.zig b/lib/std/coff.zig
+index 1461ac7fbc..bfa29c91a0 100644
+--- a/lib/std/coff.zig
++++ b/lib/std/coff.zig
+@@ -1002,6 +1002,10 @@ pub const MachineType = enum(u16) {
+     I386 = 0x14c,
+     /// Intel Itanium processor family
+     IA64 = 0x200,
++    /// LoongArch32
++    LOONGARCH32 = 0x6232,
++    /// LoongArch64
++    LOONGARCH64 = 0x6264,
+     /// Mitsubishi M32R little endian
+     M32R = 0x9041,
+     /// MIPS16
+@@ -1047,6 +1051,8 @@ pub const MachineType = enum(u16) {
+             .aarch64 => .ARM64,
+             .riscv64 => .RISCV64,
+             .x86_64 => .X64,
++            .loongarch32 => .LOONGARCH32,
++            .loongarch64 => .LOONGARCH64,
+             // there's cases we don't (yet) handle
+             else => unreachable,
+         };
+@@ -1062,6 +1068,8 @@ pub const MachineType = enum(u16) {
+             .ARM64 => .aarch64,
+             .RISCV64 => .riscv64,
+             .X64 => .x86_64,
++            .LOONGARCH32 => .loongarch32,
++            .LOONGARCH64 => .loongarch64,
+             // there's cases we don't (yet) handle
+             else => null,
+         };
+diff --git a/lib/std/elf.zig b/lib/std/elf.zig
+index bdb84f5171..d727f92934 100644
+--- a/lib/std/elf.zig
++++ b/lib/std/elf.zig
+@@ -1630,6 +1630,9 @@ pub const EM = enum(u16) {
+     /// C-SKY
+     CSKY = 252,
+ 
++    /// LoongArch
++    LOONGARCH = 258,
++
+     /// Fujitsu FR-V
+     FRV = 0x5441,
+ 
+@@ -1659,6 +1662,14 @@ pub const EM = enum(u16) {
+             .SPARCV9 => .sparc64,
+             .S390 => .s390x,
+             .SPU_2 => .spu_2,
++            // FIXME:
++            // No support for .loongarch32 yet so it is safe to assume we are on .loongarch64.
++            //
++            // However, when e_machine is .LOONGARCH, we should check
++            // ei_class's value to decide the CPU architecture.
++            // - ELFCLASS32 => .loongarch32
++            // - ELFCLASS64 => .loongarch64
++            .LOONGARCH => .loongarch64,
+             // there's many cases we don't (yet) handle, or will never have a
+             // zig target cpu arch equivalent (such as null).
+             else => null,
+diff --git a/lib/std/mem.zig b/lib/std/mem.zig
+index aff9532ecb..6d07d46620 100644
+--- a/lib/std/mem.zig
++++ b/lib/std/mem.zig
+@@ -17,6 +17,14 @@ pub const page_size = switch (builtin.cpu.arch) {
+         else => 4 * 1024,
+     },
+     .sparc64 => 8 * 1024,
++    .loongarch32, .loongarch64 => switch (builtin.os.tag) {
++        // Linux default KConfig value is 16KiB
++        .linux => 16 * 1024,
++        // FIXME:
++        // There is no other OS supported yet. Use the same value
++        // as Linux for now.
++        else => 16 * 1024,
++    },
+     else => 4 * 1024,
+ };
+ 
+diff --git a/lib/std/os/linux.zig b/lib/std/os/linux.zig
+index 6de7a0ad75..be937dd534 100644
+--- a/lib/std/os/linux.zig
++++ b/lib/std/os/linux.zig
+@@ -40,6 +40,7 @@ const arch_bits = switch (native_arch) {
+     .arm, .thumb => @import("linux/arm-eabi.zig"),
+     .riscv64 => @import("linux/riscv64.zig"),
+     .sparc64 => @import("linux/sparc64.zig"),
++    .loongarch64 => @import("linux/loongarch64.zig"),
+     .mips, .mipsel => @import("linux/mips.zig"),
+     .mips64, .mips64el => @import("linux/mips64.zig"),
+     .powerpc, .powerpcle => @import("linux/powerpc.zig"),
+@@ -103,6 +104,7 @@ pub const SYS = switch (@import("builtin").cpu.arch) {
+     .arm, .thumb => syscalls.Arm,
+     .riscv64 => syscalls.RiscV64,
+     .sparc64 => syscalls.Sparc64,
++    .loongarch64 => syscalls.LoongArch64,
+     .mips, .mipsel => syscalls.Mips,
+     .mips64, .mips64el => syscalls.Mips64,
+     .powerpc, .powerpcle => syscalls.PowerPC,
+@@ -160,7 +162,7 @@ pub const MAP = switch (native_arch) {
+         UNINITIALIZED: bool = false,
+         _: u5 = 0,
+     },
+-    .riscv64 => packed struct(u32) {
++    .riscv64, .loongarch64 => packed struct(u32) {
+         TYPE: MAP_TYPE,
+         FIXED: bool = false,
+         ANONYMOUS: bool = false,
+@@ -265,7 +267,7 @@ pub const O = switch (native_arch) {
+         TMPFILE: bool = false,
+         _: u9 = 0,
+     },
+-    .x86, .riscv64 => packed struct(u32) {
++    .x86, .riscv64, .loongarch64 => packed struct(u32) {
+         ACCMODE: ACCMODE = .RDONLY,
+         _2: u4 = 0,
+         CREAT: bool = false,
+@@ -7136,7 +7138,7 @@ pub const AUDIT = struct {
+         ARMEB = toAudit(.armeb),
+         CSKY = toAudit(.csky),
+         HEXAGON = @intFromEnum(std.elf.EM.HEXAGON),
+-        X86 = toAudit(.x86),
++        LOONGARCH64 = toAudit(.loongarch64),
+         M68K = toAudit(.m68k),
+         MIPS = toAudit(.mips),
+         MIPSEL = toAudit(.mips) | LE,
+@@ -7150,18 +7152,22 @@ pub const AUDIT = struct {
+         S390X = toAudit(.s390x),
+         SPARC = toAudit(.sparc),
+         SPARC64 = toAudit(.sparc64),
++        X86 = toAudit(.x86),
+         X86_64 = toAudit(.x86_64),
++        XTENSA = toAudit(.xtensa),
+ 
+         fn toAudit(arch: std.Target.Cpu.Arch) u32 {
+             var res: u32 = @intFromEnum(arch.toElfMachine());
+             if (arch.endian() == .little) res |= LE;
+             switch (arch) {
+                 .aarch64,
++                .loongarch64,
+                 .mips64,
+                 .mips64el,
+                 .powerpc64,
+                 .powerpc64le,
+                 .riscv64,
++                .s390x,
+                 .sparc64,
+                 .x86_64,
+                 => res |= @"64BIT",
+diff --git a/lib/std/os/linux/loongarch64.zig b/lib/std/os/linux/loongarch64.zig
+new file mode 100644
+index 0000000000..83cabcf1d5
+--- /dev/null
++++ b/lib/std/os/linux/loongarch64.zig
+@@ -0,0 +1,203 @@
++const std = @import("../../std.zig");
++const linux = std.os.linux;
++const SYS = linux.SYS;
++const iovec = std.os.iovec;
++const uid_t = linux.uid_t;
++const gid_t = linux.gid_t;
++const stack_t = linux.stack_t;
++const sigset_t = linux.sigset_t;
++
++pub fn syscall0(number: SYS) usize {
++    return asm volatile (
++        \\ syscall 0
++        : [ret] "={$r4}" (-> usize),
++        : [number] "{$r11}" (@intFromEnum(number)),
++        : "$t0", "$t1", "$t2", "$t3", "$t4", "$t5", "$t6", "$t7", "$t8", "memory"
++    );
++}
++
++pub fn syscall1(number: SYS, arg1: usize) usize {
++    return asm volatile (
++        \\ syscall 0
++        : [ret] "={$r4}" (-> usize),
++        : [number] "{$r11}" (@intFromEnum(number)),
++          [arg1] "{$r4}" (arg1),
++        : "$t0", "$t1", "$t2", "$t3", "$t4", "$t5", "$t6", "$t7", "$t8", "memory"
++    );
++}
++
++pub fn syscall2(number: SYS, arg1: usize, arg2: usize) usize {
++    return asm volatile (
++        \\ syscall 0
++        : [ret] "={$r4}" (-> usize),
++        : [number] "{$r11}" (@intFromEnum(number)),
++          [arg1] "{$r4}" (arg1),
++          [arg2] "{$r5}" (arg2),
++        : "$t0", "$t1", "$t2", "$t3", "$t4", "$t5", "$t6", "$t7", "$t8", "memory"
++    );
++}
++
++pub fn syscall3(number: SYS, arg1: usize, arg2: usize, arg3: usize) usize {
++    return asm volatile (
++        \\ syscall 0
++        : [ret] "={$r4}" (-> usize),
++        : [number] "{$r11}" (@intFromEnum(number)),
++          [arg1] "{$r4}" (arg1),
++          [arg2] "{$r5}" (arg2),
++          [arg3] "{$r6}" (arg3),
++        : "$t0", "$t1", "$t2", "$t3", "$t4", "$t5", "$t6", "$t7", "$t8", "memory"
++    );
++}
++
++pub fn syscall4(number: SYS, arg1: usize, arg2: usize, arg3: usize, arg4: usize) usize {
++    return asm volatile (
++        \\ syscall 0
++        : [ret] "={$r4}" (-> usize),
++        : [number] "{$r11}" (@intFromEnum(number)),
++          [arg1] "{$r4}" (arg1),
++          [arg2] "{$r5}" (arg2),
++          [arg3] "{$r6}" (arg3),
++          [arg4] "{$r7}" (arg4),
++        : "$t0", "$t1", "$t2", "$t3", "$t4", "$t5", "$t6", "$t7", "$t8", "memory"
++    );
++}
++
++pub fn syscall5(number: SYS, arg1: usize, arg2: usize, arg3: usize, arg4: usize, arg5: usize) usize {
++    return asm volatile (
++        \\ syscall 0
++        : [ret] "={$r4}" (-> usize),
++        : [number] "{$r11}" (@intFromEnum(number)),
++          [arg1] "{$r4}" (arg1),
++          [arg2] "{$r5}" (arg2),
++          [arg3] "{$r6}" (arg3),
++          [arg4] "{$r7}" (arg4),
++          [arg5] "{$r8}" (arg5),
++        : "$t0", "$t1", "$t2", "$t3", "$t4", "$t5", "$t6", "$t7", "$t8", "memory"
++    );
++}
++
++pub fn syscall6(
++    number: SYS,
++    arg1: usize,
++    arg2: usize,
++    arg3: usize,
++    arg4: usize,
++    arg5: usize,
++    arg6: usize,
++) usize {
++    return asm volatile (
++        \\ syscall 0
++        : [ret] "={$r4}" (-> usize),
++        : [number] "{$r11}" (@intFromEnum(number)),
++          [arg1] "{$r4}" (arg1),
++          [arg2] "{$r5}" (arg2),
++          [arg3] "{$r6}" (arg3),
++          [arg4] "{$r7}" (arg4),
++          [arg5] "{$r8}" (arg5),
++          [arg6] "{$r9}" (arg6),
++        : "$t0", "$t1", "$t2", "$t3", "$t4", "$t5", "$t6", "$t7", "$t8", "memory"
++    );
++}
++
++pub fn clone() callconv(.Naked) usize {
++    // __clone(func, stack, flags, arg, ptid, tls, ctid)
++    //           a0,    a1,    a2,  a3,   a4,  a5,   a6
++    // sys_clone(flags, stack, ptid, ctid, tls)
++    //              a0,    a1,   a2,   a3,  a4
++    asm volatile (
++        \\ bstrins.d $a1, $zero, 3, 0   # stack to 16 align
++        \\
++        \\ # Save function pointer and argument pointer on new thread stack
++        \\ addi.d  $a1, $a1, -16
++        \\ st.d    $a0, $a1, 0     # save function pointer
++        \\ st.d    $a3, $a1, 8     # save argument pointer
++        \\ or      $a0, $a2, $zero
++        \\ or      $a2, $a4, $zero
++        \\ or      $a3, $a6, $zero
++        \\ or      $a4, $a5, $zero
++        \\ ori     $a7, $zero, 220 # SYS_clone
++        \\ syscall 0               # call clone
++        \\
++        \\ beqz    $a0, 1f         # whether child process
++        \\ jirl    $zero, $ra, 0   # parent process return
++        \\1:
++        \\ ld.d    $t8, $sp, 0     # function pointer
++        \\ ld.d    $a0, $sp, 8     # argument pointer
++        \\ jirl    $ra, $t8, 0     # call the user's function
++        \\ ori     $a7, $zero, 93  # SYS_exit
++        \\ syscall 0               # child process exit
++    );
++}
++
++pub const restore = restore_rt;
++
++pub fn restore_rt() callconv(.Naked) noreturn {
++    asm volatile (
++        \\ or $a7, $zero, %[number]
++        \\ syscall 0
++        :
++        : [number] "r" (@intFromEnum(SYS.rt_sigreturn)),
++        : "$t0", "$t1", "$t2", "$t3", "$t4", "$t5", "$t6", "$t7", "$t8", "memory"
++    );
++}
++
++pub const blksize_t = i32;
++pub const nlink_t = u32;
++pub const time_t = i64;
++pub const mode_t = u32;
++pub const off_t = i64;
++pub const ino_t = u64;
++pub const dev_t = u32;
++pub const blkcnt_t = i64;
++
++pub const timeval = extern struct {
++    tv_sec: time_t,
++    tv_usec: i64,
++};
++
++pub const F = struct {
++    pub const DUPFD = 0;
++    pub const GETFD = 1;
++    pub const SETFD = 2;
++    pub const GETFL = 3;
++    pub const SETFL = 4;
++    pub const GETLK = 5;
++    pub const SETLK = 6;
++    pub const SETLKW = 7;
++    pub const SETOWN = 8;
++    pub const GETOWN = 9;
++    pub const SETSIG = 10;
++    pub const GETSIG = 11;
++
++    pub const RDLCK = 0;
++    pub const WRLCK = 1;
++    pub const UNLCK = 2;
++
++    pub const SETOWN_EX = 15;
++    pub const GETOWN_EX = 16;
++
++    pub const GETOWNER_UIDS = 17;
++};
++
++pub const VDSO = struct {
++    pub const CGT_SYM = "__vdso_clock_gettime";
++    pub const CGT_VER = "LINUX_5.10";
++};
++
++pub const mcontext_t = extern struct {
++    pc: u64,
++    regs: [32]u64,
++    flags: u32,
++    extcontext: [0]u64 align(16),
++};
++
++pub const ucontext_t = extern struct {
++    flags: c_ulong,
++    link: ?*ucontext_t,
++    stack: stack_t,
++    sigmask: sigset_t,
++    _pad: [1024 / 8 - @sizeOf(sigset_t)]u8,
++    mcontext: mcontext_t,
++};
++
++pub const Elf_Symndx = u32;
+diff --git a/lib/std/os/linux/start_pie.zig b/lib/std/os/linux/start_pie.zig
+index b576134042..7e78a37f7e 100644
+--- a/lib/std/os/linux/start_pie.zig
++++ b/lib/std/os/linux/start_pie.zig
+@@ -7,6 +7,7 @@ const R_AMD64_RELATIVE = 8;
+ const R_386_RELATIVE = 8;
+ const R_ARM_RELATIVE = 23;
+ const R_AARCH64_RELATIVE = 1027;
++const R_LARCH_RELATIVE = 3;
+ const R_RISCV_RELATIVE = 3;
+ const R_SPARC_RELATIVE = 22;
+ 
+@@ -15,6 +16,7 @@ const R_RELATIVE = switch (builtin.cpu.arch) {
+     .x86_64 => R_AMD64_RELATIVE,
+     .arm => R_ARM_RELATIVE,
+     .aarch64 => R_AARCH64_RELATIVE,
++    .loongarch32, .loongarch64 => R_LARCH_RELATIVE,
+     .riscv64 => R_RISCV_RELATIVE,
+     else => @compileError("Missing R_RELATIVE definition for this target"),
+ };
+@@ -57,6 +59,12 @@ fn getDynamicSymbol() [*]elf.Dyn {
+             \\ add %[ret], %[ret], #:lo12:_DYNAMIC
+             : [ret] "=r" (-> [*]elf.Dyn),
+         ),
++        .loongarch32, .loongarch64 => asm volatile (
++            \\ .weak _DYNAMIC
++            \\ .hidden _DYNAMIC
++            \\ la.local %[ret], _DYNAMIC
++            : [ret] "=r" (-> [*]elf.Dyn),
++        ),
+         .riscv64 => asm volatile (
+             \\ .weak _DYNAMIC
+             \\ .hidden _DYNAMIC
+diff --git a/lib/std/os/linux/tls.zig b/lib/std/os/linux/tls.zig
+index 82dc3bf759..44a008edc2 100644
+--- a/lib/std/os/linux/tls.zig
++++ b/lib/std/os/linux/tls.zig
+@@ -49,7 +49,7 @@ const TLSVariant = enum {
+ };
+ 
+ const tls_variant = switch (native_arch) {
+-    .arm, .armeb, .thumb, .aarch64, .aarch64_be, .riscv32, .riscv64, .mips, .mipsel, .mips64, .mips64el, .powerpc, .powerpcle, .powerpc64, .powerpc64le => TLSVariant.VariantI,
++    .arm, .armeb, .thumb, .aarch64, .aarch64_be, .riscv32, .riscv64, .loongarch32, .loongarch64, .mips, .mipsel, .mips64, .mips64el, .powerpc, .powerpcle, .powerpc64, .powerpc64le => TLSVariant.VariantI,
+     .x86_64, .x86, .sparc64 => TLSVariant.VariantII,
+     else => @compileError("undefined tls_variant for this architecture"),
+ };
+@@ -152,6 +152,13 @@ pub fn setThreadPointer(addr: usize) void {
+             const rc = linux.syscall1(.set_tls, addr);
+             assert(rc == 0);
+         },
++        .loongarch32, .loongarch64 => {
++            asm volatile (
++                \\ move $tp, %[addr]
++                :
++                : [addr] "r" (addr),
++            );
++        },
+         .riscv64 => {
+             asm volatile (
+                 \\ mv tp, %[addr]
+diff --git a/lib/std/start.zig b/lib/std/start.zig
+index ff97e3c8ae..bd9ac6cebc 100644
+--- a/lib/std/start.zig
++++ b/lib/std/start.zig
+@@ -290,6 +290,12 @@ fn _start() callconv(.Naked) noreturn {
+             \\ and sp, #-16
+             \\ b %[posixCallMainAndExit]
+             ,
++            .loongarch32, .loongarch64 =>
++            \\ move $fp, $zero
++            \\ move $a0, $sp
++            \\ bstrins.d $sp, $zero, 3, 0
++            \\ b %[posixCallMainAndExit]
++            ,
+             .riscv64 =>
+             \\ li s0, 0
+             \\ li ra, 0
+diff --git a/lib/std/zig/system.zig b/lib/std/zig/system.zig
+index 83c798c342..0ac11aa96b 100644
+--- a/lib/std/zig/system.zig
++++ b/lib/std/zig/system.zig
+@@ -87,6 +87,7 @@ pub fn getExternalExecutor(
+             .armeb => Executor{ .qemu = "qemu-armeb" },
+             .hexagon => Executor{ .qemu = "qemu-hexagon" },
+             .x86 => Executor{ .qemu = "qemu-i386" },
++            .loongarch64 => Executor{ .qemu = "qemu-loongarch64" },
+             .m68k => Executor{ .qemu = "qemu-m68k" },
+             .mips => Executor{ .qemu = "qemu-mips" },
+             .mipsel => Executor{ .qemu = "qemu-mipsel" },
+diff --git a/src/glibc.zig b/src/glibc.zig
+index 6474a23dce..18d958f8ed 100644
+--- a/src/glibc.zig
++++ b/src/glibc.zig
+@@ -443,6 +443,8 @@ fn start_asm_path(comp: *Compilation, arena: Allocator, basename: []const u8) ![
+         } else {
+             try result.appendSlice("powerpc" ++ s ++ "powerpc32");
+         }
++    } else if (arch.isLoongArch()) {
++        try result.appendSlice("loongarch");
+     }
+ 
+     try result.appendSlice(s);
+@@ -631,6 +633,9 @@ fn add_include_dirs_arch(
+             try args.append("-I");
+             try args.append(try path.join(arena, &[_][]const u8{ dir, "riscv" }));
+         }
++    } else if (arch.isLoongArch()) {
++        try args.append("-I");
++        try args.append(try path.join(arena, &[_][]const u8{ dir, "loongarch" }));
+     }
+ }
+ 
+@@ -1164,6 +1169,7 @@ fn buildSharedLib(
+ pub fn needsCrtiCrtn(target: std.Target) bool {
+     return switch (target.cpu.arch) {
+         .riscv32, .riscv64 => false,
++        .loongarch64 => false,
+         else => true,
+     };
+ }
+diff --git a/src/musl.zig b/src/musl.zig
+index 96caf3d193..a39047d79f 100644
+--- a/src/musl.zig
++++ b/src/musl.zig
+@@ -302,7 +302,8 @@ pub fn needsCrtiCrtn(target: std.Target) bool {
+     // zig fmt: off
+     return switch (target.cpu.arch) {
+         .riscv64,
+-        .wasm32, .wasm64 => return false,
++        .wasm32, .wasm64 => false,
++        .loongarch64 => false,
+         else => true,
+     };
+     // zig fmt: on
+diff --git a/tools/gen_stubs.zig b/tools/gen_stubs.zig
+index 4d45593d45..b0a80012c3 100644
+--- a/tools/gen_stubs.zig
++++ b/tools/gen_stubs.zig
+@@ -2,7 +2,7 @@
+ //! ./gen_stubs /path/to/musl/build-all >libc.S
+ //!
+ //! The directory 'build-all' is expected to contain these subdirectories:
+-//! arm  x86  mips  mips64  powerpc  powerpc64  riscv64  x86_64
++//! arm  x86  mips  mips64  powerpc  powerpc64  riscv64  x86_64 loongarch64
+ //!
+ //! ...each with 'lib/libc.so' inside of them.
+ //!
+@@ -17,6 +17,7 @@
+ //!   - `-DARCH_powerpc`
+ //!   - `-DARCH_powerpc64`
+ //!   - `-DARCH_aarch64`
++//!   - `-DARCH_loongarch64`
+ 
+ // TODO: pick the best index to put them into instead of at the end
+ //       - e.g. find a common previous symbol and put it after that one
+@@ -75,7 +76,8 @@ const MultiSym = struct {
+             ms.present[archIndex(.x86_64)] == false and
+             ms.present[archIndex(.powerpc)] == true and
+             ms.present[archIndex(.powerpc64)] == false and
+-            ms.present[archIndex(.aarch64)] == false;
++            ms.present[archIndex(.aarch64)] == false and
++            ms.present[archIndex(.loongarch64)] == false;
+     }
+ 
+     fn commonSize(ms: MultiSym) ?u64 {
+@@ -118,6 +120,7 @@ const MultiSym = struct {
+             .{ .powerpc, 4 },
+             .{ .powerpc64, 8 },
+             .{ .aarch64, 8 },
++            .{ .loongarch64, 8 },
+         };
+         inline for (map) |item| {
+             const arch = item[0];
+@@ -140,6 +143,7 @@ const MultiSym = struct {
+             .{ .powerpc, 8 },
+             .{ .powerpc64, 16 },
+             .{ .aarch64, 16 },
++            .{ .loongarch64, 16 },
+         };
+         inline for (map) |item| {
+             const arch = item[0];
+@@ -162,6 +166,7 @@ const MultiSym = struct {
+             .{ .powerpc, 1 },
+             .{ .powerpc64, 2 },
+             .{ .aarch64, 2 },
++            .{ .loongarch64, 2 },
+         };
+         inline for (map) |item| {
+             const arch = item[0];
+diff --git a/tools/generate_linux_syscalls.zig b/tools/generate_linux_syscalls.zig
+index a356cbdd03..bb01008be9 100644
+--- a/tools/generate_linux_syscalls.zig
++++ b/tools/generate_linux_syscalls.zig
+@@ -363,16 +363,11 @@ pub fn main() !void {
+         );
+     }
+     {
+-        try writer.writeAll(
+-            \\
+-            \\pub const LoongArch64 = enum(usize) {
+-            \\
+-        );
++        try writer.writeAll("pub const LoongArch64 = enum(usize) {\n");
+ 
+         const child_args = [_][]const u8{
+             zig_exe,
+             "cc",
+-            "-march=loongarch64",
+             "-target",
+             "loongarch64-linux-gnu",
+             "-E",
+@@ -381,6 +376,8 @@ pub fn main() !void {
+             "-nostdinc",
+             "-Iinclude",
+             "-Iinclude/uapi",
++            "-Iarch/loongarch/include/uapi",
++            "-D __SYSCALL(nr, nm)=zigsyscall nm nr",
+             "arch/loongarch/include/uapi/asm/unistd.h",
+         };
+ 
+@@ -404,27 +401,21 @@ pub fn main() !void {
+         };
+ 
+         var lines = mem.tokenizeScalar(u8, defines, '\n');
+-        loop: while (lines.next()) |line| {
+-            var fields = mem.tokenizeAny(u8, line, " \t");
+-            const cmd = fields.next() orelse return error.Incomplete;
+-            if (!mem.eql(u8, cmd, "#define")) continue;
+-            const define = fields.next() orelse return error.Incomplete;
+-            const number = fields.next() orelse continue;
++        while (lines.next()) |line| {
++            var fields = mem.tokenizeAny(u8, line, " ");
++            const prefix = fields.next() orelse return error.Incomplete;
+ 
+-            if (!std.ascii.isDigit(number[0])) continue;
+-            if (!mem.startsWith(u8, define, "__NR")) continue;
+-            const name = mem.trimLeft(u8, mem.trimLeft(u8, define, "__NR3264_"), "__NR_");
+-            if (mem.eql(u8, name, "arch_specific_syscall")) continue;
+-            if (mem.eql(u8, name, "syscalls")) break :loop;
++            if (!mem.eql(u8, prefix, "zigsyscall")) continue;
+ 
+-            const fixed_name = if (stdlib_renames.get(name)) |fixed| fixed else name;
+-            try writer.print("    {p} = {s},\n", .{ zig.fmtId(fixed_name), number });
++            const sys_name = fields.next() orelse return error.Incomplete;
++            const value = fields.rest();
++            const name = (getOverridenNameNew(value) orelse sys_name)["sys_".len..];
++            const fixed_name = if (stdlib_renames_new.get(name)) |f| f else if (stdlib_renames.get(name)) |f| f else name;
++
++            try writer.print("    {p} = {s},\n", .{ zig.fmtId(fixed_name), value });
+         }
+ 
+-        try writer.writeAll(
+-            \\};
+-            \\
+-        );
++        try writer.writeAll("};\n\n");
+     }
+ 
+     try buf_out.flush();
