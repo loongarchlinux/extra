@@ -3,7 +3,7 @@
 
 pkgname=libuv
 pkgver=1.48.0
-pkgrel=2
+pkgrel=3
 pkgdesc="Multi-platform support library with a focus on asynchronous I/O"
 arch=('loong64' 'x86_64')
 url="https://github.com/libuv/libuv"
@@ -11,8 +11,10 @@ license=('custom')
 depends=('glibc' 'libnsl')
 makedepends=('git' 'python-sphinx')
 #source=(https://dist.libuv.org/dist/v$pkgver/libuv-v$pkgver.tar.gz{,.sign})
-source=("git+https://github.com/libuv/libuv.git?signed#tag=v${pkgver}")
-sha512sums=('016401251c3490678593e92977005f6f4da16935f84fae0ed535d06fb19893b90ee59b57136d94f7c5893feed21c03000a5269218b209186f3a87cf8c34c5b9c')
+source=("git+https://github.com/libuv/libuv.git?signed#tag=v${pkgver}"
+    "libuv-loong64.patch")
+sha512sums=('016401251c3490678593e92977005f6f4da16935f84fae0ed535d06fb19893b90ee59b57136d94f7c5893feed21c03000a5269218b209186f3a87cf8c34c5b9c'
+            '1f9f71949de79b5f1497764529bdd68d8c9a7ed25336b05be71f94d2b27537284bd9d0e9d15cfdc860212b1345f4e9bef91b98952e85cdfacf5c1e0d87bc6927')
 # PGP key IDs are available from https://github.com/libuv/libuv/blob/v1.x/MAINTAINERS.md
 validpgpkeys=('57353E0DBDAAA7E839B66A1AFF47D5E4AD8B4FDC'  # Colin Ihrig (@cjihrig)
               '612F0EAD9401622379DF4402F28C3C8DA33C03BE'  # Santiago Gimeno
@@ -25,6 +27,7 @@ prepare() {
     sed -e '/udp_multicast_join/d' \
         -e '/tcp_connect6_link_local/d' \
         -i test/test-list.h
+    patch -p1 -i $srcdir/libuv-loong64.patch
 }
 
 build() {

@@ -1,0 +1,43 @@
+diff --git a/src/unix/async.c b/src/unix/async.c
+index 0ff2669e3..bf99bc24b 100644
+--- a/src/unix/async.c
++++ b/src/unix/async.c
+@@ -325,5 +325,7 @@ static void uv__cpu_relax(void) {
+   __asm volatile ("" : : : "memory");
+ #elif !defined(__APPLE__) && (defined(__powerpc64__) || defined(__ppc64__) || defined(__PPC64__))
+   __asm__ __volatile__ ("or 1,1,1; or 2,2,2" ::: "memory");
++#elif defined(__loongarch__)
++  __asm volatile (".rept 3\nnop\n.endr" : : : "memory");
+ #endif
+ }
+diff --git a/src/unix/linux.c b/src/unix/linux.c
+index 4164e90db..a5f6e903f 100644
+--- a/src/unix/linux.c
++++ b/src/unix/linux.c
+@@ -85,6 +85,8 @@
+ #  define __NR_copy_file_range 285
+ # elif defined(__riscv)
+ #  define __NR_copy_file_range 285
++# elif defined(__loongarch__)
++#  define __NR_copy_file_range 285
+ # endif
+ #endif /* __NR_copy_file_range */
+ 
+@@ -103,6 +105,8 @@
+ #  define __NR_statx 379
+ # elif defined(__riscv)
+ #  define __NR_statx 291
++# elif defined(__loongarch__)
++#  define __NR_statx 291
+ # endif
+ #endif /* __NR_statx */
+ 
+@@ -121,6 +125,8 @@
+ #  define __NR_getrandom 349
+ # elif defined(__riscv)
+ #  define __NR_getrandom 278
++# elif defined(__loongarch__)
++#  define __NR_getrandom 278
+ # endif
+ #endif /* __NR_getrandom */
+ 
