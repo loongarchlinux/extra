@@ -1,8 +1,8 @@
 diff --git a/Makefile b/Makefile
-index bfe80a8..20c3152 100644
+index 83250d3..49e0cf0 100644
 --- a/Makefile
 +++ b/Makefile
-@@ -25,28 +25,41 @@ COMMITPKG_LINKS = \
+@@ -26,28 +26,41 @@ COMMITPKG_LINKS = \
  	extrapkg \
  	extra-testingpkg \
  	extra-stagingpkg \
@@ -47,21 +47,21 @@ index bfe80a8..20c3152 100644
  
  COMPLETIONS = $(addprefix $(BUILDDIR)/,$(patsubst %.in,%,$(wildcard contrib/completion/*/*)))
  
-@@ -159,7 +172,7 @@ dist:
- 	git archive --format=tar --prefix=devtools-$(V)/ v$(V) | gzip > devtools-$(V).tar.gz
- 	gpg --detach-sign --use-agent devtools-$(V).tar.gz
+@@ -184,7 +197,7 @@ coverage: binprogs library conf completion man
+ 	jq -r '. | ["Percent covered", .percent_covered], ["Covered lines", .covered_lines], ["Total lines", .total_lines], ["Percent low", .percent_low], ["Percent high", .percent_high] | @tsv' \
+ 		$(COVERAGE_DIR)/bats.*/coverage.json
  
 -check: $(BINPROGS_SRC) $(LIBRARY_SRC) contrib/completion/bash/devtools.in config/makepkg/x86_64.conf contrib/makepkg/PKGBUILD.proto
 +check: $(BINPROGS_SRC) $(LIBRARY_SRC) contrib/completion/bash/devtools.in config/makepkg/loong64.conf config/makepkg/x86_64.conf contrib/makepkg/PKGBUILD.proto
  	shellcheck $^
  
- .PHONY: all binprogs library completion conf man clean install uninstall tag dist upload check
+ .PHONY: all binprogs library completion conf man clean install uninstall tag dist upload test coverage check
 diff --git a/config/makepkg/loong64.conf b/config/makepkg/loong64.conf
 new file mode 100644
-index 0000000..c1b2987
+index 0000000..55586b2
 --- /dev/null
 +++ b/config/makepkg/loong64.conf
-@@ -0,0 +1,162 @@
+@@ -0,0 +1,164 @@
 +#!/hint/bash
 +# shellcheck disable=2034
 +
@@ -89,7 +89,7 @@ index 0000000..c1b2987
 +
 +#-- The package required by makepkg to download VCS sources
 +#  Format: 'protocol::package'
-+VCSCLIENTS=('bzr::bzr'
++VCSCLIENTS=('bzr::breezy'
 +            'fossil::fossil'
 +            'git::git'
 +            'hg::mercurial'
@@ -104,13 +104,15 @@ index 0000000..c1b2987
 +
 +#-- Compiler and Linker Flags
 +#CPPFLAGS=""
-+CFLAGS="-mabi=lp64d -march=loongarch64 -mlsx -O2 -pipe -fno-plt -fexceptions \
-+        -Wp,-D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security \
-+        -fstack-clash-protection"
++CFLAGS="-march=la64v1.0 -mabi=lp64d -O2 -pipe -fno-plt -fexceptions \
++        -Wp,-D_FORTIFY_SOURCE=3 -Wformat -Werror=format-security \
++        -fstack-clash-protection \
++        -fno-omit-frame-pointer"
 +CXXFLAGS="$CFLAGS -Wp,-D_GLIBCXX_ASSERTIONS"
-+LDFLAGS="-Wl,-O1,--sort-common,--as-needed,-z,relro,-z,now"
++LDFLAGS="-Wl,-O1 -Wl,--sort-common -Wl,--as-needed -Wl,-z,relro -Wl,-z,now \
++         -Wl,-z,pack-relative-relocs"
 +LTOFLAGS="-flto=auto"
-+RUSTFLAGS=""
++RUSTFLAGS="-Cforce-frame-pointers=yes"
 +#-- Make Flags: change this for DistCC/SMP systems
 +#MAKEFLAGS="-j2"
 +#-- Debugging flags
@@ -567,7 +569,7 @@ index 2f3faf9..c977a24 100644
  else
  	tag="${cmd%-build}"
 diff --git a/src/archrelease.in b/src/archrelease.in
-index 818b0ca..d1e277b 100644
+index 84aed28..10f281a 100644
 --- a/src/archrelease.in
 +++ b/src/archrelease.in
 @@ -45,50 +45,50 @@ if [[ ! -f PKGBUILD ]]; then
@@ -669,10 +671,10 @@ index 818b0ca..d1e277b 100644
 +#git tag --sign --message="Package release ${pkgver}" "$gittag" || abort
 +#git push --tags --set-upstream origin main || abort
 diff --git a/src/commitpkg.in b/src/commitpkg.in
-index f979d61..0b1226f 100644
+index deb02be..3eab8a3 100644
 --- a/src/commitpkg.in
 +++ b/src/commitpkg.in
-@@ -128,17 +128,17 @@ for key in "${validpgpkeys[@]}"; do
+@@ -137,17 +137,17 @@ for key in "${validpgpkeys[@]}"; do
  done
  
  # assert that they really are controlled by git
@@ -701,7 +703,7 @@ index f979d61..0b1226f 100644
  
  
  server=${PACKAGING_REPO_RELEASE_HOST}
-@@ -176,51 +176,51 @@ for _arch in "${arch[@]}"; do
+@@ -185,50 +185,50 @@ for _arch in "${arch[@]}"; do
  done
  
  # check for PKGBUILD standards
@@ -709,10 +711,9 @@ index f979d61..0b1226f 100644
 +#check_pkgbuild_validity
  
  # auto generate .SRCINFO
--stat_busy 'Generating .SRCINFO'
--write_srcinfo_content > .SRCINFO
+ # shellcheck disable=SC2119
+-write_srcinfo_file
 -git add --force .SRCINFO
--stat_done
 -
 -if [[ -n $(git status --porcelain --untracked-files=no) ]]; then
 -	stat_busy 'Staging files'
@@ -735,14 +736,14 @@ index f979d61..0b1226f 100644
 -		echo "$msgtemplate" > "$msgfile"
 -		if [[ -n $GIT_EDITOR ]]; then
 -			$GIT_EDITOR "$msgfile" || die
+-		elif giteditor=$(git config --get core.editor); then
+-			$giteditor "$msgfile" || die
 -		elif [[ -n $VISUAL ]]; then
 -			$VISUAL "$msgfile" || die
 -		elif [[ -n $EDITOR ]]; then
 -			$EDITOR "$msgfile" || die
--		elif giteditor=$(git config --get core.editor); then
--			$giteditor "$msgfile" || die
 -		else
--			die "No usable editor found (tried \$GIT_EDITOR, \$VISUAL, \$EDITOR, git config [core.editor])."
+-			die "No usable editor found (tried \$GIT_EDITOR, git config [core.editor], \$VISUAL, \$EDITOR)."
 -		fi
 -		[[ -s $msgfile ]] || die
 -		stat_busy 'Committing changes'
@@ -751,11 +752,9 @@ index f979d61..0b1226f 100644
 -		stat_done
 -	fi
 -fi
-+#stat_busy 'Generating .SRCINFO'
-+#write_srcinfo_content > .SRCINFO
++#write_srcinfo_file
 +#git add --force .SRCINFO
-+#stat_done
-+
++#
 +#if [[ -n $(git status --porcelain --untracked-files=no) ]]; then
 +#	stat_busy 'Staging files'
 +#	for f in $(git ls-files --modified); do
@@ -777,14 +776,14 @@ index f979d61..0b1226f 100644
 +#		echo "$msgtemplate" > "$msgfile"
 +#		if [[ -n $GIT_EDITOR ]]; then
 +#			$GIT_EDITOR "$msgfile" || die
++#		elif giteditor=$(git config --get core.editor); then
++#			$giteditor "$msgfile" || die
 +#		elif [[ -n $VISUAL ]]; then
 +#			$VISUAL "$msgfile" || die
 +#		elif [[ -n $EDITOR ]]; then
 +#			$EDITOR "$msgfile" || die
-+#		elif giteditor=$(git config --get core.editor); then
-+#			$giteditor "$msgfile" || die
 +#		else
-+#			die "No usable editor found (tried \$GIT_EDITOR, \$VISUAL, \$EDITOR, git config [core.editor])."
++#			die "No usable editor found (tried \$GIT_EDITOR, git config [core.editor], \$VISUAL, \$EDITOR)."
 +#		fi
 +#		[[ -s $msgfile ]] || die
 +#		stat_busy 'Committing changes'
@@ -797,25 +796,25 @@ index f979d61..0b1226f 100644
  declare -a uploads
  declare -a commit_arches
 diff --git a/src/lib/build/build.sh b/src/lib/build/build.sh
-index a5a272d..ec7af1a 100644
+index b82011b..b0e62e8 100644
 --- a/src/lib/build/build.sh
 +++ b/src/lib/build/build.sh
-@@ -319,6 +319,9 @@ pkgctl_build() {
- 				BUILD_ARCH=("${_arch[0]}")
+@@ -377,6 +377,9 @@ pkgctl_build() {
+ 				BUILD_ARCH=("${DEVTOOLS_VALID_ARCHES[0]}")
  			else
- 				for loop_arch in "${arch[@]}"; do 
-+					if in_array "${loop_arch}" "x86_64"; then
+ 				for _arch in "${arch[@]}"; do
++					if in_array "${_arch}" "x86_64"; then
 +						continue
 +					fi
- 					if in_array "${loop_arch}" "${_arch[@]}"; then
- 						BUILD_ARCH+=("$loop_arch")
+ 					if in_array "${_arch}" "${DEVTOOLS_VALID_ARCHES[@]}"; then
+ 						BUILD_ARCH+=("$_arch")
  					else
 diff --git a/src/lib/valid-repos.sh b/src/lib/valid-repos.sh
-index 14f90ce..21a03ec 100644
+index af8a552..63cced4 100644
 --- a/src/lib/valid-repos.sh
 +++ b/src/lib/valid-repos.sh
 @@ -7,16 +7,20 @@
- _repos=(
+ DEVTOOLS_VALID_REPOS=(
  	core core-staging core-testing
  	extra extra-staging extra-testing
 +	laur laur-staging laur-testing
@@ -826,7 +825,7 @@ index 14f90ce..21a03ec 100644
  )
  
  # shellcheck disable=2034
- _build_repos=(
+ DEVTOOLS_VALID_BUILDREPOS=(
  	core-staging core-testing
  	extra extra-staging extra-testing
 +	laur laur-staging laur-testing
@@ -836,20 +835,21 @@ index 14f90ce..21a03ec 100644
 +	wine-apps
  )
 diff --git a/src/lib/valid-tags.sh b/src/lib/valid-tags.sh
-index ca8d7d7..c2397e2 100644
+index 62e40ae..078e2c3 100644
 --- a/src/lib/valid-tags.sh
 +++ b/src/lib/valid-tags.sh
-@@ -5,21 +5,26 @@
+@@ -5,6 +5,7 @@
  
  # shellcheck disable=2034
- _arch=(
+ DEVTOOLS_VALID_BINARY_ARCHES=(
 +	loong64
  	x86_64
- 	any
  )
  
+@@ -16,15 +17,19 @@ DEVTOOLS_VALID_ARCHES=(
+ 
  # shellcheck disable=2034
- _tags=(
+ DEVTOOLS_VALID_TAGS=(
 -	core-x86_64 core-any
 -	core-staging-x86_64 core-staging-any
 -	core-testing-x86_64 core-testing-any
@@ -875,10 +875,10 @@ index ca8d7d7..c2397e2 100644
 +	wine-apps-loong64 wine-apps-any
  )
 diff --git a/src/makechrootpkg.in b/src/makechrootpkg.in
-index 2cfd849..c1b00af 100644
+index 9df14e8..29adf45 100644
 --- a/src/makechrootpkg.in
 +++ b/src/makechrootpkg.in
-@@ -14,7 +14,7 @@ source /usr/share/makepkg/util/config.sh
+@@ -17,7 +17,7 @@ source /usr/share/makepkg/util/util.sh
  
  shopt -s nullglob
  
@@ -887,7 +887,7 @@ index 2cfd849..c1b00af 100644
  makepkg_args=("${default_makepkg_args[@]}")
  verifysource_args=()
  chrootdir=
-@@ -241,7 +241,7 @@ download_sources() {
+@@ -254,7 +254,7 @@ download_sources() {
  	# Ensure sources are downloaded
  	sudo -u "$makepkg_user" --preserve-env=GNUPGHOME,SSH_AUTH_SOCK \
  		env SRCDEST="$SRCDEST" BUILDDIR="$WORKDIR" \
