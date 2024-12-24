@@ -71,11 +71,17 @@ _pkgfn=${pkgname/6-/}
 source=(git+https://code.qt.io/qt/$_pkgfn#tag=v$pkgver
         git+https://code.qt.io/qt/qtwebengine-chromium
         qtwebengine-6.7.0-ninja1.12.patch
-        qtwebengine-ffmpeg-7.patch)
+        qtwebengine-ffmpeg-7.patch
+        0001-fix-libyuv-unified-source-and-LoongArch-SIMD-build.patch
+        0006-LOONGARCH64-qtwebengine-chromium-skip-unreliable-ter.patch
+        0007-LOONGARCH64-qtwebengine-chromium-add-LoongArch-suppo.patch)
 sha256sums=('e4ea371bbe91763e0499b7d12166b43162f29e57ba81705870a0f8c4ba784408'
             'SKIP'
             'c037cccc1d43bcd9d67045354ca48b405acec217149cb4b2bd3cfb7b5561cc33'
-            'f108c916ab87a247571255c56f9d04fc9bccdc3fe8972bf5a60d29636c6f5c3e')
+            'f108c916ab87a247571255c56f9d04fc9bccdc3fe8972bf5a60d29636c6f5c3e'
+            'd971477d4920a51de1ef9ffb96d1c755bf48d7ba6f3fbf869da2131f083d9f40'
+            'aac1e4354673cba1a7905a53b5b53064a10cc3191ceff922a2a4dc1fe597989e'
+            'd1cb3d7cc635da18a3023d7b71130dcf65c4ec48dc34c8b191a06d50fe071c87')
 
 prepare() {
   cd $_pkgfn
@@ -87,9 +93,22 @@ prepare() {
   patch -p1 -i ../qtwebengine-6.7.0-ninja1.12.patch
 # Fix build with ffmpeg 7 - Chromium patches
   patch -d src/3rdparty/chromium -p1 -i "$srcdir"/qtwebengine-ffmpeg-7.patch
+# Fix libyuv's lsx and lsax
+  patch -d src/3rdparty -p1 -i "$srcdir/0001-fix-libyuv-unified-source-and-LoongArch-SIMD-build.patch"
+# Fix build for loong, AOSC patch
+  patch -p2 -i ../0006-LOONGARCH64-qtwebengine-chromium-skip-unreliable-ter.patch
+  patch -p2 -i ../0007-LOONGARCH64-qtwebengine-chromium-add-LoongArch-suppo.patch
 }
 
 build() {
+
+# Add `-mcmodel=medium` to CFLAGS etc.
+# to avoid `relocation R_LARCH_B26 overflow`
+export CFLAGS="${CFLAGS} -mcmodel=extreme"
+export CXXFLAGS="${CXXFLAGS} -mcmodel=extreme"
+#export RUSTFLAGS="${RUSTFLAGS} -C code-model=extreme"
+#export LDFLAGS="${LDFLAGS} -Wl,--no-relax"
+
   cmake -B build -S $_pkgfn -G Ninja \
     -DCMAKE_MESSAGE_LOG_LEVEL=STATUS \
     -DCMAKE_TOOLCHAIN_FILE=/usr/lib/cmake/Qt6/qt.toolchain.cmake \
